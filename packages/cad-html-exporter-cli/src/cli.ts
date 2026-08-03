@@ -26,7 +26,7 @@ program
     '-o, --output <path>',
     'Output .html path (default: same name as input)'
   )
-  .option('--locale <code>', 'UI locale embedded in HTML (e.g. en, zh)', 'en')
+  .option('--locale <code>', 'UI locale embedded in HTML (e.g. en)', 'en')
   .option('--title <text>', 'Drawing title in exported metadata')
   .option(
     '--no-export-invisible-layers',

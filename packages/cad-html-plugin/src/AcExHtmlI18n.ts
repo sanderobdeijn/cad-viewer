@@ -1,19 +1,16 @@
 /** Supported locales in the offline HTML viewer. */
-export type AcExHtmlLocale = 'en' | 'zh' | 'cs' | 'tr'
+export type AcExHtmlLocale = 'en'
 
 /**
  * All locales accepted by the offline viewer, in display order.
  * The language button cycles through this list; add a locale here plus a
  * {@link LOCALE_BADGES} entry and a `MESSAGES` tree to support it.
  */
-export const ACEX_HTML_LOCALES: AcExHtmlLocale[] = ['en', 'zh', 'cs', 'tr']
+export const ACEX_HTML_LOCALES: AcExHtmlLocale[] = ['en']
 
 /** Short button badge per locale (shown on the language toolbar button). */
 const LOCALE_BADGES: Record<AcExHtmlLocale, string> = {
-  en: 'EN',
-  zh: '中',
-  cs: 'CS',
-  tr: 'TR'
+  en: 'EN'
 }
 
 /**
@@ -130,166 +127,6 @@ const MESSAGES: Record<AcExHtmlLocale, AcExMessageTree> = {
       zoomLayer: 'Zoom: {name}',
       loadFailed: 'Failed to load drawing: {error}',
       noLayout: 'No layout data in snapshot.'
-    }
-  },
-  zh: {
-    toolbar: {
-      viewerTools: '查看器工具',
-      zoomExtents: '范围缩放',
-      measureDistance: '测量距离',
-      measureAngle: '测量角度',
-      measureArc: '测量弧长',
-      measureArea: '测量面积',
-      measureCoordinate: '测量坐标',
-      clearMeasurements: '清除测量',
-      settings: '测量设置',
-      layers: '图层',
-      language: '语言',
-      languageSwitch: '切换语言',
-      collapse: '收起工具栏',
-      expand: '展开工具栏'
-    },
-    settings: {
-      toolbar: '测量设置',
-      measureColor: '测量颜色',
-      ortho: '切换正交模式',
-      polar: '极轴追踪角度',
-      polarAngles: '极轴追踪角度'
-    },
-    layers: {
-      title: '图层',
-      close: '关闭图层',
-      showAll: '全部显示',
-      hideAll: '全部隐藏',
-      zoomTo: '缩放到 {name}'
-    },
-    status: {
-      ready: '就绪',
-      measureDistanceHint: '点击两点以测量距离（已启用对象捕捉）。',
-      measureAngleHint: '依次点击顶点与两条边上的点（已启用对象捕捉）。',
-      measureArcHint: '依次点击弧起点、弧上一点与弧端点（已启用对象捕捉）。',
-      measureAreaHint: '依次点击多边形顶点；靠近首点或按 Enter 完成。',
-      measureCoordinateHint: '点击一点以读取其 X/Y 坐标（已启用对象捕捉）。',
-      distance: '距离：{value}',
-      coordinates: 'X：{x}  Y：{y}',
-      angle: '角度：{value}',
-      arcLength: '弧长：{value}',
-      area: '面积：{value}',
-      lengthTotal: '长度合计：{value}',
-      areaTotal: '面积合计：{value}',
-      zoomLayer: '缩放：{name}',
-      loadFailed: '无法加载图纸：{error}',
-      noLayout: '快照中没有布局数据。'
-    }
-  },
-  cs: {
-    toolbar: {
-      viewerTools: 'Nástroje prohlížeče',
-      zoomExtents: 'Zoom na rozsah',
-      measureDistance: 'Změřit vzdálenost',
-      measureAngle: 'Změřit úhel',
-      measureArc: 'Změřit délku oblouku',
-      measureArea: 'Změřit plochu',
-      measureCoordinate: 'Změřit souřadnice',
-      clearMeasurements: 'Vymazat měření',
-      settings: 'Nastavení měření',
-      layers: 'Hladiny',
-      language: 'Jazyk',
-      languageSwitch: 'Přepnout jazyk',
-      collapse: 'Sbalit panel nástrojů',
-      expand: 'Rozbalit panel nástrojů'
-    },
-    settings: {
-      toolbar: 'Nastavení měření',
-      measureColor: 'Barva měření',
-      ortho: 'Přepnout ortogonální režim',
-      polar: 'Úhly polárního trasování',
-      polarAngles: 'Úhly polárního trasování'
-    },
-    layers: {
-      title: 'Hladiny',
-      close: 'Zavřít hladiny',
-      showAll: 'Zobrazit vše',
-      hideAll: 'Skrýt vše',
-      zoomTo: 'Přiblížit na {name}'
-    },
-    status: {
-      ready: 'Připraveno',
-      measureDistanceHint:
-        'Klikněte na dva body pro změření vzdálenosti (uchopení objektů zapnuto).',
-      measureAngleHint:
-        'Klikněte na vrchol, poté na dva body na každém rameni (uchopení objektů zapnuto).',
-      measureArcHint:
-        'Klikněte na začátek oblouku, bod na oblouku a poté na konec oblouku (uchopení objektů zapnuto).',
-      measureAreaHint:
-        'Klikejte na vrcholy mnohoúhelníku; dokončete kliknutím poblíž prvního bodu nebo stiskem Enter.',
-      measureCoordinateHint:
-        'Klikněte na bod pro zobrazení jeho souřadnic X/Y (uchopení objektů zapnuto).',
-      distance: 'Vzdálenost: {value}',
-      coordinates: 'X: {x}  Y: {y}',
-      angle: 'Úhel: {value}',
-      arcLength: 'Délka oblouku: {value}',
-      area: 'Plocha: {value}',
-      lengthTotal: 'Celková délka: {value}',
-      areaTotal: 'Celková plocha: {value}',
-      zoomLayer: 'Zoom: {name}',
-      loadFailed: 'Nepodařilo se načíst výkres: {error}',
-      noLayout: 'Snímek neobsahuje data rozvržení.'
-    }
-  },
-  tr: {
-    toolbar: {
-      viewerTools: 'Görüntüleyici araçları',
-      zoomExtents: 'Sınırlara yakınlaştır',
-      measureDistance: 'Mesafe ölç',
-      measureAngle: 'Açı ölç',
-      measureArc: 'Yay uzunluğu ölç',
-      measureArea: 'Alan ölç',
-      measureCoordinate: 'Koordinat ölç',
-      clearMeasurements: 'Ölçümleri temizle',
-      settings: 'Ölçüm ayarları',
-      layers: 'Katmanlar',
-      language: 'Dil',
-      languageSwitch: 'Dili değiştir',
-      collapse: 'Araç çubuğunu daralt',
-      expand: 'Araç çubuğunu genişlet'
-    },
-    settings: {
-      toolbar: 'Ölçüm ayarları',
-      measureColor: 'Ölçüm rengi',
-      ortho: 'Dik modu aç/kapat',
-      polar: 'Kutupsal izleme açıları',
-      polarAngles: 'Kutupsal izleme açıları'
-    },
-    layers: {
-      title: 'Katmanlar',
-      close: 'Katmanları kapat',
-      showAll: 'Tümünü göster',
-      hideAll: 'Tümünü gizle',
-      zoomTo: '{name} katmanına yakınlaştır'
-    },
-    status: {
-      ready: 'Hazır',
-      measureDistanceHint:
-        'Mesafe ölçmek için iki nokta tıklayın (nesne yakalama etkin).',
-      measureAngleHint:
-        'Önce köşe noktasını, sonra her koldan birer nokta tıklayın (nesne yakalama etkin).',
-      measureArcHint:
-        'Yay başlangıcını, yay üzerinde bir noktayı ve yay sonunu tıklayın (nesne yakalama etkin).',
-      measureAreaHint:
-        'Çokgen köşelerini tıklayın; bitirmek için ilk noktanın yakınına tıklayın veya Enter’a basın.',
-      measureCoordinateHint:
-        'X/Y koordinatlarını okumak için bir nokta tıklayın (nesne yakalama etkin).',
-      distance: 'Mesafe: {value}',
-      coordinates: 'X: {x}  Y: {y}',
-      angle: 'Açı: {value}',
-      arcLength: 'Yay uzunluğu: {value}',
-      area: 'Alan: {value}',
-      lengthTotal: 'Toplam uzunluk: {value}',
-      areaTotal: 'Toplam alan: {value}',
-      zoomLayer: 'Yakınlaştır: {name}',
-      loadFailed: 'Çizim yüklenemedi: {error}',
-      noLayout: 'Anlık görüntüde yerleşim verisi yok.'
     }
   }
 }

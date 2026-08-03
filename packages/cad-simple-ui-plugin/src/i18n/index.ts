@@ -1,9 +1,7 @@
 import { AcApI18n } from '@mlightcad/cad-simple-viewer'
 
 import { commandEn } from './command-en'
-import { commandZh } from './command-zh'
 import { en } from './en'
-import { zh } from './zh'
 
 /** Message namespace prefix merged into {@link AcApI18n}. */
 const MESSAGE_PREFIX = 'simpleUi'
@@ -49,10 +47,6 @@ export function registerSimpleUiI18n(): void {
   AcApI18n.mergeLocaleMessage('en', {
     command: commandEn,
     [MESSAGE_PREFIX]: flatToNested(en)
-  })
-  AcApI18n.mergeLocaleMessage('zh', {
-    command: commandZh,
-    [MESSAGE_PREFIX]: flatToNested(zh)
   })
   isRegistered = true
 }

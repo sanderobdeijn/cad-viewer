@@ -173,7 +173,6 @@ describe('default toolbar items', () => {
       'csvg'
     ])
     expect(items.some(item => item.id === 'theme')).toBe(true)
-    expect(items.some(item => item.id === 'locale')).toBe(true)
     expect(items.some(item => item.id === 'toolbar-placement')).toBe(true)
   })
 

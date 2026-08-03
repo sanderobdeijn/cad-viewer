@@ -223,7 +223,7 @@ const inputHint = computed(() => {
 
 /** Returns the localized display label for a model dropdown option. */
 function modelLabel(option: LlmModelOption): string {
-  return AcApI18n.currentLocale === 'zh' ? option.labelZh : option.labelEn
+  return option.labelEn
 }
 
 /** Clears the current chat error state without removing messages. */

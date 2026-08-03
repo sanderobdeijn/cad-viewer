@@ -104,7 +104,6 @@ import {
   toggleDark,
   useDocument,
   useEntityDrawStyle,
-  useLocale,
   useNotificationCenter,
   useSettings
 } from '../composable'
@@ -117,7 +116,6 @@ import { MlDialogManager, MlFontFileReader } from './common'
 import {
   MlEntityDrawStyleToolbar,
   MlEntityInfo,
-  MlLanguageSelector,
   MlMainMenu,
   MlToolBars
 } from './layout'
@@ -140,7 +138,7 @@ const emit = defineEmits<{
 
 // Define component props with their purposes
 interface Props {
-  /** Language locale for internationalization ('en', 'zh', or 'default') */
+  /** Language locale for internationalization ('en', or 'default') */
   locale?: LocaleProp
   /** Optional URL to automatically load a CAD file on component mount */
   url?: string
@@ -220,7 +218,6 @@ const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
 })
 
 const { t } = useI18n()
-const { effectiveLocale, elementPlusLocale } = useLocale(props.locale)
 const {
   info,
   warning,
@@ -665,19 +662,14 @@ const closeNotificationCenter = () => {
     class="ml-cad-viewer-container"
   >
     <!-- Element Plus configuration provider for internationalization -->
-    <el-config-provider :locale="elementPlusLocale">
+    <el-config-provider>
       <div ref="layoutRef" class="ml-cad-layout">
         <!-- Header section with main menu and language selector -->
         <header v-if="editorRef" ref="headerRef" class="ml-cad-header">
           <ml-ribbon-commands
             v-if="isWriteMode"
-            :current-locale="effectiveLocale"
           />
           <ml-main-menu v-if="!isWriteMode" />
-          <ml-language-selector
-            v-if="!isWriteMode"
-            :current-locale="effectiveLocale"
-          />
         </header>
 
         <!-- Main content area with CAD viewing tools and controls -->

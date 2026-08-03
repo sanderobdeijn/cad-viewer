@@ -2,7 +2,6 @@
  * English UI strings for the CAD Agent panel.
  *
  * Flat keys under `main.toolPalette.agent` (merged into {@link AcApI18n}).
- * Keys must stay in sync with {@link agentZh}.
  */
 export const agentEn = {
   tab: 'Agent',

@@ -1,9 +1,6 @@
 import { AcApI18n, type AcApLocale } from '@mlightcad/cad-simple-viewer'
 
-import { agentCs } from './cs'
 import { agentEn } from './en'
-import { agentTr } from './tr'
-import { agentZh } from './zh'
 
 /** Vue i18n key prefix for all agent UI strings (`main.toolPalette.agent`). */
 export const AGENT_I18N_PREFIX = 'main.toolPalette.agent'
@@ -16,10 +13,7 @@ export type AgentChatLabels = Record<AgentChatLabelKey, string>
 
 /** Locale-specific flat message tables before nesting under `main.toolPalette.agent`. */
 const agentMessagesByLocale = {
-  en: agentEn,
-  zh: agentZh,
-  tr: agentTr,
-  cs: agentCs
+  en: agentEn
 } as const satisfies Record<AcApLocale, AgentChatLabels>
 
 /** Guards {@link registerAgentI18n} against duplicate merges. */
@@ -28,7 +22,7 @@ let isRegistered = false
 /**
  * Builds the nested vue-i18n message object for one locale.
  *
- * @param locale - Target locale (`en` or `zh`).
+ * @param locale - Target locale (`en`).
  * @returns Messages shaped for `mergeLocaleMessage`.
  */
 function buildVueMessages(locale: AcApLocale) {
@@ -49,9 +43,6 @@ export function registerAgentI18n(): void {
   if (isRegistered) return
 
   AcApI18n.mergeLocaleMessage('en', buildVueMessages('en'))
-  AcApI18n.mergeLocaleMessage('zh', buildVueMessages('zh'))
-  AcApI18n.mergeLocaleMessage('tr', buildVueMessages('tr'))
-  AcApI18n.mergeLocaleMessage('cs', buildVueMessages('cs'))
   isRegistered = true
 }
 
@@ -65,9 +56,6 @@ export function mergeAgentI18nIntoVueI18n(
 ): void {
   registerAgentI18n()
   mergeLocaleMessage('en', buildVueMessages('en'))
-  mergeLocaleMessage('zh', buildVueMessages('zh'))
-  mergeLocaleMessage('tr', buildVueMessages('tr'))
-  mergeLocaleMessage('cs', buildVueMessages('cs'))
 }
 
 /**
@@ -83,7 +71,7 @@ export function agentT(key: AgentChatLabelKey): string {
 /**
  * Builds a reactive-friendly map of all agent labels for the current locale.
  *
- * All label keys are derived from {@link agentEn} — add new strings in en.ts/zh.ts only.
+ * All label keys are derived from {@link agentEn} — add new strings in en.ts only.
  *
  * @returns Every {@link AgentChatLabelKey} mapped to its translation.
  */

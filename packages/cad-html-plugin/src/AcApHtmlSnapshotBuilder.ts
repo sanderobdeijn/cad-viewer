@@ -37,7 +37,7 @@ export interface AcApHtmlSnapshotBuilderOptions {
    */
   background?: number
   /**
-   * UI locale embedded in the exported HTML for i18n (`en`, `zh`, etc.).
+   * UI locale embedded in the exported HTML for i18n (`en`, etc.).
    * Defaults to {@link AcApI18n.currentLocale} when omitted.
    */
   locale?: string

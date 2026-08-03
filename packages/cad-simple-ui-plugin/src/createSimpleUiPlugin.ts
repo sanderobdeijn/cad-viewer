@@ -2,7 +2,6 @@ import {
   AcApContext,
   AcApDocManager,
   AcApI18n,
-  type AcApLocale,
   AcApPlugin,
   AcEdCommandStack,
   type AcEdUiTheme
@@ -468,8 +467,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     return {
       getTheme: () => this.themeSync?.getTheme() ?? 'dark',
       setTheme: (theme: AcEdUiTheme) => this.themeSync?.setTheme(theme),
-      getLocale: () => AcApI18n.currentLocale,
-      toggleLocale: () => this.toggleLocale(),
       getPlacement: () => this.toolbarPlacement,
       setPlacement: (placement: AcExToolbarPlacement) => {
         this.applyToolbarPlacement(placement)
@@ -743,12 +740,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.themeSync = undefined
 
     removeUiStylesIfUnused()
-  }
-
-  /** Toggles {@link AcApI18n.currentLocale} between English and Chinese. */
-  private toggleLocale() {
-    const next: AcApLocale = AcApI18n.currentLocale === 'en' ? 'zh' : 'en'
-    AcApI18n.setCurrentLocale(next)
   }
 }
 

@@ -283,23 +283,6 @@ export function createDefaultToolbarItems(
           action: toggleTheme
         }
       }
-    },
-    {
-      id: 'locale',
-      requiresDocument: false,
-      toggle: {
-        getValue: () => (context?.getLocale() ?? 'en') === 'en',
-        on: {
-          label: 'toolbar.localeEn',
-          icon: '<span style="font-size:10px;font-weight:700;line-height:1">EN</span>',
-          action: () => context?.toggleLocale()
-        },
-        off: {
-          label: 'toolbar.localeZh',
-          icon: '<span style="font-size:10px;font-weight:700;line-height:1">中</span>',
-          action: () => context?.toggleLocale()
-        }
-      }
     }
   ]
 

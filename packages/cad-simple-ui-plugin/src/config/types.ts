@@ -1,5 +1,4 @@
 import type {
-  AcApLocale,
   AcEdOpenMode,
   AcEdUiTheme
 } from '@mlightcad/cad-simple-viewer'
@@ -11,7 +10,7 @@ export type AcExToolbarPlacement = 'top' | 'bottom' | 'left' | 'right'
 export type AcExDockPanelSide = 'top' | 'bottom' | 'left' | 'right'
 
 /** Supported UI locale codes for plugin strings. */
-export type AcExLocale = 'en' | 'zh'
+export type AcExLocale = 'en'
 
 /**
  * Controls how a parent button icon relates to its submenu selection.
@@ -100,10 +99,6 @@ export interface AcExDefaultToolbarContext {
   getTheme: () => AcEdUiTheme
   /** Applies a UI theme change. */
   setTheme: (theme: AcEdUiTheme) => void
-  /** Returns the active application locale. */
-  getLocale: () => AcApLocale
-  /** Switches between English and Chinese (leaves other locales unchanged when toggled to). */
-  toggleLocale: () => void
   /** Returns the current toolbar edge placement. */
   getPlacement: () => AcExToolbarPlacement
   /** Moves the toolbar to the given host edge. */
