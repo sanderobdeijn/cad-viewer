@@ -1744,10 +1744,6 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
           label: t('main.mainMenu.exportHtml')
         },
         {
-          id: 'ExportPdf',
-          label: t('main.mainMenu.exportPdf')
-        },
-        {
           id: 'ExportSvg',
           label: t('main.mainMenu.exportSvg')
         },
@@ -1813,8 +1809,6 @@ const handleFileMenuSelect = async (command: string) => {
     cmd.trigger(AcApDocManager.instance.context)
   } else if (command === 'ExportHtml') {
     AcApDocManager.instance.sendStringToExecute('chtml')
-  } else if (command === 'ExportPdf') {
-    await runLazyCommand('cpdf')
   } else if (command === 'ExportSvg') {
     AcApDocManager.instance.sendStringToExecute('csvg')
   } else if (command === 'PngOut') {

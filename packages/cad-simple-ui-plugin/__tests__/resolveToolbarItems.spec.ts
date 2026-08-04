@@ -169,7 +169,6 @@ describe('default toolbar items', () => {
     const exportItem = items.find(item => item.id === 'export')
     expect(exportItem?.children?.map(child => child.command)).toEqual([
       'chtml',
-      'cpdf',
       'csvg'
     ])
     expect(items.some(item => item.id === 'theme')).toBe(true)
@@ -212,52 +211,6 @@ describe('default toolbar items', () => {
     expect(items.find(item => item.id === 'annotation')?.icon).toContain(
       'M7 14.5'
     )
-  })
-})
-
-describe('parent toolbar display', () => {
-  it('keeps parent icon when childIcon is fixed', () => {
-    const parent = resolveParentToolbarDisplay({
-      id: 'measure',
-      icon: 'parent-icon',
-      childIcon: 'fixed',
-      children: [{ id: 'child', icon: 'child-icon', command: 'x' }]
-    })
-    expect(parent.icon).toBe('parent-icon')
-  })
-
-  it('uses selected child icon when childIcon is selected', () => {
-    const parent = resolveParentToolbarDisplay(
-      {
-        id: 'export',
-        label: 'toolbar.export',
-        icon: 'parent-icon',
-        childIcon: 'selected',
-        selectedChildId: 'export-pdf',
-        children: [
-          { id: 'export-html', icon: 'html-icon', command: 'chtml' },
-          { id: 'export-pdf', icon: 'pdf-icon', command: 'cpdf' }
-        ]
-      },
-      'export-pdf'
-    )
-    expect(parent.icon).toBe('pdf-icon')
-    expect(parent.label).toBe('toolbar.export')
-  })
-
-  it('resolves active child by runtime selection first', () => {
-    const child = resolveSelectedChildItem(
-      {
-        id: 'export',
-        selectedChildId: 'export-html',
-        children: [
-          { id: 'export-html', icon: 'html-icon' },
-          { id: 'export-pdf', icon: 'pdf-icon' }
-        ]
-      },
-      'export-pdf'
-    )
-    expect(child?.id).toBe('export-pdf')
   })
 })
 

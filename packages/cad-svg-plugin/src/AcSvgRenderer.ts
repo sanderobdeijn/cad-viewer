@@ -36,7 +36,7 @@ import { AcSvgStyleContext, AcSvgStyleUtil } from './AcSvgStyleUtil'
 
 export class AcSvgRenderer implements AcGiRenderer<AcSvgEntity> {
   /**
-   * Clears the shared block rendering cache before SVG/PDF export.
+   * Clears the shared block rendering cache before SVG export.
    *
    * The cache stores drawable objects from the last renderer that populated it
    * (typically Three.js). Reusing those entries during export causes failures

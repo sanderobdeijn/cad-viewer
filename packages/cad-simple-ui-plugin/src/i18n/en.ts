@@ -26,7 +26,6 @@ export const en: Record<string, string> = {
   'toolbar.hideAnnotation': 'Hide Annotations',
   'toolbar.export': 'Export',
   'toolbar.exportHtml': 'Export HTML',
-  'toolbar.exportPdf': 'Export PDF',
   'toolbar.exportSvg': 'Export SVG',
   'toolbar.placement': 'Toolbar Position',
   'toolbar.placementTop': 'Top',

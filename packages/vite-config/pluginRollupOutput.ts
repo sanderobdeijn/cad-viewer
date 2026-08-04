@@ -2,7 +2,6 @@ import type { ManualChunksOption, OutputOptions } from 'rollup'
 
 /** Export plugins with a separate lazy `/register` entry. */
 export const PLUGIN_PACKAGE_IDS = [
-  'cad-pdf-plugin',
   'cad-html-plugin',
   'cad-svg-plugin',
   'cad-simple-ui-plugin',

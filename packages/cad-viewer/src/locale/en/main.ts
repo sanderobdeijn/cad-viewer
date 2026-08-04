@@ -6,7 +6,6 @@ export default {
     exportMenu: 'Export',
     export: 'Export to DXF',
     exportHtml: 'Export to HTML',
-    exportPdf: 'Export to PDF',
     exportSvg: 'Export to SVG',
     exportImage: 'Export to Image',
     about: 'About'
