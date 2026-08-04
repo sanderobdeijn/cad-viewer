@@ -2,7 +2,6 @@
 import '@mlightcad/ribbon/style.css'
 
 import {
-  ChatDotRound,
   Delete,
   DocumentCopy,
   Hide,
@@ -39,7 +38,6 @@ import {
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { store } from '../../app'
 import type { LayerStateSnapshot, LayerStateToggleKey } from '../../composable'
 import {
   LAYER_FILTER_ALL,
@@ -653,8 +651,7 @@ const handleRibbonLayerStateToggle = (payload: {
 const buildBaseTabs = (
   openMode: AcEdOpenMode,
   annotationVisible: boolean,
-  undoRedoState: { canUndo: boolean; canRedo: boolean },
-  agentPluginEnabled: boolean
+  undoRedoState: { canUndo: boolean; canRedo: boolean }
 ): RibbonTabModel[] => {
   const ribbonTooltips = {
     line: t('main.ribbon.tooltip.line'),
@@ -686,7 +683,6 @@ const buildBaseTabs = (
     insert: t('main.ribbon.tooltip.insert'),
     editAttributes: t('main.ribbon.tooltip.editAttributes'),
     defineAttribute: t('main.ribbon.tooltip.defineAttribute'),
-    agent: t('main.ribbon.tooltip.agent'),
     propertyColor: t('main.ribbon.tooltip.propertyColor'),
     propertyLineType: t('main.ribbon.tooltip.propertyLineType'),
     propertyLineWeight: t('main.ribbon.tooltip.propertyLineWeight')
@@ -1488,23 +1484,7 @@ const buildBaseTabs = (
                     labelWrapLines: 2,
                     labelWrapWidth: 'max-content'
                   }
-                },
-                ...(agentPluginEnabled
-                  ? [
-                      {
-                        id: 'cmd-agent',
-                        type: 'button' as const,
-                        label: t('main.ribbon.command.agent'),
-                        tooltip: ribbonTooltips.agent,
-                        size: 'large' as const,
-                        props: {
-                          icon: ChatDotRound,
-                          labelWrapLines: 2,
-                          labelWrapWidth: 'max-content'
-                        }
-                      }
-                    ]
-                  : [])
+                }
               ]
             }
           ]
@@ -1617,7 +1597,6 @@ const buildBaseTabs = (
 
 const ribbonData = computed(() => {
   locale.value
-  store.features.agentPlugin
   const openMode = docOpenMode.value
   const annotationVisible = isAnnotationVisible.value
   const commandByItemId = new Map<string, string>()
@@ -1676,9 +1655,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-imageattach', 'imageattach')
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
-  if (store.features.agentPlugin) {
-    commandByItemId.set('cmd-agent', 'agent')
-  }
   commandByItemId.set('cmd-tool-rev-freehand', 'sketch')
   commandByItemId.set('cmd-tool-rev-rect', 'revrect')
   commandByItemId.set('cmd-tool-rev-cloud', 'revcloud')
@@ -1707,7 +1683,6 @@ const ribbonData = computed(() => {
       canUndo: canUndo.value,
       canRedo: canRedo.value
     },
-    store.features.agentPlugin
   )
   return {
     tabs,
@@ -1789,16 +1764,6 @@ const handleRibbonItemClick = (payload: {
   }
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return
-  if (command === 'agent') {
-    void runLazyCommand('agent')
-    return
-  }
-  AcApDocManager.instance.sendStringToExecute(command)
-}
-
-const runLazyCommand = async (command: string) => {
-  const pluginManager = AcApDocManager.instance.pluginManager
-  await pluginManager.loadByTrigger(command)
   AcApDocManager.instance.sendStringToExecute(command)
 }
 

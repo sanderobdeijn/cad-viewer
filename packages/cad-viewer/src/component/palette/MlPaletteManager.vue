@@ -55,15 +55,6 @@
         >
           <ml-blocks-palette />
         </div>
-        <div
-          v-else-if="
-            store.features.agentPlugin &&
-            store.dialogs.activePaletteTab === 'agent'
-          "
-          class="ml-agent-palette-wrapper"
-        >
-          <agent-chat-panel embedded />
-        </div>
       </ml-overflow-tabs>
     </ml-tool-palette>
   </el-config-provider>
@@ -78,7 +69,7 @@ import {
   MlToolPalette
 } from '@mlightcad/ui-components'
 import { ElConfigProvider } from 'element-plus'
-import { computed, defineAsyncComponent, nextTick, watch } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { store } from '../../app'
@@ -91,13 +82,6 @@ import MlLayerList from './MlLayerList.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
 import MlMissingResources from './MlMissingResources.vue'
 import MlOpenFileProfile from './MlOpenFileProfile.vue'
-
-const AgentChatPanel = defineAsyncComponent(() =>
-  Promise.all([
-    import('@mlightcad/cad-agent-plugin/style.css'),
-    import('@mlightcad/cad-agent-plugin')
-  ]).then(([, module]) => module.AgentChatPanel)
-)
 
 /**
  * Properties of palette manager component
@@ -209,9 +193,6 @@ const tabNames = computed((): readonly string[] => {
   if (store.dialogs.openFileProfileTabVisible) {
     names.push('openFileProfile')
   }
-  if (store.features.agentPlugin) {
-    names.push('agent')
-  }
   return names
 })
 
@@ -322,19 +303,5 @@ const properties = computed(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.ml-agent-palette-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-agent-palette-wrapper :deep(.cad-agent-panel-root) {
-  flex: 1;
-  min-height: 0;
 }
 </style>

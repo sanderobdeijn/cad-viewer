@@ -4,8 +4,7 @@ import type { ManualChunksOption, OutputOptions } from 'rollup'
 export const PLUGIN_PACKAGE_IDS = [
   'cad-html-plugin',
   'cad-svg-plugin',
-  'cad-simple-ui-plugin',
-  'cad-agent-plugin'
+  'cad-simple-ui-plugin'
 ] as const
 
 /** Core viewer libraries shipped from this monorepo. */

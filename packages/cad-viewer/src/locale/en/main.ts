@@ -302,8 +302,6 @@ export default {
         'Open the Enhanced Attribute Editor to edit block attribute values and display properties (ATTEDIT).',
       defineAttribute:
         'Create an attribute definition for use in a block (ATTDEF).',
-      agent:
-        'Open the CAD Agent palette tab to draw geometry using natural language.',
       propertyColor:
         'Set the color for newly created objects or selected entities.',
       propertyLineType:
@@ -407,7 +405,6 @@ export default {
       insert: 'Insert',
       editAttributes: 'Edit\nAttributes',
       defineAttribute: 'Define\nAttribute',
-      agent: 'CAD\nAgent'
     }
   },
   verticalToolbar: {
