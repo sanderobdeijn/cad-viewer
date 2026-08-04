@@ -77,9 +77,6 @@ export default {
       description: 'Copies selected entities by cloning them to new positions',
       prompt: 'Select entities'
     },
-    csvg: {
-      description: 'Converts current drawing to SVG'
-    },
     chtml: {
       description: 'Exports current drawing to a standalone offline HTML file'
     },

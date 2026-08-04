@@ -1719,10 +1719,6 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
           label: t('main.mainMenu.exportHtml')
         },
         {
-          id: 'ExportSvg',
-          label: t('main.mainMenu.exportSvg')
-        },
-        {
           id: 'PngOut',
           label: t('main.mainMenu.exportImage')
         }
@@ -1774,8 +1770,6 @@ const handleFileMenuSelect = async (command: string) => {
     cmd.trigger(AcApDocManager.instance.context)
   } else if (command === 'ExportHtml') {
     AcApDocManager.instance.sendStringToExecute('chtml')
-  } else if (command === 'ExportSvg') {
-    AcApDocManager.instance.sendStringToExecute('csvg')
   } else if (command === 'PngOut') {
     AcApDocManager.instance.sendStringToExecute('pngout')
   } else if (command === 'QNew') {

@@ -12,7 +12,6 @@ import {
   ICON_CLEAR_MEASUREMENTS,
   ICON_EXPORT,
   ICON_EXPORT_HTML,
-  ICON_EXPORT_SVG,
   ICON_LAYER,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
@@ -190,12 +189,6 @@ export function createDefaultToolbarItems(
           label: 'toolbar.exportHtml',
           icon: ICON_EXPORT_HTML,
           command: 'chtml'
-        },
-        {
-          id: 'export-svg',
-          label: 'toolbar.exportSvg',
-          icon: ICON_EXPORT_SVG,
-          command: 'csvg'
         }
       ]
     },

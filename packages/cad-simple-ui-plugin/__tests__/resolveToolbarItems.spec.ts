@@ -100,8 +100,7 @@ describe('default toolbar items', () => {
     const items = createDefaultToolbarItems()
     const exportItem = items.find(item => item.id === 'export')
     expect(exportItem?.children?.map(child => child.command)).toEqual([
-      'chtml',
-      'csvg'
+      'chtml'
     ])
     expect(items.some(item => item.id === 'theme')).toBe(true)
     expect(items.some(item => item.id === 'toolbar-placement')).toBe(true)

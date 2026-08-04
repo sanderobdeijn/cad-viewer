@@ -53,10 +53,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       },
       minify: true,
       rollupOptions: {
-        // HTML/SVG plugins are peers; loaded at runtime via dynamic import
+        // HTML plugins are peers; loaded at runtime via dynamic import
         external: [
-          '@mlightcad/cad-html-plugin',
-          '@mlightcad/cad-svg-plugin'
+          '@mlightcad/cad-html-plugin'
         ],
         output: {
           chunkFileNames: `${packageId}-[name]-[hash].js`,

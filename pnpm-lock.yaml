@@ -228,21 +228,6 @@ importers:
         specifier: ^0.172.0
         version: 0.172.0
 
-  packages/cad-svg-plugin:
-    devDependencies:
-      '@mlightcad/cad-simple-viewer':
-        specifier: workspace:*
-        version: link:../cad-simple-viewer
-      '@mlightcad/data-model':
-        specifier: ^1.12.3
-        version: 1.12.3
-      '@mlightcad/mtext-parser':
-        specifier: ^1.4.1
-        version: 1.4.1
-      '@mlightcad/mtext-renderer':
-        specifier: ^0.12.1
-        version: 0.12.1(three@0.172.0)
-
   packages/cad-viewer:
     devDependencies:
       '@element-plus/icons-vue':
@@ -254,9 +239,6 @@ importers:
       '@mlightcad/cad-simple-viewer':
         specifier: workspace:*
         version: link:../cad-simple-viewer
-      '@mlightcad/cad-svg-plugin':
-        specifier: workspace:*
-        version: link:../cad-svg-plugin
       '@mlightcad/data-model':
         specifier: ^1.12.3
         version: 1.12.3
@@ -1636,9 +1618,6 @@ packages:
     peerDependencies:
       '@mlightcad/mtext-renderer': ^0.12.1
       three: ^0.172.0
-
-  '@mlightcad/mtext-parser@1.4.1':
-    resolution: {integrity: sha512-PU7D5H/k25vZpTERabpdn5HVAs8+SBNRqgi08wRPiplxTE1eB/zBZRNRrSwHqyWx6xMeQmZ9mhh9DPNpte3gYQ==}
 
   '@mlightcad/mtext-parser@1.5.0':
     resolution: {integrity: sha512-Yl/IQmSIGV1UUl/TyUptoOpNBunywcEE7yh4k9SFDXljHDTTI92VmqkVFxf4eYzhoWF4MNXIl4qgQV1P1Rbn6g==}
@@ -6833,8 +6812,6 @@ snapshots:
       '@mlightcad/mtext-renderer': 0.12.1(three@0.172.0)
       '@mlightcad/text-box-cursor': 0.1.1(three@0.172.0)
       three: 0.172.0
-
-  '@mlightcad/mtext-parser@1.4.1': {}
 
   '@mlightcad/mtext-parser@1.5.0': {}
 

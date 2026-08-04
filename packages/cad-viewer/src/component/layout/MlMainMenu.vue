@@ -36,9 +36,6 @@
                 <el-dropdown-item command="ExportHtml">{{
                   t('main.mainMenu.exportHtml')
                 }}</el-dropdown-item>
-                <el-dropdown-item command="ExportSvg">{{
-                  t('main.mainMenu.exportSvg')
-                }}</el-dropdown-item>
                 <el-dropdown-item command="PngOut">{{
                   t('main.mainMenu.exportImage')
                 }}</el-dropdown-item>
@@ -78,8 +75,6 @@ const handleCommand = async (command: string) => {
     cmd.trigger(AcApDocManager.instance.context)
   } else if (command === 'ExportHtml') {
     AcApDocManager.instance.sendStringToExecute('chtml')
-  } else if (command === 'ExportSvg') {
-    AcApDocManager.instance.sendStringToExecute('csvg')
   } else if (command === 'PngOut') {
     AcApDocManager.instance.sendStringToExecute('pngout')
   } else if (command === 'QNew') {

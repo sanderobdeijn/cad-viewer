@@ -32,7 +32,6 @@ export default defineConfig(({ command, mode }) => {
   }
   const aliases: Alias[] = []
   const devSourcePackages = [
-    'cad-svg-plugin',
     'three-renderer',
     'cad-simple-viewer',
     'cad-viewer'
@@ -43,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
     existsSync(LOCAL_DATA_MODEL_ENTRY)
   if (command === 'serve') {
     aliases.push({
-      find: /^@mlightcad\/(cad-svg-plugin|three-renderer|cad-simple-viewer|cad-viewer)$/,
+      find: /^@mlightcad\/(three-renderer|cad-simple-viewer|cad-viewer)$/,
       replacement: resolve(__dirname, '../$1/src')
     })
     if (linkLocalDataModel) {
