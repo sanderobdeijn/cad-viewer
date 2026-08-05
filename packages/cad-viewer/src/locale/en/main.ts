@@ -465,11 +465,6 @@ export default {
       description:
         'Use rectangles to highlight and annotate objects or areas in the drawing'
     },
-    revCloud: {
-      text: 'Rev Cloud',
-      description:
-        'Used to highlight areas in a drawing with a cloud-shaped outline'
-    },
     select: {
       text: 'Select',
       description: 'Selects entities'

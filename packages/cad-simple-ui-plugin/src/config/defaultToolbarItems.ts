@@ -23,7 +23,6 @@ import {
   ICON_PLACEMENT_LEFT,
   ICON_PLACEMENT_RIGHT,
   ICON_PLACEMENT_TOP,
-  ICON_REV_CLOUD,
   ICON_REV_FREEDRAW,
   ICON_REV_RECT,
   ICON_SELECT,
@@ -208,12 +207,6 @@ export function createDefaultToolbarItems(
           label: 'toolbar.revRect',
           icon: ICON_REV_RECT,
           command: 'revrect'
-        },
-        {
-          id: 'rev-cloud',
-          label: 'toolbar.revCloud',
-          icon: ICON_REV_CLOUD,
-          command: 'revcloud'
         }
       ]
     },

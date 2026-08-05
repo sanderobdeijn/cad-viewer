@@ -102,7 +102,6 @@ import {
   qselect,
   ray,
   rect,
-  revCloud,
   revFreeDraw,
   revRect,
   setting,
@@ -723,7 +722,6 @@ const buildBaseTabs = (
   const verticalToolbarDescriptions = {
     revFreehand: t('main.verticalToolbar.revFreehand.description'),
     revRect: t('main.verticalToolbar.revRect.description'),
-    revCloud: t('main.verticalToolbar.revCloud.description'),
     showAnnotation: t('main.verticalToolbar.showAnnotation.description'),
     hideAnnotation: t('main.verticalToolbar.hideAnnotation.description'),
     measureDistance: t('main.verticalToolbar.measureDistance.description'),
@@ -750,14 +748,6 @@ const buildBaseTabs = (
       tooltip: verticalToolbarDescriptions.revRect,
       size: 'large',
       props: { icon: revRect }
-    },
-    {
-      id: 'cmd-tool-rev-cloud',
-      type: 'button',
-      label: t('main.verticalToolbar.revCloud.text'),
-      tooltip: verticalToolbarDescriptions.revCloud,
-      size: 'large',
-      props: { icon: revCloud }
     },
     {
       id: 'cmd-tool-rev-vis',
@@ -1647,7 +1637,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-attdef', 'attdef')
   commandByItemId.set('cmd-tool-rev-freehand', 'sketch')
   commandByItemId.set('cmd-tool-rev-rect', 'revrect')
-  commandByItemId.set('cmd-tool-rev-cloud', 'revcloud')
   commandByItemId.set('cmd-tool-rev-vis', 'revvis')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')

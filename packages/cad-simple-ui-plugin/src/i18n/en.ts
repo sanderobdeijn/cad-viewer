@@ -20,7 +20,6 @@ export const en: Record<string, string> = {
   'toolbar.annotation': 'Annotation',
   'toolbar.revFreehand': 'Freehand Sketch',
   'toolbar.revRect': 'Rectangle Review',
-  'toolbar.revCloud': 'Revision Cloud',
   'toolbar.showAnnotation': 'Show Annotations',
   'toolbar.hideAnnotation': 'Hide Annotations',
   'toolbar.export': 'Export',
