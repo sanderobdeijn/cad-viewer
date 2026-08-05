@@ -56,22 +56,6 @@ export const ICON_SWITCH_BG =
 export const ICON_ANNOTATION =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="4" y="6" width="11" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="currentColor" d="M7 14.5 13.5 8l1.5 1.5-6.5 6.5H7v-1.5Z"/><path fill="currentColor" d="M13.2 7.3 15 5.5l1.5 1.5-1.8 1.8-1.5-1.5Z"/></svg>'
 
-/** Freehand review sketch icon. */
-export const ICON_REV_FREEDRAW =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 14c2-4 4-6 8-8 2-1 4 0 4 2"/></svg>'
-
-/** Rectangle review icon. */
-export const ICON_REV_RECT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="4" y="5" width="12" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-
-/** Revision cloud icon. */
-export const ICON_REV_CLOUD =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M5 12c0-2 1-4 4-4 1-2 4-2 5 0 2 0 3 2 3 4"/></svg>'
-
-/** Circle review icon. */
-export const ICON_REV_CIRCLE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-
 /** Show annotations icon. */
 export const ICON_ANNOTATION_SHOW =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M10 4C5 4 1.73 7.11 1 10c.73 2.89 4 6 9 6s8.27-3.11 9-6c-.73-2.89-4-6-9-6Zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>'

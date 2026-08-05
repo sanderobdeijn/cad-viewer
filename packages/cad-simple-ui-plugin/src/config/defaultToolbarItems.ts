@@ -23,7 +23,6 @@ import {
   ICON_PLACEMENT_LEFT,
   ICON_PLACEMENT_RIGHT,
   ICON_PLACEMENT_TOP,
-  ICON_REV_FREEDRAW,
   ICON_SELECT,
   ICON_SWITCH_BG,
   ICON_THEME_DARK,
@@ -195,12 +194,6 @@ export function createDefaultToolbarItems(
       icon: ICON_ANNOTATION,
       minOpenMode: AcEdOpenMode.Review,
       children: [
-        {
-          id: 'rev-freedraw',
-          label: 'toolbar.revFreehand',
-          icon: ICON_REV_FREEDRAW,
-          command: 'sketch'
-        }
       ]
     },
     {

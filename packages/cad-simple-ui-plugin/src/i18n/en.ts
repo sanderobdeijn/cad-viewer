@@ -18,7 +18,6 @@ export const en: Record<string, string> = {
   'toolbar.clearMeasurements': 'Clear Measurements',
   'toolbar.switchBg': 'Switch Background',
   'toolbar.annotation': 'Annotation',
-  'toolbar.revFreehand': 'Freehand Sketch',
   'toolbar.showAnnotation': 'Show Annotations',
   'toolbar.hideAnnotation': 'Hide Annotations',
   'toolbar.export': 'Export',

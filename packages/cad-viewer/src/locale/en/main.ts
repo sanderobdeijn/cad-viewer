@@ -455,11 +455,6 @@ export default {
       description:
         'Uses straight lines to annotate and explain objects or areas in the drawing'
     },
-    revFreehand: {
-      text: 'Freehand',
-      description:
-        'Uses freehand strokes to freely annotate and emphasize drawing content'
-    },
     select: {
       text: 'Select',
       description: 'Selects entities'

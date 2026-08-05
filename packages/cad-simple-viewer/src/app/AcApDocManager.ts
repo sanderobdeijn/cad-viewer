@@ -67,7 +67,6 @@ import {
   AcApRevVisibilityCmd,
   AcApRotateCmd,
   AcApSelectCmd,
-  AcApSketchCmd,
   AcApSplineCmd,
   AcApSwitchBgCmd,
   AcApSysVarCmd,
@@ -1256,7 +1255,6 @@ export class AcApDocManager {
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
     addSystemCommand('revvis', 'revvis', new AcApRevVisibilityCmd())
     addSystemCommand('select', 'select', new AcApSelectCmd())
-    addSystemCommand('sketch', 'sketch', new AcApSketchCmd())
     addSystemCommand('spline', 'spline', new AcApSplineCmd())
     addSystemCommand('switchbg', 'switchbg', new AcApSwitchBgCmd())
     addSystemCommand(

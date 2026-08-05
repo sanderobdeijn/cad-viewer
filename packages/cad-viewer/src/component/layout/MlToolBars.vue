@@ -16,7 +16,6 @@ import {
   measureArea,
   measureDistance,
   pan,
-  revFreeDraw,
   select,
   switchBg,
   zoomToBox,
@@ -115,12 +114,6 @@ const verticalToolbarData = computed(() => {
         command: '',
         description: t('main.verticalToolbar.annotation.description'),
         children: [
-          {
-            icon: revFreeDraw,
-            text: t('main.verticalToolbar.revFreehand.text'),
-            command: 'sketch',
-            description: t('main.verticalToolbar.revFreehand.description')
-          }
         ]
       },
       {

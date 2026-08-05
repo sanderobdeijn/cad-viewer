@@ -102,7 +102,6 @@ import {
   qselect,
   ray,
   rect,
-  revFreeDraw,
   setting,
   splineFitPoints,
   xline
@@ -719,7 +718,6 @@ const buildBaseTabs = (
     restore: t('main.ribbon.tooltip.layerAction.restore')
   }
   const verticalToolbarDescriptions = {
-    revFreehand: t('main.verticalToolbar.revFreehand.description'),
     showAnnotation: t('main.verticalToolbar.showAnnotation.description'),
     hideAnnotation: t('main.verticalToolbar.hideAnnotation.description'),
     measureDistance: t('main.verticalToolbar.measureDistance.description'),
@@ -731,14 +729,6 @@ const buildBaseTabs = (
   }
 
   const annotationItems: RibbonItemModel[] = [
-    {
-      id: 'cmd-tool-rev-freehand',
-      type: 'button',
-      label: t('main.verticalToolbar.revFreehand.text'),
-      tooltip: verticalToolbarDescriptions.revFreehand,
-      size: 'large',
-      props: { icon: revFreeDraw }
-    },
     {
       id: 'cmd-tool-rev-vis',
       type: 'toggle',
@@ -1625,7 +1615,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-imageattach', 'imageattach')
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
-  commandByItemId.set('cmd-tool-rev-freehand', 'sketch')
   commandByItemId.set('cmd-tool-rev-vis', 'revvis')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')
