@@ -19,7 +19,6 @@ export const en: Record<string, string> = {
   'toolbar.switchBg': 'Switch Background',
   'toolbar.annotation': 'Annotation',
   'toolbar.revFreehand': 'Freehand Sketch',
-  'toolbar.revRect': 'Rectangle Review',
   'toolbar.showAnnotation': 'Show Annotations',
   'toolbar.hideAnnotation': 'Hide Annotations',
   'toolbar.export': 'Export',

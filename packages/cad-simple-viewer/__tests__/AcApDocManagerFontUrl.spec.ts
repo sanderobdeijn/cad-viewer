@@ -167,7 +167,6 @@ jest.mock('../src/command', () => {
     'AcApRayCmd',
     'AcApRectCmd',
     'AcApRegenCmd',
-    'AcApRevRectCmd',
     'AcApRevVisibilityCmd',
     'AcApRedoCmd',
     'AcApRotateCmd',

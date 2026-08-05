@@ -103,7 +103,6 @@ import {
   ray,
   rect,
   revFreeDraw,
-  revRect,
   setting,
   splineFitPoints,
   xline
@@ -721,7 +720,6 @@ const buildBaseTabs = (
   }
   const verticalToolbarDescriptions = {
     revFreehand: t('main.verticalToolbar.revFreehand.description'),
-    revRect: t('main.verticalToolbar.revRect.description'),
     showAnnotation: t('main.verticalToolbar.showAnnotation.description'),
     hideAnnotation: t('main.verticalToolbar.hideAnnotation.description'),
     measureDistance: t('main.verticalToolbar.measureDistance.description'),
@@ -740,14 +738,6 @@ const buildBaseTabs = (
       tooltip: verticalToolbarDescriptions.revFreehand,
       size: 'large',
       props: { icon: revFreeDraw }
-    },
-    {
-      id: 'cmd-tool-rev-rect',
-      type: 'button',
-      label: t('main.verticalToolbar.revRect.text'),
-      tooltip: verticalToolbarDescriptions.revRect,
-      size: 'large',
-      props: { icon: revRect }
     },
     {
       id: 'cmd-tool-rev-vis',
@@ -1636,7 +1626,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
   commandByItemId.set('cmd-tool-rev-freehand', 'sketch')
-  commandByItemId.set('cmd-tool-rev-rect', 'revrect')
   commandByItemId.set('cmd-tool-rev-vis', 'revvis')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')

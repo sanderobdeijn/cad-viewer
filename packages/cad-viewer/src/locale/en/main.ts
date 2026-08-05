@@ -460,11 +460,6 @@ export default {
       description:
         'Uses freehand strokes to freely annotate and emphasize drawing content'
     },
-    revRect: {
-      text: 'Rectangle',
-      description:
-        'Use rectangles to highlight and annotate objects or areas in the drawing'
-    },
     select: {
       text: 'Select',
       description: 'Selects entities'

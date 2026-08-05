@@ -24,7 +24,6 @@ import {
   ICON_PLACEMENT_RIGHT,
   ICON_PLACEMENT_TOP,
   ICON_REV_FREEDRAW,
-  ICON_REV_RECT,
   ICON_SELECT,
   ICON_SWITCH_BG,
   ICON_THEME_DARK,
@@ -201,12 +200,6 @@ export function createDefaultToolbarItems(
           label: 'toolbar.revFreehand',
           icon: ICON_REV_FREEDRAW,
           command: 'sketch'
-        },
-        {
-          id: 'rev-rect',
-          label: 'toolbar.revRect',
-          icon: ICON_REV_RECT,
-          command: 'revrect'
         }
       ]
     },
