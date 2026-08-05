@@ -23,7 +23,6 @@ import {
   ICON_PLACEMENT_LEFT,
   ICON_PLACEMENT_RIGHT,
   ICON_PLACEMENT_TOP,
-  ICON_REV_CIRCLE,
   ICON_REV_CLOUD,
   ICON_REV_FREEDRAW,
   ICON_REV_RECT,
@@ -215,12 +214,6 @@ export function createDefaultToolbarItems(
           label: 'toolbar.revCloud',
           icon: ICON_REV_CLOUD,
           command: 'revcloud'
-        },
-        {
-          id: 'rev-circle',
-          label: 'toolbar.revCircle',
-          icon: ICON_REV_CIRCLE,
-          command: 'revcircle'
         }
       ]
     },

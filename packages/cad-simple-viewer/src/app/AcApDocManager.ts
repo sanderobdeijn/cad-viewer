@@ -64,7 +64,6 @@ import {
   AcApRectCmd,
   AcApRedoCmd,
   AcApRegenCmd,
-  AcApRevCircleCmd,
   AcApRevCloudCmd,
   AcApRevRectCmd,
   AcApRevVisibilityCmd,
@@ -1257,7 +1256,6 @@ export class AcApDocManager {
     addSystemCommand('ray', 'ray', new AcApRayCmd())
     addSystemCommand('rectang', 'rectang', new AcApRectCmd())
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
-    addSystemCommand('revcircle', 'revcircle', new AcApRevCircleCmd())
     addSystemCommand('revcloud', 'revcloud', new AcApRevCloudCmd())
     addSystemCommand('revrect', 'revrect', new AcApRevRectCmd())
     addSystemCommand('revvis', 'revvis', new AcApRevVisibilityCmd())

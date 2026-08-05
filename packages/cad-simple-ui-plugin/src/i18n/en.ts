@@ -21,7 +21,6 @@ export const en: Record<string, string> = {
   'toolbar.revFreehand': 'Freehand Sketch',
   'toolbar.revRect': 'Rectangle Review',
   'toolbar.revCloud': 'Revision Cloud',
-  'toolbar.revCircle': 'Circle Review',
   'toolbar.showAnnotation': 'Show Annotations',
   'toolbar.hideAnnotation': 'Hide Annotations',
   'toolbar.export': 'Export',

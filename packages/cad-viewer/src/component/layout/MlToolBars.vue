@@ -16,7 +16,6 @@ import {
   measureArea,
   measureDistance,
   pan,
-  revCircle,
   revCloud,
   revFreeDraw,
   revRect,
@@ -135,12 +134,6 @@ const verticalToolbarData = computed(() => {
             text: t('main.verticalToolbar.revCloud.text'),
             command: 'revcloud',
             description: t('main.verticalToolbar.revCloud.description')
-          },
-          {
-            icon: revCircle,
-            text: t('main.verticalToolbar.revCircle.text'),
-            command: 'revcircle',
-            description: t('main.verticalToolbar.revCircle.description')
           }
         ]
       },

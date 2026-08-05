@@ -450,10 +450,6 @@ export default {
       description:
         'Shifts the view without changing the viewing direction or magnification'
     },
-    revCircle: {
-      text: 'Circle',
-      description: 'Uses circles to highlight and annotate areas in the drawing'
-    },
     revLine: {
       text: 'Line',
       description:
