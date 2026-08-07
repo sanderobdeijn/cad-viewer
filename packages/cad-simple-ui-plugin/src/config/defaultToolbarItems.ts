@@ -11,7 +11,6 @@ import {
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
   ICON_EXPORT,
-  ICON_EXPORT_HTML,
   ICON_LAYER,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
@@ -179,14 +178,7 @@ export function createDefaultToolbarItems(
       id: 'export',
       label: 'toolbar.export',
       icon: ICON_EXPORT,
-      children: [
-        {
-          id: 'export-html',
-          label: 'toolbar.exportHtml',
-          icon: ICON_EXPORT_HTML,
-          command: 'chtml'
-        }
-      ]
+      children: [ ]
     },
     {
       id: 'annotation',

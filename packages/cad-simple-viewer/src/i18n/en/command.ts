@@ -77,12 +77,6 @@ export default {
       description: 'Copies selected entities by cloning them to new positions',
       prompt: 'Select entities'
     },
-    chtml: {
-      description: 'Exports current drawing to a standalone offline HTML file'
-    },
-    '-chtml': {
-      description: 'Exports current drawing to HTML using command-line options'
-    },
     dimlinear: {
       description: 'Creates linear dimensions'
     },

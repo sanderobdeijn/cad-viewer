@@ -9,7 +9,6 @@ import vue from '@vitejs/plugin-vue'
 import { exampleRollupOutput } from '../vite-config/pluginRollupOutput'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const VIEWER_RUNTIME_SRC = '../cad-html-plugin/dist/viewer-runtime.iife.js'
 const LOCAL_DATA_MODEL_LIB = resolve(
   __dirname,
   '../../../realdwg-web/packages/data-model/lib'
@@ -25,11 +24,6 @@ function useLocalDataModel(mode: string): boolean {
 }
 
 export default defineConfig(({ command, mode }) => {
-  if (!existsSync(resolve(__dirname, VIEWER_RUNTIME_SRC))) {
-    throw new Error(
-      'viewer-runtime.iife.js not found. Build @mlightcad/cad-html-plugin before cad-viewer-example.'
-    )
-  }
   const aliases: Alias[] = []
   const devSourcePackages = [
     'three-renderer',
@@ -58,18 +52,13 @@ export default defineConfig(({ command, mode }) => {
     }
   }
 
-  const plugins = [
+  const plugins = [ 
     vue(),
     svgLoader(),
     viteStaticCopy({
       targets: [
         {
           src: './node_modules/@mlightcad/cad-simple-viewer/dist/*-worker.js',
-          dest: 'assets',
-          rename: { stripBase: true }
-        },
-        {
-          src: VIEWER_RUNTIME_SRC,
           dest: 'assets',
           rename: { stripBase: true }
         }

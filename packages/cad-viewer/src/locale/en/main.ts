@@ -5,7 +5,6 @@ export default {
     drawingUnits: 'Drawing Units',
     exportMenu: 'Export',
     export: 'Export to DXF',
-    exportHtml: 'Export to HTML',
     exportImage: 'Export to Image',
     about: 'About'
   },

@@ -1,4 +1,3 @@
-import { registerLazyHtmlPlugin } from '@mlightcad/cad-html-plugin/register'
 import {
   AcApDocManager,
   AcEdCommandStack,
@@ -11,7 +10,6 @@ import {
   AcApAttEditCmd,
   AcApCountListCmd,
   AcApDrawingUnitsCmd,
-  AcApExportHtmlDlgCmd,
   AcApInsertPaletteCmd,
   AcApLayerStateCmd,
   AcApMemCmd,
@@ -29,7 +27,6 @@ import {
   MlAttDefDlg,
   MlAttEditDlg,
   MlDrawingUnitsDlg,
-  MlExportHtmlDlg,
   MlPointStyleDlg,
   MlQuickSelectDlg,
   MlTextStyleDlg
@@ -75,12 +72,6 @@ export const registerCmds = () => {
       'qselect',
       'qselect',
       new AcApQSelectCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'chtml',
-      'chtml',
-      new AcApExportHtmlDlgCmd()
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
@@ -161,11 +152,6 @@ export const registerDialogs = () => {
       props: {}
     })
     registerDialog({
-      name: 'ExportHtmlDlg',
-      component: markRaw(MlExportHtmlDlg),
-      props: {}
-    })
-    registerDialog({
       name: 'DrawingUnitsDlg',
       component: markRaw(MlDrawingUnitsDlg),
       props: {}
@@ -211,9 +197,6 @@ export const registerLazyPlugins = () => {
   if (isLazyPluginRegistered) {
     return
   }
-
-  const pluginManager = AcApDocManager.instance.pluginManager
-  registerLazyHtmlPlugin(pluginManager)
 
   isLazyPluginRegistered = true
 }
