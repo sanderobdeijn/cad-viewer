@@ -1,7 +1,9 @@
 import type { Config } from 'jest'
 
-const config: Config = {
-  verbose: true,
+type ProjectConfig = Exclude<NonNullable<Config['projects']>[number], string>
+
+const packagesProject: ProjectConfig = {
+  displayName: 'packages',
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
@@ -24,7 +26,11 @@ const config: Config = {
     // three@0.186's CJS entry re-exports ESM (`three.module.js` / `three.core.js`).
     '/node_modules/(?!.*(mtext-parser|rbush|quickselect|three/build/three))'
   ],
-  testPathIgnorePatterns: ['/e2e/', '/__tests__/helpers/'],
+  testPathIgnorePatterns: [
+    '/e2e/',
+    '/__tests__/helpers/',
+    '<rootDir>/packages/data-model/'
+  ],
   moduleNameMapper: {
     '^lodash-es$': 'lodash',
     '^@mlightcad/cad-html-core$':
@@ -50,6 +56,29 @@ const config: Config = {
     '^three/examples/jsm/controls/OrbitControls(\\.js)?$':
       '<rootDir>/test/mocks/three/OrbitControls.js'
   }
+}
+
+// data-model relies on `@ts-expect-error` for unused params, so it needs the
+// strict unused checks the shared jest tsconfig turns off. It runs as its own
+// project because ts-jest caches type-check state per worker.
+const dataModelProject: ProjectConfig = {
+  displayName: 'data-model',
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/packages/data-model'],
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/packages/data-model/tsconfig.jest.json'
+      }
+    ]
+  }
+}
+
+const config: Config = {
+  verbose: true,
+  projects: [packagesProject, dataModelProject]
 }
 
 export default config

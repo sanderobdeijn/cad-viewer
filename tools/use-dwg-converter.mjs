@@ -2,8 +2,8 @@
 /**
  * Switch example apps / CLI from @mlightcad/libredwg-converter (GPL)
  * to the proprietary @mlightcad/dwg-converter (local realdwg-web path).
- * Also repoints the @mlightcad/data-model pnpm override to the local
- * realdwg-web checkout.
+ * @mlightcad/data-model lives in this workspace (packages/data-model), so
+ * the converter resolves to it via the pnpm-workspace.yaml override.
  *
  * `@mlightcad/cad-simple-viewer` no longer depends on or registers a DWG
  * converter — hosts (examples, CLI) own that opt-in.
@@ -21,8 +21,6 @@ const rootDir = join(toolsDir, '..')
 
 const DWG_CONVERTER_VERSION =
   '../../../realdwg-web/packages/dwg-converter'
-
-const DATA_MODEL_VERSION = '../../../realdwg-web/packages/data-model'
 
 function replaceLibreDwgParserWorkerFile(content) {
   if (
@@ -341,28 +339,6 @@ const targets = [
 
       if (next === content) {
         throw new Error('No libredwg references found in CLI runner/main.ts')
-      }
-      return next
-    }
-  },
-  {
-    path: join(rootDir, 'pnpm-workspace.yaml'),
-    label: 'pnpm-workspace.yaml',
-    transform(content) {
-      if (content.includes(`'@mlightcad/data-model': '${DATA_MODEL_VERSION}'`)) {
-        console.log('  already using local @mlightcad/data-model override')
-        return null
-      }
-
-      const next = content.replace(
-        /(['"]?@mlightcad\/data-model['"]?\s*:\s*)(['"]).*?\2/,
-        `$1'${DATA_MODEL_VERSION}'`
-      )
-
-      if (next === content) {
-        throw new Error(
-          'No @mlightcad/data-model override found in pnpm-workspace.yaml'
-        )
       }
       return next
     }

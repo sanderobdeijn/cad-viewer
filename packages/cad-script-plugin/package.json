@@ -50,13 +50,13 @@
   "devDependencies": {
     "@mlightcad/cad-agent-core": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
-    "@mlightcad/data-model": "^1.15.12",
+    "@mlightcad/data-model": "workspace:*",
     "vite": "^6.4.3"
   },
   "peerDependencies": {
     "@mlightcad/cad-agent-core": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
-    "@mlightcad/data-model": "^1.15.12"
+    "@mlightcad/data-model": "workspace:*"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
