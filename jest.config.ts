@@ -2,6 +2,14 @@ import type { Config } from 'jest'
 
 type ProjectConfig = Exclude<NonNullable<Config['projects']>[number], string>
 
+/** Packages vendored from mlightcad/realdwg-web; tested in their own project. */
+const REALDWG_PACKAGES = [
+  'common',
+  'geometry-engine',
+  'graphic-interface',
+  'data-model'
+]
+
 const packagesProject: ProjectConfig = {
   displayName: 'packages',
   preset: 'ts-jest',
@@ -29,7 +37,7 @@ const packagesProject: ProjectConfig = {
   testPathIgnorePatterns: [
     '/e2e/',
     '/__tests__/helpers/',
-    '<rootDir>/packages/data-model/'
+    ...REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}/`)
   ],
   moduleNameMapper: {
     '^lodash-es$': 'lodash',
@@ -54,19 +62,23 @@ const packagesProject: ProjectConfig = {
   }
 }
 
-// data-model relies on `@ts-expect-error` for unused params, so it needs the
-// strict unused checks the shared jest tsconfig turns off. It runs as its own
-// project because ts-jest caches type-check state per worker.
-const dataModelProject: ProjectConfig = {
-  displayName: 'data-model',
+// The realdwg-web packages rely on `@ts-expect-error` for unused params, so
+// they need the strict unused checks the shared jest tsconfig turns off. They
+// run as their own project because ts-jest caches type-check state per worker.
+const realdwgProject: ProjectConfig = {
+  displayName: 'realdwg',
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/packages/data-model'],
+  roots: REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}`),
+  moduleNameMapper: {
+    '^@mlightcad/(common|geometry-engine|graphic-interface)$':
+      '<rootDir>/packages/$1/src/index.ts'
+  },
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/packages/data-model/tsconfig.jest.json'
+        tsconfig: '<rootDir>/tsconfig.jest.strict.json'
       }
     ]
   }
@@ -74,7 +86,7 @@ const dataModelProject: ProjectConfig = {
 
 const config: Config = {
   verbose: true,
-  projects: [packagesProject, dataModelProject]
+  projects: [packagesProject, realdwgProject]
 }
 
 export default config

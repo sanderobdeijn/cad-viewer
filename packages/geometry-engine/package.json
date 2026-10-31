@@ -1,0 +1,49 @@
+{
+  "name": "@mlightcad/geometry-engine",
+  "version": "3.15.12",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mlightcad/realdwg-web"
+  },
+  "keywords": [
+    "autocad",
+    "cad",
+    "dwg",
+    "dxf",
+    "mlight",
+    "mlightcad",
+    "objectarx",
+    "realdwg"
+  ],
+  "files": [
+    "dist",
+    "lib",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "main": "./dist/geometry-engine.umd.cjs",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "import": "./lib/index.js",
+    "require": "./dist/geometry-engine.umd.cjs"
+  },
+  "scripts": {
+    "clean": "rimraf dist lib tsconfig.tsbuildinfo",
+    "build": "tsc && vite build",
+    "lint": "eslint src/",
+    "lint:fix": "eslint --fix --quiet src/"
+  },
+  "peerDependencies": {
+    "@mlightcad/common": "workspace:*"
+  },
+  "devDependencies": {
+    "@mlightcad/common": "workspace:*",
+    "vite-plugin-strip-comments": "^0.0.10"
+  }
+}

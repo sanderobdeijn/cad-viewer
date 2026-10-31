@@ -399,20 +399,30 @@ importers:
         specifier: ^2.1.6
         version: 2.2.12(typescript@5.9.3)
 
+  packages/common:
+    dependencies:
+      loglevel:
+        specifier: ^1.9.1
+        version: 1.9.2
+    devDependencies:
+      vite-plugin-strip-comments:
+        specifier: ^0.0.10
+        version: 0.0.10
+
   packages/data-model:
     dependencies:
       '@mlightcad/common':
-        specifier: 1.15.12
-        version: 1.15.12
+        specifier: workspace:*
+        version: link:../common
       '@mlightcad/emf-converter':
         specifier: 1.15.12
         version: 1.15.12
       '@mlightcad/geometry-engine':
-        specifier: 3.15.12
-        version: 3.15.12(@mlightcad/common@1.15.12)
+        specifier: workspace:*
+        version: link:../geometry-engine
       '@mlightcad/graphic-interface':
-        specifier: 3.15.12
-        version: 3.15.12(@mlightcad/common@1.15.12)(@mlightcad/geometry-engine@3.15.12(@mlightcad/common@1.15.12))
+        specifier: workspace:*
+        version: link:../graphic-interface
       uid:
         specifier: ^2.0.2
         version: 2.0.2
@@ -441,6 +451,27 @@ importers:
       serve:
         specifier: ^14.2.4
         version: 14.2.6
+
+  packages/geometry-engine:
+    devDependencies:
+      '@mlightcad/common':
+        specifier: workspace:*
+        version: link:../common
+      vite-plugin-strip-comments:
+        specifier: ^0.0.10
+        version: 0.0.10
+
+  packages/graphic-interface:
+    devDependencies:
+      '@mlightcad/common':
+        specifier: workspace:*
+        version: link:../common
+      '@mlightcad/geometry-engine':
+        specifier: workspace:*
+        version: link:../geometry-engine
+      vite-plugin-strip-comments:
+        specifier: ^0.0.10
+        version: 0.0.10
 
   packages/three-renderer:
     dependencies:
@@ -1906,22 +1937,8 @@ packages:
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
 
-  '@mlightcad/common@1.15.12':
-    resolution: {integrity: sha512-y54j5owzoFBIJ6ww4qmIV3a5PzZXK0M26nnNqEwIsCRqvD/v4HqR2q68vE9hGH7/vbW1nPBYdgydlu2pjZozeg==}
-
   '@mlightcad/emf-converter@1.15.12':
     resolution: {integrity: sha512-J7/nH+aM9ZInmEDPVB+MWapE4hD0hBFu5ndT7/Vjnq5WoleAX3TqbmM+TuMt5iTpuCZCQcm7441qYSEEdDEYyQ==}
-
-  '@mlightcad/geometry-engine@3.15.12':
-    resolution: {integrity: sha512-Zr6+yxTwgOEFrK8UBUwg8SqcahrMrhcOr8g5ZjQaV8hzeriY2ypx7gh9bKY9CVw7iJcWmLP2s7lx8c02cAnopQ==}
-    peerDependencies:
-      '@mlightcad/common': 1.15.12
-
-  '@mlightcad/graphic-interface@3.15.12':
-    resolution: {integrity: sha512-V/Ip38U30HduVVAGc1bw/iAwKkIKot6brXjrhVhIlBiEoNkPJB7qOBWut3+a9nkSx+uGwjMv3jBjYdoIRrLrCQ==}
-    peerDependencies:
-      '@mlightcad/common': 1.15.12
-      '@mlightcad/geometry-engine': 3.15.12
 
   '@mlightcad/libredwg-converter@3.15.12':
     resolution: {integrity: sha512-Ei6g4Z+w5wOPB3fjH8UThuiPfcoSOSW9BvexQJ+YHEBidVbtXCfXw9RayiCJN3azIlQCOjtXt/HnhRC/HEF7Rg==}
@@ -7574,20 +7591,7 @@ snapshots:
   '@microsoft/tsdoc@0.16.0':
     optional: true
 
-  '@mlightcad/common@1.15.12':
-    dependencies:
-      loglevel: 1.9.2
-
   '@mlightcad/emf-converter@1.15.12': {}
-
-  '@mlightcad/geometry-engine@3.15.12(@mlightcad/common@1.15.12)':
-    dependencies:
-      '@mlightcad/common': 1.15.12
-
-  '@mlightcad/graphic-interface@3.15.12(@mlightcad/common@1.15.12)(@mlightcad/geometry-engine@3.15.12(@mlightcad/common@1.15.12))':
-    dependencies:
-      '@mlightcad/common': 1.15.12
-      '@mlightcad/geometry-engine': 3.15.12(@mlightcad/common@1.15.12)
 
   '@mlightcad/libredwg-converter@3.15.12(@mlightcad/data-model@packages+data-model)':
     dependencies:
