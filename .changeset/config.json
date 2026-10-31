@@ -9,7 +9,6 @@
       "@mlightcad/cad-simple-viewer-example",
       "@mlightcad/cad-diff-viewer",
       "@mlightcad/cad-diff-viewer-example",
-      "@mlightcad/cad-svg-plugin",
       "@mlightcad/cad-viewer",
       "@mlightcad/cad-viewer-example",
       "@mlightcad/cad-viewer-examples",

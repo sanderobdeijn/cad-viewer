@@ -37,7 +37,6 @@ import {
   getCurrentDemoToolbarLayoutId
 } from './demoToolbarPresets'
 import { setupFileSidebarResize } from './fileSidebarResize'
-import { registerLazyPlugins } from './register'
 import { registerLibreDwgConverter } from './registerLibreDwg'
 
 // Isolate this example's prefs from cad-viewer-example on localhost.
@@ -923,7 +922,6 @@ class CadViewerApp {
         console.log(`[openprof] mode=${w.__OPEN_MODE__}`)
       }
 
-      await registerLazyPlugins()
       this.fileOpenPanel?.refreshSourceButtons()
 
       await acuiRegisterSimpleUiPlugin(AcApDocManager.instance.pluginManager, {

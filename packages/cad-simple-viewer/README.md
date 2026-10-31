@@ -168,8 +168,6 @@ manager.events.workersReady.addEventListener(({ ready }) => {
 - `AcApPanCmd` - Pan command
 - `AcApSelectCmd` - Selection command
 
-SVG export (`csvg`) is provided by the optional `@mlightcad/cad-svg-plugin` package.
-
 ### Editor Components
 
 - `AcEditor` - Main editor class

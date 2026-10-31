@@ -72,7 +72,7 @@ await acuiRegisterSimpleUiPlugin(AcApDocManager.instance.pluginManager, {
 The [vanilla example](../cad-simple-viewer-example) **defers viewer and plugin initialization until the user opens a file** (local upload or predefined sample). That keeps the first paint lightweight:
 
 1. Page load — only file picker UI; no `AcApDocManager` yet.
-2. First open — `acedApplyUiTheme`, `AcApDocManager.createInstance`, lazy export plugins, then `acuiRegisterSimpleUiPlugin`.
+2. First open — `acedApplyUiTheme`, `AcApDocManager.createInstance`, then `acuiRegisterSimpleUiPlugin`.
 3. Subsequent opens — reuse the same viewer instance.
 
 You can adopt the same pattern or load the plugin at startup (see Quick start above). Both are supported.
@@ -281,7 +281,7 @@ By default the plugin uses `layout: 'auto'` and follows viewport width via `aced
 | --- | --- | --- | --- |
 | **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `annotation`, `layer`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
 | **pad** | 601–960px | Same floating chrome as desktop (right, icons only, `edgeOffset: 8`). | Desktop set **without** `select` and `pan` (`excludeItems: ['select', 'pan']`). Touch drag pans; a long-press starts window/crossing box select. |
-| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layer`, `layout`, `measure`, `annotation`, `export`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
+| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layer`, `layout`, `measure`, `annotation`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
 
 Phone does **not** inherit top-level `toolbar.items`, `appendItems`, or chrome (placement, labels, size). It only inherits `enabled`, `mountTarget`, and `inCanvasParent`. Pad and desktop inherit the full top-level `toolbar` baseline on top of the built-ins above.
 
@@ -405,7 +405,7 @@ See `cad-simple-viewer-example` (`demoToolbarPresets.ts`) for a working layout s
 | `preset` | Reference a built-in button by id (custom layouts only; use `{ preset: 'pan' }`) |
 | `disabled` | `boolean` or `() => boolean` |
 
-Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `layer`, `measure`, `export`, `toolbar-placement`, `switch-bg`, `theme`, `locale`, and nested ids such as `placement-top`, `measure-distance`, `export-html`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
+Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `layer`, `measure`, `toolbar-placement`, `switch-bg`, `theme`, `locale`, and nested ids such as `placement-top`, `measure-distance`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
 
 ### 1. Default toolbar + extra buttons
 
@@ -545,7 +545,7 @@ Popover menu (default when `childrenUi` is omitted):
 }
 ```
 
-Icon sub-toolbar beside the parent. Measure, Review, Export, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
+Icon sub-toolbar beside the parent. Measure, Review, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
 
 ```typescript
 {
@@ -564,21 +564,21 @@ When the parent icon should reflect the active submenu item:
 
 ```typescript
 {
-  id: 'my-export',
-  label: 'Export',
-  icon: exportIconSvg,
+  id: 'my-measure',
+  label: 'Measure',
+  icon: measureIconSvg,
   childIcon: 'selected',
-  selectedChildId: 'export-svg',
+  selectedChildId: 'my-measure-area',
   children: [
-    { id: 'export-png', label: 'PNG', icon: pngIcon, command: 'pngout' },
-    { id: 'export-svg', label: 'SVG', icon: svgIcon, command: 'csvg' }
+    { id: 'my-measure-distance', label: 'Distance', icon: distanceIcon, command: 'measuredistance' },
+    { id: 'my-measure-area', label: 'Area', icon: areaIcon, command: 'measurearea' }
   ]
 }
 ```
 
-Built-in buttons using `childIcon: 'selected'`: `toolbar-placement` and `locale`. `export`, `annotation`, and `measure` use fixed parent icons.
+Built-in buttons using `childIcon: 'selected'`: `toolbar-placement` and `locale`. `annotation` and `measure` use fixed parent icons.
 
-Built-in `childrenUi`: `measure`, `annotation`, `export`, `toolbar-placement`, and `locale` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
+Built-in `childrenUi`: `measure`, `annotation`, `toolbar-placement`, and `locale` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
 
 Submenu flyout direction follows toolbar placement (e.g. arrow points left when the toolbar is on the right).
 

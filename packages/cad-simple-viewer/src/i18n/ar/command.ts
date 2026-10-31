@@ -60,18 +60,6 @@ export default {
         'تحديد دقة عرض الزوايا بالتكامل مع AUNITS'
     },
 
-    bmpout: {
-      ...enCommand.ACAD.bmpout,
-      description:
-        'تصدير الرسم إلى BMP'
-    },
-
-    cdxf: {
-      ...enCommand.ACAD.cdxf,
-      description:
-        'تصدير الرسم الحالي إلى DXF'
-    },
-
     cecolor: {
       ...enCommand.ACAD.cecolor,
       description:
@@ -152,12 +140,6 @@ export default {
         'حدد العناصر'
     },
 
-    csvg: {
-      ...enCommand.ACAD.csvg,
-      description:
-        'تحويل الرسم الحالي إلى SVG'
-    },
-
     dimlinear: {
       ...enCommand.ACAD.dimlinear,
       description:
@@ -218,14 +200,6 @@ export default {
       ...enCommand.ACAD.extmin,
       description:
         'عرض الركن السفلي الأيسر لحدود الرسم في مساحة النموذج (للقراءة فقط)'
-    },
-
-    entout: {
-      ...enCommand.ACAD.entout,
-      description:
-        'تصدير صورة معاينة مدمجة للعناصر المحددة',
-      prompt:
-        'حدد العناصر'
     },
 
     hideobjects: {
@@ -354,12 +328,6 @@ export default {
       ...enCommand.ACAD.insunits,
       description:
         'تحديد وحدات الرسم المستخدمة في التحجيم التلقائي للكتل والصور والمراجع الخارجية عند الإدراج'
-    },
-
-    jpgout: {
-      ...enCommand.ACAD.jpgout,
-      description:
-        'تصدير الرسم إلى JPEG'
     },
 
     laycur: {
@@ -656,12 +624,6 @@ export default {
       ...enCommand.ACAD.pline,
       description:
         'إنشاء متعدد خطوط باستخدام عدة نقاط'
-    },
-
-    pngout: {
-      ...enCommand.ACAD.pngout,
-      description:
-        'تصدير الرسم إلى PNG'
     },
 
     point: {

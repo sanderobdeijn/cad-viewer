@@ -18,15 +18,10 @@ import {
   AcApCacheFontCmd,
   AcApCircleCmd,
   AcApCloseCmd,
-  AcApConvertToBmpCmd,
-  AcApConvertToDxfCmd,
-  AcApConvertToJpgCmd,
-  AcApConvertToPngCmd,
   AcApCopyCmd,
   AcApDimLinearCmd,
   acapDisposeMarkupSession,
   AcApEllipseCmd,
-  AcApEntityPreviewCmd,
   AcApEraseCmd,
   AcApHatchCmd,
   AcApHideObjectsCmd,
@@ -376,16 +371,6 @@ export interface AcApDocManagerOptions {
   builtinOpenFileDialog?: boolean
 
   /**
-   * When true, drawing export commands are not registered (`cdxf`, `pngout`,
-   * `jpgout`, `bmpout`, and host UI / lazy plugins for HTML, PDF, SVG export).
-   * Defaults to false (export remains enabled).
-   *
-   * Useful for deployments that must hide export entry points. This is a
-   * product/UX gate, not a DRM boundary: drawing data still exists in memory.
-   */
-  disableExport?: boolean
-
-  /**
    * Default options for files opened through the built-in OPEN command dialog.
    *
    * Can be updated later via {@link AcApDocManager.setOpenDocumentDefaults}.
@@ -482,8 +467,6 @@ export class AcApDocManager {
   private _commandAliasOverrides: Map<string, string[]>
   /** Default options for the built-in OPEN file dialog */
   private _openDocumentDefaults?: AcApOpenDocumentDefaultsResolver
-  /** Whether drawing export commands and related UI entry points are disabled */
-  private _disableExport: boolean
   /** Singleton instance */
   private static _instance?: AcApDocManager
   /** Worker URLs configured at initialization */
@@ -536,7 +519,6 @@ export class AcApDocManager {
       options.commandAliases
     )
     this._openDocumentDefaults = options.openDocumentDefaults
-    this._disableExport = options.disableExport === true
     if (options.useMainThreadDraw) {
       AcTrMTextRenderer.getInstance().setRenderMode('main')
     } else {
@@ -1115,14 +1097,6 @@ export class AcApDocManager {
    */
   get baseUrl() {
     return this._baseUrl
-  }
-
-  /**
-   * Whether drawing export commands (and host export UI) are disabled.
-   * Set via {@link AcApDocManagerOptions.disableExport}; defaults to false.
-   */
-  get disableExport() {
-    return this._disableExport
   }
 
   /**
@@ -1846,9 +1820,6 @@ export class AcApDocManager {
    * Registers all default commands available in the CAD viewer.
    *
    * This method sets up the command system by registering built-in commands including:
-   * - cdxf: Convert to DXF (when {@link AcApDocManagerOptions.disableExport} is false)
-   * - pngout / jpgout / bmpout: Export raster images (when
-   *   {@link AcApDocManagerOptions.disableExport} is false)
    * - log: Output debug information in console
    * - open: Open document
    * - qnew: Quick new document
@@ -1893,13 +1864,6 @@ export class AcApDocManager {
     addSystemCommand('cachefont', 'cachefont', new AcApCacheFontCmd())
     addSystemCommand('circle', 'circle', new AcApCircleCmd())
     addSystemCommand('close', 'close', new AcApCloseCmd())
-    if (!this._disableExport) {
-      addSystemCommand('bmpout', 'bmpout', new AcApConvertToBmpCmd())
-      addSystemCommand('cdxf', 'cdxf', new AcApConvertToDxfCmd())
-      addSystemCommand('jpgout', 'jpgout', new AcApConvertToJpgCmd())
-      addSystemCommand('pngout', 'pngout', new AcApConvertToPngCmd())
-    }
-    addSystemCommand('entout', 'entout', new AcApEntityPreviewCmd())
     addSystemCommand('ellipse', 'ellipse', new AcApEllipseCmd())
     addSystemCommand('erase', 'erase', new AcApEraseCmd())
     addSystemCommand('hideobjects', 'hideobjects', new AcApHideObjectsCmd())

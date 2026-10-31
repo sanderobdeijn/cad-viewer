@@ -138,7 +138,7 @@ CAD Viewer를 처음 사용하시나요? **[사용자 가이드](https://mlightc
 
 CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 모듈형 **플러그인 시스템**을 중심으로 구축됩니다. 플러그인은 `AcApPlugin` 인터페이스를 구현하고 `onLoad` / `onUnload`를 통해 뷰어 생명주기에 연결됩니다—일반적으로 명령 등록, UI 추가, 내보내기/가져오기 파이프라인 연결에 사용됩니다.
 
-`AcApDocManager.instance.pluginManager`(`loadPlugin`, `registerLazyPlugin`, 또는 문서 관리자 생성 시 `plugins.fromConfig`)를 통해 플러그인을 로드합니다. 내보내기 지향 플러그인은 **지연 로딩**을 지원합니다: 작은 stub을 먼저 등록하고, 사용자가 관련 명령을 실행할 때만 무거운 번들을 다운로드합니다.
+`AcApDocManager.instance.pluginManager`(`loadPlugin`, `registerLazyPlugin`, 또는 문서 관리자 생성 시 `plugins.fromConfig`)를 통해 플러그인을 로드합니다. 플러그인은 **지연 로딩**을 지원합니다: 작은 stub을 먼저 등록하고, 사용자가 관련 명령을 실행할 때만 무거운 번들을 다운로드합니다.
 
 모노레포에는 여러 퍼스트파티 플러그인이 포함되어 있습니다. 각각 하나의 관심사에 집중하며, 필요에 따라 조합할 수 있습니다. **설치, 등록, API 세부 사항은 각 패키지 README**에 있습니다—아래 링크를 참조하세요.
 
@@ -147,7 +147,6 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 | 패키지 | 역할 | 명령 / 기능 |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer`용 **툴바·레이어 관리자·검토 팔레트 UI**(순수 DOM, Vue/React 없음) | `layer`, `markuppanel`, 기본 툴바(보기, 측정, 내보내기, 검토, 테마, 로케일) |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 내보내기** 및 공유 벡터 렌더러 | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 간단한 뷰어용 UI 크롬
 
@@ -163,12 +162,6 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 모든 위젯은 프레임워크에 독립적(순수 DOM)입니다. 전체 Vue [`cad-viewer`](packages/cad-viewer) 앱은 자체 Element Plus UI가 있으며 이 플러그인이 필요하지 않습니다. `cad-simple-viewer`를 직접 기반으로 구축할 때 `cad-simple-ui-plugin`을 사용하세요.
 
 → **빠른 시작, 툴바 커스터마이징, 옵션:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### 내보내기 플러그인(SVG)
-
-SVG 플러그인은 동일한 플러그인 관리자에 `csvg` 내보내기 명령을 추가합니다. 초기 페이지 용량을 작게 유지하기 위해 **지연 로딩**됩니다. [`cad-simple-viewer-example`](packages/cad-simple-viewer-example)과 전체 [`cad-viewer`](packages/cad-viewer) 앱 모두 부트스트랩 시 이를 등록합니다.
-
-- **SVG** — 벡터 SVG 내보내기: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## 성능
 
@@ -381,7 +374,6 @@ CAD-Viewer는 **탁월한 성능**을 위해 설계되었으며, 높은 프레�
 #### 오프라인 에디터
 
 * [x] 브라우저 로컬 편집
-* [x] DXF로 저장
 * [ ] 변경 세트 / diff 저장
 * [ ] IndexedDB 영속성
 

@@ -69,10 +69,7 @@ export function examplePeerPackageAliases(fromPackageDir: string): Alias[] {
 }
 
 /** Export plugins with a separate lazy `/register` entry. */
-export const PLUGIN_PACKAGE_IDS = [
-  'cad-svg-plugin',
-  'cad-simple-ui-plugin'
-] as const
+export const PLUGIN_PACKAGE_IDS = ['cad-simple-ui-plugin'] as const
 
 /** Core viewer libraries shipped from this monorepo. */
 export const VIEWER_PACKAGE_IDS = [

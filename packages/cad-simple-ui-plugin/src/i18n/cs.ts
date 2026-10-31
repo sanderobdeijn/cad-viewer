@@ -51,8 +51,6 @@ export const cs: Record<string, string> = {
   'toolbar.clearMarkups': 'Vymazat',
   'toolbar.showMarkup': 'Zobrazit',
   'toolbar.hideMarkup': 'Skrýt',
-  'toolbar.export': 'Export',
-  'toolbar.exportSvg': 'Exportovat SVG',
   'toolbar.placement': 'Pozice panelu nástrojů',
   'toolbar.placementTop': 'Nahoře',
   'toolbar.placementBottom': 'Dole',

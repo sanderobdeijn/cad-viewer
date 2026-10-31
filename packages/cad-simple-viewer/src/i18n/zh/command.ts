@@ -27,12 +27,6 @@ export default {
     auprec: {
       description: '设置角度显示精度（小数位数），与 AUNITS 配合使用'
     },
-    bmpout: {
-      description: '导出为 BMP 图片'
-    },
-    cdxf: {
-      description: '导出当前图纸为DXF格式'
-    },
     cecolor: {
       description: '设置新创建对象的当前默认颜色'
     },
@@ -73,9 +67,6 @@ export default {
       description: '通过克隆将所选图元复制到新位置',
       prompt: '选择对象'
     },
-    csvg: {
-      description: '转换当前图纸为SVG格式'
-    },
     dimlinear: {
       description: '创建线性尺寸标注'
     },
@@ -106,10 +97,6 @@ export default {
     },
     extmin: {
       description: '存储模型空间图形范围的左下角（只读）'
-    },
-    entout: {
-      description: '导出所选对象的合并预览图',
-      prompt: '选择对象'
     },
     hideobjects: {
       description: '临时隐藏所选对象的显示',
@@ -174,9 +161,6 @@ export default {
     },
     insunits: {
       description: '指定插入块、图像或外部参照时用于自动缩放的图形单位'
-    },
-    jpgout: {
-      description: '导出为 JPEG 图片'
     },
     laycur: {
       description: '将所选对象的图层属性更改为当前图层',
@@ -325,9 +309,6 @@ export default {
     },
     pline: {
       description: '通过指定多个点创建多段线'
-    },
-    pngout: {
-      description: '导出为 PNG 图片'
     },
     point: {
       description: '连续创建点'

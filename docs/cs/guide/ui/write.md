@@ -20,7 +20,7 @@ Ribbon plně zobrazuje všechny karty ve stylu AutoCAD:
 
 | Karta | Příkazy |
 |---|---|
-| Soubor | Otevřít, Exportovat DXF, Exportovat PNG |
+| Soubor | Otevřít |
 | Kreslení | Čára, Kružnice, Oblouk, Obdélník, Polylinie, Šrafování, Text, MText, Vložení bloku atd. |
 | Úpravy | Přesun, Kopírovat, Odsazení, Oříznout, Prodloužit, Otočit, Měnit měřítko, Zrcadlit, Pole atd. |
 | Vrstvy | Správa vrstev (zapnuto/vypnuto, zmrazit/rozmrazit, uzamknout, izolovat, nová, smazat) |

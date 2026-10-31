@@ -138,7 +138,7 @@ Jste v CAD Viewer noví? **[Uživatelská příručka](https://mlightcad.com/cad
 
 CAD-Viewer je postaven kolem modulárního **systému pluginů** v [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Pluginy implementují rozhraní `AcApPlugin` a napojují se na životní cyklus prohlížeče přes `onLoad` / `onUnload` — typicky pro registraci příkazů, přidání UI nebo propojení exportních/importních pipeline.
 
-Pluginy načítejte přes `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` nebo `plugins.fromConfig` při vytváření správce dokumentů). Exportně orientované pluginy podporují **lazy loading**: zaregistrujte malý stub předem a stáhněte těžký balíček až když uživatel spustí související příkaz.
+Pluginy načítejte přes `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` nebo `plugins.fromConfig` při vytváření správce dokumentů). Pluginy podporují **lazy loading**: zaregistrujte malý stub předem a stáhněte těžký balíček až když uživatel spustí související příkaz.
 
 Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jednu oblast; kombinujte je podle potřeby. **Instalace, registrace a podrobnosti API jsou v README každého balíčku** — viz odkazy níže.
 
@@ -147,7 +147,6 @@ Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jedn
 | Balíček | Účel | Příkazy / schopnosti |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Panel nástrojů, správce vrstev a paleta revizí** pro `cad-simple-viewer` (čisté DOM, bez Vue/React) | `layer`, `markuppanel`, výchozí panel nástrojů (zobrazení, měření, export, revize, motiv, jazyk) |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **Export SVG** a sdílený vektorový renderer | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI vrstva pro jednoduchý prohlížeč
 
@@ -163,12 +162,6 @@ Poskytuje:
 Všechny widgety jsou nezávislé na frameworku (čisté DOM). Plná Vue aplikace [`cad-viewer`](packages/cad-viewer) má vlastní Element Plus UI a tento plugin nevyžaduje; použijte `cad-simple-ui-plugin`, když stavíte přímo na `cad-simple-viewer`.
 
 → **Rychlý start, přizpůsobení panelu nástrojů a možnosti:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### Exportní pluginy (SVG)
-
-Plugin SVG přidává do stejného správce pluginů exportní příkaz `csvg`. Je **lazy-loaded**, aby počáteční velikost stránky zůstala malá. Registruje jej jak [`cad-simple-viewer-example`](packages/cad-simple-viewer-example), tak plnohodnotná aplikace [`cad-viewer`](packages/cad-viewer) při svém spuštění.
-
-- **SVG** — vektorový export SVG: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## Výkon
 
@@ -381,7 +374,6 @@ Legenda:
 #### Offline editor
 
 * [x] Lokální úpravy v prohlížeči
-* [x] Uložení do DXF
 * [ ] Uložení sady změn / diff
 * [ ] Perzistence IndexedDB
 

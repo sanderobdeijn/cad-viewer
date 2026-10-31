@@ -250,17 +250,6 @@ export default {
     restored: 'objekt(ů) obnoveno',
     nothingToRestore: 'Žádné skryté objekty k obnovení'
   },
-  entout: {
-    longSidePrompt: 'Zadejte velikost delší strany náhledu v pixelech',
-    exported: 'náhled(ů) objektů exportováno',
-    skipped: 'objekt(ů) přeskočeno',
-    failed: {
-      'no-preview-root': 'Nelze sestavit geometrii náhledu pro výběr',
-      'no-bounds': 'Nelze vypočítat rozsah náhledu pro výběr',
-      'capture-failed': 'Nelze vykreslit náhledový obrázek entity',
-      'download-failed': 'Náhled byl vykreslen, ale stažení PNG selhalo'
-    }
-  },
   layer: {
     main: 'Zadejte volbu',
     listSummary: 'Seznam hladin byl vypsán do konzole prohlížeče',
@@ -769,21 +758,6 @@ export default {
   },
   mtext: {
     point: 'Zadejte bod vložení víceřádkového textu'
-  },
-  bmpout: {
-    boundsFirstCorner: 'Zadejte první roh rozsahu',
-    boundsSecondCorner: 'Zadejte protilehlý roh',
-    longSidePrompt: 'Zadejte velikost delší strany v pixelech'
-  },
-  jpgout: {
-    boundsFirstCorner: 'Zadejte první roh rozsahu',
-    boundsSecondCorner: 'Zadejte protilehlý roh',
-    longSidePrompt: 'Zadejte velikost delší strany v pixelech'
-  },
-  pngout: {
-    boundsFirstCorner: 'Zadejte první roh rozsahu',
-    boundsSecondCorner: 'Zadejte protilehlý roh',
-    longSidePrompt: 'Zadejte velikost delší strany v pixelech'
   },
   insert: {
     blockName: 'Zadejte název bloku:',

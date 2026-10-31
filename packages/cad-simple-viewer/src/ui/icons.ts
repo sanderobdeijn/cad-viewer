@@ -242,21 +242,6 @@ export const ICON_THEME_LIGHT =
 export const ICON_THEME_DARK =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M10 3a7 7 0 1 0 0 14 9 9 0 0 1 0-14Z"/></svg>'
 
-/** Export parent icon (same document + up-arrow as cad-viewer toolbar/ribbon). */
-export const ICON_EXPORT = ICON_MARKUP_EXPORT
-
-/** Export HTML icon. */
-export const ICON_EXPORT_HTML =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M4 3h12v14H4V3Zm2 2v2h8V5H6Zm0 4v6h8V9H6Z"/></svg>'
-
-/** Export PDF icon. */
-export const ICON_EXPORT_PDF =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M5 3h7l3 3v11H5V3Zm6 0v3h3"/><text x="6" y="16" fill="currentColor" font-size="5" font-family="Arial">PDF</text></svg>'
-
-/** Export SVG icon. */
-export const ICON_EXPORT_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 4h12v12H4z"/><circle cx="8" cy="10" r="2" fill="currentColor"/></svg>'
-
 /** Toolbar dock / placement parent button. */
 export const ICON_TOOLBAR_PLACEMENT =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="15" y="5" width="1.5" height="10" rx=".5" fill="currentColor"/></svg>'

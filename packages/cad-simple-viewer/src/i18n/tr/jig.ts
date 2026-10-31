@@ -250,18 +250,6 @@ export default {
     restored: 'nesne geri yüklendi',
     nothingToRestore: 'Geri yüklenecek gizli nesne yok'
   },
-  entout: {
-    longSidePrompt: 'Önizleme uzun kenar boyutunu piksel olarak girin',
-    exported: 'nesne önizlemesi dışa aktarıldı',
-    skipped: 'nesne atlandı',
-    failed: {
-      'no-preview-root': 'Seçim için önizleme geometrisi oluşturulamadı',
-      'no-bounds': 'Seçim için önizleme sınırları hesaplanamadı',
-      'capture-failed': 'Nesne önizleme görüntüsü oluşturulamadı',
-      'download-failed':
-        'Önizleme oluşturuldu ancak PNG indirmesi başarısız oldu'
-    }
-  },
   layer: {
     main: 'Seçenek girin',
     listSummary: 'Katman listesi tarayıcı konsoluna yazdırıldı',
@@ -770,21 +758,6 @@ export default {
   },
   mtext: {
     point: 'Çok satırlı metin ekleme noktasını belirtin'
-  },
-  bmpout: {
-    boundsFirstCorner: 'Sınırların ilk köşesini belirtin',
-    boundsSecondCorner: 'Karşı köşeyi belirtin',
-    longSidePrompt: 'Uzun kenar boyutunu piksel olarak girin'
-  },
-  jpgout: {
-    boundsFirstCorner: 'Sınırların ilk köşesini belirtin',
-    boundsSecondCorner: 'Karşı köşeyi belirtin',
-    longSidePrompt: 'Uzun kenar boyutunu piksel olarak girin'
-  },
-  pngout: {
-    boundsFirstCorner: 'Sınırların ilk köşesini belirtin',
-    boundsSecondCorner: 'Karşı köşeyi belirtin',
-    longSidePrompt: 'Uzun kenar boyutunu piksel olarak girin'
   },
   insert: {
     blockName: 'Blok adını girin:',

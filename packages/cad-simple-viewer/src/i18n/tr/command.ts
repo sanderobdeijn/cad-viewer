@@ -30,12 +30,6 @@ export default {
       description:
         'AUNITS ile birlikte kullanılan, açılar için görüntüleme hassasiyetini ayarlar'
     },
-    bmpout: {
-      description: 'BMP olarak dışa aktarır'
-    },
-    cdxf: {
-      description: 'Geçerli çizimi DXF olarak dışa aktarır'
-    },
     cecolor: {
       description:
         'Yeni oluşturulan nesneler için geçerli varsayılan rengi ayarlar'
@@ -82,9 +76,6 @@ export default {
       description: 'Seçili varlıkları klonlayarak yeni konumlara kopyalar',
       prompt: 'Varlıkları seçin'
     },
-    csvg: {
-      description: 'Geçerli çizimi SVG\'ye dönüştürür'
-    },
     dimlinear: {
       description: 'Doğrusal ölçülendirmeler oluşturur'
     },
@@ -119,11 +110,6 @@ export default {
     extmin: {
       description:
         'Model alanı çizim kapsamının sol alt köşesini saklar (salt okunur)'
-    },
-    entout: {
-      description:
-        'Seçili varlıklar için birleştirilmiş bir önizleme görüntüsü dışa aktarır',
-      prompt: 'Varlıkları seçin'
     },
     hideobjects: {
       description: 'Seçili nesnelerin görüntülenmesini geçici olarak gizler',
@@ -204,9 +190,6 @@ export default {
     insunits: {
       description:
         'Eklenen blokların, görüntülerin veya dış referansların otomatik ölçeklendirilmesi için çizim birimlerini belirtir'
-    },
-    jpgout: {
-      description: 'JPEG olarak dışa aktarır'
     },
     laycur: {
       description:
@@ -370,9 +353,6 @@ export default {
     },
     pline: {
       description: 'Birden çok nokta belirterek bir çoklu çizgi oluşturur'
-    },
-    pngout: {
-      description: 'PNG olarak dışa aktarır'
     },
     point: {
       description: 'Noktalar oluşturur'

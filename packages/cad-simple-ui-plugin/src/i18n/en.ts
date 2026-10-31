@@ -51,8 +51,6 @@ export const en: Record<string, string> = {
   'toolbar.clearMarkups': 'Clear',
   'toolbar.showMarkup': 'Show',
   'toolbar.hideMarkup': 'Hide',
-  'toolbar.export': 'Export',
-  'toolbar.exportSvg': 'Export SVG',
   'toolbar.placement': 'Toolbar Position',
   'toolbar.placementTop': 'Top',
   'toolbar.placementBottom': 'Bottom',

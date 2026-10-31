@@ -138,7 +138,7 @@ pnpm preview:simple
 
 CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中提供可扩展的**插件系统**。插件实现 `AcApPlugin` 接口，通过 `onLoad` / `onUnload` 接入查看器生命周期，常见用途包括注册命令、挂载 UI、或接入导出/导入流程。
 
-通过 `AcApDocManager.instance.pluginManager` 加载插件（`loadPlugin`、`registerLazyPlugin`，或在创建文档管理器时使用 `plugins.fromConfig`）。面向导出的插件支持**懒加载**：应用启动时只注册轻量 stub，用户首次执行相关命令时才下载完整 bundle。
+通过 `AcApDocManager.instance.pluginManager` 加载插件（`loadPlugin`、`registerLazyPlugin`，或在创建文档管理器时使用 `plugins.fromConfig`）。插件支持**懒加载**：应用启动时只注册轻量 stub，用户首次执行相关命令时才下载完整 bundle。
 
 本 monorepo 内置多个官方插件，各司其职，可按需组合。**各插件的安装、注册方式与 API 说明请直接阅读对应包的 README**（见下方链接）。
 
@@ -147,7 +147,6 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 | 包名 | 作用 | 命令 / 能力 |
 |------|------|-------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏、图层管理器与批注列表面板 UI**（纯 DOM，不依赖 Vue/React） | `layer`、`markuppanel`、默认工具栏（视图、测量、导出、审阅、主题、语言） |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 导出**及共享矢量渲染器 | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 简易查看器的 UI 层
 
@@ -163,12 +162,6 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 全部 UI 为框架无关的纯 DOM 实现。完整 Vue 版 [`cad-viewer`](packages/cad-viewer) 自带 Element Plus 界面，**不需要**此插件；仅在直接基于 `cad-simple-viewer` 集成时使用 `cad-simple-ui-plugin`。
 
 → **快速开始、工具栏定制与配置项：** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### 导出类插件（SVG）
-
-SVG 插件向同一插件管理器注册 `csvg` 导出命令，并采用**懒加载**以控制首屏体积。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) 与完整版 [`cad-viewer`](packages/cad-viewer) 应用都会在启动时注册它。
-
-- **SVG** — 矢量 SVG 导出：[packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## 性能优化
 
@@ -381,7 +374,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 #### 离线编辑器
 
 -   [x] 浏览器本地编辑
--   [x] 保存为 DXF
 -   [ ] 保存变更集 / 差异（diff）
 -   [ ] IndexedDB 持久化
 

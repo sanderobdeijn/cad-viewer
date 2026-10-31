@@ -13,7 +13,6 @@ import {
   View
 } from '@element-plus/icons-vue'
 import {
-  AcApConvertToDxfCmd,
   acapCssColor,
   AcApDocManager,
   acapDrawStyleKindForCommand,
@@ -2652,27 +2651,6 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
       label: t('main.mainMenu.drawingUnits')
     }
   ]
-  if (!AcApDocManager.instance.disableExport) {
-    items.push({
-      id: 'Export',
-      label: t('main.mainMenu.exportMenu'),
-      divided: true,
-      children: [
-        {
-          id: 'Convert',
-          label: t('main.mainMenu.export')
-        },
-        {
-          id: 'ExportSvg',
-          label: t('main.mainMenu.exportSvg')
-        },
-        {
-          id: 'PngOut',
-          label: t('main.mainMenu.exportImage')
-        }
-      ]
-    })
-  }
   items.push({
     id: 'About',
     label: t('main.mainMenu.about'),
@@ -2724,22 +2702,7 @@ const handleHeaderRedo = () => {
 
 const handleFileMenuSelect = async (command: string) => {
   if (isRibbonDisabled.value) return
-  if (
-    AcApDocManager.instance.disableExport &&
-    (command === 'Convert' ||
-      command === 'ExportSvg' ||
-      command === 'PngOut')
-  ) {
-    return
-  }
-  if (command === 'Convert') {
-    const cmd = new AcApConvertToDxfCmd()
-    cmd.trigger(AcApDocManager.instance.context)
-  } else if (command === 'ExportSvg') {
-    AcApDocManager.instance.sendStringToExecute('csvg')
-  } else if (command === 'PngOut') {
-    AcApDocManager.instance.sendStringToExecute('pngout')
-  } else if (command === 'QNew') {
+  if (command === 'QNew') {
     const cmd = new AcApQNewCmd()
     cmd.trigger(AcApDocManager.instance.context)
   } else if (command === 'Open') {

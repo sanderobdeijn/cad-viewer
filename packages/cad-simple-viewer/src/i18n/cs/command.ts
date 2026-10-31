@@ -31,12 +31,6 @@ export default {
       description:
         'Nastaví přesnost zobrazení úhlů, používá se společně s AUNITS'
     },
-    bmpout: {
-      description: 'Exportuje do BMP'
-    },
-    cdxf: {
-      description: 'Exportuje aktuální výkres do DXF'
-    },
     cecolor: {
       description: 'Nastaví aktuální výchozí barvu pro nově vytvářené objekty'
     },
@@ -80,9 +74,6 @@ export default {
         'Kopíruje vybrané objekty vytvořením kopií na nových pozicích',
       prompt: 'Vyberte objekty'
     },
-    csvg: {
-      description: 'Převede aktuální výkres na SVG'
-    },
     dimlinear: {
       description: 'Vytvoří lineární kóty'
     },
@@ -116,10 +107,6 @@ export default {
     extmin: {
       description:
         'Ukládá levý dolní roh rozsahu výkresu v modelovém prostoru (pouze pro čtení)'
-    },
-    entout: {
-      description: 'Exportuje sloučený náhledový obrázek vybraných objektů',
-      prompt: 'Vyberte objekty'
     },
     hideobjects: {
       description: 'Dočasně potlačí zobrazení vybraných objektů',
@@ -198,9 +185,6 @@ export default {
     insunits: {
       description:
         'Určuje jednotky výkresu pro automatické měřítko vkládaných bloků, obrázků nebo externích referencí'
-    },
-    jpgout: {
-      description: 'Exportuje do JPEG'
     },
     laycur: {
       description: 'Změní hladinu vybraných objektů na aktuální hladinu',
@@ -359,9 +343,6 @@ export default {
     },
     pline: {
       description: 'Vytvoří křivku zadáním více bodů'
-    },
-    pngout: {
-      description: 'Exportuje do PNG'
     },
     point: {
       description: 'Vytvoří body'

@@ -35,12 +35,7 @@ export default {
   message: {
     onLockedLayer: 'على طبقة مقفلة.',
     fetchingDrawingFile: 'جارٍ جلب ملف الرسم ...',
-    exportingDxf: 'جارٍ تصدير DXF ...',
-    exportingPdf: 'جارٍ تصدير PDF ...',
-    exportingSvg: 'جارٍ تصدير SVG ...',
     calculatingSmartExtents: 'جارٍ حساب الملاءمة الذكية ...',
-    importingPdf: 'جارٍ استيراد PDF ...',
-    exportingEntityPreview: 'جارٍ تصدير الصورة ...',
     collectingMemoryProfile: 'جارٍ تحليل الذاكرة ...',
     fontCached: 'تم تخزين الخط بنجاح',
     fontCacheFailed: 'فشل تخزين الخط',

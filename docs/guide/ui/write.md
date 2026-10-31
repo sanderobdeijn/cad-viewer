@@ -20,7 +20,7 @@ The Ribbon fully displays all AutoCAD-style tabs:
 
 | Tab | Commands |
 |---|---|
-| File | Open, Export DXF, Export PNG |
+| File | Open |
 | Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, Block Insert, etc. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, etc. |
 | Layers | Layer management (on/off, freeze/thaw, lock, isolate, new, delete) |

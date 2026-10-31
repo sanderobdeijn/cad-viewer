@@ -18,8 +18,6 @@ import {
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MARKUPS,
   ICON_CLEAR_MEASUREMENTS,
-  ICON_EXPORT,
-  ICON_EXPORT_SVG,
   ICON_FIND,
   ICON_LANGUAGE,
   ICON_LAYER,
@@ -615,20 +613,6 @@ export function acuiCreateDefaultToolbarItems(
     acuiCreateLayoutToolbarItem(),
     acuiCreateMeasureToolbarItem(),
     acuiCreateAnnotationToolbarItem(),
-    {
-      id: 'export',
-      label: 'toolbar.export',
-      icon: ICON_EXPORT,
-      childrenUi: 'toolbar',
-      children: [
-        {
-          id: 'export-svg',
-          label: 'toolbar.exportSvg',
-          icon: ICON_EXPORT_SVG,
-          command: 'csvg'
-        }
-      ]
-    },
     {
       type: 'separator',
       id: 'sep-settings'

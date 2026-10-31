@@ -11,7 +11,6 @@ import { registerCadViewerNotificationCenter } from './cadViewerNotificationCent
 import {
   registerCmds,
   registerDialogs,
-  registerLazyPlugins,
   registerMTextColorPicker
 } from './register'
 
@@ -33,5 +32,4 @@ export const initializeCadViewer = (
   registerCmds()
   registerDialogs()
   registerMTextColorPicker()
-  registerLazyPlugins()
 }

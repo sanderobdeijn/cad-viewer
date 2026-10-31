@@ -3,7 +3,6 @@ import {
   AcEdCommandStack,
   AcEdMTextEditor
 } from '@mlightcad/cad-simple-viewer'
-import { registerLazySvgPlugin } from '@mlightcad/cad-svg-plugin/register'
 import { markRaw } from 'vue'
 
 import {
@@ -205,25 +204,4 @@ export const registerMTextColorPicker = () => {
     )
     isMTextColorPickerRegistered = true
   }
-}
-
-let isLazyPluginRegistered = false
-
-/**
- * Registers lazy plugins that load on first use of their trigger commands.
- *
- * Currently registers the SVG export plugin (`csvg`). When
- * {@link AcApDocManager.disableExport} is true, nothing is registered.
- * Safe to call multiple times; registration runs once per application lifetime.
- */
-export const registerLazyPlugins = () => {
-  if (isLazyPluginRegistered) {
-    return
-  }
-
-  if (!AcApDocManager.instance.disableExport) {
-    registerLazySvgPlugin(AcApDocManager.instance.pluginManager)
-  }
-
-  isLazyPluginRegistered = true
 }

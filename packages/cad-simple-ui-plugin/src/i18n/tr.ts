@@ -51,8 +51,6 @@ export const tr: Record<string, string> = {
   'toolbar.clearMarkups': 'Temizle',
   'toolbar.showMarkup': 'Göster',
   'toolbar.hideMarkup': 'Gizle',
-  'toolbar.export': 'Dışa Aktar',
-  'toolbar.exportSvg': 'SVG Dışa Aktar',
   'toolbar.placement': 'Araç Çubuğu Konumu',
   'toolbar.placementTop': 'Üst',
   'toolbar.placementBottom': 'Alt',

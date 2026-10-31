@@ -210,9 +210,6 @@ importers:
       '@mlightcad/cad-simple-viewer':
         specifier: workspace:*
         version: link:../cad-simple-viewer
-      '@mlightcad/cad-svg-plugin':
-        specifier: workspace:*
-        version: link:../cad-svg-plugin
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
@@ -248,21 +245,6 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1(vite@6.4.3(@types/node@24.12.4)(sass@1.98.0)(yaml@2.8.3))
 
-  packages/cad-svg-plugin:
-    devDependencies:
-      '@mlightcad/cad-simple-viewer':
-        specifier: workspace:*
-        version: link:../cad-simple-viewer
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
-      '@mlightcad/mtext-parser':
-        specifier: ^1.5.5
-        version: 1.5.5
-      '@mlightcad/mtext-renderer':
-        specifier: ^0.13.5
-        version: 0.13.5(@mlightcad/mtext-parser@1.5.5)(three@0.186.1)
-
   packages/cad-viewer:
     devDependencies:
       '@element-plus/icons-vue':
@@ -271,9 +253,6 @@ importers:
       '@mlightcad/cad-simple-viewer':
         specifier: workspace:*
         version: link:../cad-simple-viewer
-      '@mlightcad/cad-svg-plugin':
-        specifier: workspace:*
-        version: link:../cad-svg-plugin
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model

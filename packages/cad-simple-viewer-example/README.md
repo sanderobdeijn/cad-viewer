@@ -1,13 +1,12 @@
 # CAD Simple Viewer Example
 
-A vanilla TypeScript demo that shows how to embed [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer/tree/main/packages/cad-simple-viewer) in a web page: open DXF/DWG files, drive viewer commands from a small toolbar, and lazy-load the SVG export plugin.
+A vanilla TypeScript demo that shows how to embed [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer/tree/main/packages/cad-simple-viewer) in a web page: open DXF/DWG files, drive viewer commands from a small toolbar, and add the simple UI toolbar.
 
 ## Features
 
 - **Local files** — Open `.dxf` / `.dwg` via file picker (toolbar **Open** or center **Open File**)
 - **Sample drawings** — Sidebar loads predefined files from the [cad-data](https://github.com/mlightcad/cad-data) CDN
-- **Viewer toolbar** — Zoom fit, zoom window, background toggle, pickbox size, line-weight display, export SVG
-- **Lazy plugins** — registered from `@mlightcad/cad-svg-plugin/register` in `src/register.ts`; `csvg` loads the plugin chunk on demand
+- **Viewer toolbar** — Zoom fit, zoom window, background toggle, pickbox size, line-weight display
 - **Browser-only** — Parsing and rendering run in the browser (Web Workers + WebAssembly for DWG)
 - **Responsive layout** — Sidebar + viewer pane; stacks vertically on narrow screens
 
@@ -68,7 +67,6 @@ The build copies parser workers into `dist/` (see `vite.config.ts`).
    - **Switch BG** — Toggle drawing background
    - **Set Pickbox** — Prompt to set `PICKBOX` system variable
    - **LineWeight: On/Off** — Toggle `lwdisplay` on the current database
-   - **Export SVG** — Run `csvg` from the toolbar. The plugin must be registered; see `src/register.ts`.
 
 Toast messages at the top report success or errors. The window title updates when a document is activated.
 
@@ -88,9 +86,8 @@ Integration patterns useful when building your own host app (not a full CAD UI l
 | Document manager | `AcApDocManager.createInstance({ container, baseUrl, webworkerFileUrls, commandAliases, … })` |
 | Local open | `openDocument(name, ArrayBuffer, options)` with `AcApOpenDatabaseOptions` |
 | Remote open | `openUrl(url, options)` for CDN sample files |
-| Commands | `sendStringToExecute('zoom\\nall')`, `switchbg`, plugin command `csvg` |
+| Commands | `sendStringToExecute('zoom\\nall')`, `switchbg` |
 | System variables | `AcDbSysVarManager` + `sendStringToExecute` (e.g. `PICKBOX`) |
-| Plugins | Lazy registration via `@mlightcad/*/register` in `src/register.ts` (only needed plugins) |
 | Command aliases | Demo overrides (`LINE` → `LX`, etc.) via `commandAliases` |
 | Workers & assets | `webworkerFileUrls`, static copy in Vite |
 
@@ -102,7 +99,6 @@ Lazy initialization: `AcApDocManager` is created on first file open, not at page
 |------|------|
 | `index.html` | Layout: sidebar, toolbar, canvas container, styles |
 | `src/main.ts` | `CadViewerApp` — wiring UI to `AcApDocManager` |
-| `src/register.ts` | Registers the SVG export plugin from `@mlightcad/cad-svg-plugin/register` |
 | `vite.config.ts` | `base: './'`, copies workers |
 | `package.json` | Scripts and workspace dependencies |
 
@@ -112,7 +108,6 @@ Lazy initialization: `AcApDocManager` is created on first file open, not at page
 |---------|------|
 | `@mlightcad/cad-simple-viewer` | Core viewer, `AcApDocManager`, commands |
 | `@mlightcad/data-model` | Database, system variables, logging |
-| `@mlightcad/cad-svg-plugin` | SVG export (`csvg`) |
 | `three` | Peer of the viewer render stack |
 
 ## Scripts

@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@mlightcad/cad-simple-ui-plugin": "workspace:*",
-    "@mlightcad/cad-svg-plugin": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
     "@mlightcad/libredwg-converter": "workspace:*",

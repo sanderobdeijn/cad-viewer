@@ -258,12 +258,9 @@ describe('acuiResolveEffectiveToolbarItem', () => {
 })
 
 describe('default toolbar items', () => {
-  it('includes export submenu and a settings strip with theme, locale, placement', () => {
+  it('has no export button and includes a settings strip with theme, locale, placement', () => {
     const items = acuiCreateDefaultToolbarItems()
-    const exportItem = items.find(item => item.id === 'export')
-    expect(exportItem?.children?.map(child => child.command)).toEqual([
-      'csvg'
-    ])
+    expect(items.find(item => item.id === 'export')).toBeUndefined()
     const settings = items.find(item => item.id === 'settings')
     expect(settings?.childrenUi).toBe('toolbar')
     const childIds = settings?.children?.map(child => child.id) ?? []
@@ -322,7 +319,6 @@ describe('default toolbar items', () => {
   it('uses selected child icon for toolbar placement and locale', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
-    expect(items.find(item => item.id === 'export')?.childIcon).toBeUndefined()
     expect(
       items.find(item => item.id === 'annotation')?.childIcon
     ).toBeUndefined()
@@ -395,21 +391,19 @@ describe('default toolbar items', () => {
     ).toBeDefined()
   })
 
-  it('places review tools after measure and export after review', () => {
+  it('places review tools after measure', () => {
     const items = acuiCreateDefaultToolbarItems()
     const measureIndex = items.findIndex(item => item.id === 'measure')
     expect(items[measureIndex + 1]?.id).toBe('annotation')
-    expect(items[measureIndex + 2]?.id).toBe('export')
   })
 
-  it('uses dismissible sub-toolbars for measure, review, export, and settings', () => {
+  it('uses dismissible sub-toolbars for measure, review, and settings', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
     expect(items.find(item => item.id === 'measure')?.childrenUi).toBe('toolbar')
     expect(items.find(item => item.id === 'annotation')?.childrenUi).toBe(
       'toolbar'
     )
-    expect(items.find(item => item.id === 'export')?.childrenUi).toBe('toolbar')
     expect(items.find(item => item.id === 'layout')?.childrenUi).toBe('menu')
     expect(settings?.childrenUi).toBe('toolbar')
     expect(
@@ -421,11 +415,8 @@ describe('default toolbar items', () => {
     ).toBe('toolbar')
   })
 
-  it('uses the same export parent icon as cad-viewer toolbar and ribbon', () => {
+  it('uses the same annotation parent icon as cad-viewer toolbar and ribbon', () => {
     const items = acuiCreateDefaultToolbarItems()
-    expect(items.find(item => item.id === 'export')?.icon).toContain(
-      'M15.5 2H9.1L4.5 6.6'
-    )
     expect(items.find(item => item.id === 'annotation')?.icon).toContain(
       'M12.4 3.25H5.5'
     )

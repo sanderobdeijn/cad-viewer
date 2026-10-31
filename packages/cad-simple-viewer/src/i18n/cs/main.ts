@@ -35,12 +35,7 @@ export default {
   message: {
     onLockedLayer: 'na uzamčené hladině.',
     fetchingDrawingFile: 'Načítám soubor…',
-    exportingDxf: 'Exportuji DXF…',
-    exportingPdf: 'Exportuji PDF…',
-    exportingSvg: 'Exportuji SVG…',
     calculatingSmartExtents: 'Počítám chytrý rozsah…',
-    importingPdf: 'Importuji PDF…',
-    exportingEntityPreview: 'Exportuji obrázek…',
     collectingMemoryProfile: 'Analyzuji paměť…',
     fontCached: 'Font úspěšně uložen do mezipaměti',
     fontCacheFailed: 'Uložení fontu do mezipaměti selhalo',

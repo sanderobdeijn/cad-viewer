@@ -138,7 +138,7 @@ CAD Viewer を初めてお使いですか？**[ユーザーガイド](https://ml
 
 CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内のモジュラー **プラグインシステム** を中心に構築されています。プラグインは `AcApPlugin` インターフェースを実装し、`onLoad` / `onUnload` 経由でビューアのライフサイクルにフックします。通常はコマンド登録、UI 追加、エクスポート/インポートパイプラインの接続に使用します。
 
-プラグインは `AcApDocManager.instance.pluginManager`（`loadPlugin`、`registerLazyPlugin`、またはドキュメントマネージャー作成時の `plugins.fromConfig`）から読み込みます。エクスポート向けプラグインは **遅延読み込み** をサポートします。起動時に小さなスタブだけを登録し、ユーザーが関連コマンドを実行した時点で重いバンドルをダウンロードします。
+プラグインは `AcApDocManager.instance.pluginManager`（`loadPlugin`、`registerLazyPlugin`、またはドキュメントマネージャー作成時の `plugins.fromConfig`）から読み込みます。プラグインは **遅延読み込み** をサポートします。起動時に小さなスタブだけを登録し、ユーザーが関連コマンドを実行した時点で重いバンドルをダウンロードします。
 
 モノレポには複数のファーストパーティプラグインが同梱されています。各プラグインは 1 つの関心事に集中しており、必要に応じて組み合わせられます。**インストール、登録、API の詳細は各パッケージの README に記載されています** — 下記リンクを参照してください。
 
@@ -147,7 +147,6 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 | パッケージ | 役割 | コマンド / 機能 |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer` 向け **ツールバー・レイヤーマネージャー・レビューパレット UI**（プレーン DOM、Vue/React 非依存） | `layer`、`markuppanel`、デフォルトツールバー（表示、測定、エクスポート、レビュー、テーマ、ロケール） |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG エクスポート** と共有ベクターレンダラー | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — シンプルビューア向け UI 層
 
@@ -163,12 +162,6 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 すべてのウィジェットはフレームワーク非依存（プレーン DOM）です。フル Vue [`cad-viewer`](packages/cad-viewer) アプリは Element Plus UI を内蔵しており、このプラグインは不要です。`cad-simple-viewer` を直接ベースに構築する場合に `cad-simple-ui-plugin` を使用してください。
 
 → **クイックスタート、ツールバーカスタマイズ、オプション：** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### エクスポートプラグイン（SVG）
-
-SVG プラグインは、同じプラグインマネージャーに `csvg` エクスポートコマンドを追加します。初期ページの容量を小さく保つため、**遅延読み込み**されます。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) とフル版の [`cad-viewer`](packages/cad-viewer) アプリの両方が起動時に登録します。
-
-- **SVG** — ベクター SVG エクスポート：[packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## パフォーマンス
 
@@ -381,7 +374,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 #### オフラインエディタ
 
 * [x] ブラウザ内ローカル編集
-* [x] DXF として保存
 * [ ] 変更セット / diff の保存
 * [ ] IndexedDB 永続化
 

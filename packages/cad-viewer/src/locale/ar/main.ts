@@ -8,10 +8,6 @@ export default {
     new: 'رسم جديد',
     open: 'فتح رسم',
     drawingUnits: 'وحدات الرسم',
-    exportMenu: 'تصدير',
-    export: 'تصدير إلى DXF',
-    exportSvg: 'تصدير إلى SVG',
-    exportImage: 'تصدير إلى صورة',
     about: 'حول'
   },
 

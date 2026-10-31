@@ -74,12 +74,6 @@ export default {
       paperSpaceBlack: 'أسود',
       paperSpaceBlackHint: 'تفضيل عارض الويب',
 
-      export: 'تصدير',
-      exportEnable: 'تمكين',
-      exportEnableHint: 'السماح بتصدير DXF/HTML/PDF/SVG/PNG',
-      exportDisable: 'تعطيل',
-      exportDisableHint: 'إخفاء أوامر التصدير وعناصر قائمة File',
-
       invalidFileType:
         'نوع الملف غير صالح. يرجى اختيار ملف DWG أو DXF.'
     }

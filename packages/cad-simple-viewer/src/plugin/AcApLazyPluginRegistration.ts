@@ -8,9 +8,11 @@ import { AcApPlugin } from './AcApPlugin'
  *
  * @example
  * ```typescript
- * import { registerLazySvgPlugin } from '@mlightcad/cad-svg-plugin/register'
- *
- * registerLazySvgPlugin(pluginManager)
+ * pluginManager.registerLazyPlugin({
+ *   name: 'my-plugin',
+ *   triggers: ['mycommand'],
+ *   loader: async () => new (await import('./MyPlugin')).MyPlugin()
+ * })
  * ```
  */
 export interface AcApLazyPluginRegistration {

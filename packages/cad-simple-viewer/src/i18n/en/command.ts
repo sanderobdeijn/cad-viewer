@@ -31,12 +31,6 @@ export default {
       description:
         'Sets the display precision for angles, used together with AUNITS'
     },
-    bmpout: {
-      description: 'Exports to BMP'
-    },
-    cdxf: {
-      description: 'Exports current drawing to DXF'
-    },
     cecolor: {
       description: 'Sets the current default color for newly created objects'
     },
@@ -80,9 +74,6 @@ export default {
       description: 'Copies selected entities by cloning them to new positions',
       prompt: 'Select entities'
     },
-    csvg: {
-      description: 'Converts current drawing to SVG'
-    },
     dimlinear: {
       description: 'Creates linear dimensions'
     },
@@ -116,10 +107,6 @@ export default {
     extmin: {
       description:
         'Stores the lower-left corner of the model-space drawing extents (read-only)'
-    },
-    entout: {
-      description: 'Exports a merged preview image for selected entities',
-      prompt: 'Select entities'
     },
     hideobjects: {
       description: 'Temporarily suppresses the display of selected objects',
@@ -197,9 +184,6 @@ export default {
     insunits: {
       description:
         'Specifies drawing units for automatic scaling of inserted blocks, images, or xrefs'
-    },
-    jpgout: {
-      description: 'Exports to JPEG'
     },
     laycur: {
       description:
@@ -361,9 +345,6 @@ export default {
     },
     pline: {
       description: 'Creates a polyline by specifying multiple points'
-    },
-    pngout: {
-      description: 'Exports to PNG'
     },
     point: {
       description: 'Creates points'

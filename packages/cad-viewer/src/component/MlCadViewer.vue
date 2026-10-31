@@ -162,12 +162,6 @@ interface Props {
    */
   docsBaseUrl?: string
   /**
-   * When true, drawing export commands are not registered and the File menu
-   * Export submenu is hidden. Forwarded to {@link AcApDocManagerOptions.disableExport}.
-   * Defaults to false (export remains enabled).
-   */
-  disableExport?: boolean
-  /**
    * The flag whether to use main thread or webwork to render drawing.
    * - true: use main thread
    * - false: use web worker
@@ -231,7 +225,6 @@ const props = withDefaults(defineProps<Props>(), {
   background: undefined,
   baseUrl: undefined,
   docsBaseUrl: undefined,
-  disableExport: false,
   useMainThreadDraw: true,
   theme: 'dark',
   mode: AcEdOpenMode.Write,
@@ -501,7 +494,6 @@ onMounted(async () => {
       busyIndicatorHost: layoutRef.value,
       baseUrl: props.baseUrl,
       docsBaseUrl: props.docsBaseUrl,
-      disableExport: props.disableExport,
       autoResize: true,
       useMainThreadDraw: props.useMainThreadDraw,
       openDocumentDefaults: buildOpenOptions

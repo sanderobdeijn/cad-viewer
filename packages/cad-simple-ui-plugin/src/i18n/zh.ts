@@ -51,8 +51,6 @@ export const zh: Record<string, string> = {
   'toolbar.clearMarkups': '清除',
   'toolbar.showMarkup': '显示',
   'toolbar.hideMarkup': '隐藏',
-  'toolbar.export': '导出',
-  'toolbar.exportSvg': '导出 SVG',
   'toolbar.placement': '工具栏位置',
   'toolbar.placementTop': '上方',
   'toolbar.placementBottom': '下方',

@@ -928,35 +928,6 @@ export default {
     nothingToRestore: 'لا توجد عناصر مخفية لاستعادتها'
   },
 
-  entout: {
-    ...enJig.entout,
-
-    longSidePrompt:
-      'أدخل حجم الضلع الأطول للمعاينة بالبكسل',
-
-    exported:
-      'تم تصدير معاينات العناصر',
-
-    skipped:
-      'تم تخطي بعض العناصر',
-
-    failed: {
-      ...enJig.entout.failed,
-
-      'no-preview-root':
-        'تعذر إنشاء هندسة المعاينة للعناصر المحددة',
-
-      'no-bounds':
-        'تعذر حساب حدود المعاينة للعناصر المحددة',
-
-      'capture-failed':
-        'تعذر عرض صورة معاينة العناصر',
-
-      'download-failed':
-        'تم إنشاء المعاينة ولكن فشل تنزيل ملف PNG'
-    }
-  },
-
   layer: {
     ...enJig.layer,
 
@@ -1720,45 +1691,6 @@ export default {
       chooseFile:
         'اختر ملف JSON جانبيًا يحتوي على علامات المراجعة'
     }
-  },
-
-  bmpout: {
-    ...enJig.bmpout,
-
-    boundsFirstCorner:
-      'حدد الركن الأول لحدود الصورة',
-
-    boundsSecondCorner:
-      'حدد الركن المقابل',
-
-    longSidePrompt:
-      'أدخل حجم الضلع الأطول بالبكسل'
-  },
-
-  jpgout: {
-    ...enJig.jpgout,
-
-    boundsFirstCorner:
-      'حدد الركن الأول لحدود الصورة',
-
-    boundsSecondCorner:
-      'حدد الركن المقابل',
-
-    longSidePrompt:
-      'أدخل حجم الضلع الأطول بالبكسل'
-  },
-
-  pngout: {
-    ...enJig.pngout,
-
-    boundsFirstCorner:
-      'حدد الركن الأول لحدود الصورة',
-
-    boundsSecondCorner:
-      'حدد الركن المقابل',
-
-    longSidePrompt:
-      'أدخل حجم الضلع الأطول بالبكسل'
   },
 
   insert: {

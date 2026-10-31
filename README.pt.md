@@ -138,7 +138,7 @@ Novo no CAD Viewer? O **[guia do usuário](https://mlightcad.com/cad-viewer/docs
 
 O CAD-Viewer é construído em torno de um **sistema de plugins** modular em [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Os plugins implementam a interface `AcApPlugin` e se conectam ao ciclo de vida do visualizador via `onLoad` / `onUnload` — normalmente para registrar comandos, adicionar UI ou conectar pipelines de exportação/importação.
 
-Carregue plugins por meio de `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` ou `plugins.fromConfig` ao criar o gerenciador de documentos). Plugins orientados à exportação suportam **lazy loading**: registre um stub pequeno antecipadamente e baixe o bundle pesado somente quando o usuário executar o comando relacionado.
+Carregue plugins por meio de `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` ou `plugins.fromConfig` ao criar o gerenciador de documentos). Plugins suportam **lazy loading**: registre um stub pequeno antecipadamente e baixe o bundle pesado somente quando o usuário executar o comando relacionado.
 
 O monorepo inclui vários plugins oficiais. Cada um foca em uma preocupação; combine-os conforme necessário. **Instalação, registro e detalhes da API estão no README de cada pacote** — veja os links abaixo.
 
@@ -147,7 +147,6 @@ O monorepo inclui vários plugins oficiais. Cada um foca em uma preocupação; c
 | Pacote | Função | Comandos / capacidades |
 |--------|--------|------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **UI de barra de ferramentas, gerenciador de camadas e paleta de revisão** para `cad-simple-viewer` (DOM puro, sem Vue/React) | `layer`, `markuppanel`, barra de ferramentas padrão (visualização, medição, exportação, revisão, tema, idioma) |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **Exportação SVG** e renderizador vetorial compartilhado | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — Interface de usuário para o visualizador simples
 
@@ -163,12 +162,6 @@ Ele fornece:
 Todos os widgets são agnósticos a framework (DOM puro). O app completo Vue [`cad-viewer`](packages/cad-viewer) tem sua própria UI Element Plus e não requer este plugin; use `cad-simple-ui-plugin` quando construir diretamente sobre `cad-simple-viewer`.
 
 → **Início rápido, personalização da barra de ferramentas e opções:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### Plugins de exportação (SVG)
-
-O plugin SVG adiciona o comando de exportação `csvg` ao mesmo gerenciador de plugins. Ele é **carregado sob demanda (lazy-loaded)** para manter pequeno o peso inicial da página. Tanto o [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) quanto o aplicativo completo [`cad-viewer`](packages/cad-viewer) o registram na inicialização.
-
-- **SVG** — exportação vetorial SVG: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## Desempenho
 
@@ -381,7 +374,6 @@ Legenda:
 #### Editor offline
 
 * [x] Edição local no navegador
-* [x] Salvar em DXF
 * [ ] Salvar conjunto de alterações / diff
 * [ ] Persistência IndexedDB
 

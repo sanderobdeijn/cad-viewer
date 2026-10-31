@@ -43,7 +43,6 @@
     "lint:fix": "eslint --fix --quiet src/"
   },
   "devDependencies": {
-    "@mlightcad/cad-svg-plugin": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
     "@mlightcad/ribbon": "^0.1.13",
@@ -68,7 +67,6 @@
     "vue-tsc": "^2.1.6"
   },
   "peerDependencies": {
-    "@mlightcad/cad-svg-plugin": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",
@@ -78,10 +76,5 @@
     "three": "^0.186.1",
     "vue": "^3.4.21",
     "vue-i18n": "^11.4.4"
-  },
-  "peerDependenciesMeta": {
-    "@mlightcad/cad-svg-plugin": {
-      "optional": true
-    }
   }
 }

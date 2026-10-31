@@ -3,10 +3,6 @@ export default {
     new: 'New Drawing',
     open: 'Open Drawing',
     drawingUnits: 'Drawing Units',
-    exportMenu: 'Export',
-    export: 'Export to DXF',
-    exportSvg: 'Export to SVG',
-    exportImage: 'Export to Image',
     about: 'About'
   },
   ribbon: {

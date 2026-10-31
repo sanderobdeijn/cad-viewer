@@ -226,41 +226,7 @@
             </div>
           </div>
 
-          <div class="setting-block setting-block--half">
-            <h3 class="setting-label">
-              {{ t('example.fileUpload.export') }}
-            </h3>
-            <div
-              class="pill-segment"
-              role="radiogroup"
-              :aria-label="t('example.fileUpload.export')"
-            >
-              <button
-                type="button"
-                class="pill-option"
-                :class="{ 'is-active': !disableExport }"
-                role="radio"
-                :aria-checked="!disableExport"
-                :title="t('example.fileUpload.exportEnableHint')"
-                @click="disableExport = false"
-              >
-                {{ t('example.fileUpload.exportEnable') }}
-              </button>
-              <button
-                type="button"
-                class="pill-option"
-                :class="{ 'is-active': disableExport }"
-                role="radio"
-                :aria-checked="disableExport"
-                :title="t('example.fileUpload.exportDisableHint')"
-                @click="disableExport = true"
-              >
-                {{ t('example.fileUpload.exportDisable') }}
-              </button>
-            </div>
-          </div>
-
-          <div class="setting-block setting-block--half">
+          <div class="setting-block setting-block--full">
             <h3 class="setting-label">
               {{ t('example.fileUpload.paperSpaceBackground') }}
             </h3>
@@ -327,8 +293,7 @@ interface Props {
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
-    paperSpaceBackground: number,
-    disableExport: boolean
+    paperSpaceBackground: number
   ) => void
   onNewDrawing?: (
     mode: AcEdOpenMode,
@@ -337,8 +302,7 @@ interface Props {
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
-    paperSpaceBackground: number,
-    disableExport: boolean
+    paperSpaceBackground: number
   ) => void
   onUrlSelect?: (
     url: string,
@@ -348,8 +312,7 @@ interface Props {
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
-    paperSpaceBackground: number,
-    disableExport: boolean
+    paperSpaceBackground: number
   ) => void
   onDataSourceAction?: (
     item: AcApDataSourceMenuItem,
@@ -359,8 +322,7 @@ interface Props {
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
-    paperSpaceBackground: number,
-    disableExport: boolean
+    paperSpaceBackground: number
   ) => void
   /**
    * Cloud {@link AcApDataSource} instances for the landing open panel
@@ -385,8 +347,7 @@ const emitOpenOptions = () =>
     progressiveRendering.value,
     resolveOpenViewMode(),
     selectedCircleSides.value,
-    paperSpaceBackground.value,
-    disableExport.value
+    paperSpaceBackground.value
   ] as const
 
 const mountFileOpenPanel = () => {
@@ -440,7 +401,6 @@ const useMainThreadDraw = ref(true)
 const drawNoPlotLayers = ref(false)
 const progressiveRendering = ref(false)
 const paperSpaceBackground = ref(ACGI_PAPER_SPACE_BACKGROUND)
-const disableExport = ref(false)
 
 let mobileMediaQuery: MediaQueryList | null = null
 

@@ -244,17 +244,6 @@ export default {
     restored: '个对象已恢复显示',
     nothingToRestore: '没有可恢复显示的对象'
   },
-  entout: {
-    longSidePrompt: '输入预览图长边像素尺寸',
-    exported: '个对象预览已导出',
-    skipped: '个对象已跳过',
-    failed: {
-      'no-preview-root': '无法为所选对象构建预览几何',
-      'no-bounds': '无法计算所选对象的预览范围',
-      'capture-failed': '无法渲染实体预览图',
-      'download-failed': '预览已渲染，但 PNG 下载失败'
-    }
-  },
   layer: {
     main: '输入选项',
     listSummary: '图层列表已输出到浏览器控制台',
@@ -760,21 +749,6 @@ export default {
   },
   mtext: {
     point: '指定多行文本插入点'
-  },
-  bmpout: {
-    boundsFirstCorner: '指定边界的第一个角点',
-    boundsSecondCorner: '指定对角点',
-    longSidePrompt: '输入长边像素大小'
-  },
-  jpgout: {
-    boundsFirstCorner: '指定边界的第一个角点',
-    boundsSecondCorner: '指定对角点',
-    longSidePrompt: '输入长边像素大小'
-  },
-  pngout: {
-    boundsFirstCorner: '指定边界的第一个角点',
-    boundsSecondCorner: '指定对角点',
-    longSidePrompt: '输入长边像素大小'
   },
   insert: {
     blockName: '输入块名：',

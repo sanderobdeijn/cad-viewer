@@ -138,7 +138,7 @@ New to CAD Viewer? The **[User Guide](https://mlightcad.com/cad-viewer/docs/)** 
 
 CAD-Viewer is built around a modular **plugin system** in [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Plugins implement the `AcApPlugin` interface and hook into viewer lifecycle via `onLoad` / `onUnload`—typically to register commands, add UI, or wire export/import pipelines.
 
-Load plugins through `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Export-oriented plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command (for example `csvg`).
+Load plugins through `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command.
 
 The monorepo ships several first-party plugins. Each focuses on one concern; combine them as needed. **Installation, registration, and API details live in each package’s README**—see the links below.
 
@@ -147,7 +147,6 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 | Package | Role | Commands / capabilities |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar, layer manager & review palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `layer`, `markuppanel`, default toolbar (view, measure, export, review, theme, locale) |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG export** and shared vector renderer | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI chrome for the simple viewer
 
@@ -163,12 +162,6 @@ It provides:
 All widgets are framework-agnostic (plain DOM). The full Vue [`cad-viewer`](packages/cad-viewer) app has its own Element Plus UI and does not require this plugin; use `cad-simple-ui-plugin` when you build on `cad-simple-viewer` directly.
 
 → **Quick start, toolbar customization, and options:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
-
-### Export plugin (SVG)
-
-The SVG plugin adds the `csvg` export command to the same plugin manager. It is **lazy-loaded** so initial page weight stays small. Both [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) and the full [`cad-viewer`](packages/cad-viewer) app register it in their bootstrap.
-
-- **SVG** — vector SVG export: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
 
 ## Performance
 
@@ -381,7 +374,6 @@ Legend:
 #### Offline Editor
 
 * [x] Local editing in browser
-* [x] Save to DXF
 * [ ] Save change set / diff
 * [ ] IndexedDB persistence
 

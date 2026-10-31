@@ -3,10 +3,6 @@ export default {
     new: '新建图纸',
     open: '打开图纸',
     drawingUnits: '图形单位',
-    exportMenu: '导出',
-    export: '导出为DXF',
-    exportSvg: '导出为 SVG',
-    exportImage: '导出图片',
     about: '关于'
   },
   ribbon: {

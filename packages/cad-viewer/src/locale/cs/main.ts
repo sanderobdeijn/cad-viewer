@@ -3,10 +3,6 @@ export default {
     new: 'Nový výkres',
     open: 'Otevřít výkres',
     drawingUnits: 'Jednotky výkresu',
-    exportMenu: 'Export',
-    export: 'Exportovat do DXF',
-    exportSvg: 'Exportovat do SVG',
-    exportImage: 'Exportovat do obrázku',
     about: 'O aplikaci'
   },
   ribbon: {

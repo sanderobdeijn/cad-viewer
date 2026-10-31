@@ -201,11 +201,6 @@ jest.mock('../src/command', () => {
     'AcApClearMarkupsCmd',
     'AcApClearMeasurementsCmd',
     'AcApCloseCmd',
-    'AcApConvertToBmpCmd',
-    'AcApConvertToDxfCmd',
-    'AcApConvertToJpgCmd',
-    'AcApConvertToPngCmd',
-    'AcApEntityPreviewCmd',
     'AcApCopyCmd',
     'AcApDimLinearCmd',
     'AcApEllipseCmd',
@@ -468,48 +463,6 @@ describe('AcApDocManager preset fonts for open', () => {
     // Open continues while preset load is still in flight.
     expect(ensureSettled).toBe(false)
     if (settleTimer) clearTimeout(settleTimer)
-  })
-})
-
-describe('AcApDocManager disableExport', () => {
-  beforeEach(() => {
-    ;(AcApDocManager as unknown as { _instance: unknown })._instance = undefined
-    acapDisposeNotificationService()
-  })
-
-  it('defaults to enabling export commands', () => {
-    const manager = AcApDocManager.createInstance({})
-    expect(manager?.disableExport).toBe(false)
-
-    const addCommand = (
-      manager!.commandManager as unknown as { addCommand: jest.Mock }
-    ).addCommand
-    const registered = addCommand.mock.calls.map(
-      (call: unknown[]) => call[1] as string
-    )
-    expect(registered).toContain('cdxf')
-    expect(registered).toContain('pngout')
-    expect(registered).toContain('jpgout')
-    expect(registered).toContain('bmpout')
-  })
-
-  it('skips built-in export commands when disableExport is true', () => {
-    const manager = AcApDocManager.createInstance({
-      disableExport: true
-    })
-    expect(manager?.disableExport).toBe(true)
-
-    const addCommand = (
-      manager!.commandManager as unknown as { addCommand: jest.Mock }
-    ).addCommand
-    const registered = addCommand.mock.calls.map(
-      (call: unknown[]) => call[1] as string
-    )
-    expect(registered).not.toContain('cdxf')
-    expect(registered).not.toContain('pngout')
-    expect(registered).not.toContain('jpgout')
-    expect(registered).not.toContain('bmpout')
-    expect(registered).toContain('open')
   })
 })
 

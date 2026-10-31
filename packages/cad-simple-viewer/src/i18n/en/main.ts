@@ -35,12 +35,7 @@ export default {
   message: {
     onLockedLayer: 'on a locked layer.',
     fetchingDrawingFile: 'Fetching file ...',
-    exportingDxf: 'Exporting DXF ...',
-    exportingPdf: 'Exporting PDF ...',
-    exportingSvg: 'Exporting SVG ...',
     calculatingSmartExtents: 'Calculating smart extents ...',
-    importingPdf: 'Importing PDF ...',
-    exportingEntityPreview: 'Exporting image ...',
     collectingMemoryProfile: 'Analyzing memory ...',
     fontCached: 'Font cached successfully',
     fontCacheFailed: 'Failed to cache font',

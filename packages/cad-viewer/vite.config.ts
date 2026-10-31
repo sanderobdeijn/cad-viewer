@@ -71,8 +71,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       },
       minify: true,
       rollupOptions: {
-        // The SVG plugin is a peer; loaded at runtime via dynamic import
-        external: ['@mlightcad/cad-svg-plugin'],
         output: {
           chunkFileNames: `${packageId}-[name]-[hash].js`,
           assetFileNames: `${packageId}[extname]`

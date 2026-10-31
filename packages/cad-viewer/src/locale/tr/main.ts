@@ -3,10 +3,6 @@ export default {
     new: 'Yeni Çizim',
     open: 'Çizim Aç',
     drawingUnits: 'Çizim Birimleri',
-    exportMenu: 'Dışa Aktar',
-    export: 'DXF\'e Dışa Aktar',
-    exportSvg: 'SVG\'e Dışa Aktar',
-    exportImage: 'Görüntüye Dışa Aktar',
     about: 'Hakkında'
   },
   ribbon: {

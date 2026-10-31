@@ -25,7 +25,6 @@
         :open-view-mode="openViewMode"
         :circle-sides="circleSides"
         :paper-space-background="paperSpaceBackground"
-        :disable-export="disableExport"
         @create="onViewerCreate"
         :base-url="BASE_URL"
       />
@@ -121,7 +120,6 @@ const progressiveRendering = ref(false)
 const openViewMode = ref<AcApOpenViewMode | undefined>(undefined)
 const circleSides = ref(ACDB_DRAW_CIRCLE_SIDES_DRAFT)
 const paperSpaceBackground = ref(ACGI_PAPER_SPACE_BACKGROUND)
-const disableExport = ref(false)
 
 const createNewDrawing = async () => {
   const success = await AcApDocManager.instance.newDocument({
@@ -164,8 +162,7 @@ const applyOpenOptions = (
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
-  paperBg: number,
-  exportDisabled: boolean
+  paperBg: number
 ) => {
   selectedMode.value = mode
   useMainThreadDraw.value = mainThreadDraw
@@ -174,7 +171,6 @@ const applyOpenOptions = (
   openViewMode.value = viewMode
   circleSides.value = sides
   paperSpaceBackground.value = paperBg
-  disableExport.value = exportDisabled
 }
 
 const handleFileSelect = (
@@ -185,8 +181,7 @@ const handleFileSelect = (
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
-  paperBg: number,
-  exportDisabled: boolean
+  paperBg: number
 ) => {
   store.isNewDrawing = false
   store.selectedUrl = null
@@ -198,8 +193,7 @@ const handleFileSelect = (
     enableProgressiveRendering,
     viewMode,
     sides,
-    paperBg,
-    exportDisabled
+    paperBg
   )
 }
 
@@ -211,8 +205,7 @@ const handleUrlSelect = (
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
-  paperBg: number,
-  exportDisabled: boolean
+  paperBg: number
 ) => {
   store.isNewDrawing = false
   store.selectedFile = null
@@ -224,8 +217,7 @@ const handleUrlSelect = (
     enableProgressiveRendering,
     viewMode,
     sides,
-    paperBg,
-    exportDisabled
+    paperBg
   )
 }
 
@@ -237,8 +229,7 @@ const handleDataSourceAction = (
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
-  paperBg: number,
-  exportDisabled: boolean
+  paperBg: number
 ) => {
   // Landing page: invoke the AcApDataSource protocol (any cloud plugin).
   const landingSource = landingDataSources.get(item.sourceId)
@@ -255,8 +246,7 @@ const handleDataSourceAction = (
             enableProgressiveRendering,
             viewMode,
             sides,
-            paperBg,
-            exportDisabled
+            paperBg
           )
           return
         }
@@ -269,8 +259,7 @@ const handleDataSourceAction = (
             enableProgressiveRendering,
             viewMode,
             sides,
-            paperBg,
-            exportDisabled
+            paperBg
           )
         }
       })
@@ -291,8 +280,7 @@ const handleDataSourceAction = (
     enableProgressiveRendering,
     viewMode,
     sides,
-    paperBg,
-    exportDisabled
+    paperBg
   )
 }
 
@@ -303,8 +291,7 @@ const handleNewDrawing = (
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
-  paperBg: number,
-  exportDisabled: boolean
+  paperBg: number
 ) => {
   store.selectedFile = null
   store.selectedUrl = null
@@ -316,8 +303,7 @@ const handleNewDrawing = (
     enableProgressiveRendering,
     viewMode,
     sides,
-    paperBg,
-    exportDisabled
+    paperBg
   )
 }
 </script>
