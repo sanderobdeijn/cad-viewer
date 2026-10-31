@@ -33,12 +33,6 @@ export default {
     cdxf: {
       description: '导出当前图纸为DXF格式'
     },
-    cpdf: {
-      description: '导出当前图纸为PDF格式'
-    },
-    '-cpdf': {
-      description: '使用命令行选项将当前图纸导出为PDF'
-    },
     cecolor: {
       description: '设置新创建对象的当前默认颜色'
     },
@@ -81,12 +75,6 @@ export default {
     },
     csvg: {
       description: '转换当前图纸为SVG格式'
-    },
-    chtml: {
-      description: '将当前图纸导出为可离线打开的 HTML 文件'
-    },
-    '-chtml': {
-      description: '通过命令行选项将当前图纸导出为 HTML 文件'
     },
     dimlinear: {
       description: '创建线性尺寸标注'
@@ -153,9 +141,6 @@ export default {
     },
     hatch: {
       description: '用填充图案填充封闭区域或所选对象'
-    },
-    ipdf: {
-      description: '从 PDF 文件导入矢量几何'
     },
     hpang: {
       description: '设置新创建填充图案的默认角度（弧度）'

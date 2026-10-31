@@ -189,8 +189,6 @@ export default {
     urlDialogHint: 'أدخل عنوان URL لملف .dwg أو .dxf.',
     urlPlaceholder: 'https://example.com/drawing.dwg',
     cancel: 'إلغاء',
-    onedrive: 'OneDrive',
-    googledrive: 'Google Drive',
     or: 'أو',
     dropFile: 'أسقط ملفًا هنا أو',
     browse: 'تصفح',

@@ -144,12 +144,8 @@ Prefer writing the changeset file directly (agents often lack an interactive TTY
 
 ```md
 ---
-"@mlightcad/cad-agent-plugin": patch
-"@mlightcad/cad-html-plugin": patch
-"@mlightcad/cad-pdf-plugin": patch
 "@mlightcad/cad-simple-ui-plugin": patch
 "@mlightcad/cad-simple-viewer": patch
-"@mlightcad/cad-simple-viewer-cli": patch
 "@mlightcad/cad-simple-viewer-example": patch
 "@mlightcad/cad-diff-viewer": patch
 "@mlightcad/cad-diff-viewer-example": patch

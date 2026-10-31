@@ -10,8 +10,6 @@
 cad-viewer は、`バックエンドサービスに一切依存せず、完全にブラウザ上で動作する世界初の Web ベース DXF/DWG ビューア兼エディタ` です。
 DWG/DXF の解析、ジオメトリ処理、レンダリングをすべてブラウザ内で行うことで、cad-viewer は真のサーバーレス CAD 閲覧・編集を実現します。クラウドアプリ、オフライン利用、プライバシーに配慮したワークフローに最適です。
 
-また、他の CAD ビューアではほとんど見られない機能として、**ワンクリックで単一の自己完結型 HTML ファイルへエクスポート** できます。ダウンロードした `.html` には図面スナップショットと軽量なビューアランタイムが埋め込まれており、受信者は **CAD アプリもサーバーもインストールも不要** で、任意のモダンブラウザから開いて、パン、ズーム、レイヤー切り替え、距離測定ができます。多くのデスクトップおよび Web CAD ビューアは自社製品内での閲覧に限られますが、cad-viewer はライブな図面を、メール送信、アーカイブ、静的ファイルホストに置けるポータブルなオフライン成果物に変換します。クライアントへの共有、コンプライアンスアーカイブ、エアギャップ環境に最適です。オフラインビューアは、同じ図面を開く際に従来のデスクトップツールよりはるかに少ないメモリを使用します（下記の[メモリ比較](#自己完結型-html-のメモリ使用量)を参照）。
-
 - [**🌐 ホームページ**](https://mlightcad.com/)
 - **🌐 ライブデモ**：[Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
 - **🌐 API ドキュメント**：[Read the Docs](https://cad-viewer.readthedocs.io/en/latest/)（バージョン管理あり）· [MCP サーバー](https://gitmcp.io/mlightcad/cad-viewer)
@@ -62,7 +60,6 @@ cad-viewer を自社プロダクトへ組み込む方法を示す公式サンプ
 - **容易な統合** — サーバー設定やバックエンドインフラが不要
 - サードパーティ連携に適したモジュラーアーキテクチャ
 - **モバイルレイアウトとタッチ操作** — `@mlightcad/cad-simple-viewer` にレスポンシブなスマホ/タブレット UI とタッチジェスチャ（ピンチズーム、単指パン、タップ選択）を内蔵。専用モバイルアプリなしでモバイルブラウザから利用可能
-- **オフライン HTML へのエクスポート** — 現在の図面を、埋め込みビューア付きの単一自己完結型 `.html` ファイルとしてエクスポート（パン/ズーム、範囲ズーム、レイヤー、距離測定、EN/ZH UI）。任意のブラウザでオフライン起動可能。cad-viewer インスタンスやバックエンドは不要
 - オフラインおよびオンライン編集ワークフロー
 - 高度な最適化手法を備えた THREE.js 3D レンダリングエンジン
 - CMS、Notion、WeChat などのプラットフォームとの連携を見据えた拡張性
@@ -141,7 +138,7 @@ CAD Viewer を初めてお使いですか？**[ユーザーガイド](https://ml
 
 CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内のモジュラー **プラグインシステム** を中心に構築されています。プラグインは `AcApPlugin` インターフェースを実装し、`onLoad` / `onUnload` 経由でビューアのライフサイクルにフックします。通常はコマンド登録、UI 追加、エクスポート/インポートパイプラインの接続に使用します。
 
-プラグインは `AcApDocManager.instance.pluginManager`（`loadPlugin`、`registerLazyPlugin`、またはドキュメントマネージャー作成時の `plugins.fromConfig`）から読み込みます。エクスポート向けプラグインは **遅延読み込み** をサポートします。起動時に小さなスタブだけを登録し、ユーザーが関連コマンド（例：`-chtml`、または `cad-viewer` の `chtml` ダイアログでエクスポートを確定したとき）を実行した時点で重いバンドルをダウンロードします。
+プラグインは `AcApDocManager.instance.pluginManager`（`loadPlugin`、`registerLazyPlugin`、またはドキュメントマネージャー作成時の `plugins.fromConfig`）から読み込みます。エクスポート向けプラグインは **遅延読み込み** をサポートします。起動時に小さなスタブだけを登録し、ユーザーが関連コマンドを実行した時点で重いバンドルをダウンロードします。
 
 モノレポには複数のファーストパーティプラグインが同梱されています。各プラグインは 1 つの関心事に集中しており、必要に応じて組み合わせられます。**インストール、登録、API の詳細は各パッケージの README に記載されています** — 下記リンクを参照してください。
 
@@ -150,10 +147,7 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 | パッケージ | 役割 | コマンド / 機能 |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer` 向け **ツールバー・レイヤーマネージャー・レビューパレット UI**（プレーン DOM、Vue/React 非依存） | `layer`、`markuppanel`、デフォルトツールバー（表示、測定、エクスポート、レビュー、テーマ、ロケール） |
-| [`@mlightcad/cad-agent-plugin`](packages/cad-agent-plugin) | **自然言語 CAD エージェント**（AI チャットパネル + 図面ツール呼び出し） | `agent` |
-| [`@mlightcad/cad-html-plugin`](packages/cad-html-plugin) | 図面を **自己完結型オフライン HTML** へエクスポート | `chtml`（`cad-viewer` のダイアログ）、`-chtml`（コマンドライン） |
-| [`@mlightcad/cad-pdf-plugin`](packages/cad-pdf-plugin) | **PDF エクスポートとインポート**（ベクターパイプライン） | `cpdf`、`ipdf` |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG エクスポート** と共有ベクターレンダラー（PDF エクスポートでも使用） | `csvg` |
+| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG エクスポート** と共有ベクターレンダラー | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — シンプルビューア向け UI 層
 
@@ -170,43 +164,11 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 
 → **クイックスタート、ツールバーカスタマイズ、オプション：** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
-### `@mlightcad/cad-agent-plugin` — AI 図面アシスタント
+### エクスポートプラグイン（SVG）
 
-[`cad-agent-plugin`](packages/cad-agent-plugin) は `cad-simple-viewer` ベースのアプリに **自然言語 CAD エージェント** を追加します。ユーザーは平易な言語で希望を記述し、エージェントが CAD ツールを呼び出して図面を調査し、ジオメトリを作成または変更します。
+SVG プラグインは、同じプラグインマネージャーに `csvg` エクスポートコマンドを追加します。初期ページの容量を小さく保つため、**遅延読み込み**されます。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) とフル版の [`cad-viewer`](packages/cad-viewer) アプリの両方が起動時に登録します。
 
-提供機能：
-
-- **遅延読み込み** `AcApPlugin`（トリガーコマンド：`agent`）により、AI バンドルをクリティカルパスから外す
-- Vercel AI SDK（`Experimental_Agent` + `@ai-sdk/vue`）上の **Vue チャットパネル**（`AgentChatPanel`）
-- **ブラウザ側 LLM 設定** — OpenAI、Anthropic、OpenAI 互換エンドポイントの API キーはクライアントに保持（`localStorage` に暗号化保存）
-- **フェーズ 1 CAD ツール** — `get_drawing_context`；`draw_line`、`draw_circle`、`draw_arc`、`draw_rectangle`、`draw_polyline`、`draw_text`；`set_current_layer`、`create_layer`、`zoom_extents`
-- プラグイン i18n 層による **英語 / 中国語 / トルコ語 / チェコ語** UI 文字列
-
-フル Vue [`cad-viewer`](packages/cad-viewer) アプリは、パッケージインストール時にエージェントを自動登録します（パレットタブ）。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) は `cad-simple-ui-plugin` 経由でドックタブに接続します。ホストアプリは `registerLazyAgentPlugin` と `setAgentPaletteOpener` を呼び出し、パネルのマウント位置を決定します。
-
-→ **インストール、登録、ツール一覧：** [packages/cad-agent-plugin/README.md](packages/cad-agent-plugin/README.md)
-
-### エクスポートプラグイン（HTML / PDF / SVG）
-
-これらのプラグインは、同一プラグインマネージャーにエクスポート（および PDF インポート）コマンドを追加します。**遅延読み込み** により初期ページ重量を抑えます。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) デモは 3 つのエクスポートプラグイン、`cad-simple-ui-plugin`、`cad-agent-plugin` をすべて登録します。フル [`cad-viewer`](packages/cad-viewer) アプリはブートストラップ時にエクスポートプラグインと（インストール時）エージェントプラグインを登録します。
-
-- **HTML** — 共有とアーカイブ向けの単一ファイルオフラインビューア：[packages/cad-html-plugin/README.md](packages/cad-html-plugin/README.md)  
-  （同一パイプラインのヘッドレス CLI：[packages/cad-simple-viewer-cli/README.md](packages/cad-simple-viewer-cli/README.md)）
-- **PDF** — ベクター PDF エクスポートと PDF から CAD へのインポート：[packages/cad-pdf-plugin/README.md](packages/cad-pdf-plugin/README.md)
 - **SVG** — ベクター SVG エクスポート：[packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
-
-#### 自己完結型 HTML のメモリ使用量
-
-サンプル図面 [`canteen.dwg`](https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg) を開いた場合のメモリ消費量の目安：
-
-| ビューア | メモリ消費量 |
-|--------|-------------|
-| AutoCAD 2020 | 320 MB |
-| GstarCAD Viewer (浩辰看图王) | 246 MB |
-| 自己完結型 HTML（測定モード） | 56 MB |
-| 自己完結型 HTML（表示モード） | 33 MB |
-
-オフライン HTML ビューアは、表示モードで AutoCAD 2020 より約 **83% 少ない** メモリ、GstarCAD Viewer より約 **77% 少ない** メモリを使用しながら、パン/ズーム、レイヤー切り替え、距離測定（測定モード）をサポートします。
 
 ## パフォーマンス
 
@@ -251,7 +213,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 
 * [x] DXF 読み込み
 * [x] DWG 読み込み
-* [x] 自己完結型オフライン HTML へのエクスポート（埋め込みビューア）
 * [x] 大容量ファイルのストリーミング / 増分読み込み
 * [ ] ⏳ ファイルバージョン互換性（R12–Latest）
 
@@ -434,7 +395,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 
 ### プラットフォーム目標
 
-* [x] Google Drive 連携（Picker データソース；Drive “Open with” は任意のフォローアップ）
 * [ ] WeChat Mini Program ビューア
 * [x] モバイルブラウザサポート（レスポンシブレイアウトとタッチ操作）
 

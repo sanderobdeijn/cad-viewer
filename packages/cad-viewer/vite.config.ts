@@ -71,18 +71,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       },
       minify: true,
       rollupOptions: {
-        // PDF/HTML/SVG/Agent plugins are peers; loaded at runtime via dynamic import
-        external: [
-          '@mlightcad/cad-pdf-plugin',
-          '@mlightcad/cad-html-plugin',
-          '@mlightcad/cad-svg-plugin',
-          '@mlightcad/cad-agent-plugin',
-          '@mlightcad/cad-agent-plugin/register',
-          '@mlightcad/cad-agent-plugin/style.css',
-          '@mlightcad/cad-script-plugin',
-          '@mlightcad/cad-script-plugin/register',
-          '@mlightcad/cad-script-plugin/style.css'
-        ],
+        // The SVG plugin is a peer; loaded at runtime via dynamic import
+        external: ['@mlightcad/cad-svg-plugin'],
         output: {
           chunkFileNames: `${packageId}-[name]-[hash].js`,
           assetFileNames: `${packageId}[extname]`

@@ -20,7 +20,7 @@ Ribbon, tüm AutoCAD tarzı sekmeleri tam olarak görüntüler:
 
 | Sekme | Komutlar |
 |---|---|
-| File | Aç, Export DXF, Export PNG, Export Self-contained HTML |
+| File | Aç, Export DXF, Export PNG |
 | Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, Block Insert, vb. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, vb. |
 | Layers | Katman yönetimi (açma/kapama, dondurma/çözme, kilitleme, yalıtma, yeni, silme) |

@@ -1,11 +1,5 @@
 import {
-  type AcApHtmlPluginOptions,
-  registerLazyHtmlPlugin
-} from '@mlightcad/cad-html-plugin/register'
-import { registerLazyPdfPlugin } from '@mlightcad/cad-pdf-plugin/register'
-import {
   AcApDocManager,
-  type AcApPluginManager,
   AcEdCommandStack,
   AcEdMTextEditor
 } from '@mlightcad/cad-simple-viewer'
@@ -17,8 +11,6 @@ import {
   AcApAttEditCmd,
   AcApCountListCmd,
   AcApDrawingUnitsCmd,
-  AcApExportHtmlDlgCmd,
-  AcApExportPdfDlgCmd,
   AcApFindCmd,
   AcApInsertPaletteCmd,
   AcApLayerStateCmd,
@@ -39,21 +31,16 @@ import {
   MlAttDefDlg,
   MlAttEditDlg,
   MlDrawingUnitsDlg,
-  MlExportHtmlDlg,
-  MlExportPdfDlg,
   MlPointStyleDlg,
   MlQuickSelectDlg,
   MlTextStyleDlg
 } from '../component'
 import { useDialogManager } from '../composable'
-import { i18n } from '../locale'
-import { store } from './store'
 
 let isCommandRegistered = false
 export const registerCmds = () => {
   if (!isCommandRegistered) {
     const register = AcApDocManager.instance.commandManager
-    const disableExport = AcApDocManager.instance.disableExport
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'layer',
@@ -90,20 +77,6 @@ export const registerCmds = () => {
       'qselect',
       new AcApQSelectCmd()
     )
-    if (!disableExport) {
-      register.addCommand(
-        AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-        'chtml',
-        'chtml',
-        new AcApExportHtmlDlgCmd()
-      )
-      register.addCommand(
-        AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-        'cpdf',
-        'cpdf',
-        new AcApExportPdfDlgCmd()
-      )
-    }
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'units',
@@ -190,7 +163,6 @@ let isDialogRegistered = false
 export const registerDialogs = () => {
   if (!isDialogRegistered) {
     const { registerDialog } = useDialogManager()
-    const disableExport = AcApDocManager.instance.disableExport
     registerDialog({
       name: 'PointStyleDlg',
       component: markRaw(MlPointStyleDlg),
@@ -201,18 +173,6 @@ export const registerDialogs = () => {
       component: markRaw(MlQuickSelectDlg),
       props: {}
     })
-    if (!disableExport) {
-      registerDialog({
-        name: 'ExportHtmlDlg',
-        component: markRaw(MlExportHtmlDlg),
-        props: {}
-      })
-      registerDialog({
-        name: 'ExportPdfDlg',
-        component: markRaw(MlExportPdfDlg),
-        props: {}
-      })
-    }
     registerDialog({
       name: 'DrawingUnitsDlg',
       component: markRaw(MlDrawingUnitsDlg),
@@ -248,113 +208,21 @@ export const registerMTextColorPicker = () => {
 }
 
 let isLazyPluginRegistered = false
-let isAgentIntegrationStarted = false
-let isScriptIntegrationStarted = false
-
-const registerAgentIntegration = async (pluginManager: AcApPluginManager) => {
-  try {
-    await import('@mlightcad/cad-agent-plugin/style.css')
-    const agentRegister = await import('@mlightcad/cad-agent-plugin/register')
-
-    agentRegister.setAgentPaletteOpener(() => {
-      if (
-        store.dialogs.layerManager &&
-        store.dialogs.activePaletteTab === 'agent'
-      ) {
-        store.dialogs.layerManager = false
-        return
-      }
-
-      store.dialogs.activePaletteTab = 'agent'
-      store.dialogs.layerManager = true
-    })
-
-    agentRegister.mergeAgentI18nIntoVueI18n((locale, messages) => {
-      i18n.global.mergeLocaleMessage(locale, messages)
-    })
-
-    agentRegister.registerLazyAgentPlugin(pluginManager)
-    store.features.agentPlugin = true
-  } catch {
-    // Optional peer `@mlightcad/cad-agent-plugin` is not installed.
-  }
-}
-
-const registerCadScriptIntegration = async (
-  pluginManager: AcApPluginManager
-) => {
-  try {
-    await import('@mlightcad/cad-script-plugin/style.css')
-    const scriptRegister = await import('@mlightcad/cad-script-plugin/register')
-
-    scriptRegister.setCadScriptPaletteOpener(() => {
-      if (
-        store.dialogs.layerManager &&
-        store.dialogs.activePaletteTab === 'cadScript'
-      ) {
-        store.dialogs.layerManager = false
-        return
-      }
-
-      store.dialogs.activePaletteTab = 'cadScript'
-      store.dialogs.layerManager = true
-    })
-
-    scriptRegister.mergeScriptI18nIntoVueI18n((locale, messages) => {
-      i18n.global.mergeLocaleMessage(locale, messages)
-    })
-
-    scriptRegister.registerLazyCadScriptPlugin(pluginManager)
-    store.features.scriptPlugin = true
-  } catch {
-    // Optional peer `@mlightcad/cad-script-plugin` is not installed.
-  }
-}
-
-/**
- * Options for {@link registerLazyPlugins}.
- */
-export interface RegisterLazyPluginsOptions {
-  /** Options passed to {@link registerLazyHtmlPlugin} (HTML export only). */
-  htmlPlugin?: AcApHtmlPluginOptions
-}
 
 /**
  * Registers lazy plugins that load on first use of their trigger commands.
  *
- * Currently registers the PDF plugin (`-cpdf`, `ipdf`), the HTML export
- * plugin (`-chtml`), the SVG export plugin (`csvg`), and optionally the CAD
- * Agent plugin (`agent`) when `@mlightcad/cad-agent-plugin` is installed, and the
- * script console (`cadscript`) when `@mlightcad/cad-script-plugin` is installed.
- * When {@link AcApDocManager.disableExport} is true, HTML/SVG export plugins
- * are skipped and the PDF plugin only exposes `ipdf`. Host UI commands
- * `chtml` / `cpdf` open export dialogs and load the plugins on confirm.
+ * Currently registers the SVG export plugin (`csvg`). When
+ * {@link AcApDocManager.disableExport} is true, nothing is registered.
  * Safe to call multiple times; registration runs once per application lifetime.
- *
- * @param options - Optional HTML plugin settings such as `viewerRuntimeUrl`
  */
-export const registerLazyPlugins = (
-  options: RegisterLazyPluginsOptions = {}
-) => {
+export const registerLazyPlugins = () => {
   if (isLazyPluginRegistered) {
     return
   }
 
-  const pluginManager = AcApDocManager.instance.pluginManager
-  const disableExport = AcApDocManager.instance.disableExport
-  registerLazyPdfPlugin(pluginManager, { disableExport })
-  if (!disableExport) {
-    registerLazyHtmlPlugin(pluginManager, options.htmlPlugin)
-    registerLazySvgPlugin(pluginManager)
-  }
-
-  if (!isAgentIntegrationStarted) {
-    isAgentIntegrationStarted = true
-    void registerAgentIntegration(pluginManager)
-  }
-  if (!isScriptIntegrationStarted) {
-    isScriptIntegrationStarted = true
-    void registerCadScriptIntegration(pluginManager)
+  if (!AcApDocManager.instance.disableExport) {
+    registerLazySvgPlugin(AcApDocManager.instance.pluginManager)
   }
 
   isLazyPluginRegistered = true

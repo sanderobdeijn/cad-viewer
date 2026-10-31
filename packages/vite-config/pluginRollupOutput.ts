@@ -35,7 +35,7 @@ function resolvePackageEntry(
 
 /**
  * Resolves peer packages from the example app so nested imports inside
- * `cad-pdf-plugin/dist` (pnpm isolation) still bundle.
+ * plugin `dist` folders (pnpm isolation) still bundle.
  *
  * Resolve the package entry (`require.resolve(name)`), not `name/package.json`:
  * many `@mlightcad/*` packages omit `package.json` from `exports`.
@@ -70,14 +70,8 @@ export function examplePeerPackageAliases(fromPackageDir: string): Alias[] {
 
 /** Export plugins with a separate lazy `/register` entry. */
 export const PLUGIN_PACKAGE_IDS = [
-  'cad-pdf-plugin',
-  'cad-html-plugin',
   'cad-svg-plugin',
-  'cad-simple-ui-plugin',
-  'cad-agent-plugin',
-  'cad-script-plugin',
-  'cad-onedrive-plugin',
-  'cad-google-drive-plugin'
+  'cad-simple-ui-plugin'
 ] as const
 
 /** Core viewer libraries shipped from this monorepo. */
@@ -85,9 +79,7 @@ export const VIEWER_PACKAGE_IDS = [
   'cad-simple-viewer',
   'cad-diff-viewer',
   'cad-viewer',
-  'three-renderer',
-  'cad-html-core',
-  'cad-agent-core'
+  'three-renderer'
 ] as const
 
 /**
@@ -152,18 +144,6 @@ function matchThreePackage(id: string): boolean {
  * Groups monorepo packages into predictable Rollup chunks for example app builds.
  */
 export const exampleManualChunks: ManualChunksOption = (id: string) => {
-  if (
-    matchMonorepoPackage(id, 'pdf-renderer') ||
-    /(?:^|\/)pdf-lib(?:\/|$)/.test(id.replace(/\\/g, '/'))
-  ) {
-    return 'cad-pdf-plugin'
-  }
-
-  // Shared ACEX codecs / packagers ship with the HTML plugin chunk.
-  if (matchMonorepoPackage(id, 'cad-html-core')) {
-    return 'cad-html-plugin'
-  }
-
   for (const pluginId of PLUGIN_PACKAGE_IDS) {
     if (!matchMonorepoPackage(id, pluginId)) {
       continue

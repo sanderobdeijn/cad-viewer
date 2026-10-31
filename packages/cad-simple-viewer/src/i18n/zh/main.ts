@@ -186,8 +186,6 @@ export default {
     urlDialogHint: '请输入 .dwg 或 .dxf 文件的网址。',
     urlPlaceholder: 'https://example.com/drawing.dwg',
     cancel: '取消',
-    onedrive: 'OneDrive',
-    googledrive: 'Google Drive',
     or: '或',
     dropFile: '将文件拖放到此处，或',
     browse: '浏览',

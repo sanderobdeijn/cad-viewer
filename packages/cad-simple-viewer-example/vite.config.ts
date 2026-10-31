@@ -14,19 +14,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-/** Relative to this package root; works with vite-plugin-static-copy on Windows. */
-const VIEWER_RUNTIME_SRC = '../cad-html-plugin/dist/viewer-runtime.iife.js'
-
 export default defineConfig(() => {
-  const runtimePath = resolve(__dirname, VIEWER_RUNTIME_SRC)
-  const hasViewerRuntime = existsSync(runtimePath)
-  if (!hasViewerRuntime) {
-    console.warn(
-      '[cad-simple-viewer-example] viewer-runtime.iife.js not found — HTML export (chtml) will be unavailable. ' +
-        'Build @mlightcad/cad-html-plugin to enable it. Opening DXF/DWG does not require this file.'
-    )
-  }
-
   const realdwgRoot = resolve(__dirname, '../../../realdwg-web')
   const libredwgDist = `./node_modules/${LIBREDWG_CONVERTER_PACKAGE}/dist`
   const libredwgWasmSrc = resolve(
@@ -57,8 +45,7 @@ export default defineConfig(() => {
       minify: true,
       rollupOptions: {
         input: {
-          main: resolve(__dirname, 'index.html'),
-          htmlConverter: resolve(__dirname, 'html-converter.html')
+          main: resolve(__dirname, 'index.html')
         },
         output: exampleRollupOutput
       }
@@ -82,15 +69,6 @@ export default defineConfig(() => {
                 {
                   src: `${libredwgDist}/${LIBREDWG_PARSER_WASM_FILE}`,
                   dest: 'workers',
-                  rename: { stripBase: true }
-                }
-              ]
-            : []),
-          ...(hasViewerRuntime
-            ? [
-                {
-                  src: VIEWER_RUNTIME_SRC,
-                  dest: '',
                   rename: { stripBase: true }
                 }
               ]

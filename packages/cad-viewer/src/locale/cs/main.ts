@@ -5,8 +5,6 @@ export default {
     drawingUnits: 'Jednotky výkresu',
     exportMenu: 'Export',
     export: 'Exportovat do DXF',
-    exportHtml: 'Exportovat do HTML',
-    exportPdf: 'Exportovat do PDF',
     exportSvg: 'Exportovat do SVG',
     exportImage: 'Exportovat do obrázku',
     about: 'O aplikaci'
@@ -311,8 +309,6 @@ export default {
         'Otevře Rozšířený editor atributů pro úpravu hodnot a zobrazovacích vlastností atributů bloku (ATTEDIT).',
       defineAttribute:
         'Vytvoří definici atributu pro použití v bloku (ATTDEF).',
-      agent:
-        'Otevře kartu palety CAD Agent pro kreslení geometrie přirozeným jazykem.',
       propertyColor: 'Nastaví barvu nových nebo vybraných objektů.',
       propertyLineType: 'Nastaví typ čáry nových nebo vybraných objektů.',
       propertyLineWeight:
@@ -413,8 +409,7 @@ export default {
       attachImage: 'Připojit\nobrázek',
       insert: 'Vložit',
       editAttributes: 'Upravit\natributy',
-      defineAttribute: 'Definovat\natribut',
-      agent: 'CAD\nAgent'
+      defineAttribute: 'Definovat\natribut'
     }
   },
   verticalToolbar: {

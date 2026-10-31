@@ -52,8 +52,6 @@ export const en: Record<string, string> = {
   'toolbar.showMarkup': 'Show',
   'toolbar.hideMarkup': 'Hide',
   'toolbar.export': 'Export',
-  'toolbar.exportHtml': 'Export HTML',
-  'toolbar.exportPdf': 'Export PDF',
   'toolbar.exportSvg': 'Export SVG',
   'toolbar.placement': 'Toolbar Position',
   'toolbar.placementTop': 'Top',

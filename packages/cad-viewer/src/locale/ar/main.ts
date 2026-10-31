@@ -10,8 +10,6 @@ export default {
     drawingUnits: 'وحدات الرسم',
     exportMenu: 'تصدير',
     export: 'تصدير إلى DXF',
-    exportHtml: 'تصدير إلى HTML',
-    exportPdf: 'تصدير إلى PDF',
     exportSvg: 'تصدير إلى SVG',
     exportImage: 'تصدير إلى صورة',
     about: 'حول'
@@ -104,8 +102,7 @@ export default {
       attachDwg: 'إرفاق\nDWG',
       attachImage: 'إرفاق\nصورة',
       editAttributes: 'تعديل\nالسمات',
-      defineAttribute: 'تعريف\nسمة',
-      agent: 'وكيل\nCAD'
+      defineAttribute: 'تعريف\nسمة'
 ,
   mline: 'خط متعدد',
   ray: 'شعاع',
@@ -468,9 +465,6 @@ export default {
 
       defineAttribute:
         'أنشئ تعريف سمة لاستخدامه داخل كتلة (ATTDEF).',
-
-      agent:
-        'افتح لوحة CAD Agent لإنشاء هندسة باستخدام اللغة الطبيعية.',
 
       propertyColor:
         'حدد لون العناصر الجديدة أو العناصر المحددة.',

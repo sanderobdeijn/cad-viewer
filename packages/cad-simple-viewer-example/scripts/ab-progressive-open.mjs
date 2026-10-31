@@ -2,7 +2,6 @@
  * A/B open-performance harness for progressive rendering.
  *
  * Prerequisites:
- *   - `pnpm --filter @mlightcad/cad-html-plugin build` (viewer-runtime)
  *   - Target DWG at AB_DWG (default: 14.1 MiB water/drainage fixture)
  *
  * Run:

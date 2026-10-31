@@ -37,12 +37,6 @@ export default {
     cdxf: {
       description: 'Exportuje aktuální výkres do DXF'
     },
-    cpdf: {
-      description: 'Exportuje aktuální výkres do PDF'
-    },
-    '-cpdf': {
-      description: 'Exportuje aktuální výkres do PDF pomocí příkazového řádku'
-    },
     cecolor: {
       description: 'Nastaví aktuální výchozí barvu pro nově vytvářené objekty'
     },
@@ -88,14 +82,6 @@ export default {
     },
     csvg: {
       description: 'Převede aktuální výkres na SVG'
-    },
-    chtml: {
-      description:
-        'Exportuje aktuální výkres do samostatného offline souboru HTML'
-    },
-    '-chtml': {
-      description:
-        'Exportuje aktuální výkres do HTML pomocí voleb příkazového řádku'
     },
     dimlinear: {
       description: 'Vytvoří lineární kóty'
@@ -171,9 +157,6 @@ export default {
     hatch: {
       description:
         'Vyplní uzavřenou oblast nebo vybrané objekty vzorem šrafování'
-    },
-    ipdf: {
-      description: 'Importuje vektorovou geometrii ze souboru PDF'
     },
     hpang: {
       description:

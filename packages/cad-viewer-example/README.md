@@ -6,20 +6,17 @@ A Vue 3 demo that embeds [`@mlightcad/cad-viewer`](https://github.com/mlightcad/
 
 - **Full CAD UI** — `MlCadViewer` with toolbars, layer manager, command line, dialogs, and status bar
 - **Local files** — Drag-and-drop or file picker for `.dxf` / `.dwg` before entering the viewer
-- **OneDrive** — Optional `@mlightcad/cad-onedrive-plugin` when `VITE_MSAL_CLIENT_ID` is set (landing **Sign in to OneDrive**, then File → Open → **Open from OneDrive**)
-- **Google Drive** — Optional `@mlightcad/cad-google-drive-plugin` when `VITE_GOOGLE_*` env vars are set
 - **Open modes** — Read, Review, or Write access when opening a drawing
 - **Internationalization** — Built-in English/Chinese UI via `vue-i18n`; host app can merge custom messages
 - **Custom commands** — Example `quit` / `exit` commands return to the upload screen
 - **CDN assets** — Fonts and templates loaded from [cad-data](https://github.com/mlightcad/cad-data)
-- **Export plugins** — HTML (`chtml` dialog, `-chtml` command-line) and PDF (`cpdf`) via lazy-loaded workspace plugins
+- **Export plugins** — SVG (`csvg`) via a lazy-loaded workspace plugin
 - **E2E tests** — Playwright smoke and rendering checks against local fixtures
 
 ## Prerequisites
 
 - Node.js **≥ 24** and pnpm **≥ 10** (monorepo workspace)
 - Built dependencies before **dev** or **build**:
-  - `@mlightcad/cad-html-plugin` (produces `viewer-runtime.iife.js`, copied into the example dist)
   - `@mlightcad/cad-simple-viewer` and `@mlightcad/cad-viewer` (workers and bundles)
 
 From the repo root, a full workspace build satisfies this:
@@ -32,7 +29,6 @@ pnpm build
 Or build only what this example needs:
 
 ```bash
-pnpm --filter @mlightcad/cad-html-plugin build
 pnpm --filter @mlightcad/cad-simple-viewer build
 pnpm --filter @mlightcad/cad-viewer build
 ```
@@ -56,24 +52,6 @@ pnpm dev
 
 Vite prints the local URL (default `http://localhost:5173`). In dev mode, Vite aliases `@mlightcad/cad-viewer`, `@mlightcad/cad-simple-viewer`, and renderer packages to their **source** for faster iteration.
 
-### OneDrive (optional)
-
-1. Copy [`.env.example`](./.env.example) to `.env.local` (a workspace `.env.local` may already be present).
-2. Set `VITE_MSAL_CLIENT_ID` to your Azure SPA application id.
-3. In Azure Entra ID, add an SPA redirect URI matching `VITE_MSAL_REDIRECT_URI` (local default `http://localhost:5173/`). If that env var is omitted, the plugin uses the current page URL, so GitHub Pages must register `https://mlightcad.com/cad-viewer/cad-viewer/`.
-4. Restart the Vite dev server so env vars reload.
-
-On the upload screen, choose **Sign in to OneDrive**. After the viewer opens, use **File → Open → Open from OneDrive** (a second click is required so the File Picker popup is not blocked).
-
-### Google Drive (optional)
-
-1. Copy [`.env.example`](./.env.example) to `.env.local`.
-2. Set `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, and `VITE_GOOGLE_APP_ID` (numeric Cloud project number).
-3. Enable Drive API + Picker API; add Authorized JavaScript origins for this app (e.g. `http://localhost:5173`).
-4. Restart the Vite dev server so env vars reload.
-
-On the upload screen, choose **Sign in to Google Drive**, then **Open from Google Drive** (two separate clicks).
-
 ### Production
 
 ```bash
@@ -81,12 +59,12 @@ pnpm build
 pnpm preview
 ```
 
-The build runs `vue-tsc`, then copies parser workers and `viewer-runtime.iife.js` into `dist/` (see `vite.config.ts`).
+The build runs `vue-tsc`, then copies parser workers into `dist/` (see `vite.config.ts`).
 
 ## Usage
 
 1. Start the dev server and open the URL shown in the terminal.
-2. On the upload screen, choose **Read**, **Review**, or **Write**, then drop or select a `.dxf` or `.dwg` file — or OneDrive / Google Drive / **From URL** when configured.
+2. On the upload screen, choose **Read**, **Review**, or **Write**, then drop or select a `.dxf` or `.dwg` file — or **From URL**.
 3. The full `MlCadViewer` UI loads with your file. Use menus, ribbons, and the command line as in a desktop CAD host.
 4. Run `quit` or `exit` in the command line to close the drawing and return to the upload screen.
 
@@ -109,7 +87,7 @@ Integration patterns useful when embedding `@mlightcad/cad-viewer` in your own V
 | Custom i18n | `AcApI18n.mergeLocaleMessage('en' \| 'zh', messages)` in `@create` (`src/locale/`) |
 | Custom commands | `AcApDocManager.instance.commandManager.addCommand(…)` — see `quit` / `exit` in `src/commands/` |
 | Upload flow | Reactive store + conditional render: upload screen until `selectedFile` is set |
-| Workers & runtime | `vite-plugin-static-copy` copies MTEXT worker, LibreDWG worker/wasm, and `viewer-runtime.iife.js` |
+| Workers | `vite-plugin-static-copy` copies MTEXT worker and LibreDWG worker/wasm |
 | Export plugins | Declared in `package.json`; `@mlightcad/cad-viewer` registers them via `@mlightcad/cad-*-plugin/register` on bootstrap |
 
 Minimal host wiring in `App.vue`:
@@ -135,7 +113,7 @@ Minimal host wiring in `App.vue`:
 | `src/store.ts` | Reactive `selectedFile` for upload ↔ viewer navigation |
 | `src/locale/` | Custom command descriptions merged into viewer i18n |
 | `src/commands/` | `AcApQuitCmd` — clears `selectedFile` to return to upload |
-| `vite.config.ts` | `base: './'`, dev aliases, static copy of workers + HTML runtime |
+| `vite.config.ts` | `base: './'`, dev aliases, static copy of workers |
 | `e2e/` | Playwright tests and DXF fixtures |
 
 ## Dependencies
@@ -145,8 +123,6 @@ Minimal host wiring in `App.vue`:
 | `@mlightcad/cad-viewer` | `MlCadViewer` component, UI, and `i18n` setup |
 | `@mlightcad/cad-simple-viewer` | `AcApDocManager`, commands, `AcEdOpenMode`, `AcApI18n` |
 | `@mlightcad/data-model` | Logging and CAD data types |
-| `@mlightcad/cad-html-plugin` | Offline HTML export; supplies `viewer-runtime.iife.js` |
-| `@mlightcad/cad-pdf-plugin` | PDF export (`cpdf`) |
 | `element-plus` | Upload UI and icons (peer of `cad-viewer`) |
 | `vue` / `vue-i18n` | Vue 3 host and internationalization |
 | `three` | Peer of the viewer render stack |
@@ -178,8 +154,6 @@ From the monorepo root: `pnpm dev`, `pnpm preview`, `pnpm test:e2e`.
 
 - [`@mlightcad/cad-viewer`](../cad-viewer) — Component API, props, and customization
 - [`cad-simple-viewer-example`](../cad-simple-viewer-example) — Minimal vanilla TypeScript host without the full Vue UI
-- [`@mlightcad/cad-html-plugin`](../cad-html-plugin) — HTML export and `viewer-runtime.iife.js`
-- [`@mlightcad/cad-simple-viewer-cli`](../cad-simple-viewer-cli) — Headless HTML export CLI (`-chtml` via `.scr`)
 
 ## License
 

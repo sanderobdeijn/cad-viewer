@@ -19,8 +19,6 @@ import {
   ICON_CLEAR_MARKUPS,
   ICON_CLEAR_MEASUREMENTS,
   ICON_EXPORT,
-  ICON_EXPORT_HTML,
-  ICON_EXPORT_PDF,
   ICON_EXPORT_SVG,
   ICON_FIND,
   ICON_LANGUAGE,
@@ -623,18 +621,6 @@ export function acuiCreateDefaultToolbarItems(
       icon: ICON_EXPORT,
       childrenUi: 'toolbar',
       children: [
-        {
-          id: 'export-html',
-          label: 'toolbar.exportHtml',
-          icon: ICON_EXPORT_HTML,
-          command: 'chtml'
-        },
-        {
-          id: 'export-pdf',
-          label: 'toolbar.exportPdf',
-          icon: ICON_EXPORT_PDF,
-          command: 'cpdf'
-        },
         {
           id: 'export-svg',
           label: 'toolbar.exportSvg',

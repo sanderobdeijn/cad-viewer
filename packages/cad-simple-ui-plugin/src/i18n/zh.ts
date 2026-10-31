@@ -52,8 +52,6 @@ export const zh: Record<string, string> = {
   'toolbar.showMarkup': '显示',
   'toolbar.hideMarkup': '隐藏',
   'toolbar.export': '导出',
-  'toolbar.exportHtml': '导出 HTML',
-  'toolbar.exportPdf': '导出 PDF',
   'toolbar.exportSvg': '导出 SVG',
   'toolbar.placement': '工具栏位置',
   'toolbar.placementTop': '上方',

@@ -2,7 +2,6 @@
 import '@mlightcad/ribbon/style.css'
 
 import {
-  ChatDotRound,
   ChatLineSquare,
   Delete,
   DocumentCopy,
@@ -81,7 +80,6 @@ import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { store } from '../../app'
 import type { LayerStateSnapshot, LayerStateToggleKey } from '../../composable'
 import {
   LAYER_FILTER_ALL,
@@ -1171,8 +1169,7 @@ const applyOpenModeTabVisibility = (
 const buildBaseTabs = (
   openMode: AcEdOpenMode,
   markupVisible: boolean,
-  measurementVisible: boolean,
-  agentPluginEnabled: boolean
+  measurementVisible: boolean
 ): RibbonTabModel[] => {
   const ribbonTooltips = {
     line: t('main.ribbon.tooltip.line'),
@@ -1207,7 +1204,6 @@ const buildBaseTabs = (
     insert: t('main.ribbon.tooltip.insert'),
     editAttributes: t('main.ribbon.tooltip.editAttributes'),
     defineAttribute: t('main.ribbon.tooltip.defineAttribute'),
-    agent: t('main.ribbon.tooltip.agent'),
     propertyColor: t('main.ribbon.tooltip.propertyColor'),
     propertyLineType: t('main.ribbon.tooltip.propertyLineType'),
     propertyLineWeight: t('main.ribbon.tooltip.propertyLineWeight')
@@ -2386,23 +2382,7 @@ const buildBaseTabs = (
                     labelWrapLines: 2,
                     labelWrapWidth: 'max-content'
                   }
-                },
-                ...(agentPluginEnabled
-                  ? [
-                      {
-                        id: 'cmd-agent',
-                        type: 'button' as const,
-                        label: t('main.ribbon.command.agent'),
-                        tooltip: ribbonTooltips.agent,
-                        size: 'large' as const,
-                        props: {
-                          icon: ChatDotRound,
-                          labelWrapLines: 2,
-                          labelWrapWidth: 'max-content'
-                        }
-                      }
-                    ]
-                  : [])
+                }
               ]
             }
           ]
@@ -2524,7 +2504,6 @@ const buildBaseTabs = (
 
 const ribbonData = computed(() => {
   locale.value
-  store.features.agentPlugin
   const openMode = docOpenMode.value
   const markupVisible = isMarkupOverlayVisible.value
   const measurementVisible = isMeasurementOverlayVisible.value
@@ -2600,9 +2579,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-imageattach', 'imageattach')
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
-  if (store.features.agentPlugin) {
-    commandByItemId.set('cmd-agent', 'agent')
-  }
   commandByItemId.set('cmd-tool-markup-panel', 'markuppanel')
   commandByItemId.set('cmd-tool-markup-text', 'markuptext')
   commandByItemId.set('cmd-tool-markup-cloud', 'markupcloud')
@@ -2641,8 +2617,7 @@ const ribbonData = computed(() => {
   const tabs: RibbonTabModel[] = buildBaseTabs(
     openMode,
     markupVisible,
-    measurementVisible,
-    store.features.agentPlugin
+    measurementVisible
   )
   return {
     tabs,
@@ -2703,14 +2678,6 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
           label: t('main.mainMenu.export')
         },
         {
-          id: 'ExportHtml',
-          label: t('main.mainMenu.exportHtml')
-        },
-        {
-          id: 'ExportPdf',
-          label: t('main.mainMenu.exportPdf')
-        },
-        {
           id: 'ExportSvg',
           label: t('main.mainMenu.exportSvg')
         },
@@ -2757,16 +2724,6 @@ const handleRibbonItemClick = (payload: {
   }
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return
-  if (command === 'agent') {
-    void runLazyCommand('agent')
-    return
-  }
-  AcApDocManager.instance.sendStringToExecute(command)
-}
-
-const runLazyCommand = async (command: string) => {
-  const pluginManager = AcApDocManager.instance.pluginManager
-  await pluginManager.loadByTrigger(command)
   AcApDocManager.instance.sendStringToExecute(command)
 }
 
@@ -2785,8 +2742,6 @@ const handleFileMenuSelect = async (command: string) => {
   if (
     AcApDocManager.instance.disableExport &&
     (command === 'Convert' ||
-      command === 'ExportHtml' ||
-      command === 'ExportPdf' ||
       command === 'ExportSvg' ||
       command === 'PngOut')
   ) {
@@ -2795,12 +2750,6 @@ const handleFileMenuSelect = async (command: string) => {
   if (command === 'Convert') {
     const cmd = new AcApConvertToDxfCmd()
     cmd.trigger(AcApDocManager.instance.context)
-  } else if (command === 'ExportHtml') {
-    AcApDocManager.instance.sendStringToExecute('chtml')
-  } else if (command === 'ExportPdf') {
-    // Same path as chtml/csvg: DocManager lazy-loads the plugin then runs cpdf.
-    // Avoid a separate await+execute that raced Vite's first-time pdf-lib optimize.
-    AcApDocManager.instance.sendStringToExecute('cpdf')
   } else if (command === 'ExportSvg') {
     AcApDocManager.instance.sendStringToExecute('csvg')
   } else if (command === 'PngOut') {

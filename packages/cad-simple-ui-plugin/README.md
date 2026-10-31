@@ -21,7 +21,7 @@ This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Eleme
 - Layer UI opens from the toolbar button or the `layer` command (opens dock when closed, switches to layers tab when open)
 - Review palette opens from the Review toolbar button or the `markuppanel` command
 - Dock panel closes via the close button or `close-layer-manager` event
-- Optional collapsible toolbar (like HTML export viewer): hide tool buttons and show only a chevron toggle
+- Optional collapsible toolbar: hide tool buttons and show only a chevron toggle
 
 ## Install
 
@@ -237,7 +237,7 @@ Demo / verification: `__tests__/fixtures/find-text.dxf` is a fictitious single-l
 
 ### Collapsible toolbar
 
-Set `toolbar.collapsible: true` to append a chevron toggle at the end of the toolbar (same behavior as the HTML export viewer). When collapsed, only the toggle button is shown; the dock panel is closed automatically.
+Set `toolbar.collapsible: true` to append a chevron toggle at the end of the toolbar. When collapsed, only the toggle button is shown; the dock panel is closed automatically.
 
 ```typescript
 toolbar: {
@@ -545,7 +545,7 @@ Popover menu (default when `childrenUi` is omitted):
 }
 ```
 
-Icon sub-toolbar beside the parent (same model as the HTML export viewer). Measure, Review, Export, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
+Icon sub-toolbar beside the parent. Measure, Review, Export, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
 
 ```typescript
 {
@@ -568,10 +568,10 @@ When the parent icon should reflect the active submenu item:
   label: 'Export',
   icon: exportIconSvg,
   childIcon: 'selected',
-  selectedChildId: 'export-pdf',
+  selectedChildId: 'export-svg',
   children: [
-    { id: 'export-html', label: 'HTML', icon: htmlIcon, command: 'chtml' }, // dialog in cad-viewer; command-line in cad-simple-viewer-only hosts
-    { id: 'export-pdf', label: 'PDF', icon: pdfIcon, command: 'cpdf' }
+    { id: 'export-png', label: 'PNG', icon: pngIcon, command: 'pngout' },
+    { id: 'export-svg', label: 'SVG', icon: svgIcon, command: 'csvg' }
   ]
 }
 ```

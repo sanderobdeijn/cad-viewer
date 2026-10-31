@@ -15,7 +15,6 @@ import {
 } from '../../tools/worker-assets.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const VIEWER_RUNTIME_SRC = '../cad-html-plugin/dist/viewer-runtime.iife.js'
 const LOCAL_DATA_MODEL_LIB = resolve(
   __dirname,
   '../../../realdwg-web/packages/data-model/lib'
@@ -67,18 +66,9 @@ function useLocalMtextRenderer(mode: string): boolean {
 }
 
 export default defineConfig(({ command, mode }) => {
-  const hasViewerRuntime = existsSync(resolve(__dirname, VIEWER_RUNTIME_SRC))
-  if (!hasViewerRuntime) {
-    console.warn(
-      '[cad-viewer-example] viewer-runtime.iife.js not found — HTML export will be unavailable. ' +
-        'Build @mlightcad/cad-html-plugin to enable it. Opening DXF/DWG does not require this file.'
-    )
-  }
   const aliases: Alias[] = []
   const devSourcePackages = [
     'cad-svg-plugin',
-    'cad-pdf-plugin',
-    'pdf-renderer',
     'three-renderer',
     'cad-simple-viewer',
     'cad-viewer'
@@ -97,11 +87,7 @@ export default defineConfig(({ command, mode }) => {
     existsSync(LOCAL_MTEXT_RENDERER_ENTRY)
   if (command === 'serve') {
     aliases.push({
-      find: /^@mlightcad\/cad-pdf-plugin\/register$/,
-      replacement: resolve(__dirname, '../cad-pdf-plugin/src/register.ts')
-    })
-    aliases.push({
-      find: /^@mlightcad\/(cad-svg-plugin|cad-pdf-plugin|pdf-renderer|three-renderer|cad-simple-viewer|cad-viewer)$/,
+      find: /^@mlightcad\/(cad-svg-plugin|three-renderer|cad-simple-viewer|cad-viewer)$/,
       replacement: resolve(__dirname, '../$1/src')
     })
     if (linkLocalMtextRenderer) {
@@ -195,15 +181,6 @@ export default defineConfig(({ command, mode }) => {
                 rename: { stripBase: true }
               }
             ]
-          : []),
-        ...(hasViewerRuntime
-          ? [
-              {
-                src: VIEWER_RUNTIME_SRC,
-                dest: 'assets',
-                rename: { stripBase: true }
-              }
-            ]
           : [])
       ]
     })
@@ -220,17 +197,6 @@ export default defineConfig(({ command, mode }) => {
     },
     optimizeDeps: {
       force: command === 'serve',
-      // Pre-bundle pdf-lib so the first lazy `cpdf` import does not trigger a
-      // Vite optimizeDeps full-page reload in the example app.
-      include:
-        command === 'serve'
-          ? [
-              'pdf-lib',
-              '@pdf-lib/standard-fonts',
-              '@pdf-lib/upng',
-              'pako'
-            ]
-          : [],
       exclude:
         command === 'serve'
           ? [

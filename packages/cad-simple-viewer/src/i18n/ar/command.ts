@@ -72,18 +72,6 @@ export default {
         'تصدير الرسم الحالي إلى DXF'
     },
 
-    cpdf: {
-      ...enCommand.ACAD.cpdf,
-      description:
-        'تصدير الرسم الحالي إلى PDF'
-    },
-
-    '-cpdf': {
-      ...enCommand.ACAD['-cpdf'],
-      description:
-        'تصدير الرسم الحالي إلى PDF باستخدام خيارات سطر الأوامر'
-    },
-
     cecolor: {
       ...enCommand.ACAD.cecolor,
       description:
@@ -168,18 +156,6 @@ export default {
       ...enCommand.ACAD.csvg,
       description:
         'تحويل الرسم الحالي إلى SVG'
-    },
-
-    chtml: {
-      ...enCommand.ACAD.chtml,
-      description:
-        'تصدير الرسم الحالي إلى ملف HTML مستقل يعمل دون اتصال'
-    },
-
-    '-chtml': {
-      ...enCommand.ACAD['-chtml'],
-      description:
-        'تصدير الرسم الحالي إلى HTML باستخدام خيارات سطر الأوامر'
     },
 
     dimlinear: {
@@ -312,12 +288,6 @@ export default {
       ...enCommand.ACAD.hatch,
       description:
         'ملء منطقة مغلقة أو عناصر محددة بنمط تهشير'
-    },
-
-    ipdf: {
-      ...enCommand.ACAD.ipdf,
-      description:
-        'استيراد الهندسة المتجهية من ملف PDF'
     },
 
     hpang: {

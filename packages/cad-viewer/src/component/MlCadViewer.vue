@@ -168,13 +168,6 @@ interface Props {
    */
   disableExport?: boolean
   /**
-   * URL of the offline HTML viewer runtime (`viewer-runtime.iife.js`).
-   * Used only for File menu “Export to HTML”. Copy the file from
-   * `@mlightcad/cad-html-plugin` into your app assets when you need HTML export.
-   * Not required to open or view DXF/DWG.
-   */
-  htmlViewerRuntimeUrl?: string | URL
-  /**
    * The flag whether to use main thread or webwork to render drawing.
    * - true: use main thread
    * - false: use web worker
@@ -239,7 +232,6 @@ const props = withDefaults(defineProps<Props>(), {
   baseUrl: undefined,
   docsBaseUrl: undefined,
   disableExport: false,
-  htmlViewerRuntimeUrl: './assets/viewer-runtime.iife.js',
   useMainThreadDraw: true,
   theme: 'dark',
   mode: AcEdOpenMode.Write,
@@ -510,7 +502,6 @@ onMounted(async () => {
       baseUrl: props.baseUrl,
       docsBaseUrl: props.docsBaseUrl,
       disableExport: props.disableExport,
-      htmlViewerRuntimeUrl: props.htmlViewerRuntimeUrl,
       autoResize: true,
       useMainThreadDraw: props.useMainThreadDraw,
       openDocumentDefaults: buildOpenOptions

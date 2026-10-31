@@ -10,8 +10,6 @@
 cad-viewer는 `백엔드 서비스에 전혀 의존하지 않고 완전히 브라우저에서 동작하는 세계 최초의 웹 기반 DXF/DWG 뷰어 및 에디터`입니다.
 DWG/DXF 파싱, 지오메트리 처리, 렌더링을 브라우저에서 직접 수행함으로써 cad-viewer는 진정한 서버리스 CAD 보기 및 편집을 가능하게 하며, 클라우드 앱, 오프라인 사용, 개인정보에 민감한 워크플로에 이상적입니다.
 
-또한 다른 CAD 뷰어에서는 거의 찾아볼 수 없는 기능을 제공합니다—**클릭 한 번으로 단일 자체 포함 HTML 파일로 내보내기**. 다운로드한 `.html`에는 도면 스냅샷과 경량 뷰어 런타임이 내장되어 있어, 수신자는 **CAD 앱, 서버, 설치 없이** 모든 최신 브라우저에서 열어 팬, 줌, 레이어 전환, 거리 측정을 할 수 있습니다. 대부분의 데스크톱 및 웹 CAD 뷰어는 자사 제품 내에서만 보기를 허용합니다. cad-viewer는 라이브 도면을 이메일로 보내거나, 보관하거나, 정적 파일 호스트에 올릴 수 있는 휴대용 오프라인 산출물로 바꿉니다—클라이언트 공유, 규정 준수 아카이브, 에어갭 워크플로에 이상적입니다. 오프라인 뷰어는 동일한 도면을 열 때 기존 데스크톱 도구보다 훨씬 적은 메모리를 사용합니다(아래 [메모리 비교](#자체-포함-html-메모리-사용량) 참조).
-
 - [**🌐 홈페이지**](https://mlightcad.com/)
 - **🌐 라이브 데모**: [Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
 - **🌐 API 문서**: [Read the Docs](https://cad-viewer.readthedocs.io/en/latest/) (버전별) · [MCP 서버](https://gitmcp.io/mlightcad/cad-viewer)
@@ -62,7 +60,6 @@ cad-viewer를 자체 제품에 통합하는 방법을 보여주는 공식 샘플
 - **쉬운 통합** — 서버 설정이나 백엔드 인프라 불필요
 - 서드파티 통합을 위한 모듈형 아키텍처
 - **모바일 레이아웃 및 터치** — `@mlightcad/cad-simple-viewer`에 반응형 폰/태블릿 UI와 터치 제스처(핀치 줌, 한 손가락 팬, 탭 선택)가 내장되어 별도 모바일 앱 없이 모바일 브라우저에서 사용 가능
-- **오프라인 HTML로 내보내기** — 현재 도면을 내장 뷰어(팬/줌, 범위 줌, 레이어, 거리 측정, EN/ZH UI)가 포함된 단일 자체 포함 `.html` 파일로 내보내기. 모든 브라우저에서 오프라인으로 열림. cad-viewer 인스턴스나 백엔드 불필요.
 - 오프라인 및 온라인 편집 워크플로
 - 고급 최적화 기법을 적용한 THREE.js 3D 렌더링 엔진
 - CMS, Notion, WeChat 등 플랫폼과의 확장 및 통합을 위해 설계
@@ -141,7 +138,7 @@ CAD Viewer를 처음 사용하시나요? **[사용자 가이드](https://mlightc
 
 CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 모듈형 **플러그인 시스템**을 중심으로 구축됩니다. 플러그인은 `AcApPlugin` 인터페이스를 구현하고 `onLoad` / `onUnload`를 통해 뷰어 생명주기에 연결됩니다—일반적으로 명령 등록, UI 추가, 내보내기/가져오기 파이프라인 연결에 사용됩니다.
 
-`AcApDocManager.instance.pluginManager`(`loadPlugin`, `registerLazyPlugin`, 또는 문서 관리자 생성 시 `plugins.fromConfig`)를 통해 플러그인을 로드합니다. 내보내기 지향 플러그인은 **지연 로딩**을 지원합니다: 작은 stub을 먼저 등록하고, 사용자가 관련 명령(예: `-chtml`, 또는 `cad-viewer`의 `chtml` 대화상자에서 내보내기 확인)을 실행할 때만 무거운 번들을 다운로드합니다.
+`AcApDocManager.instance.pluginManager`(`loadPlugin`, `registerLazyPlugin`, 또는 문서 관리자 생성 시 `plugins.fromConfig`)를 통해 플러그인을 로드합니다. 내보내기 지향 플러그인은 **지연 로딩**을 지원합니다: 작은 stub을 먼저 등록하고, 사용자가 관련 명령을 실행할 때만 무거운 번들을 다운로드합니다.
 
 모노레포에는 여러 퍼스트파티 플러그인이 포함되어 있습니다. 각각 하나의 관심사에 집중하며, 필요에 따라 조합할 수 있습니다. **설치, 등록, API 세부 사항은 각 패키지 README**에 있습니다—아래 링크를 참조하세요.
 
@@ -150,10 +147,7 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 | 패키지 | 역할 | 명령 / 기능 |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer`용 **툴바·레이어 관리자·검토 팔레트 UI**(순수 DOM, Vue/React 없음) | `layer`, `markuppanel`, 기본 툴바(보기, 측정, 내보내기, 검토, 테마, 로케일) |
-| [`@mlightcad/cad-agent-plugin`](packages/cad-agent-plugin) | **자연어 CAD 에이전트**(AI 채팅 패널 + 도면 도구 호출) | `agent` |
-| [`@mlightcad/cad-html-plugin`](packages/cad-html-plugin) | 도면을 **자체 포함 오프라인 HTML**로 내보내기 | `chtml` (`cad-viewer` 대화상자), `-chtml` (명령줄) |
-| [`@mlightcad/cad-pdf-plugin`](packages/cad-pdf-plugin) | **PDF 내보내기 및 가져오기**(벡터 파이프라인) | `cpdf`, `ipdf` |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 내보내기** 및 공유 벡터 렌더러(PDF 내보내기에서도 사용) | `csvg` |
+| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 내보내기** 및 공유 벡터 렌더러 | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 간단한 뷰어용 UI 크롬
 
@@ -170,43 +164,11 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 
 → **빠른 시작, 툴바 커스터마이징, 옵션:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
-### `@mlightcad/cad-agent-plugin` — AI 도면 어시스턴트
+### 내보내기 플러그인(SVG)
 
-[`cad-agent-plugin`](packages/cad-agent-plugin)은 `cad-simple-viewer` 기반 앱에 **자연어 CAD 에이전트**를 추가합니다. 사용자가 일반 언어로 원하는 것을 설명하면, 에이전트가 CAD 도구를 호출하여 도면을 검사하고 지오메트리를 생성하거나 수정합니다.
+SVG 플러그인은 동일한 플러그인 관리자에 `csvg` 내보내기 명령을 추가합니다. 초기 페이지 용량을 작게 유지하기 위해 **지연 로딩**됩니다. [`cad-simple-viewer-example`](packages/cad-simple-viewer-example)과 전체 [`cad-viewer`](packages/cad-viewer) 앱 모두 부트스트랩 시 이를 등록합니다.
 
-제공 기능:
-
-- **지연 로딩** `AcApPlugin`(트리거 명령: `agent`) — AI 번들이 크리티컬 패스에 포함되지 않음
-- Vercel AI SDK(`Experimental_Agent` + `@ai-sdk/vue`) 기반 **Vue 채팅 패널**(`AgentChatPanel`)
-- **브라우저 측 LLM 구성** — OpenAI, Anthropic 또는 OpenAI 호환 엔드포인트용 API 키가 클라이언트에 유지(`localStorage`에 암호화 저장)
-- **1단계 CAD 도구** — `get_drawing_context`; `draw_line`, `draw_circle`, `draw_arc`, `draw_rectangle`, `draw_polyline`, `draw_text`; `set_current_layer`, `create_layer`, `zoom_extents`
-- 플러그인 i18n 레이어를 통한 **영어 / 중국어 / 터키어 / 체코어** UI 문자열
-
-전체 Vue [`cad-viewer`](packages/cad-viewer) 앱은 패키지가 설치되면 에이전트를 자동 등록합니다(팔레트 탭). [`cad-simple-viewer-example`](packages/cad-simple-viewer-example)은 `cad-simple-ui-plugin`을 통해 도킹 탭에 연결합니다. 호스트 앱은 `registerLazyAgentPlugin`과 `setAgentPaletteOpener`를 호출하여 원하는 위치에 패널을 마운트합니다.
-
-→ **설치, 등록, 도구 목록:** [packages/cad-agent-plugin/README.md](packages/cad-agent-plugin/README.md)
-
-### 내보내기 플러그인(HTML / PDF / SVG)
-
-이 플러그인들은 동일한 플러그인 관리자에 내보내기(및 PDF 가져오기) 명령을 추가합니다. **지연 로딩**되어 초기 페이지 용량을 작게 유지합니다. [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) 데모는 세 내보내기 플러그인, `cad-simple-ui-plugin`, `cad-agent-plugin`을 모두 등록합니다. 전체 [`cad-viewer`](packages/cad-viewer) 앱은 부트스트랩에서 내보내기 플러그인과(설치 시) 에이전트 플러그인을 등록합니다.
-
-- **HTML** — 공유 및 아카이브용 단일 파일 오프라인 뷰어: [packages/cad-html-plugin/README.md](packages/cad-html-plugin/README.md)  
-  (동일 파이프라인의 헤드리스 CLI: [packages/cad-simple-viewer-cli/README.md](packages/cad-simple-viewer-cli/README.md))
-- **PDF** — 벡터 PDF 내보내기 및 PDF-to-CAD 가져오기: [packages/cad-pdf-plugin/README.md](packages/cad-pdf-plugin/README.md)
 - **SVG** — 벡터 SVG 내보내기: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
-
-#### 자체 포함 HTML 메모리 사용량
-
-샘플 도면 [`canteen.dwg`](https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg)를 열 때 메모리 소비량은 대략 다음과 같습니다:
-
-| 뷰어 | 메모리 소비량 |
-|--------|-------------|
-| AutoCAD 2020 | 320 MB |
-| GstarCAD Viewer (浩辰看图王) | 246 MB |
-| 자체 포함 HTML(측정 모드) | 56 MB |
-| 자체 포함 HTML(보기 모드) | 33 MB |
-
-오프라인 HTML 뷰어는 보기 모드에서 AutoCAD 2020보다 약 **83% 적은** 메모리, GstarCAD Viewer보다 약 **77% 적은** 메모리를 사용하면서도 팬/줌, 레이어 전환, 거리 측정(측정 모드)을 지원합니다.
 
 ## 성능
 
@@ -251,7 +213,6 @@ CAD-Viewer는 **탁월한 성능**을 위해 설계되었으며, 높은 프레�
 
 * [x] DXF 로딩
 * [x] DWG 로딩
-* [x] 자체 포함 오프라인 HTML로 내보내기(내장 뷰어)
 * [x] 대용량 파일 스트리밍 / 증분 로딩
 * [ ] ⏳ 파일 버전 호환성(R12–Latest)
 
@@ -434,7 +395,6 @@ CAD-Viewer는 **탁월한 성능**을 위해 설계되었으며, 높은 프레�
 
 ### 플랫폼 목표
 
-* [x] Google Drive 통합 (Picker 데이터 소스; Drive “Open with”는 선택적 후속 작업)
 * [ ] WeChat 미니 프로그램 뷰어
 * [x] 모바일 브라우저 지원(반응형 레이아웃 및 터치)
 

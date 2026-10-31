@@ -5,8 +5,6 @@ export default {
     drawingUnits: 'Çizim Birimleri',
     exportMenu: 'Dışa Aktar',
     export: 'DXF\'e Dışa Aktar',
-    exportHtml: 'HTML\'e Dışa Aktar',
-    exportPdf: 'PDF\'e Dışa Aktar',
     exportSvg: 'SVG\'e Dışa Aktar',
     exportImage: 'Görüntüye Dışa Aktar',
     about: 'Hakkında'
@@ -318,8 +316,6 @@ export default {
         'Blok öznitelik değerlerini ve görüntü özelliklerini düzenlemek için Gelişmiş Öznitelik Düzenleyiciyi açın (ATTEDIT).',
       defineAttribute:
         'Bir blokta kullanılacak öznitelik tanımı oluşturun (ATTDEF).',
-      agent:
-        'Doğal dil kullanarak geometri çizmek için CAD Ajanı panel sekmesini açın.',
       propertyColor:
         'Yeni oluşturulan nesneler veya seçili varlıklar için rengi ayarlayın.',
       propertyLineType:
@@ -423,8 +419,7 @@ export default {
       attachImage: 'Görüntü\nEkle',
       insert: 'Ekle',
       editAttributes: 'Öznitelikleri\nDüzenle',
-      defineAttribute: 'Öznitelik\nTanımla',
-      agent: 'CAD\nAjanı'
+      defineAttribute: 'Öznitelik\nTanımla'
     }
   },
   verticalToolbar: {

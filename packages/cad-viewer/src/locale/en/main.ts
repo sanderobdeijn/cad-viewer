@@ -5,8 +5,6 @@ export default {
     drawingUnits: 'Drawing Units',
     exportMenu: 'Export',
     export: 'Export to DXF',
-    exportHtml: 'Export to HTML',
-    exportPdf: 'Export to PDF',
     exportSvg: 'Export to SVG',
     exportImage: 'Export to Image',
     about: 'About'
@@ -312,8 +310,6 @@ export default {
         'Open the Enhanced Attribute Editor to edit block attribute values and display properties (ATTEDIT).',
       defineAttribute:
         'Create an attribute definition for use in a block (ATTDEF).',
-      agent:
-        'Open the CAD Agent palette tab to draw geometry using natural language.',
       propertyColor:
         'Set the color for newly created objects or selected entities.',
       propertyLineType:
@@ -419,8 +415,7 @@ export default {
       attachImage: 'Attach\nImage',
       insert: 'Insert',
       editAttributes: 'Edit\nAttributes',
-      defineAttribute: 'Define\nAttribute',
-      agent: 'CAD\nAgent'
+      defineAttribute: 'Define\nAttribute'
     }
   },
   verticalToolbar: {

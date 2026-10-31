@@ -36,13 +36,6 @@ export default {
     cdxf: {
       description: 'Geçerli çizimi DXF olarak dışa aktarır'
     },
-    cpdf: {
-      description: 'Geçerli çizimi PDF olarak dışa aktarır'
-    },
-    '-cpdf': {
-      description:
-        'Geçerli çizimi komut satırı seçenekleriyle PDF olarak dışa aktarır'
-    },
     cecolor: {
       description:
         'Yeni oluşturulan nesneler için geçerli varsayılan rengi ayarlar'
@@ -91,14 +84,6 @@ export default {
     },
     csvg: {
       description: 'Geçerli çizimi SVG\'ye dönüştürür'
-    },
-    chtml: {
-      description:
-        'Geçerli çizimi bağımsız, çevrimdışı bir HTML dosyasına dışa aktarır'
-    },
-    '-chtml': {
-      description:
-        'Komut satırı seçeneklerini kullanarak geçerli çizimi HTML\'e dışa aktarır'
     },
     dimlinear: {
       description: 'Doğrusal ölçülendirmeler oluşturur'
@@ -176,9 +161,6 @@ export default {
     hatch: {
       description:
         'Kapalı bir alanı veya seçili nesneleri bir tarama deseniyle doldurur'
-    },
-    ipdf: {
-      description: 'Bir PDF dosyasından vektör geometrisini içe aktarır'
     },
     hpang: {
       description:

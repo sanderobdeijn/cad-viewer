@@ -22,7 +22,7 @@ let selectionStylesInstalled = false
  * Injects the CSS used to highlight selected HTML overlays.
  *
  * Selection is a fluorescent glow only: stroke / fill / text colors stay
- * as drawn. Mirrors cad-html-plugin `AcExHtmlShell` markup/measure rules.
+ * as drawn.
  *
  * No-op after the first call, and when `document` is unavailable (SSR / workers).
  */

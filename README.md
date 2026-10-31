@@ -10,8 +10,6 @@
 cad-viewer is `the first web-based DXF/DWG viewer and editor in the world that operates entirely in browser, without relying on any backend services`.
 By performing DWG/DXF parsing, geometry processing, and rendering directly in the browser, cad-viewer enables true serverless CAD viewing and editing, ideal for cloud apps, offline usage, and privacy-sensitive workflows.
 
-It also offers something you will rarely find in other CAD viewers—**one-click export to a single, self-contained HTML file**. The downloaded `.html` embeds the drawing snapshot and a lightweight viewer runtime, so recipients can open, pan, zoom, toggle layers, and measure distances in any modern browser with **no CAD app, no server, and no install**. Most desktop and web CAD viewers only let you view inside their own product; cad-viewer turns a live drawing into a portable, offline artifact you can email, archive, or drop on a static file host—ideal for sharing with clients, compliance archives, and air-gapped workflows. The offline viewer also uses far less memory than traditional desktop tools when opening the same drawing (see [memory comparison](#self-contained-html-memory-usage) below).
-
 - [**🌐 Home Page**](https://mlightcad.com/)
 - **🌐 Live Demo**: [Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
 - **🌐 API Docs**: [Read the Docs](https://cad-viewer.readthedocs.io/en/latest/) (versioned) · [MCP Server](https://gitmcp.io/mlightcad/cad-viewer)
@@ -62,7 +60,6 @@ Official sample apps that show how to integrate cad-viewer into your own product
 - **Easy integration** - No server setup or backend infrastructure needed
 - Modular architecture for seamless third-party integration
 - **Mobile layout & touch** — Responsive phone/tablet UI and touch gestures (pinch-to-zoom, single-finger pan, tap to select) built into `@mlightcad/cad-simple-viewer`, so mobile browsers work without a separate app
-- **Export to offline HTML** — Export the current drawing as one self-contained `.html` file with an embedded viewer (pan/zoom, zoom extents, layers, distance measure, EN/ZH UI). Opens offline in any browser; no cad-viewer instance or backend required.
 - Offline and online editing workflows
 - THREE.js 3D rendering engines with advanced optimization techniques
 - Designed for extensibility and integration with platforms like CMS, Notion, and WeChat
@@ -141,7 +138,7 @@ New to CAD Viewer? The **[User Guide](https://mlightcad.com/cad-viewer/docs/)** 
 
 CAD-Viewer is built around a modular **plugin system** in [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Plugins implement the `AcApPlugin` interface and hook into viewer lifecycle via `onLoad` / `onUnload`—typically to register commands, add UI, or wire export/import pipelines.
 
-Load plugins through `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Export-oriented plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command (for example `-chtml`, or when confirming export from the `chtml` dialog in `cad-viewer`).
+Load plugins through `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Export-oriented plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command (for example `csvg`).
 
 The monorepo ships several first-party plugins. Each focuses on one concern; combine them as needed. **Installation, registration, and API details live in each package’s README**—see the links below.
 
@@ -150,12 +147,7 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 | Package | Role | Commands / capabilities |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar, layer manager & review palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `layer`, `markuppanel`, default toolbar (view, measure, export, review, theme, locale) |
-| [`@mlightcad/cad-agent-plugin`](packages/cad-agent-plugin) | **Natural-language CAD agent** (AI chat panel + drawing tool calls) | `agent` |
-| [`@mlightcad/cad-html-plugin`](packages/cad-html-plugin) | Export drawings to **self-contained offline HTML** | `chtml` (dialog in `cad-viewer`), `-chtml` (command-line) |
-| [`@mlightcad/cad-pdf-plugin`](packages/cad-pdf-plugin) | **PDF export and import** (vector pipeline) | `cpdf`, `ipdf` |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG export** and shared vector renderer (also used by PDF export) | `csvg` |
-| [`@mlightcad/cad-onedrive-plugin`](packages/cad-onedrive-plugin) | **OneDrive data source** — open DWG/DXF from OneDrive / SharePoint | Registers `AcApDataSource` (`onedrive`); two-step Sign in → Open (popup-safe) |
-| [`@mlightcad/cad-google-drive-plugin`](packages/cad-google-drive-plugin) | **Google Drive data source** — open DWG/DXF from Google Drive | Registers `AcApDataSource` (`googledrive`); two-step Sign in → Open (popup-safe) |
+| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG export** and shared vector renderer | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI chrome for the simple viewer
 
@@ -172,43 +164,11 @@ All widgets are framework-agnostic (plain DOM). The full Vue [`cad-viewer`](pack
 
 → **Quick start, toolbar customization, and options:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
-### `@mlightcad/cad-agent-plugin` — AI drawing assistant
+### Export plugin (SVG)
 
-[`cad-agent-plugin`](packages/cad-agent-plugin) adds a **natural-language CAD agent** to `cad-simple-viewer`-based apps. Users describe what they want in plain language; the agent calls CAD tools to inspect the drawing and create or modify geometry.
+The SVG plugin adds the `csvg` export command to the same plugin manager. It is **lazy-loaded** so initial page weight stays small. Both [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) and the full [`cad-viewer`](packages/cad-viewer) app register it in their bootstrap.
 
-It provides:
-
-- A **lazy-loaded** `AcApPlugin` (trigger command: `agent`) so the AI bundle is not on the critical path
-- A **Vue chat panel** (`AgentChatPanel`) built on the Vercel AI SDK (`Experimental_Agent` + `@ai-sdk/vue`)
-- **Browser-side LLM configuration** — API keys for OpenAI, Anthropic, or OpenAI-compatible endpoints stay in the client (encrypted in `localStorage`)
-- **Phase 1 CAD tools** — `get_drawing_context`; `draw_line`, `draw_circle`, `draw_arc`, `draw_rectangle`, `draw_polyline`, `draw_text`; `set_current_layer`, `create_layer`, `zoom_extents`
-- **English / Chinese / Turkish / Czech** UI strings via the plugin i18n layer
-
-The full Vue [`cad-viewer`](packages/cad-viewer) app registers the agent automatically when the package is installed (palette tab). [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) wires it into a dock tab via `cad-simple-ui-plugin`. Host apps call `registerLazyAgentPlugin` and `setAgentPaletteOpener` to mount the panel where they want.
-
-→ **Installation, registration, and tool list:** [packages/cad-agent-plugin/README.md](packages/cad-agent-plugin/README.md)
-
-### Export plugins (HTML / PDF / SVG)
-
-These plugins add export (and PDF import) commands to the same plugin manager. They are **lazy-loaded** so initial page weight stays small. The [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) demo registers all three export plugins, `cad-simple-ui-plugin`, and `cad-agent-plugin`; the full [`cad-viewer`](packages/cad-viewer) app registers the export plugins and the agent plugin (when installed) in its bootstrap.
-
-- **HTML** — one-file offline viewer for sharing and archiving: [packages/cad-html-plugin/README.md](packages/cad-html-plugin/README.md)  
-  (Headless CLI using the same pipeline: [packages/cad-simple-viewer-cli/README.md](packages/cad-simple-viewer-cli/README.md))
-- **PDF** — vector PDF export and PDF-to-CAD import: [packages/cad-pdf-plugin/README.md](packages/cad-pdf-plugin/README.md)
 - **SVG** — vector SVG export: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
-
-#### Self-contained HTML memory usage
-
-When opening the sample drawing [`canteen.dwg`](https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg), memory consumption is roughly:
-
-| Viewer | Memory consumption |
-|--------|-------------|
-| AutoCAD 2020 | 320 MB |
-| GstarCAD Viewer (浩辰看图王) | 246 MB |
-| Self-contained HTML (measure mode) | 56 MB |
-| Self-contained HTML (view mode) | 33 MB |
-
-The offline HTML viewer uses about **83% less memory than AutoCAD 2020** and about **77% less than GstarCAD Viewer** in view mode, while still supporting pan/zoom, layer toggle, and distance measurement (measure mode).
 
 ## Performance
 
@@ -253,7 +213,6 @@ Legend:
 
 * [x] DXF loading
 * [x] DWG loading
-* [x] Export to self-contained offline HTML (embedded viewer)
 * [x] Large file streaming / incremental loading
 * [ ] ⏳ File version compatibility (R12–Latest)
 
@@ -436,7 +395,6 @@ Legend:
 
 ### Platform Targets
 
-* [x] Google Drive Integration (Picker data source; Drive “Open with” optional follow-up)
 * [ ] WeChat Mini Program viewer
 * [x] Mobile browser support (responsive layout & touch)
 

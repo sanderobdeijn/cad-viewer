@@ -1,9 +1,0 @@
-; export-pdf.scr
-zoom
-e
--cpdf
-Extents
-Yes
-Text
-
-quit

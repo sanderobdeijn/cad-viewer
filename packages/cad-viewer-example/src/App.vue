@@ -57,15 +57,7 @@ import { computed, nextTick, ref } from 'vue'
 
 import { AcApQuitCmd } from './commands'
 import FileUpload from './components/FileUpload.vue'
-import {
-  getGoogleDriveEnvConfig,
-  registerGoogleDriveFromEnv
-} from './googleDriveEnv'
 import { initializeLocale } from './locale'
-import {
-  getOneDriveEnvConfig,
-  registerOneDriveFromEnv
-} from './onedriveEnv'
 import { store } from './store'
 
 // Isolate this example's prefs from cad-simple-viewer-example on localhost.
@@ -74,9 +66,6 @@ AcApSettingManager.configure({
 })
 
 initializeLocale()
-
-const oneDriveEnv = getOneDriveEnvConfig()
-const googleDriveEnv = getGoogleDriveEnvConfig()
 
 /**
  * Landing-page registry used before DocManager exists.
@@ -94,79 +83,6 @@ landingDataSources.on('auth-changed', bumpLandingSources)
 
 const getLandingCloudSources = (): AcApDataSource[] =>
   landingDataSources.list()
-
-const setupLandingCloudSources = async () => {
-  if (oneDriveEnv) {
-    try {
-      const { AcApOneDriveDataSource } = await import(
-        '@mlightcad/cad-onedrive-plugin'
-      )
-      if (!landingDataSources.get('onedrive')) {
-        const source = new AcApOneDriveDataSource(
-          oneDriveEnv,
-          landingDataSources
-        )
-        landingDataSources.register(source)
-        await source.restoreSession()
-      }
-    } catch (error) {
-      log.warn('Landing OneDrive data source unavailable:', error)
-    }
-  }
-
-  if (googleDriveEnv) {
-    try {
-      const { AcApGoogleDriveDataSource } = await import(
-        '@mlightcad/cad-google-drive-plugin'
-      )
-      if (!landingDataSources.get('googledrive')) {
-        const source = new AcApGoogleDriveDataSource(
-          googleDriveEnv,
-          landingDataSources
-        )
-        landingDataSources.register(source)
-        await source.restoreSession()
-      }
-    } catch (error) {
-      log.warn('Landing Google Drive data source unavailable:', error)
-    }
-  }
-}
-
-void setupLandingCloudSources()
-
-let oneDriveRegistered = false
-let googleDriveRegistered = false
-
-const registerOneDriveIfConfigured = async () => {
-  if (oneDriveRegistered || !oneDriveEnv) return
-  try {
-    const registered = await registerOneDriveFromEnv(
-      AcApDocManager.instance.pluginManager
-    )
-    oneDriveRegistered = registered
-    if (registered) {
-      log.info('[example] OneDrive data source registered')
-    }
-  } catch (error) {
-    log.warn('OneDrive plugin not available:', error)
-  }
-}
-
-const registerGoogleDriveIfConfigured = async () => {
-  if (googleDriveRegistered || !googleDriveEnv) return
-  try {
-    const registered = await registerGoogleDriveFromEnv(
-      AcApDocManager.instance.pluginManager
-    )
-    googleDriveRegistered = registered
-    if (registered) {
-      log.info('[example] Google Drive data source registered')
-    }
-  } catch (error) {
-    log.warn('Google Drive plugin not available:', error)
-  }
-}
 
 const initialize = () => {
   if (import.meta.env.DEV) {
@@ -225,21 +141,10 @@ const createNewDrawing = async () => {
 
 const onViewerCreate = async () => {
   initialize()
-  const landingOneDrive = landingDataSources.get('onedrive')
-  if (landingOneDrive) {
-    // Reuse the landing MSAL client. A second PublicClientApplication for the
-    // same client id splits the cache and can block interactive login.
-    AcApDocManager.instance.dataSourceManager.register(landingOneDrive)
-    oneDriveRegistered = true
+  // Hand landing-page data sources to DocManager so auth state is shared.
+  for (const source of landingDataSources.list()) {
+    AcApDocManager.instance.dataSourceManager.register(source)
   }
-  const landingGoogleDrive = landingDataSources.get('googledrive')
-  if (landingGoogleDrive) {
-    // Reuse the landing GIS client / token so auth state stays consistent.
-    AcApDocManager.instance.dataSourceManager.register(landingGoogleDrive)
-    googleDriveRegistered = true
-  }
-  await registerOneDriveIfConfigured()
-  await registerGoogleDriveIfConfigured()
   if (store.isNewDrawing) {
     await nextTick()
     await createNewDrawing()

@@ -262,8 +262,6 @@ describe('default toolbar items', () => {
     const items = acuiCreateDefaultToolbarItems()
     const exportItem = items.find(item => item.id === 'export')
     expect(exportItem?.children?.map(child => child.command)).toEqual([
-      'chtml',
-      'cpdf',
       'csvg'
     ])
     const settings = items.find(item => item.id === 'settings')

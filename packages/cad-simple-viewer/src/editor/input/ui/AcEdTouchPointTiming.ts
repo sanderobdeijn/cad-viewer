@@ -1,9 +1,8 @@
 /**
  * Shared timing for touch precise point capture.
  *
- * Kept in a tiny module so {@link @mlightcad/cad-html-plugin} can share the
- * same values via the main package export (tree-shaken into the offline HTML
- * IIFE) without depending on {@link ./AcEdTouchPointSession}.
+ * Kept in a tiny module so other packages can share the same values via the
+ * main package export without depending on {@link ./AcEdTouchPointSession}.
  */
 
 /**

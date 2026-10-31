@@ -10,8 +10,6 @@
 cad-viewer es `el primer visor y editor web de DXF/DWG del mundo que funciona completamente en el navegador, sin depender de ningún servicio backend`.
 Al realizar el análisis de DWG/DXF, el procesamiento geométrico y el renderizado directamente en el navegador, cad-viewer permite una visualización y edición CAD verdaderamente sin servidor, ideal para aplicaciones en la nube, uso sin conexión y flujos de trabajo sensibles a la privacidad.
 
-También ofrece algo que rara vez encontrará en otros visores CAD: **exportación con un solo clic a un único archivo HTML autocontenido**. El `.html` descargado incorpora la instantánea del dibujo y un visor ligero en tiempo de ejecución, de modo que los destinatarios pueden abrir, desplazar, hacer zoom, alternar capas y medir distancias en cualquier navegador moderno **sin aplicación CAD, sin servidor y sin instalación**. La mayoría de los visores CAD de escritorio y web solo permiten ver dentro de su propio producto; cad-viewer convierte un dibujo activo en un artefacto portable y sin conexión que puede enviar por correo, archivar o alojar en un servidor de archivos estático, ideal para compartir con clientes, archivos de cumplimiento normativo y flujos de trabajo en entornos aislados. El visor sin conexión también utiliza mucha menos memoria que las herramientas de escritorio tradicionales al abrir el mismo dibujo (consulte la [comparación de memoria](#uso-de-memoria-del-html-autocontenido) más abajo).
-
 - [**🌐 Página de inicio**](https://mlightcad.com/)
 - **🌐 Demo en vivo**: [Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
 - **🌐 Documentación de la API**: [Read the Docs](https://cad-viewer.readthedocs.io/en/latest/) (versionada) · [Servidor MCP](https://gitmcp.io/mlightcad/cad-viewer)
@@ -62,7 +60,6 @@ Aplicaciones de ejemplo oficiales que muestran cómo integrar cad-viewer en su p
 - **Integración sencilla** — No se necesita configuración de servidor ni infraestructura backend
 - Arquitectura modular para una integración fluida con terceros
 - **Diseño móvil y gestos táctiles** — Interfaz responsive para teléfono/tableta y gestos táctiles (pellizcar para zoom, arrastrar con un dedo, tocar para seleccionar) integrados en `@mlightcad/cad-simple-viewer`, sin necesidad de una app móvil aparte
-- **Exportación a HTML sin conexión** — Exporte el dibujo actual como un único archivo `.html` autocontenido con un visor integrado (desplazamiento/zoom, zoom a extensión, capas, medición de distancias, interfaz EN/ZH). Se abre sin conexión en cualquier navegador; no requiere instancia de cad-viewer ni backend.
 - Flujos de trabajo de edición sin conexión y en línea
 - Motores de renderizado 3D THREE.js con técnicas avanzadas de optimización
 - Diseñado para extensibilidad e integración con plataformas como CMS, Notion y WeChat
@@ -141,7 +138,7 @@ pnpm preview:simple
 
 CAD-Viewer está construido en torno a un **sistema de plugins** modular en [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Los plugins implementan la interfaz `AcApPlugin` y se enganchan al ciclo de vida del visor mediante `onLoad` / `onUnload`, normalmente para registrar comandos, añadir interfaz de usuario o conectar flujos de exportación/importación.
 
-Cargue los plugins a través de `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` o `plugins.fromConfig` al crear el administrador de documentos). Los plugins orientados a la exportación admiten **carga diferida**: registre un pequeño stub por adelantado y descargue el paquete pesado solo cuando el usuario ejecute el comando relacionado (por ejemplo `-chtml`, o al confirmar la exportación desde el diálogo `chtml` en `cad-viewer`).
+Cargue los plugins a través de `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin` o `plugins.fromConfig` al crear el administrador de documentos). Los plugins orientados a la exportación admiten **carga diferida**: registre un pequeño stub por adelantado y descargue el paquete pesado solo cuando el usuario ejecute el comando relacionado.
 
 El monorepo incluye varios plugins propios. Cada uno se centra en un aspecto; combínelos según sea necesario. **La instalación, el registro y los detalles de la API están en el README de cada paquete** — consulte los enlaces a continuación.
 
@@ -150,10 +147,7 @@ El monorepo incluye varios plugins propios. Cada uno se centra en un aspecto; co
 | Paquete | Función | Comandos / capacidades |
 |---------|------|-------------------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Barra de herramientas, administrador de capas y paleta de revisión** para `cad-simple-viewer` (DOM plano, sin Vue/React) | `layer`, `markuppanel`, barra de herramientas predeterminada (vista, medición, exportación, revisión, tema, idioma) |
-| [`@mlightcad/cad-agent-plugin`](packages/cad-agent-plugin) | **Agente CAD en lenguaje natural** (panel de chat con IA + llamadas a herramientas de dibujo) | `agent` |
-| [`@mlightcad/cad-html-plugin`](packages/cad-html-plugin) | Exportar dibujos a **HTML sin conexión autocontenido** | `chtml` (diálogo en `cad-viewer`), `-chtml` (línea de comandos) |
-| [`@mlightcad/cad-pdf-plugin`](packages/cad-pdf-plugin) | **Exportación e importación de PDF** (canal vectorial) | `cpdf`, `ipdf` |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **Exportación SVG** y renderizador vectorial compartido (también usado por la exportación PDF) | `csvg` |
+| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **Exportación SVG** y renderizador vectorial compartido | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — Interfaz de usuario para el visor simple
 
@@ -170,43 +164,11 @@ Todos los widgets son independientes del framework (DOM plano). La aplicación c
 
 → **Inicio rápido, personalización de la barra de herramientas y opciones:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
-### `@mlightcad/cad-agent-plugin` — Asistente de dibujo con IA
+### Plugins de exportación (SVG)
 
-[`cad-agent-plugin`](packages/cad-agent-plugin) añade un **agente CAD en lenguaje natural** a las aplicaciones basadas en `cad-simple-viewer`. Los usuarios describen lo que desean en lenguaje llano; el agente llama a herramientas CAD para inspeccionar el dibujo y crear o modificar geometría.
+El plugin SVG añade el comando de exportación `csvg` al mismo gestor de plugins. Se carga de forma **diferida (lazy-loaded)** para que el peso inicial de la página siga siendo pequeño. Tanto [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) como la aplicación completa [`cad-viewer`](packages/cad-viewer) lo registran durante su arranque.
 
-Proporciona:
-
-- Un `AcApPlugin` **de carga diferida** (comando de activación: `agent`) para que el paquete de IA no esté en la ruta crítica
-- Un **panel de chat Vue** (`AgentChatPanel`) construido sobre el Vercel AI SDK (`Experimental_Agent` + `@ai-sdk/vue`)
-- **Configuración de LLM en el navegador** — las claves API para OpenAI, Anthropic o endpoints compatibles con OpenAI permanecen en el cliente (cifradas en `localStorage`)
-- **Herramientas CAD de fase 1** — `get_drawing_context`; `draw_line`, `draw_circle`, `draw_arc`, `draw_rectangle`, `draw_polyline`, `draw_text`; `set_current_layer`, `create_layer`, `zoom_extents`
-- Cadenas de interfaz en **inglés / chino / turco / checo** a través de la capa i18n del plugin
-
-La aplicación completa de Vue [`cad-viewer`](packages/cad-viewer) registra el agente automáticamente cuando el paquete está instalado (pestaña del panel). [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) lo conecta a una pestaña acoplable mediante `cad-simple-ui-plugin`. Las aplicaciones host llaman a `registerLazyAgentPlugin` y `setAgentPaletteOpener` para montar el panel donde deseen.
-
-→ **Instalación, registro y lista de herramientas:** [packages/cad-agent-plugin/README.md](packages/cad-agent-plugin/README.md)
-
-### Plugins de exportación (HTML / PDF / SVG)
-
-Estos plugins añaden comandos de exportación (e importación de PDF) al mismo administrador de plugins. Tienen **carga diferida** para que el peso inicial de la página se mantenga bajo. La demo [`cad-simple-viewer-example`](packages/cad-simple-viewer-example) registra los tres plugins de exportación, `cad-simple-ui-plugin` y `cad-agent-plugin`; la aplicación completa [`cad-viewer`](packages/cad-viewer) registra los plugins de exportación y el plugin del agente (cuando está instalado) en su arranque.
-
-- **HTML** — visor sin conexión de un solo archivo para compartir y archivar: [packages/cad-html-plugin/README.md](packages/cad-html-plugin/README.md)  
-  (CLI sin interfaz que utiliza el mismo canal: [packages/cad-simple-viewer-cli/README.md](packages/cad-simple-viewer-cli/README.md))
-- **PDF** — exportación vectorial a PDF e importación de PDF a CAD: [packages/cad-pdf-plugin/README.md](packages/cad-pdf-plugin/README.md)
 - **SVG** — exportación vectorial a SVG: [packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
-
-#### Uso de memoria del HTML autocontenido
-
-Al abrir el dibujo de ejemplo [`canteen.dwg`](https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg), el consumo de memoria es aproximadamente:
-
-| Visor | Consumo de memoria |
-|--------|-------------|
-| AutoCAD 2020 | 320 MB |
-| GstarCAD Viewer (浩辰看图王) | 246 MB |
-| HTML autocontenido (modo medición) | 56 MB |
-| HTML autocontenido (modo vista) | 33 MB |
-
-El visor HTML sin conexión utiliza aproximadamente un **83 % menos de memoria que AutoCAD 2020** y aproximadamente un **77 % menos que GstarCAD Viewer** en modo vista, manteniendo soporte para desplazamiento/zoom, alternancia de capas y medición de distancias (modo medición).
 
 ## Rendimiento
 
@@ -251,7 +213,6 @@ Leyenda:
 
 * [x] Carga de DXF
 * [x] Carga de DWG
-* [x] Exportación a HTML sin conexión autocontenido (visor integrado)
 * [x] Transmisión de archivos grandes / carga incremental
 * [ ] ⏳ Compatibilidad de versiones de archivo (R12–Latest)
 
@@ -434,7 +395,6 @@ Leyenda:
 
 ### Plataformas objetivo
 
-* [x] Integración con Google Drive (origen de datos Picker; Drive “Open with” como seguimiento opcional)
 * [ ] Visor de Mini Program de WeChat
 * [x] Soporte de navegador móvil (diseño responsive y gestos táctiles)
 

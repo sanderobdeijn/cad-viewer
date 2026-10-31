@@ -37,12 +37,6 @@ export default {
     cdxf: {
       description: 'Exports current drawing to DXF'
     },
-    cpdf: {
-      description: 'Exports current drawing to PDF'
-    },
-    '-cpdf': {
-      description: 'Exports current drawing to PDF using command-line options'
-    },
     cecolor: {
       description: 'Sets the current default color for newly created objects'
     },
@@ -88,12 +82,6 @@ export default {
     },
     csvg: {
       description: 'Converts current drawing to SVG'
-    },
-    chtml: {
-      description: 'Exports current drawing to a standalone offline HTML file'
-    },
-    '-chtml': {
-      description: 'Exports current drawing to HTML using command-line options'
     },
     dimlinear: {
       description: 'Creates linear dimensions'
@@ -169,9 +157,6 @@ export default {
     hatch: {
       description:
         'Fills an enclosed area or selected objects with a hatch pattern'
-    },
-    ipdf: {
-      description: 'Imports vector geometry from a PDF file'
     },
     hpang: {
       description:

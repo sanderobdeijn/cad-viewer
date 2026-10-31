@@ -20,7 +20,7 @@ Ribbon 完整展示 AutoCAD 风格的所有选项卡：
 
 | 选项卡 | 包含命令 |
 |---|---|
-| 文件 | 打开、导出 DXF、导出 PNG、导出自包含 HTML |
+| 文件 | 打开、导出 DXF、导出 PNG |
 | 绘制 | Line、Circle、Arc、Rect、Polyline、Hatch、Text、MText、Block Insert 等 |
 | 修改 | Move、Copy、Offset、Trim、Extend、Rotate、Scale、Mirror、Array 等 |
 | 图层 | 图层管理（开/关、冻结/解冻、锁定、隔离、新建、删除） |

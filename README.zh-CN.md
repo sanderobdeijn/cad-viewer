@@ -10,8 +10,6 @@
 CAD-Viewer 是`全球首个完全运行在浏览器端、无需依赖任何后端服务的 Web 版 DXF/DWG 查看与编辑器`。
 通过在浏览器中直接完成 DWG/DXF 解析、几何处理和渲染，CAD-Viewer 实现了真正的无服务器（serverless）CAD 查看与编辑，非常适合云应用、离线使用以及对隐私敏感的工作场景。
 
-此外，它还提供市面上 CAD 看图软件中极为少见的能力——**一键导出为单个自包含 HTML 文件**。下载的 `.html` 内嵌图纸快照与轻量查看器运行时，接收方只需用任意现代浏览器即可离线打开、平移缩放、切换图层并测量距离，**无需安装 CAD 软件、无需服务器、无需再打开 CAD-Viewer**。多数桌面或 Web CAD 看图工具只能在自家产品内查看；CAD-Viewer 则把当前图纸变成可邮件发送、可归档、可放到静态站点上的便携文件，非常适合对外分享、合规留档与内网隔离环境。离线查看器的内存占用也远低于传统桌面 CAD 看图软件（见下文[内存对比](#自包含-html-内存占用)）。
-
 - [**🌐 主页**](https://mlightcad.com/)
 - **🌐 在线演示**：[Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
 - **🌐 API 文档**：[Read the Docs](https://cad-viewer.readthedocs.io/en/latest/)（支持版本切换）· [MCP 服务器](https://gitmcp.io/mlightcad/cad-viewer)
@@ -62,7 +60,6 @@ CAD-Viewer 是`全球首个完全运行在浏览器端、无需依赖任何后�
 - **易于集成**：无需服务器或后端基础设施
 - 模块化架构，便于第三方系统集成
 - **移动端布局与触控**：`@mlightcad/cad-simple-viewer` 内置响应式手机/平板布局与触控手势（双指缩放、单指平移、点选），无需单独的移动端应用即可在移动浏览器中使用
-- **导出为离线 HTML**：将当前图纸导出为单个自包含 `.html` 文件，内嵌查看器（平移缩放、范围缩放、图层、距离测量、中英文界面），可在任意浏览器中离线打开，无需 CAD-Viewer 实例或后端。
 - 支持离线与在线编辑流程
 - 基于 THREE.js 的 3D 渲染引擎，包含多项性能优化
 - 面向可扩展与二次开发，适配 CMS、Notion、微信等平台
@@ -141,7 +138,7 @@ pnpm preview:simple
 
 CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中提供可扩展的**插件系统**。插件实现 `AcApPlugin` 接口，通过 `onLoad` / `onUnload` 接入查看器生命周期，常见用途包括注册命令、挂载 UI、或接入导出/导入流程。
 
-通过 `AcApDocManager.instance.pluginManager` 加载插件（`loadPlugin`、`registerLazyPlugin`，或在创建文档管理器时使用 `plugins.fromConfig`）。面向导出的插件支持**懒加载**：应用启动时只注册轻量 stub，用户首次执行相关命令（例如 `-chtml`，或在 `cad-viewer` 中通过 `chtml` 对话框确认导出）时才下载完整 bundle。
+通过 `AcApDocManager.instance.pluginManager` 加载插件（`loadPlugin`、`registerLazyPlugin`，或在创建文档管理器时使用 `plugins.fromConfig`）。面向导出的插件支持**懒加载**：应用启动时只注册轻量 stub，用户首次执行相关命令时才下载完整 bundle。
 
 本 monorepo 内置多个官方插件，各司其职，可按需组合。**各插件的安装、注册方式与 API 说明请直接阅读对应包的 README**（见下方链接）。
 
@@ -150,10 +147,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 | 包名 | 作用 | 命令 / 能力 |
 |------|------|-------------|
 | [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏、图层管理器与批注列表面板 UI**（纯 DOM，不依赖 Vue/React） | `layer`、`markuppanel`、默认工具栏（视图、测量、导出、审阅、主题、语言） |
-| [`@mlightcad/cad-agent-plugin`](packages/cad-agent-plugin) | **自然语言 CAD 智能体**（AI 对话面板 + 绘图工具调用） | `agent` |
-| [`@mlightcad/cad-html-plugin`](packages/cad-html-plugin) | 导出为**自包含离线 HTML** | `chtml`（`cad-viewer` 对话框）、`-chtml`（命令行） |
-| [`@mlightcad/cad-pdf-plugin`](packages/cad-pdf-plugin) | **PDF 导出与导入**（矢量管线） | `cpdf`、`ipdf` |
-| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 导出**及共享矢量渲染器（PDF 导出也会用到） | `csvg` |
+| [`@mlightcad/cad-svg-plugin`](packages/cad-svg-plugin) | **SVG 导出**及共享矢量渲染器 | `csvg` |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 简易查看器的 UI 层
 
@@ -170,43 +164,11 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 
 → **快速开始、工具栏定制与配置项：** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
-### `@mlightcad/cad-agent-plugin` — AI 绘图助手
+### 导出类插件（SVG）
 
-[`cad-agent-plugin`](packages/cad-agent-plugin) 为基于 `cad-simple-viewer` 的应用提供**自然语言 CAD 智能体**。用户用自然语言描述需求，智能体通过 CAD 工具读取图纸上下文并创建或修改几何图形。
+SVG 插件向同一插件管理器注册 `csvg` 导出命令，并采用**懒加载**以控制首屏体积。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) 与完整版 [`cad-viewer`](packages/cad-viewer) 应用都会在启动时注册它。
 
-主要能力：
-
-- **懒加载** `AcApPlugin`（触发命令：`agent`），避免 AI 相关 bundle 影响首屏加载
-- **Vue 对话面板**（`AgentChatPanel`），基于 Vercel AI SDK（`Experimental_Agent` + `@ai-sdk/vue`）
-- **浏览器端 LLM 配置** — 支持 OpenAI、Anthropic 及 OpenAI 兼容接口，API Key 保存在客户端（`localStorage` 加密存储）
-- **一期 CAD 工具** — `get_drawing_context`；`draw_line`、`draw_circle`、`draw_arc`、`draw_rectangle`、`draw_polyline`、`draw_text`；`set_current_layer`、`create_layer`、`zoom_extents`
-- **英 / 中 / 土耳其语 / 捷克语** 界面文案，通过插件 i18n 层提供
-
-完整 Vue 版 [`cad-viewer`](packages/cad-viewer) 在安装该包后会自动注册智能体（调色板标签页）。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) 通过 `cad-simple-ui-plugin` 将其接入停靠面板。宿主应用可调用 `registerLazyAgentPlugin` 与 `setAgentPaletteOpener`，自行决定面板挂载位置。
-
-→ **安装、注册方式与工具列表：** [packages/cad-agent-plugin/README.md](packages/cad-agent-plugin/README.md)
-
-### 导出类插件（HTML / PDF / SVG）
-
-以下插件向同一插件管理器注册导出（及 PDF 导入）命令，并采用**懒加载**以控制首屏体积。[`cad-simple-viewer-example`](packages/cad-simple-viewer-example) 示例会注册全部三个导出插件、`cad-simple-ui-plugin` 以及 `cad-agent-plugin`；完整 [`cad-viewer`](packages/cad-viewer) 应用在启动时注册导出类插件，并在安装时注册智能体插件。
-
-- **HTML** — 单文件离线查看器，便于分享与归档：[packages/cad-html-plugin/README.md](packages/cad-html-plugin/README.md)  
-  （相同管线的无头 CLI：[packages/cad-simple-viewer-cli/README.md](packages/cad-simple-viewer-cli/README.md)）
-- **PDF** — 矢量 PDF 导出与 PDF 导入 CAD：[packages/cad-pdf-plugin/README.md](packages/cad-pdf-plugin/README.md)
 - **SVG** — 矢量 SVG 导出：[packages/cad-svg-plugin/README.md](packages/cad-svg-plugin/README.md)
-
-#### 自包含 HTML 内存占用
-
-打开样例图纸 [`canteen.dwg`](https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg) 时，内存占用大致如下：
-
-| 查看器 | 内存占用 |
-|--------|----------|
-| AutoCAD 2020 | 320 MB |
-| 浩辰看图王 | 246 MB |
-| 自包含 HTML（测量模式） | 56 MB |
-| 自包含 HTML（查看模式） | 33 MB |
-
-在查看模式下，离线 HTML 查看器比 AutoCAD 2020 约低 **83%**、比浩辰看图王约低 **77%**，同时仍支持平移缩放、图层切换与距离测量（测量模式）。
 
 ## 性能优化
 
@@ -252,7 +214,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 
 -   [x] DXF 加载
 -   [x] DWG 加载
--   [x] 导出为自包含离线 HTML（内嵌查看器）
 -   [x] 大文件流式加载 / 增量加载
 -   [ ] ⏳ 文件版本兼容（R12–最新版本）
 
@@ -434,7 +395,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 
 ### 平台目标
 
--   [x] Google Drive 集成（Picker 数据源；Drive “Open with” 为可选后续）
 -   [ ] 微信小程序查看器
 -   [x] 移动端浏览器支持（响应式布局与触控）
 

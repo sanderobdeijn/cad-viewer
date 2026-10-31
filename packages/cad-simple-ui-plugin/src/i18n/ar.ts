@@ -56,8 +56,6 @@ export const ar: Record<string, string> = {
   'toolbar.hideMarkup': 'إخفاء',
 
   'toolbar.export': 'تصدير',
-  'toolbar.exportHtml': 'تصدير HTML',
-  'toolbar.exportPdf': 'تصدير PDF',
   'toolbar.exportSvg': 'تصدير SVG',
 
   'toolbar.placement': 'موضع شريط الأدوات',

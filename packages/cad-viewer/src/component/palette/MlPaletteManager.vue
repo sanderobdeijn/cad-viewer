@@ -77,24 +77,6 @@
         >
           <ml-blocks-palette />
         </div>
-        <div
-          v-else-if="
-            store.features.agentPlugin &&
-            store.dialogs.activePaletteTab === 'agent'
-          "
-          class="ml-agent-palette-wrapper"
-        >
-          <agent-chat-panel embedded />
-        </div>
-        <div
-          v-else-if="
-            store.features.scriptPlugin &&
-            store.dialogs.activePaletteTab === 'cadScript'
-          "
-          class="ml-agent-palette-wrapper"
-        >
-          <ml-cad-script-panel />
-        </div>
       </ml-overflow-tabs>
     </ml-tool-palette>
   </el-config-provider>
@@ -112,14 +94,12 @@ import {
   MlToolPalette
 } from '@mlightcad/ui-components'
 import { ElConfigProvider } from 'element-plus'
-import { computed, defineAsyncComponent, nextTick, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, nextTick, watch } from 'vue'
 
 import { store } from '../../app'
 import { useSelectionSet, useViewerRect } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlBlocksPalette from './MlBlocksPalette.vue'
-import MlCadScriptPanel from './MlCadScriptPanel.vue'
 import MlCountList from './MlCountList.vue'
 import MlDesignReviewPalette from './MlDesignReviewPalette.vue'
 import MlEntityProperties from './MlEntityProperties.vue'
@@ -129,16 +109,6 @@ import MlMeasurementPalette from './MlMeasurementPalette.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
 import MlMissingResources from './MlMissingResources.vue'
 import MlOpenFileProfile from './MlOpenFileProfile.vue'
-
-const loadAgentPlugin = () =>
-  Promise.all([
-    import('@mlightcad/cad-agent-plugin/style.css'),
-    import('@mlightcad/cad-agent-plugin')
-  ]).then(([, module]) => module)
-
-const AgentChatPanel = defineAsyncComponent(() =>
-  loadAgentPlugin().then(module => module.AgentChatPanel)
-)
 
 /**
  * Properties of palette manager component
@@ -151,7 +121,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t } = useI18n()
 const containerRect = useViewerRect()
 
 const DEFAULT_WIDTH = 520
@@ -253,12 +222,6 @@ const tabNames = computed((): readonly string[] => {
   if (store.dialogs.openFileProfileTabVisible) {
     names.push('openFileProfile')
   }
-  if (store.features.agentPlugin) {
-    names.push('agent')
-  }
-  if (store.features.scriptPlugin) {
-    names.push('cadScript')
-  }
   return names
 })
 
@@ -266,20 +229,14 @@ const tabs = computed<MlOverflowTab[]>(() => {
   return tabNames.value.map(name => {
     return {
       name,
-      label:
-        name === 'cadScript'
-          ? t('main.toolPalette.script.scriptTab')
-          : toolPaletteTabName(name)
+      label: toolPaletteTabName(name)
     }
   })
 })
 
-const activeTabTitle = computed(() => {
-  if (store.dialogs.activePaletteTab === 'cadScript') {
-    return t('main.toolPalette.script.scriptTitle')
-  }
-  return toolPaletteTitle(store.dialogs.activePaletteTab)
-})
+const activeTabTitle = computed(() =>
+  toolPaletteTitle(store.dialogs.activePaletteTab)
+)
 
 watch(
   [() => store.dialogs.activePaletteTab, tabNames],
@@ -420,19 +377,5 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
   min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.ml-agent-palette-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-agent-palette-wrapper :deep(.cad-agent-panel-root) {
-  flex: 1;
-  min-height: 0;
 }
 </style>
