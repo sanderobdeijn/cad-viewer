@@ -261,32 +261,6 @@ export abstract class AcTrMaterialManager<T> {
   }
 
   /**
-   * Changes material color to the specified color if its userData
-   * 'isBackgroundFill' is true — i.e. fills that should fuse with the
-   * canvas background instead of carrying an absolute RGB.
-   *
-   * This path is reserved for fill styles that should track the canvas
-   * colour itself rather than the foreground colour. Managers opt in via
-   * `shouldTrackBackground`; the default is a no-op.
-   *
-   * @param color - New rendering color (typically the canvas background).
-   */
-  changeBackground(color: number) {
-    for (const oldKey of Object.keys(this.cache)) {
-      const oldMaterial = this.cache[oldKey]
-      const metadata = getMaterialMetadata(oldMaterial)
-
-      const isTarget = metadata.isBackgroundFill === true
-      if (!isTarget) continue
-
-      const oldTraits = this.keyToTraits[oldKey]
-      if (!oldTraits) continue
-
-      AcTrMaterialUtil.setMaterialColor(oldMaterial, new THREE.Color(color))
-    }
-  }
-
-  /**
    * Clears all cached materials.
    */
   dispose(): void {
@@ -494,15 +468,8 @@ export abstract class AcTrMaterialManager<T> {
    *   - layer
    *   - isByLayerColor/isByLayerLineType/isByLayerLineWeight/isByLayerTransparency
    *   - isForeground      (inverts with layout background when tracked)
-   *   - isBackgroundFill  (follows canvas bg when tracked by manager)
    *   - drawOrder         (batch/render-order tier for same-plane meshes)
    *   - materialKey (cache key, used by getBackSideVariant for reverse lookup)
-   *
-   * `isForeground` and `isBackgroundFill` are mutually exclusive in
-   * practice: the former flips a material to the colour *opposite* the
-   * canvas bg (so ACI 7 text stays legible), whereas the latter paints
-   * the material with the canvas bg itself. Subclasses enforce the split via
-   * `shouldTrackForeground` and `shouldTrackBackground`.
    */
   protected createMaterial(
     key: string,
@@ -524,7 +491,6 @@ export abstract class AcTrMaterialManager<T> {
       (traits.color.isByLayer &&
         layerColor?.isForeground === true &&
         this.shouldTrackForeground({ ...traits, color: layerColor }, options))
-    const isBackgroundFill = this.shouldTrackBackground(traits, options)
 
     // Foreground-follow materials (typically ACI 7 lines/text) must be
     // initialized from the current layout background, not from trait RGB,
@@ -536,13 +502,6 @@ export abstract class AcTrMaterialManager<T> {
         new THREE.Color(
           acgiForegroundColorForBackground(this.options.currentBackgroundColor)
         )
-      )
-    } else if (isBackgroundFill) {
-      // Wipeouts (and any other bg-tracked fills) are born with the current
-      // canvas colour so the first frame matches MODELBKCOLOR / PAPERBKCOLOR.
-      AcTrMaterialUtil.setMaterialColor(
-        material,
-        new THREE.Color(this.options.currentBackgroundColor)
       )
     }
 
@@ -557,7 +516,6 @@ export abstract class AcTrMaterialManager<T> {
       isByLayerLineWeight: resolvedByLayerBindings.isByLayerLineWeight,
       isByLayerTransparency: resolvedByLayerBindings.isByLayerTransparency,
       isForeground,
-      isBackgroundFill,
       drawOrder: traits.drawOrder ?? 0,
       materialKey: key
     })
@@ -595,24 +553,6 @@ export abstract class AcTrMaterialManager<T> {
     _options: T
   ): boolean {
     return traits.color.isForeground
-  }
-
-  /**
-   * Whether materials from this manager should follow the canvas
-   * background colour — i.e. be repainted by `changeBackground` when
-   * the theme flips.
-   *
-   * Default is `false`: lines, points and text glyph fills never fuse
-   * with the background — they need to stay visible against it.
-   *
-   * Managers can override this to opt specific fill styles into
-   * background-follow behaviour.
-   */
-  protected shouldTrackBackground(
-    _traits: AcGiSubEntityTraits,
-    _options: T
-  ): boolean {
-    return false
   }
 
   /**

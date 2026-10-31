@@ -236,12 +236,6 @@ export default {
         'حدد العناصر'
     },
 
-    imageattach: {
-      ...enCommand.ACAD.imageattach,
-      description:
-        'إرفاق صورة نقطية كمرجع خارجي إلى الرسم الحالي'
-    },
-
     '-insert': {
       ...enCommand.ACAD['-insert'],
       description:

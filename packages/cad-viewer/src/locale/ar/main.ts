@@ -100,7 +100,6 @@ export default {
       quickSelect: 'تحديد\nسريع',
       drawingUnits: 'وحدات\nالرسم',
       attachDwg: 'إرفاق\nDWG',
-      attachImage: 'إرفاق\nصورة',
       editAttributes: 'تعديل\nالسمات',
       defineAttribute: 'تعريف\nسمة'
 ,
@@ -453,9 +452,6 @@ export default {
 
       attachDwg:
         'أرفق رسم DWG أو DXF كمرجع خارجي (XATTACH).',
-
-      attachImage:
-        'أرفق صورة نقطية كمرجع خارجي (IMAGEATTACH).',
 
       insert:
         'افتح لوحة الكتل لاستعراض تعريفات الكتل وإدراجها (INSERT).',
@@ -1157,15 +1153,10 @@ export default {
       title: 'الموارد المفقودة / الخارجية',
 
       fontTab: 'الخطوط',
-      imageTab: 'الصور',
       xrefTab: 'المراجع الخارجية',
 
       attach: 'إرفاق',
       attachDwg: 'إرفاق DWG/DXF...',
-      attachImage: 'إرفاق صورة...',
-
-      attachImageFailed:
-        'فشل إرفاق الصورة "{name}"',
 
       fileReferences: 'مراجع الملفات',
 
@@ -1194,7 +1185,6 @@ export default {
       selectLocalFont: 'حدد ملف خط محلي',
 
       file: 'الملف',
-      replace: 'استبدال',
 
       name: 'الاسم',
       path: 'المسار المحفوظ',
@@ -1203,7 +1193,6 @@ export default {
 
       typeAttach: 'إرفاق',
       typeOverlay: 'تراكب',
-      typeImage: 'صورة',
 
       status: 'الحالة',
       statusMissing: 'مفقود',

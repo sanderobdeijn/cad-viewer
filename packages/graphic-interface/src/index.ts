@@ -5,7 +5,6 @@ export type {
   AcGiHatchPatternLine,
   AcGiHatchStyle
 } from './AcGiHatchStyle'
-export type { AcGiImageStyle } from './AcGiImageStyle'
 export type {
   AcGiArrowStyle,
   AcGiBaseLineStyle,

@@ -16,7 +16,6 @@ import { AcDbLayerIndex } from '../object/AcDbLayerIndex'
 import { AcDbMLeaderStyle } from '../object/AcDbMLeaderStyle'
 import { AcDbMlineStyle } from '../object/AcDbMlineStyle'
 import { AcDbMTextObjectContextData } from '../object/AcDbMTextObjectContextData'
-import { AcDbRasterImageDef } from '../object/AcDbRasterImageDef'
 import { AcDbScale } from '../object/AcDbScale'
 import { AcDbSortentsTable } from '../object/AcDbSortentsTable'
 import { AcDbXrecord } from '../object/AcDbXrecord'
@@ -88,12 +87,6 @@ export class AcDbDxfObjectsReader {
         if (layout.layoutName) {
           this._db.objects.layout.setAt(layout.layoutName, layout)
         }
-        break
-      }
-      case 'IMAGEDEF': {
-        const imageDef = new AcDbRasterImageDef()
-        imageDef.dxfIn(filer)
-        this._db.objects.imageDefinition.setAt(imageDef.objectId, imageDef)
         break
       }
       case 'LAYER_FILTER': {
@@ -231,7 +224,6 @@ export class AcDbDxfObjectsReader {
       ACAD_MLEADERSTYLE: this._db.objects.mleaderStyle,
       ACAD_MLINESTYLE: this._db.objects.mlineStyle,
       ACAD_SCALELIST: this._db.objects.scale,
-      ISM_RASTER_IMAGE_DICT: this._db.objects.imageDefinition,
       MLIGHT_XRECORD: this._db.objects.xrecord
     }
 
@@ -281,7 +273,6 @@ export class AcDbDxfObjectsReader {
     for (const [, o] of this._db.objects.layout.entries()) add(o)
     for (const [, o] of this._db.objects.group.entries()) add(o)
     for (const [, o] of this._db.objects.sortentsTable.entries()) add(o)
-    for (const [, o] of this._db.objects.imageDefinition.entries()) add(o)
     for (const [, o] of this._db.objects.mleaderStyle.entries()) add(o)
     for (const [, o] of this._db.objects.mlineStyle.entries()) add(o)
     for (const [, o] of this._db.objects.layerFilter.entries()) add(o)

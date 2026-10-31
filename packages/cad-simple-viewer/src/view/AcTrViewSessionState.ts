@@ -20,8 +20,6 @@ export interface AcTrViewSessionState {
   externallyFramedLayouts: Set<AcDbObjectId>
   /** Layouts currently being batch-converted. */
   loadingLayouts: Set<AcDbObjectId>
-  /** Missing raster images keyed by entity id. */
-  missedImages: Map<AcDbObjectId, string>
   /**
    * Missing fonts reported while this document was active.
    * Parked with the session so FontManager's live map can track the active

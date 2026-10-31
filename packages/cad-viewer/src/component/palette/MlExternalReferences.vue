@@ -18,9 +18,6 @@
             <el-dropdown-item command="dwg">
               {{ t('main.toolPalette.missingResources.attachDwg') }}
             </el-dropdown-item>
-            <el-dropdown-item command="image">
-              {{ t('main.toolPalette.missingResources.attachImage') }}
-            </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -111,31 +108,6 @@
                   {{ t('main.toolPalette.missingResources.fromUrl') }}
                 </el-button>
               </template>
-              <template v-else-if="row.kind === 'image'">
-                <el-tooltip
-                  v-if="row.replacementName"
-                  :content="row.foundAt"
-                  placement="top"
-                  :show-after="2000"
-                >
-                  <span
-                    class="ml-external-references__replace-name"
-                    @click.stop="handleBrowseImage(row)"
-                  >
-                    {{ row.replacementName }}
-                  </span>
-                </el-tooltip>
-                <el-button
-                  v-else
-                  link
-                  type="primary"
-                  size="small"
-                  :title="t('main.toolPalette.missingResources.replace')"
-                  @click.stop="handleBrowseImage(row)"
-                >
-                  ...
-                </el-button>
-              </template>
             </div>
           </template>
         </el-table-column>
@@ -212,13 +184,6 @@
       style="display: none"
       @change="handleXrefFileChange"
     />
-    <input
-      ref="imageFileInput"
-      type="file"
-      accept=".png,.jpg,.jpeg,.bmp,.gif,.tif,.tiff"
-      style="display: none"
-      @change="handleImageFileChange"
-    />
   </div>
 </template>
 
@@ -226,11 +191,9 @@
 import { ArrowDown, Paperclip } from '@element-plus/icons-vue'
 import {
   AcApDocManager,
-  acapRunDatabaseEdit,
   AcApXrefManager,
   eventBus
 } from '@mlightcad/cad-simple-viewer'
-import { AcDbRasterImage } from '@mlightcad/data-model'
 import {
   type CheckboxValueType,
   ElButton,
@@ -241,28 +204,21 @@ import {
   ElIcon,
   ElMessageBox,
   ElTable,
-  ElTableColumn,
-  ElTooltip
+  ElTableColumn
 } from 'element-plus'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import {
-  type ImageMappingData,
-  useMissedData,
-  type XrefOverlayState
-} from '../../composable'
+import { useMissedData, type XrefOverlayState } from '../../composable'
 const { t } = useI18n()
-const { images: imageTableData, xrefs, xrefOverlays } = useMissedData()
+const { xrefs, xrefOverlays } = useMissedData()
 
 const xrefFileInput = ref<HTMLInputElement | null>(null)
-const imageFileInput = ref<HTMLInputElement | null>(null)
 const pendingXrefName = ref<string | null>(null)
-const pendingImageRow = ref<ImageMappingData | null>(null)
 const detailsExpanded = ref(true)
 const selectedKey = ref<string | null>(null)
 
-type RefKind = 'xref' | 'image'
+type RefKind = 'xref'
 
 interface ExternalRefRow {
   key: string
@@ -277,9 +233,6 @@ interface ExternalRefRow {
   isOverlay?: boolean
   overlayId?: string
   visible?: boolean
-  /** Image fields */
-  imageData?: ImageMappingData
-  replacementName?: string
 }
 
 const fileNameFromPath = (path: string) => {
@@ -290,27 +243,6 @@ const fileNameFromPath = (path: string) => {
 const rows = computed<ExternalRefRow[]>(() => {
   const result: ExternalRefRow[] = []
   const xrefNames = new Set(xrefs.map(x => x.name))
-
-  for (const image of imageTableData.values()) {
-    const replaced = !!image.file
-    // Found At = replacement file name only (not the original missing name).
-    const foundAt = replaced
-      ? image.filePath?.trim() || image.file!.name
-      : ''
-    result.push({
-      key: `image:${image.fileName}`,
-      kind: 'image',
-      name: image.fileName,
-      status: replaced ? 'loaded' : 'missing',
-      statusLabel: replaced
-        ? t('main.toolPalette.missingResources.statusLoaded')
-        : t('main.toolPalette.missingResources.statusMissing'),
-      typeLabel: t('main.toolPalette.missingResources.typeImage'),
-      foundAt,
-      imageData: image,
-      replacementName: image.file?.name
-    })
-  }
 
   for (const xref of xrefs) {
     const state = xrefOverlays.get(xref.name)
@@ -381,9 +313,7 @@ const handleCurrentChange = (row: ExternalRefRow | undefined) => {
 }
 
 const handleRowDblClick = (row: ExternalRefRow) => {
-  if (row.kind === 'image') {
-    handleBrowseImage(row)
-  } else if (row.kind === 'xref' && !row.overlayId) {
+  if (row.kind === 'xref' && !row.overlayId) {
     handleBrowseXref(row)
   }
 }
@@ -431,22 +361,12 @@ const handleAttachCommand = (command: string | number) => {
   if (command === 'dwg') {
     // XATTACH (XA): file picker → insertion point → scale → rotation
     AcApDocManager.instance.sendStringToExecute('xattach')
-  } else if (command === 'image') {
-    pendingImageRow.value = null
-    // IMAGEATTACH (IAT): file picker → insertion point → scale → rotation
-    AcApDocManager.instance.sendStringToExecute('imageattach')
   }
 }
 
 const handleBrowseXref = (row: ExternalRefRow) => {
   pendingXrefName.value = row.name
   xrefFileInput.value?.click()
-}
-
-const handleBrowseImage = (row: ExternalRefRow) => {
-  if (!row.imageData) return
-  pendingImageRow.value = row.imageData
-  imageFileInput.value?.click()
 }
 
 const handleXrefFileChange = async () => {
@@ -465,59 +385,6 @@ const handleXrefFileChange = async () => {
   } catch {
     // Error already reported
   }
-}
-
-const applyImageReplacement = (item: ImageMappingData, file: File) => {
-  const db = AcApDocManager.instance.curDocument.database
-  const fileName = file.name
-  let replaced = false
-  acapRunDatabaseEdit(db, 'Replace Image', () => {
-    item.ids.forEach(id => {
-      const image = db.openEntityForWrite(id) as AcDbRasterImage | undefined
-      if (!image) return
-      image.image = file
-      // Persist replacement file name on the image definition when present.
-      // Prefer getIdAt; fall back to getAt when the dictionary key is the DWG
-      // handle but objectId was reminted on collision.
-      if (image.imageDefId) {
-        const dict = db.objects.imageDefinition
-        const imageDef =
-          dict.getIdAt(image.imageDefId) ?? dict.getAt(image.imageDefId)
-        if (imageDef) {
-          imageDef.sourceFileName = fileName
-        }
-      }
-      replaced = true
-    })
-  })
-  if (!replaced) return
-  item.file = file
-  item.filePath = fileName
-  eventBus.emit('missed-data-changed', {})
-  eventBus.emit('message', {
-    message: t('main.toolPalette.missingResources.applyDone'),
-    type: 'success'
-  })
-  void nextTick(() => {
-    const match = rows.value.find(
-      row =>
-        row.kind === 'image' &&
-        (row.foundAt === fileName || row.imageData?.file === file)
-    )
-    if (match) selectedKey.value = match.key
-  })
-}
-
-const handleImageFileChange = async () => {
-  const file = imageFileInput.value?.files?.[0]
-  const row = pendingImageRow.value
-  pendingImageRow.value = null
-  if (imageFileInput.value) {
-    imageFileInput.value.value = ''
-  }
-  if (!file || !row) return
-
-  applyImageReplacement(row, file)
 }
 
 const handleUrlXref = async (row: ExternalRefRow) => {
@@ -654,17 +521,6 @@ const handleUnloadXref = (row: ExternalRefRow) => {
   gap: 4px;
   min-width: 0;
   flex-wrap: wrap;
-}
-
-.ml-external-references__replace-name {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--el-color-primary, #409eff);
-  cursor: pointer;
-  vertical-align: middle;
 }
 
 .ml-external-references__status {

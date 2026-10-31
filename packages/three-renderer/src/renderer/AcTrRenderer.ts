@@ -9,7 +9,6 @@ import {
   AcGePoint3dLike,
   AcGePolyline2d,
   AcGiFontMapping,
-  AcGiImageStyle,
   AcGiMTextData,
   AcGiPointStyle,
   AcGiRenderer,
@@ -25,7 +24,6 @@ import { isComplexLineType } from '../linetype'
 import {
   AcTrEntity,
   AcTrGroup,
-  AcTrImage,
   AcTrLine,
   AcTrLineSegments,
   AcTrMText,
@@ -204,7 +202,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   private _directCapturePlaceholder: AcTrEntity | null = null
   /**
    * Monotonic Z used so later entities occlude earlier ones on the shared
-   * CAD plane (needed for wipeouts to mask prior linework). Reset when the
+   * CAD plane (AutoCAD creation-order behaviour). Reset when the
    * view clears / starts a new convert.
    */
   private _drawOrderZ = 0
@@ -466,22 +464,11 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   }
 
   /**
-   * Repaints materials explicitly registered as background-follow fills
-   * (currently wipeouts via {@link AcGiSubEntityTraits.isBackgroundFill}).
-   *
-   * @param color - New background color (typically the canvas bg).
-   */
-  changeBackground(color: number) {
-    this._context.styleManager.changeBackground(color)
-  }
-
-  /**
    * The canvas background colour tracked by the style manager.
    *
    * Reading returns the value last written here (or the default
-   * `0x000000`).  Writing both stores the colour on the style manager
-   * options (so material managers know the current theme) and repaints
-   * every background-follow material already in the cache.
+   * `0x000000`).  Writing stores the colour on the style manager options
+   * so material managers know the current theme.
    */
   get currentBackgroundColor(): number {
     return this._context.styleManager.currentBackgroundColor
@@ -894,17 +881,6 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
       this._context,
       delay
     )
-  }
-
-  /**
-   * @inheritdoc
-   */
-  image(blob: Blob, style: AcGiImageStyle) {
-    if (this._directCapture !== 'off') {
-      this.missDirectCapture()
-      return this.createDirectCapturePlaceholder() as AcTrImage
-    }
-    return new AcTrImage(blob, style, this._context)
   }
 
   /**

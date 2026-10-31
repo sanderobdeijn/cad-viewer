@@ -15,7 +15,6 @@ This package provides the graphics interface layer that bridges the gap between 
 - **Style Customization**: Control colors, line styles, text styles, and point styles
 - **View Management**: Handle different views and viewports
 - **Arrow and Hatch Support**: Custom arrow types and hatch pattern rendering
-- **Image Rendering**: Support for raster image display
 - **Flexible Rendering**: Extensible rendering system for different output formats
 
 ## Installation
@@ -35,7 +34,6 @@ npm install @mlightcad/graphic-interface
 ### Style Classes
 - **AcGiArrowType**: Defines different arrow types for dimensions and leaders
 - **AcGiHatchStyle**: Controls hatch pattern rendering and appearance
-- **AcGiImageStyle**: Manages raster image display properties
 - **AcGiLineStyle**: Defines line styles including dash patterns and widths
 - **AcGiPointStyle**: Controls point entity display appearance
 - **AcGiTextStyle**: Manages text rendering properties and formatting

@@ -308,8 +308,6 @@ export default {
         'Koordinat biçimlerini, hassasiyeti ve ekleme ölçeğini ayarlamak için Çizim Birimlerini açın.',
       attachDwg:
         'Bir DWG veya DXF çizimini harici referans olarak ekleyin (XATTACH).',
-      attachImage:
-        'Bir raster görüntüyü harici referans olarak ekleyin (IMAGEATTACH).',
       insert:
         'Blok tanımlarını göz atmak ve eklemek için Bloklar paletini açın (INSERT).',
       editAttributes:
@@ -416,7 +414,6 @@ export default {
       countList: 'Sayım',
       drawingUnits: 'Çizim\nBirimleri',
       attachDwg: 'DWG\nEkle',
-      attachImage: 'Görüntü\nEkle',
       insert: 'Ekle',
       editAttributes: 'Öznitelikleri\nDüzenle',
       defineAttribute: 'Öznitelik\nTanımla'
@@ -821,12 +818,9 @@ export default {
       tab: 'Kaynaklar',
       title: 'Eksik / Harici Kaynaklar',
       fontTab: 'Yazı tipi',
-      imageTab: 'Görsel',
       xrefTab: 'Harici Referanslar',
       attach: 'Ekle',
       attachDwg: 'DWG/DXF ekle...',
-      attachImage: 'Görüntü ekle...',
-      attachImageFailed: '"{name}" görüntüsü eklenemedi',
       fileReferences: 'Dosya Referansları',
       details: 'Ayrıntılar',
       foundAt: 'Bulunduğu yer',
@@ -843,13 +837,11 @@ export default {
       selectFont: 'Yerine kullanılacak yazı tipini seçin',
       selectLocalFont: 'Yerel yazı tipi dosyası seçin',
       file: 'Dosya',
-      replace: 'Değiştir',
       name: 'Ad',
       path: 'Kayıtlı yol',
       type: 'Tür',
       typeAttach: 'Ekle',
       typeOverlay: 'Kaplama',
-      typeImage: 'Görüntü',
       status: 'Durum',
       statusMissing: 'Eksik',
       statusLoaded: 'Yüklendi',

@@ -31,8 +31,6 @@ export interface AcTrMaterialMetadata extends AcTrByLayerBindingFlags {
   materialKey: string
   /** True when color follows foreground inversion rules (ACI 7 behavior). */
   isForeground: boolean
-  /** True when fill should be repainted with current canvas background. */
-  isBackgroundFill?: boolean
   /** Explicit render-order tier for the batch that owns this material. */
   drawOrder?: number
   /** Culling side used by fill materials. Present only when explicitly set. */

@@ -114,25 +114,6 @@ export type {
 export { AcDbObjectIterator } from './AcDbObjectIterator'
 export { AcDbIntersect } from './AcDbIntersect'
 export {
-  ACDB_OLE2FRAME_GEOMETRY_HEADER_SIZE,
-  acdbParseOle2FrameGeometryHeader
-} from './AcDbOle2FrameGeometry'
-export type { AcDbOle2FrameGeometryHeader } from './AcDbOle2FrameGeometry'
-export { acdbExtractOleImageBlob } from './AcDbOleImageExtractor'
-export {
-  ACDB_OLE_METAFILE_EMF_MIME,
-  ACDB_OLE_METAFILE_WMF_MIME,
-  acdbIsOleMetafileMimeType,
-  acdbLooksLikeEmf,
-  acdbLooksLikeWmf,
-  acdbReassembleEmfFromWmfEscapes
-} from './AcDbOleMetafileDetect'
-export {
-  acdbOleBlobNeedsMetafileRasterization,
-  acdbRasterizeOleMetafile
-} from './AcDbOleMetafileRasterizer'
-export type { AcDbOleMetafileRasterizeOptions } from './AcDbOleMetafileRasterizer'
-export {
   AcDbOsnapMode,
   acdbHasOsnapMode,
   acdbMaskToOsnapModes,

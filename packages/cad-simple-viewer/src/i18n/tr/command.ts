@@ -129,10 +129,6 @@ export default {
       description: 'Seçili nesnelerin görüntülenmesini geçici olarak gizler',
       prompt: 'Nesneleri seçin'
     },
-    imageattach: {
-      description:
-        'Geçerli çizime harici başvuru olarak bir raster görüntü ekler'
-    },
     '-insert': {
       description: 'Bir blok tanımını geçerli çizime ekler (komut satırı)'
     },

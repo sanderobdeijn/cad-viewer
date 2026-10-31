@@ -153,13 +153,11 @@ export class AcTrStyleManager {
   }
 
   /**
-   * Updates the canvas background colour, repaints background-follow
-   * materials, and refreshes ACI-7 foreground inversion to contrast with
-   * the new layout background.
+   * Updates the canvas background colour and refreshes ACI-7 foreground
+   * inversion to contrast with the new layout background.
    */
   set currentBackgroundColor(value: number) {
     this.options.currentBackgroundColor = value
-    this.changeBackground(value)
     this.repaintForegroundMaterials(acgiForegroundColorForBackground(value))
   }
 
@@ -282,21 +280,6 @@ export class AcTrStyleManager {
     this.lineMgr.changeForeground(color)
     this.pointMgr.changeForeground(color)
     this.fillMgr.changeForeground(color)
-  }
-
-  /**
-   * Repaints every material marked as `isBackgroundFill` with the given colour.
-   *
-   * Point and line managers currently never opt materials into this
-   * behaviour, so their delegation is a no-op; keeping it symmetric
-   * allows future managers to opt in without touching the callers.
-   *
-   * @param color - New rendering color (typically the canvas bg).
-   */
-  changeBackground(color: number) {
-    this.lineMgr.changeBackground(color)
-    this.pointMgr.changeBackground(color)
-    this.fillMgr.changeBackground(color)
   }
 
   /**

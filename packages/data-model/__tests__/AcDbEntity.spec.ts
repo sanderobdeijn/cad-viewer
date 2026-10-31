@@ -34,13 +34,11 @@ import { AcDbPolyFaceMesh } from '../src/entity/AcDbPolyFaceMesh'
 import { AcDbPolygonMesh } from '../src/entity/AcDbPolygonMesh'
 import { AcDbPoint } from '../src/entity/AcDbPoint'
 import { AcDbPolyline } from '../src/entity/AcDbPolyline'
-import { AcDbRasterImage } from '../src/entity/AcDbRasterImage'
 import { AcDbRadialDimension } from '../src/entity/dimension/AcDbRadialDimension'
 import { AcDbTable } from '../src/entity/AcDbTable'
 import { AcDbText } from '../src/entity/AcDbText'
 import { AcDbTrace } from '../src/entity/AcDbTrace'
 import { AcDbViewport } from '../src/entity/AcDbViewport'
-import { AcDbWipeout } from '../src/entity/AcDbWipeout'
 import { AcDbEllipse } from '../src/entity/AcDbEllipse'
 import { AcDbLeader } from '../src/entity/AcDbLeader'
 import { AcDbRay } from '../src/entity/AcDbRay'
@@ -95,7 +93,6 @@ describe('AcDbEntity.dxfTypeName', () => {
     expect(new AcDb2dVertex().dxfTypeName).toBe('VERTEX')
     expect(new AcDb3dVertex().dxfTypeName).toBe('VERTEX')
     expect(new AcDbFace().dxfTypeName).toBe('3DFACE')
-    expect(new AcDbRasterImage().dxfTypeName).toBe('IMAGE')
     expect(new AcDbTable('TEST', 1, 1).dxfTypeName).toBe('ACAD_TABLE')
     expect(
       new AcDb3PointAngularDimension(
@@ -563,15 +560,6 @@ describe('AcDbEntity.transformBy', () => {
     expect(hatch.elevation).toBeCloseTo(8, 8)
     expect(hatch.geometricExtents.min).toMatchObject({ x: 5, y: 6, z: 8 })
 
-    const rasterImage = new AcDbRasterImage()
-    rasterImage.position = new AcGePoint3d(1, 0, 0)
-    rasterImage.width = 2
-    rasterImage.height = 1
-    rasterImage.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
-    expect(rasterImage.position.x).toBeCloseTo(0, 8)
-    expect(rasterImage.position.y).toBeCloseTo(1, 8)
-    expect(rasterImage.rotation).toBeCloseTo(Math.PI / 2, 8)
-
     const viewport = new AcDbViewport()
     viewport.centerPoint = new AcGePoint3d(1, 2, 0)
     viewport.width = 2
@@ -606,7 +594,7 @@ describe('AcDbEntity.transformBy', () => {
     })
   })
 
-  it('updates text, mtext, hatch, raster image and viewport under combined transforms', () => {
+  it('updates text, mtext, hatch and viewport under combined transforms', () => {
     const text = new AcDbText()
     text.position = new AcGePoint3d(1, 0, 0)
     text.rotation = 0
@@ -651,17 +639,6 @@ describe('AcDbEntity.transformBy', () => {
     expect(hatch.patternAngle).toBeCloseTo(Math.PI / 6, 8)
     expect(hatch.patternScale).toBeCloseTo(6, 8)
 
-    const rasterImage = new AcDbRasterImage()
-    rasterImage.position = new AcGePoint3d(1, 0, 0)
-    rasterImage.width = 2
-    rasterImage.height = 3
-    rasterImage.scale = new AcGePoint2d(2, 3) as never
-    rasterImage.rotation = 0
-    rasterImage.transformBy(new AcGeMatrix3d().makeScale(2, 4, 1))
-    expectPoint3dClose(rasterImage.position, { x: 2, y: 0, z: 0 })
-    expect(rasterImage.width).toBeCloseTo(8, 8)
-    expect(rasterImage.height).toBeCloseTo(36, 8)
-
     const viewport = new AcDbViewport()
     viewport.centerPoint = new AcGePoint3d(1, 1, 0)
     viewport.width = 2
@@ -697,7 +674,7 @@ describe('AcDbEntity.transformBy', () => {
     expect(trace.elevation).toBeCloseTo(5, 8)
   })
 
-  it('transforms inherited text, raster and block-reference entity kinds', () => {
+  it('transforms inherited text and block-reference entity kinds', () => {
     const attribute = new AcDbAttribute()
     attribute.position = new AcGePoint3d(0, 0, 0)
     attribute.height = 1
@@ -708,14 +685,6 @@ describe('AcDbEntity.transformBy', () => {
     attributeDefinition.position = new AcGePoint3d(1, 1, 0)
     attributeDefinition.transformBy(new AcGeMatrix3d().makeTranslation(2, 4, 6))
     expectPoint3dClose(attributeDefinition.position, { x: 3, y: 5, z: 6 })
-
-    const wipeout = new AcDbWipeout()
-    wipeout.position = new AcGePoint3d(1, 0, 0)
-    wipeout.width = 4
-    wipeout.height = 2
-    wipeout.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
-    expectPoint3dClose(wipeout.position, { x: 0, y: 1, z: 0 })
-    expect(wipeout.rotation).toBeCloseTo(Math.PI / 2, 8)
 
     const table = new AcDbTable('TEST', 1, 1)
     table.position = new AcGePoint3d(2, 0, 0)

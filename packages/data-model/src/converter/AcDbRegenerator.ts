@@ -146,15 +146,6 @@ export class AcDbRegenerator extends AcDbDatabaseConverter<AcDbDatabase> {
       })
     }
 
-    const imageDefs = this._database.objects.imageDefinition.newIterator()
-    for (const imageDef of imageDefs) {
-      this._database.events.dictObjetSet.dispatch({
-        database: this._database,
-        object: imageDef,
-        key: imageDef.objectId
-      })
-    }
-
     const mleaderStyles = this._database.objects.mleaderStyle.newIterator()
     for (const mleaderStyle of mleaderStyles) {
       this._database.events.dictObjetSet.dispatch({

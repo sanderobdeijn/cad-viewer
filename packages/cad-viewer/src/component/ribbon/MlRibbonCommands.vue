@@ -104,7 +104,6 @@ import {
   arcStartEndRadius,
   arcThreePoints,
   attachDwg,
-  attachImage,
   circleCenterDiameter,
   circleCenterRadius,
   circleTanTanRadius,
@@ -1200,7 +1199,6 @@ const buildBaseTabs = (
     find: t('main.ribbon.tooltip.find'),
     drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
     attachDwg: t('main.ribbon.tooltip.attachDwg'),
-    attachImage: t('main.ribbon.tooltip.attachImage'),
     insert: t('main.ribbon.tooltip.insert'),
     editAttributes: t('main.ribbon.tooltip.editAttributes'),
     defineAttribute: t('main.ribbon.tooltip.defineAttribute'),
@@ -2466,18 +2464,6 @@ const buildBaseTabs = (
                     labelWrapLines: 2,
                     labelWrapWidth: 'max-content'
                   }
-                },
-                {
-                  id: 'cmd-imageattach',
-                  type: 'button',
-                  label: t('main.ribbon.command.attachImage'),
-                  tooltip: ribbonTooltips.attachImage,
-                  size: 'large',
-                  props: {
-                    icon: attachImage,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
                 }
               ]
             }
@@ -2576,7 +2562,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-countlist', 'countlist')
   commandByItemId.set('cmd-drawing-units', 'units')
   commandByItemId.set('cmd-xattach', 'xattach')
-  commandByItemId.set('cmd-imageattach', 'imageattach')
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
   commandByItemId.set('cmd-tool-markup-panel', 'markuppanel')

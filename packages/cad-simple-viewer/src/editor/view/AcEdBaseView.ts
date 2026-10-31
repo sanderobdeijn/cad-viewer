@@ -150,7 +150,6 @@ export interface AcEdMissedXref {
  */
 export interface AcEdMissedData {
   fonts: Record<string, number>
-  images: Map<string, string>
   /** Unresolved external references in the current database */
   xrefs: AcEdMissedXref[]
 }
@@ -186,7 +185,7 @@ export type AcEdCalculateSizeCallback = () => { width: number; height: number }
  * ```typescript
  * class MyView extends AcEdBaseView {
  *   // Implement required abstract methods
- *   get missedData() { return { fonts: {}, images: new Map(), xrefs: [] }; }
+ *   get missedData() { return { fonts: {}, xrefs: [] }; }
  *   get mode() { return this._mode; }
  *   set mode(value) { this._mode = value; }
  *   // ... other abstract methods

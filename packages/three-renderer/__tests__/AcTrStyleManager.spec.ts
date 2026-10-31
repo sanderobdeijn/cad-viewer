@@ -298,46 +298,17 @@ describe('AcTrStyleManager', () => {
 
     const hatchMetadata = getMaterialMetadata(hatchMaterial)
     expect(hatchMetadata.drawOrder).toBe(-1)
-    expect(hatchMetadata.isBackgroundFill).toBe(false)
     expect(hatchMetadata.isForeground).toBe(true)
     expect(hatchMaterial.color.getHex()).toBe(0x000000)
 
     const lineworkFillMetadata = getMaterialMetadata(lineworkFillMaterial)
     expect(lineworkFillMetadata.drawOrder).toBe(0)
     expect(lineworkFillMetadata.isForeground).toBe(true)
-    expect(lineworkFillMetadata.isBackgroundFill).toBe(false)
     expect(lineworkFillMaterial.color.getHex()).toBe(0x000000)
 
     styleManager.currentBackgroundColor = 0x000000
     expect(hatchMaterial.color.getHex()).toBe(0xffffff)
     expect(lineworkFillMaterial.color.getHex()).toBe(0xffffff)
-  })
-
-  it('wipeout fills fuse with the canvas background and track theme flips (#671)', () => {
-    const styleManager = new AcTrStyleManager()
-    styleManager.currentBackgroundColor = 0xffffff
-
-    const wipeoutTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    wipeoutTraits.layer = '0'
-    // Entity colour is typically ACI 7 / ByLayer — must not paint black.
-    wipeoutTraits.color = new AcCmColor().setForeground()
-    wipeoutTraits.drawOrder = 0
-    wipeoutTraits.isBackgroundFill = true
-
-    const material = styleManager.getFillMaterial(
-      wipeoutTraits
-    ) as THREE.MeshBasicMaterial
-    const metadata = getMaterialMetadata(material)
-
-    expect(metadata.isBackgroundFill).toBe(true)
-    expect(metadata.isForeground).toBe(false)
-    expect(material.color.getHex()).toBe(0xffffff)
-
-    styleManager.currentBackgroundColor = 0x000000
-    expect(material.color.getHex()).toBe(0x000000)
-
-    styleManager.currentBackgroundColor = 0xffffff
-    expect(material.color.getHex()).toBe(0xffffff)
   })
 
   it('keeps patterned foreground hatches as visible shader linework', () => {
@@ -374,7 +345,6 @@ describe('AcTrStyleManager', () => {
 
     const metadata = getMaterialMetadata(material)
     expect(metadata.drawOrder).toBe(-1)
-    expect(metadata.isBackgroundFill).toBe(false)
     expect(metadata.isForeground).toBe(true)
   })
 
@@ -454,7 +424,6 @@ describe('AcTrStyleManager', () => {
     ) as THREE.MeshBasicMaterial
 
     const metadata = getMaterialMetadata(material)
-    expect(metadata.isBackgroundFill).toBe(false)
     expect(metadata.isForeground).toBe(false)
     expect(material.color.getHex()).toBe(0x808080)
 
@@ -652,7 +621,6 @@ describe('AcTrStyleManager', () => {
 
     const metadata = getMaterialMetadata(material)
     expect(metadata.drawOrder).toBe(-1)
-    expect(metadata.isBackgroundFill).toBe(false)
   })
 
   it('uses fat line materials when forceShowLineWeight is on even if LWDISPLAY is off', () => {

@@ -301,8 +301,6 @@ export default {
         'Otevře Jednotky výkresu pro nastavení formátu souřadnic, přesnosti a měřítka vkládání.',
       attachDwg:
         'Připojí výkres DWG nebo DXF jako externí referenci (XATTACH).',
-      attachImage:
-        'Připojí rastrový obrázek jako externí referenci (IMAGEATTACH).',
       insert:
         'Otevře paletu Bloky pro procházení a vkládání definic bloků (INSERT).',
       editAttributes:
@@ -406,7 +404,6 @@ export default {
       countList: 'Počet',
       drawingUnits: 'Jednotky\nvýkresu',
       attachDwg: 'Připojit\nDWG',
-      attachImage: 'Připojit\nobrázek',
       insert: 'Vložit',
       editAttributes: 'Upravit\natributy',
       defineAttribute: 'Definovat\natribut'
@@ -808,12 +805,9 @@ export default {
       tab: 'Zdroje',
       title: 'Chybějící / externí zdroje',
       fontTab: 'Font',
-      imageTab: 'Obrázek',
       xrefTab: 'Externí reference',
       attach: 'Připojit',
       attachDwg: 'Připojit DWG/DXF…',
-      attachImage: 'Připojit obrázek…',
-      attachImageFailed: 'Nepodařilo se připojit obrázek „{name}“',
       fileReferences: 'Odkazy na soubory',
       details: 'Podrobnosti',
       foundAt: 'Nalezeno v',
@@ -830,13 +824,11 @@ export default {
       selectFont: 'Vyberte font pro nahrazení',
       selectLocalFont: 'Vyberte místní soubor fontu',
       file: 'Soubor',
-      replace: 'Nahradit',
       name: 'Název',
       path: 'Uložená cesta',
       type: 'Typ',
       typeAttach: 'Připojení',
       typeOverlay: 'Překrytí',
-      typeImage: 'Obrázek',
       status: 'Stav',
       statusMissing: 'Chybí',
       statusLoaded: 'Načteno',

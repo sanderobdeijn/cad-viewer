@@ -7,7 +7,8 @@ const REALDWG_PACKAGES = [
   'common',
   'geometry-engine',
   'graphic-interface',
-  'data-model'
+  'data-model',
+  'libredwg-converter'
 ]
 
 const packagesProject: ProjectConfig = {
@@ -71,7 +72,7 @@ const realdwgProject: ProjectConfig = {
   testEnvironment: 'node',
   roots: REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}`),
   moduleNameMapper: {
-    '^@mlightcad/(common|geometry-engine|graphic-interface)$':
+    '^@mlightcad/(common|geometry-engine|graphic-interface|data-model)$':
       '<rootDir>/packages/$1/src/index.ts'
   },
   transform: {

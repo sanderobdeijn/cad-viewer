@@ -139,7 +139,7 @@ import {
 import MlExternalReferences from './MlExternalReferences.vue'
 
 const { t } = useI18n()
-const { fonts: fontMapping, images: imageTableData, xrefs } = useMissedData()
+const { fonts: fontMapping, xrefs } = useMissedData()
 
 const fontFileInput = ref<HTMLInputElement | null>(null)
 const availableFontInfos = ref<AcApFontInfo[]>([])
@@ -205,10 +205,10 @@ watch(
 )
 
 watch(
-  [() => fontMapping.size, () => imageTableData.size, () => xrefs.length],
+  [() => fontMapping.size, () => xrefs.length],
   () => {
     const tab = store.dialogs.activeMissingResourceTab as MissingResourceTab
-    const hasXrefs = imageTableData.size > 0 || xrefs.length > 0
+    const hasXrefs = xrefs.length > 0
     const valid =
       (tab === 'font' && fontMapping.size > 0) ||
       (tab === 'xref' && hasXrefs) ||

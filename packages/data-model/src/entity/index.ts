@@ -74,14 +74,6 @@ export type {
   AcDbMLeaderMTextContentLike
 } from './AcDbMLeader'
 export { AcDbMText } from './AcDbMText'
-export { AcDbFrame } from './AcDbFrame'
-export { AcDbOleFrame } from './AcDbOleFrame'
-export {
-  AcDbOle2Frame,
-  AcDbOleObjectType,
-  AcDbOleTileMode
-} from './AcDbOle2Frame'
-export type { AcDbOleRectangle3d } from './AcDbOle2Frame'
 export { AcDbSpline } from './AcDbSpline'
 export { AcDbTable } from './AcDbTable'
 export type {
@@ -99,15 +91,9 @@ export { AcDbSolid } from './AcDbSolid'
 export { AcDbPolyline, acdbOffsetVertexPathAsPolyline } from './AcDbPolyline'
 export { AcDbProxyEntity } from './AcDbProxyEntity'
 export { AcDbPoint } from './AcDbPoint'
-export {
-  AcDbRasterImage,
-  AcDbRasterImageClipBoundaryType,
-  AcDbRasterImageImageDisplayOpt
-} from './AcDbRasterImage'
 export { AcDbRay } from './AcDbRay'
 export { AcDbShape } from './AcDbShape'
 export { AcDbViewport } from './AcDbViewport'
-export { AcDbWipeout } from './AcDbWipeout'
 export { AcDbXline } from './AcDbXline'
 export { AcDbPolygonMesh, AcDbPolygonMeshVertex } from './AcDbPolygonMesh'
 export {

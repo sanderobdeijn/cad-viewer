@@ -16,7 +16,6 @@ import {
   ACGI_LIGHT_THEME_FOREGROUND,
   AcGiContext,
   AcGiFontMapping,
-  AcGiImageStyle,
   acgiIsLightBackground,
   AcGiLineWeight,
   AcGiMTextData,
@@ -34,7 +33,6 @@ import { AcSvgEntity } from './AcSvgEntity'
 import { AcSvgExportUtil } from './AcSvgExportUtil'
 import { computeSvgViewBox } from './AcSvgExtents'
 import { AcSvgGroup } from './AcSvgGroup'
-import { AcSvgImage } from './AcSvgImage'
 import { AcSvgLine } from './AcSvgLine'
 import { AcSvgLineSegments } from './AcSvgLineSegments'
 import { AcSvgMText } from './AcSvgMText'
@@ -67,14 +65,12 @@ export class AcSvgRenderer implements AcGiRenderer<AcSvgEntity> {
   private _currentBackgroundColor = 0x000000
   private _foregroundColor = 0x000000
   private _showLineWeight = false
-  private _pendingImages: Promise<void>[]
   private readonly _context: AcGiContext
 
   constructor() {
     this._entities = []
     this._bbox = new AcGeBox2d()
     this._fontMapping = {}
-    this._pendingImages = []
     this._context = AcGiContext.fromBackgroundColor(
       this._currentBackgroundColor
     )
@@ -342,21 +338,8 @@ export class AcSvgRenderer implements AcGiRenderer<AcSvgEntity> {
   }
 
   /**
-   * @inheritdoc
-   */
-  image(blob: Blob, style: AcGiImageStyle) {
-    const traits = { ...this._subEntityTraits }
-    const ctx = this.styleContext
-    const pending = AcSvgImage.fromBlob(blob, style, traits, ctx).then(entity =>
-      this.pushEntity(entity)
-    )
-    this._pendingImages.push(pending.then(() => undefined))
-    return _tempEntity
-  }
-
-  /**
-   * Exports SVG markup. Awaits pending raster images and yields periodically
-   * so a host busy indicator can keep animating.
+   * Exports SVG markup, yielding periodically so a host busy indicator can
+   * keep animating.
    *
    * Prefer explicit {@link roots} from top-level `worldDraw` return values.
    * The internal `_entities` list is polluted by {@link AcDbRenderingCache}:
@@ -364,13 +347,11 @@ export class AcSvgRenderer implements AcGiRenderer<AcSvgEntity> {
    * `applyMatrix`'d clones that are never pushed here.
    */
   async exportAsync(roots?: AcSvgEntity[]): Promise<string> {
-    await Promise.all(this._pendingImages)
     return this.exportMarkup(true, roots)
   }
 
   /**
-   * Synchronous export. Raster images added via {@link image} may be missing
-   * unless {@link exportAsync} is used.
+   * Synchronous export without yielding to the event loop.
    *
    * @param roots - Optional top-level drawables; see {@link exportAsync}.
    */
@@ -507,8 +488,6 @@ ${elements}
     return `  <rect x="${viewBox.x}" y="${viewBox.y}" width="${width}" height="${height}" fill="${fill}"/>`
   }
 }
-
-const _tempEntity = /*@__PURE__*/ new AcSvgEntity()
 
 /**
  * Midpoint loop for wide-polyline offset rings (sub-pixel visibility stroke).

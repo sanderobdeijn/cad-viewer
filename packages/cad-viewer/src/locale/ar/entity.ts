@@ -31,13 +31,10 @@ export default {
     MText: 'نص متعدد الأسطر',
 
     OrdinateDimension: 'بُعد إحداثي',
-    Ole2Frame: 'Ole2Frame',
-    OleFrame: 'OleFrame',
     Point: 'نقطة',
     Polyline: 'متعدد الخطوط',
 
     RadialDimension: 'بُعد نصف القطر',
-    RasterImage: 'صورة نقطية',
     Ray: 'شعاع',
     RotatedDimension: 'بُعد مدوّر',
 

@@ -5,33 +5,26 @@ export type MissingResourceTab = 'font' | 'xref'
 
 /**
  * Picks the best Missing Resources sub-tab for the current missed-data set.
- * Prefer `xref` when images or unresolved xrefs are present (they share one UI).
+ * Prefer `xref` when unresolved xrefs are present.
  */
 export function resolveMissingResourceTab(
-  preferred?: MissingResourceTab | 'image'
+  preferred?: MissingResourceTab
 ): MissingResourceTab {
-  const { fonts, images, xrefs } = useMissedData()
-  const hasExternalRefs = images.size > 0 || xrefs.length > 0
+  const { fonts, xrefs } = useMissedData()
+  const hasExternalRefs = xrefs.length > 0
 
   if (preferred === 'font' && fonts.size > 0) return 'font'
-  if (
-    (preferred === 'xref' || preferred === 'image') &&
-    hasExternalRefs
-  ) {
-    return 'xref'
-  }
+  if (preferred === 'xref' && hasExternalRefs) return 'xref'
 
   if (fonts.size > 0) return 'font'
   if (hasExternalRefs) return 'xref'
-  return preferred === 'image' ? 'xref' : (preferred ?? 'font')
+  return preferred ?? 'font'
 }
 
 /**
  * Opens the tool palette on the Missing / External Resources tab.
  */
-export function openMissingResourcesPalette(
-  preferred?: MissingResourceTab | 'image'
-) {
+export function openMissingResourcesPalette(preferred?: MissingResourceTab) {
   store.dialogs.activePaletteTab = 'missingResources'
   store.dialogs.activeMissingResourceTab = resolveMissingResourceTab(preferred)
   store.dialogs.layerManager = true

@@ -787,13 +787,6 @@ export default {
     boundsSecondCorner: 'Specify opposite corner',
     longSidePrompt: 'Enter long side size in pixels'
   },
-  imageattach: {
-    insertionPoint: 'Specify insertion point:',
-    scale: 'Specify scale factor:',
-    rotation: 'Specify rotation angle:',
-    invalidScale: 'Scale factor must be greater than 0.',
-    decodeFailed: 'Failed to read the selected image file.'
-  },
   insert: {
     blockName: 'Enter block name:',
     insertionPoint: 'Specify insertion point:',

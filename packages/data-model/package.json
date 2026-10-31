@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "@mlightcad/common": "workspace:*",
-    "@mlightcad/emf-converter": "1.15.12",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
     "uid": "^2.0.2"

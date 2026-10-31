@@ -67,7 +67,7 @@ import {
  * Allocates the next entity draw-order Z offset.
  *
  * Wired by the view to {@link AcTrRenderer.allocateDrawOrderZ} so later
- * entities occlude earlier ones (wipeout masking). Defaults to `0` so unit
+ * entities occlude earlier ones (AutoCAD draw order). Defaults to `0` so unit
  * tests that construct {@link AcTrBatchedGroup} directly stay unchanged.
  */
 export type AcTrDrawOrderZAllocator = () => number
@@ -1307,7 +1307,7 @@ export class AcTrBatchedGroup extends THREE.Group {
       if (drawableUserData.noBatch) {
         const cloned = this.cloneUnbatchedObject(object)
         cloned.visible = entityVisible && object.visible
-        // Elevate later unbatched linework so wipeouts can occlude it.
+        // Elevate later unbatched linework so later entities can occlude it.
         // Hatch-tier unbatched meshes keep Z=0 (under linework via renderOrder).
         const material = (cloned as THREE.Mesh).material as
           | THREE.Material
@@ -3104,52 +3104,6 @@ export class AcTrBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Applies canvas-background colour to every owned batch material clone
-   * marked as {@link getMaterialMetadata}'s `isBackgroundFill` (wipeouts).
-   *
-   * Style-manager cache entries are updated by
-   * {@link AcTrMaterialManager.changeBackground}; batch containers keep
-   * private clones so they must be repainted separately.
-   *
-   * @param color - Current canvas background colour.
-   */
-  repaintBackgroundMaterials(color: number) {
-    const threeColor = new THREE.Color(color)
-    const paint = (material: THREE.Material) => {
-      if (getMaterialMetadata(material).isBackgroundFill === true) {
-        AcTrMaterialUtil.setMaterialColor(material, threeColor)
-      }
-    }
-
-    for (const group of this.groups) {
-      group.forEach(batches => {
-        batches.forEach(batch => {
-          const material = batch.material
-          if (Array.isArray(material)) {
-            material.forEach(paint)
-          } else if (material) {
-            paint(material)
-          }
-        })
-      })
-    }
-
-    this._unbatchedObjects.traverse(object => {
-      if (!('material' in object)) {
-        return
-      }
-      const material = (
-        object as THREE.Mesh | THREE.Line | THREE.LineSegments | THREE.Points
-      ).material
-      if (Array.isArray(material)) {
-        material.forEach(paint)
-      } else if (material) {
-        paint(material)
-      }
-    })
-  }
-
-  /**
    * Clones a style-cached material for exclusive use by one batch container.
    *
    * Batches are still grouped by the source `material.id`, but each container
@@ -3329,7 +3283,7 @@ export class AcTrBatchedGroup extends THREE.Group {
     this.copyWorldMatrixOntoClone(source, cloned)
     if (this.hasMaterial(source) && this.hasMaterial(cloned)) {
       const sourceMaterial = source.material
-      // Textured leaves (AcTrImage) must own cloned geometry/material/map:
+      // Textured leaves must own cloned geometry/material/map:
       // AcTrView2d disposes the convert-time entity right after addEntity, and
       // sharing those resources leaves a blank mesh in the scene.
       const ownsTexturedMaterial = this.materialHasTextureMap(sourceMaterial)

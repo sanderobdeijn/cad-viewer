@@ -125,10 +125,6 @@ export default {
       description: 'Dočasně potlačí zobrazení vybraných objektů',
       prompt: 'Vyberte objekty'
     },
-    imageattach: {
-      description:
-        'Připojí rastrový obrázek jako externí referenci k aktuálnímu výkresu'
-    },
     '-insert': {
       description:
         'Vloží definici bloku do aktuálního výkresu (příkazový řádek)'

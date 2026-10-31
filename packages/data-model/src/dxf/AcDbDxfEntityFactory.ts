@@ -16,12 +16,9 @@ import { AcDbLine } from '../entity/AcDbLine'
 import { AcDbMLeader } from '../entity/AcDbMLeader'
 import { AcDbMLine } from '../entity/AcDbMLine'
 import { AcDbMText } from '../entity/AcDbMText'
-import { AcDbOle2Frame } from '../entity/AcDbOle2Frame'
-import { AcDbOleFrame } from '../entity/AcDbOleFrame'
 import { AcDbPoint } from '../entity/AcDbPoint'
 import { AcDbPolyline } from '../entity/AcDbPolyline'
 import { AcDbProxyEntity } from '../entity/AcDbProxyEntity'
-import { AcDbRasterImage } from '../entity/AcDbRasterImage'
 import { AcDbRay } from '../entity/AcDbRay'
 import { AcDbShape } from '../entity/AcDbShape'
 import { AcDbSolid } from '../entity/AcDbSolid'
@@ -30,7 +27,6 @@ import { AcDbTable } from '../entity/AcDbTable'
 import { AcDbText } from '../entity/AcDbText'
 import { AcDbTrace } from '../entity/AcDbTrace'
 import { AcDbViewport } from '../entity/AcDbViewport'
-import { AcDbWipeout } from '../entity/AcDbWipeout'
 import { AcDbXline } from '../entity/AcDbXline'
 import { acdbDxfInDimension } from './AcDbDxfDimensionAssembler'
 import { acdbDxfInPolyline } from './AcDbDxfPolylineAssembler'
@@ -87,16 +83,8 @@ export function acdbCreateEntityForDxfIn(typeName: string): AcDbEntity | null {
       return new AcDbLeader()
     case 'VIEWPORT':
       return new AcDbViewport()
-    case 'IMAGE':
-      return new AcDbRasterImage()
-    case 'WIPEOUT':
-      return new AcDbWipeout()
     case 'ACAD_PROXY_ENTITY':
       return new AcDbProxyEntity()
-    case 'OLEFRAME':
-      return new AcDbOleFrame()
-    case 'OLE2FRAME':
-      return new AcDbOle2Frame()
     case 'HATCH':
       return new AcDbHatch()
     case 'MLINE':

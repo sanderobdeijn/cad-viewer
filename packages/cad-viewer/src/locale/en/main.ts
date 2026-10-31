@@ -302,8 +302,6 @@ export default {
         'Open Drawing Units to set coordinate formats, precision, and insertion scale.',
       attachDwg:
         'Attach a DWG or DXF drawing as an external reference (XATTACH).',
-      attachImage:
-        'Attach a raster image as an external reference (IMAGEATTACH).',
       insert:
         'Open the Blocks palette to browse and insert block definitions (INSERT).',
       editAttributes:
@@ -412,7 +410,6 @@ export default {
       countList: 'Count',
       drawingUnits: 'Drawing\nUnits',
       attachDwg: 'Attach\nDWG',
-      attachImage: 'Attach\nImage',
       insert: 'Insert',
       editAttributes: 'Edit\nAttributes',
       defineAttribute: 'Define\nAttribute'
@@ -821,12 +818,9 @@ export default {
       tab: 'Resources',
       title: 'Missing / External Resources',
       fontTab: 'Font',
-      imageTab: 'Image',
       xrefTab: 'External References',
       attach: 'Attach',
       attachDwg: 'Attach DWG/DXF...',
-      attachImage: 'Attach Image...',
-      attachImageFailed: 'Failed to attach image "{name}"',
       fileReferences: 'File References',
       details: 'Details',
       foundAt: 'Found at',
@@ -843,13 +837,11 @@ export default {
       selectFont: 'Select font to replace',
       selectLocalFont: 'Select local font file',
       file: 'File',
-      replace: 'Replace',
       name: 'Name',
       path: 'Saved path',
       type: 'Type',
       typeAttach: 'Attach',
       typeOverlay: 'Overlay',
-      typeImage: 'Image',
       status: 'Status',
       statusMissing: 'Missing',
       statusLoaded: 'Loaded',

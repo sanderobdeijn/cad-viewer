@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@mlightcad/data-model': workspace:*
-  '@mlightcad/libredwg-converter': ^3.15.12
+  '@mlightcad/libredwg-converter': workspace:*
   '@mlightcad/mtext-input-box': ^0.3.5
   '@mlightcad/mtext-parser': ^1.5.5
   '@mlightcad/mtext-renderer': ^0.13.5
@@ -136,8 +136,8 @@ importers:
         specifier: workspace:*
         version: link:../data-model
       '@mlightcad/libredwg-converter':
-        specifier: ^3.15.12
-        version: 3.15.12(@mlightcad/data-model@packages+data-model)
+        specifier: workspace:*
+        version: link:../libredwg-converter
       '@mlightcad/mtext-parser':
         specifier: ^1.5.5
         version: 1.5.5
@@ -217,8 +217,8 @@ importers:
         specifier: workspace:*
         version: link:../data-model
       '@mlightcad/libredwg-converter':
-        specifier: ^3.15.12
-        version: 3.15.12(@mlightcad/data-model@packages+data-model)
+        specifier: workspace:*
+        version: link:../libredwg-converter
       '@mlightcad/mtext-parser':
         specifier: ^1.5.5
         version: 1.5.5
@@ -350,8 +350,8 @@ importers:
         specifier: workspace:*
         version: link:../data-model
       '@mlightcad/libredwg-converter':
-        specifier: ^3.15.12
-        version: 3.15.12(@mlightcad/data-model@packages+data-model)
+        specifier: workspace:*
+        version: link:../libredwg-converter
       '@mlightcad/mtext-parser':
         specifier: ^1.5.5
         version: 1.5.5
@@ -414,9 +414,6 @@ importers:
       '@mlightcad/common':
         specifier: workspace:*
         version: link:../common
-      '@mlightcad/emf-converter':
-        specifier: 1.15.12
-        version: 1.15.12
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
@@ -469,6 +466,19 @@ importers:
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
+      vite-plugin-strip-comments:
+        specifier: ^0.0.10
+        version: 0.0.10
+
+  packages/libredwg-converter:
+    dependencies:
+      '@mlightcad/libredwg-web':
+        specifier: ^0.8.1
+        version: 0.8.1
+    devDependencies:
+      '@mlightcad/data-model':
+        specifier: workspace:*
+        version: link:../data-model
       vite-plugin-strip-comments:
         specifier: ^0.0.10
         version: 0.0.10
@@ -1936,14 +1946,6 @@ packages:
 
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
-
-  '@mlightcad/emf-converter@1.15.12':
-    resolution: {integrity: sha512-J7/nH+aM9ZInmEDPVB+MWapE4hD0hBFu5ndT7/Vjnq5WoleAX3TqbmM+TuMt5iTpuCZCQcm7441qYSEEdDEYyQ==}
-
-  '@mlightcad/libredwg-converter@3.15.12':
-    resolution: {integrity: sha512-Ei6g4Z+w5wOPB3fjH8UThuiPfcoSOSW9BvexQJ+YHEBidVbtXCfXw9RayiCJN3azIlQCOjtXt/HnhRC/HEF7Rg==}
-    peerDependencies:
-      '@mlightcad/data-model': workspace:*
 
   '@mlightcad/libredwg-web@0.8.1':
     resolution: {integrity: sha512-02Jn0m3xIokJ0ghr/OXSI4H6MoimSED2sbZYr47A7IGoaI66saLkNN2HDeX6UICSdiQsRQDBVyhuPE3CG3jd3Q==}
@@ -7590,13 +7592,6 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0':
     optional: true
-
-  '@mlightcad/emf-converter@1.15.12': {}
-
-  '@mlightcad/libredwg-converter@3.15.12(@mlightcad/data-model@packages+data-model)':
-    dependencies:
-      '@mlightcad/data-model': link:packages/data-model
-      '@mlightcad/libredwg-web': 0.8.1
 
   '@mlightcad/libredwg-web@0.8.1': {}
 

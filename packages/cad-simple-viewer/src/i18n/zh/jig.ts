@@ -776,13 +776,6 @@ export default {
     boundsSecondCorner: '指定对角点',
     longSidePrompt: '输入长边像素大小'
   },
-  imageattach: {
-    insertionPoint: '指定插入点：',
-    scale: '指定比例因子：',
-    rotation: '指定旋转角度：',
-    invalidScale: '比例因子必须大于 0。',
-    decodeFailed: '无法读取所选图像文件。'
-  },
   insert: {
     blockName: '输入块名：',
     insertionPoint: '指定插入点：',

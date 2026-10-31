@@ -785,13 +785,6 @@ export default {
     boundsSecondCorner: 'Zadejte protilehlý roh',
     longSidePrompt: 'Zadejte velikost delší strany v pixelech'
   },
-  imageattach: {
-    insertionPoint: 'Zadejte bod vložení:',
-    scale: 'Zadejte faktor měřítka:',
-    rotation: 'Zadejte úhel otočení:',
-    invalidScale: 'Faktor měřítka musí být větší než 0.',
-    decodeFailed: 'Nepodařilo se načíst vybraný soubor obrázku.'
-  },
   insert: {
     blockName: 'Zadejte název bloku:',
     insertionPoint: 'Zadejte bod vložení:',

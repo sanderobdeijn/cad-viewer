@@ -1309,18 +1309,6 @@ describe('AcDbNativeDxfConverter', () => {
       '330',
       '20',
       '0',
-      'IMAGEDEF',
-      '5',
-      'B0',
-      '100',
-      'AcDbRasterImageDef',
-      '1',
-      'C:\\images\\site.png',
-      '280',
-      '1',
-      '281',
-      '0',
-      '0',
       'LAYER_FILTER',
       '5',
       'B1',
@@ -1497,10 +1485,6 @@ describe('AcDbNativeDxfConverter', () => {
     expect(layout1!.tabOrder).toBe(1)
     expect(layout1!.blockTableRecordId).toBe('20')
     expect(db.tables.blockTable.getAt('*Paper_Space')!.layoutId).toBe('A1')
-
-    const imageDef = db.objects.imageDefinition.getAt('B0')
-    expect(imageDef).toBeDefined()
-    expect(imageDef!.sourceFileName).toBe('C:\\images\\site.png')
 
     const layerFilter = db.objects.layerFilter.getAt('B1')
     expect(layerFilter).toBeDefined()

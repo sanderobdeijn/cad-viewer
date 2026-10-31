@@ -30,7 +30,6 @@ import {
   AcApEraseCmd,
   AcApHatchCmd,
   AcApHideObjectsCmd,
-  AcApImageAttachCmd,
   AcApInsertCmd,
   AcApLayerCloseCmd,
   AcApLayerCmd,
@@ -1910,7 +1909,6 @@ export class AcApDocManager {
       commandManager: this._commandManager
     })
     addSystemCommand('-hatch', '-hatch', new AcApHatchCmd())
-    addSystemCommand('imageattach', 'imageattach', new AcApImageAttachCmd())
     addSystemCommand('-insert', '-insert', new AcApInsertCmd())
     addSystemCommand('xattach', 'xattach', new AcApXAttachCmd())
     addSystemCommand('-layer', '-layer', new AcApLayerCmd())

@@ -1761,25 +1761,6 @@ export default {
       'أدخل حجم الضلع الأطول بالبكسل'
   },
 
-  imageattach: {
-    ...enJig.imageattach,
-
-    insertionPoint:
-      'حدد نقطة الإدراج:',
-
-    scale:
-      'حدد معامل المقياس:',
-
-    rotation:
-      'حدد زاوية الدوران:',
-
-    invalidScale:
-      'يجب أن يكون معامل المقياس أكبر من 0.',
-
-    decodeFailed:
-      'فشلت قراءة ملف الصورة المحدد.'
-  },
-
   insert: {
     ...enJig.insert,
 

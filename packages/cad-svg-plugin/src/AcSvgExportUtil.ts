@@ -50,34 +50,4 @@ export class AcSvgExportUtil {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
   }
-
-  /**
-   * Rasterizes an SVG data URL to PNG so nested SVG cannot reference external files.
-   */
-  static async rasterizeSvgDataUrl(dataUrl: string): Promise<string> {
-    if (typeof document === 'undefined') {
-      return dataUrl
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => {
-        const width = Math.max(1, img.naturalWidth || 1)
-        const height = Math.max(1, img.naturalHeight || 1)
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          reject(new Error('Canvas 2D context unavailable'))
-          return
-        }
-        ctx.drawImage(img, 0, 0, width, height)
-        resolve(canvas.toDataURL('image/png'))
-      }
-      img.onerror = () =>
-        reject(new Error('Failed to rasterize embedded SVG image'))
-      img.src = dataUrl
-    })
-  }
 }

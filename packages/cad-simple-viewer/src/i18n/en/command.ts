@@ -125,10 +125,6 @@ export default {
       description: 'Temporarily suppresses the display of selected objects',
       prompt: 'Select objects'
     },
-    imageattach: {
-      description:
-        'Attaches a raster image as an external reference to the current drawing'
-    },
     '-insert': {
       description:
         'Inserts a block definition into the current drawing (command-line)'

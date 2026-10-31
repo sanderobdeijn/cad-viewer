@@ -61,7 +61,6 @@ import { AcDbLayerIndex } from '../object/AcDbLayerIndex'
 import { AcDbMLeaderStyle } from '../object/AcDbMLeaderStyle'
 import { AcDbMlineStyle } from '../object/AcDbMlineStyle'
 import { AcDbMTextObjectContextData } from '../object/AcDbMTextObjectContextData'
-import { AcDbRasterImageDef } from '../object/AcDbRasterImageDef'
 import { AcDbScale } from '../object/AcDbScale'
 import { AcDbSortentsTable } from '../object/AcDbSortentsTable'
 import { AcDbXrecord } from '../object/AcDbXrecord'
@@ -426,7 +425,6 @@ export class AcDbDatabase extends AcDbObject {
     readonly dictionary: AcDbDictionary<AcDbDictionary>
     readonly dictionaryVar: AcDbDictionary<AcDbDictionaryVar>
     readonly group: AcDbDictionary<AcDbGroup>
-    readonly imageDefinition: AcDbDictionary<AcDbRasterImageDef>
     readonly layerFilter: AcDbDictionary<AcDbLayerFilter>
     readonly layerIndex: AcDbDictionary<AcDbLayerIndex>
     readonly layout: AcDbLayoutDictionary
@@ -586,7 +584,6 @@ export class AcDbDatabase extends AcDbObject {
       dictionary: new AcDbDictionary(this),
       dictionaryVar: new AcDbDictionary(this),
       group: new AcDbDictionary(this),
-      imageDefinition: new AcDbDictionary(this),
       layerFilter: new AcDbDictionary(this),
       layerIndex: new AcDbDictionary(this),
       layout: new AcDbLayoutDictionary(this),
@@ -820,7 +817,6 @@ export class AcDbDatabase extends AcDbObject {
       this.objects.dictionary,
       this.objects.dictionaryVar,
       this.objects.group,
-      this.objects.imageDefinition,
       this.objects.layerFilter,
       this.objects.layerIndex,
       this.objects.layout,
@@ -1221,7 +1217,6 @@ export class AcDbDatabase extends AcDbObject {
       this._objects.dictionary,
       this._objects.dictionaryVar,
       this._objects.group,
-      this._objects.imageDefinition,
       this._objects.layerFilter,
       this._objects.layerIndex,
       this._objects.layout,
@@ -3339,11 +3334,6 @@ export class AcDbDatabase extends AcDbObject {
     } else {
       dropRootEntry('ACAD_MLINESTYLE')
     }
-    if (this.objects.imageDefinition.numEntries > 0) {
-      ensureRootEntry('ISM_RASTER_IMAGE_DICT', this.objects.imageDefinition)
-    } else {
-      dropRootEntry('ISM_RASTER_IMAGE_DICT')
-    }
     if (this.objects.xrecord.numEntries > 0) {
       ensureRootEntry('MLIGHT_XRECORD', this.objects.xrecord)
     } else {
@@ -3366,10 +3356,6 @@ export class AcDbDatabase extends AcDbObject {
       writeDictionary(this.objects.mlineStyle)
     }
 
-    if (this.objects.imageDefinition.numEntries > 0) {
-      writeDictionary(this.objects.imageDefinition)
-    }
-
     if (this.objects.xrecord.numEntries > 0) {
       writeDictionary(this.objects.xrecord)
     }
@@ -3388,11 +3374,6 @@ export class AcDbDatabase extends AcDbObject {
     for (const [_, sortents] of this.objects.sortentsTable.entries()) {
       filer.writeStart('SORTENTSTABLE')
       sortents.dxfOut(filer, true)
-    }
-
-    for (const [_, imageDef] of this.objects.imageDefinition.entries()) {
-      filer.writeStart('IMAGEDEF')
-      imageDef.dxfOut(filer, true)
     }
 
     for (const [_, layerFilter] of this.objects.layerFilter.entries()) {
@@ -3674,7 +3655,6 @@ export class AcDbDatabase extends AcDbObject {
     this._tables.appIdTable.removeAll()
     this._objects.layout.removeAll()
     this._objects.group.removeAll()
-    this._objects.imageDefinition.removeAll()
     this._objects.layerFilter.removeAll()
     this._objects.layerIndex.removeAll()
     this._objects.mleaderStyle.removeAll()

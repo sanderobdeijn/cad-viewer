@@ -1,8 +1,8 @@
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbRegenerator } from '../src/converter/AcDbRegenerator'
 import { AcDbLine } from '../src/entity/AcDbLine'
-import { AcDbRasterImageDef } from '../src/object/AcDbRasterImageDef'
 import { AcDbDataGenerator } from '../src/misc/AcDbDataGenerator'
+import { AcDbLayerFilter } from '../src/object/AcDbLayerFilter'
 
 class TestRegenerator extends AcDbRegenerator {
   parsePublic() {
@@ -60,8 +60,8 @@ describe('AcDbRegenerator', () => {
     const lineB = new AcDbLine({ x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 })
     db.tables.blockTable.modelSpace.appendEntity([lineA, lineB])
 
-    const imageDef = new AcDbRasterImageDef()
-    db.objects.imageDefinition.setAt(imageDef.objectId, imageDef)
+    const layerFilter = new AcDbLayerFilter()
+    db.objects.layerFilter.setAt(layerFilter.objectId, layerFilter)
 
     const reg = new TestRegenerator(db)
 

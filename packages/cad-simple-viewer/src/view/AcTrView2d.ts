@@ -11,7 +11,6 @@ import {
   AcDbLayout,
   AcDbMText,
   AcDbObjectId,
-  AcDbRasterImage,
   AcDbRay,
   AcDbRenderingCache,
   AcDbSysVarManager,
@@ -198,8 +197,6 @@ export class AcTrView2d extends AcEdBaseView {
   private _htmlDirty: boolean
   /** Performance monitoring statistics display */
   private _stats: Stats
-  /** Map of missing raster images during rendering */
-  private _missedImages: Map<AcDbObjectId, string>
   /** The number of entities waiting for processing */
   private _numOfEntitiesToProcess: number
   /** CSS2D renderer for HTML transient overlays */
@@ -273,7 +270,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Per-objectId convert generation. Bumped by {@link updateEntity} so an
    * in-flight progressive {@link batchConvert} / deferred commit for the same
    * id cannot `addEntity` after the scene was cleared for reconversion
-   * (ghost RasterImage / pre-replacement pixels).
+   * (ghost drawables from before the update).
    */
   private readonly _entityConvertGeneration = new Map<string, number>()
   /**
@@ -623,8 +620,8 @@ export class AcTrView2d extends AcEdBaseView {
     renderer.setSize(this.width, this.height)
 
     this._renderer = new AcTrRenderer(renderer)
-    // Shared across all layer batched groups so later entities (e.g. wipeouts)
-    // occlude earlier linework via depth, matching AutoCAD draw order.
+    // Shared across all layer batched groups so later entities occlude
+    // earlier linework via depth, matching AutoCAD draw order.
     setAcTrDrawOrderZAllocator(() => this._renderer.allocateDrawOrderZ())
     const fontMapping = AcApSettingManager.instance.fontMapping
     this._renderer.setFontMapping(fontMapping)
@@ -1009,7 +1006,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._css2dRenderer.domElement.style.maxHeight = '100%'
     container.appendChild(this._css2dRenderer.domElement)
 
-    this._missedImages = new Map()
     this._layoutViewManager = new AcTrLayoutViewManager()
     this._progressiveOpenFit = new AcTrProgressiveOpenFitController(
       (box, margin) => {
@@ -1366,14 +1362,13 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * Gets information about missing data during rendering (fonts, images, xrefs).
+   * Gets information about missing data during rendering (fonts, xrefs).
    *
-   * @returns Object containing maps of missing fonts/images and unresolved xrefs
+   * @returns Object containing missing fonts and unresolved xrefs
    */
   get missedData() {
     return {
       fonts: this._renderer.missedFonts,
-      images: this._missedImages,
       xrefs: this.collectUnresolvedXrefs()
     }
   }
@@ -1445,9 +1440,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._scene.repaintForegroundMaterials(
       acgiForegroundColorForBackground(value)
     )
-    // Wipeouts track the canvas background (isBackgroundFill); repaint their
-    // batch-owned clones the same way as ACI-7 foreground materials.
-    this._scene.repaintBackgroundMaterials(value)
     this.resyncForegroundLayersForBackground()
     if (this._readingMode.isEnabled) {
       this._readingMode.noteLayoutBackground(value)
@@ -2657,7 +2649,7 @@ export class AcTrView2d extends AcEdBaseView {
         )
         // Allow reconversion: open-time batchConvert claims objectIds to prevent
         // duplicate progressive slots. updateEntity must release that claim or
-        // batchConvert skips the entity (scene already cleared → blank RasterImage).
+        // batchConvert skips the entity (scene already cleared → blank drawable).
         this._claimedConvertObjectIds.delete(objectId)
       }
       if (this._scene.hasEntity(item.objectId)) {
@@ -2883,7 +2875,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._scene.clear()
     this._renderer.resetDrawOrderZ()
     this._isDirty = true
-    this._missedImages.clear()
     this._initializedLayouts.clear()
     this._externallyFramedLayouts.clear()
     this._loadingLayouts.clear()
@@ -2905,7 +2896,6 @@ export class AcTrView2d extends AcEdBaseView {
       initializedLayouts: this._initializedLayouts,
       externallyFramedLayouts: this._externallyFramedLayouts,
       loadingLayouts: this._loadingLayouts,
-      missedImages: this._missedImages,
       missedFonts: this._renderer.snapshotMissedFonts(),
       selectionIds: this.selectionSet.ids
     }
@@ -2932,7 +2922,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._initializedLayouts = state.initializedLayouts
     this._externallyFramedLayouts = state.externallyFramedLayouts
     this._loadingLayouts = state.loadingLayouts
-    this._missedImages = state.missedImages
     this._renderer.replaceMissedFonts(state.missedFonts ?? {})
     this.rebindLayerAppearance()
     this._layoutViewManager.resize(this.width, this.height)
@@ -2966,7 +2955,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._initializedLayouts = new Set()
     this._externallyFramedLayouts = new Set()
     this._loadingLayouts = new Set()
-    this._missedImages = new Map()
     this._renderer.clearMissedFonts()
     this.rebindLayerAppearance()
     this.selectionSet.clear()
@@ -2986,7 +2974,6 @@ export class AcTrView2d extends AcEdBaseView {
     state.initializedLayouts.clear()
     state.externallyFramedLayouts.clear()
     state.loadingLayouts.clear()
-    state.missedImages.clear()
     state.missedFonts = {}
     state.selectionIds = []
   }
@@ -4541,14 +4528,6 @@ export class AcTrView2d extends AcEdBaseView {
           // a defensive guard in case a future refactor reorders the
           // early-skip — it costs ~nothing and prevents a regression.
           this.attachViewportView(entity)
-        } else if (entity instanceof AcDbRasterImage) {
-          // Only track images whose pixel data is still unresolved.
-          const fileName = entity.imageFileName
-          if (fileName && !entity.image) {
-            this._missedImages.set(entity.objectId, fileName)
-          } else if (entity.image) {
-            this._missedImages.delete(entity.objectId)
-          }
         }
       } catch (error) {
         const failedId = String(entity.objectId ?? '')

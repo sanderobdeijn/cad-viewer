@@ -55,10 +55,9 @@ npm install @mlightcad/data-model
 - **AcDbSpline**: Spline curve entity
 - **AcDbHatch**: Hatch pattern entity
 - **AcDbTable**: Table entity
-- **AcDbRasterImage**: Raster image entity
 - **AcDbLeader**: Leader entity
 - **AcDbRay, AcDbXline**: Construction line entities
-- **AcDbTrace, AcDbWipeout**: Filled area entities
+- **AcDbTrace**: Filled area entity
 
 ### Dimension Entities
 - **AcDbDimension**: Base class for dimension entities
@@ -71,7 +70,6 @@ npm install @mlightcad/data-model
 
 ### Objects and Layouts
 - **AcDbDictionary**: Dictionary object for storing key-value pairs
-- **AcDbRasterImageDef**: Raster image definition
 - **AcDbLayout**: Layout object for paper space
 - **AcDbLayoutDictionary**: Layout dictionary management
 - **AcDbLayoutManager**: Layout manager for switching between layouts

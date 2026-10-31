@@ -40,7 +40,7 @@
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/cad-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
-    "@mlightcad/libredwg-converter": "^3.15.12",
+    "@mlightcad/libredwg-converter": "workspace:*",
     "@mlightcad/mtext-parser": "^1.5.5",
     "@mlightcad/mtext-renderer": "^0.13.5",
     "@mlightcad/three-renderer": "workspace:*",

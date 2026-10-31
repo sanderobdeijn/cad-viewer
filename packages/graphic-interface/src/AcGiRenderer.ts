@@ -8,7 +8,6 @@ import {
 
 import { AcGiContext } from './AcGiContext'
 import { AcGiEntity } from './AcGiEntity'
-import { AcGiImageStyle } from './AcGiImageStyle'
 import { AcGiPointStyle } from './AcGiPointStyle'
 import { AcGiShapeData } from './AcGiShapeData'
 import { AcGiSubEntityTraits } from './AcGiSubEntityTraits'
@@ -138,14 +137,6 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @returns Rendered entity for the scene graph
    */
   shape(shape: AcGiShapeData, style?: AcGiTextStyle, delay?: boolean): T
-
-  /**
-   * Draw image
-   * @param blob Input Blob instance of one image file
-   * @param style Input image style
-   * @returns Return an object which can be added to scene
-   */
-  image(blob: Blob, style: AcGiImageStyle): T
 
   /**
    * Set font mapping

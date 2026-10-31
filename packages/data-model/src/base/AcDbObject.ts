@@ -912,9 +912,8 @@ export class AcDbObject<ATTRS extends AcDbObjectAttrs = AcDbObjectAttrs> {
     }
 
     // Blob/File must be shared by reference. Deep-cloning via Object.create +
-    // Object.keys yields an empty shell with no bytes — undo/redo of image
-    // replace would then lose pixel data, and any restore from that snapshot
-    // would leave RasterImage undrawable.
+    // Object.keys yields an empty shell with no bytes, so a restored snapshot
+    // would lose the binary payload.
     if (typeof Blob !== 'undefined' && value instanceof Blob) {
       return value
     }
