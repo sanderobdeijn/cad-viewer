@@ -1,0 +1,55 @@
+{
+  "name": "@mlightcad/ribbon",
+  "version": "0.1.13",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mlightcad/ribbon"
+  },
+  "main": "./dist/ml-ribbon.es.js",
+  "module": "./dist/ml-ribbon.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/ml-ribbon.es.js",
+      "default": "./dist/ml-ribbon.es.js"
+    },
+    "./style.css": {
+      "default": "./dist/ml-ribbon.css"
+    }
+  },
+  "files": [
+    "dist/*.js",
+    "dist/*.css",
+    "dist/**/*.d.ts",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "vite build --mode lib && vue-tsc -p tsconfig.types.json",
+    "test": "vitest run",
+    "lint": "eslint src/ribbon/",
+    "lint:fix": "eslint --fix --quiet src/ribbon/"
+  },
+  "peerDependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "element-plus": "^2.12.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.9.1",
+    "element-plus": "^2.12.0",
+    "jsdom": "^29.0.2",
+    "vite": "^6.4.3",
+    "vitest": "^3.2.4",
+    "vue": "^3.4.21",
+    "vue-tsc": "^3.2.6"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@mlightcad/mtext-input-box",
+  "version": "0.3.5",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mlightcad/mtext-input-box.git",
+    "directory": "packages/mtext-input-box"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "eslint src/",
+    "lint:fix": "eslint --fix --quiet src/"
+  },
+  "dependencies": {
+    "@mlightcad/text-box-cursor": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mlightcad/mtext-parser": "workspace:*",
+    "@mlightcad/mtext-renderer": "workspace:*",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@mlightcad/mtext-parser": "workspace:*",
+    "@mlightcad/mtext-renderer": "workspace:*",
+    "@types/node": "^24.4.0",
+    "@types/three": "^0.186.0",
+    "three": "^0.186.1",
+    "vitest": "^3.2.4"
+  }
+}

@@ -39,7 +39,7 @@
     "sync:versions": "node tools/sync-versions.mjs",
     "sync:versions:check": "node tools/sync-versions.mjs --check",
     "serve": "nx run @mlightcad/cad-viewer-examples:serve",
-    "test": "jest && pnpm --filter @mlightcad/mtext-renderer test",
+    "test": "jest && pnpm --filter @mlightcad/mtext-renderer --filter @mlightcad/mtext-input-box --filter @mlightcad/text-box-cursor --filter @mlightcad/ribbon test",
     "test:e2e": "pnpm --filter @mlightcad/cad-viewer-example test:e2e",
     "use:dwg-converter": "node tools/use-dwg-converter.mjs"
   },

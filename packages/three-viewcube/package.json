@@ -1,0 +1,51 @@
+{
+  "name": "@mlightcad/three-viewcube",
+  "description": "A highly customizable standalone view cube addon for three.js",
+  "license": "MIT",
+  "private": false,
+  "version": "0.0.9",
+  "author": "MLight Lee <mlight.lee@outlook.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mlight-lee/three-viewcube"
+  },
+  "keywords": [
+    "viewcube",
+    "axes",
+    "three",
+    "three.js",
+    "cad",
+    "mlight",
+    "mlightcad"
+  ],
+  "type": "module",
+  "files": [
+    "dist",
+    "lib/*.js",
+    "lib/*.ts",
+    "src",
+    "README.md",
+    "package.json"
+  ],
+  "main": "./dist/viewcube.umd.cjs",
+  "module": "./dist/viewcube.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "import": "./dist/viewcube.js",
+    "require": "./dist/viewcube.umd.cjs"
+  },
+  "scripts": {
+    "clean": "rimraf dist lib tsconfig.tsbuildinfo",
+    "build": "tsc && vite build",
+    "lint": "eslint src/",
+    "lint:fix": "eslint --fix --quiet src/"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "three": "^0.186.1"
+  },
+  "peerDependencies": {
+    "three": "^0.186.1"
+  }
+}

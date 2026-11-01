@@ -38,8 +38,11 @@ const packagesProject: ProjectConfig = {
   testPathIgnorePatterns: [
     '/e2e/',
     '/__tests__/helpers/',
-    // mtext-renderer's suite runs on vitest (`pnpm test` runs both).
+    // These suites run on vitest (`pnpm test` runs both).
     '<rootDir>/packages/mtext-renderer/',
+    '<rootDir>/packages/mtext-input-box/',
+    '<rootDir>/packages/text-box-cursor/',
+    '<rootDir>/packages/ribbon/',
     ...REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}/`)
   ],
   moduleNameMapper: {
