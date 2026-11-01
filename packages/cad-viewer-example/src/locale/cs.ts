@@ -51,13 +51,6 @@ export default {
       off: 'Vypnuto',
       progressiveOffHint: 'Čekat na dokončení převodu entit i textu',
 
-      nonPlottable: 'Netisknutelné',
-      nonPlottableLayers: 'Netisknutelné hladiny',
-      hide: 'Skrýt',
-      hideHint: 'Výchozí pro webový prohlížeč',
-      show: 'Zobrazit',
-      showHint: 'Chování editoru AutoCAD',
-
       curveQuality: 'Kvalita křivek',
       curveDraft: 'Paměť',
       curveDraftHint: 'Méně vrcholů, menší soubory',
@@ -72,8 +65,7 @@ export default {
       paperSpaceBlack: 'Černé',
       paperSpaceBlackHint: 'Preferované pro webový prohlížeč',
 
-      invalidFileType:
-        'Neplatný typ souboru. Nahrajte soubory DWG nebo DXF.'
+      invalidFileType: 'Neplatný typ souboru. Nahrajte soubory DWG nebo DXF.'
     }
   }
 }

@@ -25,7 +25,7 @@ features:
     details: Çizimler tamamen istemcide ayrıştırılır ve işlenir; dosyalar hiçbir sunucuya yüklenmez, saklanmaz veya yansıtılmaz — gizlilik mimariyle garanti edilir, sözlerle değil.
   - icon: 📐
     title: DWG / DXF desteği
-    details: Model uzayı, düzenler, katmanlar, bloklar ve dış referanslar dahil yüksek doğrulukta çizim görüntüleme.
+    details: Model uzayı, düzenler, bloklar ve dış referanslar dahil yüksek doğrulukta çizim görüntüleme.
   - icon: 📏
     title: Ölçüm
     details: Mesafe, alan, açı ve yay uzunluğunu doğrudan tarayıcıda hassas biçimde ölçün.

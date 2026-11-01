@@ -23,8 +23,7 @@ Ribbon plně zobrazuje všechny karty ve stylu AutoCAD:
 | Soubor | Otevřít |
 | Kreslení | Čára, Kružnice, Oblouk, Obdélník, Polylinie, Šrafování, Text, MText atd. |
 | Úpravy | Přesun, Kopírovat, Odsazení, Oříznout, Prodloužit, Otočit, Měnit měřítko, Zrcadlit, Pole atd. |
-| Vrstvy | Správa vrstev (zapnuto/vypnuto, zmrazit/rozmrazit, uzamknout, izolovat, nová, smazat) |
-| Vlastnosti | Barva, typ čáry, tloušťka čáry, výběr vrstvy |
+| Vlastnosti | Barva, typ čáry, tloušťka čáry |
 | Měření | Všechny příkazy měření |
 
 ### Command Line
@@ -42,7 +41,6 @@ Kromě nástrojů režimu pouze pro čtení je k dispozici **Skupina nástrojů 
 - Posun
 - Přiblížit na rozsah
 - Přiblížit oknem
-- Správa vrstev
 - Skupina měřicích nástrojů
 - Režim čtení
 - Přepnout světlé/tmavé pozadí
@@ -51,8 +49,7 @@ Kromě nástrojů režimu pouze pro čtení je k dispozici **Skupina nástrojů 
 
 | Panel | Popis |
 |---|---|
-| Vrstvy | Úplná správa vrstev |
-| Vlastnosti | Vlastnosti vybrané entity (typ, souřadnice, vrstva, barva, typ čáry, tloušťka čáry atd.), upravitelné |
+| Vlastnosti | Vlastnosti vybrané entity (typ, souřadnice, barva, typ čáry, tloušťka čáry atd.), upravitelné |
 | Měření | Správa výsledků měření |
 | Statistiky | Statistiky používání bloků |
 | Chybějící prostředky | Upozornění na písma / externí odkazy |

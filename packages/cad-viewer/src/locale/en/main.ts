@@ -202,7 +202,6 @@ export default {
     group: {
       draw: 'Draw',
       modify: 'Modify',
-      layer: 'Layer',
       properties: 'Properties',
       utilities: 'Utilities',
       annotation: 'Annotation',
@@ -215,19 +214,6 @@ export default {
       color: 'Color',
       lineType: 'Linetype',
       lineWeight: 'Lineweight'
-    },
-    layerTools: {
-      select: 'Layer',
-      off: 'Turn Off Layer',
-      isolate: 'Isolate',
-      freeze: 'Freeze Layer',
-      lock: 'Lock Layer',
-      current: 'Set Current',
-      allOn: 'Layer On',
-      unisolate: 'Unisolate',
-      thaw: 'Thaw Layer',
-      unlock: 'Unlock Layer',
-      restore: 'Layer Restore'
     },
     arc: {
       threePoint: '3-Point',
@@ -292,25 +278,6 @@ export default {
         'Set the line type for newly created objects or selected entities.',
       propertyLineWeight:
         'Set the line weight for newly created objects or selected entities.',
-      layerAction: {
-        off: 'Turns off the selected layer so its objects are hidden without freezing the layer.',
-        isolate:
-          'Shows only the selected layer and hides the others so you can focus on related objects.',
-        freeze:
-          'Freezes the selected layer so its objects are hidden and skipped during regeneration.',
-        lock: 'Locks the selected layer so its objects stay visible but cannot be edited.',
-        current:
-          'Makes the selected layer current so new objects are created on that layer.',
-        allOn:
-          'Turns on every layer that is currently off. Layers that are frozen remain frozen.',
-        unisolate:
-          'Restores layers hidden or locked by Layer Isolate while keeping later layer changes.',
-        thaw: 'Thaws the selected layer so its objects are visible and included in regeneration again.',
-        unlock:
-          'Unlocks the selected layer so its objects can be selected and modified again.',
-        restore:
-          'Restores the previous layer state from the most recent layer action in this ribbon.'
-      },
       circleOption: {
         centerRadius:
           'Create a circle by specifying a center point and a radius.',
@@ -435,10 +402,6 @@ export default {
     measurementExport: {
       text: 'Export',
       description: 'Export measurements to a sidecar JSON file'
-    },
-    layer: {
-      text: 'Layer',
-      description: 'Manages layers'
     },
     pan: {
       text: 'Pan',
@@ -572,66 +535,6 @@ export default {
         multipleEntitySelected: '{count} entities selected',
         propValCopied: 'Property value copied',
         failedToCopyPropVal: 'Failed to copy property value!'
-      }
-    },
-    layerManager: {
-      tab: 'Layers',
-      title: 'Layer Manager',
-      currentLayerLabel: 'Current layer: {name}',
-      searchPlaceholder: 'Search layers',
-      filters: 'Filters',
-      collapseFilters: 'Collapse filters',
-      expandFilters: 'Expand filters',
-      filterAll: 'All',
-      filterAllUsed: 'All Used Layers',
-      toolbar: {
-        showFilters: 'Layer Filters',
-        newFilter: 'New Filter',
-        newFilterGroup: 'New Group Filter',
-        newLayer: 'New Layer',
-        deleteLayer: 'Delete Layer',
-        setCurrent: 'Set Current'
-      },
-      prompts: {
-        newFilterTitle: 'New Filter',
-        newFilterName: 'Enter filter name',
-        newFilterGroupTitle: 'New Group Filter',
-        newFilterGroupName: 'Enter group filter name',
-        newLayerTitle: 'New Layer',
-        newLayerName: 'Enter layer name',
-        confirm: 'OK',
-        cancel: 'Cancel'
-      },
-      messages: {
-        filterCreated: 'Filter "{name}" created',
-        filterExists: 'A filter named "{name}" already exists',
-        filterCreateFailed: 'Failed to create filter',
-        layerCreated: 'Layer "{name}" created',
-        layerExists: 'Layer "{name}" already exists',
-        layerCreateFailed: 'Failed to create layer',
-        layerDeleted: 'Layer "{name}" deleted',
-        layerDeleteFailed: 'Failed to delete layer "{name}"',
-        cannotDeleteLayer0: 'Layer "0" cannot be deleted',
-        cannotDeleteCurrent: 'The current layer cannot be deleted',
-        selectLayerFirst: 'Select a layer first',
-        setCurrentSuccess: 'Current layer set to "{name}"',
-        setCurrentFailed: 'Failed to set current layer'
-      },
-      layerList: {
-        name: 'Name',
-        on: 'On',
-        freeze: 'Freeze',
-        lock: 'Lock',
-        plot: 'Plot',
-        color: 'Color',
-        linetype: 'Linetype',
-        lineweight: 'Lineweight',
-        transparency: 'Transparency',
-        description: 'Description',
-        currentLayer: 'Current layer',
-        newLayerPlaceholder: 'Layer name',
-        zoomToLayer: 'Zoomed to the clicked layer "{layer}"',
-        lineWeightDefault: 'Default'
       }
     },
     find: {
@@ -848,7 +751,6 @@ export default {
   },
   entityInfo: {
     color: 'Color',
-    layer: 'Layer',
     lineType: 'Linetype'
   },
   ribbonProperty: {
@@ -856,25 +758,6 @@ export default {
     lineType: 'Linetype',
     lineWeight: 'Lineweight',
     layer: 'Layer'
-  },
-  layerSelect: {
-    searchPlaceholder: 'Search layer name',
-    noLayerAvailable: 'No layers available',
-    noMatchedLayer: 'No matched layers',
-    tooltip: {
-      layer: 'Layer',
-      visibility: 'Visibility',
-      freeze: 'Freeze',
-      lock: 'Lock',
-      lineType: 'Linetype',
-      color: 'Color',
-      visible: 'Visible',
-      hidden: 'Hidden',
-      frozen: 'Frozen',
-      thawed: 'Thawed',
-      locked: 'Locked',
-      unlocked: 'Unlocked'
-    }
   },
   message: {
     loadingFonts: 'Loading fonts ...',

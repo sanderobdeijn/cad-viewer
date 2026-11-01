@@ -1,6 +1,7 @@
-import { expect, test, type Page } from '@playwright/test'
-import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { expect, type Page, test } from '@playwright/test'
 
 import { uploadFixture } from '../helpers/fileUpload'
 
@@ -20,12 +21,8 @@ import { uploadFixture } from '../helpers/fileUpload'
  * reliably wait for worker/main-thread font rendering in this fixture.
  */
 const currentDir = path.dirname(fileURLToPath(import.meta.url))
-const fixturePath = path.resolve(
-  currentDir,
-  '..',
-  'fixtures',
-  'aci7-bylayer-background.dxf'
-)
+const fixturePath = (name: string) =>
+  path.resolve(currentDir, '..', 'fixtures', name)
 
 type ColorCounts = {
   black: number
@@ -34,8 +31,8 @@ type ColorCounts = {
 
 type SceneColorSummary = {
   backgroundColor: number | null
-  layer0Colors: number[]
-  redLayerColors: number[]
+  foregroundColors: number[]
+  redColors: number[]
 }
 
 async function waitForViewer(page: Page) {
@@ -123,11 +120,11 @@ async function readSceneColorSummary(page: Page): Promise<SceneColorSummary> {
 
     const summary: SceneColorSummary = {
       backgroundColor: mgr?.curView?.backgroundColor ?? null,
-      layer0Colors: [],
-      redLayerColors: []
+      foregroundColors: [],
+      redColors: []
     }
 
-    const collect = (layerName: string, bucket: number[]) => {
+    const collect = (layerName: string) => {
       const layer = mgr?.curView?.cadScene?.activeLayout?.getLayer(layerName)
       if (!layer) return
       layer.internalObject.traverse((obj: unknown) => {
@@ -143,14 +140,17 @@ async function readSceneColorSummary(page: Page): Promise<SceneColorSummary> {
         for (const mat of mats) {
           const hex = mat.color?.getHex?.()
           if (typeof hex === 'number') {
-            bucket.push(hex)
+            ;(hex === 0xff0000
+              ? summary.redColors
+              : summary.foregroundColors
+            ).push(hex)
           }
         }
       })
     }
 
-    collect('0', summary.layer0Colors)
-    collect('RED', summary.redLayerColors)
+    // Opening a drawing flattens it, so everything is drawn on layer 0.
+    collect('0')
     return summary
   })
 }
@@ -174,46 +174,51 @@ async function runSwitchBg(page: Page): Promise<boolean> {
   })
 }
 
-test('switchbg inverts ACI-7 ByLayer content and leaves explicit colours (#464)', async ({
-  page
-}) => {
-  await page.goto('/')
-  await uploadFixture(page, fixturePath)
-  await waitForViewer(page)
+for (const [title, fixture] of [
+  ['on layer 0', 'aci7-bylayer-background.dxf'],
+  ['baked from another layer', 'aci7-baked-from-layer.dxf']
+]) {
+  test(`switchbg inverts ACI-7 content ${title} and leaves explicit colours (#464)`, async ({
+    page
+  }) => {
+    await page.goto('/')
+    await uploadFixture(page, fixturePath(fixture))
+    await waitForViewer(page)
 
-  const initial = await readSceneColorSummary(page)
-  expect(initial.backgroundColor).not.toBeNull()
-  expect(initial.layer0Colors.length).toBeGreaterThan(0)
-  expect(initial.redLayerColors.length).toBeGreaterThan(0)
+    const initial = await readSceneColorSummary(page)
+    expect(initial.backgroundColor).not.toBeNull()
+    expect(initial.foregroundColors.length).toBeGreaterThan(0)
+    expect(initial.redColors.length).toBeGreaterThan(0)
 
-  // Dark canvas: ByLayer-on-ACI-7 resolves to white; explicit red stays red.
-  expect(initial.layer0Colors.every(hex => hex === 0xffffff)).toBe(true)
-  expect(initial.redLayerColors.every(hex => hex === 0xff0000)).toBe(true)
+    // Dark canvas: ByLayer-on-ACI-7 resolves to white; explicit red stays red.
+    expect(initial.foregroundColors.every(hex => hex === 0xffffff)).toBe(true)
+    expect(initial.redColors.every(hex => hex === 0xff0000)).toBe(true)
 
-  const darkCounts = await getCanvasColorCounts(page)
-  expect(darkCounts.white).toBeGreaterThan(20)
+    const darkCounts = await getCanvasColorCounts(page)
+    expect(darkCounts.white).toBeGreaterThan(20)
 
-  expect(await runSwitchBg(page)).toBe(true)
-  await page.waitForTimeout(1000)
+    expect(await runSwitchBg(page)).toBe(true)
+    await page.waitForTimeout(1000)
 
-  const light = await readSceneColorSummary(page)
-  expect(light.backgroundColor).not.toBe(initial.backgroundColor)
-  // Light canvas: ByLayer ACI-7 must flip to black (legible). Explicit red
-  // must not be rewritten by the theme.
-  expect(light.layer0Colors.every(hex => hex === 0x000000)).toBe(true)
-  expect(light.redLayerColors.every(hex => hex === 0xff0000)).toBe(true)
+    const light = await readSceneColorSummary(page)
+    expect(light.backgroundColor).not.toBe(initial.backgroundColor)
+    // Light canvas: ByLayer ACI-7 must flip to black (legible). Explicit red
+    // must not be rewritten by the theme.
+    expect(light.foregroundColors.every(hex => hex === 0x000000)).toBe(true)
+    expect(light.redColors.every(hex => hex === 0xff0000)).toBe(true)
 
-  const lightCounts = await getCanvasColorCounts(page)
-  expect(lightCounts.black).toBeGreaterThan(20)
+    const lightCounts = await getCanvasColorCounts(page)
+    expect(lightCounts.black).toBeGreaterThan(20)
 
-  expect(await runSwitchBg(page)).toBe(true)
-  await page.waitForTimeout(1000)
+    expect(await runSwitchBg(page)).toBe(true)
+    await page.waitForTimeout(1000)
 
-  const restored = await readSceneColorSummary(page)
-  expect(restored.backgroundColor).toBe(initial.backgroundColor)
-  expect(restored.layer0Colors.every(hex => hex === 0xffffff)).toBe(true)
-  expect(restored.redLayerColors.every(hex => hex === 0xff0000)).toBe(true)
+    const restored = await readSceneColorSummary(page)
+    expect(restored.backgroundColor).toBe(initial.backgroundColor)
+    expect(restored.foregroundColors.every(hex => hex === 0xffffff)).toBe(true)
+    expect(restored.redColors.every(hex => hex === 0xff0000)).toBe(true)
 
-  const restoredCounts = await getCanvasColorCounts(page)
-  expect(restoredCounts.white).toBeGreaterThan(20)
-})
+    const restoredCounts = await getCanvasColorCounts(page)
+    expect(restoredCounts.white).toBeGreaterThan(20)
+  })
+}

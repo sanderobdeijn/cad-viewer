@@ -12,7 +12,6 @@ beforeAll(() => {
 
 const localeLabels: Record<string, Record<string, string>> = {
   en: {
-    'simpleUi.toolbar.layerShort': 'Layers',
     'simpleUi.toolbar.settings': 'Settings',
     'simpleUi.toolbar.locale': 'Language',
     'simpleUi.toolbar.measure': 'Measure',
@@ -22,7 +21,6 @@ const localeLabels: Record<string, Record<string, string>> = {
     'simpleUi.toolbar.hideMeasurements': 'Hide'
   },
   zh: {
-    'simpleUi.toolbar.layerShort': '图层',
     'simpleUi.toolbar.settings': '设置',
     'simpleUi.toolbar.locale': '语言',
     'simpleUi.toolbar.measure': '测量',
@@ -103,9 +101,9 @@ import { AcApI18n, AcUiToolbar } from '@mlightcad/cad-simple-viewer'
 import { acuiCreatePhoneToolbarItems } from '../src/config/defaultToolbarItems'
 import { AcUiI18n } from '../src/i18n'
 
-function getLayerLabel(host: HTMLElement) {
+function getMeasureLabel(host: HTMLElement) {
   return host.querySelector(
-    '[data-toolbar-item-id="layer"] .ml-ex-ui-toolbar-btn-label'
+    '[data-toolbar-item-id="measure"] .ml-ex-ui-toolbar-btn-label'
   )?.textContent
 }
 
@@ -139,12 +137,12 @@ describe('phone toolbar labels on locale change', () => {
       onCommand: jest.fn()
     })
 
-    expect(getLayerLabel(host)).toBe('Layers')
+    expect(getMeasureLabel(host)).toBe('Measure')
 
     AcApI18n.setCurrentLocale('zh')
     toolbar.refreshLocale()
 
-    expect(getLayerLabel(host)).toBe('图层')
+    expect(getMeasureLabel(host)).toBe('测量')
     toolbar.destroy()
   })
 
@@ -193,7 +191,7 @@ describe('phone toolbar labels on locale change', () => {
     localeZh?.click()
 
     expect(currentLocale).toBe('zh')
-    expect(getLayerLabel(host)).toBe('图层')
+    expect(getMeasureLabel(host)).toBe('测量')
     toolbar.destroy()
   })
 

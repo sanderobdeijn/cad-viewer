@@ -16,11 +16,6 @@ import {
 
 import packageJson from '../package.json'
 import { AcApFindUiCmd } from './command/AcApFindUiCmd'
-import {
-  AcApLayerUiCmd,
-  AcUiLayerDockController,
-  AcUiLayerUiControllerHolder
-} from './command/AcApLayerUiCmd'
 import { AcApMeasurementPanelUiCmd } from './command/AcApMeasurementPanelUiCmd'
 import { acuiPrependToolbarLayoutSwitcher } from './config/createToolbarLayoutSwitcher'
 import { acuiMergeToolbarOptionsForLayout } from './config/mergeToolbarOptionsForLayout'
@@ -45,19 +40,17 @@ import { AcUiI18n, acuiRegisterSimpleUiI18n } from './i18n'
 import { AcUiThemeSync } from './theme/AcUiThemeSync'
 import { AcUiDockPanel, type AcUiDockPanelTab } from './ui/AcUiDockPanel'
 import { AcUiFindPaletteView } from './ui/AcUiFindPaletteView'
-import { AcUiLayerListView } from './ui/AcUiLayerListView'
 import { AcUiMeasurementPaletteView } from './ui/AcUiMeasurementPaletteView'
 import { acuiRemoveUiStylesIfUnused } from './ui/styles'
 
-const LAYERS_TAB_ID = 'layers'
 const MEASUREMENTS_TAB_ID = 'measurements'
 const FIND_TAB_ID = 'find'
 
 /**
- * CAD viewer plugin that adds a framework-agnostic toolbar, layer manager, and
+ * CAD viewer plugin that adds a framework-agnostic toolbar and
  * measurement palette.
  *
- * Registers the `layer` and `measurementpanel` commands when
+ * Registers the `measurementpanel` command when
  * the toolbar includes those buttons, injects shared UI styles, and keeps
  * theme and locale in sync
  * with {@link AcApI18n} and the `COLORTHEME` system variable.
@@ -73,21 +66,14 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   /** Plugin semver string. */
   version = packageJson.version
   /** Human-readable plugin summary. */
-  description =
-    'Framework-agnostic toolbar, layer manager, and measurement palette UI'
+  description = 'Framework-agnostic toolbar and measurement palette UI'
 
-  /** Layer list view mounted in the dock panel layers tab. */
-  private layerListView?: AcUiLayerListView
   /** Measurement list view mounted in the dock panel measurements tab. */
   private measurementPaletteView?: AcUiMeasurementPaletteView
   /** Text search view mounted in the dock panel find tab. */
   private findPaletteView?: AcUiFindPaletteView
   /** Chrome DevTools-style dock panel container. */
   private dockPanel?: AcUiDockPanel
-  /** Dock-mode layer controller (for cleanup). */
-  private layerDockController?: AcUiLayerDockController
-  /** Mutable delegate for the registered `layer` command. */
-  private readonly layerUiControllerHolder = new AcUiLayerUiControllerHolder()
   /** Configurable toolbar instance. */
   private toolbar?: AcUiToolbar
   /** Cleanup for {@link acapBindToolbarDocState}. */
@@ -100,7 +86,7 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private hostEl?: HTMLElement
   /** Explicit dock mount override from plugin options. */
   private dockPanelMountTargetOption?: HTMLElement
-  /** Resolved toolbar items before layer action wiring. */
+  /** Resolved toolbar items before action wiring. */
   private baseToolbarItems: AcUiToolbarItem[] = []
   /** Raw toolbar items configuration last applied via {@link setToolbarItems}. */
   private toolbarItemsInput: AcUiToolbarItemsInput = 'default'
@@ -112,10 +98,8 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private toolbarItemsOverridden = false
   /** Optional layout-switcher button prepended by the last {@link setToolbarItems}. */
   private toolbarLayoutSwitcher?: AcUiToolbarItem
-  /** Command stack reference for dynamic layer command registration. */
+  /** Command stack reference for dynamic command registration. */
   private commandManager?: AcEdCommandStack
-  /** Whether the toolbar includes a layer button. */
-  private hasLayerToolbarItem = false
   /** Whether the toolbar includes a measurement panel button. */
   private hasMeasurementPanelToolbarItem = false
   /** Whether the toolbar includes a find (text search) button. */
@@ -169,11 +153,10 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private unsubscribeLayout?: () => void
   /** Commands registered during {@link onLoad} for cleanup on unload. */
   private registeredCommands: Array<{ group: string; name: string }> = []
-  /** Refreshes toolbar, layer, and measurement UI when the app locale changes. */
+  /** Refreshes toolbar and measurement UI when the app locale changes. */
   private handleLocaleChanged = () => {
     this.rebuildToolbarItems(this.activeLayoutKind)
     this.toolbar?.setSelectedChild('locale', `locale-${AcApI18n.currentLocale}`)
-    this.layerListView?.refreshLocale()
     this.measurementPaletteView?.refreshLocale()
     this.findPaletteView?.refreshLocale()
     this.dockPanel?.refreshLocale()
@@ -184,9 +167,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   }
   /** Re-resolves mount targets after the viewer view becomes available. */
   private handleDocumentActivatedForDock = () => {
-    if (this.hasLayerToolbarItem) {
-      this.mountLayerDockUi()
-    }
     if (this.hasMeasurementPanelToolbarItem) {
       this.mountMeasurementDockUi()
     }
@@ -201,7 +181,7 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   }
 
   /**
-   * @param options - Toolbar, layer manager, dock panel, and host configuration.
+   * @param options - Toolbar, dock panel, and host configuration.
    */
   constructor(private readonly options: AcUiSimpleUiPluginOptions = {}) {}
 
@@ -342,7 +322,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.baseToolbarItems = layoutSwitcher
       ? acuiPrependToolbarLayoutSwitcher(resolved, layoutSwitcher)
       : resolved
-    this.syncLayerToolbarItem()
     this.syncMeasurementToolbarItem()
     this.syncFindToolbarItem()
     this.renderToolbarItems()
@@ -491,7 +470,7 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
    * Creates UI components, registers commands, and starts theme sync.
    *
    * @param _context - Application context (unused).
-   * @param commandManager - Command stack used to register `layer` and `measurementpanel`.
+   * @param commandManager - Command stack used to register `measurementpanel`.
    */
   onLoad(_context: AcApContext, commandManager: AcEdCommandStack): void {
     acuiRegisterSimpleUiI18n()
@@ -536,14 +515,9 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       this.ensureDockPanel()
     }
 
-    // applyLayoutKind → syncLayerToolbarItem / syncMeasurementToolbarItem
+    // applyLayoutKind → syncMeasurementToolbarItem
     // may already have registered these; use
     // ensure* so onLoad stays idempotent.
-    if (this.hasLayerToolbarItem) {
-      this.mountLayerDockUi()
-      this.ensureLayerCommandRegistered()
-    }
-
     if (this.hasMeasurementPanelToolbarItem) {
       this.mountMeasurementDockUi()
       this.ensureMeasurementPanelCommandRegistered()
@@ -627,7 +601,10 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     try {
       this.setLayout(this.layoutMode)
     } catch (error) {
-      console.warn('[SimpleUiPlugin] setLayout failed during toolbar setup:', error)
+      console.warn(
+        '[SimpleUiPlugin] setLayout failed during toolbar setup:',
+        error
+      )
     }
   }
 
@@ -723,7 +700,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       nextInCanvasParent !== this.toolbarInCanvasParent
     this.toolbarInCanvasParent = nextInCanvasParent
     this.rebuildToolbarItems(kind, toolbarOpts)
-    this.syncLayerToolbarItem()
     this.syncMeasurementToolbarItem()
     this.syncFindToolbarItem()
 
@@ -822,21 +798,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.toolbar?.updateItems(this.baseToolbarItems)
   }
 
-  /** Mounts or tears down layer UI when the layer toolbar button is added or removed. */
-  private syncLayerToolbarItem() {
-    const hadLayer = this.hasLayerToolbarItem
-    const hasLayer = acuiToolbarItemsIncludeItem(this.baseToolbarItems, 'layer')
-    this.hasLayerToolbarItem = hasLayer
-
-    if (hasLayer && !hadLayer) {
-      this.ensureLayerCommandRegistered()
-      this.mountLayerDockUi()
-    } else if (!hasLayer && hadLayer) {
-      this.teardownLayerUi()
-      this.unregisterLayerCommand()
-    }
-  }
-
   /** Mounts or tears down measurement UI when the panel button is added or removed. */
   private syncMeasurementToolbarItem() {
     const hadPanel = this.hasMeasurementPanelToolbarItem
@@ -868,25 +829,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       this.teardownFindUi()
       this.unregisterFindCommand()
     }
-  }
-
-  /** Removes the `layer` command when the layer toolbar button is removed at runtime. */
-  private unregisterLayerCommand() {
-    if (!this.commandManager) return
-    const group = AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME
-    const index = this.registeredCommands.findIndex(cmd => cmd.name === 'layer')
-    if (index === -1) return
-
-    this.commandManager.removeCmd(group, 'layer')
-    this.registeredCommands.splice(index, 1)
-  }
-
-  /** Registers the `layer` command when a layer button appears at runtime. */
-  private ensureLayerCommandRegistered() {
-    if (!this.commandManager) return
-    if (this.registeredCommands.some(cmd => cmd.name === 'layer')) return
-
-    this.registerLayerCommand(this.commandManager)
   }
 
   /** Removes the `measurementpanel` command when the measurement panel button is removed. */
@@ -947,34 +889,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.registeredCommands.push({ group, name: 'find' })
   }
 
-  /** Registers the `layer` command with dock preparation wired in. */
-  private registerLayerCommand(commandManager: AcEdCommandStack) {
-    if (this.registeredCommands.some(cmd => cmd.name === 'layer')) return
-
-    const group = AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME
-    commandManager.addCommand(
-      group,
-      'layer',
-      'layer',
-      this.createLayerCommand()
-    )
-    this.registeredCommands.push({ group, name: 'layer' })
-  }
-
-  /** Creates the `layer` command that prepares the dock panel before opening layers. */
-  private createLayerCommand() {
-    return new AcApLayerUiCmd({
-      prepare: () => this.prepareLayerDockForCommand(),
-      toggle: () => this.layerUiControllerHolder.toggleFromCommand()
-    })
-  }
-
-  /** Ensures the dock panel and layers tab exist for the `layer` command. */
-  private prepareLayerDockForCommand() {
-    this.mountLayerDockUi()
-    this.tryUpgradeDockMountTarget()
-  }
-
   /** Registers the `measurementpanel` command with dock preparation wired in. */
   private registerMeasurementPanelCommand(commandManager: AcEdCommandStack) {
     if (this.registeredCommands.some(cmd => cmd.name === 'measurementpanel')) {
@@ -1012,9 +926,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       return
     }
 
-    if (this.hasLayerToolbarItem && !this.dockPanel.hasTab(LAYERS_TAB_ID)) {
-      this.mountLayerDockUi()
-    }
     if (
       this.hasMeasurementPanelToolbarItem &&
       !this.dockPanel.hasTab(MEASUREMENTS_TAB_ID)
@@ -1032,9 +943,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
 
   /** Ensures the dock panel exists, is mounted on the current target, and has tabs when applicable. */
   private prepareDockPanel() {
-    if (this.hasLayerToolbarItem) {
-      this.mountLayerDockUi()
-    }
     if (this.hasMeasurementPanelToolbarItem) {
       this.mountMeasurementDockUi()
     }
@@ -1114,72 +1022,7 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     }
 
     this.dockPanel.reparentTo(preferred)
-    this.refreshLayerDockController()
     this.syncToolbarMountAfterDockChange()
-  }
-
-  /** Rebinds the layer dock controller after the dock panel moves. */
-  private refreshLayerDockController() {
-    if (!this.dockPanel?.hasTab(LAYERS_TAB_ID)) {
-      return
-    }
-
-    this.layerDockController?.destroy()
-    this.layerDockController = new AcUiLayerDockController(
-      this.dockPanel,
-      LAYERS_TAB_ID
-    )
-    this.layerUiControllerHolder.current = this.layerDockController
-  }
-
-  /** Mounts the layer list in the dock panel layers tab. */
-  private mountLayerDockUi() {
-    if (!this.hostEl || !this.i18n) return
-
-    this.ensureDockPanel()
-    if (!this.dockPanel) return
-
-    if (this.dockPanel.hasTab(LAYERS_TAB_ID)) {
-      this.refreshLayerDockController()
-      return
-    }
-
-    this.layerListView = new AcUiLayerListView({
-      editor: AcApDocManager.instance,
-      i18n: this.i18n,
-      host: this.hostEl,
-      showHeader: false
-    })
-    const added = this.dockPanel.addTab({
-      id: LAYERS_TAB_ID,
-      labelKey: 'dockPanel.tab.layers',
-      content: this.layerListView.element
-    })
-    if (!added) {
-      this.layerListView.destroy()
-      this.layerListView = undefined
-      return
-    }
-
-    this.layerDockController = new AcUiLayerDockController(
-      this.dockPanel,
-      LAYERS_TAB_ID
-    )
-    this.layerUiControllerHolder.current = this.layerDockController
-  }
-
-  /** Tears down active layer UI without removing the dock shell when other tabs remain. */
-  private teardownLayerUi() {
-    this.dockPanel?.removeTab(LAYERS_TAB_ID)
-    this.layerListView?.destroy()
-    this.layerListView = undefined
-
-    this.layerDockController?.destroy()
-    this.layerDockController = undefined
-
-    this.layerUiControllerHolder.current = undefined
-
-    this.destroyDockIfUnused()
   }
 
   /** Mounts the measurement list in the dock panel measurements tab. */
@@ -1304,7 +1147,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     }
     this.registeredCommands = []
 
-    this.teardownLayerUi()
     this.teardownMeasurementUi()
     this.teardownFindUi()
     this.toolbarDocUnbind?.()
@@ -1322,7 +1164,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.toolbarItemsInput = 'default'
     this.toolbarItemsOverridden = false
     this.toolbarLayoutSwitcher = undefined
-    this.hasLayerToolbarItem = false
     this.hasMeasurementPanelToolbarItem = false
     this.hasFindToolbarItem = false
     this.commandManager = undefined

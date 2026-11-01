@@ -9,12 +9,6 @@ export { default as MlDialogManager } from './MlDialogManager.vue'
 export { default as MlFieldsetGroup } from './MlFieldsetGroup.vue'
 export { default as MlHatchPatternPanel } from './MlHatchPatternPanel.vue'
 export { default as MlLineWeightSelect } from './MlLineWeightSelect.vue'
-export { default as MlLayerSelect } from './MlLayerSelect.vue'
-export type {
-  MlLayerTableChangeField,
-  MlLayerTableRow
-} from './MlLayerTable'
-export { default as MlLayerTable } from './MlLayerTable.vue'
 export { default as MlFontFileReader } from './MlFontFileReader.vue'
 export { default as MlLineTypeSelect } from './MlLineTypeSelect.vue'
 export { default as MlHatchPatternDropdown } from './MlHatchPatternDropdown.vue'

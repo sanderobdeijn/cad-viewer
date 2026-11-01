@@ -23,8 +23,7 @@ The Ribbon fully displays all AutoCAD-style tabs:
 | File | Open |
 | Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, etc. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, etc. |
-| Layers | Layer management (on/off, freeze/thaw, lock, isolate, new, delete) |
-| Properties | Color, linetype, lineweight, layer selector |
+| Properties | Color, linetype, lineweight |
 | Measure | All measurement commands |
 
 ### Command Line
@@ -42,7 +41,6 @@ In addition to the read-only mode tools, there is a **Select / Edit tool group**
 - Pan
 - Zoom to Extents
 - Window Zoom
-- Layer Management
 - Measure tool group
 - Reading Mode
 - Toggle Light/Dark Background
@@ -51,8 +49,7 @@ In addition to the read-only mode tools, there is a **Select / Edit tool group**
 
 | Panel | Description |
 |---|---|
-| Layers | Full layer management |
-| Properties | Selected entity properties (type, coordinates, layer, color, linetype, lineweight, etc.), editable |
+| Properties | Selected entity properties (type, coordinates, color, linetype, lineweight, etc.), editable |
 | Measurements | Measurement result management |
 | Statistics | Block usage statistics |
 | Missing Resources | Font / external reference alerts |

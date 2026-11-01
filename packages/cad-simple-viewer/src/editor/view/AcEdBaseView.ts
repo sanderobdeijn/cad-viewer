@@ -13,9 +13,6 @@ import {
 } from '@mlightcad/data-model'
 import { debounce } from 'lodash-es'
 
-import { AcApDocManager } from '../../app'
-import { AcApI18n } from '../../i18n'
-import { excludeLockedLayerIds } from '../../service/AcApLockedLayer'
 import type { AcTrSpatialSearchOptions } from '../../spatialIndex/AcTrSpatialIndex'
 import type {
   AcEdSessionAccessory,
@@ -236,12 +233,6 @@ export abstract class AcEdBaseView {
    */
   private _entitySelectionEnabled = true
 
-  /**
-   * When true, pick and window selection may include entities on locked layers.
-   * Selection prompts set this from `allowObjectOnLockedLayer` for commands that
-   * only read entities, such as layer isolate and hatch boundaries.
-   */
-  private _allowSelectOnLockedLayer = false
   /** Input manager for handling user interactions */
   private _editor: AcEditor
   /** Size of selection box in pixels for entity picking */
@@ -597,20 +588,6 @@ export abstract class AcEdBaseView {
   abstract zoomToFitDrawing(timeout?: number): void
 
   /**
-   * Zooms the view to fit all visible entities in the current scene.
-   *
-   * This method automatically calculates the bounding box of all entities
-   * currently displayed in the specified layer and adjusts the view's center
-   * and zoom level to show the entire layer. This is useful for getting an
-   * overview of the entire layer of one drawing or after loading new content.
-   *
-   * @param layerName - The layer name
-   *
-   * @return - Return true if zoomed to the layer successfully.
-   */
-  abstract zoomToFitLayer(layerName: string): boolean
-
-  /**
    * Zooms to the dominant geometry cluster, peeling far outlier entities.
    *
    * Falls back to {@link zoomToFitDrawing} when clustering cannot produce a
@@ -962,7 +939,6 @@ export abstract class AcEdBaseView {
    */
   applySelection(ids: AcDbObjectId[], action: AcEdSelectionAction) {
     if (!this.entitySelectionEnabled) return
-    ids = this.selectableIds(ids, action)
     if (action === 'replace') {
       this.selectionSet.clear()
       const unique = ids.filter(id => !this.selectionSet.has(id))
@@ -979,26 +955,6 @@ export abstract class AcEdBaseView {
       const existing = ids.filter(id => this.selectionSet.has(id))
       if (existing.length > 0) this.selectionSet.delete(existing)
     }
-  }
-
-  /**
-   * Drops entities on locked layers unless {@link allowSelectOnLockedLayer} is set.
-   * Removal is unchanged so a locked entity can still be deselected.
-   */
-  protected selectableIds(
-    ids: AcDbObjectId[],
-    action: AcEdSelectionAction
-  ): AcDbObjectId[] {
-    if (action === 'remove' || this._allowSelectOnLockedLayer) return ids
-    const db = AcApDocManager.tryGetInstance?.()?.curDocument?.database
-    const filtered = excludeLockedLayerIds(db, ids)
-    if (filtered.lockedCount > 0) {
-      AcApDocManager.tryGetInstance?.()?.editor.showMessage(
-        `${filtered.lockedCount} ${AcApI18n.t('main.message.onLockedLayer')}`,
-        'warning'
-      )
-    }
-    return filtered.ids
   }
 
   /**
@@ -1200,16 +1156,6 @@ export abstract class AcEdBaseView {
       this.clearHover()
       this.selectionSet.clear()
     }
-  }
-
-  /**
-   * Whether pick and window selection include entities on locked layers.
-   */
-  get allowSelectOnLockedLayer() {
-    return this._allowSelectOnLockedLayer
-  }
-  set allowSelectOnLockedLayer(value: boolean) {
-    this._allowSelectOnLockedLayer = value
   }
 
   /**

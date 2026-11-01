@@ -4,7 +4,6 @@ import {
   AcGePoint3dLike
 } from '@mlightcad/data-model'
 
-import { isEntityOnLockedLayer } from '../../service/AcApLockedLayer'
 import { acapRunDatabaseEdit } from '../../util/AcApDatabaseEdit'
 import { AcEdOsnapResolver } from '../input/AcEdOsnapResolver'
 import { AcEdMarkerManager } from '../input/marker'
@@ -66,13 +65,9 @@ export class AcEdGripEditSession {
     const wcs = this.resolveWcs(e)
     const offset = this._jig.computeOffset(wcs)
     const db = this._entity.database
-    if (isEntityOnLockedLayer(db, this._entity)) {
-      this.finish()
-      return
-    }
     acapRunDatabaseEdit(db, 'Grip Edit', () => {
       const entity = db.openEntityForWrite(this._entity)
-      if (!entity || isEntityOnLockedLayer(db, entity)) return
+      if (!entity) return
       entity.subMoveGripPointsAt([this._target.gripIndex], offset)
     })
     this.finish()

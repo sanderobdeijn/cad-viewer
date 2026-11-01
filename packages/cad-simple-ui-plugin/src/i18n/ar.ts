@@ -11,9 +11,7 @@ export const ar: Record<string, string> = {
   'toolbar.zoomWindow': 'نافذة',
   'toolbar.zoomSaved': 'محفوظ',
   'toolbar.zoomOriginal': 'محفوظ',
-  'toolbar.layer': 'مدير الطبقات',
   'toolbar.find': 'بحث',
-  'toolbar.layerShort': 'الطبقات',
   'toolbar.layout': 'المخطط',
   'toolbar.settings': 'الإعدادات',
   'toolbar.simulatedMouseOn': 'ماوس',
@@ -37,10 +35,6 @@ export const ar: Record<string, string> = {
   'toolbar.switchBg': 'خلفية',
   'toolbar.readingMode': 'قراءة',
 
-
-
-
-
   'toolbar.placement': 'موضع شريط الأدوات',
   'toolbar.placementTop': 'أعلى',
   'toolbar.placementBottom': 'أسفل',
@@ -61,24 +55,6 @@ export const ar: Record<string, string> = {
   'toolbar.moreOverflow': 'المزيد من الأدوات',
   'toolbar.expand': 'توسيع شريط الأدوات',
 
-  'layerManager.title': 'مدير الطبقات',
-  'layerManager.name': 'الاسم',
-  'layerManager.on': 'تشغيل',
-  'layerManager.color': 'اللون',
-  'layerManager.currentLayer': 'الطبقة الحالية',
-
-  'layerManager.zoomToLayer':
-    'تم التكبير إلى الطبقة: {layer}',
-
-  'layerManager.sortByNameAsc':
-    'ترتيب حسب الاسم تصاعديًا',
-
-  'layerManager.sortByNameDesc':
-    'ترتيب حسب الاسم تنازليًا',
-
-  'layerManager.sortByNameNone':
-    'إلغاء ترتيب الاسم',
-
   'colorPicker.title': 'تحديد اللون',
   'colorPicker.index': 'فهرس اللون: ',
   'colorPicker.rgb': 'RGB: ',
@@ -95,15 +71,9 @@ export const ar: Record<string, string> = {
   'dockPanel.dockRight': 'إرساء باليمين',
   'dockPanel.moreTabs': 'المزيد من علامات التبويب',
 
-  'dockPanel.tab.layers': 'الطبقات',
   'dockPanel.tab.find': 'بحث',
   'dockPanel.tab.measurements': 'القياسات',
   'dockPanel.resize': 'تغيير ارتفاع اللوحة',
-
-
-
-
-
 
   'measurePalette.filterGroup': 'التصفية حسب النوع',
   'measurePalette.empty': 'لا توجد قياسات حتى الآن',

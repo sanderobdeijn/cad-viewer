@@ -33,7 +33,6 @@ export default {
     secondCorner: 'حدد الركن الثاني أو'
   },
   message: {
-    onLockedLayer: 'على طبقة مقفلة.',
     fetchingDrawingFile: 'جارٍ جلب ملف الرسم ...',
     calculatingSmartExtents: 'جارٍ حساب الملاءمة الذكية ...',
     collectingMemoryProfile: 'جارٍ تحليل الذاكرة ...',

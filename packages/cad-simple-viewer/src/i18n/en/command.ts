@@ -4,9 +4,6 @@ export default {
       description:
         'Creates hatch fills through command-line options without the ribbon UI'
     },
-    '-layer': {
-      description: 'Manages layers through command-line options'
-    },
     about: {
       description: 'Displays information about mlightcad'
     },
@@ -176,50 +173,6 @@ export default {
     insunits: {
       description:
         'Specifies drawing units for automatic scaling of inserted blocks, images, or xrefs'
-    },
-    laycur: {
-      description:
-        'Changes the layer property of selected objects to the current layer',
-      prompt: 'Select objects to be changed to the current layer'
-    },
-    laydel: {
-      description: 'Deletes a layer and all objects on that layer'
-    },
-    layerclose: {
-      description: 'Closes the Layer Properties Manager'
-    },
-    layerp: {
-      description:
-        'Undoes the last change or set of changes made to layer settings'
-    },
-    layfrz: {
-      description: 'Freezes the layer of selected objects',
-      prompt: 'Select object on layer to freeze'
-    },
-    layiso: {
-      description: 'Isolates the layers of selected objects',
-      prompt: 'Select objects on layers to isolate'
-    },
-    laylck: {
-      description: 'Locks the layer of selected objects',
-      prompt: 'Select object on layer to lock'
-    },
-    layoff: {
-      description: 'Turns off the layer of selected objects',
-      prompt: 'Select object on layer to turn off'
-    },
-    layon: {
-      description: 'Turns on all layers in the drawing'
-    },
-    laythw: {
-      description: 'Thaws all frozen layers in the drawing'
-    },
-    layulk: {
-      description: 'Unlocks the layer of selected objects',
-      prompt: 'Select object on layer to unlock'
-    },
-    layuniso: {
-      description: 'Restores layers hidden or locked by LAYISO'
     },
     line: {
       description: 'Draws straight line segments between points'

@@ -27,5 +27,5 @@ export function resolveMissingResourceTab(
 export function openMissingResourcesPalette(preferred?: MissingResourceTab) {
   store.dialogs.activePaletteTab = 'missingResources'
   store.dialogs.activeMissingResourceTab = resolveMissingResourceTab(preferred)
-  store.dialogs.layerManager = true
+  store.dialogs.toolPalette = true
 }

@@ -3,9 +3,6 @@
  */
 export const commandTr = {
   ACAD: {
-    layer: {
-      description: 'Katman yöneticisi yerleştirme panelini açar veya kapatır'
-    },
     measurementpanel: {
       description: 'Ölçüm listesi yerleştirme panelini açar'
     },

@@ -22,7 +22,7 @@ export class AcApFindCmd extends AcEdCommand {
  */
 export function openFindPalette() {
   store.dialogs.activePaletteTab = 'find'
-  store.dialogs.layerManager = true
+  store.dialogs.toolPalette = true
   store.dialogs.findFocusTick++
 }
 

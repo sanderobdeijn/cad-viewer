@@ -137,7 +137,7 @@ const dialogVisible = ref(true)
 const DEFAULT_FORM = {
   applyTo: 'entireDrawing' as MlQuickSelectApplyTo,
   objectType: '*',
-  property: 'layer' as MlQuickSelectProperty,
+  property: 'color' as MlQuickSelectProperty,
   operator: 'equals' as MlQuickSelectOperator,
   value: '',
   selectionMode: 'set' as MlQuickSelectSelectionMode
@@ -147,7 +147,7 @@ const DEFAULT_FORM = {
  * Dialog form state.
  * Defaults are chosen to match common AutoCAD Quick Select behavior:
  * - apply to entire drawing
- * - default property: layer
+ * - default property: color
  * - default operator: equals
  * - default apply mode: create new selection set
  */
@@ -183,7 +183,6 @@ const applyToOptions = computed(() => [
 const propertyOptions = computed(() => [
   { value: 'objectType', label: t('dialog.quickSelectDlg.propObjectType') },
   { value: 'handle', label: t('dialog.quickSelectDlg.propHandle') },
-  { value: 'layer', label: t('dialog.quickSelectDlg.propLayer') },
   { value: 'color', label: t('dialog.quickSelectDlg.propColor') },
   { value: 'lineType', label: t('dialog.quickSelectDlg.propLineType') },
   { value: 'lineWeight', label: t('dialog.quickSelectDlg.propLineWeight') }

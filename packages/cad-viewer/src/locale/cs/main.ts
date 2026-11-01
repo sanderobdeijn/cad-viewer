@@ -202,7 +202,6 @@ export default {
     group: {
       draw: 'Kreslení',
       modify: 'Úpravy',
-      layer: 'Hladiny',
       properties: 'Vlastnosti',
       utilities: 'Nástroje',
       annotation: 'Poznámky',
@@ -215,19 +214,6 @@ export default {
       color: 'Barva',
       lineType: 'Typ čáry',
       lineWeight: 'Tloušťka čáry'
-    },
-    layerTools: {
-      select: 'Hladina',
-      off: 'Vypnout hladinu',
-      isolate: 'Izolovat',
-      freeze: 'Zmrazit hladinu',
-      lock: 'Uzamknout hladinu',
-      current: 'Nastavit aktuální',
-      allOn: 'Zapnout hladiny',
-      unisolate: 'Zrušit izolaci',
-      thaw: 'Rozmrazit hladinu',
-      unlock: 'Odemknout hladinu',
-      restore: 'Obnovit hladiny'
     },
     arc: {
       threePoint: '3 body',
@@ -289,25 +275,6 @@ export default {
       propertyLineType: 'Nastaví typ čáry nových nebo vybraných objektů.',
       propertyLineWeight:
         'Nastaví tloušťku čáry nových nebo vybraných objektů.',
-      layerAction: {
-        off: 'Vypne vybranou hladinu, takže se její objekty skryjí bez zmrazení hladiny.',
-        isolate:
-          'Zobrazí pouze vybranou hladinu a ostatní skryje, abyste se mohli soustředit na související objekty.',
-        freeze:
-          'Zmrazí vybranou hladinu, takže se její objekty skryjí a přeskočí při regeneraci.',
-        lock: 'Uzamkne vybranou hladinu, její objekty zůstanou viditelné, ale nelze je upravovat.',
-        current:
-          'Nastaví vybranou hladinu jako aktuální, nové objekty vzniknou na ní.',
-        allOn:
-          'Zapne všechny vypnuté hladiny. Zmrazené hladiny zůstanou zmrazené.',
-        unisolate:
-          'Obnoví hladiny skryté nebo uzamčené funkcí Izolovat a zachová pozdější změny hladin.',
-        thaw: 'Rozmrazí vybranou hladinu, její objekty budou opět viditelné a zahrnuté v regeneraci.',
-        unlock:
-          'Odemkne vybranou hladinu, její objekty lze opět vybírat a upravovat.',
-        restore:
-          'Obnoví předchozí stav hladin z poslední akce s hladinami na tomto pásu karet.'
-      },
       circleOption: {
         centerRadius: 'Vytvoří kružnici zadáním středu a poloměru.',
         centerDiameter: 'Vytvoří kružnici zadáním středu a průměru.',
@@ -429,10 +396,6 @@ export default {
       text: 'Exportovat',
       description: 'Exportuje měření do sidecar JSON souboru'
     },
-    layer: {
-      text: 'Hladiny',
-      description: 'Spravuje hladiny'
-    },
     pan: {
       text: 'Posun',
       description: 'Posune pohled beze změny směru pohledu a zvětšení'
@@ -464,12 +427,12 @@ export default {
     switchBg: {
       text: 'Pozadí',
       description: 'Přepne pozadí výkresu mezi bílým a černým',
-      disabledInReadingMode:
-        'Nedostupné v režimu čtení (bílé plátno je pevné)'
+      disabledInReadingMode: 'Nedostupné v režimu čtení (bílé plátno je pevné)'
     },
     zoom: {
       text: 'Zoom',
-      description: 'Nástroje zoomu: uložený pohled, rozsah, chytrý rozsah a okno'
+      description:
+        'Nástroje zoomu: uložený pohled, rozsah, chytrý rozsah a okno'
     },
     zoomSaved: {
       text: 'Uložený',
@@ -559,66 +522,6 @@ export default {
         multipleEntitySelected: 'Vybráno objektů: {count}',
         propValCopied: 'Hodnota vlastnosti zkopírována',
         failedToCopyPropVal: 'Nepodařilo se zkopírovat hodnotu vlastnosti!'
-      }
-    },
-    layerManager: {
-      tab: 'Hladiny',
-      title: 'Správce hladin',
-      currentLayerLabel: 'Aktuální hladina: {name}',
-      searchPlaceholder: 'Hledat hladiny',
-      filters: 'Filtry',
-      collapseFilters: 'Sbalit filtry',
-      expandFilters: 'Rozbalit filtry',
-      filterAll: 'Vše',
-      filterAllUsed: 'Všechny použité hladiny',
-      toolbar: {
-        showFilters: 'Filtry hladin',
-        newFilter: 'Nový filtr',
-        newFilterGroup: 'Nový skupinový filtr',
-        newLayer: 'Nová hladina',
-        deleteLayer: 'Smazat hladinu',
-        setCurrent: 'Nastavit aktuální'
-      },
-      prompts: {
-        newFilterTitle: 'Nový filtr',
-        newFilterName: 'Zadejte název filtru',
-        newFilterGroupTitle: 'Nový skupinový filtr',
-        newFilterGroupName: 'Zadejte název skupinového filtru',
-        newLayerTitle: 'Nová hladina',
-        newLayerName: 'Zadejte název hladiny',
-        confirm: 'OK',
-        cancel: 'Zrušit'
-      },
-      messages: {
-        filterCreated: 'Filtr „{name}“ byl vytvořen',
-        filterExists: 'Filtr s názvem „{name}“ už existuje',
-        filterCreateFailed: 'Nepodařilo se vytvořit filtr',
-        layerCreated: 'Hladina „{name}“ byla vytvořena',
-        layerExists: 'Hladina „{name}“ už existuje',
-        layerCreateFailed: 'Nepodařilo se vytvořit hladinu',
-        layerDeleted: 'Hladina „{name}“ byla smazána',
-        layerDeleteFailed: 'Nepodařilo se smazat hladinu „{name}“',
-        cannotDeleteLayer0: 'Hladinu „0“ nelze smazat',
-        cannotDeleteCurrent: 'Aktuální hladinu nelze smazat',
-        selectLayerFirst: 'Nejprve vyberte hladinu',
-        setCurrentSuccess: 'Aktuální hladina nastavena na „{name}“',
-        setCurrentFailed: 'Nepodařilo se nastavit aktuální hladinu'
-      },
-      layerList: {
-        name: 'Název',
-        on: 'Zapnuto',
-        freeze: 'Zmrazit',
-        lock: 'Zamknout',
-        plot: 'Tisk',
-        color: 'Barva',
-        linetype: 'Typ čáry',
-        lineweight: 'Tloušťka čáry',
-        transparency: 'Průhlednost',
-        description: 'Popis',
-        currentLayer: 'Aktuální hladina',
-        newLayerPlaceholder: 'Název hladiny',
-        zoomToLayer: 'Přiblíženo na zvolenou hladinu „{layer}“',
-        lineWeightDefault: 'Výchozí'
       }
     },
     find: {
@@ -835,7 +738,6 @@ export default {
   },
   entityInfo: {
     color: 'Barva',
-    layer: 'Hladina',
     lineType: 'Typ čáry'
   },
   ribbonProperty: {
@@ -843,25 +745,6 @@ export default {
     lineType: 'Typ čáry',
     lineWeight: 'Tloušťka čáry',
     layer: 'Hladina'
-  },
-  layerSelect: {
-    searchPlaceholder: 'Hledat název hladiny',
-    noLayerAvailable: 'Žádné hladiny nejsou k dispozici',
-    noMatchedLayer: 'Žádné odpovídající hladiny',
-    tooltip: {
-      layer: 'Hladina',
-      visibility: 'Viditelnost',
-      freeze: 'Zmrazit',
-      lock: 'Uzamknout',
-      lineType: 'Typ čáry',
-      color: 'Barva',
-      visible: 'Viditelná',
-      hidden: 'Skrytá',
-      frozen: 'Zmrazená',
-      thawed: 'Rozmrazená',
-      locked: 'Uzamčená',
-      unlocked: 'Odemčená'
-    }
   },
   message: {
     loadingFonts: 'Načítám fonty…',

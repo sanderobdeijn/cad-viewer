@@ -9,7 +9,6 @@ import {
   AcApCountListCmd,
   AcApDrawingUnitsCmd,
   AcApFindCmd,
-  AcApLayerStateCmd,
   AcApMeasurementPanelCmd,
   AcApMemCmd,
   AcApMissedDataCmd,
@@ -34,12 +33,6 @@ let isCommandRegistered = false
 export const registerCmds = () => {
   if (!isCommandRegistered) {
     const register = AcApDocManager.instance.commandManager
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'layer',
-      'layer',
-      new AcApLayerStateCmd()
-    )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'hatch',

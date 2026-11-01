@@ -19,6 +19,6 @@ export class AcApOpenPerfCmd extends AcEdCommand {
     store.openFileProfileTick++
     store.dialogs.openFileProfileTabVisible = true
     store.dialogs.activePaletteTab = 'openFileProfile'
-    store.dialogs.layerManager = true
+    store.dialogs.toolPalette = true
   }
 }

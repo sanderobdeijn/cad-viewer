@@ -3,9 +3,6 @@ export default {
     hatch: {
       description: 'Vytváří šrafování pomocí kontextového pásu karet'
     },
-    layer: {
-      description: 'Správce vlastností hladin'
-    },
     md: {
       description:
         'Otevře paletu Chybějící / externí zdroje pro fonty, obrázky a externí reference'

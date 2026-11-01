@@ -4,9 +4,6 @@ export default {
       description:
         'Şerit menüsü olmadan komut satırı seçenekleriyle tarama dolgular oluşturur'
     },
-    '-layer': {
-      description: 'Komut satırı seçenekleriyle katmanları yönetir'
-    },
     about: {
       description: 'mlightcad hakkında bilgi gösterir'
     },
@@ -184,51 +181,6 @@ export default {
       description:
         'Eklenen blokların, görüntülerin veya dış referansların otomatik ölçeklendirilmesi için çizim birimlerini belirtir'
     },
-    laycur: {
-      description:
-        'Seçili nesnelerin katman özelliğini geçerli katman olarak değiştirir',
-      prompt: 'Geçerli katmana değiştirilecek nesneleri seçin'
-    },
-    laydel: {
-      description: 'Bir katmanı ve o katmandaki tüm nesneleri siler'
-    },
-    layerclose: {
-      description: 'Katman Özellikleri Yöneticisi\'ni kapatır'
-    },
-    layerp: {
-      description:
-        'Katman ayarlarında yapılan son değişikliği veya değişiklik kümesini geri alır'
-    },
-    layfrz: {
-      description: 'Seçili nesnelerin katmanını dondurur',
-      prompt: 'Dondurulacak katmandaki nesneyi seçin'
-    },
-    layiso: {
-      description: 'Seçili nesnelerin katmanlarını izole eder',
-      prompt: 'İzole edilecek katmanlardaki nesneleri seçin'
-    },
-    laylck: {
-      description: 'Seçili nesnelerin katmanını kilitler',
-      prompt: 'Kilitlenecek katmandaki nesneyi seçin'
-    },
-    layoff: {
-      description: 'Seçili nesnelerin katmanını kapatır',
-      prompt: 'Kapatılacak katmandaki nesneyi seçin'
-    },
-    layon: {
-      description: 'Çizimdeki tüm katmanları açar'
-    },
-    laythw: {
-      description: 'Çizimdeki tüm donmuş katmanları çözer'
-    },
-    layulk: {
-      description: 'Seçili nesnelerin katmanının kilidini açar',
-      prompt: 'Kilidi açılacak katmandaki nesneyi seçin'
-    },
-    layuniso: {
-      description:
-        'LAYISO tarafından gizlenen veya kilitlenen katmanları geri yükler'
-    },
     line: {
       description: 'Noktalar arasında düz çizgi parçaları çizer'
     },
@@ -317,7 +269,8 @@ export default {
         'Dosya açma aşaması zamanlama profillerinin konsola kaydedilip kaydedilmeyeceğini denetler'
     },
     openperf: {
-      description: 'Son çizim açılışının zamanlamalarını Open Performance paletinde gösterir'
+      description:
+        'Son çizim açılışının zamanlamalarını Open Performance paletinde gösterir'
     },
     orthomode: {
       description: 'İmleç hareketini yatay veya dikey eksenle sınırlar'

@@ -35,6 +35,8 @@ import { acdbDxfInHeader } from './AcDbDxfHeaderReader'
 import { AcDbDxfObjectsReader } from './AcDbDxfObjectsReader'
 
 export interface AcDbDxfDocumentReaderOptions {
+  /** Collapses the drawing onto layer `0` while reading. */
+  flattenLayers?: boolean
   /**
    * How often to check parse progress / UI yield while streaming entities
    * (entity count). Actual yields are time-budgeted via {@link yieldBudgetMs}.
@@ -72,6 +74,7 @@ export class AcDbDxfDocumentReader {
   private _unknownObjectCount = 0
   /** ATTRIB entities waiting for their owning INSERT (keyed by INSERT objectId). */
   private readonly _attributeMap = new Map<AcDbObjectId, AcDbAttribute[]>()
+  private _layerFlattenStarted = false
   private readonly _yieldGate: AcCmUiYieldGate
 
   constructor(
@@ -112,11 +115,19 @@ export class AcDbDxfDocumentReader {
     }
 
     this.flushRemainingAttributes()
+    this._db.endLayerFlatten()
 
     return {
       unknownEntityCount: this._unknownEntityCount,
       unknownObjectCount: this._unknownObjectCount
     }
+  }
+
+  /** Starts flattening once the layer table is loaded and before any entity. */
+  private beginLayerFlatten() {
+    if (!this._options.flattenLayers || this._layerFlattenStarted) return
+    this._layerFlattenStarted = true
+    this._db.beginLayerFlatten()
   }
 
   private readSectionName(filer: AcDbDxfFiler): string {
@@ -143,10 +154,12 @@ export class AcDbDxfDocumentReader {
         await this.reportParseProgress(filer)
         break
       case 'BLOCKS':
+        this.beginLayerFlatten()
         await this.readBlocksSection(filer)
         await this.reportParseProgress(filer)
         break
       case 'ENTITIES':
+        this.beginLayerFlatten()
         await this.readEntitiesSection(filer)
         await this.reportParseProgress(filer)
         break

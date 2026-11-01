@@ -83,7 +83,6 @@ export default {
     propObjectType: 'Nesne türü',
     propHandle: 'Handle',
     handleValuePlaceholder: 'Varlık handle değerini girin',
-    propLayer: 'Katman',
     propColor: 'Renk',
     propLineType: 'Çizgi tipi',
     propLineWeight: 'Çizgi kalınlığı',

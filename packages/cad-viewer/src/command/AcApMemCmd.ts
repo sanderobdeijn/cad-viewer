@@ -29,6 +29,6 @@ export class AcApMemCmd extends AcEdCommand {
     publishMemorySnapshot(snapshot)
     store.memoryProfileTick++
     store.dialogs.activePaletteTab = 'memoryProfile'
-    store.dialogs.layerManager = true
+    store.dialogs.toolPalette = true
   }
 }

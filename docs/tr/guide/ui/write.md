@@ -23,8 +23,7 @@ Ribbon, tüm AutoCAD tarzı sekmeleri tam olarak görüntüler:
 | File | Aç |
 | Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, vb. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, vb. |
-| Layers | Katman yönetimi (açma/kapama, dondurma/çözme, kilitleme, yalıtma, yeni, silme) |
-| Properties | Renk, çizgi tipi, çizgi kalınlığı, katman seçici |
+| Properties | Renk, çizgi tipi, çizgi kalınlığı |
 | Measure | Tüm ölçüm komutları |
 
 ### Command Line
@@ -42,7 +41,6 @@ Salt okunur mod araçlarına ek olarak, bir **Seç / Düzenle araç grubu** vard
 - Pan
 - Sınırlara Yakınlaştır
 - Pencere Yakınlaştırma
-- Katman Yönetimi
 - Ölçüm araç grubu
 - Okuma Modu
 - Açık/Koyu Arka Planı Değiştir
@@ -51,8 +49,7 @@ Salt okunur mod araçlarına ek olarak, bir **Seç / Düzenle araç grubu** vard
 
 | Panel | Açıklama |
 |---|---|
-| Layers | Tam katman yönetimi |
-| Properties | Seçili öğenin özellikleri (tür, koordinatlar, katman, renk, çizgi tipi, çizgi kalınlığı, vb.), düzenlenebilir |
+| Properties | Seçili öğenin özellikleri (tür, koordinatlar, renk, çizgi tipi, çizgi kalınlığı, vb.), düzenlenebilir |
 | Measurements | Ölçüm sonucu yönetimi |
 | Statistics | Blok kullanım istatistikleri |
 | Missing Resources | Yazı tipi / dış referans uyarıları |

@@ -108,7 +108,7 @@ const paletteInsets = () => {
     | HTMLElement
     | undefined
   const palette = (rootRef.value?.closest('.ml-tool-palette-dialog') ??
-    rootRef.value?.closest('.ml-layer-manager') ??
+    rootRef.value?.closest('.ml-tool-palette-manager') ??
     rootRef.value) as HTMLElement | null
   if (!canvas || !palette) return undefined
   const c = canvas.getBoundingClientRect()
@@ -151,14 +151,14 @@ const kindLabel = (kind: AcApFindLayoutHit['kind']) => {
   }
 }
 
-/** `Type · layer · (x, y)` label for a hit (same format as cad-simple-ui-plugin). */
+/** `Type · (x, y)` label for a hit (same format as cad-simple-ui-plugin). */
 const describeHit = (hit: AcApFindLayoutHit) => {
   let kind = kindLabel(hit.kind)
   if (hit.kind === 'attribute' || (hit.kind === 'block' && hit.tag)) {
     const owner = [hit.blockName, hit.tag].filter(Boolean).join(' / ')
     if (owner) kind = `${kind} ${owner}`
   }
-  return `${kind} · ${hit.layer} · (${round(hit.position.x)}, ${round(hit.position.y)})`
+  return `${kind} · (${round(hit.position.x)}, ${round(hit.position.y)})`
 }
 
 const statusText = computed(() => {

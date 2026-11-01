@@ -192,40 +192,6 @@
             </div>
           </div>
 
-          <div class="setting-block">
-            <h3 class="setting-label">
-              {{ t('example.fileUpload.nonPlottable') }}
-            </h3>
-            <div
-              class="pill-segment"
-              role="radiogroup"
-              :aria-label="t('example.fileUpload.nonPlottableLayers')"
-            >
-              <button
-                type="button"
-                class="pill-option"
-                :class="{ 'is-active': !drawNoPlotLayers }"
-                role="radio"
-                :aria-checked="!drawNoPlotLayers"
-                :title="t('example.fileUpload.hideHint')"
-                @click="drawNoPlotLayers = false"
-              >
-                {{ t('example.fileUpload.hide') }}
-              </button>
-              <button
-                type="button"
-                class="pill-option"
-                :class="{ 'is-active': drawNoPlotLayers }"
-                role="radio"
-                :aria-checked="drawNoPlotLayers"
-                :title="t('example.fileUpload.showHint')"
-                @click="drawNoPlotLayers = true"
-              >
-                {{ t('example.fileUpload.show') }}
-              </button>
-            </div>
-          </div>
-
           <div class="setting-block setting-block--full">
             <h3 class="setting-label">
               {{ t('example.fileUpload.paperSpaceBackground') }}
@@ -289,7 +255,6 @@ interface Props {
     file: File,
     mode: AcEdOpenMode,
     useMainThreadDraw: boolean,
-    drawNoPlotLayers: boolean,
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
@@ -298,7 +263,6 @@ interface Props {
   onNewDrawing?: (
     mode: AcEdOpenMode,
     useMainThreadDraw: boolean,
-    drawNoPlotLayers: boolean,
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
@@ -308,7 +272,6 @@ interface Props {
     url: string,
     mode: AcEdOpenMode,
     useMainThreadDraw: boolean,
-    drawNoPlotLayers: boolean,
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
@@ -318,7 +281,6 @@ interface Props {
     item: AcApDataSourceMenuItem,
     mode: AcEdOpenMode,
     useMainThreadDraw: boolean,
-    drawNoPlotLayers: boolean,
     progressiveRendering: boolean,
     openViewMode: AcApOpenViewMode | undefined,
     circleSides: number,
@@ -343,7 +305,6 @@ const emitOpenOptions = () =>
   [
     selectedMode.value,
     useMainThreadDraw.value,
-    drawNoPlotLayers.value,
     progressiveRendering.value,
     resolveOpenViewMode(),
     selectedCircleSides.value,
@@ -398,7 +359,6 @@ const selectedMode = ref<AcEdOpenMode>(AcEdOpenMode.Write)
 const selectedOpenViewMode = ref<OpenViewModeChoice>('auto')
 const selectedCircleSides = ref(ACDB_DRAW_CIRCLE_SIDES_DRAFT)
 const useMainThreadDraw = ref(true)
-const drawNoPlotLayers = ref(false)
 const progressiveRendering = ref(false)
 const paperSpaceBackground = ref(ACGI_PAPER_SPACE_BACKGROUND)
 

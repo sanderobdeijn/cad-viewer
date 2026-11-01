@@ -303,7 +303,6 @@ export class AcApOffsetCmd extends AcEdCommand {
           AcApI18n.t('jig.offset.selectObject')
         )
         prompt.allowNone = true
-        prompt.allowObjectOnLockedLayer = true
         prompt.setRejectMessage(AcApI18n.t('jig.offset.invalidSelection'))
         return prompt
       }

@@ -16,7 +16,7 @@ CAD Viewer is a **high-performance** Vue 3 component for viewing and editing CAD
 - **Customizable UI** - Control visibility of toolbars, command line, coordinates, and performance stats
 - **Customizable Resources** - Set custom base URLs for fonts, templates, and example files
 - Modern UI optimized for large CAD file handling
-- State management for layers, entities, and settings
+- State management for entities and settings
 - Integration with optimized SVG and THREE.js renderers
 - Dialogs, toolbars, and command line interface
 - Vue 3 component for embedding high-performance CAD viewers in your own apps
@@ -27,7 +27,7 @@ Use `cad-viewer` if you want a **ready-to-use Vue 3 component** for viewing and 
 
 - You want to quickly embed a high-performance CAD viewer/editor into your Vue application with minimal setup.
 - You need support for both local file loading (from user's computer) and remote file loading (from URLs).
-- You need a solution that handles file loading, rendering, layer/entity management, and user interactions out of the box.
+- You need a solution that handles file loading, rendering, entity management, and user interactions out of the box.
 - You want seamless integration with optimized SVG and THREE.js renderers, internationalization, and theming.
 - You do **not** want to build your own UI from scratch.
 
@@ -178,7 +178,7 @@ initApp()
 
 ## MlCadViewer Component
 
-The `MlCadViewer` is the main Vue 3 component that provides a complete CAD viewing and editing interface. It includes toolbars, layer management, command line, status bar, and various dialogs for a full-featured CAD experience.
+The `MlCadViewer` is the main Vue 3 component that provides a complete CAD viewing and editing interface. It includes toolbars, a command line, status bar, and various dialogs for a full-featured CAD experience.
 
 ### Component Properties
 
@@ -307,7 +307,6 @@ The `MlCadViewer` component includes:
 
 - **Ribbon** - File operations (including local file opening), CAD commands, and settings
 - **Toolbars** - Drawing tools, zoom controls, and selection tools
-- **Layer Manager** - Layer visibility and property management
 - **Find** - Text search across all layouts of the drawing (see [Find (text search)](#find-text-search))
 - **Command Line** - AutoCAD-style command input
 - **Status Bar** - Current position, zoom level, and system status
@@ -323,7 +322,7 @@ Open the **Find** palette from the ribbon (Home → Utilities → Find; it moves
 
 - **Scope - whole drawing by default.** A search covers model space **and every paper-space layout** of the open drawing, in layout-tab order. Check **Current layout only** to restrict it to the layout that is currently shown (the scope is also applied when you toggle it after a search).
 - **What is searched:** `TEXT`, `MTEXT` (formatting codes removed), the attribute values (`ATTRIB`) of every `INSERT`, and text found _inside_ drawn content: `TEXT` / `MTEXT` / `ATTRIB` and **constant** `ATTDEF` values in the block definition of every `INSERT` (nested, anonymous and dynamic blocks included, up to 8 levels deep), `DIMENSION` text (the text of its dimension block when that block has a match, otherwise its override text), `MULTILEADER` contents and `ACAD_TABLE` cells (from the table block, otherwise the cell strings). A hit inside a block, dimension or table selects the top-level entity (the `INSERT`, `DIMENSION` or table) and zooms to the matched text; a block inserted several times is listed once per insertion. `DIMENSION`, `MULTILEADER` and `ACAD_TABLE` entities are searched as top-level entities only: they are not visited inside block definitions, so such an entity nested in a block is not found. Case-, accent- and width-insensitive by default (`instalacao` finds `Instalação`); **Match case** makes it exact. Hidden entities, invisible attributes and entities on off/frozen layers are skipped; at most 500 results are listed (a notice says when the list was truncated).
-- **Results** show the layout name, the matched text, the type (Text / MText / Attribute + block / tag), the layer and `(x, y)`.
+- **Results** show the layout name, the matched text, the type (Text / MText / Attribute + block / tag) and `(x, y)`.
 - **Navigation:** the Find button and the first Enter both search and jump to the first hit; further Enter / Shift+Enter (or clicking a result) steps through the list, switching layout when needed, zooming to the text and selecting its entity (attributes select their `INSERT`). The search never runs while typing.
 - **Same engine as `@mlightcad/cad-simple-ui-plugin`:** both UIs use `@mlightcad/cad-simple-viewer/find` (`acapFindText`) and `acapNavigateToFindHit`, so results and navigation are identical.
 - **Client-side only:** the search is a synchronous pass over the drawing already loaded in the browser. There is no backend, index or upload, so the static-hosting deployment described in [Browser-Only Architecture](#browser-only-architecture) is unchanged.
@@ -358,7 +357,6 @@ Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to
 ### Commands
 
 - `AcApFindCmd` - Opens the Find palette
-- `AcApLayerStateCmd` - Layer state command
 - `AcApLogCmd` - Log command
 - `AcApMissedDataCmd` - Missed data command
 - `AcApPointStyleCmd` - Point style command
@@ -376,7 +374,6 @@ Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to
 - `useDialogManager` - Dialog management
 - `useFileTypes` - File type utilities
 - `useFind` - State and actions of the Find palette (whole-drawing / current-layout search, navigation)
-- `useLayers` - Layer management
 - `useLayouts` - Layout management
 - `useMissedData` - Missed data handling
 - `useSettings` - Settings management

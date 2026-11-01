@@ -80,6 +80,7 @@ import type { AcDbConversionProgressCallback } from './AcDbDatabaseConverter'
 import { AcDbOpenDatabaseError } from './AcDbOpenDatabaseError'
 import { AcDbDimStyleTable } from './AcDbDimStyleTable'
 import { AcDbDimStyleTableRecord } from './AcDbDimStyleTableRecord'
+import { AcDbLayerFlattener } from './AcDbLayerFlattener'
 import { AcDbLayerTable } from './AcDbLayerTable'
 import {
   AcDbLayerTableRecord,
@@ -254,6 +255,13 @@ export interface AcDbOpenDatabaseOptions {
    *   no-plot layers are omitted from display.
    */
   drawNoPlotLayers?: boolean
+
+  /**
+   * Collapses the drawing onto layer `0` while reading, baking each layer's
+   * style into its entities and showing content from hidden or frozen layers.
+   * See {@link AcDbLayerFlattener}.
+   */
+  flattenLayers?: boolean
 
   /**
    * Maximum number of segments used to tessellate a full circle when drawing.
@@ -461,6 +469,8 @@ export class AcDbDatabase extends AcDbObject {
    * Set from {@link AcDbOpenDatabaseOptions.drawNoPlotLayers} when opening a database.
    */
   private _drawNoPlotLayers = true
+  /** Set while a read is collapsing the drawing onto layer `0`. */
+  private _layerFlattener?: AcDbLayerFlattener
   /**
    * Display tessellation side count for a full circle.
    * Set from {@link AcDbOpenDatabaseOptions.circleSides} when opening a database.
@@ -827,6 +837,35 @@ export class AcDbDatabase extends AcDbObject {
       this.objects.sortentsTable,
       this.objects.xrecord
     ]
+  }
+
+  /**
+   * Starts collapsing the drawing onto layer `0`. Called by converters once the
+   * layer table is loaded.
+   *
+   * @internal
+   */
+  beginLayerFlatten() {
+    this._layerFlattener = new AcDbLayerFlattener(this)
+  }
+
+  /**
+   * Finishes the flattening started by {@link beginLayerFlatten}, if any.
+   *
+   * @internal
+   */
+  endLayerFlatten() {
+    this._layerFlattener?.finish()
+    this._layerFlattener = undefined
+  }
+
+  /**
+   * Moves an entity being appended to layer `0` when a flatten is in progress.
+   *
+   * @internal
+   */
+  flattenEntityLayer(entity: AcDbEntity, inheritsFromOwner: boolean) {
+    this._layerFlattener?.flatten(entity, inheritsFromOwner)
   }
 
   /**
@@ -2534,9 +2573,11 @@ export class AcDbDatabase extends AcDbObject {
         progress: this.createConversionProgressHandler(),
         timeout: options?.timeout,
         encoding: options?.encoding,
-        sysVars: options?.sysVars
+        sysVars: options?.sysVars,
+        flattenLayers: options?.flattenLayers
       })
     } catch (error) {
+      this._layerFlattener = undefined
       const openError = AcDbOpenDatabaseError.from(error)
       this._lastOpenError = openError
       this.events.openFailed.dispatch({ database: this, error: openError })

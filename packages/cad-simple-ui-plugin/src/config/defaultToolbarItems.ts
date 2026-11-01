@@ -16,7 +16,6 @@ import {
   ICON_CLEAR_MEASUREMENTS,
   ICON_FIND,
   ICON_LANGUAGE,
-  ICON_LAYER,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
   ICON_MEASURE,
@@ -494,12 +493,6 @@ export function acuiCreateDefaultToolbarItems(
     },
     acuiCreateZoomToolbarItem(),
     acuiCreateFindToolbarItem(),
-    {
-      id: 'layer',
-      label: 'toolbar.layer',
-      icon: ICON_LAYER,
-      command: 'layer'
-    },
     acuiCreateLayoutToolbarItem(),
     acuiCreateMeasureToolbarItem(),
     {
@@ -513,7 +506,7 @@ export function acuiCreateDefaultToolbarItems(
 }
 
 /**
- * Builds the phone-layout toolbar: zoom, measure, layer, layout, settings.
+ * Builds the phone-layout toolbar: zoom, measure, layout, settings.
  *
  * @param context - Optional callbacks for theme and locale items under settings.
  * @returns Default phone {@link AcUiToolbarItem} array.
@@ -525,12 +518,6 @@ export function acuiCreatePhoneToolbarItems(
     acuiCreateZoomToolbarItem(),
     acuiCreateFindToolbarItem(),
     acuiCreateMeasureToolbarItem(),
-    {
-      id: 'layer',
-      label: 'toolbar.layerShort',
-      icon: ICON_LAYER,
-      command: 'layer'
-    },
     acuiCreateLayoutToolbarItem(),
     acuiCreateSettingsToolbarItem(context)
   ]

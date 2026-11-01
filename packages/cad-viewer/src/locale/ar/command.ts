@@ -8,14 +8,7 @@ export default {
 
     hatch: {
       ...enCommand.ACAD.hatch,
-      description:
-        'إنشاء تعبئة تهشير باستخدام سير عمل سياقي عبر الشريط'
-    },
-
-    layer: {
-      ...enCommand.ACAD.layer,
-      description:
-        'فتح مدير خصائص الطبقات'
+      description: 'إنشاء تعبئة تهشير باستخدام سير عمل سياقي عبر الشريط'
     },
 
     md: {
@@ -32,8 +25,7 @@ export default {
 
     properties: {
       ...enCommand.ACAD.properties,
-      description:
-        'فتح لوحة خصائص العناصر'
+      description: 'فتح لوحة خصائص العناصر'
     },
 
     find: {
@@ -43,20 +35,17 @@ export default {
 
     countlist: {
       ...enCommand.ACAD.countlist,
-      description:
-        'فتح لوحة العد لعرض الكتل التي تم عدها وإدارتها'
+      description: 'فتح لوحة العد لعرض الكتل التي تم عدها وإدارتها'
     },
 
     mem: {
       ...enCommand.ACAD.mem,
-      description:
-        'فتح لوحة ملف تعريف الذاكرة لتحليل استخدام الرسم للذاكرة'
+      description: 'فتح لوحة ملف تعريف الذاكرة لتحليل استخدام الرسم للذاكرة'
     },
 
     pttype: {
       ...enCommand.ACAD.pttype,
-      description:
-        'تحديد نمط عرض عناصر النقاط وحجمها'
+      description: 'تحديد نمط عرض عناصر النقاط وحجمها'
     },
 
     qselect: {
@@ -73,8 +62,7 @@ export default {
 
     style: {
       ...enCommand.ACAD.style,
-      description:
-        'إنشاء أنماط النص وتعديلها وتحديدها للنص والنص متعدد الأسطر'
+      description: 'إنشاء أنماط النص وتعديلها وتحديدها للنص والنص متعدد الأسطر'
     }
   },
 

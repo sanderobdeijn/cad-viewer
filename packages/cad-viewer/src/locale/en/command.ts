@@ -3,9 +3,6 @@ export default {
     hatch: {
       description: 'Creates hatch fills with a ribbon-based contextual workflow'
     },
-    layer: {
-      description: 'Layer properties manager'
-    },
     md: {
       description:
         'Opens the Missing / External Resources palette for fonts, images, and xrefs'

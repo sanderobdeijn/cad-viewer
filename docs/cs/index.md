@@ -25,7 +25,7 @@ features:
     details: Výkresy se parsují a vykreslují celé lokálně; nic se nenahrává, neukládá ani nezrcadlí na server — důvěrnost zaručuje architektura, nikoli sliby v podmínkách.
   - icon: 📐
     title: Podpora DWG / DXF
-    details: Věrné zobrazení výkresů včetně modelového prostoru, rozvržení, hladin, bloků a externích referencí.
+    details: Věrné zobrazení výkresů včetně modelového prostoru, rozvržení, bloků a externích referencí.
   - icon: 📏
     title: Měření
     details: Přesné měření vzdálenosti, plochy, úhlu a délky oblouku přímo v prohlížeči.

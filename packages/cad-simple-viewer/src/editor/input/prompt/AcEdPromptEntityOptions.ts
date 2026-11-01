@@ -8,8 +8,6 @@ export class AcEdPromptEntityOptions extends AcEdPromptOptions<string> {
   /** Whether ENTER (no selection) is allowed */
   private _allowNone = false
 
-  /** Whether entities on locked layers are selectable */
-  private _allowObjectOnLockedLayer = false
 
   /** Message displayed when selection is rejected */
   private _rejectMessage = 'Invalid object selected.'
@@ -56,20 +54,6 @@ export class AcEdPromptEntityOptions extends AcEdPromptOptions<string> {
   set allowNone(value: boolean) {
     if (!this.isReadOnly) {
       this._allowNone = value
-    }
-  }
-
-  /**
-   * Gets or sets whether entities on locked layers can be selected.
-   * Corresponds to `PromptEntityOptions.AllowObjectOnLockedLayer`.
-   */
-  get allowObjectOnLockedLayer(): boolean {
-    return this._allowObjectOnLockedLayer
-  }
-
-  set allowObjectOnLockedLayer(value: boolean) {
-    if (!this.isReadOnly) {
-      this._allowObjectOnLockedLayer = value
     }
   }
 

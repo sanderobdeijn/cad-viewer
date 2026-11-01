@@ -17,7 +17,6 @@ import {
   acapGetMeasurementCustomTextHeightWcs,
   acapGetMeasurementFontSize,
   acapGetMeasurementTextHeightMode,
-  AcApLayerService,
   AcApOpenCmd,
   AcApQNewCmd,
   acapRunDatabaseEdit,
@@ -65,13 +64,9 @@ import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { LayerStateSnapshot, LayerStateToggleKey } from '../../composable'
 import {
-  LAYER_FILTER_ALL,
   useDataSources,
   useDocument,
-  useLayerFilters,
-  useLayers,
   useSettings,
   useUndoRedo
 } from '../../composable'
@@ -99,16 +94,6 @@ import {
   ellipseCenter,
   find,
   hatch,
-  layerCurrent,
-  layerFreeze,
-  layerIsolate,
-  layerLock,
-  layerOff,
-  layerOn,
-  layerPrevious,
-  layerUnfreeze,
-  layerUnisolate,
-  layerUnlock,
   line,
   mline,
   move,
@@ -130,7 +115,6 @@ import {
   clearMeasurements,
   exportIcon,
   importIcon,
-  layer,
   measureAngle,
   measureArc,
   measureArea,
@@ -140,7 +124,6 @@ import {
   measurePoint,
   revCloud
 } from '../../svg/toolbarIcons'
-import MlLayerSelect from '../common/MlLayerSelect.vue'
 import MlCharacterMapDialog from '../dialog/MlCharacterMapDialog.vue'
 import MlRibbonFileName from './MlRibbonFileName.vue'
 import MlRibbonLanguageSelector from './MlRibbonLanguageSelector.vue'
@@ -197,13 +180,14 @@ const measurementLunits = ref(AcDbLinearUnits.Decimal)
 const measurementLuprec = ref(4)
 const measurementAunits = ref(AcDbAngleUnits.DecimalDegrees)
 const measurementAuprec = ref(0)
-const measurementLengthUnit = ref<number>(MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING)
+const measurementLengthUnit = ref<number>(
+  MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
+)
 const isRibbonDisabled = computed(() => isDocumentOpening.value)
 const ribbonColor = ref<AcCmColor | undefined>(new AcCmColor())
 const ribbonColorDisplay = ref('#7b8794')
 const ribbonLineType = ref<string | undefined>('ByLayer')
 const ribbonLineWeight = ref<AcGiLineWeight | undefined>(AcGiLineWeight.ByLayer)
-const ribbonDisplayedLayerName = ref('')
 const activeRibbonTabId = ref('home')
 const {
   handleCommandWillStart: handleHatchCommandWillStart,
@@ -227,40 +211,6 @@ const {
 } = useMTextContextualRibbon({
   activeTabId: activeRibbonTabId
 })
-const {
-  layers: ribbonLayers,
-  currentLayerName: ribbonStoreCurrentLayerName,
-  setCurrentLayer: setRibbonCurrentLayer,
-  toggleLayerState: toggleRibbonLayerState,
-  captureLayerSnapshot: captureRibbonLayerSnapshot
-} = useLayers(AcApDocManager.instance)
-const { selectedFilterId, matchesSelectedFilter } = useLayerFilters(
-  AcApDocManager.instance
-)
-const ribbonLayerOptions = computed(() => {
-  const db = AcApDocManager.instance?.curDocument?.database
-  const filterId = selectedFilterId.value
-  const currentName = ribbonDisplayedLayerName.value
-
-  return ribbonLayers
-    .filter(layer => {
-      if (layer.name === currentName) return true
-      if (filterId === LAYER_FILTER_ALL || !db) return true
-      const record = db.tables.layerTable.getAt(layer.name)
-      return record ? matchesSelectedFilter(record) : false
-    })
-    .map(layer => ({
-      value: layer.name,
-      name: layer.name,
-      cssColor: layer.cssColor || '#7b8794',
-      isOn: layer.isOn,
-      isLocked: layer.isLocked,
-      isFrozen: layer.isFrozen,
-      lineType: layer.linetype
-    }))
-})
-const ribbonLayerIsolationSnapshot = ref<LayerStateSnapshot | null>(null)
-const ribbonLayerPreviousSnapshot = ref<LayerStateSnapshot | null>(null)
 
 let observedDatabase: AcDbDatabase | undefined
 
@@ -341,15 +291,10 @@ const syncRibbonProperties = (db = getCurrentDatabase()) => {
     ribbonColorDisplay.value = '#7b8794'
     ribbonLineWeight.value = AcGiLineWeight.ByLayer
     ribbonLineType.value = 'ByLayer'
-    ribbonDisplayedLayerName.value = ''
     return
   }
 
   const selectedEntities = getSelectedEntities(db)
-  const commonLayerName = getCommonValue(
-    selectedEntities,
-    entity => entity.layer ?? ''
-  )
   const commonLineType = getCommonValue(
     selectedEntities,
     entity => entity.lineType || 'ByLayer'
@@ -369,24 +314,18 @@ const syncRibbonProperties = (db = getCurrentDatabase()) => {
 
   ribbonColor.value =
     selectedEntities.length > 0 ? commonColor : db.cecolor.clone()
-  ribbonDisplayedLayerName.value =
-    selectedEntities.length > 0 ? (commonLayerName ?? '') : db.clayer
   ribbonLineType.value =
     selectedEntities.length > 0 ? commonLineType : db.celtype || 'ByLayer'
   ribbonLineWeight.value =
     selectedEntities.length > 0 ? commonLineWeight : db.celweight
   ribbonColorDisplay.value =
     selectedEntities.length > 0
-      ? resolveRibbonColorDisplay(commonColor, db, commonLayerName)
+      ? resolveRibbonColorDisplay(commonColor, db, db.clayer)
       : resolveRibbonColorDisplay(db.cecolor, db, db.clayer)
 }
 
 const syncMeasurementVisibility = () => {
   isMeasurementOverlayVisible.value = isMeasurementVisible()
-}
-
-const handleAnnotationLayerChange = () => {
-  syncRibbonProperties(observedDatabase)
 }
 
 const handleSelectionChanged = () => {
@@ -441,13 +380,6 @@ const handleSysVarChange = (args: RibbonSysVarChangeEvent) => {
   }
 }
 
-// Palette (and other useLayers consumers) update CLAYER via AcApLayerStore, which
-// may notify before the deferred sysVarChanged event. Keep the Home layer dropdown
-// in sync with the store's current layer.
-watch(ribbonStoreCurrentLayerName, () => {
-  syncRibbonProperties(getCurrentDatabase())
-})
-
 const bindSelectionEvents = (selectionSet = getCurrentSelectionSet()) => {
   if (observedSelectionSet === selectionSet) return
 
@@ -477,12 +409,6 @@ const bindAnnotationVisibilityEvents = (db?: AcDbDatabase) => {
   if (observedDatabase === db) return
 
   if (observedDatabase) {
-    observedDatabase.events.layerAppended.removeEventListener(
-      handleAnnotationLayerChange
-    )
-    observedDatabase.events.layerModified.removeEventListener(
-      handleAnnotationLayerChange
-    )
     observedDatabase.events.entityModified.removeEventListener(
       handleObservedEntityChange
     )
@@ -495,12 +421,6 @@ const bindAnnotationVisibilityEvents = (db?: AcDbDatabase) => {
 
   if (!observedDatabase) return
 
-  observedDatabase.events.layerAppended.addEventListener(
-    handleAnnotationLayerChange
-  )
-  observedDatabase.events.layerModified.addEventListener(
-    handleAnnotationLayerChange
-  )
   observedDatabase.events.entityModified.addEventListener(
     handleObservedEntityChange
   )
@@ -512,8 +432,6 @@ const bindAnnotationVisibilityEvents = (db?: AcDbDatabase) => {
 const handleDocumentActivated = () => {
   bindSelectionEvents(getCurrentSelectionSet())
   bindAnnotationVisibilityEvents(AcApDocManager.instance?.curDocument?.database)
-  ribbonLayerIsolationSnapshot.value = null
-  ribbonLayerPreviousSnapshot.value = null
   lastActivatedMeasurementId = undefined
   syncMeasurementVisibility()
   syncMeasurementStyleControls()
@@ -533,12 +451,8 @@ const applyToSelectedEntities = (mutator: (entity: AcDbEntity) => void) => {
   if (!db || !ids?.length) return
 
   ids.forEach(id => {
-    const existing = db.tables.blockTable.getEntityById(id)
-    if (existing && AcApLayerService.isEntityOnLockedLayer(db, existing)) {
-      return
-    }
     const entity = db.openEntityForWrite(id)
-    if (!entity || AcApLayerService.isEntityOnLockedLayer(db, entity)) return
+    if (!entity) return
     mutator(entity)
   })
 }
@@ -573,7 +487,8 @@ const activateRibbonTabForOverlaySelection = () => {
 
   if (kind === 'measurement') {
     const measurementId = getSelectedMeasurementId()
-    const measurementNewlySelected = measurementId !== lastActivatedMeasurementId
+    const measurementNewlySelected =
+      measurementId !== lastActivatedMeasurementId
     lastActivatedMeasurementId = measurementId
     if (measurementNewlySelected) {
       activeRibbonTabId.value = 'measurement'
@@ -783,19 +698,16 @@ const handleMeasurementTextHeightClick = async () => {
     const selected = getActiveMeasurementStyle()
     const hasSelection = selected != null
     const measureId = getSelectedMeasurementId()
-    const fontSizePx =
-      selected?.fontSize ?? acapGetMeasurementFontSize()
+    const fontSizePx = selected?.fontSize ?? acapGetMeasurementFontSize()
     const selectedTextHeightWcs = hasSelection
-      ? selected?.textHeightWcs ??
+      ? (selected?.textHeightWcs ??
         (measureId
           ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-          : undefined)
+          : undefined))
       : acapGetMeasurementCustomTextHeightWcs()
     const initials = acuiResolveTextHeightDialogInitials({
       hasSelection,
-      sessionMode: hasSelection
-        ? 'custom'
-        : acapGetMeasurementTextHeightMode(),
+      sessionMode: hasSelection ? 'custom' : acapGetMeasurementTextHeightMode(),
       fontSizePx,
       selectedTextHeightWcs,
       view
@@ -894,67 +806,6 @@ const handleRibbonLineTypeChange = (value: string) => {
 }
 
 /**
- * Applies a newly selected ribbon current layer to the active database.
- *
- * @param layerName Layer name chosen from the ribbon layer selector.
- */
-const handleRibbonLayerChange = (layerName: string) => {
-  const db = getCurrentDatabase()
-  if (!db || !layerName) return
-
-  let changed = false
-  if (selectedEntityIds.value.length > 0) {
-    acapRunDatabaseEdit(db, 'Layer', () => {
-      applyToSelectedEntities(entity => {
-        if (entity.layer === layerName) return
-        entity.layer = layerName
-        changed = true
-      })
-    })
-  } else {
-    acapRunDatabaseEdit(db, 'Layer', () => {
-      changed = setRibbonCurrentLayer(layerName)
-    })
-  }
-
-  if (!changed) return
-  syncRibbonProperties(db)
-}
-
-/**
- * Makes the layer currently shown in the ribbon layer selector the drawing's
- * current layer (`CLAYER`).
- */
-const handleRibbonSetCurrentLayer = () => {
-  const db = getCurrentDatabase()
-  const layerName = ribbonDisplayedLayerName.value
-  if (!db || !layerName) return
-
-  let changed = false
-  acapRunDatabaseEdit(db, 'Layer', () => {
-    changed = setRibbonCurrentLayer(layerName)
-  })
-  if (!changed) return
-  syncRibbonProperties(db)
-}
-
-const handleRibbonLayerStateToggle = (payload: {
-  layerName: string
-  state: LayerStateToggleKey
-}) => {
-  const db = getCurrentDatabase()
-  if (!db || !payload.layerName) return
-
-  const previousSnapshot = captureRibbonLayerSnapshot(db)
-  if (!previousSnapshot) return
-  const changed = toggleRibbonLayerState(payload.layerName, payload.state)
-
-  if (!changed) return
-  ribbonLayerPreviousSnapshot.value = previousSnapshot
-  syncRibbonProperties(db)
-}
-
-/**
  * Read: measurement only. Write: all tabs.
  * Contextual tabs keep the visibility their builders already set.
  */
@@ -1028,18 +879,6 @@ const buildBaseTabs = (
     ellipse: t('main.ribbon.tooltip.ellipseOption.ellipse'),
     ellipseArc: t('main.ribbon.tooltip.ellipseOption.arc')
   }
-  const ribbonLayerActionTooltips = {
-    off: t('main.ribbon.tooltip.layerAction.off'),
-    isolate: t('main.ribbon.tooltip.layerAction.isolate'),
-    freeze: t('main.ribbon.tooltip.layerAction.freeze'),
-    lock: t('main.ribbon.tooltip.layerAction.lock'),
-    current: t('main.ribbon.tooltip.layerAction.current'),
-    allOn: t('main.ribbon.tooltip.layerAction.allOn'),
-    unisolate: t('main.ribbon.tooltip.layerAction.unisolate'),
-    thaw: t('main.ribbon.tooltip.layerAction.thaw'),
-    unlock: t('main.ribbon.tooltip.layerAction.unlock'),
-    restore: t('main.ribbon.tooltip.layerAction.restore')
-  }
   const verticalToolbarDescriptions = {
     measureDistance: t('main.verticalToolbar.measureDistance.description'),
     measureContinuous: t('main.verticalToolbar.measureContinuous.description'),
@@ -1050,7 +889,6 @@ const buildBaseTabs = (
     clearMeasurements: t('main.verticalToolbar.clearMeasurements.description'),
     measurementImport: t('main.verticalToolbar.measurementImport.description'),
     measurementExport: t('main.verticalToolbar.measurementExport.description'),
-    layer: t('main.verticalToolbar.layer.description'),
     hideMeasurements: t('main.verticalToolbar.hideMeasurements.description'),
     showMeasurements: t('main.verticalToolbar.showMeasurements.description')
   }
@@ -1686,138 +1524,6 @@ const buildBaseTabs = (
           ]
         },
         {
-          id: 'home-layer',
-          title: t('main.ribbon.group.layer'),
-          orientation: 'row',
-          collections: [
-            {
-              id: 'home-layer-button',
-              layout: 'row',
-              items: [
-                {
-                  id: 'cmd-layer',
-                  type: 'button',
-                  label: t('main.verticalToolbar.layer.text'),
-                  tooltip: verticalToolbarDescriptions.layer,
-                  size: 'large',
-                  props: { icon: layer }
-                }
-              ]
-            },
-            {
-              id: 'home-layer-main',
-              layout: 'column',
-              rows: 3,
-              items: [
-                {
-                  id: 'layer-select',
-                  type: 'custom',
-                  size: 'small',
-                  tooltip: t('main.ribbon.layerTools.select'),
-                  disabled: ribbonLayerOptions.value.length === 0,
-                  props: {
-                    width: 'full',
-                    component: MlLayerSelect,
-                    componentProps: {
-                      modelValue: ribbonDisplayedLayerName.value,
-                      options: ribbonLayerOptions.value,
-                      disabled: ribbonLayerOptions.value.length === 0,
-                      'onUpdate:modelValue': handleRibbonLayerChange,
-                      onLayerStateToggle: handleRibbonLayerStateToggle
-                    }
-                  }
-                },
-                {
-                  id: 'layer-actions-primary',
-                  type: 'buttonGroup',
-                  hideLabel: true,
-                  size: 'small',
-                  disabled: ribbonLayerOptions.value.length === 0,
-                  props: {
-                    wrap: false,
-                    buttonSize: 'small',
-                    options: [
-                      {
-                        label: '',
-                        value: 'layer-action-off',
-                        icon: layerOff,
-                        tooltip: ribbonLayerActionTooltips.off
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-isolate',
-                        icon: layerIsolate,
-                        tooltip: ribbonLayerActionTooltips.isolate
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-freeze',
-                        icon: layerFreeze,
-                        tooltip: ribbonLayerActionTooltips.freeze
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-lock',
-                        icon: layerLock,
-                        tooltip: ribbonLayerActionTooltips.lock
-                      },
-                      {
-                        label: t('main.ribbon.layerTools.current'),
-                        value: 'layer-action-current',
-                        icon: layerCurrent,
-                        tooltip: ribbonLayerActionTooltips.current
-                      }
-                    ]
-                  }
-                },
-                {
-                  id: 'layer-actions-secondary',
-                  type: 'buttonGroup',
-                  hideLabel: true,
-                  size: 'small',
-                  disabled: ribbonLayerOptions.value.length === 0,
-                  props: {
-                    wrap: false,
-                    buttonSize: 'small',
-                    options: [
-                      {
-                        label: '',
-                        value: 'layer-action-all-on',
-                        icon: layerOn,
-                        tooltip: ribbonLayerActionTooltips.allOn
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-unisolate',
-                        icon: layerUnisolate,
-                        tooltip: ribbonLayerActionTooltips.unisolate
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-thaw',
-                        icon: layerUnfreeze,
-                        tooltip: ribbonLayerActionTooltips.thaw
-                      },
-                      {
-                        label: '',
-                        value: 'layer-action-unlock',
-                        icon: layerUnlock,
-                        tooltip: ribbonLayerActionTooltips.unlock
-                      },
-                      {
-                        label: t('main.ribbon.layerTools.restore'),
-                        value: 'layer-action-restore',
-                        icon: layerPrevious,
-                        tooltip: ribbonLayerActionTooltips.restore
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
           id: 'home-properties',
           title: t('main.ribbon.group.properties'),
           orientation: 'row',
@@ -2046,7 +1752,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-copy', 'copy')
   commandByItemId.set('cmd-erase', 'erase')
   commandByItemId.set('cmd-offset', 'offset')
-  commandByItemId.set('cmd-layer', 'layer')
   commandByItemId.set('cmd-properties', 'properties')
   commandByItemId.set('cmd-qselect', 'qselect')
   commandByItemId.set('cmd-find', 'find')
@@ -2063,16 +1768,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-tool-measurement-import', 'measurementimport')
   commandByItemId.set('cmd-tool-measurement-export', 'measurementexport')
   commandByItemId.set('cmd-tool-clear-measurements', 'clearmeasurements')
-  // Layer actions
-  commandByItemId.set('layer-action-off', 'layoff')
-  commandByItemId.set('layer-action-isolate', 'layiso')
-  commandByItemId.set('layer-action-freeze', 'layfrz')
-  commandByItemId.set('layer-action-lock', 'laylck')
-  commandByItemId.set('layer-action-all-on', 'layon')
-  commandByItemId.set('layer-action-unisolate', 'layuniso')
-  commandByItemId.set('layer-action-thaw', 'laythw')
-  commandByItemId.set('layer-action-unlock', 'layulk')
-  commandByItemId.set('layer-action-restore', 'layerp')
 
   const tabs: RibbonTabModel[] = buildBaseTabs(openMode, measurementVisible)
   return {
@@ -2146,17 +1841,6 @@ const handleRibbonItemClick = (payload: {
   if (isRibbonDisabled.value) return
   if (handleHatchItem(payload.itemId)) return
   if (handleMTextItem(payload.itemId)) return
-  if (
-    payload.groupId === 'home-layer' &&
-    ribbonLayerOptions.value.some(item => item.value === payload.itemId)
-  ) {
-    handleRibbonLayerChange(payload.itemId)
-    return
-  }
-  if (payload.itemId === 'layer-action-current') {
-    handleRibbonSetCurrentLayer()
-    return
-  }
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return
   AcApDocManager.instance.sendStringToExecute(command)

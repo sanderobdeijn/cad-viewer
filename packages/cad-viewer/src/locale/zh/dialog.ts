@@ -83,7 +83,6 @@ export default {
     propObjectType: '对象类型',
     propHandle: '句柄',
     handleValuePlaceholder: '请输入实体句柄',
-    propLayer: '图层',
     propColor: '颜色',
     propLineType: '线型',
     propLineWeight: '线宽',

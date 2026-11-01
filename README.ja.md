@@ -146,7 +146,7 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 
 | パッケージ | 役割 | コマンド / 機能 |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer` 向け **ツールバー・レイヤーマネージャー・計測パレット UI**（プレーン DOM、Vue/React 非依存） | `layer`、`measurementpanel`、デフォルトツールバー（表示、測定、テーマ、ロケール） |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer` 向け **ツールバー・計測パレット UI**（プレーン DOM、Vue/React 非依存） | `measurementpanel`、デフォルトツールバー（表示、測定、テーマ、ロケール） |
 
 ### `@mlightcad/cad-simple-ui-plugin` — シンプルビューア向け UI 層
 
@@ -155,7 +155,7 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 提供機能：
 
 - **設定可能なツールバー**（任意の辺に配置、デフォルト CAD コマンド、ネストメニュー、カスタム項目）
-- **ドックパネル**：**レイヤーマネージャー**タブ（レイヤー ON/OFF、ACI カラーピッカー、ダブルクリックでレイヤーへズーム）と**計測**タブ
+- **ドックパネル**：**計測**タブ
 - **`COLORTHEME` システム変数とホスト要素上の `--ml-ui-*` CSS トークンとのテーマ同期**
 - **`AcApI18n` とのロケール同期**（英語 / 中国語 / チェコ語 / トルコ語）
 
@@ -248,8 +248,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 
 #### 表示制御
 
-* [x] レイヤー表示 ON/OFF
-* [x] レイヤーフリーズ / ロック
 * [x] 線幅表示
 * [ ] 線種スケーリング
 * [x] 背景 / テーマ切り替え
@@ -337,12 +335,11 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 #### プロパティパレット
 
 * [x] 選択エンティティのプロパティ
-* [ ] レイヤー、色、線種の編集
+* [ ] 色、線種の編集
 * [x] 変更時のライブ更新
 
 #### パネルと UI
 
-* [x] レイヤーマネージャー
 * [ ] ブロックマネージャー
 * [x] コマンド履歴 / コンソール
 * [x] ステータスバー（スナップ、直交、グリッド）

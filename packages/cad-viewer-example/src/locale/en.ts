@@ -51,13 +51,6 @@ export default {
       off: 'Off',
       progressiveOffHint: 'Wait until entities and text are fully converted',
 
-      nonPlottable: 'Non-plottable',
-      nonPlottableLayers: 'Non-plottable layers',
-      hide: 'Hide',
-      hideHint: 'Web viewer default',
-      show: 'Show',
-      showHint: 'AutoCAD editor semantics',
-
       curveQuality: 'Curve quality',
       curveDraft: 'Memory',
       curveDraftHint: 'Fewer vertices, smaller files',
@@ -72,8 +65,7 @@ export default {
       paperSpaceBlack: 'Black',
       paperSpaceBlackHint: 'Web viewer preference',
 
-      invalidFileType:
-        'Invalid file type. Please upload DWG or DXF files.'
+      invalidFileType: 'Invalid file type. Please upload DWG or DXF files.'
     }
   }
 }

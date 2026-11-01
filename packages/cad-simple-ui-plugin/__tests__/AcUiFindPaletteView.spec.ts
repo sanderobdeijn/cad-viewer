@@ -193,13 +193,13 @@ describe('AcUiFindPaletteView', () => {
     view.destroy()
   })
 
-  it('lists matches with type, layer and location labels', () => {
+  it('lists matches with type and location labels', () => {
     const view = createView()
     view.search('BETA')
     expect(rows(view)).toHaveLength(2)
     expect(
       rows(view)[0].querySelector('.ml-ex-ui-find-meta')?.textContent
-    ).toBe('Text · NOTES · (10, 0)')
+    ).toBe('Text · (10, 0)')
     expect(status(view)).toBe('2 found')
     view.destroy()
   })
@@ -532,8 +532,8 @@ describe('AcUiFindPaletteView', () => {
       const view = createView()
       view.search('nota')
       expect(rows(view)).toHaveLength(2)
-      expect(meta(view, 0)).toBe('Leader · NOTES · (5, 6)')
-      expect(meta(view, 1)).toBe('Block text · BLOCKS · (1, 0)')
+      expect(meta(view, 0)).toBe('Leader · (5, 6)')
+      expect(meta(view, 1)).toBe('Block text · (1, 0)')
       view.destroy()
     })
 
@@ -543,8 +543,8 @@ describe('AcUiFindPaletteView', () => {
       setLocale('ar')
       const view = createView()
       view.search('nota')
-      expect(meta(view, 0)).toBe('خط إشارة · NOTES · (5, 6)')
-      expect(meta(view, 1)).toBe('نص كتلة · BLOCKS · (1, 0)')
+      expect(meta(view, 0)).toBe('خط إشارة · (5, 6)')
+      expect(meta(view, 1)).toBe('نص كتلة · (1, 0)')
       view.destroy()
     })
 
@@ -554,7 +554,7 @@ describe('AcUiFindPaletteView', () => {
       const view = createView()
       expect(status(view)).toBe(en['findPalette.hint'])
       view.search('nota')
-      expect(meta(view, 0)).toBe('Leader · NOTES · (5, 6)')
+      expect(meta(view, 0)).toBe('Leader · (5, 6)')
       expect(status(view)).not.toContain('findPalette.')
       view.destroy()
     })

@@ -1,6 +1,5 @@
 export * from './AcApCountListCmd'
 export * from './AcApHatchRibbonCmd'
-export * from './AcApLayerStateCmd'
 export * from './AcApMemCmd'
 export * from './AcApMissedDataCmd'
 export * from './AcApMeasurementPanelCmd'

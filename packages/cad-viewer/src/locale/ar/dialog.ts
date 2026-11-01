@@ -111,7 +111,6 @@ export default {
     propObjectType: 'نوع العنصر',
     propHandle: 'المعرف (Handle)',
     handleValuePlaceholder: 'أدخل معرف العنصر (Handle)',
-    propLayer: 'الطبقة',
     propColor: 'اللون',
     propLineType: 'نوع الخط',
     propLineWeight: 'سُمك الخط',
@@ -127,13 +126,11 @@ export default {
     modeAdd: 'إضافة إلى مجموعة التحديد الحالية',
     modeRemove: 'استبعاد من مجموعة التحديد الحالية',
 
-    previewResult:
-      'العناصر المطابقة: {count} / إجمالي العناصر: {total}',
+    previewResult: 'العناصر المطابقة: {count} / إجمالي العناصر: {total}',
 
     valueRequired: 'يرجى تحديد قيمة للتصفية',
 
-    selectionResult:
-      'تم العثور على {count} عنصر وتطبيقها على التحديد'
+    selectionResult: 'تم العثور على {count} عنصر وتطبيقها على التحديد'
   },
 
   textStyleDlg: {

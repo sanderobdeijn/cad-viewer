@@ -12,22 +12,14 @@ export default {
         'إنشاء تعبئة تهشير باستخدام خيارات سطر الأوامر دون واجهة الشريط'
     },
 
-    '-layer': {
-      ...enCommand.ACAD['-layer'],
-      description:
-        'إدارة الطبقات باستخدام خيارات سطر الأوامر'
-    },
-
     about: {
       ...enCommand.ACAD.about,
-      description:
-        'عرض معلومات حول mlightcad'
+      description: 'عرض معلومات حول mlightcad'
     },
 
     acadver: {
       ...enCommand.ACAD.acadver,
-      description:
-        'عرض معرّف إصدار قاعدة بيانات الرسم (للقراءة فقط)'
+      description: 'عرض معرّف إصدار قاعدة بيانات الرسم (للقراءة فقط)'
     },
 
     angbase: {
@@ -44,136 +36,113 @@ export default {
 
     arc: {
       ...enCommand.ACAD.arc,
-      description:
-        'إنشاء قوس'
+      description: 'إنشاء قوس'
     },
 
     aunits: {
       ...enCommand.ACAD.aunits,
-      description:
-        'تحديد تنسيق عرض الزوايا'
+      description: 'تحديد تنسيق عرض الزوايا'
     },
 
     auprec: {
       ...enCommand.ACAD.auprec,
-      description:
-        'تحديد دقة عرض الزوايا بالتكامل مع AUNITS'
+      description: 'تحديد دقة عرض الزوايا بالتكامل مع AUNITS'
     },
 
     cecolor: {
       ...enCommand.ACAD.cecolor,
-      description:
-        'تحديد اللون الافتراضي الحالي للعناصر الجديدة'
+      description: 'تحديد اللون الافتراضي الحالي للعناصر الجديدة'
     },
 
     celtscale: {
       ...enCommand.ACAD.celtscale,
-      description:
-        'التحكم في معامل مقياس نوع الخط للعناصر الجديدة'
+      description: 'التحكم في معامل مقياس نوع الخط للعناصر الجديدة'
     },
 
     celtype: {
       ...enCommand.ACAD.celtype,
-      description:
-        'تحديد نوع الخط للعناصر الجديدة'
+      description: 'تحديد نوع الخط للعناصر الجديدة'
     },
 
     celweight: {
       ...enCommand.ACAD.celweight,
-      description:
-        'تحديد سُمك الخط الافتراضي للعناصر الجديدة'
+      description: 'تحديد سُمك الخط الافتراضي للعناصر الجديدة'
     },
 
     cetransparency: {
       ...enCommand.ACAD.cetransparency,
-      description:
-        'تحديد الشفافية للعناصر الجديدة'
+      description: 'تحديد الشفافية للعناصر الجديدة'
     },
 
     cachefont: {
       ...enCommand.ACAD.cachefont,
-      description:
-        'تخزين ملف خط محلي مؤقتًا في IndexedDB لاستخدامه في عرض النص'
+      description: 'تخزين ملف خط محلي مؤقتًا في IndexedDB لاستخدامه في عرض النص'
     },
 
     circle: {
       ...enCommand.ACAD.circle,
-      description:
-        'إنشاء دائرة باستخدام المركز ونصف القطر'
+      description: 'إنشاء دائرة باستخدام المركز ونصف القطر'
     },
 
     clayer: {
       ...enCommand.ACAD.clayer,
-      description:
-        'تحديد الطبقة الحالية للعناصر الجديدة وعمليات التحرير'
+      description: 'تحديد الطبقة الحالية للعناصر الجديدة وعمليات التحرير'
     },
 
     cmleaderstyle: {
       ...enCommand.ACAD.cmleaderstyle,
-      description:
-        'تحديد اسم نمط Multileader الحالي'
+      description: 'تحديد اسم نمط Multileader الحالي'
     },
 
     cmlscale: {
       ...enCommand.ACAD.cmlscale,
-      description:
-        'التحكم في العرض الكلي للخط متعدد المسارات'
+      description: 'التحكم في العرض الكلي للخط متعدد المسارات'
     },
 
     cmlstyle: {
       ...enCommand.ACAD.cmlstyle,
-      description:
-        'تحديد اسم نمط الخط متعدد المسارات الحالي'
+      description: 'تحديد اسم نمط الخط متعدد المسارات الحالي'
     },
 
     colortheme: {
       ...enCommand.ACAD.colortheme,
-      description:
-        'التحكم في سمة ألوان واجهة المستخدم بين الوضع الداكن والفاتح'
+      description: 'التحكم في سمة ألوان واجهة المستخدم بين الوضع الداكن والفاتح'
     },
 
     copy: {
       ...enCommand.ACAD.copy,
-      description:
-        'نسخ العناصر المحددة إلى مواضع جديدة',
-      prompt:
-        'حدد العناصر'
+      description: 'نسخ العناصر المحددة إلى مواضع جديدة',
+      prompt: 'حدد العناصر'
     },
 
     dimlinear: {
       ...enCommand.ACAD.dimlinear,
-      description:
-        'إنشاء أبعاد خطية'
+      description: 'إنشاء أبعاد خطية'
     },
 
     dimstyle: {
       ...enCommand.ACAD.dimstyle,
-      description:
-        'تحديد اسم نمط الأبعاد الحالي'
+      description: 'تحديد اسم نمط الأبعاد الحالي'
     },
 
     dwgname: {
       ...enCommand.ACAD.dwgname,
-      description:
-        'عرض اسم ملف الرسم الحالي (للقراءة فقط)'
+      description: 'عرض اسم ملف الرسم الحالي (للقراءة فقط)'
     },
 
     loginname: {
       ...enCommand.ACAD.loginname,
-      description:
-        'عرض اسم تسجيل دخول المستخدم (للقراءة فقط)'
+      description: 'عرض اسم تسجيل دخول المستخدم (للقراءة فقط)'
     },
 
     dynmode: {
       ...enCommand.ACAD.dynmode,
-      description:
-        'التحكم في إعدادات الإدخال الديناميكي عند المؤشر'
+      description: 'التحكم في إعدادات الإدخال الديناميكي عند المؤشر'
     },
 
     dynprompt: {
       ...enCommand.ACAD.dynprompt,
-      description:
-        'التحكم في عرض رسائل الأوامر داخل تلميحات الإدخال الديناميكي'
+      description: 'التحكم في عرض رسائل الأوامر داخل تلميحات الإدخال الديناميكي'
     },
 
     ellipse: {
@@ -184,10 +153,8 @@ export default {
 
     erase: {
       ...enCommand.ACAD.erase,
-      description:
-        'حذف العناصر المحددة من الرسم',
-      prompt:
-        'حدد العناصر'
+      description: 'حذف العناصر المحددة من الرسم',
+      prompt: 'حدد العناصر'
     },
 
     extmax: {
@@ -204,22 +171,18 @@ export default {
 
     hideobjects: {
       ...enCommand.ACAD.hideobjects,
-      description:
-        'إخفاء العناصر المحددة مؤقتًا من العرض',
-      prompt:
-        'حدد العناصر'
+      description: 'إخفاء العناصر المحددة مؤقتًا من العرض',
+      prompt: 'حدد العناصر'
     },
 
     gripcolor: {
       ...enCommand.ACAD.gripcolor,
-      description:
-        'تحديد لون مقابض التحكم غير المحددة للعناصر المحددة'
+      description: 'تحديد لون مقابض التحكم غير المحددة للعناصر المحددة'
     },
 
     griphot: {
       ...enCommand.ACAD.griphot,
-      description:
-        'تحديد لون مقابض التحكم المحددة'
+      description: 'تحديد لون مقابض التحكم المحددة'
     },
 
     gripobjlimit: {
@@ -230,62 +193,52 @@ export default {
 
     grips: {
       ...enCommand.ACAD.grips,
-      description:
-        'التحكم في عرض مقابض التحكم على العناصر المحددة'
+      description: 'التحكم في عرض مقابض التحكم على العناصر المحددة'
     },
 
     gripsize: {
       ...enCommand.ACAD.gripsize,
-      description:
-        'تحديد حجم مربعات مقابض التحكم بالبكسل'
+      description: 'تحديد حجم مربعات مقابض التحكم بالبكسل'
     },
 
     hatch: {
       ...enCommand.ACAD.hatch,
-      description:
-        'ملء منطقة مغلقة أو عناصر محددة بنمط تهشير'
+      description: 'ملء منطقة مغلقة أو عناصر محددة بنمط تهشير'
     },
 
     hpang: {
       ...enCommand.ACAD.hpang,
-      description:
-        'تحديد الزاوية الافتراضية بالراديان لأنماط التهشير الجديدة'
+      description: 'تحديد الزاوية الافتراضية بالراديان لأنماط التهشير الجديدة'
     },
 
     hpassoc: {
       ...enCommand.ACAD.hpassoc,
-      description:
-        'التحكم في كون التهشير الجديد ترابطيًا'
+      description: 'التحكم في كون التهشير الجديد ترابطيًا'
     },
 
     hpbackgroundcolor: {
       ...enCommand.ACAD.hpbackgroundcolor,
-      description:
-        'تحديد لون الخلفية الافتراضي لأنماط التهشير الجديدة'
+      description: 'تحديد لون الخلفية الافتراضي لأنماط التهشير الجديدة'
     },
 
     hpcolor: {
       ...enCommand.ACAD.hpcolor,
-      description:
-        'تحديد اللون الافتراضي للتهشير الجديد'
+      description: 'تحديد اللون الافتراضي للتهشير الجديد'
     },
 
     hpdouble: {
       ...enCommand.ACAD.hpdouble,
-      description:
-        'التحكم في مضاعفة أنماط التهشير المعرفة بواسطة المستخدم'
+      description: 'التحكم في مضاعفة أنماط التهشير المعرفة بواسطة المستخدم'
     },
 
     hpislanddetection: {
       ...enCommand.ACAD.hpislanddetection,
-      description:
-        'التحكم في كيفية التعامل مع الجزر داخل حدود التهشير الجديدة'
+      description: 'التحكم في كيفية التعامل مع الجزر داخل حدود التهشير الجديدة'
     },
 
     hplayer: {
       ...enCommand.ACAD.hplayer,
-      description:
-        'تحديد الطبقة الافتراضية للتهشير والتعبئة الجديدة'
+      description: 'تحديد الطبقة الافتراضية للتهشير والتعبئة الجديدة'
     },
 
     hpname: {
@@ -296,8 +249,7 @@ export default {
 
     hpscale: {
       ...enCommand.ACAD.hpscale,
-      description:
-        'تحديد معامل المقياس الافتراضي لأنماط التهشير الجديدة'
+      description: 'تحديد معامل المقياس الافتراضي لأنماط التهشير الجديدة'
     },
 
     hpseparate: {
@@ -308,8 +260,7 @@ export default {
 
     hptransparency: {
       ...enCommand.ACAD.hptransparency,
-      description:
-        'تحديد الشفافية الافتراضية للتهشير والتعبئة الجديدة'
+      description: 'تحديد الشفافية الافتراضية للتهشير والتعبئة الجديدة'
     },
 
     insunits: {
@@ -318,190 +269,89 @@ export default {
         'تحديد وحدات الرسم المستخدمة في التحجيم التلقائي للكتل والصور والمراجع الخارجية عند الإدراج'
     },
 
-    laycur: {
-      ...enCommand.ACAD.laycur,
-      description:
-        'تغيير طبقة العناصر المحددة إلى الطبقة الحالية',
-      prompt:
-        'حدد العناصر المطلوب نقلها إلى الطبقة الحالية'
-    },
-
-    laydel: {
-      ...enCommand.ACAD.laydel,
-      description:
-        'حذف طبقة وجميع العناصر الموجودة عليها'
-    },
-
-    layerclose: {
-      ...enCommand.ACAD.layerclose,
-      description:
-        'إغلاق مدير خصائص الطبقات'
-    },
-
-    layerp: {
-      ...enCommand.ACAD.layerp,
-      description:
-        'التراجع عن آخر تغيير أو مجموعة تغييرات في إعدادات الطبقات'
-    },
-
-    layfrz: {
-      ...enCommand.ACAD.layfrz,
-      description:
-        'تجميد طبقة العناصر المحددة',
-      prompt:
-        'حدد عنصرًا على الطبقة المراد تجميدها'
-    },
-
-    layiso: {
-      ...enCommand.ACAD.layiso,
-      description:
-        'عزل طبقات العناصر المحددة',
-      prompt:
-        'حدد عناصر على الطبقات المراد عزلها'
-    },
-
-    laylck: {
-      ...enCommand.ACAD.laylck,
-      description:
-        'قفل طبقة العناصر المحددة',
-      prompt:
-        'حدد عنصرًا على الطبقة المراد قفلها'
-    },
-
-    layoff: {
-      ...enCommand.ACAD.layoff,
-      description:
-        'إيقاف طبقة العناصر المحددة',
-      prompt:
-        'حدد عنصرًا على الطبقة المراد إيقافها'
-    },
-
-    layon: {
-      ...enCommand.ACAD.layon,
-      description:
-        'تشغيل جميع الطبقات في الرسم'
-    },
-
-    laythw: {
-      ...enCommand.ACAD.laythw,
-      description:
-        'إلغاء تجميد جميع الطبقات المجمدة في الرسم'
-    },
-
-    layulk: {
-      ...enCommand.ACAD.layulk,
-      description:
-        'إلغاء قفل طبقة العناصر المحددة',
-      prompt:
-        'حدد عنصرًا على الطبقة المراد إلغاء قفلها'
-    },
-
-    layuniso: {
-      ...enCommand.ACAD.layuniso,
-      description:
-        'استعادة الطبقات التي تم إخفاؤها أو قفلها بواسطة LAYISO'
-    },
-
     line: {
       ...enCommand.ACAD.line,
-      description:
-        'رسم مقاطع خطوط مستقيمة بين النقاط'
+      description: 'رسم مقاطع خطوط مستقيمة بين النقاط'
     },
 
     log: {
       ...enCommand.ACAD.log,
-      description:
-        'تسجيل معلومات تصحيح الأخطاء في وحدة التحكم'
+      description: 'تسجيل معلومات تصحيح الأخطاء في وحدة التحكم'
     },
 
     ltscale: {
       ...enCommand.ACAD.ltscale,
-      description:
-        'تحديد معامل مقياس نوع الخط العام للرسم'
+      description: 'تحديد معامل مقياس نوع الخط العام للرسم'
     },
 
     lunits: {
       ...enCommand.ACAD.lunits,
-      description:
-        'تحديد تنسيق عرض الإحداثيات والمسافات'
+      description: 'تحديد تنسيق عرض الإحداثيات والمسافات'
     },
 
     luprec: {
       ...enCommand.ACAD.luprec,
-      description:
-        'تحديد دقة عرض الوحدات الخطية بالتكامل مع LUNITS'
+      description: 'تحديد دقة عرض الوحدات الخطية بالتكامل مع LUNITS'
     },
 
     lwdisplay: {
       ...enCommand.ACAD.lwdisplay,
-      description:
-        'التحكم في عرض سُمك الخطوط داخل الرسم'
+      description: 'التحكم في عرض سُمك الخطوط داخل الرسم'
     },
 
     clearmeasurements: {
       ...enCommand.ACAD.clearmeasurements,
-      description:
-        'إزالة جميع القياسات من المخطط الحالي'
+      description: 'إزالة جميع القياسات من المخطط الحالي'
     },
 
     measurementvis: {
       ...enCommand.ACAD.measurementvis,
-      description:
-        'إظهار أو إخفاء القياسات في المخطط الحالي'
+      description: 'إظهار أو إخفاء القياسات في المخطط الحالي'
     },
 
     measurementpanel: {
       ...enCommand.ACAD.measurementpanel,
-      description:
-        'فتح لوحة القياس'
+      description: 'فتح لوحة القياس'
     },
 
     measurementexport: {
       ...enCommand.ACAD.measurementexport,
-      description:
-        'تصدير القياسات إلى ملف JSON جانبي'
+      description: 'تصدير القياسات إلى ملف JSON جانبي'
     },
 
     measurementimport: {
       ...enCommand.ACAD.measurementimport,
-      description:
-        'استيراد القياسات من ملف JSON جانبي'
+      description: 'استيراد القياسات من ملف JSON جانبي'
     },
 
     measurearea: {
       ...enCommand.ACAD.measurearea,
-      description:
-        'حساب المساحة والمحيط للعناصر أو النقاط المحددة'
+      description: 'حساب المساحة والمحيط للعناصر أو النقاط المحددة'
     },
 
     measureangle: {
       ...enCommand.ACAD.measureangle,
-      description:
-        'قياس الزاوية بين خطين أو باستخدام ثلاث نقاط'
+      description: 'قياس الزاوية بين خطين أو باستخدام ثلاث نقاط'
     },
 
     measurearc: {
       ...enCommand.ACAD.measurearc,
-      description:
-        'قياس طول مقطع قوس'
+      description: 'قياس طول مقطع قوس'
     },
 
     measuredistance: {
       ...enCommand.ACAD.measuredistance,
-      description:
-        'قياس المسافة وفروق الإحداثيات بين نقطتين'
+      description: 'قياس المسافة وفروق الإحداثيات بين نقطتين'
     },
 
     measurecontinuous: {
       ...enCommand.ACAD.measurecontinuous,
-      description:
-        'قياس مسافات متسلسلة باختيار نقاط متتالية حتى Enter أو إلغاء'
+      description: 'قياس مسافات متسلسلة باختيار نقاط متتالية حتى Enter أو إلغاء'
     },
 
     measurepoint: {
       ...enCommand.ACAD.measurepoint,
-      description:
-        'قياس إحداثيات X وY لنقطة محددة'
+      description: 'قياس إحداثيات X وY لنقطة محددة'
     },
 
     measurement: {
@@ -512,28 +362,23 @@ export default {
 
     measurementcolor: {
       ...enCommand.ACAD.measurementcolor,
-      description:
-        'تحديد اللون المستخدم لتراكبات القياس'
+      description: 'تحديد اللون المستخدم لتراكبات القياس'
     },
 
     modelbkcolor: {
       ...enCommand.ACAD.modelbkcolor,
-      description:
-        'تحديد لون خلفية مساحة النموذج'
+      description: 'تحديد لون خلفية مساحة النموذج'
     },
 
     mline: {
       ...enCommand.ACAD.mline,
-      description:
-        'إنشاء عدة خطوط متوازية كعنصر متعدد الخطوط واحد'
+      description: 'إنشاء عدة خطوط متوازية كعنصر متعدد الخطوط واحد'
     },
 
     move: {
       ...enCommand.ACAD.move,
-      description:
-        'نقل العناصر المحددة باستخدام متجه إزاحة',
-      prompt:
-        'حدد العناصر'
+      description: 'نقل العناصر المحددة باستخدام متجه إزاحة',
+      prompt: 'حدد العناصر'
     },
 
     offset: {
@@ -544,80 +389,67 @@ export default {
 
     mtext: {
       ...enCommand.ACAD.mtext,
-      description:
-        'إنشاء عنصر نص متعدد الأسطر'
+      description: 'إنشاء عنصر نص متعدد الأسطر'
     },
 
     open: {
       ...enCommand.ACAD.open,
-      description:
-        'فتح ملف رسم موجود'
+      description: 'فتح ملف رسم موجود'
     },
 
     openprof: {
       ...enCommand.ACAD.openprof,
-      description:
-        'التحكم في تسجيل أزمنة مراحل فتح الملفات داخل وحدة التحكم'
+      description: 'التحكم في تسجيل أزمنة مراحل فتح الملفات داخل وحدة التحكم'
     },
 
     openperf: {
       ...enCommand.ACAD.openperf,
-      description:
-        'فتح لوحة أداء الفتح وعرض أزمنة آخر عملية فتح للرسم'
+      description: 'فتح لوحة أداء الفتح وعرض أزمنة آخر عملية فتح للرسم'
     },
 
     orthomode: {
       ...enCommand.ACAD.orthomode,
-      description:
-        'تقييد حركة المؤشر على المحور الأفقي أو الرأسي'
+      description: 'تقييد حركة المؤشر على المحور الأفقي أو الرأسي'
     },
 
     osmode: {
       ...enCommand.ACAD.osmode,
-      description:
-        'تحديد أوضاع Object Snap المستمرة باستخدام قيمة bitcode'
+      description: 'تحديد أوضاع Object Snap المستمرة باستخدام قيمة bitcode'
     },
 
     pan: {
       ...enCommand.ACAD.pan,
-      description:
-        'تحريك العرض دون تغيير اتجاه الرؤية أو مستوى التكبير'
+      description: 'تحريك العرض دون تغيير اتجاه الرؤية أو مستوى التكبير'
     },
 
     paperbkcolor: {
       ...enCommand.ACAD.paperbkcolor,
-      description:
-        'تحديد لون خلفية مساحة الورق أو المخطط'
+      description: 'تحديد لون خلفية مساحة الورق أو المخطط'
     },
 
     pdmode: {
       ...enCommand.ACAD.pdmode,
-      description:
-        'التحكم في طريقة عرض عناصر POINT'
+      description: 'التحكم في طريقة عرض عناصر POINT'
     },
 
     pdsize: {
       ...enCommand.ACAD.pdsize,
-      description:
-        'تحديد حجم عرض عناصر POINT'
+      description: 'تحديد حجم عرض عناصر POINT'
     },
 
     pickbox: {
       ...enCommand.ACAD.pickbox,
-      description:
-        'تحديد حجم مربع التحديد المستخدم لاختيار العناصر بالبكسل'
+      description: 'تحديد حجم مربع التحديد المستخدم لاختيار العناصر بالبكسل'
     },
 
     pline: {
       ...enCommand.ACAD.pline,
-      description:
-        'إنشاء متعدد خطوط باستخدام عدة نقاط'
+      description: 'إنشاء متعدد خطوط باستخدام عدة نقاط'
     },
 
     point: {
       ...enCommand.ACAD.point,
-      description:
-        'إنشاء نقاط'
+      description: 'إنشاء نقاط'
     },
 
     polaraddang: {
@@ -628,14 +460,12 @@ export default {
 
     polarang: {
       ...enCommand.ACAD.polarang,
-      description:
-        'تحديد مقدار زيادة الزاوية للتتبع القطبي'
+      description: 'تحديد مقدار زيادة الزاوية للتتبع القطبي'
     },
 
     polarmode: {
       ...enCommand.ACAD.polarmode,
-      description:
-        'التحكم في إعدادات التتبع القطبي وتتبع Object Snap'
+      description: 'التحكم في إعدادات التتبع القطبي وتتبع Object Snap'
     },
 
     polygon: {
@@ -646,76 +476,63 @@ export default {
 
     qnew: {
       ...enCommand.ACAD.qnew,
-      description:
-        'بدء رسم جديد'
+      description: 'بدء رسم جديد'
     },
 
     close: {
       ...enCommand.ACAD.close,
-      description:
-        'إغلاق الرسم الحالي'
+      description: 'إغلاق الرسم الحالي'
     },
 
     ray: {
       ...enCommand.ACAD.ray,
-      description:
-        'إنشاء شعاع يبدأ من نقطة ويمتد إلى ما لا نهاية'
+      description: 'إنشاء شعاع يبدأ من نقطة ويمتد إلى ما لا نهاية'
     },
 
     rectang: {
       ...enCommand.ACAD.rectang,
-      description:
-        'إنشاء مستطيل بتحديد ركنين متقابلين'
+      description: 'إنشاء مستطيل بتحديد ركنين متقابلين'
     },
 
     regen: {
       ...enCommand.ACAD.regen,
-      description:
-        'إعادة رسم العرض الحالي'
+      description: 'إعادة رسم العرض الحالي'
     },
 
     revcloud: {
       ...enCommand.ACAD.revcloud,
-      description:
-        'إنشاء أو تعديل سحابة مراجعة'
+      description: 'إنشاء أو تعديل سحابة مراجعة'
     },
 
     rotate: {
       ...enCommand.ACAD.rotate,
-      description:
-        'تدوير العناصر المحددة حول نقطة أساس',
-      prompt:
-        'حدد العناصر'
+      description: 'تدوير العناصر المحددة حول نقطة أساس',
+      prompt: 'حدد العناصر'
     },
 
     select: {
       ...enCommand.ACAD.select,
-      description:
-        'تحديد العناصر'
+      description: 'تحديد العناصر'
     },
 
     shortcutmenu: {
       ...enCommand.ACAD.shortcutmenu,
-      description:
-        'التحكم في إتاحة القوائم المختصرة داخل منطقة الرسم'
+      description: 'التحكم في إتاحة القوائم المختصرة داخل منطقة الرسم'
     },
 
     sketch: {
       ...enCommand.ACAD.sketch,
-      description:
-        'إنشاء سلسلة من مقاطع الخطوط بالرسم الحر'
+      description: 'إنشاء سلسلة من مقاطع الخطوط بالرسم الحر'
     },
 
     spline: {
       ...enCommand.ACAD.spline,
-      description:
-        'إنشاء منحنى Spline ناعم باستخدام نقاط التحكم'
+      description: 'إنشاء منحنى Spline ناعم باستخدام نقاط التحكم'
     },
 
     textstyle: {
       ...enCommand.ACAD.textstyle,
-      description:
-        'تحديد اسم نمط النص الحالي'
+      description: 'تحديد اسم نمط النص الحالي'
     },
 
     unitmode: {
@@ -726,42 +543,34 @@ export default {
 
     switchbg: {
       ...enCommand.ACAD.switchbg,
-      description:
-        'التبديل بين الخلفية البيضاء والسوداء لمنطقة الرسم'
+      description: 'التبديل بين الخلفية البيضاء والسوداء لمنطقة الرسم'
     },
 
     unisolateobjects: {
       ...enCommand.ACAD.unisolateobjects,
-      description:
-        'إعادة عرض جميع العناصر التي تم إخفاؤها بواسطة HIDEOBJECTS'
+      description: 'إعادة عرض جميع العناصر التي تم إخفاؤها بواسطة HIDEOBJECTS'
     },
 
     undo: {
       ...enCommand.ACAD.undo,
-      description:
-        'التراجع عن آخر عملية تحرير في قاعدة بيانات الرسم',
-      nothingToUndo:
-        'لا توجد عملية يمكن التراجع عنها.'
+      description: 'التراجع عن آخر عملية تحرير في قاعدة بيانات الرسم',
+      nothingToUndo: 'لا توجد عملية يمكن التراجع عنها.'
     },
 
     redo: {
       ...enCommand.ACAD.redo,
-      description:
-        'إعادة آخر عملية تم التراجع عنها',
-      nothingToRedo:
-        'لا توجد عملية يمكن إعادتها.'
+      description: 'إعادة آخر عملية تم التراجع عنها',
+      nothingToRedo: 'لا توجد عملية يمكن إعادتها.'
     },
 
     xline: {
       ...enCommand.ACAD.xline,
-      description:
-        'إنشاء خط إنشائي يمتد إلى ما لا نهاية في الاتجاهين'
+      description: 'إنشاء خط إنشائي يمتد إلى ما لا نهاية في الاتجاهين'
     },
 
     zoom: {
       ...enCommand.ACAD.zoom,
-      description:
-        'التكبير أو التصغير لعرض أقصى امتداد لجميع العناصر'
+      description: 'التكبير أو التصغير لعرض أقصى امتداد لجميع العناصر'
     }
   },
 

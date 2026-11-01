@@ -24,7 +24,6 @@ Svislý panel nástrojů plovoucí na pravé straně plátna — hlavní vstupn�
 - Posun (ruka)
 - Přiblížit na rozsah
 - Přiblížit oknem
-- Správa vrstev (otevře panel)
 - Skupina měřicích nástrojů (otevře panel měření)
 - Režim čtení (vstoupit do režimu celoobrazovkového zaměření)
 - Přepnout světlé/tmavé pozadí
@@ -33,9 +32,8 @@ Svislý panel nástrojů plovoucí na pravé straně plátna — hlavní vstupn�
 
 | Panel | Popis |
 |---|---|
-| Vrstvy | Zobrazí všechny vrstvy; podporuje zapnutí/vypnutí, uzamčení, zmrazení, izolaci |
 | Měření | Zobrazí všechna měření v aktuálním výkresu; kliknutím přejdete na místo |
-| Informace o entitě | Zobrazí typ, souřadnice, vrstvu a vlastnosti vybrané entity |
+| Informace o entitě | Zobrazí typ, souřadnice a vlastnosti vybrané entity |
 | Statistiky | Statistiky používání bloků |
 | Chybějící prostředky | Upozornění na chybějící písma nebo externí odkazy |
 
@@ -52,7 +50,7 @@ Mobil používá design **spodní lišta karet + zásuvkový panel**, který sou
 
 ### Spodní lišta karet
 
-V dolní části obrazovky se zobrazuje pět tlačítek s ikonami:
+V dolní části obrazovky se zobrazují čtyři tlačítka s ikonami:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,13 +58,8 @@ V dolní části obrazovky se zobrazuje pět tlačítek s ikonami:
 |---|---|
 | Zoom | Skupina nástrojů přiblížení: přiblížit, oddálit, přiblížit na rozsah, přiblížit oknem |
 | Measure | Skupina měřicích nástrojů: vzdálenost, průběžná vzdálenost, plocha, souřadnice, délka oblouku, úhel |
-| Layers | Otevře zásuvku panelu vrstev |
 | Layout | Přepne rozložení |
 | Setting | Nabídka nastavení: motiv, simulovaná myš, OSNAP atd. |
-
-### Zásuvkový panel
-
-Klepnutím na tlačítko Layers se ze spodní části otevře panel vrstev, který zobrazuje název, viditelnost (zapnuto/vypnuto), barvu atd. každé vrstvy. Klepnutím na plátno nebo oblast mimo panel zásuvku zavřete.
 
 ### Oblast plátna
 
@@ -74,4 +67,4 @@ Plátno vyplňuje horní část obrazovky. Při výběru měření se na plátn�
 
 ### Rozdíly oproti desktopu
 
-Mobil nezobrazuje pravý panel nástrojů ani ukotvené panely; jejich funkce jsou nahrazeny spodní lištou karet + zásuvkovými panely.
+Mobil nezobrazuje pravý panel nástrojů ani ukotvené panely; jejich funkce jsou nahrazeny spodní lištou karet.

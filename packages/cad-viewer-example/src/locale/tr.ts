@@ -51,13 +51,6 @@ export default {
       off: 'Kapalı',
       progressiveOffHint: 'Varlık ve metin geometrisi dönüşene kadar bekle',
 
-      nonPlottable: 'Yazdırılamayan',
-      nonPlottableLayers: 'Yazdırılamayan katmanlar',
-      hide: 'Gizle',
-      hideHint: 'Web görüntüleyici varsayılanı',
-      show: 'Göster',
-      showHint: 'AutoCAD düzenleyici semantiği',
-
       curveQuality: 'Eğri kalitesi',
       curveDraft: 'Bellek',
       curveDraftHint: 'Daha az tepe noktası, daha küçük dosyalar',

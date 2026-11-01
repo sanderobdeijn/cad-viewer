@@ -173,14 +173,17 @@ test.describe('Find palette (full Vue UI)', () => {
     await expect(status(page)).toContainText('3 found in 3 layouts')
   })
 
-  test('is accent/case-insensitive and respects match case and hidden layers', async ({
+  test('is accent/case-insensitive, respects match case and finds text from hidden layers', async ({
     page
   }) => {
     await openFind(page)
     await search(page, 'alcado')
-    expect(await results(page)).toEqual(['Alçados | Alçado Norte - Folha 2'])
+    expect(await results(page)).toEqual([
+      'Alçados | Alçado Norte - Folha 2',
+      'Alçados | Alçado oculto (camada desligada)'
+    ])
 
-    await search(page, 'oculta')
+    await search(page, 'no-such-text')
     await expect(rows(page)).toHaveCount(0)
     await expect(status(page)).toContainText('No text found')
 

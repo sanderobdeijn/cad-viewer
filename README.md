@@ -146,7 +146,7 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 
 | Package | Role | Commands / capabilities |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar, layer manager & measurement palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `layer`, `measurementpanel`, default toolbar (view, measure, theme, locale) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar & measurement palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `measurementpanel`, default toolbar (view, measure, theme, locale) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI chrome for the simple viewer
 
@@ -155,7 +155,7 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 It provides:
 
 - A **configurable toolbar** (placement on any edge, default CAD commands, nested menus, custom items)
-- A **dock panel** with a **layer manager** tab (layer on/off, ACI color picker, zoom-to-layer on double-click) and a **measurements** tab
+- A **dock panel** with a **measurements** tab
 - **Theme sync** with the `COLORTHEME` sysvar and `--ml-ui-*` CSS tokens on your host element
 - **Locale sync** with `AcApI18n` (English / Chinese / Czech / Turkish)
 
@@ -248,8 +248,6 @@ Legend:
 
 #### Display Controls
 
-* [x] Layer visibility on/off
-* [x] Layer freeze / lock
 * [x] Lineweight display
 * [ ] Linetype scaling
 * [x] Background / theme switching
@@ -337,12 +335,11 @@ Legend:
 #### Property Palette
 
 * [x] Selected entity properties
-* [ ] Layer, color, linetype editing
+* [ ] Color, linetype editing
 * [x] Live update on change
 
 #### Panels & UI
 
-* [x] Layer manager
 * [ ] Block manager
 * [x] Command history / console
 * [x] Status bar (snap, ortho, grid)

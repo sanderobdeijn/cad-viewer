@@ -3,14 +3,8 @@
  */
 export const commandAr = {
   ACAD: {
-    layer: {
-      description:
-        'فتح أو إغلاق لوحة مدير الطبقات'
-    },
-
     measurementpanel: {
-      description:
-        'فتح لوحة قائمة القياسات'
+      description: 'فتح لوحة قائمة القياسات'
     },
     find: {
       description: 'فتح لوحة البحث عن النص'

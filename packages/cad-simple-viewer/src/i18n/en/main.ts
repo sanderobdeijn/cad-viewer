@@ -33,14 +33,12 @@ export default {
     secondCorner: 'Specify the second corner or'
   },
   message: {
-    onLockedLayer: 'on a locked layer.',
     fetchingDrawingFile: 'Fetching file ...',
     calculatingSmartExtents: 'Calculating smart extents ...',
     collectingMemoryProfile: 'Analyzing memory ...',
     fontCached: 'Font cached successfully',
     fontCacheFailed: 'Failed to cache font',
-    fontsNotFound:
-      'Fonts not found in the font repository: {fonts}.',
+    fontsNotFound: 'Fonts not found in the font repository: {fonts}.',
     fontsNotLoaded: 'Failed to load fonts: {fonts}.',
     fontMissedInDrawing:
       'Font "{font}" is required by {count} text object(s) but is not available. Displaying with "{replacementFont}".',

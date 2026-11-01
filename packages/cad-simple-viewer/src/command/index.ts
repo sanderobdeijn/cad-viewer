@@ -1,6 +1,5 @@
 export * from './AcApDrawStyleDrawCmd'
 export * from './AcApDrawStyleSession'
-export * from './layer'
 export * from './draw'
 export * from './measure'
 export * from './AcApSessionUndo'

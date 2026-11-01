@@ -11,7 +11,6 @@ import {
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
-  ICON_LAYER,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
   ICON_MEASURE,
@@ -128,12 +127,6 @@ const buildItems = (): AcUiToolbarItem[] => {
           command: 'zoom\nwindow'
         }
       ]
-    },
-    {
-      id: 'layer',
-      label: 'main.verticalToolbar.layer.text',
-      icon: ICON_LAYER,
-      command: 'layer'
     },
     {
       id: 'switch-bg',

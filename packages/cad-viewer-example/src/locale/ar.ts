@@ -51,13 +51,6 @@ export default {
       off: 'إيقاف',
       progressiveOffHint: 'الانتظار حتى اكتمال تحويل الكيانات والنص',
 
-      nonPlottable: 'غير قابل للطباعة',
-      nonPlottableLayers: 'الطبقات غير القابلة للطباعة',
-      hide: 'إخفاء',
-      hideHint: 'الإعداد الافتراضي لعارض الويب',
-      show: 'إظهار',
-      showHint: 'سلوك محرر AutoCAD',
-
       curveQuality: 'جودة المنحنيات',
       curveDraft: 'ذاكرة',
       curveDraftHint: 'رؤوس أقل وملفات أصغر',
@@ -72,8 +65,7 @@ export default {
       paperSpaceBlack: 'أسود',
       paperSpaceBlackHint: 'تفضيل عارض الويب',
 
-      invalidFileType:
-        'نوع الملف غير صالح. يرجى اختيار ملف DWG أو DXF.'
+      invalidFileType: 'نوع الملف غير صالح. يرجى اختيار ملف DWG أو DXF.'
     }
   }
 }

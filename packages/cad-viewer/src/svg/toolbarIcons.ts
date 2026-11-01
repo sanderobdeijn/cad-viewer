@@ -6,7 +6,6 @@
 
 import {
   ICON_CLEAR_MEASUREMENTS,
-  ICON_LAYER,
   ICON_MARKUP_CLOUD,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
@@ -32,7 +31,6 @@ export const select = acapSvgIcon(ICON_SELECT, 'IconSelect')
 export const pan = acapSvgIcon(ICON_PAN, 'IconPan')
 export const zoomToExtent = acapSvgIcon(ICON_ZOOM_EXTENT, 'IconZoomToExtent')
 export const zoomToBox = acapSvgIcon(ICON_ZOOM_WINDOW, 'IconZoomToBox')
-export const layer = acapSvgIcon(ICON_LAYER, 'IconLayer')
 export const switchBg = acapSvgIcon(ICON_SWITCH_BG, 'IconSwitchBg')
 export const readingMode = acapSvgIcon(ICON_READING_MODE, 'IconReadingMode')
 export const measure = acapSvgIcon(ICON_MEASURE, 'IconMeasure')

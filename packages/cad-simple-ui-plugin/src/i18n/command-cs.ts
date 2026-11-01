@@ -3,9 +3,6 @@
  */
 export const commandCs = {
   ACAD: {
-    layer: {
-      description: 'Otevře nebo zavře dokovací panel správce hladin'
-    },
     measurementpanel: {
       description: 'Otevře dokovací panel seznamu měření'
     },

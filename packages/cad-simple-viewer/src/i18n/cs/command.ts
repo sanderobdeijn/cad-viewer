@@ -4,9 +4,6 @@ export default {
       description:
         'Vytváří šrafování pomocí voleb příkazového řádku bez rozhraní pásu karet'
     },
-    '-layer': {
-      description: 'Spravuje hladiny pomocí voleb příkazového řádku'
-    },
     about: {
       description: 'Zobrazí informace o mlightcad'
     },
@@ -178,49 +175,6 @@ export default {
       description:
         'Určuje jednotky výkresu pro automatické měřítko vkládaných bloků, obrázků nebo externích referencí'
     },
-    laycur: {
-      description: 'Změní hladinu vybraných objektů na aktuální hladinu',
-      prompt: 'Vyberte objekty pro změnu na aktuální hladinu'
-    },
-    laydel: {
-      description: 'Odstraní hladinu a všechny objekty na této hladině'
-    },
-    layerclose: {
-      description: 'Zavře Správce vlastností hladin'
-    },
-    layerp: {
-      description:
-        'Vrátí poslední změnu nebo sadu změn provedených v nastavení hladin'
-    },
-    layfrz: {
-      description: 'Zmrazí hladinu vybraných objektů',
-      prompt: 'Vyberte objekt na hladině ke zmrazení'
-    },
-    layiso: {
-      description: 'Izoluje hladiny vybraných objektů',
-      prompt: 'Vyberte objekty na hladinách k izolaci'
-    },
-    laylck: {
-      description: 'Uzamkne hladinu vybraných objektů',
-      prompt: 'Vyberte objekt na hladině k uzamčení'
-    },
-    layoff: {
-      description: 'Vypne hladinu vybraných objektů',
-      prompt: 'Vyberte objekt na hladině k vypnutí'
-    },
-    layon: {
-      description: 'Zapne všechny hladiny ve výkresu'
-    },
-    laythw: {
-      description: 'Rozmrazí všechny zmrazené hladiny ve výkresu'
-    },
-    layulk: {
-      description: 'Odemkne hladinu vybraných objektů',
-      prompt: 'Vyberte objekt na hladině k odemčení'
-    },
-    layuniso: {
-      description: 'Obnoví hladiny skryté nebo uzamčené příkazem LAYISO'
-    },
     line: {
       description: 'Kreslí úsečky mezi body'
     },
@@ -307,7 +261,8 @@ export default {
         'Řídí, zda se do konzole zaznamenávají časové profily fází otevírání souboru'
     },
     openperf: {
-      description: 'Otevře paletu výkonu otevření s časy z posledního otevření výkresu'
+      description:
+        'Otevře paletu výkonu otevření s časy z posledního otevření výkresu'
     },
     orthomode: {
       description: 'Omezí pohyb kurzoru na vodorovnou nebo svislou osu'

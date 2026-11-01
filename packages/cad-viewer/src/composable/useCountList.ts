@@ -5,7 +5,6 @@ import {
 } from '@mlightcad/cad-simple-viewer'
 import {
   AcDbBlockReference,
-  AcDbDatabase,
   AcDbEntity,
   AcDbObjectId,
   AcGeBox2d,
@@ -72,12 +71,6 @@ function getInsertionTransform(entity: AcDbBlockReference): AcGeMatrix3d {
   return entity.blockTransform.clone()
 }
 
-function isLayerVisible(db: AcDbDatabase, layerName: string): boolean {
-  const layer = db.tables.layerTable.getAt(layerName)
-  if (!layer) return true
-  return !layer.isOff && !layer.isFrozen
-}
-
 function isInArea(
   area: MlCountListArea,
   position: { x: number; y: number; z: number }
@@ -107,7 +100,6 @@ export function collectCountListInstances(
   ) => {
     if (!isCountableBlockName(entity.blockName)) return
     if (!entity.visibility) return
-    if (!isLayerVisible(db, entity.layer)) return
     if (!isInArea(area, worldPosition)) return
 
     result.push({
@@ -153,7 +145,6 @@ export function collectCountListInstances(
     if (!isBlockReference(entity) || entity.type === 'Table') continue
     if (!isCountableBlockName(entity.blockName)) continue
     if (!entity.visibility) continue
-    if (!isLayerVisible(db, entity.layer)) continue
 
     const position = {
       x: entity.position.x,

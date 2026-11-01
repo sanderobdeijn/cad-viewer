@@ -7,7 +7,6 @@ import {
 } from '@mlightcad/data-model'
 
 import { createRotationMatrix } from '../util/AcApGeTransform'
-import { isEntityOnLockedLayer } from './AcApLockedLayer'
 import { acapRunServiceEdit, ENTITY_EDIT_LABEL } from './AcApServiceEdit'
 
 /**
@@ -19,23 +18,9 @@ export interface AcApCloneAndTransformOptions {
 }
 
 /**
- * Result of moving entities to the current layer (`LAYMCUR` semantics).
- */
-export interface AcApMoveToCurrentLayerResult {
-  /** Number of entities whose layer was changed. */
-  changedCount: number
-  /** Number of entities already on the current layer. */
-  alreadyCurrent: number
-  /** Number of entity ids that could not be resolved or opened. */
-  missing: number
-  /** `true` when the current layer does not exist in the layer table. */
-  currentLayerMissing: boolean
-}
-
-/**
  * Centralizes entity mutations for modify commands and non-command callers.
  *
- * Provides geometric transforms, cloning, erasure, layer reassignment,
+ * Provides geometric transforms, cloning, erasure,
  * and undo-wrapped edit helpers against a single {@link AcDbDatabase}.
  */
 export class AcApEntityService {
@@ -72,7 +57,6 @@ export class AcApEntityService {
   transformEntities(entities: AcDbEntity[], matrix: AcGeMatrix3d): number {
     let count = 0
     entities.forEach(entity => {
-      if (isEntityOnLockedLayer(this.db, entity)) return
       const opened = this.db.openEntityForWrite(entity)
       if (!opened) return
       opened.transformBy(matrix)
@@ -154,70 +138,13 @@ export class AcApEntityService {
     return this.runEntityEdit(() => {
       let count = 0
       objectIds.forEach(objectId => {
-        const existing = this.db.tables?.blockTable?.getEntityById(objectId)
-        if (existing && isEntityOnLockedLayer(this.db, existing)) return
         const entity = this.db.openEntityForWrite(objectId)
         if (!entity) return
-        if (isEntityOnLockedLayer(this.db, entity)) return
         entity.erase()
         count++
       })
       return count
     })
-  }
-
-  /**
-   * Moves entities to the current layer (`CLAYER`).
-   *
-   * @param objectIds - Entity ids to reassign.
-   * @returns Counts of changed, skipped, and missing entities.
-   */
-  moveEntitiesToCurrentLayer(
-    objectIds: AcDbObjectId[]
-  ): AcApMoveToCurrentLayerResult {
-    const currentLayerName = this.db.clayer?.trim()
-    const currentLayer = currentLayerName
-      ? this.db.tables.layerTable.getAt(currentLayerName)
-      : undefined
-
-    if (!currentLayer) {
-      return {
-        changedCount: 0,
-        alreadyCurrent: 0,
-        missing: 0,
-        currentLayerMissing: true
-      }
-    }
-
-    let changedCount = 0
-    let alreadyCurrent = 0
-    let missing = 0
-
-    new Set(objectIds).forEach(objectId => {
-      const entity = this.db.tables.blockTable.getEntityById(objectId)
-      if (!entity) {
-        missing++
-        return
-      }
-
-      if (isEntityOnLockedLayer(this.db, entity)) return
-
-      if (entity.layer === currentLayer.name) {
-        alreadyCurrent++
-        return
-      }
-
-      const opened = this.db.openEntityForWrite(objectId)
-      if (!opened) {
-        missing++
-        return
-      }
-
-      opened.layer = currentLayer.name
-      changedCount++
-    })
-
-    return { changedCount, alreadyCurrent, missing, currentLayerMissing: false }
   }
 
   /**

@@ -2,7 +2,7 @@
   MlCadViewer - Main CAD Viewer Component
   
   This is the primary component for displaying and interacting with CAD files (DWG, DXF, etc.).
-  It provides a complete CAD viewing experience with file loading, layer management, 
+  It provides a complete CAD viewing experience with file loading, 
   command execution, and various viewing tools.
   
   USAGE EXAMPLE:
@@ -10,7 +10,6 @@
   
   FEATURES:
   - File loading from local files (drag & drop or file dialog) or remote URLs
-  - Layer management and visibility control
   - Command line interface for CAD operations
   - Toolbars with common CAD tools (zoom, pan, select, etc.)
   - Entity information display
@@ -22,7 +21,6 @@
   COMPONENTS INCLUDED:
   - Ribbon with CAD commands and language selector
   - Toolbars with CAD commands
-  - Layer manager for controlling entity visibility
   - Command line for text-based commands
   - Status bar with various controls
   - File reader for local file uploads (supports drag & drop and file dialog)
@@ -104,7 +102,6 @@ import { useI18n } from 'vue-i18n'
 
 import {
   initializeCadViewer,
-  store,
   unregisterCadViewerNotificationCenter
 } from '../app'
 import {
@@ -176,11 +173,6 @@ interface Props {
    */
   mode?: AcEdOpenMode
   /**
-   * Whether entities on non-plottable ("no-plot") layers are drawn.
-   * When omitted, {@link AcApDocManager} defaults to `false` (web viewer semantics).
-   */
-  drawNoPlotLayers?: boolean
-  /**
    * Whether opening a drawing is progressive.
    *
    * Controls both stages: mid-open paints during entity convert, and overlay
@@ -236,7 +228,6 @@ const props = withDefaults(defineProps<Props>(), {
 const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
   minimumChunkSize: 1000,
   mode: props.mode,
-  drawNoPlotLayers: props.drawNoPlotLayers,
   progressiveRendering: props.progressiveRendering,
   circleSides: props.circleSides,
   sysVars: {
@@ -258,9 +249,6 @@ const headerRef = ref<HTMLElement>()
 // Referenence to the root element used to switch theme
 // Editor reference that gets updated after initialization
 const editorRef = ref<AcApDocManager | null>(null)
-
-// Computed property to ensure proper typing
-const editor = computed(() => editorRef.value as AcApDocManager)
 
 // Notification center visibility
 const showNotificationCenter = ref(false)
@@ -442,7 +430,6 @@ watch(
 watch(
   () => [
     props.mode,
-    props.drawNoPlotLayers,
     props.progressiveRendering,
     props.openViewMode,
     props.circleSides,
@@ -592,13 +579,6 @@ eventBus.on('failed-to-open-file', params => {
   })
 })
 
-// Mirror AutoCAD's LAYERCLOSE behavior: only close when the layer tab is open.
-eventBus.on('close-layer-manager', () => {
-  if (!store.dialogs.layerManager) return
-  if (store.dialogs.activePaletteTab !== 'layerManager') return
-  store.dialogs.layerManager = false
-})
-
 // Toggle notification center visibility
 const toggleNotificationCenter = () => {
   showNotificationCenter.value = !showNotificationCenter.value
@@ -640,8 +620,8 @@ const closeNotificationCenter = () => {
           <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
           <ml-tool-bars v-if="editorRef" />
 
-          <!-- Layer manager palette and entity properties palette for controlling entity visibility and properties -->
-          <ml-palette-manager v-if="editorRef" :editor="editor" />
+          <!-- Entity properties palette for controlling entity visibility and properties -->
+          <ml-palette-manager v-if="editorRef" />
 
           <!-- Dialog manager for modal dialogs and settings -->
           <ml-dialog-manager v-if="editorRef" />

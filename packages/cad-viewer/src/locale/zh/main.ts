@@ -199,7 +199,6 @@ export default {
     group: {
       draw: '绘制',
       modify: '修改',
-      layer: '图层',
       properties: '属性',
       utilities: '实用工具',
       annotation: '批注',
@@ -212,19 +211,6 @@ export default {
       color: '颜色',
       lineType: '线型',
       lineWeight: '线宽'
-    },
-    layerTools: {
-      select: '图层',
-      off: '关闭图层',
-      isolate: '隔离',
-      freeze: '冻结图层',
-      lock: '锁定图层',
-      current: '置为当前',
-      allOn: '图层全开',
-      unisolate: '取消隔离',
-      thaw: '解冻图层',
-      unlock: '解锁图层',
-      restore: '图层恢复'
     },
     arc: {
       threePoint: '三点',
@@ -282,20 +268,6 @@ export default {
       propertyColor: '设置新建对象或当前选中对象使用的颜色。',
       propertyLineType: '设置新建对象或当前选中对象使用的线型。',
       propertyLineWeight: '设置新建对象或当前选中对象使用的线宽。',
-      layerAction: {
-        off: '关闭当前选中的图层，使该图层上的对象隐藏，但不会冻结该图层。',
-        isolate: '仅显示当前选中的图层，并隐藏其他图层，方便专注处理相关对象。',
-        freeze: '冻结当前选中的图层，使其对象隐藏，并在重生成时跳过该图层。',
-        lock: '锁定当前选中的图层，使其对象保持可见，但不能被编辑。',
-        current:
-          '将当前选中的图层设为当前图层，之后新建对象会默认放在该图层上。',
-        allOn: '打开所有已关闭的图层；已冻结的图层会继续保持冻结状态。',
-        unisolate:
-          '恢复被图层隔离隐藏或锁定的图层，同时保留隔离之后的其他图层更改。',
-        thaw: '解冻当前选中的图层，使其对象重新显示并重新参与重生成。',
-        unlock: '解锁当前选中的图层，使其对象可以再次被选择和编辑。',
-        restore: '恢复此 Ribbon 中最近一次图层操作之前的图层状态。'
-      },
       circleOption: {
         centerRadius: '通过指定圆心和半径创建圆。',
         centerDiameter: '通过指定圆心和直径创建圆。',
@@ -404,10 +376,6 @@ export default {
       text: '导出',
       description: '将测量标注导出为 sidecar JSON 文件'
     },
-    layer: {
-      text: '图层',
-      description: '管理图层'
-    },
     pan: {
       text: '移动',
       description: '平移视图'
@@ -449,7 +417,8 @@ export default {
     },
     zoomSaved: {
       text: '保存的视图',
-      description: '恢复 AutoCAD 保存的视图（VPORT / 布局界限），或打开时的初始视口'
+      description:
+        '恢复 AutoCAD 保存的视图（VPORT / 布局界限），或打开时的初始视口'
     },
     zoomToExtent: {
       text: '范围',
@@ -533,66 +502,6 @@ export default {
         multipleEntitySelected: '{count}个图元',
         propValCopied: '属性值已复制',
         failedToCopyPropVal: '复制属性值失败！'
-      }
-    },
-    layerManager: {
-      tab: '图层',
-      title: '图层管理器',
-      currentLayerLabel: '当前图层: {name}',
-      searchPlaceholder: '搜索图层',
-      filters: '过滤器',
-      collapseFilters: '收起过滤器',
-      expandFilters: '展开过滤器',
-      filterAll: '全部',
-      filterAllUsed: '所有使用的图层',
-      toolbar: {
-        showFilters: '图层过滤器',
-        newFilter: '新建过滤器',
-        newFilterGroup: '新建过滤器组',
-        newLayer: '新建图层',
-        deleteLayer: '删除图层',
-        setCurrent: '置为当前'
-      },
-      prompts: {
-        newFilterTitle: '新建过滤器',
-        newFilterName: '请输入过滤器名称',
-        newFilterGroupTitle: '新建过滤器组',
-        newFilterGroupName: '请输入过滤器组名称',
-        newLayerTitle: '新建图层',
-        newLayerName: '请输入图层名称',
-        confirm: '确定',
-        cancel: '取消'
-      },
-      messages: {
-        filterCreated: '已创建过滤器 "{name}"',
-        filterExists: '过滤器 "{name}" 已存在',
-        filterCreateFailed: '创建过滤器失败',
-        layerCreated: '已创建图层 "{name}"',
-        layerExists: '图层 "{name}" 已存在',
-        layerCreateFailed: '创建图层失败',
-        layerDeleted: '已删除图层 "{name}"',
-        layerDeleteFailed: '删除图层 "{name}" 失败',
-        cannotDeleteLayer0: '无法删除图层 "0"',
-        cannotDeleteCurrent: '无法删除当前图层',
-        selectLayerFirst: '请先选择一个图层',
-        setCurrentSuccess: '当前图层已设为 "{name}"',
-        setCurrentFailed: '设置当前图层失败'
-      },
-      layerList: {
-        name: '名称',
-        on: '开',
-        freeze: '冻结',
-        lock: '锁定',
-        plot: '打印',
-        color: '颜色',
-        linetype: '线型',
-        lineweight: '线宽',
-        transparency: '透明度',
-        description: '说明',
-        currentLayer: '当前图层',
-        newLayerPlaceholder: '图层名称',
-        zoomToLayer: '已缩放到所点击的图层"{layer}"',
-        lineWeightDefault: '默认'
       }
     },
     find: {
@@ -808,7 +717,6 @@ export default {
   },
   entityInfo: {
     color: '颜色',
-    layer: '图层',
     lineType: '线型'
   },
   ribbonProperty: {
@@ -816,25 +724,6 @@ export default {
     lineType: '线型',
     lineWeight: '线宽',
     layer: '图层'
-  },
-  layerSelect: {
-    searchPlaceholder: '请输入图层名字进行搜索',
-    noLayerAvailable: '无可用图层',
-    noMatchedLayer: '未找到匹配图层',
-    tooltip: {
-      layer: '图层',
-      visibility: '可见性',
-      freeze: '冻结',
-      lock: '锁定',
-      lineType: '线型',
-      color: '颜色',
-      visible: '显示',
-      hidden: '隐藏',
-      frozen: '已冻结',
-      thawed: '未冻结',
-      locked: '已锁定',
-      unlocked: '未锁定'
-    }
   },
   message: {
     loadingFonts: '正在加载字体...',

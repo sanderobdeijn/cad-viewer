@@ -24,7 +24,6 @@ export type MlQuickSelectApplyTo = 'entireDrawing' | 'currentSelection'
 export type MlQuickSelectProperty =
   | 'objectType'
   | 'handle'
-  | 'layer'
   | 'color'
   | 'lineType'
   | 'lineWeight'
@@ -106,8 +105,6 @@ function getEntityPropertyValue(
       return entity.type ?? ''
     case 'handle':
       return entity.objectId ?? ''
-    case 'layer':
-      return entity.layer ?? ''
     case 'color':
       return entity.color?.toString() ?? ''
     case 'lineType':
@@ -129,8 +126,6 @@ function getDxfCodeByProperty(property: MlQuickSelectProperty): AcDbDxfCode {
       return AcDbDxfCode.Start
     case 'handle':
       return AcDbDxfCode.Handle
-    case 'layer':
-      return AcDbDxfCode.LayerName
     case 'color':
       return AcDbDxfCode.ColorName
     case 'lineType':

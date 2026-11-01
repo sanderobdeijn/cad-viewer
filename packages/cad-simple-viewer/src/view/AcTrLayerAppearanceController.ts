@@ -6,7 +6,6 @@ import {
 import { AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
-import { AcApLayerService } from '../service/AcApLayerService'
 import { AcTrScene } from './AcTrScene'
 
 /**
@@ -116,6 +115,17 @@ export class AcTrLayerAppearanceController {
       return undefined
     }
 
-    return AcApLayerService.resolveLayerTraits(database, layerName)
+    const layer = database.tables.layerTable.getAt(layerName)
+    if (!layer) {
+      return undefined
+    }
+
+    return {
+      layer: layer.name,
+      color: layer.color.clone(),
+      lineType: layer.lineStyle,
+      lineWeight: layer.lineWeight,
+      transparency: layer.transparency
+    }
   }
 }

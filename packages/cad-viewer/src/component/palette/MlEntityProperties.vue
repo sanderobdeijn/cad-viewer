@@ -351,6 +351,7 @@ function expandEntity(entity: AcDbEntityProperties): MlDisplayRow[] {
     const children: MlDisplayPropertyRow[] = []
 
     group.properties.forEach((prop, pi) => {
+      if (prop.name === 'layer') return
       if (!isArrayProperty(prop)) {
         children.push({
           ...prop,

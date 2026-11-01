@@ -20,7 +20,6 @@
         :local-file="store.selectedFile ?? undefined"
         :mode="selectedMode"
         :use-main-thread-draw="useMainThreadDraw"
-        :draw-no-plot-layers="drawNoPlotLayers"
         :progressive-rendering="progressiveRendering"
         :open-view-mode="openViewMode"
         :circle-sides="circleSides"
@@ -115,7 +114,6 @@ const showViewer = computed(
 
 const selectedMode = ref<AcEdOpenMode>(AcEdOpenMode.Write)
 const useMainThreadDraw = ref(true)
-const drawNoPlotLayers = ref(false)
 const progressiveRendering = ref(false)
 const openViewMode = ref<AcApOpenViewMode | undefined>(undefined)
 const circleSides = ref(ACDB_DRAW_CIRCLE_SIDES_DRAFT)
@@ -124,7 +122,6 @@ const paperSpaceBackground = ref(ACGI_PAPER_SPACE_BACKGROUND)
 const createNewDrawing = async () => {
   const success = await AcApDocManager.instance.newDocument({
     mode: selectedMode.value,
-    drawNoPlotLayers: drawNoPlotLayers.value,
     progressiveRendering: progressiveRendering.value,
     circleSides: circleSides.value,
     sysVars: {
@@ -158,7 +155,6 @@ const onViewerCreate = async () => {
 const applyOpenOptions = (
   mode: AcEdOpenMode,
   mainThreadDraw: boolean,
-  showNoPlotLayers: boolean,
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
@@ -166,7 +162,6 @@ const applyOpenOptions = (
 ) => {
   selectedMode.value = mode
   useMainThreadDraw.value = mainThreadDraw
-  drawNoPlotLayers.value = showNoPlotLayers
   progressiveRendering.value = enableProgressiveRendering
   openViewMode.value = viewMode
   circleSides.value = sides
@@ -177,7 +172,6 @@ const handleFileSelect = (
   file: File,
   mode: AcEdOpenMode,
   mainThreadDraw: boolean,
-  showNoPlotLayers: boolean,
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
@@ -189,7 +183,6 @@ const handleFileSelect = (
   applyOpenOptions(
     mode,
     mainThreadDraw,
-    showNoPlotLayers,
     enableProgressiveRendering,
     viewMode,
     sides,
@@ -201,7 +194,6 @@ const handleUrlSelect = (
   url: string,
   mode: AcEdOpenMode,
   mainThreadDraw: boolean,
-  showNoPlotLayers: boolean,
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
@@ -213,7 +205,6 @@ const handleUrlSelect = (
   applyOpenOptions(
     mode,
     mainThreadDraw,
-    showNoPlotLayers,
     enableProgressiveRendering,
     viewMode,
     sides,
@@ -225,7 +216,6 @@ const handleDataSourceAction = (
   item: AcApDataSourceMenuItem,
   mode: AcEdOpenMode,
   mainThreadDraw: boolean,
-  showNoPlotLayers: boolean,
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
@@ -242,7 +232,6 @@ const handleDataSourceAction = (
             new File([file.content], file.name),
             mode,
             mainThreadDraw,
-            showNoPlotLayers,
             enableProgressiveRendering,
             viewMode,
             sides,
@@ -255,7 +244,6 @@ const handleDataSourceAction = (
             file.url,
             mode,
             mainThreadDraw,
-            showNoPlotLayers,
             enableProgressiveRendering,
             viewMode,
             sides,
@@ -276,7 +264,6 @@ const handleDataSourceAction = (
   applyOpenOptions(
     mode,
     mainThreadDraw,
-    showNoPlotLayers,
     enableProgressiveRendering,
     viewMode,
     sides,
@@ -287,7 +274,6 @@ const handleDataSourceAction = (
 const handleNewDrawing = (
   mode: AcEdOpenMode,
   mainThreadDraw: boolean,
-  showNoPlotLayers: boolean,
   enableProgressiveRendering: boolean,
   viewMode: AcApOpenViewMode | undefined,
   sides: number,
@@ -299,7 +285,6 @@ const handleNewDrawing = (
   applyOpenOptions(
     mode,
     mainThreadDraw,
-    showNoPlotLayers,
     enableProgressiveRendering,
     viewMode,
     sides,

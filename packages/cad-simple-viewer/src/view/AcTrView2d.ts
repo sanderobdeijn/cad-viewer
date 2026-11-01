@@ -1907,23 +1907,6 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  zoomToFitLayer(layerName: string) {
-    const activeLayout = this._scene.activeLayout
-    if (activeLayout) {
-      const layer = activeLayout.getLayer(layerName)
-      if (layer && !layer.box.isEmpty()) {
-        const box = AcTrGeometryUtil.threeBox3dToGeBox2d(layer.box)
-        this.zoomTo(box)
-        this._isDirty = true
-        return true
-      }
-    }
-    return false
-  }
-
-  /**
-   * @inheritdoc
-   */
   zoomToSmartExtents(timeout: number = 0): Promise<void> {
     return new Promise((resolve, reject) => {
       const waiter = new AcEdConditionWaiter(
@@ -2266,8 +2249,7 @@ export class AcTrView2d extends AcEdBaseView {
     const idsAdded: Array<AcDbObjectId> = []
     const results = this.pick(point)
     results.forEach(item => idsAdded.push(item.id))
-    const selectable = this.selectableIds(idsAdded, 'add')
-    if (selectable.length > 0) this.selectionSet.add(selectable)
+    if (idsAdded.length > 0) this.selectionSet.add(idsAdded)
   }
 
   /**

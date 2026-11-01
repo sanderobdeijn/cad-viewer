@@ -24,7 +24,6 @@ Tuvalin sağ tarafında yüzen dikey bir araç çubuğu — salt okunur modda bi
 - Pan (el)
 - Sınırlara Yakınlaştır
 - Pencere Yakınlaştırma
-- Katman Yönetimi (paneli açar)
 - Ölçüm Araç Grubu (ölçüm panelini açar)
 - Okuma Modu (tam ekran odak moduna girer)
 - Açık/Koyu Arka Planı Değiştir
@@ -33,9 +32,8 @@ Tuvalin sağ tarafında yüzen dikey bir araç çubuğu — salt okunur modda bi
 
 | Panel | Açıklama |
 |---|---|
-| Layers | Tüm katmanları listeler; açma/kapama, kilitleme, dondurma, yalıtma destekler |
 | Measurements | Geçerli çizimdeki tüm ölçümleri listeler; konumlandırmak için tıklayın |
-| Entity Info | Seçili öğenin türünü, koordinatlarını, katmanını ve özelliklerini gösterir |
+| Entity Info | Seçili öğenin türünü, koordinatlarını ve özelliklerini gösterir |
 | Statistics | Blok kullanım istatistikleri |
 | Missing Resources | Eksik yazı tipleri veya dış referanslar için uyarılar |
 
@@ -52,7 +50,7 @@ Mobil, **alt sekme çubuğu + çekmece paneli** tasarımı kullanır; tüm etkil
 
 ### Alt Sekme Çubuğu
 
-Ekranın altında beş simge düğmesi görüntülenir:
+Ekranın altında dört simge düğmesi görüntülenir:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,13 +58,8 @@ Ekranın altında beş simge düğmesi görüntülenir:
 |---|---|
 | Zoom | Yakınlaştırma araç grubu: yakınlaştır, uzaklaştır, sınırlara yakınlaştır, pencere yakınlaştırma |
 | Measure | Ölçüm araç grubu: mesafe, sürekli mesafe, alan, koordinatlar, yay uzunluğu, açı |
-| Layers | Katman panel çekmecesini açar |
 | Layout | Düzeni değiştir |
 | Setting | Ayarlar menüsü: tema, simüle fare, OSNAP, vb. |
-
-### Çekmece Paneli
-
-Layers düğmesine dokunmak, alttan bir katman paneli açar; her katmanın adını, görünürlüğünü (Açık/Kapalı), rengini vb. gösterir. Tuvale veya panelin dışındaki alana dokunmak çekmceyi kapatır.
 
 ### Tuval Alanı
 
@@ -74,4 +67,4 @@ Tuval ekranın üst kısmını doldurur. Bir ölçüm seçildiğinde, tuvalde bi
 
 ### Masaüstünden Farkları
 
-Mobil, sağ taraf araç çubuğunu veya yerleştirilmiş panelleri görüntülemez; işlevleri alt sekme çubuğu + çekmece panelleri ile değiştirilir.
+Mobil, sağ taraf araç çubuğunu veya yerleştirilmiş panelleri görüntülemez; işlevleri alt sekme çubuğu ile değiştirilir.

@@ -426,6 +426,10 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
       this.database.commitObjectHandle(item, id => this.hasEntityId(id))
       item.ownerId = this.objectId
       item.resolveEffectiveProperties()
+      this.database.flattenEntityLayer(
+        item,
+        !this.isModelSapce && !this.isPaperSapce
+      )
       this._entities.push(item)
       if (
         item.dxfTypeName === 'INSERT' &&

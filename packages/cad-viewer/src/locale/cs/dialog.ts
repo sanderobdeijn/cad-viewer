@@ -83,7 +83,6 @@ export default {
     propObjectType: 'Typ objektu',
     propHandle: 'Handle',
     handleValuePlaceholder: 'Zadejte handle entity',
-    propLayer: 'Hladina',
     propColor: 'Barva',
     propLineType: 'Typ čáry',
     propLineWeight: 'Tloušťka čáry',

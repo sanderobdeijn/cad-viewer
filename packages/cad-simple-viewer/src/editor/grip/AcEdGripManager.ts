@@ -6,7 +6,6 @@ import {
 } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../app'
-import { isEntityOnLockedLayer } from '../../service/AcApLockedLayer'
 import { AcEdMTextEditor } from '../input/ui/AcEdMTextEditor'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import {
@@ -138,7 +137,7 @@ export class AcEdGripManager {
 
     for (const entityId of this._view.selectionSet.ids) {
       const entity = blockTable.getEntityById(entityId)
-      if (!entity || isEntityOnLockedLayer(doc.database, entity)) continue
+      if (!entity) continue
 
       const gripPoints = entity.subGetGripPoints()
       for (let gripIndex = 0; gripIndex < gripPoints.length; ++gripIndex) {

@@ -3,9 +3,6 @@
  */
 export const commandEn = {
   ACAD: {
-    layer: {
-      description: 'Opens or closes the layer manager dock panel'
-    },
     measurementpanel: {
       description: 'Opens the measurement list dock panel'
     },

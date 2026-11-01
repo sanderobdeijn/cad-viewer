@@ -146,7 +146,7 @@ O monorepo inclui vários plugins oficiais. Cada um foca em uma preocupação; c
 
 | Pacote | Função | Comandos / capacidades |
 |--------|--------|------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **UI de barra de ferramentas, gerenciador de camadas e paleta de medições** para `cad-simple-viewer` (DOM puro, sem Vue/React) | `layer`, `measurementpanel`, barra de ferramentas padrão (visualização, medição, tema, idioma) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **UI de barra de ferramentas e paleta de medições** para `cad-simple-viewer` (DOM puro, sem Vue/React) | `measurementpanel`, barra de ferramentas padrão (visualização, medição, tema, idioma) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — Interface de usuário para o visualizador simples
 
@@ -155,7 +155,7 @@ O [`cad-simple-viewer`](packages/cad-simple-viewer) deliberadamente **não inclu
 Ele fornece:
 
 - Uma **barra de ferramentas configurável** (posicionamento em qualquer borda, comandos CAD padrão, menus aninhados, itens personalizados)
-- Um **painel dock** com aba de **gerenciador de camadas** (camada ligada/desligada, seletor de cor ACI, zoom para camada com duplo clique) e aba de **medições**
+- Um **painel dock** com aba de **medições**
 - **Sincronização de tema** com a sysvar `COLORTHEME` e tokens CSS `--ml-ui-*` no seu elemento host
 - **Sincronização de locale** com `AcApI18n` (inglês / chinês / tcheco / turco)
 
@@ -248,8 +248,6 @@ Legenda:
 
 #### Controles de exibição
 
-* [x] Visibilidade de camada ligada/desligada
-* [x] Congelar / bloquear camada
 * [x] Exibição de espessura de linha
 * [ ] Escala de tipo de linha
 * [x] Alternância de fundo / tema
@@ -337,12 +335,11 @@ Legenda:
 #### Paleta de propriedades
 
 * [x] Propriedades da entidade selecionada
-* [ ] Edição de camada, cor, tipo de linha
+* [ ] Edição de cor, tipo de linha
 * [x] Atualização ao vivo na mudança
 
 #### Painéis e UI
 
-* [x] Gerenciador de camadas
 * [ ] Gerenciador de blocos
 * [x] Histórico de comandos / console
 * [x] Barra de status (captura, ortogonal, grade)

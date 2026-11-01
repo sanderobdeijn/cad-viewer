@@ -12,6 +12,6 @@ import { store } from '../app'
 export class AcApCountListCmd extends AcEdCommand {
   async execute(_context: AcApContext) {
     store.dialogs.activePaletteTab = 'countList'
-    store.dialogs.layerManager = true
+    store.dialogs.toolPalette = true
   }
 }

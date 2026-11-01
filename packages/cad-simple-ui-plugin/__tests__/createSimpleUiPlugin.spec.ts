@@ -201,17 +201,16 @@ describe('AcApSimpleUiPlugin', () => {
     document.getElementById('ml-ex-ui-styles')?.remove()
   })
 
-  it('loads layer UI in the dock panel on startup', () => {
+  it('loads find UI in the dock panel on startup', () => {
     const { host } = createHostTree()
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('select'), acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('select'), acuiToolbarPreset('find')]
       }
     })
 
-    expect(mockCommands.has('SYSTEM:layer')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-layer-manager')).toBeNull()
+    expect(mockCommands.has('SYSTEM:find')).toBe(true)
     expect(
       (plugin as unknown as { dockPanel?: unknown }).dockPanel
     ).toBeDefined()
@@ -241,7 +240,7 @@ describe('AcApSimpleUiPlugin', () => {
     expect(plugin.isDockPanelOpen()).toBe(false)
   })
 
-  it('opens the dock panel without clicking the layer button first', () => {
+  it('opens the dock panel without clicking the find button first', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
 
@@ -249,7 +248,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -287,12 +286,12 @@ describe('AcApSimpleUiPlugin', () => {
     expect(host.querySelector(':scope > .ml-ex-ui-dock-panel')).toBeNull()
   })
 
-  it('opens the dock panel from the layer button and switches to the layers tab', () => {
+  it('opens the dock panel from the find button and switches to the find tab', () => {
     const { host } = createHostTree()
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -305,12 +304,12 @@ describe('AcApSimpleUiPlugin', () => {
 
     expect(plugin.isDockPanelOpen()).toBe(false)
 
-    const layerButton = host.querySelector(
-      '[data-toolbar-item-id="layer"]'
+    const findButton = host.querySelector(
+      '[data-toolbar-item-id="find"]'
     ) as HTMLButtonElement
-    layerButton.click()
+    findButton.click()
     expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(getActiveTabId()).toBe('layers')
+    expect(getActiveTabId()).toBe('find')
 
     expect(
       plugin.addDockPanelTab({
@@ -321,9 +320,9 @@ describe('AcApSimpleUiPlugin', () => {
     ).toBe(true)
     expect(getActiveTabId()).toBe('demo')
 
-    layerButton.click()
+    findButton.click()
     expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(getActiveTabId()).toBe('layers')
+    expect(getActiveTabId()).toBe('find')
   })
 
   it('opens an existing dock shell that was never opened before', () => {
@@ -331,7 +330,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -354,7 +353,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -377,7 +376,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -397,7 +396,7 @@ describe('AcApSimpleUiPlugin', () => {
     ).toBe(true)
 
     expect(
-      host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="layers"]')
+      host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="find"]')
     ).not.toBeNull()
     expect(
       host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="demo-1"]')
@@ -412,7 +411,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -446,7 +445,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -478,7 +477,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('select'), acuiToolbarPreset('layer')],
+        items: [acuiToolbarPreset('select'), acuiToolbarPreset('find')],
         collapsible: true
       }
     })
@@ -500,7 +499,7 @@ describe('AcApSimpleUiPlugin', () => {
     expect(plugin.getToolbarEdgeOffset()).toBe(16)
   })
 
-  it('setToolbarItems dynamically adds the layer command when a layer button appears', () => {
+  it('setToolbarItems dynamically adds the find command when a find button appears', () => {
     const { host } = createHostTree()
     const { plugin } = loadPlugin({
       host,
@@ -509,17 +508,17 @@ describe('AcApSimpleUiPlugin', () => {
       }
     })
 
-    expect(mockCommands.has('SYSTEM:layer')).toBe(false)
+    expect(mockCommands.has('SYSTEM:find')).toBe(false)
 
     plugin.setToolbarItems([
       acuiToolbarPreset('select'),
-      acuiToolbarPreset('layer')
+      acuiToolbarPreset('find')
     ])
-    expect(mockCommands.has('SYSTEM:layer')).toBe(true)
+    expect(mockCommands.has('SYSTEM:find')).toBe(true)
     expect(host.querySelector('.ml-ex-ui-dock-panel')).not.toBeNull()
 
     plugin.setToolbarItems([acuiToolbarPreset('select')])
-    expect(mockCommands.has('SYSTEM:layer')).toBe(false)
+    expect(mockCommands.has('SYSTEM:find')).toBe(false)
     expect(host.querySelector('.ml-ex-ui-dock-panel')).toBeNull()
   })
 
@@ -775,7 +774,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       }
     })
 
@@ -864,7 +863,7 @@ describe('AcApSimpleUiPlugin', () => {
       host,
       layout: 'phone',
       toolbar: {
-        items: [acuiToolbarPreset('layer')],
+        items: [acuiToolbarPreset('find')],
         inCanvasParent: true
       }
     })
@@ -917,7 +916,7 @@ describe('AcApSimpleUiPlugin', () => {
       host,
       layout: 'phone',
       toolbar: {
-        items: [acuiToolbarPreset('layer')]
+        items: [acuiToolbarPreset('find')]
       },
       layouts: {
         phone: {

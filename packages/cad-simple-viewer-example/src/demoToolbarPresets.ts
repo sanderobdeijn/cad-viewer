@@ -8,7 +8,6 @@ import {
   acuiCreateToolbarSeparator,
   acuiToolbarPreset
 } from '@mlightcad/cad-simple-ui-plugin'
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
 
 const ICON_DEMO_INFO =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="currentColor" d="M9 9h2v5H9zm0-3h2v2H9z"/></svg>'
@@ -33,8 +32,7 @@ export const DEMO_TOOLBAR_PRESET_ITEMS: Record<string, AcUiToolbarItemsInput> =
     minimal: [
       acuiToolbarPreset('select'),
       acuiToolbarPreset('pan'),
-      acuiToolbarPreset('zoomExtent'),
-      acuiToolbarPreset('layer')
+      acuiToolbarPreset('zoomExtent')
     ],
     draw: [
       acuiToolbarPreset('select'),
@@ -50,7 +48,6 @@ export const DEMO_TOOLBAR_PRESET_ITEMS: Record<string, AcUiToolbarItemsInput> =
         command: 'circle',
         requiresDocument: true
       },
-      acuiToolbarPreset('layer'),
       acuiCreateToolbarSeparator('draw-separator'),
       acuiToolbarPreset('zoomWindow')
     ],
@@ -98,20 +95,7 @@ export const DEMO_TOOLBAR_PRESET_ITEMS: Record<string, AcUiToolbarItemsInput> =
             }
           }
         }
-      },
-      {
-        id: 'demo-layer-count',
-        label: 'Layer Count',
-        icon: ICON_DEMO_INFO,
-        requiresDocument: true,
-        disabled: () => !AcApDocManager.instance.curDocument,
-        action: () => {
-          const doc = AcApDocManager.instance.curDocument
-          const count = doc?.layerStore.getLayers().length ?? 0
-          window.alert(`Layer count: ${count}`)
-        }
-      },
-      acuiToolbarPreset('layer')
+      }
     ]
   }
 

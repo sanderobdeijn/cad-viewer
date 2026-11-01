@@ -1,6 +1,6 @@
 # @mlightcad/cad-simple-ui-plugin
 
-Framework-agnostic toolbar, layer manager, and measurement palette UI for [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer).
+Framework-agnostic toolbar and measurement palette UI for [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer).
 
 This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Element Plus. All UI uses plain DOM and respects the cad-simple-viewer `--ml-ui-*` theme tokens.
 
@@ -13,12 +13,9 @@ This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Eleme
 - Default toolbar differs by layout: compact phone bar, pad without Select/Pan, full desktop icon strip
 - UI theme follows `COLORTHEME` sysvar and `--ml-ui-*` tokens on `host` automatically
 - Locale follows `AcApI18n.currentLocale` automatically
-- Layer list in a dock panel tab (name, visibility, color), opened from the toolbar layer button
 - Text search (**Find**) in a dock panel tab: TEXT, MTEXT, block attributes and block-definition text, dimension, multileader and table text of the whole drawing (or the current layout), click-to-zoom with selection, opened from the Find toolbar button (`find`)
 - Chrome DevTools-style **dock panel** with tabs, open/close, dock side (bottom/left/right), and resize handle
-- ACI color picker for layer colors
-- Layer UI opens from the toolbar button or the `layer` command (opens dock when closed, switches to layers tab when open)
-- Dock panel closes via the close button or `close-layer-manager` event
+- Dock panel closes via the close button
 - Optional collapsible toolbar: hide tool buttons and show only a chevron toggle
 
 ## Install
@@ -103,15 +100,15 @@ By default `appendItems` are added at the end of the toolbar. Use `appendItemsAf
 toolbar: {
   items: 'default',
   appendItems: [{ id: 'agent', label: 'Agent', command: 'agent' }],
-  appendItemsAfter: 'layer'
+  appendItemsAfter: 'find'
 }
 ```
 
 The built-in theme toggle button updates `COLORTHEME` when a document is open, or applies `acedApplyUiTheme` on `host` when no document is loaded.
 
-### Layer manager (dock panel)
+### Dock panel
 
-The layer list is enabled automatically when the resolved toolbar includes a layer button (`id: 'layer'` or `{ preset: 'layer' }`). Layers always render as a tab in the dock panel.
+The measurement and find tabs are enabled automatically when the resolved toolbar includes their buttons, and render as tabs in the dock panel.
 
 ```typescript
 acuiCreateSimpleUiPlugin({
@@ -127,15 +124,13 @@ acuiCreateSimpleUiPlugin({
 
 Dock panel behavior:
 
-- Click the layer toolbar button (runs the `layer` command) to open the dock panel when it is closed, or switch to the layers tab when it is already open
-- Open or focus layers via the `layer` command or `AcApDocManager.sendStringToExecute('layer')`
 - Close via the panel close button or `setDockPanelOpen(false)`
 - `setDockPanelOpen(true)` opens the dock without changing the active tab
 - Default dock side is **left**; override with `dockPanel.defaultSide`
 - By default the dock mounts on the viewer canvas parent (inside `host`), so sibling header toolbars are not stretched
 - Override mount element with `dockPanel.mountTarget` when needed
 - Drag the resize handle on the panel edge to adjust height or width
-- Multiple tabs supported (layers, measurements, and find tabs registered automatically when those toolbar buttons are present)
+- Multiple tabs supported (measurements and find tabs registered automatically when those toolbar buttons are present)
 - Canvas area shrinks when the panel is open (flex layout on `host`)
 
 Runtime dock panel controls:
@@ -152,7 +147,7 @@ plugin.getDockPanelSize()
 plugin.setDockPanelSize(320)
 ```
 
-You can enable an empty dock panel for future tabs without a layer button:
+You can enable an empty dock panel for future tabs without a toolbar button:
 
 ```typescript
 acuiCreateSimpleUiPlugin({
@@ -160,8 +155,6 @@ acuiCreateSimpleUiPlugin({
   dockPanel: { enabled: true }
 })
 ```
-
-The built-in `layerclose` command emits `close-layer-manager`, which the plugin listens for.
 
 ### Find text (dock panel)
 
@@ -194,12 +187,12 @@ Matching:
 - **Match case** checkbox: exact case and accents
 - **Scope**: whole drawing by default (layouts are searched in tab order); the **Current layout only** checkbox limits the search to the layout that is currently shown and re-runs the last search when toggled
 - Blank query → no search; at most 500 results (shared across all searched layouts) (a "first N results" notice is shown when truncated)
-- Entities that are hidden or on an off/frozen layer are skipped, so every result is something you can see
+- Hidden entities are skipped, so every result is something you can see
 
 Usage:
 
 - Search runs only on **Enter** / the Find button (never while typing, never in the background). Both start a search and jump to the first hit; further Enter / Shift+Enter steps through the list. The scan is a single synchronous pass over the entities of the searched layouts (including the block definitions they insert); nothing is cached or stored globally
-- Each result shows its **layout name** (a layout with an empty name is shown as a localized "(unnamed layout)" placeholder), the matched text, type (Text / MText / Attribute / Block text / Dimension / Leader / Table; attributes also show block / tag), layer and `(x, y)`. Labels are translated in en, zh, cs, tr and ar; a message missing from the active locale falls back to English instead of showing its key
+- Each result shows its **layout name** (a layout with an empty name is shown as a localized "(unnamed layout)" placeholder), the matched text, type (Text / MText / Attribute / Block text / Dimension / Leader / Table; attributes also show block / tag) and `(x, y)`. Labels are translated in en, zh, cs, tr and ar; a message missing from the active locale falls back to English instead of showing its key
 - Click a result (or press Enter / Shift+Enter in the field to step through them) to zoom to the text and select its entity (attributes select their `INSERT`). Selection uses the normal selection set/highlight, so Escape or clicking elsewhere clears it. Pan, wheel/pinch zoom, layers and touch handling are untouched
 - A hit in another layout switches to that layout first (`layoutManager.setCurrentLayoutBtrId`), waits for its entities to be converted, then zooms and selects. The layout's first-visit auto zoom is suppressed so it cannot override the zoom to the hit. If the layout cannot be opened a notice is shown instead
 - With **Current layout only**, if the active layout changed since the search, clicking a result re-runs the search for the new layout instead of navigating (drawing-wide results stay valid)
@@ -257,9 +250,9 @@ By default the plugin uses `layout: 'auto'` and follows viewport width via `aced
 
 | Kind | Viewport | Chrome | Default buttons (`items: 'default'`) |
 | --- | --- | --- | --- |
-| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `layer`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
+| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
 | **pad** | 601–960px | Same floating chrome as desktop (right, icons only, `edgeOffset: 8`). | Desktop set **without** `select` and `pan` (`excludeItems: ['select', 'pan']`). Touch drag pans; a long-press starts window/crossing box select. |
-| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layer`, `layout`, `measure`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
+| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layout`, `measure`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
 
 Phone does **not** inherit top-level `toolbar.items`, `appendItems`, or chrome (placement, labels, size). It only inherits `enabled`, `mountTarget`, and `inCanvasParent`. Pad and desktop inherit the full top-level `toolbar` baseline on top of the built-ins above.
 
@@ -339,8 +332,7 @@ const plugin = docManager.pluginManager.getPlugin(
 
 plugin.setToolbarItems([
   acuiToolbarPreset('select'),
-  acuiToolbarPreset('pan'),
-  acuiToolbarPreset('layer')
+  acuiToolbarPreset('pan')
 ])
 
 // Optional: prepend a submenu button that switches between full layouts
@@ -383,7 +375,7 @@ See `cad-simple-viewer-example` (`demoToolbarPresets.ts`) for a working layout s
 | `preset` | Reference a built-in button by id (custom layouts only; use `{ preset: 'pan' }`) |
 | `disabled` | `boolean` or `() => boolean` |
 
-Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `layer`, `measure`, `toolbar-placement`, `switch-bg`, `theme`, `locale`, and nested ids such as `placement-top`, `measure-distance`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
+Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `measure`, `toolbar-placement`, `switch-bg`, `theme`, `locale`, and nested ids such as `placement-top`, `measure-distance`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
 
 ### 1. Default toolbar + extra buttons
 
@@ -428,7 +420,6 @@ acuiCreateSimpleUiPlugin({
       acuiToolbarPreset('pan'),
       acuiToolbarPreset('zoom'),
       acuiCreateToolbarSeparator('sep-tools'),
-      acuiToolbarPreset('layer'),
       acuiToolbarPreset('measure'),
       acuiCreateToolbarSeparator('sep-settings'),
       acuiToolbarPreset('switch-bg'),
@@ -592,8 +583,6 @@ acuiCreateSimpleUiPlugin({
 })
 ```
 
-Disabling the toolbar also disables the layer dock UI, because the layer list is tied to the layer toolbar button.
-
 ### Complete example
 
 ```typescript
@@ -636,36 +625,12 @@ await AcApDocManager.instance.pluginManager.loadPlugin(
 )
 ```
 
-## Layer manager
-
-When the toolbar includes a layer button, the plugin registers a `layer` command. The button opens the dock when closed, or activates the layers tab when the dock is already open.
-
-Supported columns in v1:
-
-- Name (current layer marked with `*`)
-- On (visibility checkbox)
-- Color (ACI picker)
-
-Double-click a layer row to zoom to that layer.
-
-To use the layer UI in a custom toolbar, include the built-in preset or a button with `id: 'layer'`:
-
-```typescript
-items: [
-  acuiToolbarPreset('select'),
-  acuiToolbarPreset('layer')
-]
-```
-
-Omit the layer button from `items` if you do not want the layer dock UI or `layer` command.
-
 ## API
 
 | Export | Description |
 |--------|-------------|
 | `acuiCreateSimpleUiPlugin(options)` | Returns an `AcApPlugin` instance |
 | `acuiRegisterSimpleUiPlugin(pluginManager, options)` | Eager-load helper |
-| `AcApLayerStore` | Document-scoped layer observer and UI mutations |
 | `AcUiSimpleUiPluginOptions` | Plugin configuration type |
 | `AcUiToolbarItem` | Single toolbar button definition |
 | `AcUiToolbarChildrenUi` | `'menu' \| 'toolbar' \| 'sticky-toolbar'` |

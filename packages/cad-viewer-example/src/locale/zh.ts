@@ -51,13 +51,6 @@ export default {
       off: '关',
       progressiveOffHint: '实体和文字都转换完成后再显示',
 
-      nonPlottable: '不打印图层',
-      nonPlottableLayers: '不打印图层',
-      hide: '隐藏',
-      hideHint: 'Web 查看器默认',
-      show: '显示',
-      showHint: 'AutoCAD 编辑器语义',
-
       curveQuality: '曲线精度',
       curveDraft: '省内存',
       curveDraftHint: '顶点更少，文件更小',

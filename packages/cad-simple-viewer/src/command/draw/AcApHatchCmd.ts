@@ -743,7 +743,6 @@ export class AcApHatchCmd extends AcEdCommand {
     const options = new AcEdPromptSelectionOptions(
       AcApI18n.t('jig.hatch.select')
     )
-    options.allowObjectOnLockedLayer = true
     const result = await AcApDocManager.instance.editor.getSelection(options)
     if (result.status !== AcEdPromptStatus.OK || !result.value) return false
 

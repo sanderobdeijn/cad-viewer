@@ -25,7 +25,7 @@ features:
     details: Parsing and rendering happen entirely on the client. Drawings are never uploaded, cached or mirrored to a server — confidentiality is guaranteed by architecture, not by policy.
   - icon: 📐
     title: DWG / DXF support
-    details: High-fidelity drawing display with model space, layouts, layers, blocks and external references.
+    details: High-fidelity drawing display with model space, layouts, blocks and external references.
   - icon: 📏
     title: Measure
     details: Precise distance, area, angle and arc-length measurement, right in the browser.

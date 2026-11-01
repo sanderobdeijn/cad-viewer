@@ -33,7 +33,6 @@ export default {
     secondCorner: 'İkinci köşeyi belirtin veya'
   },
   message: {
-    onLockedLayer: 'kilitli katmandaydı.',
     fetchingDrawingFile: 'Dosya alınıyor ...',
     calculatingSmartExtents: 'Akıllı sınırlar hesaplanıyor ...',
     collectingMemoryProfile: 'Bellek analiz ediliyor ...',
@@ -118,7 +117,8 @@ export default {
     title: 'Hakkında',
     close: 'Kapat',
     product: 'CAD Viewer',
-    tagline: 'DWG ve DXF çizimleri için yüksek performanslı web CAD görüntüleyici.',
+    tagline:
+      'DWG ve DXF çizimleri için yüksek performanslı web CAD görüntüleyici.',
     website: 'Web sitesi',
     docs: 'Belgeler',
     repository: 'GitHub',

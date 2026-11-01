@@ -64,7 +64,6 @@ describe('acuiResolveToolbarItems', () => {
       'zoom',
       'find',
       'measure',
-      'layer',
       'layout',
       'settings'
     ])
@@ -140,10 +139,10 @@ describe('acuiResolveToolbarItems', () => {
     const items = acuiResolveToolbarItems({
       items: 'default',
       appendItems: [{ id: 'agent', command: 'agent' }],
-      appendItemsAfter: 'layer'
+      appendItemsAfter: 'find'
     })
-    const layerIndex = items.findIndex(item => item.id === 'layer')
-    expect(items[layerIndex + 1]?.id).toBe('agent')
+    const findIndex = items.findIndex(item => item.id === 'find')
+    expect(items[findIndex + 1]?.id).toBe('agent')
   })
 
   it('inserts appendItems before a root toolbar item id', () => {
@@ -286,13 +285,13 @@ describe('default toolbar items', () => {
     expect(childIds[themeIndex - 1]).toBe('toolbar-placement')
   })
 
-  it('places the layout switcher after the layer manager', () => {
+  it('places the layout switcher after find', () => {
     const items = acuiCreateDefaultToolbarItems()
-    const layerIndex = items.findIndex(item => item.id === 'layer')
-    expect(items[layerIndex + 1]?.id).toBe('layout')
-    expect(items[layerIndex + 1]?.childrenUi).toBe('menu')
-    expect(items[layerIndex + 1]?.icon).toContain('rect x="2" y="2" width="8.2"')
-    expect(items[layerIndex + 2]?.id).toBe('measure')
+    const findIndex = items.findIndex(item => item.id === 'find')
+    expect(items[findIndex + 1]?.id).toBe('layout')
+    expect(items[findIndex + 1]?.childrenUi).toBe('menu')
+    expect(items[findIndex + 1]?.icon).toContain('rect x="2" y="2" width="8.2"')
+    expect(items[findIndex + 2]?.id).toBe('measure')
   })
 
   it('includes a separator before the settings button', () => {
@@ -484,33 +483,23 @@ describe('toolbar presets and separators', () => {
   it('keeps desktop labels for shared presets and still resolves phone-only ids', () => {
     const items = acuiResolveToolbarItems({
       items: [
-        { preset: 'layer' },
+        { preset: 'find' },
         { preset: 'zoom' },
         { preset: 'settings' }
       ]
     })
-    expect(items[0].label).toBe('toolbar.layer')
+    expect(items[0].id).toBe('find')
     expect(items[1].id).toBe('zoom')
     expect(items[2].id).toBe('settings')
   })
 
-  it('uses phone labels for shared presets when layout is phone', () => {
-    const items = acuiResolveToolbarItems(
-      { items: [{ preset: 'layer' }] },
-      undefined,
-      'phone'
-    )
-    expect(items[0].label).toBe('toolbar.layerShort')
-  })
-
   it('does not let phone variants overwrite desktop shared presets', () => {
     const desktop = acuiCreateDefaultToolbarPresetMap(undefined, 'desktop')
-    expect(desktop.get('layer')?.label).toBe('toolbar.layer')
     expect(desktop.get('zoom')?.id).toBe('zoom')
     expect(desktop.get('settings')?.id).toBe('settings')
 
     const phone = acuiCreateDefaultToolbarPresetMap(undefined, 'phone')
-    expect(phone.get('layer')?.label).toBe('toolbar.layerShort')
+    expect(phone.get('zoom')?.id).toBe('zoom')
   })
 
   it('preserves live layout children when expanding the layout preset', () => {

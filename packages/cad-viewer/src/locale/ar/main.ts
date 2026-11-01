@@ -26,7 +26,6 @@ export default {
       ...enMain.ribbon.group,
       draw: 'رسم',
       modify: 'تعديل',
-      layer: 'الطبقات',
       properties: 'الخصائص',
       utilities: 'أدوات',
       annotation: 'تعليقات توضيحية',
@@ -41,21 +40,6 @@ export default {
       color: 'اللون',
       lineType: 'نوع الخط',
       lineWeight: 'سُمك الخط'
-    },
-
-    layerTools: {
-      ...enMain.ribbon.layerTools,
-      select: 'الطبقة',
-      off: 'إيقاف الطبقة',
-      isolate: 'عزل',
-      freeze: 'تجميد الطبقة',
-      lock: 'قفل الطبقة',
-      current: 'تعيين كحالية',
-      allOn: 'تشغيل الطبقات',
-      unisolate: 'إلغاء العزل',
-      thaw: 'إلغاء التجميد',
-      unlock: 'إلغاء القفل',
-      restore: 'استعادة الطبقات'
     },
 
     command: {
@@ -88,10 +72,10 @@ export default {
       countList: 'العد',
       quickSelect: 'تحديد\nسريع',
       drawingUnits: 'وحدات\nالرسم',
-  mline: 'خط متعدد',
-  ray: 'شعاع',
-  xline: 'خط إنشائي',
-},
+      mline: 'خط متعدد',
+      ray: 'شعاع',
+      xline: 'خط إنشائي'
+    },
     hatch: {
       ...enMain.ribbon.hatch,
 
@@ -349,78 +333,54 @@ export default {
 
       line: 'ارسم قطعة خط مستقيم واحدة.',
 
-      polyline:
-        'ارسم سلسلة مترابطة من مقاطع الخطوط أو الأقواس كعنصر واحد.',
+      polyline: 'ارسم سلسلة مترابطة من مقاطع الخطوط أو الأقواس كعنصر واحد.',
 
-      spline:
-        'ارسم منحنى Spline ناعمًا باستخدام نقاط الملاءمة أو نقاط التحكم.',
+      spline: 'ارسم منحنى Spline ناعمًا باستخدام نقاط الملاءمة أو نقاط التحكم.',
 
-      sketch:
-        'أنشئ سلسلة من مقاطع الخطوط بالرسم الحر.',
+      sketch: 'أنشئ سلسلة من مقاطع الخطوط بالرسم الحر.',
 
-      revcloud:
-        'أنشئ سحابة مراجعة لإبراز منطقة في الرسم.',
+      revcloud: 'أنشئ سحابة مراجعة لإبراز منطقة في الرسم.',
 
-      circle:
-        'ارسم دائرة باستخدام عدة طرق إنشائية.',
+      circle: 'ارسم دائرة باستخدام عدة طرق إنشائية.',
 
-      arc:
-        'ارسم قوسًا باستخدام عدة طرق إنشائية.',
+      arc: 'ارسم قوسًا باستخدام عدة طرق إنشائية.',
 
-      mline:
-        'ارسم عدة خطوط متوازية كعنصر متعدد الخطوط واحد.',
+      mline: 'ارسم عدة خطوط متوازية كعنصر متعدد الخطوط واحد.',
 
-      ray:
-        'ارسم شعاعًا إنشائيًا يبدأ من نقطة ويمتد بلا نهاية في اتجاه واحد.',
+      ray: 'ارسم شعاعًا إنشائيًا يبدأ من نقطة ويمتد بلا نهاية في اتجاه واحد.',
 
-      xline:
-        'ارسم خطًا إنشائيًا غير محدود في الاتجاهين.',
+      xline: 'ارسم خطًا إنشائيًا غير محدود في الاتجاهين.',
 
-      ellipse:
-        'ارسم قطعًا ناقصًا أو قوسًا بيضاويًا.',
+      ellipse: 'ارسم قطعًا ناقصًا أو قوسًا بيضاويًا.',
 
-      rect:
-        'ارسم مستطيلًا أو مضلعًا منتظمًا.',
+      rect: 'ارسم مستطيلًا أو مضلعًا منتظمًا.',
 
-      point:
-        'ضع عنصر نقطة داخل الرسم.',
+      point: 'ضع عنصر نقطة داخل الرسم.',
 
-      hatch:
-        'املأ منطقة مغلقة بنمط تهشير.',
+      hatch: 'املأ منطقة مغلقة بنمط تهشير.',
 
-      text:
-        'أنشئ نصًا متعدد الأسطر داخل الرسم.',
+      text: 'أنشئ نصًا متعدد الأسطر داخل الرسم.',
 
-      move:
-        'انقل العناصر المحددة إلى موضع جديد.',
+      move: 'انقل العناصر المحددة إلى موضع جديد.',
 
-      rotate:
-        'دوّر العناصر المحددة حول نقطة أساس.',
+      rotate: 'دوّر العناصر المحددة حول نقطة أساس.',
 
-      copy:
-        'انسخ العناصر المحددة إلى موضع جديد.',
+      copy: 'انسخ العناصر المحددة إلى موضع جديد.',
 
-      erase:
-        'احذف العناصر المحددة من الرسم.',
+      erase: 'احذف العناصر المحددة من الرسم.',
 
-      offset:
-        'أنشئ نسخة موازية من عنصر على مسافة محددة.',
+      offset: 'أنشئ نسخة موازية من عنصر على مسافة محددة.',
 
-      undo:
-        'تراجع عن آخر عملية تحرير.',
+      undo: 'تراجع عن آخر عملية تحرير.',
 
-      redo:
-        'أعد آخر عملية تم التراجع عنها.',
+      redo: 'أعد آخر عملية تم التراجع عنها.',
 
-      properties:
-        'افتح لوحة الخصائص للعناصر المحددة حاليًا.',
+      properties: 'افتح لوحة الخصائص للعناصر المحددة حاليًا.',
 
-      quickSelect:
-        'افتح التحديد السريع لتصفية العناصر وتحديدها وفق شروط.',
+      quickSelect: 'افتح التحديد السريع لتصفية العناصر وتحديدها وفق شروط.',
 
       find: 'افتح لوحة البحث للبحث عن النص في الرسم بالكامل أو في التخطيط الحالي.',
-      countList:
-        'افتح لوحة العد لعرض أعداد الكتل وإدارتها.',
+      countList: 'افتح لوحة العد لعرض أعداد الكتل وإدارتها.',
 
       missingResources:
         'افتح لوحة الموارد المفقودة والخارجية للخطوط والصور والمراجع الخارجية.',
@@ -428,85 +388,39 @@ export default {
       drawingUnits:
         'افتح وحدات الرسم لتحديد تنسيق الإحداثيات والدقة ومقياس الإدراج.',
 
-      propertyColor:
-        'حدد لون العناصر الجديدة أو العناصر المحددة.',
+      propertyColor: 'حدد لون العناصر الجديدة أو العناصر المحددة.',
 
-      propertyLineType:
-        'حدد نوع الخط للعناصر الجديدة أو العناصر المحددة.',
+      propertyLineType: 'حدد نوع الخط للعناصر الجديدة أو العناصر المحددة.',
 
-      propertyLineWeight:
-        'حدد سُمك الخط للعناصر الجديدة أو العناصر المحددة.',
-
-      layerAction: {
-        ...enMain.ribbon.tooltip.layerAction,
-
-        off:
-          'أوقف الطبقة المحددة لإخفاء عناصرها دون تجميدها.',
-
-        isolate:
-          'اعزل الطبقة المحددة وأخفِ الطبقات الأخرى للتركيز على عناصرها.',
-
-        freeze:
-          'جمّد الطبقة المحددة لإخفاء عناصرها واستبعادها من إعادة التوليد.',
-
-        lock:
-          'اقفل الطبقة المحددة بحيث تظل عناصرها مرئية دون إمكانية تعديلها.',
-
-        current:
-          'اجعل الطبقة المحددة هي الحالية بحيث تُنشأ العناصر الجديدة عليها.',
-
-        allOn:
-          'شغّل جميع الطبقات المتوقفة حاليًا. تظل الطبقات المجمدة مجمدة.',
-
-        unisolate:
-          'ألغِ عزل الطبقات واستعد الطبقات التي تم إخفاؤها أو قفلها.',
-
-        thaw:
-          'ألغِ تجميد الطبقة المحددة لإظهار عناصرها وإدراجها في إعادة التوليد.',
-
-        unlock:
-          'ألغِ قفل الطبقة المحددة للسماح بتحديد عناصرها وتعديلها.',
-
-        restore:
-          'استعد حالة الطبقات السابقة من آخر عملية طبقات.'
-      },
+      propertyLineWeight: 'حدد سُمك الخط للعناصر الجديدة أو العناصر المحددة.',
 
       circleOption: {
         ...enMain.ribbon.tooltip.circleOption,
 
-        centerRadius:
-          'أنشئ دائرة بتحديد نقطة المركز ونصف القطر.',
+        centerRadius: 'أنشئ دائرة بتحديد نقطة المركز ونصف القطر.',
 
-        centerDiameter:
-          'أنشئ دائرة بتحديد نقطة المركز والقطر.',
+        centerDiameter: 'أنشئ دائرة بتحديد نقطة المركز والقطر.',
 
-        twoPoint:
-          'أنشئ دائرة يُحدد قطرها بواسطة نقطتين.',
+        twoPoint: 'أنشئ دائرة يُحدد قطرها بواسطة نقطتين.',
 
-        threePoint:
-          'أنشئ دائرة تمر عبر ثلاث نقاط.',
+        threePoint: 'أنشئ دائرة تمر عبر ثلاث نقاط.',
 
-        tanTanRadius:
-          'أنشئ دائرة مماسة لعنصرين بنصف قطر محدد.',
+        tanTanRadius: 'أنشئ دائرة مماسة لعنصرين بنصف قطر محدد.',
 
-        tanTanTan:
-          'أنشئ دائرة مماسة لثلاثة عناصر.'
+        tanTanTan: 'أنشئ دائرة مماسة لثلاثة عناصر.'
       },
 
       arcOption: {
         ...enMain.ribbon.tooltip.arcOption,
 
-        threePoint:
-          'أنشئ قوسًا يمر بنقطة بداية ونقطة ثانية ونقطة نهاية.',
+        threePoint: 'أنشئ قوسًا يمر بنقطة بداية ونقطة ثانية ونقطة نهاية.',
 
-        startCenterEnd:
-          'أنشئ قوسًا بتحديد نقطة البداية والمركز والنهاية.',
+        startCenterEnd: 'أنشئ قوسًا بتحديد نقطة البداية والمركز والنهاية.',
 
         startCenterAngle:
           'أنشئ قوسًا بتحديد نقطة البداية والمركز والزاوية المحصورة.',
 
-        startCenterLength:
-          'أنشئ قوسًا بتحديد نقطة البداية والمركز وطول القوس.',
+        startCenterLength: 'أنشئ قوسًا بتحديد نقطة البداية والمركز وطول القوس.',
 
         startEndAngle:
           'أنشئ قوسًا من نقطتي البداية والنهاية مع تحديد الزاوية المحصورة.',
@@ -517,38 +431,31 @@ export default {
         startEndRadius:
           'أنشئ قوسًا من نقطتي البداية والنهاية مع تحديد نصف القطر.',
 
-        centerStartEnd:
-          'أنشئ قوسًا بتحديد المركز ونقطة البداية والنهاية.',
+        centerStartEnd: 'أنشئ قوسًا بتحديد المركز ونقطة البداية والنهاية.',
 
         centerStartAngle:
           'أنشئ قوسًا بتحديد المركز ونقطة البداية والزاوية المحصورة.',
 
-        centerStartLength:
-          'أنشئ قوسًا بتحديد المركز ونقطة البداية وطول القوس.'
+        centerStartLength: 'أنشئ قوسًا بتحديد المركز ونقطة البداية وطول القوس.'
       },
 
       rectOption: {
         ...enMain.ribbon.tooltip.rectOption,
 
-        rectangle:
-          'أنشئ مستطيلًا بتحديد ركنين متقابلين أو باستخدام الأبعاد.',
+        rectangle: 'أنشئ مستطيلًا بتحديد ركنين متقابلين أو باستخدام الأبعاد.',
 
-        polygon:
-          'أنشئ مضلعًا منتظمًا بتحديد عدد الأضلاع وطريقة الإنشاء.'
+        polygon: 'أنشئ مضلعًا منتظمًا بتحديد عدد الأضلاع وطريقة الإنشاء.'
       },
 
       ellipseOption: {
         ...enMain.ribbon.tooltip.ellipseOption,
 
-        ellipse:
-          'أنشئ قطعًا ناقصًا كاملًا بتحديد المحورين الأكبر والأصغر.',
+        ellipse: 'أنشئ قطعًا ناقصًا كاملًا بتحديد المحورين الأكبر والأصغر.',
 
-        arc:
-          'أنشئ قوسًا بيضاويًا بتحديد محوري القطع الناقص وحدود القوس.'
+        arc: 'أنشئ قوسًا بيضاويًا بتحديد محوري القطع الناقص وحدود القوس.'
       }
     }
-
-},
+  },
   verticalToolbar: {
     ...enMain.verticalToolbar,
 
@@ -618,12 +525,6 @@ export default {
       description: 'تصدير القياسات إلى ملف JSON جانبي'
     },
 
-    layer: {
-      ...enMain.verticalToolbar.layer,
-      text: 'الطبقات',
-      description: 'إدارة الطبقات'
-    },
-
     pan: {
       ...enMain.verticalToolbar.pan,
       text: 'تحريك',
@@ -689,7 +590,8 @@ export default {
     zoomSmartExtents: {
       ...enMain.verticalToolbar.zoomSmartExtents,
       text: 'ملاءمة ذكية',
-      description: 'التكبير إلى مجموعة الهندسة الرئيسية مع تجاهل العناصر البعيدة الشاذة'
+      description:
+        'التكبير إلى مجموعة الهندسة الرئيسية مع تجاهل العناصر البعيدة الشاذة'
     },
 
     zoomToBox: {
@@ -804,96 +706,6 @@ export default {
       }
     },
 
-    layerManager: {
-      ...enMain.toolPalette.layerManager,
-
-      tab: 'الطبقات',
-      title: 'مدير الطبقات',
-
-      currentLayerLabel: 'الطبقة الحالية: {name}',
-      searchPlaceholder: 'البحث في الطبقات',
-
-      filters: 'عوامل التصفية',
-      collapseFilters: 'طي عوامل التصفية',
-      expandFilters: 'توسيع عوامل التصفية',
-
-      filterAll: 'الكل',
-      filterAllUsed: 'جميع الطبقات المستخدمة',
-
-      toolbar: {
-        ...enMain.toolPalette.layerManager.toolbar,
-
-        showFilters: 'عوامل تصفية الطبقات',
-        newFilter: 'عامل تصفية جديد',
-        newFilterGroup: 'مجموعة تصفية جديدة',
-        newLayer: 'طبقة جديدة',
-        deleteLayer: 'حذف الطبقة',
-        setCurrent: 'تعيين كحالية'
-      },
-
-      prompts: {
-        ...enMain.toolPalette.layerManager.prompts,
-
-        newFilterTitle: 'عامل تصفية جديد',
-        newFilterName: 'أدخل اسم عامل التصفية',
-
-        newFilterGroupTitle: 'مجموعة تصفية جديدة',
-        newFilterGroupName: 'أدخل اسم مجموعة التصفية',
-
-        newLayerTitle: 'طبقة جديدة',
-        newLayerName: 'أدخل اسم الطبقة',
-
-        confirm: 'موافق',
-        cancel: 'إلغاء'
-      },
-
-      messages: {
-        ...enMain.toolPalette.layerManager.messages,
-
-        filterCreated: 'تم إنشاء عامل التصفية "{name}"',
-        filterExists: 'يوجد عامل تصفية باسم "{name}" بالفعل',
-        filterCreateFailed: 'فشل إنشاء عامل التصفية',
-
-        layerCreated: 'تم إنشاء الطبقة "{name}"',
-        layerExists: 'توجد طبقة باسم "{name}" بالفعل',
-        layerCreateFailed: 'فشل إنشاء الطبقة',
-
-        layerDeleted: 'تم حذف الطبقة "{name}"',
-        layerDeleteFailed: 'فشل حذف الطبقة "{name}"',
-
-        cannotDeleteLayer0: 'لا يمكن حذف الطبقة "0"',
-        cannotDeleteCurrent: 'لا يمكن حذف الطبقة الحالية',
-
-        selectLayerFirst: 'حدد طبقة أولًا',
-
-        setCurrentSuccess: 'تم تعيين الطبقة الحالية إلى "{name}"',
-        setCurrentFailed: 'فشل تعيين الطبقة الحالية'
-      },
-
-      layerList: {
-        ...enMain.toolPalette.layerManager.layerList,
-
-        name: 'الاسم',
-        on: 'تشغيل',
-        freeze: 'تجميد',
-        lock: 'قفل',
-        plot: 'طباعة',
-
-        color: 'اللون',
-        linetype: 'نوع الخط',
-        lineweight: 'سُمك الخط',
-        transparency: 'الشفافية',
-
-        description: 'الوصف',
-
-        currentLayer: 'الطبقة الحالية',
-        newLayerPlaceholder: 'اسم الطبقة',
-
-        zoomToLayer: 'تم التكبير إلى الطبقة "{layer}"',
-        lineWeightDefault: 'افتراضي'
-      }
-    },
-
     find: {
       tab: 'بحث',
       title: 'بحث',
@@ -945,11 +757,9 @@ export default {
       prompt: {
         ...enMain.toolPalette.countList.prompt,
 
-        firstCorner:
-          'حدد الركن الأول لمنطقة العد أو [الرسم بالكامل]: ',
+        firstCorner: 'حدد الركن الأول لمنطقة العد أو [الرسم بالكامل]: ',
 
-        secondCorner:
-          'حدد الركن المقابل: '
+        secondCorner: 'حدد الركن المقابل: '
       }
     },
 
@@ -990,8 +800,7 @@ export default {
       details: 'التفاصيل',
       foundAt: 'تم العثور عليه في',
 
-      selectReference:
-        'حدد مرجعًا لعرض التفاصيل',
+      selectReference: 'حدد مرجعًا لعرض التفاصيل',
 
       expandDetails: 'توسيع التفاصيل',
       collapseDetails: 'طي التفاصيل',
@@ -1002,8 +811,7 @@ export default {
       emptyFonts: 'لا توجد خطوط مفقودة',
       emptyImages: 'لا توجد صور مفقودة',
 
-      matchFontType:
-        'مطابقة نوع الخط (SHX / Mesh)',
+      matchFontType: 'مطابقة نوع الخط (SHX / Mesh)',
 
       missedFont: 'الخط المفقود',
       replacedFont: 'الخط البديل',
@@ -1034,17 +842,13 @@ export default {
       unload: 'إلغاء التحميل',
       load: 'تحميل',
 
-      empty:
-        'لا توجد مراجع خارجية أو صور في هذا الرسم',
+      empty: 'لا توجد مراجع خارجية أو صور في هذا الرسم',
 
-      urlPrompt:
-        'أدخل رابط URL لملف DWG أو DXF',
+      urlPrompt: 'أدخل رابط URL لملف DWG أو DXF',
 
-      urlRequired:
-        'يرجى إدخال رابط URL',
+      urlRequired: 'يرجى إدخال رابط URL',
 
-      loadFailed:
-        'فشل تحميل المرجع "{name}"'
+      loadFailed: 'فشل تحميل المرجع "{name}"'
     },
     memoryProfile: {
       ...enMain.toolPalette.memoryProfile,
@@ -1076,22 +880,18 @@ export default {
 
       fontMemory: 'ذاكرة الخطوط / MText',
 
-      fontMemorySummary:
-        'الذاكرة {live} (الرئيسية {main} · العمال {workers})',
+      fontMemorySummary: 'الذاكرة {live} (الرئيسية {main} · العمال {workers})',
 
-      fontStorage:
-        'تخزين IndexedDB (ليس ذاكرة تشغيل)',
+      fontStorage: 'تخزين IndexedDB (ليس ذاكرة تشغيل)',
 
-      fontStorageSummary:
-        '{count} خط مخزن مؤقتًا · {size}',
+      fontStorageSummary: '{count} خط مخزن مؤقتًا · {size}',
 
       materialPoint: 'نقاط',
       materialLine: 'خطوط',
       materialFill: 'تعبئة',
       materialTotal: 'الإجمالي',
 
-      dataModelCounts:
-        '{entities} عنصر · {objects} كائن · {total}',
+      dataModelCounts: '{entities} عنصر · {objects} كائن · {total}',
 
       dataModelCategories: 'حسب الفئة',
       dataModelEntityTypes: 'حسب نوع العنصر',
@@ -1150,8 +950,7 @@ export default {
 
       collectedAt: 'تم جمع البيانات في {time}',
 
-      hint:
-        'يتم تسجيل البيانات تلقائيًا عند آخر فتح للرسم. استخدم OPENPROF=1 لتسجيلها أيضًا في وحدة التحكم.',
+      hint: 'يتم تسجيل البيانات تلقائيًا عند آخر فتح للرسم. استخدم OPENPROF=1 لتسجيلها أيضًا في وحدة التحكم.',
 
       noData:
         'لا توجد بيانات أداء للفتح حتى الآن. افتح رسمًا أولًا ثم شغّل OPENPERF.',
@@ -1197,7 +996,7 @@ export default {
         compact: 'الضغط'
       }
     }
-},
+  },
 
   colorDropdown: {
     ...enMain.colorDropdown,
@@ -1215,8 +1014,7 @@ export default {
     color: 'اللون: ',
     colorIndex: 'فهرس اللون: ',
 
-    inputPlaceholder:
-      '0-256, BYLAYER, BYBLOCK',
+    inputPlaceholder: '0-256, BYLAYER, BYBLOCK',
 
     rgb: 'RGB: '
   },
@@ -1225,7 +1023,6 @@ export default {
     ...enMain.entityInfo,
 
     color: 'اللون',
-    layer: 'الطبقة',
     lineType: 'نوع الخط'
   },
 
@@ -1238,67 +1035,29 @@ export default {
     layer: 'الطبقة'
   },
 
-  layerSelect: {
-    ...enMain.layerSelect,
-
-    searchPlaceholder: 'البحث باسم الطبقة',
-
-    noLayerAvailable: 'لا توجد طبقات متاحة',
-    noMatchedLayer: 'لا توجد طبقات مطابقة',
-
-    tooltip: {
-      ...enMain.layerSelect.tooltip,
-
-      layer: 'الطبقة',
-      visibility: 'الرؤية',
-      freeze: 'تجميد',
-      lock: 'قفل',
-      lineType: 'نوع الخط',
-      color: 'اللون',
-
-      visible: 'مرئي',
-      hidden: 'مخفي',
-
-      frozen: 'مجمد',
-      thawed: 'غير مجمد',
-
-      locked: 'مقفل',
-      unlocked: 'غير مقفل'
-    }
-  },
-
   message: {
     ...enMain.message,
 
-    loadingFonts:
-      'جارٍ تحميل الخطوط ...',
+    loadingFonts: 'جارٍ تحميل الخطوط ...',
 
-    loadingDwgConverter:
-      'جارٍ تحميل محول DWG ...',
+    loadingDwgConverter: 'جارٍ تحميل محول DWG ...',
 
-    fontsNotFound:
-      'تعذر العثور على الخطوط {fonts} في مستودع الخطوط!',
+    fontsNotFound: 'تعذر العثور على الخطوط {fonts} في مستودع الخطوط!',
 
-    fontsNotLoaded:
-      'تعذر تحميل الخطوط {fonts}!',
+    fontsNotLoaded: 'تعذر تحميل الخطوط {fonts}!',
 
     fontMissedInDrawing:
       'الخط "{font}" مطلوب بواسطة {count} عنصر نصي ولكنه غير متاح. سيتم العرض باستخدام "{replacementFont}".',
 
-    fontMissedReplacement:
-      '"{font}" (يتم العرض باستخدام "{replacement}")',
+    fontMissedReplacement: '"{font}" (يتم العرض باستخدام "{replacement}")',
 
-    fontCached:
-      'تم تخزين الخط "{font}" مؤقتًا بنجاح.',
+    fontCached: 'تم تخزين الخط "{font}" مؤقتًا بنجاح.',
 
-    fontCacheFailed:
-      'فشل تخزين الخط "{fileName}" مؤقتًا.',
+    fontCacheFailed: 'فشل تخزين الخط "{fileName}" مؤقتًا.',
 
-    failedToGetAvaiableFonts:
-      'فشل الحصول على الخطوط المتاحة من "{url}"!',
+    failedToGetAvaiableFonts: 'فشل الحصول على الخطوط المتاحة من "{url}"!',
 
-    failedToOpenFile:
-      'فشل فتح الملف "{fileName}"!',
+    failedToOpenFile: 'فشل فتح الملف "{fileName}"!',
 
     failedToOpenFileToast:
       'فشل فتح "{fileName}". راجع مركز الإشعارات للتفاصيل.',
@@ -1320,8 +1079,7 @@ export default {
     failedToOpenFileLicenseInvalid:
       'فشل فتح "{fileName}". ترخيص محول DWG مفقود أو غير صالح.',
 
-    fetchingDrawingFile:
-      'جارٍ جلب ملف الرسم ...',
+    fetchingDrawingFile: 'جارٍ جلب ملف الرسم ...',
 
     unknownEntities:
       'يحتوي هذا الرسم على {count} عنصر غير معروف أو غير مدعوم. لن يتم عرض هذه العناصر.',
@@ -1373,5 +1131,4 @@ export default {
       systemInfo: 'معلومات النظام'
     }
   }
-
 }

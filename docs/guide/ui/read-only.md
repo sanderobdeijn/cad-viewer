@@ -24,7 +24,6 @@ A vertical toolbar floating on the right side of the canvas — the primary comm
 - Pan (hand)
 - Zoom to Extents
 - Window Zoom
-- Layer Management (opens panel)
 - Measure Tool Group (pops out measure panel)
 - Reading Mode (enter fullscreen focus mode)
 - Toggle Light/Dark Background
@@ -33,9 +32,8 @@ A vertical toolbar floating on the right side of the canvas — the primary comm
 
 | Panel | Description |
 |---|---|
-| Layers | Lists all layers; supports on/off, lock, freeze, isolate |
 | Measurements | Lists all measurements in the current drawing; click to locate |
-| Entity Info | Shows type, coordinates, layer, properties of selected entity |
+| Entity Info | Shows type, coordinates, properties of selected entity |
 | Statistics | Block usage statistics |
 | Missing Resources | Alerts for missing fonts or external references |
 
@@ -52,7 +50,7 @@ Mobile uses a **bottom tab bar + drawer panel** design, concentrating all intera
 
 ### Bottom Tab Bar
 
-Five icon buttons are displayed at the bottom of the screen:
+Four icon buttons are displayed at the bottom of the screen:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,13 +58,8 @@ Five icon buttons are displayed at the bottom of the screen:
 |---|---|
 | Zoom | Zoom tool group: zoom in, zoom out, zoom to extents, window zoom |
 | Measure | Measure tool group: distance, continuous distance, area, coordinates, arc length, angle |
-| Layers | Opens layer panel drawer |
 | Layout | Switch layout |
 | Setting | Settings menu: theme, simulated mouse, OSNAP, etc. |
-
-### Drawer Panel
-
-Tapping the Layers button pops up a layer panel from the bottom, showing each layer's name, visibility (On/Off), color, etc. Tapping the canvas or area outside the panel closes the drawer.
 
 ### Canvas Area
 
@@ -74,4 +67,4 @@ The canvas fills the upper portion of the screen. When a measurement is selected
 
 ### Differences from Desktop
 
-Mobile does not display the right-side toolbar or docked panels; their functions are replaced by the bottom tab bar + drawer panels.
+Mobile does not display the right-side toolbar or docked panels; their functions are replaced by the bottom tab bar.

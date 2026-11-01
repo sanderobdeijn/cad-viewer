@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 
 const mockStore = {
-  dialogs: { activePaletteTab: '', layerManager: false, findFocusTick: 0 }
+  dialogs: { activePaletteTab: '', toolPalette: false, findFocusTick: 0 }
 }
 
 jest.mock('@mlightcad/cad-simple-viewer', () => ({
@@ -72,7 +72,7 @@ describe('openFindPalette', () => {
   it('shows the Find tab and asks it to focus its field', () => {
     openFindPalette()
     expect(mockStore.dialogs.activePaletteTab).toBe('find')
-    expect(mockStore.dialogs.layerManager).toBe(true)
+    expect(mockStore.dialogs.toolPalette).toBe(true)
     expect(mockStore.dialogs.findFocusTick).toBe(1)
     openFindPalette()
     expect(mockStore.dialogs.findFocusTick).toBe(2)

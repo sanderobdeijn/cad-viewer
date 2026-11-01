@@ -1,9 +1,9 @@
 <template>
   <el-config-provider :size="'small'">
     <ml-tool-palette
-      class="ml-layer-manager"
+      class="ml-tool-palette-manager"
       :style="paletteStyle"
-      v-model="store.dialogs.layerManager"
+      v-model="store.dialogs.toolPalette"
       :title="activeTabTitle"
       :left-offset="paletteOffsets.left"
       :right-offset="paletteOffsets.right"
@@ -15,13 +15,7 @@
         :tabs="tabs"
       >
         <div
-          v-if="store.dialogs.activePaletteTab === 'layerManager'"
-          class="ml-layer-list-wrapper"
-        >
-          <ml-layer-list :editor="props.editor" />
-        </div>
-        <div
-          v-else-if="store.dialogs.activePaletteTab === 'entityProperties'"
+          v-if="store.dialogs.activePaletteTab === 'entityProperties'"
           class="ml-entity-properties-wrapper"
         >
           <ml-entity-properties
@@ -71,10 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  AcApDocManager,
-  AcApLayerService
-} from '@mlightcad/cad-simple-viewer'
+import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
 import { AcDbEntityProperties } from '@mlightcad/data-model'
 import {
   type MlOverflowTab,
@@ -90,23 +81,11 @@ import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlCountList from './MlCountList.vue'
 import MlEntityProperties from './MlEntityProperties.vue'
 import MlFindPalette from './MlFindPalette.vue'
-import MlLayerList from './MlLayerList.vue'
 import MlMeasurementPalette from './MlMeasurementPalette.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
 import MlMissingResources from './MlMissingResources.vue'
 import MlOpenFileProfile from './MlOpenFileProfile.vue'
 
-/**
- * Properties of palette manager component
- */
-interface Props {
-  /**
-   * Current editor
-   */
-  editor: AcApDocManager
-}
-
-const props = defineProps<Props>()
 const containerRect = useViewerRect()
 
 const DEFAULT_WIDTH = 520
@@ -146,10 +125,10 @@ const paletteStyle = computed(() => {
 })
 
 const syncPaletteToContainer = () => {
-  if (!store.dialogs.layerManager) return
+  if (!store.dialogs.toolPalette) return
 
   const paletteElement =
-    document.querySelector<HTMLElement>('.ml-layer-manager')
+    document.querySelector<HTMLElement>('.ml-tool-palette-manager')
   if (!paletteElement) return
 
   const {
@@ -192,7 +171,6 @@ const syncPaletteToContainer = () => {
 }
 
 const baseTabNames = [
-  'layerManager',
   'entityProperties',
   'countList',
   'find',
@@ -233,7 +211,7 @@ watch(
 )
 
 watch(
-  () => [containerRect.value, store.dialogs.layerManager],
+  () => [containerRect.value, store.dialogs.toolPalette],
   async () => {
     await nextTick()
     syncPaletteToContainer()
@@ -253,7 +231,7 @@ const propertyRows = computed(() => {
     const entity = blockTable.getEntityById(id)
     if (!entity) continue
     list.push(entity.properties)
-    locked.push(AcApLayerService.isEntityOnLockedLayer(db, entity))
+    locked.push(false)
   }
   return { list, locked }
 })
@@ -262,7 +240,7 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
 </script>
 
 <style scoped>
-.ml-layer-manager {
+.ml-tool-palette-manager {
   left: var(--ml-palette-left);
   top: var(--ml-palette-top);
   width: var(--ml-palette-width);
@@ -270,15 +248,6 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
   max-width: var(--ml-palette-max-width);
   max-height: var(--ml-palette-max-height);
   z-index: 7;
-}
-
-.ml-layer-list-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .ml-entity-properties-wrapper {

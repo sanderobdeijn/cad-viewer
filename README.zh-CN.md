@@ -146,7 +146,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 
 | 包名 | 作用 | 命令 / 能力 |
 |------|------|-------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏、图层管理器与测量列表面板 UI**（纯 DOM，不依赖 Vue/React） | `layer`、`measurementpanel`、默认工具栏（视图、测量、主题、语言） |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏与测量列表面板 UI**（纯 DOM，不依赖 Vue/React） | `measurementpanel`、默认工具栏（视图、测量、主题、语言） |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 简易查看器的 UI 层
 
@@ -155,7 +155,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 主要能力：
 
 - **可配置工具栏**（四边任意放置、内置 CAD 命令、嵌套菜单、自定义按钮）
-- **停靠面板**：含**图层管理器**标签页（图层开关、ACI 颜色选择、双击缩放至图层）与**测量**标签页
+- **停靠面板**：含**测量**标签页
 - **主题同步**：跟随 `COLORTHEME` 系统变量及 host 上的 `--ml-ui-*` CSS 变量
 - **语言同步**：跟随 `AcApI18n`（英 / 中 / 捷克语 / 土耳其语）
 
@@ -249,8 +249,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 
 #### 显示控制
 
--   [x] 图层显示 / 隐藏
--   [x] 图层冻结 / 锁定
 -   [x] 线宽显示
 -   [ ] 线型比例
 -   [x] 背景 / 主题切换
@@ -337,12 +335,11 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 #### 属性面板（Property Palette）
 
 -   [x] 选中实体属性
--   [ ] 图层、颜色、线型编辑
+-   [ ] 颜色、线型编辑
 -   [x] 属性修改实时更新
 
 #### 面板与界面
 
--   [x] 图层管理器
 -   [ ] 块管理器
 -   [x] 命令历史 / 控制台
 -   [x] 状态栏（捕捉、正交、网格）

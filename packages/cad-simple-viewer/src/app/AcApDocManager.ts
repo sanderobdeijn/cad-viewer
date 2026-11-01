@@ -25,19 +25,6 @@ import {
   AcApEraseCmd,
   AcApHatchCmd,
   AcApHideObjectsCmd,
-  AcApLayerCloseCmd,
-  AcApLayerCmd,
-  AcApLayerCurCmd,
-  AcApLayerDelCmd,
-  AcApLayerFreezeCmd,
-  AcApLayerIsoCmd,
-  AcApLayerLockCmd,
-  AcApLayerOnCmd,
-  AcApLayerPCmd,
-  AcApLayerThawCmd,
-  AcApLayerUnisoCmd,
-  AcApLayerUnlockCmd,
-  AcApLayoffCmd,
   AcApLineCmd,
   AcApLogCmd,
   AcApMLineCmd,
@@ -152,8 +139,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   MEASUREAREA: ['AA', 'AREA'],
   MEASUREANGLE: ['ANG'],
   '-HATCH': ['-H'],
-  LAYER: ['LA'],
-  '-LAYER': ['-LA'],
   LINE: ['L'],
   MLINE: ['ML'],
   MTEXT: ['T'],
@@ -1423,7 +1408,7 @@ export class AcApDocManager {
     await acapWithSecondaryDatabase(db, async () => {
       await db.read(
         content,
-        { readOnly: true, ...dbOptions },
+        { readOnly: true, ...dbOptions, flattenLayers: true },
         fileExtension === 'dwg' ? AcDbFileType.DWG : AcDbFileType.DXF
       )
     })
@@ -1867,19 +1852,6 @@ export class AcApDocManager {
       commandManager: this._commandManager
     })
     addSystemCommand('-hatch', '-hatch', new AcApHatchCmd())
-    addSystemCommand('-layer', '-layer', new AcApLayerCmd())
-    addSystemCommand('laycur', 'laycur', new AcApLayerCurCmd())
-    addSystemCommand('laydel', 'laydel', new AcApLayerDelCmd())
-    addSystemCommand('layfrz', 'layfrz', new AcApLayerFreezeCmd())
-    addSystemCommand('layiso', 'layiso', new AcApLayerIsoCmd())
-    addSystemCommand('laylck', 'laylck', new AcApLayerLockCmd())
-    addSystemCommand('layon', 'layon', new AcApLayerOnCmd())
-    addSystemCommand('layoff', 'layoff', new AcApLayoffCmd())
-    addSystemCommand('laythw', 'laythw', new AcApLayerThawCmd())
-    addSystemCommand('layuniso', 'layuniso', new AcApLayerUnisoCmd())
-    addSystemCommand('layulk', 'layulk', new AcApLayerUnlockCmd())
-    addSystemCommand('layerp', 'layerp', new AcApLayerPCmd())
-    addSystemCommand('layerclose', 'layerclose', new AcApLayerCloseCmd())
     addSystemCommand('line', 'line', new AcApLineCmd())
     addSystemCommand('mline', 'mline', new AcApMLineCmd())
     addSystemCommand('mtext', 'mtext', new AcApMTextCmd())
@@ -2437,15 +2409,11 @@ export class AcApDocManager {
   private setOptions(options?: AcApOpenDatabaseOptions) {
     if (options == null) {
       options = {
-        drawNoPlotLayers: false,
         progressiveRendering: false
       }
     } else {
       this.stripObsoleteFontOpenOptions(options)
       this.stripDeprecatedWaitForTextGeometry(options)
-      if (options.drawNoPlotLayers == null) {
-        options.drawNoPlotLayers = false
-      }
       if (options.progressiveRendering == null) {
         options.progressiveRendering = false
       }

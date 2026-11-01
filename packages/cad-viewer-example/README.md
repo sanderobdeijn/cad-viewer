@@ -4,7 +4,7 @@ A Vue 3 demo that embeds [`@mlightcad/cad-viewer`](https://github.com/mlightcad/
 
 ## Features
 
-- **Full CAD UI** — `MlCadViewer` with toolbars, layer manager, command line, dialogs, and status bar
+- **Full CAD UI** — `MlCadViewer` with toolbars, command line, dialogs, and status bar
 - **Local files** — Drag-and-drop or file picker for `.dxf` / `.dwg` before entering the viewer
 - **Open modes** — Read or Write access when opening a drawing
 - **Internationalization** — Built-in English/Chinese UI via `vue-i18n`; host app can merge custom messages

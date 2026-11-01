@@ -166,6 +166,12 @@ export interface AcDbDatabaseConverterReadOptions {
    * System variables to override in the database after HEADER is processed.
    */
   sysVars?: Record<string, number | boolean | string>
+
+  /**
+   * Collapses the drawing onto layer `0` while reading. See
+   * {@link AcDbLayerFlattener}.
+   */
+  flattenLayers?: boolean
 }
 
 /**
@@ -436,7 +442,8 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
       minimumChunkSize = 10,
       progress,
       timeout,
-      sysVars
+      sysVars,
+      flattenLayers
     } = options
 
     const loadDbTimeEntry: AcCmPerformanceEntry<AcDbConvertDatabasePerformanceData> =
@@ -543,6 +550,7 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
             if (db.tables.layerTable.numEntries === 0) {
               db.createDefaultData({ layer: true })
             }
+            if (flattenLayers) db.beginLayerFlatten()
             return data
           }
         },
@@ -658,6 +666,7 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
           step: 0,
           progress: percentage,
           task: async (data: { model: TModel }) => {
+            db.endLayerFlatten()
             return data
           }
         },

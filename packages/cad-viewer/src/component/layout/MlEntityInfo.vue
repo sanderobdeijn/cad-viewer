@@ -17,14 +17,6 @@
     </el-row>
     <el-row class="ml-entity-info-text">
       <el-col :span="10">
-        <el-text size="small">{{ t('main.entityInfo.layer') }}</el-text>
-      </el-col>
-      <el-col :span="14">
-        <el-text size="small">{{ info.layer }}</el-text>
-      </el-col>
-    </el-row>
-    <el-row class="ml-entity-info-text">
-      <el-col :span="10">
         <el-text size="small">{{ t('main.entityInfo.lineType') }}</el-text>
       </el-col>
       <el-col :span="14">
@@ -64,12 +56,11 @@ const top = computed(
 
 const info = computed(() => {
   const ent = entity.value as unknown as AcDbEntity | null
-  if (!ent) return { type: '', color: '', layer: '', lineType: '' }
+  if (!ent) return { type: '', color: '', lineType: '' }
 
   return {
     type: entityName(ent),
     color: colorName(ent.color.toString()),
-    layer: ent.layer,
     lineType: ent.lineType
   }
 })

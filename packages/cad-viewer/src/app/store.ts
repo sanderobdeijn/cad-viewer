@@ -2,8 +2,8 @@ import { reactive } from 'vue'
 
 export const store = reactive({
   dialogs: {
-    layerManager: false,
-    activePaletteTab: 'layerManager',
+    toolPalette: false,
+    activePaletteTab: 'entityProperties',
     /** Sub-tab inside Missing / External Resources palette */
     activeMissingResourceTab: 'font' as 'font' | 'xref',
     /**

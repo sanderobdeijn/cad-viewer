@@ -146,7 +146,7 @@ Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jedn
 
 | Balíček | Účel | Příkazy / schopnosti |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Panel nástrojů, správce vrstev a paleta měření** pro `cad-simple-viewer` (čisté DOM, bez Vue/React) | `layer`, `measurementpanel`, výchozí panel nástrojů (zobrazení, měření, motiv, jazyk) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Panel nástrojů a paleta měření** pro `cad-simple-viewer` (čisté DOM, bez Vue/React) | `measurementpanel`, výchozí panel nástrojů (zobrazení, měření, motiv, jazyk) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI vrstva pro jednoduchý prohlížeč
 
@@ -155,7 +155,7 @@ Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jedn
 Poskytuje:
 
 - **Konfigurovatelný panel nástrojů** (umístění na libovolném okraji, výchozí CAD příkazy, vnořená menu, vlastní položky)
-- **Dokovací panel** se záložkou **správce vrstev** (zapnutí/vypnutí vrstvy, výběr barvy ACI, přiblížení na vrstvu dvojklikem) a záložkou **měření**
+- **Dokovací panel** se záložkou **měření**
 - **Synchronizaci motivu** se sysvar `COLORTHEME` a CSS tokeny `--ml-ui-*` na hostitelském elementu
 - **Synchronizaci jazyka** s `AcApI18n` (angličtina / čínština / čeština / turečtina)
 
@@ -248,8 +248,6 @@ Legenda:
 
 #### Ovládání zobrazení obsahu
 
-* [x] Viditelnost vrstev zap/vyp
-* [x] Zmrazení / uzamčení vrstev
 * [x] Zobrazení tloušťky čar
 * [ ] Měřítko typů čar
 * [x] Přepínání pozadí / motivu
@@ -337,12 +335,11 @@ Legenda:
 #### Paleta vlastností
 
 * [x] Vlastnosti vybrané entity
-* [ ] Úprava vrstvy, barvy, typu čáry
+* [ ] Úprava barvy, typu čáry
 * [x] Živá aktualizace při změně
 
 #### Panely a UI
 
-* [x] Správce vrstev
 * [ ] Správce bloků
 * [x] Historie příkazů / konzole
 * [x] Stavový řádek (přichycení, orto, mřížka)

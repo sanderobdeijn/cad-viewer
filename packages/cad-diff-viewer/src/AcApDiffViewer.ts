@@ -1514,7 +1514,7 @@ export class AcApDiffViewer {
         label.textContent = `${hit.dxfType} · ${hit.objectId}`
         const meta = document.createElement('span')
         meta.className = 'ml-diff-result-meta'
-        meta.textContent = `${hit.layer} · ${kindLabel(hit.kind)}`
+        meta.textContent = kindLabel(hit.kind)
         btn.append(label, meta)
         btn.addEventListener('click', () => {
           this.navIndex = navIdx >= 0 ? navIdx : this.navIndex

@@ -56,7 +56,8 @@ export class AcDbNativeDxfConverter extends AcDbDatabaseConverter<null> {
     const {
       minimumChunkSize = 10,
       progress,
-      encoding
+      encoding,
+      flattenLayers
     } = options
 
     this.progress = progress
@@ -93,6 +94,7 @@ export class AcDbNativeDxfConverter extends AcDbDatabaseConverter<null> {
         entityBatchSize: Math.max(1, minimumChunkSize || 200),
         yieldBudgetMs: ACCM_DEFAULT_UI_YIELD_BUDGET_MS,
         totalBytes,
+        flattenLayers,
         onProgress: async ratio => {
           const pct = Math.min(
             PARSE_END_PCT - 1,

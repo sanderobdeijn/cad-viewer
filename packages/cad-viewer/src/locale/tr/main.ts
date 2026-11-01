@@ -203,7 +203,6 @@ export default {
     group: {
       draw: 'Çiz',
       modify: 'Düzenle',
-      layer: 'Katman',
       properties: 'Özellikler',
       utilities: 'Yardımcı Araçlar',
       annotation: 'Açıklama',
@@ -216,19 +215,6 @@ export default {
       color: 'Renk',
       lineType: 'Çizgi Tipi',
       lineWeight: 'Çizgi Kalınlığı'
-    },
-    layerTools: {
-      select: 'Katman',
-      off: 'Katmanı Kapat',
-      isolate: 'İzole Et',
-      freeze: 'Katmanı Dondur',
-      lock: 'Katmanı Kilitle',
-      current: 'Geçerli Yap',
-      allOn: 'Katmanı Aç',
-      unisolate: 'İzolasyonu Kaldır',
-      thaw: 'Katmanı Çöz',
-      unlock: 'Katman Kilidini Aç',
-      restore: 'Katmanı Geri Yükle'
     },
     arc: {
       threePoint: '3 Nokta',
@@ -298,25 +284,6 @@ export default {
         'Yeni oluşturulan nesneler veya seçili varlıklar için çizgi tipini ayarlayın.',
       propertyLineWeight:
         'Yeni oluşturulan nesneler veya seçili varlıklar için çizgi kalınlığını ayarlayın.',
-      layerAction: {
-        off: 'Seçili katmanı kapatarak katmanı dondurmadan nesnelerini gizler.',
-        isolate:
-          'Yalnızca seçili katmanı gösterir ve diğerlerini gizleyerek ilgili nesnelere odaklanmanızı sağlar.',
-        freeze:
-          'Seçili katmanı dondurarak nesnelerini gizler ve yeniden oluşturma sırasında atlanmasını sağlar.',
-        lock: 'Seçili katmanı kilitleyerek nesnelerinin görünür kalmasını ancak düzenlenememesini sağlar.',
-        current:
-          'Seçili katmanı geçerli yaparak yeni nesnelerin o katmanda oluşturulmasını sağlar.',
-        allOn:
-          'Şu anda kapalı olan tüm katmanları açar. Donmuş katmanlar donmuş kalır.',
-        unisolate:
-          'Katman İzole tarafından gizlenen veya kilitlenen katmanları, sonraki katman değişikliklerini koruyarak geri yükler.',
-        thaw: 'Seçili katmanı çözerek nesnelerinin tekrar görünür ve yeniden oluşturmaya dahil olmasını sağlar.',
-        unlock:
-          'Seçili katmanın kilidini açarak nesnelerinin tekrar seçilip değiştirilebilmesini sağlar.',
-        restore:
-          'Bu şeritteki en son katman işleminden önceki katman durumunu geri yükler.'
-      },
       circleOption: {
         centerRadius: 'Bir merkez nokta ve yarıçap belirterek daire oluşturun.',
         centerDiameter: 'Bir merkez nokta ve çap belirterek daire oluşturun.',
@@ -438,10 +405,6 @@ export default {
     measurementExport: {
       text: 'Dışa Aktar',
       description: 'Ölçümleri sidecar JSON dosyasına dışa aktarır'
-    },
-    layer: {
-      text: 'Katman',
-      description: 'Katmanları yönetir'
     },
     pan: {
       text: 'Kaydır',
@@ -572,66 +535,6 @@ export default {
         multipleEntitySelected: '{count} varlık seçildi',
         propValCopied: 'Özellik değeri kopyalandı',
         failedToCopyPropVal: 'Özellik değeri kopyalanamadı!'
-      }
-    },
-    layerManager: {
-      tab: 'Katmanlar',
-      title: 'Katman Yöneticisi',
-      currentLayerLabel: 'Geçerli katman: {name}',
-      searchPlaceholder: 'Katman ara',
-      filters: 'Filtreler',
-      collapseFilters: 'Filtreleri daralt',
-      expandFilters: 'Filtreleri genişlet',
-      filterAll: 'Tümü',
-      filterAllUsed: 'Kullanılan Tüm Katmanlar',
-      toolbar: {
-        showFilters: 'Katman Filtreleri',
-        newFilter: 'Yeni Filtre',
-        newFilterGroup: 'Yeni Grup Filtresi',
-        newLayer: 'Yeni Katman',
-        deleteLayer: 'Katmanı Sil',
-        setCurrent: 'Geçerli Yap'
-      },
-      prompts: {
-        newFilterTitle: 'Yeni Filtre',
-        newFilterName: 'Filtre adını girin',
-        newFilterGroupTitle: 'Yeni Grup Filtresi',
-        newFilterGroupName: 'Grup filtresi adını girin',
-        newLayerTitle: 'Yeni Katman',
-        newLayerName: 'Katman adını girin',
-        confirm: 'Tamam',
-        cancel: 'İptal'
-      },
-      messages: {
-        filterCreated: '"{name}" filtresi oluşturuldu',
-        filterExists: '"{name}" adlı filtre zaten var',
-        filterCreateFailed: 'Filtre oluşturulamadı',
-        layerCreated: '"{name}" katmanı oluşturuldu',
-        layerExists: '"{name}" katmanı zaten var',
-        layerCreateFailed: 'Katman oluşturulamadı',
-        layerDeleted: '"{name}" katmanı silindi',
-        layerDeleteFailed: '"{name}" katmanı silinemedi',
-        cannotDeleteLayer0: '"0" katmanı silinemez',
-        cannotDeleteCurrent: 'Geçerli katman silinemez',
-        selectLayerFirst: 'Önce bir katman seçin',
-        setCurrentSuccess: 'Geçerli katman "{name}" olarak ayarlandı',
-        setCurrentFailed: 'Geçerli katman ayarlanamadı'
-      },
-      layerList: {
-        name: 'Ad',
-        on: 'Açık',
-        freeze: 'Dondur',
-        lock: 'Kilitle',
-        plot: 'Çizdir',
-        color: 'Renk',
-        linetype: 'Çizgi tipi',
-        lineweight: 'Çizgi kalınlığı',
-        transparency: 'Saydamlık',
-        description: 'Açıklama',
-        currentLayer: 'Geçerli katman',
-        newLayerPlaceholder: 'Katman adı',
-        zoomToLayer: 'Tıklanan "{layer}" katmanına yakınlaştırıldı',
-        lineWeightDefault: 'Varsayılan'
       }
     },
     find: {
@@ -849,7 +752,6 @@ export default {
   },
   entityInfo: {
     color: 'Renk',
-    layer: 'Katman',
     lineType: 'Çizgi Tipi'
   },
   ribbonProperty: {
@@ -857,25 +759,6 @@ export default {
     lineType: 'Çizgi Tipi',
     lineWeight: 'Çizgi Kalınlığı',
     layer: 'Katman'
-  },
-  layerSelect: {
-    searchPlaceholder: 'Katman adı ara',
-    noLayerAvailable: 'Kullanılabilir katman yok',
-    noMatchedLayer: 'Eşleşen katman yok',
-    tooltip: {
-      layer: 'Katman',
-      visibility: 'Görünürlük',
-      freeze: 'Dondur',
-      lock: 'Kilitle',
-      lineType: 'Çizgi Tipi',
-      color: 'Renk',
-      visible: 'Görünür',
-      hidden: 'Gizli',
-      frozen: 'Donmuş',
-      thawed: 'Çözülmüş',
-      locked: 'Kilitli',
-      unlocked: 'Kilidi Açık'
-    }
   },
   message: {
     loadingFonts: 'Yazı tipleri yükleniyor ...',

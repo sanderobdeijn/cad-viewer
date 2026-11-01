@@ -10,7 +10,6 @@ import {
 
 import { AcApDocManager, AcApSettingManager } from '../../../app'
 import { AcApI18n } from '../../../i18n'
-import { isEntityOnLockedLayer as entityIsOnLockedLayer } from '../../../service/AcApLockedLayer'
 import { AcUiTouchPointTutorialDialog } from '../../../ui/AcUiTouchPointTutorialDialog'
 import type {
   AcEdSessionAccessory,
@@ -727,24 +726,6 @@ export class AcEdInputManager {
   private getEntityById(objectId: string): AcDbEntity | undefined {
     return AcApDocManager.instance.curDocument.database.tables.blockTable.getEntityById(
       objectId
-    )
-  }
-
-  /**
-   * Returns whether the specified entity belongs to a locked layer.
-   *
-   * The entity itself only stores its layer name, so this helper resolves the
-   * layer record from the current drawing database and inspects its lock state.
-   * Missing layer records are treated as unlocked to avoid rejecting input due
-   * to incomplete metadata.
-   *
-   * @param entity - Entity being evaluated for prompt selection
-   * @returns `true` if the entity's layer exists and is locked; otherwise `false`
-   */
-  private isEntityOnLockedLayer(entity: AcDbEntity): boolean {
-    return entityIsOnLockedLayer(
-      AcApDocManager.tryGetInstance()?.curDocument?.database,
-      entity
     )
   }
 
@@ -1468,8 +1449,6 @@ export class AcEdInputManager {
         new Promise<string[]>((resolve, reject) => {
           this.active = true
           this.entitySelectionActive = true
-          const previousAllowLocked = this.view.allowSelectOnLockedLayer
-          this.view.allowSelectOnLockedLayer = options.allowObjectOnLockedLayer
           const keywordSession = this.startKeywordSession(options, true)
           if (!keywordSession) {
             this._commandLine.setPrompt(options.message)
@@ -1551,7 +1530,6 @@ export class AcEdInputManager {
             disposeGesture?.()
             disposeGesture = null
             this.view.setNavigationEnabled(true)
-            this.view.allowSelectOnLockedLayer = previousAllowLocked
 
             document.removeEventListener('keydown', keyHandler)
             this.view.canvas.removeEventListener('mousedown', mouseDown)
@@ -1787,7 +1765,7 @@ export class AcEdInputManager {
    *
    * Selection is performed by clicking in the view and validating the first
    * hit-tested entity under the cursor. The picked entity may be rejected when
-   * it belongs to a locked layer or does not satisfy the prompt's allowed-class
+   * it does not satisfy the prompt's allowed-class
    * filter, in which case the rejection message is shown and the prompt remains
    * active. Keywords and `AllowNone` behavior are also supported.
    *
@@ -1895,14 +1873,6 @@ export class AcEdInputManager {
 
             const entity = this.getEntityById(picked[0].id)
             if (!entity) {
-              this._commandLine.showMessage(options.rejectMessage, 'warning')
-              return
-            }
-
-            if (
-              !options.allowObjectOnLockedLayer &&
-              this.isEntityOnLockedLayer(entity)
-            ) {
               this._commandLine.showMessage(options.rejectMessage, 'warning')
               return
             }

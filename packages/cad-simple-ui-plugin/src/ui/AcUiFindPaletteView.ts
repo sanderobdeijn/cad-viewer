@@ -321,7 +321,7 @@ export class AcUiFindPaletteView {
     return name.trim() ? name : this.i18n.t('findPalette.unnamedLayout')
   }
 
-  /** `Type · layer · (x, y)` label for a hit. */
+  /** `Type · (x, y)` label for a hit. */
   private describeHit(hit: AcUiFindLayoutHit): string {
     let kind = this.i18n.t(`findPalette.kind.${hit.kind}`)
     if (hit.kind === 'attribute' || (hit.kind === 'block' && hit.tag)) {
@@ -329,7 +329,7 @@ export class AcUiFindPaletteView {
       if (owner) kind = `${kind} ${owner}`
     }
     const at = `(${round(hit.position.x)}, ${round(hit.position.y)})`
-    return `${kind} · ${hit.layer} · ${at}`
+    return `${kind} · ${at}`
   }
 
   /**

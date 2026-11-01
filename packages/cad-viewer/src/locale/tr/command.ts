@@ -4,16 +4,12 @@ export default {
       description:
         'Şerit tabanlı bağlamsal iş akışıyla tarama dolgusu oluşturur'
     },
-    layer: {
-      description: 'Katman özellikleri yöneticisi'
-    },
     md: {
       description:
         'Yazı tipi, görsel ve xref’ler için Eksik / Harici Kaynaklar paletini açar'
     },
     xref: {
-      description:
-        'Eksik / Harici Kaynaklar paletini Xref sekmesinde açar'
+      description: 'Eksik / Harici Kaynaklar paletini Xref sekmesinde açar'
     },
     properties: {
       description: 'Varlık özellikleri paleti'
