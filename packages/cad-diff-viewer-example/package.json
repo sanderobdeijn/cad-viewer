@@ -21,8 +21,8 @@
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
     "@mlightcad/libredwg-converter": "workspace:*",
-    "@mlightcad/mtext-parser": "^1.5.5",
-    "@mlightcad/mtext-renderer": "^0.13.5",
+    "@mlightcad/mtext-parser": "workspace:*",
+    "@mlightcad/mtext-renderer": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",
     "three": "^0.186.1"
   }

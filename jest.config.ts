@@ -33,11 +33,13 @@ const packagesProject: ProjectConfig = {
   },
   transformIgnorePatterns: [
     // three@0.186's CJS entry re-exports ESM (`three.module.js` / `three.core.js`).
-    '/node_modules/(?!.*(mtext-parser|rbush|quickselect|three/build/three))'
+    '/node_modules/(?!.*(rbush|quickselect|three/build/three))'
   ],
   testPathIgnorePatterns: [
     '/e2e/',
     '/__tests__/helpers/',
+    // mtext-renderer's suite runs on vitest (`pnpm test` runs both).
+    '<rootDir>/packages/mtext-renderer/',
     ...REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}/`)
   ],
   moduleNameMapper: {

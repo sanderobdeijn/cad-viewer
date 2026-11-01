@@ -1,0 +1,753 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { FontManager } from '../../src/font/fontManager'
+import { DefaultStyleManager } from '../../src/renderer/defaultStyleManager'
+import { MText } from '../../src/renderer/mtext'
+import { Shape } from '../../src/renderer/shape'
+import {
+  createDefaultColorSettings,
+  MTextAttachmentPoint,
+  MTextFlowDirection,
+  TextStyle
+} from '../../src/renderer/types'
+import { MainThreadRenderer } from '../../src/worker/mainThreadRenderer'
+import { WebWorkerRenderer } from '../../src/worker/webWorkerRenderer'
+
+const workerInstances: MockWorker[] = []
+
+class MockWorker {
+  onmessage: ((event: MessageEvent) => void) | null = null
+  onerror: ((event: ErrorEvent) => void) | null = null
+  /** Faces this mock pretends to have loaded (used by setMissedFonts filtering). */
+  loadedFaces = new Set<string>()
+
+  postMessage = vi.fn((message: Record<string, unknown>) => {
+    queueMicrotask(() => {
+      const { type, id, data } = message
+      if (type === 'getAvailableFonts') {
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: { fonts: [] }
+          }
+        } as MessageEvent)
+        return
+      }
+      if (type === 'loadFonts') {
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: { loaded: (data as { fonts: string[] }).fonts }
+          }
+        } as MessageEvent)
+        return
+      }
+      if (
+        type === 'setLazyFontLoading' ||
+        type === 'setAwaitFontsBeforeDraw' ||
+        type === 'setFontUrl'
+      ) {
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: { enabled: (data as { enabled: boolean }).enabled }
+          }
+        } as MessageEvent)
+        return
+      }
+      if (type === 'setDefaultFonts') {
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: {
+              fonts: (data as { fonts: string[] }).fonts,
+              symbolFonts: (data as { symbolFonts: string[] }).symbolFonts
+            }
+          }
+        } as MessageEvent)
+        return
+      }
+      if (type === 'setMissedFonts') {
+        const incoming =
+          (data as { missedFonts?: Record<string, number> }).missedFonts ?? {}
+        const missedFonts: Record<string, number> = {}
+        for (const [name, count] of Object.entries(incoming)) {
+          if (!this.loadedFaces.has(name.toLowerCase())) {
+            missedFonts[name] = count
+          }
+        }
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: { missedFonts }
+          }
+        } as MessageEvent)
+        return
+      }
+      if (type === 'render') {
+        this.onmessage?.({
+          data: {
+            id,
+            type,
+            success: true,
+            data: {
+              type: 'MText',
+              position: { x: 0, y: 0, z: 0 },
+              rotation: { x: 0, y: 0, z: 0, w: 1 },
+              scale: { x: 1, y: 1, z: 1 },
+              box: {
+                min: { x: 0, y: 0, z: 0 },
+                max: { x: 0, y: 0, z: 0 }
+              },
+              children: []
+            }
+          }
+        } as MessageEvent)
+      }
+    })
+  })
+
+  terminate = vi.fn()
+
+  constructor(_url: string | URL, _options?: WorkerOptions) {
+    workerInstances.push(this)
+  }
+}
+
+vi.stubGlobal('Worker', MockWorker)
+
+const minimalMTextData = {
+  text: '\\fArial|Hello',
+  height: 10,
+  width: 100,
+  position: { x: 0, y: 0, z: 0 },
+  attachmentPoint: MTextAttachmentPoint.BaselineLeft,
+  drawingDirection: MTextFlowDirection.BOTTOM_TO_TOP
+}
+
+const minimalTextStyle: TextStyle = {
+  name: 'Standard',
+  standardFlag: 0,
+  font: 'txt.shx',
+  bigFont: 'hztxt.shx',
+  fixedTextHeight: 10,
+  widthFactor: 1,
+  obliqueAngle: 0,
+  textGenerationFlag: 0,
+  lastHeight: 10
+}
+
+describe('render remote font loading', () => {
+  let loadFontsByNames: ReturnType<typeof vi.spyOn>
+  let getAvailableFonts: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    FontManager.instance.release()
+    FontManager.instance.lazyFontLoading = true
+    FontManager.instance.awaitFontsBeforeDraw = false
+    FontManager.instance.defaultFonts = new Set(['simkai'])
+    FontManager.instance.symbolFonts = new Set(['amgdt'])
+    loadFontsByNames = vi
+      .spyOn(FontManager.instance, 'loadFontsByNames')
+      .mockResolvedValue([])
+    getAvailableFonts = vi
+      .spyOn(FontManager.instance, 'getAvailableFonts')
+      .mockResolvedValue([])
+    workerInstances.length = 0
+  })
+
+  afterEach(() => {
+    loadFontsByNames.mockRestore()
+    getAvailableFonts.mockRestore()
+    FontManager.instance.lazyFontLoading = true
+    FontManager.instance.awaitFontsBeforeDraw = false
+    vi.unstubAllGlobals()
+    vi.stubGlobal('Worker', MockWorker)
+  })
+
+  it('MainThreadRenderer schedules style fonts lazily on first render', async () => {
+    const renderer = new MainThreadRenderer()
+    const requestFonts = vi.spyOn(FontManager.instance, 'requestFonts')
+
+    await renderer.asyncRenderMText(
+      minimalMTextData,
+      minimalTextStyle,
+      createDefaultColorSettings()
+    )
+
+    expect(loadFontsByNames).not.toHaveBeenCalledWith(['simkai', 'amgdt'])
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['arial', 'txt', 'hztxt'])
+    )
+    requestFonts.mockRestore()
+  })
+
+  it('MText.asyncDraw schedules inline/style fonts without awaiting preload', async () => {
+    const styleManager = new DefaultStyleManager()
+    const requestFonts = vi.spyOn(FontManager.instance, 'requestFonts')
+    const mtext = new MText(
+      minimalMTextData,
+      minimalTextStyle,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    await mtext.asyncDraw()
+
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['arial', 'txt', 'hztxt'])
+    )
+    requestFonts.mockRestore()
+  })
+
+  it('MText.asyncDraw awaits loadFontsByNames when lazyFontLoading is false', async () => {
+    FontManager.instance.lazyFontLoading = false
+    const styleManager = new DefaultStyleManager()
+    const requestFonts = vi.spyOn(FontManager.instance, 'requestFonts')
+    const mtext = new MText(
+      minimalMTextData,
+      minimalTextStyle,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    await mtext.asyncDraw()
+
+    expect(requestFonts).not.toHaveBeenCalled()
+    expect(loadFontsByNames).toHaveBeenCalledWith(
+      expect.arrayContaining(['arial', 'txt', 'hztxt'])
+    )
+    requestFonts.mockRestore()
+  })
+
+  it('MText.asyncDraw awaits requestFonts when awaitFontsBeforeDraw is true', async () => {
+    FontManager.instance.awaitFontsBeforeDraw = true
+    const styleManager = new DefaultStyleManager()
+    let releaseFonts!: () => void
+    const fontsReady = new Promise<void>(resolve => {
+      releaseFonts = resolve
+    })
+    const requestFonts = vi
+      .spyOn(FontManager.instance, 'requestFonts')
+      .mockImplementation(async () => {
+        await fontsReady
+        return []
+      })
+    const mtext = new MText(
+      minimalMTextData,
+      minimalTextStyle,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    let drawSettled = false
+    const drawPromise = mtext.asyncDraw().then(() => {
+      drawSettled = true
+    })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(drawSettled).toBe(false)
+    // Awaited call is content/style only; preset fallbacks are fire-and-forget.
+    const contentCall = requestFonts.mock.calls.find(call => {
+      const names = call[0] as string[]
+      return names.includes('arial') && names.includes('txt')
+    })
+    expect(contentCall?.[0]).toEqual(
+      expect.arrayContaining(['arial', 'txt', 'hztxt'])
+    )
+    expect(contentCall?.[0]).not.toContain('simkai')
+    expect(contentCall?.[0]).not.toContain('amgdt')
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['simkai', 'amgdt'])
+    )
+
+    releaseFonts()
+    await drawPromise
+    expect(drawSettled).toBe(true)
+    requestFonts.mockRestore()
+  })
+
+  it('MText.asyncDraw awaits fonts when options.awaitFonts is true', async () => {
+    const styleManager = new DefaultStyleManager()
+    let releaseFonts!: () => void
+    const fontsReady = new Promise<void>(resolve => {
+      releaseFonts = resolve
+    })
+    const requestFonts = vi
+      .spyOn(FontManager.instance, 'requestFonts')
+      .mockImplementation(async () => {
+        await fontsReady
+        return []
+      })
+    const mtext = new MText(
+      minimalMTextData,
+      minimalTextStyle,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    let drawSettled = false
+    const drawPromise = mtext.asyncDraw({ awaitFonts: true }).then(() => {
+      drawSettled = true
+    })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(drawSettled).toBe(false)
+    // Content/style fonts are awaited; default/symbol fallbacks are only
+    // scheduled so unused preset faces do not block every draw.
+    const contentCall = requestFonts.mock.calls.find(call => {
+      const names = call[0] as string[]
+      return names.includes('arial')
+    })
+    expect(contentCall?.[0]).toEqual(
+      expect.arrayContaining(['arial', 'txt', 'hztxt'])
+    )
+    expect(contentCall?.[0]).not.toContain('simkai')
+    expect(contentCall?.[0]).not.toContain('amgdt')
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['simkai', 'amgdt'])
+    )
+
+    releaseFonts()
+    await drawPromise
+    expect(drawSettled).toBe(true)
+    requestFonts.mockRestore()
+  })
+
+  it('MText.asyncDraw still requests style fonts after an empty first draw', async () => {
+    const styleManager = new DefaultStyleManager()
+    const requestFonts = vi.spyOn(FontManager.instance, 'requestFonts')
+    const style: TextStyle = {
+      ...minimalTextStyle,
+      font: '',
+      bigFont: '',
+      extendedFont: ''
+    }
+    const mtext = new MText(
+      {
+        ...minimalMTextData,
+        text: ''
+      },
+      style,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    await mtext.asyncDraw()
+    expect(requestFonts).not.toHaveBeenCalled()
+
+    style.font = 'txt.shx'
+    style.bigFont = 'hztxt.shx'
+    await mtext.asyncDraw()
+
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['txt', 'hztxt'])
+    )
+    requestFonts.mockRestore()
+  })
+
+  it('Shape.asyncDraw still requests style fonts after an empty first draw', async () => {
+    const styleManager = new DefaultStyleManager()
+    const requestFonts = vi.spyOn(FontManager.instance, 'requestFonts')
+    const style: TextStyle = {
+      ...minimalTextStyle,
+      font: '',
+      bigFont: '',
+      extendedFont: ''
+    }
+    const shape = new Shape(
+      {
+        shapeNumber: 128,
+        size: 24,
+        widthFactor: 1,
+        rotation: 0,
+        position: { x: 0, y: 0, z: 0 }
+      },
+      style,
+      styleManager,
+      FontManager.instance,
+      createDefaultColorSettings()
+    )
+
+    await shape.asyncDraw()
+    expect(requestFonts).not.toHaveBeenCalled()
+
+    style.font = 'complex.shx'
+    await shape.asyncDraw()
+
+    expect(requestFonts).toHaveBeenCalledWith(
+      expect.arrayContaining(['complex'])
+    )
+    requestFonts.mockRestore()
+  })
+
+  it('glyph fallback does not trigger remote font loading', () => {
+    const manager = FontManager.instance as any
+    const primary = {
+      names: new Set(['primary']),
+      getCharShape: vi.fn().mockReturnValue(undefined),
+      dispose: vi.fn()
+    }
+    const fallback = {
+      names: new Set(['simkai']),
+      getCharShape: vi.fn().mockReturnValue(undefined),
+      dispose: vi.fn()
+    }
+    manager.loadedFontMap.set('primary', primary)
+    manager.loadedFontMap.set('simkai', fallback)
+
+    expect(
+      FontManager.instance.getCharShapeFromDefaults('中', 10)
+    ).toBeUndefined()
+    expect(loadFontsByNames).not.toHaveBeenCalled()
+  })
+
+  it('WebWorkerRenderer does not preload default fonts on first render', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 1, timeOut: 5000 })
+
+    await renderer.asyncRenderMText(
+      minimalMTextData,
+      minimalTextStyle,
+      createDefaultColorSettings()
+    )
+
+    const loadFontsMessages = workerInstances[0].postMessage.mock.calls.filter(
+      ([message]) => (message as { type?: string }).type === 'loadFonts'
+    )
+    expect(loadFontsMessages).toHaveLength(0)
+
+    renderer.destroy()
+  })
+
+  it('MainThreadRenderer preloads default fonts when lazyFontLoading is false', async () => {
+    FontManager.instance.lazyFontLoading = false
+    const renderer = new MainThreadRenderer()
+
+    await renderer.asyncRenderMText(
+      minimalMTextData,
+      minimalTextStyle,
+      createDefaultColorSettings()
+    )
+
+    expect(loadFontsByNames).toHaveBeenCalledWith(['simkai', 'amgdt'])
+  })
+
+  it('WebWorkerRenderer preloads default fonts when lazyFontLoading is false', async () => {
+    FontManager.instance.lazyFontLoading = false
+    const renderer = new WebWorkerRenderer({ poolSize: 1, timeOut: 5000 })
+
+    await renderer.asyncRenderMText(
+      minimalMTextData,
+      minimalTextStyle,
+      createDefaultColorSettings()
+    )
+
+    const loadFontsMessages = workerInstances[0].postMessage.mock.calls.filter(
+      ([message]) => (message as { type?: string }).type === 'loadFonts'
+    )
+    expect(loadFontsMessages.length).toBeGreaterThan(0)
+    expect(loadFontsMessages[0][0]).toEqual(
+      expect.objectContaining({
+        type: 'loadFonts',
+        data: { fonts: ['simkai', 'amgdt'] }
+      })
+    )
+
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer forwards worker fontLoaded to main FontManager', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 1, timeOut: 5000 })
+    const listener = vi.fn()
+    FontManager.instance.events.fontLoaded.addEventListener(listener)
+    FontManager.instance.missedFonts = { hztxt: 1 }
+
+    await renderer.asyncRenderMText(
+      minimalMTextData,
+      minimalTextStyle,
+      createDefaultColorSettings()
+    )
+
+    workerInstances[0].onmessage?.({
+      data: {
+        id: '',
+        type: 'fontLoaded',
+        success: true,
+        data: { fontName: 'hztxt' }
+      }
+    } as MessageEvent)
+
+    await vi.waitFor(() => {
+      expect(listener).toHaveBeenCalledWith({ fontName: 'hztxt' })
+    })
+    expect(FontManager.instance.missedFonts.hztxt).toBeUndefined()
+    FontManager.instance.events.fontLoaded.removeEventListener(listener)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer dedupes fontLoaded dispatch for the same face', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 1, timeOut: 5000 })
+    const listener = vi.fn()
+    FontManager.instance.events.fontLoaded.addEventListener(listener)
+
+    for (let i = 0; i < 2; i++) {
+      workerInstances[0].onmessage?.({
+        data: {
+          id: '',
+          type: 'fontLoaded',
+          success: true,
+          data: { fontName: 'hztxt' }
+        }
+      } as MessageEvent)
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({ fontName: 'hztxt' })
+
+    FontManager.instance.events.fontLoaded.removeEventListener(listener)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer forwards worker fontNotFound to main FontManager', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 1, timeOut: 5000 })
+    const listener = vi.fn()
+    FontManager.instance.events.fontNotFound.addEventListener(listener)
+
+    workerInstances[0].onmessage?.({
+      data: {
+        id: '',
+        type: 'fontNotFound',
+        success: true,
+        data: { fontName: 'missing-face', count: 1 }
+      }
+    } as MessageEvent)
+
+    expect(listener).toHaveBeenCalledWith({
+      fontName: 'missing-face',
+      count: 1
+    })
+    expect(FontManager.instance.missedFonts).toEqual({ 'missing-face': 1 })
+
+    FontManager.instance.events.fontNotFound.removeEventListener(listener)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer.replaceMissedFonts adopts intersection of worker-filtered maps', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+    for (const worker of workerInstances) {
+      worker.loadedFaces.add('worker-loaded')
+    }
+
+    await renderer.replaceMissedFonts({
+      'worker-loaded': 1,
+      stillMissing: 2
+    })
+
+    expect(FontManager.instance.missedFonts).toEqual({ stillMissing: 2 })
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer does not fan-out lazy fontLoaded into every worker', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+    const listener = vi.fn()
+    FontManager.instance.events.fontLoaded.addEventListener(listener)
+
+    for (const worker of workerInstances) {
+      worker.postMessage.mockClear()
+    }
+
+    workerInstances[0].onmessage?.({
+      data: {
+        id: '',
+        type: 'fontLoaded',
+        success: true,
+        data: { fontName: 'simkai' }
+      }
+    } as MessageEvent)
+
+    await vi.waitFor(() => {
+      expect(listener).toHaveBeenCalledWith({ fontName: 'simkai' })
+    })
+
+    for (const worker of workerInstances) {
+      expect(worker.postMessage).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'loadFonts',
+          data: { fonts: ['simkai'] }
+        })
+      )
+    }
+
+    FontManager.instance.events.fontLoaded.removeEventListener(listener)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer.loadFonts defaults to warming a single worker', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    for (const worker of workerInstances) {
+      worker.postMessage.mockClear()
+    }
+
+    await renderer.loadFonts(['simkai'])
+
+    const loadFontsCallCounts = workerInstances.map(
+      worker =>
+        worker.postMessage.mock.calls.filter(
+          ([message]) => (message as { type?: string }).type === 'loadFonts'
+        ).length
+    )
+    expect(loadFontsCallCounts.reduce((a, b) => a + b, 0)).toBe(1)
+    expect(loadFontsCallCounts.some(count => count === 1)).toBe(true)
+
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer.loadFonts scope=all still warms every worker', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    for (const worker of workerInstances) {
+      worker.postMessage.mockClear()
+    }
+
+    const { loaded } = await renderer.loadFonts(['simkai'], { scope: 'all' })
+
+    expect(loaded).toEqual(['simkai'])
+    for (const worker of workerInstances) {
+      expect(worker.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'loadFonts',
+          data: { fonts: ['simkai'] }
+        })
+      )
+    }
+
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer.loadFonts scope=all returns only fonts loaded in every worker', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    for (const worker of workerInstances) {
+      worker.postMessage.mockClear()
+    }
+
+    workerInstances[1].postMessage = vi.fn(
+      (message: Record<string, unknown>) => {
+        queueMicrotask(() => {
+          const { type, id } = message
+          if (type === 'getAvailableFonts') {
+            workerInstances[1].onmessage?.({
+              data: {
+                id,
+                type,
+                success: true,
+                data: { fonts: [] }
+              }
+            } as MessageEvent)
+            return
+          }
+          if (type === 'loadFonts') {
+            workerInstances[1].onmessage?.({
+              data: {
+                id,
+                type,
+                success: true,
+                data: { loaded: [] }
+              }
+            } as MessageEvent)
+          }
+        })
+      }
+    )
+
+    const { loaded } = await renderer.loadFonts(['simkai'], { scope: 'all' })
+
+    expect(loaded).toEqual([])
+
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer setLazyFontLoading mirrors flag to all workers', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    await renderer.setLazyFontLoading(false)
+
+    expect(FontManager.instance.lazyFontLoading).toBe(false)
+    for (const worker of workerInstances) {
+      expect(worker.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'setLazyFontLoading',
+          data: { enabled: false }
+        })
+      )
+    }
+
+    await renderer.setLazyFontLoading(true)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer setAwaitFontsBeforeDraw mirrors flag to all workers', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    await renderer.setAwaitFontsBeforeDraw(true)
+
+    expect(FontManager.instance.awaitFontsBeforeDraw).toBe(true)
+    for (const worker of workerInstances) {
+      expect(worker.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'setAwaitFontsBeforeDraw',
+          data: { enabled: true }
+        })
+      )
+    }
+
+    await renderer.setAwaitFontsBeforeDraw(false)
+    renderer.destroy()
+  })
+
+  it('WebWorkerRenderer loadFonts delegates font names to one worker by default', async () => {
+    const renderer = new WebWorkerRenderer({ poolSize: 2, timeOut: 5000 })
+
+    for (const worker of workerInstances) {
+      worker.postMessage.mockClear()
+    }
+
+    await renderer.loadFonts(['txt', 'hztxt'])
+
+    const loadFontsCallCounts = workerInstances.map(
+      worker =>
+        worker.postMessage.mock.calls.filter(
+          ([message]) => (message as { type?: string }).type === 'loadFonts'
+        ).length
+    )
+    expect(loadFontsCallCounts.reduce((a, b) => a + b, 0)).toBe(1)
+    const warmed = workerInstances.find((_, i) => loadFontsCallCounts[i] === 1)
+    expect(warmed?.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'loadFonts',
+        data: { fonts: ['txt', 'hztxt'] }
+      })
+    )
+
+    renderer.destroy()
+  })
+})
