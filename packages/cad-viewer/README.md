@@ -3,15 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@mlightcad/cad-viewer.svg)](https://www.npmjs.com/package/@mlightcad/cad-viewer)
 
-CAD Viewer is a **high-performance** Vue 3 component for viewing and editing CAD files (DXF, DWG) **entirely in the browser without requiring any backend server**. It provides a modern user interface, state management, and seamless integration with optimized rendering engines for smooth browser-based CAD workflows with exceptional performance.
+CAD Viewer is a **high-performance** Vue 3 component for creating and editing CAD drawings **entirely in the browser without requiring any backend server**. It provides a modern user interface, state management, and seamless integration with optimized rendering engines for smooth browser-based CAD workflows with exceptional performance.
 
 ## Key Features
 
 - **High-performance** CAD editing and viewing with smooth 60+ FPS rendering
-- **No backend required** - Files are parsed and processed entirely in the browser
-- **Enhanced data security** - Files never leave your device, ensuring complete privacy
-- **Local file support** - Load DWG/DXF files directly from your computer via file dialog or drag & drop
-- **Remote file support** - Load CAD files from URLs automatically
+- **No backend required** - Everything runs entirely in the browser
+- **Always a new drawing** - The viewer opens with a blank drawing; drawings are not loaded from or saved to files
 - **Easy integration** - No server setup or backend infrastructure needed for third-party integration
 - **Customizable UI** - Control visibility of toolbars, command line, coordinates, and performance stats
 - **Customizable Resources** - Set custom base URLs for fonts, templates, and example files
@@ -35,7 +33,7 @@ Use `cad-viewer` if you want a **ready-to-use Vue 3 component** for viewing and 
 
 ## Browser-Only Architecture
 
-This Vue 3 component operates entirely in the browser with **no backend dependencies**. DWG/DXF files are parsed and processed locally using WebAssembly and JavaScript, providing:
+This Vue 3 component operates entirely in the browser with **no backend dependencies**.
 
 - **Zero server requirements** - Deploy the component anywhere with just static file hosting
 - **Complete data privacy** - CAD files never leave the user's device, whether loaded locally or from URLs
@@ -44,54 +42,6 @@ This Vue 3 component operates entirely in the browser with **no backend dependen
 - **Instant integration** - No complex backend setup or API configuration needed
 - **Offline capability** - Works without internet connectivity once loaded
 - **Third-party friendly** - Easy to embed in any Vue 3 application without server-side concerns
-
-## File Loading Methods
-
-The MlCadViewer component supports multiple ways to load CAD files:
-
-### 1. Local File Loading
-Users can load files directly from their computer:
-- **File Dialog**: Click the File menu on the ribbon and select "Open" to browse and select local DWG/DXF files
-- **Drag & Drop**: Drag and drop CAD files directly onto the viewer (if implemented in your application)
-- **File Input**: Use the built-in file reader component for programmatic file selection
-- **Component Prop**: Pass a File object directly to the `localFile` prop for automatic loading
-
-#### Example: Using localFile prop with file input
-```vue
-<template>
-  <div>
-    <input 
-      type="file" 
-      accept=".dwg,.dxf" 
-      @change="handleFileSelect"
-    />
-    <MlCadViewer 
-      :local-file="selectedFile" 
-    />
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import { MlCadViewer } from '@mlightcad/cad-viewer'
-
-const selectedFile = ref<File | undefined>()
-
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  selectedFile.value = target.files?.[0]
-}
-</script>
-```
-
-### 2. Remote File Loading
-Automatically load files from URLs:
-- **URL Prop**: Provide a `url` prop to automatically load a file when the component mounts
-- **Dynamic Loading**: Change the `url` prop to load different files without remounting the component
-
-### 3. Supported File Formats
-- **DWG files**: Binary AutoCAD drawing format (read as ArrayBuffer)
-- **DXF files**: ASCII/binary AutoCAD drawing exchange format (read as text)
 
 ## Directory Structure (partial)
 
@@ -130,20 +80,7 @@ Then create one vue component as follows.
 ```vue
 <template>
   <div>
-    <!-- For local file loading (users can open files via menu) -->
     <MlCADViewer :background="0x808080" />
-    
-    <!-- For remote file loading (automatically loads from URL) -->
-    <!-- <MlCADViewer 
-      :background="0x808080" 
-      :url="'https://example.com/drawing.dwg'" 
-    /> -->
-    
-    <!-- For local file loading (automatically loads from File object) -->
-    <!-- <MlCADViewer 
-      :background="0x808080" 
-      :local-file="selectedFile" 
-    /> -->
     
     <!-- With custom base URL for fonts and templates -->
     <!-- <MlCADViewer 
@@ -187,13 +124,10 @@ The `MlCadViewer` component accepts the following props:
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `locale` | `'en' \| 'zh' \| 'default'` | `'default'` | Sets the language for the component interface. Use `'en'` for English, `'zh'` for Chinese, or `'default'` to use the browser's default language. |
-| `url` | `string` | `undefined` | Optional URL to automatically load a CAD file when the component mounts. The file will be fetched and opened automatically. **Note**: If not provided, users can still load local files using the ribbon File menu "Open" option. |
-| `localFile` | `File` | `undefined` | Optional local File object to automatically load a CAD file when the component mounts. The file will be read and opened automatically. **Note**: This takes precedence over the `url` prop if both are provided. |
 | `background` | `number` | `undefined` | Background color as 24-bit hexadecimal RGB (e.g., `0x000000` for black, `0x808080` for gray). |
 | `baseUrl` | `string` | `undefined` | Base URL for loading fonts, templates, and example files. This URL is used by the CAD viewer to load resources like fonts and drawing templates. **Note**: If not provided, uses the default URL. |
 | `useMainThreadDraw` | `boolean` | `false` | Optional flag whether to use main thread or webwork to render drawing. The true value means using main thread to render drawing. This approach take less memory and take longer time to show rendering results. The false value means using web worker to render drawing. This approach take more memory and take shorter time to show rendering results. |
 | `theme` | `'light' \| 'dark'` | `'dark'` | Initial UI theme of the CAD viewer. On mount, this prop initializes the `COLORTHEME` system variable in the active database (`0 = dark`, `1 = light`). After that, the viewer theme is driven by `COLORTHEME`, so runtime changes from the status bar theme button or direct system-variable updates stay synchronized across `cad-viewer` and `cad-simple-viewer`. |
-| `mode` | `AcEdOpenMode` | `'AcEdOpenMode.Write'` | Access mode for opening CAD files. `'AcEdOpenMode.Read'` means read-only access. `'AcEdOpenMode.Write'` means full read/write access, compatible with read. |
 ### UI Settings
 
 The `MlCadViewer` reads its UI visibility from the global `AcApSettingManager` (provided by `@mlightcad/cad-simple-viewer`). Configure these flags anywhere before rendering the viewer to customize the UI.
@@ -213,21 +147,6 @@ Settings resolve in three layers (later wins): built-in defaults, user preferenc
 #### Example (recommended)
 ```vue
 <template>
-  <!-- Local file loading - users can open files via the ribbon File menu -->
-  <MlCadViewer locale="en" />
-  
-  <!-- Remote file loading - automatically loads from URL -->
-  <!-- <MlCadViewer 
-    locale="en" 
-    :url="'https://example.com/drawing.dwg'" 
-  /> -->
-  
-  <!-- Local file loading - automatically loads from File object -->
-  <!-- <MlCadViewer 
-    locale="en" 
-    :local-file="selectedFile" 
-  /> -->
-  
   <!-- Custom baseUrl for fonts and templates -->
   <!-- <MlCadViewer 
     locale="en" 
@@ -282,7 +201,6 @@ When using a custom `baseUrl`, ensure your server has the following structure:
 ```
 your-base-url/
 ├── fonts/           # Font files for text rendering
-├── templates/       # Drawing templates (e.g., acadiso.dxf)
 └── examples/        # Example CAD files
 ```
 
@@ -291,7 +209,6 @@ your-base-url/
 <template>
   <MlCadViewer 
     :base-url="'https://my-company.com/cad-resources/'"
-    :url="'https://my-company.com/drawings/project.dwg'"
   />
 </template>
 ```
@@ -327,7 +244,7 @@ Open the **Find** palette from the ribbon (Home → Utilities → Find; it moves
 - **Same engine as `@mlightcad/cad-simple-ui-plugin`:** both UIs use `@mlightcad/cad-simple-viewer/find` (`acapFindText`) and `acapNavigateToFindHit`, so results and navigation are identical.
 - **Client-side only:** the search is a synchronous pass over the drawing already loaded in the browser. There is no backend, index or upload, so the static-hosting deployment described in [Browser-Only Architecture](#browser-only-architecture) is unchanged.
 
-Limitations: text produced by fields (only the stored text is searched) and xref content are not searched; non-constant `ATTDEF` templates (never drawn inside a block) and `ATTDEF`s loose in a layout are not searched; a `DIMENSION` whose block has no matching text can still match its stored override text even if the block does not display it; only entities present in the loaded database are searched (what the DXF/DWG parser attaches to each layout); no regex / whole-word / replace; selecting a paper-space hit does not populate the Properties palette (it only inspects model-space entities).
+Limitations: text produced by fields is not searched (only the stored text is); non-constant `ATTDEF` templates (never drawn inside a block) and `ATTDEF`s loose in a layout are not searched; a `DIMENSION` whose block has no matching text can still match its stored override text even if the block does not display it; only entities present in the loaded database are searched (what the DXF/DWG parser attaches to each layout); no regex / whole-word / replace; selecting a paper-space hit does not populate the Properties palette (it only inspects model-space entities).
 
 Known follow-ups: the search is one synchronous pass over the whole drawing and runs on the UI thread (it has not been benchmarked on large drawings; moving it to chunks or a worker is a possible follow-up); the real-drawing end-to-end check (`e2e/tests/find-b11l1.spec.ts`) is opt-in via `B11L1_DWG` and is skipped in the default CI run, which exercises the committed fixtures only.
 
@@ -344,7 +261,6 @@ The component automatically handles various events:
 
 Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to learn the following advanced usage.
 
-- Register DWG converter to display drawings in DWG format
 - Define your own font loader to load fonts from your own server
 - Create drawing or modify drawing
 

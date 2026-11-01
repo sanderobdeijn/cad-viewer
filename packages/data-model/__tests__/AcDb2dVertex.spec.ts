@@ -1,7 +1,4 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
-
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
-import { AcDbDatabase } from '../src/database'
 import { AcDb2dVertex, AcDb2dVertexType } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
@@ -109,34 +106,6 @@ describe('AcDb2dVertex', () => {
     const vertex = new AcDb2dVertex()
 
     expect(vertex.subWorldDraw({} as never)).toBeUndefined()
-  })
-
-  it('writes DXF fields for AcDbVertex/AcDb2dVertex data and returns itself', () => {
-    const db = new AcDbDatabase()
-    db.createDefaultData()
-    acdbHostApplicationServices().workingDatabase = db
-
-    const vertex = new AcDb2dVertex()
-    db.tables.blockTable.modelSpace.appendEntity(vertex)
-    vertex.position = { x: 1.25, y: 2.5, z: 3.75 }
-    vertex.startWidth = 4.5
-    vertex.endWidth = 5.5
-    vertex.bulge = 0.25
-    vertex.vertexType = AcDb2dVertexType.SplineFitVertex
-
-    const filer = new AcDbDxfFiler()
-    const result = vertex.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(result).toBe(vertex)
-    expect(dxf).toContain('100\nAcDbVertex\n')
-    expect(dxf).toContain('100\nAcDb2dVertex\n')
-    expect(dxf).toContain('10\n1.25\n')
-    expect(dxf).toContain('20\n2.5\n')
-    expect(dxf).toContain('40\n4.5\n')
-    expect(dxf).toContain('41\n5.5\n')
-    expect(dxf).toContain('42\n0.25\n')
-    expect(dxf).toContain('70\n8\n')
   })
 
   it('clone creates a detached clone with a new objectId', () => {

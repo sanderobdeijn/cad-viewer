@@ -1,6 +1,6 @@
 import { AcGePoint3d } from '@mlightcad/geometry-engine'
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDxfFiler, acdbHostApplicationServices } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbLayerTableRecord } from '../src/database/AcDbLayerTableRecord'
 import {
@@ -16,19 +16,6 @@ const setWorkingDb = () => {
   db.createDefaultData()
   acdbHostApplicationServices().workingDatabase = db
   return db
-}
-
-const createDxf = (attribute: AcDbAttribute) => {
-  const filer = new AcDbDxfFiler()
-  attribute.dxfOutFields(filer)
-  return filer.toString()
-}
-
-const prepareAttributeForDxf = (attribute: AcDbAttribute) => {
-  attribute.ownerId = 'NON_EXIST_OWNER'
-  attribute.layer = '0'
-  attribute.lineWeight = 0
-  attribute.linetypeScale = 1
 }
 
 describe('AcDbAttribute', () => {
@@ -104,96 +91,6 @@ describe('AcDbAttribute', () => {
     attribute.mtext = undefined
     expect(attribute.mtext).toBeUndefined()
     expect(attribute.isMTextAttribute).toBe(false)
-  })
-
-  it('writes expected DXF fields for single-line attribute', () => {
-    setWorkingDb()
-    const attribute = new AcDbAttribute()
-    prepareAttributeForDxf(attribute)
-    attribute.tag = 'TAG_A'
-    attribute.fieldLength = 32
-    attribute.isInvisible = true
-    attribute.isReallyLocked = true
-
-    const filer = new AcDbDxfFiler()
-    expect(attribute.dxfOutFields(filer)).toBe(attribute)
-
-    const dxf = filer.toString()
-    expect(dxf).toContain('100\nAcDbAttribute\n')
-    expect(dxf).toContain('70\n1\n')
-    expect(dxf).toContain('73\n32\n')
-    expect(dxf).toContain('2\nTAG_A\n')
-    expect(dxf).toContain('74\n1\n')
-    expect(dxf).not.toContain('\n71\n')
-  })
-
-  it('writes group 71 as 1 when multiline attribute is enabled', () => {
-    setWorkingDb()
-    const attribute = new AcDbAttribute()
-    prepareAttributeForDxf(attribute)
-    attribute.mtext = new AcDbMText()
-
-    const dxf = createDxf(attribute)
-    expect(dxf).toContain('71\n1\n')
-  })
-
-  it('writes group 71 as 0 when mtext exists but multiline flag is disabled', () => {
-    setWorkingDb()
-    const attribute = new AcDbAttribute()
-    prepareAttributeForDxf(attribute)
-    attribute.mtext = new AcDbMText()
-    attribute.isMTextAttribute = false
-
-    const dxf = createDxf(attribute)
-    expect(dxf).toContain('71\n0\n')
-  })
-
-  it('does not treat an embedded Xrecord group 70 as attribute flags', () => {
-    setWorkingDb()
-    const groups = [
-      '100',
-      'AcDbEntity',
-      '8',
-      '0',
-      '100',
-      'AcDbText',
-      '10',
-      0,
-      '20',
-      0,
-      '30',
-      0,
-      '40',
-      3.2,
-      '1',
-      'Light Industrial Campus',
-      '100',
-      'AcDbAttribute',
-      '2',
-      'PROJEKT',
-      '70',
-      0,
-      '74',
-      1,
-      '280',
-      0,
-      '100',
-      'AcDbXrecord',
-      '280',
-      0,
-      '70',
-      1,
-      '1001',
-      'MYAPP',
-      '1000',
-      'xdata-value'
-    ]
-    const attribute = new AcDbAttribute()
-    attribute.dxfIn(AcDbDxfFiler.fromString(groups.join('\n') + '\n'))
-    expect(attribute.isInvisible).toBe(false)
-    expect(attribute.tag).toBe('PROJEKT')
-    expect(attribute.textString).toBe('Light Industrial Campus')
-    expect(attribute.getXData('MYAPP')?.at(1)?.value).toBe('xdata-value')
   })
 
   it('clone creates a detached clone with a new objectId', () => {

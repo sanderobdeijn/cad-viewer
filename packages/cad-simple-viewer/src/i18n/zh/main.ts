@@ -44,18 +44,6 @@ export default {
       '字体 "{font}" 被 {count} 个文字对象使用，但不可用，已使用 "{replacementFont}" 显示。',
     fontMissedReplacement: '"{font}"（已用 "{replacement}" 显示）',
     failedToGetAvaiableFonts: '无法从"{url}"获取可用的字体信息！',
-    failedToOpenFile: '无法打开文件"{fileName}"！',
-    failedToOpenFileToast: '无法打开"{fileName}"。详情请查看通知中心。',
-    failedToOpenFileWorkerOom:
-      '无法打开"{fileName}"。使用 LibreDWG 解析器时内存不足，导致打开失败。可点击{dwgParserLink}购买商用 DWG Parser，以支持更大图纸并避免此问题。',
-    failedToOpenFileWorkerOomLink: '此页面',
-    failedToOpenFileWorkerTimeout: '无法打开"{fileName}"。解析图纸时操作超时。',
-    failedToOpenFileFontLoadFailed:
-      '无法打开"{fileName}"。无法加载图纸所需的字体。',
-    failedToOpenFileLicenseExpired:
-      '无法打开"{fileName}"。DWG 转换器许可证已过期。',
-    failedToOpenFileLicenseInvalid:
-      '无法打开"{fileName}"。DWG 转换器许可证缺失或无效。',
     unknownEntities:
       '这张图纸中包含了{count}个未知或不支持的实体，这些实体将无法显示！',
     tianzhengEntities:
@@ -77,12 +65,6 @@ export default {
       genericSummary: '共 {count} 条消息，点击展开查看详情'
     },
     title: {
-      failedToOpenFile: '无法打开文件',
-      failedToOpenFileWorkerOom: '内存不足',
-      failedToOpenFileWorkerTimeout: '打开超时',
-      failedToOpenFileFontLoadFailed: '字体加载失败',
-      failedToOpenFileLicenseExpired: '许可证已过期',
-      failedToOpenFileLicenseInvalid: '许可证无效',
       fontNotFound: '找不到字体',
       fontNotLoaded: '无法加载字体',
       parsingWarning: '解析图纸问题',
@@ -113,7 +95,7 @@ export default {
     title: '关于',
     close: '关闭',
     product: 'CAD 查看器',
-    tagline: '面向 DWG/DXF 图纸的高性能 Web CAD 查看器。',
+    tagline: '高性能 Web CAD 编辑器。',
     website: '官网',
     docs: '文档',
     repository: 'GitHub',
@@ -167,28 +149,5 @@ export default {
     snoozeToday: '今日不再提醒',
     hideForever: '不再提醒',
     ok: '我知道了'
-  },
-  dataSource: {
-    open: '打开',
-    local: '本地文件',
-    url: '从 URL 打开',
-    openFrom: '从 {name} 打开',
-    signInTo: '登录 {name}',
-    signOutOf: '退出 {name}',
-    signOutOfAccount: '退出 {name}（{account}）',
-    urlDialogTitle: '从 URL 打开',
-    urlDialogHint: '请输入 .dwg 或 .dxf 文件的网址。',
-    urlPlaceholder: 'https://example.com/drawing.dwg',
-    cancel: '取消',
-    or: '或',
-    dropFile: '将文件拖放到此处，或',
-    browse: '浏览',
-    dropOrBrowse: '将 DWG 或 DXF 文件拖放到此处，或浏览选择',
-    newDrawing: '新建图纸',
-    source: '数据源',
-    unavailable: '该数据源暂不可用。',
-    selectFile: '选择文件',
-    signInRequired: '请先登录后再选择文件。',
-    downloading: '正在下载文件 ...'
   }
 }

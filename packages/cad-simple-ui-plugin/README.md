@@ -198,7 +198,7 @@ Usage:
 - With **Current layout only**, if the active layout changed since the search, clicking a result re-runs the search for the new layout instead of navigating (drawing-wide results stay valid)
 - Open with the toolbar button, the `find` command (`AcApDocManager.sendStringToExecute('find')`) or `plugin.toggleDockPanelTab('find')`
 
-Limitations: text produced by fields (only the stored text is searched) and xref content are not searched; non-constant `ATTDEF` templates and `ATTDEF`s loose in a layout are not searched; a `DIMENSION` whose block has no matching text can still match its stored override text even if the block does not display it; only entities present in the loaded database are searched (what the DXF/DWG parser attaches to each layout - a layout never opened is searched from the database, not from the rendered scene); selecting a hit in a layout that has never been visited waits for its entities to be converted (up to 15 s) before zooming; no regex / whole-word / replace; selection highlight requires entity selection to be enabled on the view (it is by default); on large drawings the synchronous whole-drawing pass can hitch the UI briefly.
+Limitations: text produced by fields is not searched (only the stored text is); non-constant `ATTDEF` templates and `ATTDEF`s loose in a layout are not searched; a `DIMENSION` whose block has no matching text can still match its stored override text even if the block does not display it; only entities present in the loaded database are searched (what the DXF/DWG parser attaches to each layout - a layout never opened is searched from the database, not from the rendered scene); selecting a hit in a layout that has never been visited waits for its entities to be converted (up to 15 s) before zooming; no regex / whole-word / replace; selection highlight requires entity selection to be enabled on the view (it is by default); on large drawings the synchronous whole-drawing pass can hitch the UI briefly.
 
 Known follow-ups: the whole-drawing pass is synchronous and runs on the UI thread (it has not been benchmarked on large drawings; chunking or a worker is a possible follow-up); the real-drawing end-to-end check in `cad-viewer-example` (`find-b11l1.spec.ts`) is opt-in via `B11L1_DWG` and skipped in the default CI run, which exercises the committed fixtures only.
 
@@ -602,15 +602,6 @@ await AcApDocManager.instance.pluginManager.loadPlugin(
       placement: 'right',
       items: 'default',
       appendItems: [
-        {
-          id: 'open-url',
-          label: 'Open URL',
-          requiresDocument: false,
-          action: () => {
-            const url = window.prompt('Drawing URL:')
-            if (url) void AcApDocManager.instance.openUrl(url)
-          }
-        },
         {
           id: 'draw-tools',
           label: 'Draw',

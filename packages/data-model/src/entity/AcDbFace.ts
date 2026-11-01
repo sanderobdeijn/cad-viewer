@@ -10,7 +10,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbEntity } from './AcDbEntity'
 import { acdbMovePointArrayGripAt } from './AcDbGripHelpers'
@@ -292,83 +291,6 @@ export class AcDbFace extends AcDbEntity {
       }
     }
     return renderer.lineSegments(buffer, 3, indices)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    const p0 = this.getVertexAt(0)
-    const p1 = this.getVertexAt(1)
-    const p2 = this.getVertexAt(2)
-    const p3 = this.getVertexAt(3)
-    filer.writeSubclassMarker('AcDbFace')
-    filer.writePoint3d(10, p0)
-    filer.writePoint3d(11, p1)
-    filer.writePoint3d(12, p2)
-    filer.writePoint3d(13, p3)
-    let mask = 0
-    for (let i = 0; i < 4; ++i) {
-      if (!this.isEdgeVisibleAt(i)) {
-        mask |= 1 << i
-      }
-    }
-    filer.writeInt16(70, mask)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbFace')
-
-    // Constructor starts with 3 verts; seed local copies without requiring index 3.
-    const pts = [0, 1, 2, 3].map(i => {
-      const v = this._vertices[i]
-      return v
-        ? { x: v.x, y: v.y, z: v.z }
-        : { x: 0, y: 0, z: 0 }
-    })
-    let edgeMask = this._edgeInvisibilities
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-          pts[code - 10].x = n
-          break
-        case 20:
-        case 21:
-        case 22:
-        case 23:
-          pts[code - 20].y = n
-          break
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-          pts[code - 30].z = n
-          break
-        case 70:
-          edgeMask = n
-          break
-        default:
-          break
-      }
-    }
-
-    pts.forEach((p, i) => this.setVertexAt(i, p))
-    this._edgeInvisibilities = edgeMask
-    return this
   }
 }
 

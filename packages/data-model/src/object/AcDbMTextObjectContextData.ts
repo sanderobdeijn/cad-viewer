@@ -1,6 +1,5 @@
 import { AcGePoint3d, AcGeVector3d } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbObject, type AcDbObjectId } from '../base/AcDbObject'
 
 /**
@@ -100,111 +99,5 @@ export class AcDbMTextObjectContextData extends AcDbObject {
   }
   set columnType(value: number) {
     this._columnType = value
-  }
-
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbObjectContextData')
-    filer.writeInt16(70, this._classVersion)
-    filer.writeBoolean(290, this._isDefault)
-    filer.writeSubclassMarker('AcDbAnnotScaleObjectContextData')
-    filer.writeObjectId(340, this._scaleId)
-    filer.writeInt16(70, this._attachmentPoint)
-    filer.writeVector3d(10, this._direction)
-    filer.writePoint3d(11, this._insertionPoint)
-    filer.writeDouble(40, this._definedWidth)
-    filer.writeDouble(41, this._definedHeight)
-    filer.writeDouble(42, this._extentsWidth)
-    filer.writeDouble(43, this._extentsHeight)
-    filer.writeInt16(71, this._columnType)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-
-    // Walk subclass markers in order; field codes repeat across subclasses.
-    let section: 'object' | 'annot' | 'mtext' = 'object'
-    filer.atSubclassData('AcDbObjectContextData')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        const marker = String(item.value)
-        if (marker === 'AcDbAnnotScaleObjectContextData') {
-          section = 'annot'
-          continue
-        }
-        if (marker === 'AcDbMTextObjectContextData') {
-          section = 'mtext'
-          continue
-        }
-        filer.pushBackItem(item)
-        break
-      }
-
-      if (section === 'object') {
-        switch (code) {
-          case 70:
-            this._classVersion = Number(item.value)
-            break
-          case 290:
-            this._isDefault = Boolean(Number(item.value))
-            break
-          default:
-            break
-        }
-        continue
-      }
-
-      // Annot-scale + MTEXT context fields share the same group codes after
-      // AcDbAnnotScaleObjectContextData (AutoCAD often omits the MTEXT marker).
-      switch (code) {
-        case 340:
-          this._scaleId = String(item.value)
-          break
-        case 70:
-          this._attachmentPoint = Number(item.value)
-          break
-        case 10:
-          this._direction.x = Number(item.value)
-          break
-        case 20:
-          this._direction.y = Number(item.value)
-          break
-        case 30:
-          this._direction.z = Number(item.value)
-          break
-        case 11:
-          this._insertionPoint.x = Number(item.value)
-          break
-        case 21:
-          this._insertionPoint.y = Number(item.value)
-          break
-        case 31:
-          this._insertionPoint.z = Number(item.value)
-          break
-        case 40:
-          this._definedWidth = Number(item.value)
-          break
-        case 41:
-          this._definedHeight = Number(item.value)
-          break
-        case 42:
-          this._extentsWidth = Number(item.value)
-          break
-        case 43:
-          this._extentsHeight = Number(item.value)
-          break
-        case 71:
-          this._columnType = Number(item.value)
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }

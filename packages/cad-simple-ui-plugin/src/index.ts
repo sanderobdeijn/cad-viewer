@@ -51,7 +51,6 @@ export {
 } from './config/resolveToolbarItems'
 export {
   acuiCreateDefaultToolbarItems,
-  acuiCreateOpenToolbarItem,
   acuiCreatePhoneToolbarItems,
   acuiCreateSettingsToolbarItem,
   acuiCreateZoomToolbarItem

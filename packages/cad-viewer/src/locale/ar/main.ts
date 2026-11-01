@@ -6,7 +6,6 @@ export default {
   mainMenu: {
     ...enMain.mainMenu,
     new: 'رسم جديد',
-    open: 'فتح رسم',
     drawingUnits: 'وحدات الرسم',
     about: 'حول'
   },
@@ -793,7 +792,6 @@ export default {
       title: 'الموارد المفقودة / الخارجية',
 
       fontTab: 'الخطوط',
-      xrefTab: 'المراجع الخارجية',
 
       fileReferences: 'مراجع الملفات',
 
@@ -843,8 +841,6 @@ export default {
       load: 'تحميل',
 
       empty: 'لا توجد مراجع خارجية أو صور في هذا الرسم',
-
-      urlPrompt: 'أدخل رابط URL لملف DWG أو DXF',
 
       urlRequired: 'يرجى إدخال رابط URL',
 
@@ -934,67 +930,6 @@ export default {
         category: 'الفئة',
         font: 'الخط'
       }
-    },
-
-    openFileProfile: {
-      ...enMain.toolPalette.openFileProfile,
-
-      tab: 'أداء الفتح',
-      title: 'أداء فتح الرسم',
-
-      refresh: 'تحديث',
-      copy: 'نسخ',
-
-      copied: 'تم نسخ بيانات الأداء',
-      copyFailed: 'فشل نسخ بيانات الأداء',
-
-      collectedAt: 'تم جمع البيانات في {time}',
-
-      hint: 'يتم تسجيل البيانات تلقائيًا عند آخر فتح للرسم. استخدم OPENPROF=1 لتسجيلها أيضًا في وحدة التحكم.',
-
-      noData:
-        'لا توجد بيانات أداء للفتح حتى الآن. افتح رسمًا أولًا ثم شغّل OPENPERF.',
-
-      empty: 'لا توجد بيانات',
-
-      timing: 'الزمن الفعلي',
-      progressive: 'الفتح التدريجي',
-
-      progressiveMode: 'الوضع',
-      progressiveOn: 'تشغيل',
-      progressiveOff: 'إيقاف',
-
-      midOpenPaints: 'عمليات الرسم أثناء الفتح',
-      yields: 'مرات إتاحة التنفيذ',
-
-      cache: 'ذاكرة تخزين عرض INSERT',
-      slowBlocks: 'أبطأ عمليات إنشاء قوالب الكتل',
-
-      total: 'إجمالي الفتح',
-
-      read: 'قراءة قاعدة البيانات',
-      parse: 'تحليل الملف',
-      entity: 'معالجة العناصر',
-      convert: 'تحويل المشهد',
-
-      cacheHits: 'إصابات الذاكرة المؤقتة',
-      cacheMisses: 'إخفاقات الذاكرة المؤقتة',
-      cacheBuild: 'زمن البناء عند الإخفاق',
-      cacheCompact: 'زمن الضغط عند الإخفاق',
-      cacheHitPath: 'مسار الإصابة',
-
-      columns: {
-        ...enMain.toolPalette.openFileProfile.columns,
-
-        stage: 'المرحلة',
-        duration: 'المدة',
-        share: 'النسبة',
-        metric: 'المقياس',
-        value: 'القيمة',
-        block: 'الكتلة',
-        build: 'البناء',
-        compact: 'الضغط'
-      }
     }
   },
 
@@ -1040,8 +975,6 @@ export default {
 
     loadingFonts: 'جارٍ تحميل الخطوط ...',
 
-    loadingDwgConverter: 'جارٍ تحميل محول DWG ...',
-
     fontsNotFound: 'تعذر العثور على الخطوط {fonts} في مستودع الخطوط!',
 
     fontsNotLoaded: 'تعذر تحميل الخطوط {fonts}!',
@@ -1056,28 +989,6 @@ export default {
     fontCacheFailed: 'فشل تخزين الخط "{fileName}" مؤقتًا.',
 
     failedToGetAvaiableFonts: 'فشل الحصول على الخطوط المتاحة من "{url}"!',
-
-    failedToOpenFile: 'فشل فتح الملف "{fileName}"!',
-
-    failedToOpenFileToast:
-      'فشل فتح "{fileName}". راجع مركز الإشعارات للتفاصيل.',
-
-    failedToOpenFileWorkerOom:
-      'فشل فتح "{fileName}". فشل التحليل بسبب نفاد الذاكرة المتاحة (محلل LibreDWG). يمكنك النقر على {dwgParserLink} لشراء محلل DWG التجاري وفتح الرسومات الكبيرة دون حدوث هذا الانهيار.',
-
-    failedToOpenFileWorkerOomLink: 'هذه الصفحة',
-
-    failedToOpenFileWorkerTimeout:
-      'فشل فتح "{fileName}". انتهت مهلة العملية أثناء تحليل الرسم.',
-
-    failedToOpenFileFontLoadFailed:
-      'فشل فتح "{fileName}". تعذر تحميل الخطوط المطلوبة.',
-
-    failedToOpenFileLicenseExpired:
-      'فشل فتح "{fileName}". انتهت صلاحية ترخيص محول DWG.',
-
-    failedToOpenFileLicenseInvalid:
-      'فشل فتح "{fileName}". ترخيص محول DWG مفقود أو غير صالح.',
 
     fetchingDrawingFile: 'جارٍ جلب ملف الرسم ...',
 
@@ -1113,13 +1024,6 @@ export default {
 
     title: {
       ...enMain.notification.title,
-
-      failedToOpenFile: 'فشل فتح الملف',
-      failedToOpenFileWorkerOom: 'نفاد الذاكرة',
-      failedToOpenFileWorkerTimeout: 'انتهت مهلة فتح الرسم',
-      failedToOpenFileFontLoadFailed: 'فشل تحميل الخطوط',
-      failedToOpenFileLicenseExpired: 'انتهت صلاحية الترخيص',
-      failedToOpenFileLicenseInvalid: 'ترخيص غير صالح',
 
       fontNotFound: 'الخط غير موجود',
       fontNotLoaded: 'لم يتم تحميل الخط',

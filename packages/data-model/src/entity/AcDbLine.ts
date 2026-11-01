@@ -10,15 +10,10 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
 import { acdbForEachGripIndex } from './AcDbGripHelpers'
-
-/** Reused across dxfIn to avoid per-entity temporaries (parse is sequential). */
-const _dxfInPointA = /*@__PURE__*/ new AcGePoint3d()
-const _dxfInPointB = /*@__PURE__*/ new AcGePoint3d()
 
 /**
  * Represents a line entity in AutoCAD.
@@ -492,104 +487,6 @@ export class AcDbLine extends AcDbCurve {
       new AcGePoint3d(end.x, end.y, 0)
     ]
     return renderer.lines(points)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbLine')
-    if (this.thickness !== 0) {
-      filer.writeDouble(39, this.thickness)
-    }
-    // LINE start/end are WCS (DXF group 10/11); extrusion only affects thickness.
-    filer.writePoint3d(10, this.startPoint)
-    filer.writePoint3d(11, this.endPoint)
-    filer.writeVector3d(210, this.normal)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbLine')
-
-    // Literal defaults instead of reading `this.startPoint`/`endPoint`/`normal`:
-    // those getters materialize the lazy `_geo` (an `AcGeLine3d` plus two
-    // points) that the assignment at the end of this method replaces
-    // immediately, allocating one throwaway geometry per LINE (~390k on a
-    // large drawing). The defaults below are the values a freshly constructed
-    // line exposes.
-    let x1 = 0
-    let y1 = 0
-    let z1 = 0
-    let x2 = 0
-    let y2 = 0
-    let z2 = 0
-    let thickness = this.thickness
-    let nx = 0
-    let ny = 0
-    let nz = 1
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-          x1 = n
-          break
-        case 20:
-          y1 = n
-          break
-        case 30:
-          z1 = n
-          break
-        case 11:
-          x2 = n
-          break
-        case 21:
-          y2 = n
-          break
-        case 31:
-          z2 = n
-          break
-        case 39:
-          thickness = n
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        default:
-          break
-      }
-    }
-
-    // Skip the (dominant) identity normal: `normalize()` on the already unit
-    // +Z vector is a no-op, and DXF group 210 is +Z for the vast majority of
-    // lines. Only a non-identity normal materializes `_normal`.
-    // LINE 10/11 are WCS — do not run them through the OCS transform (that
-    // wrongly mirrored X for extrusion (0,0,-1) from MIRROR).
-    if (nx !== 0 || ny !== 0 || nz !== 1) {
-      if (nx * nx + ny * ny + nz * nz > 0) {
-        this.normal.set(nx, ny, nz).normalize()
-      }
-    }
-    this.thickness = thickness
-    _dxfInPointA.set(x1, y1, z1)
-    _dxfInPointB.set(x2, y2, z2)
-    this._geo = new AcGeLine3d(_dxfInPointA, _dxfInPointB)
-    return this
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {

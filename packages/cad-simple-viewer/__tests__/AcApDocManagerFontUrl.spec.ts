@@ -110,14 +110,6 @@ jest.mock('../src/app/AcApDocument', () => ({
   }))
 }))
 
-jest.mock('../src/app/AcApXrefManager', () => ({
-  AcApXrefManager: {
-    instance: {
-      clearAll: jest.fn()
-    }
-  }
-}))
-
 jest.mock('../src/app/AcApProgress', () => ({
   AcApProgress: jest.fn().mockImplementation(() => ({
     hide: jest.fn(),
@@ -263,11 +255,6 @@ jest.mock('@mlightcad/data-model', () => ({
     removeEventListener: jest.fn(),
     dispatch: jest.fn()
   })),
-  AcDbDatabaseConverterManager: {
-    instance: {
-      register: jest.fn()
-    }
-  },
   AcDbFileType: {
     DXF: 'DXF',
     DWG: 'DWG'

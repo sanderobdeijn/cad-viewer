@@ -3,7 +3,7 @@ import {
   AcGePoint3d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbXline } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -183,23 +183,6 @@ describe('AcDbXline', () => {
     expect(points[0].y).toBeCloseTo(-999999)
     expect(points[1].x).toBeCloseTo(0)
     expect(points[1].y).toBeCloseTo(1000001)
-  })
-
-  it('writes xline-specific DXF fields and returns itself', () => {
-    const db = createWorkingDb()
-    const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint3d(1.25, -2.5, 3.75)
-    xline.unitDir = new AcGeVector3d(0.5, -0.25, 1.5)
-    db.tables.blockTable.modelSpace.appendEntity(xline)
-    const filer = new AcDbDxfFiler()
-
-    expect(xline.dxfOutFields(filer)).toBe(xline)
-
-    const out = filer.toString()
-    expect(out).toContain('100\nAcDbEntity\n')
-    expect(out).toContain('100\nAcDbXline\n')
-    expect(out).toContain('10\n1.25\n20\n-2.5\n30\n3.75\n')
-    expect(out).toContain('11\n0.5\n21\n-0.25\n31\n1.5\n')
   })
   it('creates a detached clone with a new objectId', () => {
     createWorkingDb()

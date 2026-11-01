@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject } from '../base/AcDbObject'
 import { AcDbResultBuffer } from '../base/AcDbResultBuffer'
 
@@ -86,54 +86,5 @@ export class AcDbXrecord extends AcDbObject {
    */
   setDuplicateRecordCloning(value: AcDbDuplicateRecordCloning): void {
     this._cloningFlag = value
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbXrecord')
-    filer.writeInt16(
-      280,
-      this._cloningFlag ?? AcDbDuplicateRecordCloning.Ignore
-    )
-    filer.writeResultBuffer(this.data)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbXrecord')
-
-    const buffer = new AcDbResultBuffer()
-    while (!filer.atEndOfObject && !filer.atEof) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 1001 || (code >= 1000 && code <= 1071)) {
-        // Trailing XData belongs to the object wrapper.
-        filer.pushBackItem(item)
-        break
-      }
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 280:
-          // Duplicate-record cloning flag (AcDb::DuplicateRecordCloning).
-          this._cloningFlag = Number(item.value) as AcDbDuplicateRecordCloning
-          break
-        default:
-          buffer.add({ code: item.code, value: item.value })
-          break
-      }
-    }
-    this._data = buffer.length > 0 ? buffer : null
-    return this
   }
 }

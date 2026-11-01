@@ -1,14 +1,7 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
-
-import { AcDbDxfFiler } from '../src/base'
 import { AcDbPolyFaceMesh } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-import {
-  appendEntityToModelSpace,
-  getDxfGroupValues,
-  setupWorkingDatabase
-} from '../test-utils/entityTestUtils'
 
 describe('AcDbPolyFaceMesh', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -200,73 +193,5 @@ describe('AcDbPolyFaceMesh', () => {
     expect(linesArg[1]).toMatchObject({ x: 1, y: 0, z: 0 })
     expect(linesArg[6]).toMatchObject({ x: 0, y: 0, z: 0 })
     expect(linesArg[7]).toMatchObject({ x: 1, y: 1, z: 0 })
-  })
-
-  it('writes polyface mesh markers and flags in dxfOutFields', () => {
-    const db = setupWorkingDatabase()
-    const mesh = appendEntityToModelSpace(
-      db,
-      new AcDbPolyFaceMesh(
-        [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 0, z: 0 },
-          { x: 0, y: 1, z: 0 }
-        ],
-        [[1, 2, 3]]
-      )
-    )
-
-    const filer = new AcDbDxfFiler()
-    const result = mesh.dxfOutFields(filer)
-    const dxfText = filer.toString()
-
-    expect(result).toBe(mesh)
-    expect(getDxfGroupValues(dxfText, 100)).toContain('AcDbEntity')
-    expect(getDxfGroupValues(dxfText, 100)).toContain('AcDbPolyFaceMesh')
-    expect(getDxfGroupValues(dxfText, 66)).toContain('1')
-    expect(getDxfGroupValues(dxfText, 70)).toContain('64')
-  })
-
-  it('writes vertex records, face records and SEQEND in dxfOut', () => {
-    const db = setupWorkingDatabase()
-    const mesh = appendEntityToModelSpace(
-      db,
-      new AcDbPolyFaceMesh(
-        [
-          { x: 1, y: 2, z: 3 },
-          { x: 4, y: 5, z: 6 },
-          { x: 7, y: 8, z: 9 }
-        ],
-        [[1, 2, 3, -4]]
-      )
-    )
-    const filer = new AcDbDxfFiler({ database: db })
-
-    const result = mesh.dxfOut(filer)
-    const dxfText = filer.toString()
-
-    expect(result).toBe(mesh)
-    expect((dxfText.match(/\n0\nVERTEX\n/g) || []).length).toBe(4)
-    expect(
-      (dxfText.match(/\n100\nAcDbPolyFaceMeshVertex\n/g) || []).length
-    ).toBe(4)
-    expect((dxfText.match(/\n70\n64\n/g) || []).length).toBe(4)
-    expect((dxfText.match(/\n70\n128\n/g) || []).length).toBe(1)
-    expect(dxfText).toContain('\n10\n1\n20\n2\n30\n3\n')
-    expect(dxfText).toContain('\n10\n4\n20\n5\n30\n6\n')
-    expect(dxfText).toContain('\n11\n2\n12\n3\n13\n-4\n')
-    expect(dxfText).toContain('\n0\nSEQEND\n')
-  })
-
-  it('writes dxfOut with no vertices/faces using default allXdata parameter', () => {
-    const db = setupWorkingDatabase()
-    const mesh = appendEntityToModelSpace(db, new AcDbPolyFaceMesh([], []))
-    const filer = new AcDbDxfFiler({ database: db })
-
-    mesh.dxfOut(filer)
-    const dxfText = filer.toString()
-
-    expect(dxfText).not.toContain('\n0\nVERTEX\n')
-    expect(dxfText).toContain('\n0\nSEQEND\n')
   })
 })

@@ -66,12 +66,11 @@ describe('AcApFontLoader', () => {
     expect(mockLoad.mock.contexts[0].baseUrl).toBe(fontUrl)
   })
 
-  it('wraps catastrophic font load failures as font_load_failed errors', async () => {
+  it('rethrows catastrophic font load failures', async () => {
     const loader = new AcApFontLoader()
     mockLoad.mockRejectedValueOnce(new Error('Failed to fetch'))
 
     await expect(loader.load(['arial'])).rejects.toMatchObject({
-      code: 'font_load_failed',
       message: 'Failed to fetch'
     })
     expect(eventBus.emit).not.toHaveBeenCalled()

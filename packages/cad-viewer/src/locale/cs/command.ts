@@ -7,10 +7,6 @@ export default {
       description:
         'Otevře paletu Chybějící / externí zdroje pro fonty, obrázky a externí reference'
     },
-    xref: {
-      description:
-        'Otevře paletu Chybějící / externí zdroje na kartě externích referencí'
-    },
     properties: {
       description: 'Paleta vlastností objektu'
     },

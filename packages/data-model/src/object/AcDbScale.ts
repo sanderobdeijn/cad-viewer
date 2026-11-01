@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject } from '../base/AcDbObject'
 
 /**
@@ -59,51 +59,5 @@ export class AcDbScale extends AcDbObject {
    */
   get scaleFactor() {
     return this._drawingUnits / this._paperUnits
-  }
-
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbScale')
-    filer.writeInt16(70, this._classVersion)
-    filer.writeString(300, this._scaleName)
-    filer.writeDouble(140, this._paperUnits)
-    filer.writeDouble(141, this._drawingUnits)
-    filer.writeBoolean(290, this._isUnitScale)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbScale')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 70:
-          this._classVersion = Number(item.value)
-          break
-        case 300:
-          this._scaleName = String(item.value)
-          break
-        case 140:
-          this.paperUnits = Number(item.value)
-          break
-        case 141:
-          this.drawingUnits = Number(item.value)
-          break
-        case 290:
-          this._isUnitScale = Boolean(Number(item.value))
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }

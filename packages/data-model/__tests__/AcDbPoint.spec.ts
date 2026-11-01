@@ -1,6 +1,6 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbPoint } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -159,22 +159,6 @@ describe('AcDbPoint', () => {
       displayMode: 34,
       displaySize: 2.5
     })
-  })
-
-  it('writes point-specific DXF fields', () => {
-    createWorkingDb()
-    const point = new AcDbPoint()
-    point.position = { x: 1.25, y: -2, z: 3.5 }
-    point.ownerId = '0'
-    const filer = new AcDbDxfFiler()
-
-    const result = point.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(result).toBe(point)
-    expect(dxf).toContain('100\nAcDbEntity\n')
-    expect(dxf).toContain('100\nAcDbPoint\n')
-    expect(dxf).toContain('10\n1.25\n20\n-2\n30\n3.5\n')
   })
   it('creates a detached clone with a new objectId', () => {
     createWorkingDb()

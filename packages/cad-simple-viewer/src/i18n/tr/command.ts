@@ -261,9 +261,6 @@ export default {
     mtext: {
       description: 'Bir çoklu metin varlığı oluşturur'
     },
-    open: {
-      description: 'Mevcut bir çizim dosyasını açar'
-    },
     openprof: {
       description:
         'Dosya açma aşaması zamanlama profillerinin konsola kaydedilip kaydedilmeyeceğini denetler'

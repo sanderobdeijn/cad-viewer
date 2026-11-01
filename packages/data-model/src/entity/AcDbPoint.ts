@@ -9,7 +9,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbEntity } from './AcDbEntity'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
@@ -291,85 +290,6 @@ export class AcDbPoint extends AcDbEntity {
       displayMode: this.database.pdmode,
       displaySize: this.database.pdsize
     })
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbPoint')
-    if (this.thickness !== 0) {
-      filer.writeDouble(39, this.thickness)
-    }
-    // POINT position is WCS; extrusion only affects thickness / ECS rotation.
-    filer.writePoint3d(10, this.position)
-    if (this.ecsRotation !== 0) {
-      filer.writeAngle(50, this.ecsRotation)
-    }
-    filer.writeVector3d(210, this.normal)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbPoint')
-
-    let x = this.position.x
-    let y = this.position.y
-    let z = this.position.z
-    let thickness = this.thickness
-    let angleDeg = (this.ecsRotation * 180) / Math.PI
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-          x = n
-          break
-        case 20:
-          y = n
-          break
-        case 30:
-          z = n
-          break
-        case 39:
-          thickness = n
-          break
-        case 50:
-          angleDeg = n
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        default:
-          break
-      }
-    }
-
-    const normal = new AcGeVector3d(nx, ny, nz)
-    if (normal.lengthSq() > 0) {
-      this.normal.copy(normal.normalize())
-    }
-    this.thickness = thickness
-    this.ecsRotation = (angleDeg * Math.PI) / 180
-    this.position = new AcGePoint3d(x, y, z)
-    return this
   }
 }
 

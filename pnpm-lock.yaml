@@ -6,7 +6,6 @@ settings:
 
 overrides:
   '@mlightcad/data-model': workspace:*
-  '@mlightcad/libredwg-converter': workspace:*
   '@mlightcad/mtext-input-box': workspace:*
   '@mlightcad/mtext-parser': workspace:*
   '@mlightcad/mtext-renderer': workspace:*
@@ -115,42 +114,6 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.57.0)(@types/node@24.12.4)(async-validator@4.2.5)(axios@1.14.0)(postcss@8.5.8)(sass@1.98.0)(search-insights@2.17.3)(typescript@5.9.3)
 
-  packages/cad-diff-viewer:
-    devDependencies:
-      '@mlightcad/cad-simple-viewer':
-        specifier: workspace:*
-        version: link:../cad-simple-viewer
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
-
-  packages/cad-diff-viewer-example:
-    dependencies:
-      '@mlightcad/cad-diff-viewer':
-        specifier: workspace:*
-        version: link:../cad-diff-viewer
-      '@mlightcad/cad-simple-viewer':
-        specifier: workspace:*
-        version: link:../cad-simple-viewer
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
-      '@mlightcad/libredwg-converter':
-        specifier: workspace:*
-        version: link:../libredwg-converter
-      '@mlightcad/mtext-parser':
-        specifier: workspace:*
-        version: link:../mtext-parser
-      '@mlightcad/mtext-renderer':
-        specifier: workspace:*
-        version: link:../mtext-renderer
-      '@mlightcad/three-renderer':
-        specifier: workspace:*
-        version: link:../three-renderer
-      three:
-        specifier: ^0.186.1
-        version: 0.186.1
-
   packages/cad-simple-ui-plugin:
     devDependencies:
       '@mlightcad/cad-simple-viewer':
@@ -213,9 +176,6 @@ importers:
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
-      '@mlightcad/libredwg-converter':
-        specifier: workspace:*
-        version: link:../libredwg-converter
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser
@@ -328,9 +288,6 @@ importers:
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
-      '@mlightcad/libredwg-converter':
-        specifier: workspace:*
-        version: link:../libredwg-converter
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser
@@ -409,9 +366,6 @@ importers:
 
   packages/examples:
     devDependencies:
-      '@mlightcad/cad-diff-viewer-example':
-        specifier: workspace:*
-        version: link:../cad-diff-viewer-example
       '@mlightcad/cad-simple-viewer-example':
         specifier: workspace:*
         version: link:../cad-simple-viewer-example
@@ -445,19 +399,6 @@ importers:
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
-      vite-plugin-strip-comments:
-        specifier: ^0.0.10
-        version: 0.0.10
-
-  packages/libredwg-converter:
-    dependencies:
-      '@mlightcad/libredwg-web':
-        specifier: ^0.8.1
-        version: 0.8.1
-    devDependencies:
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
       vite-plugin-strip-comments:
         specifier: ^0.0.10
         version: 0.0.10
@@ -2144,10 +2085,6 @@ packages:
 
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
-
-  '@mlightcad/libredwg-web@0.8.1':
-    resolution: {integrity: sha512-02Jn0m3xIokJ0ghr/OXSI4H6MoimSED2sbZYr47A7IGoaI66saLkNN2HDeX6UICSdiQsRQDBVyhuPE3CG3jd3Q==}
-    engines: {node: '>=20'}
 
   '@mlightcad/shx-parser@1.4.5':
     resolution: {integrity: sha512-wFY0X7vnuq1IYdP6JRggb7LHcKho1P8zmcWGtXa6XYthwyKZCUoZCswTXr7J26pbzyhBB7KsiCcCL48iwIevdQ==}
@@ -8173,8 +8110,6 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0':
     optional: true
-
-  '@mlightcad/libredwg-web@0.8.1': {}
 
   '@mlightcad/shx-parser@1.4.5': {}
 

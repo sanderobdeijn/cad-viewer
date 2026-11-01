@@ -12,23 +12,16 @@ const cadSimpleViewerExampleDist = path.resolve(
   '../cad-simple-viewer-example/dist'
 )
 const cadSimpleViewer = path.resolve(rootDir, './public/cad-simple-viewer/')
-const cadDiffViewerExampleDist = path.resolve(
-  rootDir,
-  '../cad-diff-viewer-example/dist'
-)
-const cadDiffViewer = path.resolve(rootDir, './public/cad-diff-viewer/')
 const docsSource = path.resolve(rootDir, '../../docs/.vitepress/dist')
 const docsTarget = path.resolve(rootDir, './public/docs/')
 
 export async function copyDist() {
   await fs.ensureDir(cadViewer)
   await fs.ensureDir(cadSimpleViewer)
-  await fs.ensureDir(cadDiffViewer)
   await fs.copy(cadViewerExampleDist, cadViewer, { overwrite: true })
   await fs.copy(cadSimpleViewerExampleDist, cadSimpleViewer, {
     overwrite: true
   })
-  await fs.copy(cadDiffViewerExampleDist, cadDiffViewer, { overwrite: true })
   if (await fs.pathExists(docsSource)) {
     // The VitePress user guide is the only content deployed under /docs/.
     // The TypeDoc API reference lives on Read the Docs (see .readthedocs.yaml),

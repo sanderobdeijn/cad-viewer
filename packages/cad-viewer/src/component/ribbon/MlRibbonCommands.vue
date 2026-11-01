@@ -17,10 +17,8 @@ import {
   acapGetMeasurementCustomTextHeightWcs,
   acapGetMeasurementFontSize,
   acapGetMeasurementTextHeightMode,
-  AcApOpenCmd,
   AcApQNewCmd,
   acapRunDatabaseEdit,
-  acapRunDataSourceMenuAction,
   acapScreenPxToWcs,
   acapSetMeasurementDrawColor,
   acapSetMeasurementTextHeight,
@@ -65,7 +63,6 @@ import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
-  useDataSources,
   useDocument,
   useSettings,
   useUndoRedo
@@ -164,7 +161,6 @@ const features = useSettings()
 const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 const { canUndo, canRedo } = useUndoRedo()
-const { menuItems: dataSourceMenuItems, isSingleLocalOpen } = useDataSources()
 const { t, locale } = useI18n()
 const isMeasurementOverlayVisible = ref(true)
 const measurementDrawColor = shallowRef(new AcCmColor())
@@ -1792,27 +1788,11 @@ watch(
 
 const fileMenuItems = computed<FileMenuItemModel[]>(() => {
   locale.value
-  dataSourceMenuItems.value
-  isSingleLocalOpen.value
-  const openItem: FileMenuItemModel = isSingleLocalOpen.value
-    ? {
-        id: 'Open',
-        label: t('main.mainMenu.open')
-      }
-    : {
-        id: 'Open',
-        label: t('main.mainMenu.open'),
-        children: dataSourceMenuItems.value.map(item => ({
-          id: `ds:${item.id}`,
-          label: item.label
-        }))
-      }
   const items: FileMenuItemModel[] = [
     {
       id: 'QNew',
       label: t('main.mainMenu.new')
     },
-    openItem,
     {
       id: 'DrawingUnits',
       label: t('main.mainMenu.drawingUnits')
@@ -1861,15 +1841,6 @@ const handleFileMenuSelect = async (command: string) => {
   if (command === 'QNew') {
     const cmd = new AcApQNewCmd()
     cmd.trigger(AcApDocManager.instance.context)
-  } else if (command === 'Open') {
-    const cmd = new AcApOpenCmd()
-    cmd.trigger(AcApDocManager.instance.context)
-  } else if (command.startsWith('ds:')) {
-    const itemId = command.slice(3)
-    const item = dataSourceMenuItems.value.find(i => i.id === itemId)
-    if (item) {
-      void acapRunDataSourceMenuAction(item)
-    }
   } else if (command === 'DrawingUnits') {
     AcApDocManager.instance.sendStringToExecute('units')
   } else if (command === 'About') {

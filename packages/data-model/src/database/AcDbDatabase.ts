@@ -3,26 +3,17 @@ import {
   AcCmColor,
   AcCmColorMethod,
   AcCmEventManager,
-  AcCmTaskError,
   AcCmTransparency
 } from '@mlightcad/common'
-
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import {
   AcDbObject,
   AcDbObjectId,
-  TEMP_OBJECT_ID_PREFIX,
-  acdbAssignWorkingDatabase
+  TEMP_OBJECT_ID_PREFIX
 } from '../base/AcDbObject'
 import { AcDbOpenMode } from '../base/AcDbOpenMode'
+import { acdbAssignWorkingDatabase } from '../base/AcDbObject'
 import { AcDbRegenerator } from '../converter/AcDbRegenerator'
-import {
-  AcDbConverterType,
-  AcDbDatabaseConverterManager,
-  AcDbFileType
-} from './AcDbDatabaseConverterManager'
 import { AcDbEntity } from '../entity/AcDbEntity'
-import { AcDbPolyline } from '../entity/AcDbPolyline'
 import {
   ACAD_APPID,
   ACDB_COMPAREHATCH_DEFAULT,
@@ -65,22 +56,12 @@ import { AcDbScale } from '../object/AcDbScale'
 import { AcDbSortentsTable } from '../object/AcDbSortentsTable'
 import { AcDbXrecord } from '../object/AcDbXrecord'
 import { AcLyLayerFilterTree } from '../ly/AcLyLayerFilterTree'
-import {
-  ACAD_LAYERFILTERS_NAME,
-  ACLY_DICTIONARY_NAME,
-  acdbLayerGroupsToResultBuffer,
-  acdbSerializeLayerFilterTree,
-  type AcDbSerializedFilterNode
-} from '../ly/AcLyLayerFilterIO'
-import { acdbBytesToHexString } from '../misc/proxyGraphic'
 import { AcDbBlockTable } from './AcDbBlockTable'
 import { AcDbBlockTableRecord } from './AcDbBlockTableRecord'
 import { AcDbConversionStage, AcDbStageStatus } from './AcDbDatabaseConverter'
 import type { AcDbConversionProgressCallback } from './AcDbDatabaseConverter'
-import { AcDbOpenDatabaseError } from './AcDbOpenDatabaseError'
 import { AcDbDimStyleTable } from './AcDbDimStyleTable'
 import { AcDbDimStyleTableRecord } from './AcDbDimStyleTableRecord'
-import { AcDbLayerFlattener } from './AcDbLayerFlattener'
 import { AcDbLayerTable } from './AcDbLayerTable'
 import {
   AcDbLayerTableRecord,
@@ -182,15 +163,6 @@ export interface AcDbProgressdEventArgs {
   data?: unknown
 }
 
-/**
- * Event arguments when opening a drawing database fails.
- */
-export interface AcDbOpenFailedEventArgs {
-  /** The database that failed to open */
-  database: AcDbDatabase
-  /** Structured failure information */
-  error: AcDbOpenDatabaseError
-}
 
 /**
  * Options for reading a drawing database.
@@ -216,25 +188,6 @@ export interface AcDbOpenDatabaseOptions {
   minimumChunkSize?: number
 
   /**
-   * Timeout for web worker parsing in milliseconds.
-   *
-   * This option is used only when the selected converter parses the drawing
-   * file in a web worker. If omitted, the converter-level timeout is used.
-   */
-  timeout?: number
-
-  /**
-   * Override the text encoding used to decode text content (layer names,
-   * annotations, text entities, block attributes, ...).
-   *
-   * When omitted, the encoding is auto-detected from the file (DXF reads
-   * `$DWGCODEPAGE`; DWG reads the header code page). When provided, it wins
-   * over auto-detection — for example `'cp949'` or `'euc-kr'` for Korean
-   * drawings whose declared code page is missing or wrong.
-   */
-  encoding?: string
-
-  /**
    * System variables to override in the database.
    *
    * This allows overriding system variable values when opening a database.
@@ -257,13 +210,6 @@ export interface AcDbOpenDatabaseOptions {
   drawNoPlotLayers?: boolean
 
   /**
-   * Collapses the drawing onto layer `0` while reading, baking each layer's
-   * style into its entities and showing content from hidden or frozen layers.
-   * See {@link AcDbLayerFlattener}.
-   */
-  flattenLayers?: boolean
-
-  /**
    * Maximum number of segments used to tessellate a full circle when drawing.
    *
    * Lower values use less GPU memory and produce smaller HTML exports; higher
@@ -275,13 +221,6 @@ export interface AcDbOpenDatabaseOptions {
    * Short arcs still use fewer segments than a full circle.
    */
   circleSides?: number
-
-  /**
-   * File name of the drawing being opened, including extension (for example `Plan.dwg`).
-   *
-   * When provided, updates the read-only **DWGNAME** system variable for this database.
-   */
-  fileName?: string
 }
 
 /**
@@ -469,8 +408,6 @@ export class AcDbDatabase extends AcDbObject {
    * Set from {@link AcDbOpenDatabaseOptions.drawNoPlotLayers} when opening a database.
    */
   private _drawNoPlotLayers = true
-  /** Set while a read is collapsing the drawing onto layer `0`. */
-  private _layerFlattener?: AcDbLayerFlattener
   /**
    * Display tessellation side count for a full circle.
    * Set from {@link AcDbOpenDatabaseOptions.circleSides} when opening a database.
@@ -497,7 +434,6 @@ export class AcDbDatabase extends AcDbObject {
   private _pendingEntityErased: AcDbEntity[] = []
   private _pendingDictObjectSet: { object: AcDbObject; key: string }[] = []
   private _pendingDictObjectErased: { object: AcDbObject; key: string }[] = []
-  private _lastOpenError: AcDbOpenDatabaseError | null = null
 
   /**
    * Events that can be triggered by the database.
@@ -523,9 +459,7 @@ export class AcDbDatabase extends AcDbObject {
     /** Fired when a layer is erased from the database */
     layerErased: new AcCmEventManager<AcDbLayerEventArgs>(),
     /** Fired during database opening operations to report progress */
-    openProgress: new AcCmEventManager<AcDbProgressdEventArgs>(),
-    /** Fired when {@link AcDbDatabase.read} or {@link AcDbDatabase.openUri} fails */
-    openFailed: new AcCmEventManager<AcDbOpenFailedEventArgs>()
+    openProgress: new AcCmEventManager<AcDbProgressdEventArgs>()
   }
 
   /**
@@ -837,35 +771,6 @@ export class AcDbDatabase extends AcDbObject {
       this.objects.sortentsTable,
       this.objects.xrecord
     ]
-  }
-
-  /**
-   * Starts collapsing the drawing onto layer `0`. Called by converters once the
-   * layer table is loaded.
-   *
-   * @internal
-   */
-  beginLayerFlatten() {
-    this._layerFlattener = new AcDbLayerFlattener(this)
-  }
-
-  /**
-   * Finishes the flattening started by {@link beginLayerFlatten}, if any.
-   *
-   * @internal
-   */
-  endLayerFlatten() {
-    this._layerFlattener?.finish()
-    this._layerFlattener = undefined
-  }
-
-  /**
-   * Moves an entity being appended to layer `0` when a flatten is in progress.
-   *
-   * @internal
-   */
-  flattenEntityLayer(entity: AcDbEntity, inheritsFromOwner: boolean) {
-    this._layerFlattener?.flatten(entity, inheritsFromOwner)
   }
 
   /**
@@ -2475,301 +2380,22 @@ export class AcDbDatabase extends AcDbObject {
     )
   }
 
-  /**
-   * The most recent failure from {@link read} or {@link openUri}, or `null` after a successful open.
-   *
-   * Useful when a caller catches no exception (for example a viewer that returns `false`)
-   * but still needs to distinguish worker out-of-memory from other parse failures.
-   */
-  get lastOpenError(): AcDbOpenDatabaseError | null {
-    return this._lastOpenError
-  }
-
-  /**
-   * Reads drawing data from a string, ArrayBuffer, or typed-array view.
-   *
-   * This method parses the provided data and populates the database with
-   * the resulting entities, tables, and objects. The method supports
-   * both DXF and DWG file formats.
-   *
-   * @param data - The drawing data as a string, ArrayBuffer, or ArrayBufferView
-   *   - For DXF files: Pass a string containing the DXF content, or bytes as
-   *     an ArrayBuffer / Uint8Array (e.g. from `fetch` / `File` / `fs.readFile`)
-   *   - For DWG files: Pass an ArrayBuffer or Uint8Array of the binary DWG data
-   * @param options - Options for reading the database
-   * @param fileType - The type of file being read (defaults to DXF)
-   *
-   * @example
-   * ```typescript
-   * // Reading a DXF file (string)
-   * const database = new AcDbDatabase();
-   * await database.read(dxfString, { readOnly: true }, AcDbFileType.DXF);
-   *
-   * // Reading a DXF file (Uint8Array / ArrayBuffer)
-   * await database.read(
-   *   new TextEncoder().encode(dxfString),
-   *   { readOnly: true },
-   *   AcDbFileType.DXF
-   * );
-   *
-   * // Reading a DWG file (ArrayBuffer)
-   * await database.read(dwgArrayBuffer, { readOnly: true }, AcDbFileType.DWG);
-   * ```
-   */
-  async read(
-    data: string | ArrayBuffer | ArrayBufferView,
-    options: AcDbOpenDatabaseOptions,
-    fileType: AcDbConverterType = AcDbFileType.DXF
-  ) {
-    const converter = AcDbDatabaseConverterManager.instance.get(fileType)
-    if (converter == null)
-      throw new Error(
-        `Database converter for file type '${fileType}' isn't registered and can can't read this file!`
-      )
-
-    let buffer: ArrayBuffer
-    if (typeof data === 'string') {
-      const encoded = new TextEncoder().encode(data)
-      buffer = encoded.buffer.slice(
-        encoded.byteOffset,
-        encoded.byteOffset + encoded.byteLength
-      ) as ArrayBuffer
-    } else if (data instanceof ArrayBuffer) {
-      buffer = data
-    } else if (ArrayBuffer.isView(data)) {
-      // Copy the exact view range — Node Buffer / sliced Uint8Array may share
-      // a larger underlying ArrayBuffer.
-      buffer = data.buffer.slice(
-        data.byteOffset,
-        data.byteOffset + data.byteLength
-      ) as ArrayBuffer
-    } else {
-      const openError = new AcDbOpenDatabaseError(
-        'AcDbDatabase.read expects a string, ArrayBuffer, or ArrayBufferView',
-        'unknown'
-      )
-      this._lastOpenError = openError
-      this.events.openFailed.dispatch({ database: this, error: openError })
-      throw openError
-    }
-
-    this.clear()
-    this._lastOpenError = null
-    this._drawNoPlotLayers = options?.drawNoPlotLayers ?? true
-    this.drawCircleSides = options?.circleSides ?? ACDB_DRAW_CIRCLE_SIDES_DRAFT
-    if (options?.fileName) {
-      this.setDwgName(options.fileName)
-    }
-
-    // Ensure this database is the host working database for the duration of
-    // conversion. Converters (including peer packages such as dxf-json-converter)
-    // assign real handles on unbound objects; some entity getters still fall
-    // back to the working database before append/add binds them.
-    acdbAssignWorkingDatabase(this)
-
-    try {
-      await converter.read(buffer, this, {
-        minimumChunkSize: (options && options.minimumChunkSize) || 10,
-        progress: this.createConversionProgressHandler(),
-        timeout: options?.timeout,
-        encoding: options?.encoding,
-        sysVars: options?.sysVars,
-        flattenLayers: options?.flattenLayers
-      })
-    } catch (error) {
-      this._layerFlattener = undefined
-      const openError = AcDbOpenDatabaseError.from(error)
-      this._lastOpenError = openError
-      this.events.openFailed.dispatch({ database: this, error: openError })
-      throw openError
-    }
-
-    this._lastOpenError = null
-    this.ensureDatabaseDefaults()
-  }
-
   private createConversionProgressHandler(): AcDbConversionProgressCallback {
     return async (
       percentage: number,
       stage: AcDbConversionStage,
       stageStatus: AcDbStageStatus,
-      data?: unknown,
-      taskError?: AcCmTaskError
+      data?: unknown
     ) => {
-      let progressData: unknown = data
-      if (stageStatus === 'ERROR' && taskError) {
-        const openError = AcDbOpenDatabaseError.fromTask(taskError)
-        this._lastOpenError = openError
-        progressData = {
-          code: openError.code,
-          message: openError.message,
-          stage: openError.stage ?? stage
-        }
-      }
-
       this.events.openProgress.dispatch({
         database: this,
         percentage: percentage,
         stage: 'CONVERSION',
         subStage: stage,
         subStageStatus: stageStatus,
-        data: progressData
+        data
       })
     }
-  }
-
-  /**
-   * Read AutoCAD DXF or DWG drawing specified by the URL into the database object.
-   * The method automatically detects the file type based on the URL extension:
-   * - .dxf files are read as text using readAsText()
-   * - .dwg files are read as binary data using readAsArrayBuffer()
-   * @param url Input the URL linked to one AutoCAD DXF or DWG file
-   * @param options Input options to read drawing data
-   */
-  async openUri(url: string, options: AcDbOpenDatabaseOptions): Promise<void> {
-    this.events.openProgress.dispatch({
-      database: this,
-      percentage: 0,
-      stage: 'FETCH_FILE',
-      subStageStatus: 'START'
-    })
-
-    const response = await fetch(url)
-    if (!response.ok) {
-      this.events.openProgress.dispatch({
-        database: this,
-        percentage: 100,
-        stage: 'FETCH_FILE',
-        subStageStatus: 'ERROR'
-      })
-      throw new Error(
-        `Failed to fetch file '${url}' with HTTP status code '${response.status}'!`
-      )
-    }
-
-    const contentLength = response.headers.get('content-length')
-    const totalBytes = contentLength ? parseInt(contentLength, 10) : null
-    let loadedBytes = 0
-
-    // Create a reader to track progress
-    const reader = response.body?.getReader()
-    if (!reader) {
-      throw new Error('Failed to get response reader')
-    }
-
-    const chunks = []
-
-    while (true) {
-      const { done, value } = await reader.read()
-
-      if (done) {
-        break
-      }
-
-      chunks.push(value)
-      loadedBytes += value.length
-
-      // Calculate and report progress if we know the total size
-      if (totalBytes !== null) {
-        const percentage = Math.round((loadedBytes / totalBytes) * 100)
-        this.events.openProgress.dispatch({
-          database: this,
-          percentage: percentage,
-          stage: 'FETCH_FILE',
-          subStageStatus: 'IN-PROGRESS'
-        })
-      }
-    }
-
-    // Combine all chunks into a single buffer
-    const content = new Uint8Array(loadedBytes)
-    let position = 0
-    for (const chunk of chunks) {
-      content.set(chunk, position)
-      position += chunk.length
-    }
-
-    const fileName = this.getFileNameFromUri(url)
-    if (fileName) {
-      this.setDwgName(fileName)
-    }
-    const fileExtension = fileName.toLowerCase().split('.').pop()
-    if (fileExtension === 'dwg') {
-      // DWG files are binary, convert to ArrayBuffer
-      await this.read(content.buffer, options, AcDbFileType.DWG)
-    } else if (fileExtension === 'dxf') {
-      await this.read(content.buffer, options, AcDbFileType.DXF)
-    } else {
-      await this.read(content.buffer, options, fileExtension)
-    }
-
-    this.events.openProgress.dispatch({
-      database: this,
-      percentage: 100,
-      stage: 'FETCH_FILE',
-      subStageStatus: 'END'
-    })
-  }
-
-  /**
-   * Exports the current database into DXF (ASCII string or binary bytes).
-   *
-   * The `fileName` parameter is kept for ObjectARX API parity. In this web
-   * implementation the method returns the DXF payload instead of writing the
-   * filesystem directly.
-   *
-   * @param _fileName - Kept for ObjectARX parity. Ignored in this implementation.
-   * @param precision - Numeric precision used by the DXF filer.
-   * @param version - Target DXF/DWG version name or value.
-   * @param optionsOrThumbnail - Legacy boolean thumbnail flag, or options with
-   *   `saveThumbnailImage` and `format: 'ascii' | 'binary'`.
-   * @returns ASCII DXF string, or `Uint8Array` when format is `'binary'`.
-   */
-  dxfOut(
-    _fileName?: string,
-    precision: number = 16,
-    version: AcDbDwgVersion | string | number = this.version.name,
-    optionsOrThumbnail:
-      | boolean
-      | { saveThumbnailImage?: boolean; format?: 'ascii' | 'binary' } = false
-  ): string | Uint8Array {
-    this.ensureDatabaseDefaults()
-    if (
-      this._layerFilters.root.getNestedFilters().length > 0 &&
-      !this.tables.layerTable.extensionDictionary
-    ) {
-      this.tables.layerTable.extensionDictionary = this.generateHandle()
-    }
-
-    const options =
-      typeof optionsOrThumbnail === 'boolean'
-        ? {
-            saveThumbnailImage: optionsOrThumbnail,
-            format: 'ascii' as const
-          }
-        : {
-            saveThumbnailImage: optionsOrThumbnail.saveThumbnailImage ?? false,
-            format: optionsOrThumbnail.format ?? 'ascii'
-          }
-
-    const outVersion =
-      version instanceof AcDbDwgVersion ? version : new AcDbDwgVersion(version)
-    const filer = new AcDbDxfFiler({
-      database: this,
-      precision,
-      version: outVersion,
-      outputFormat: options.format
-    })
-
-    this.writeDxfHeaderSection(filer)
-    this.writeDxfClassesSection(filer)
-    this.writeDxfTablesSection(filer, outVersion)
-    this.writeDxfBlocksSection(filer)
-    this.writeDxfEntitiesSection(filer)
-    this.writeDxfObjectsSection(filer)
-    this.writeDxfThumbnailImageSection(filer, options.saveThumbnailImage)
-    filer.writeStart('EOF')
-    return options.format === 'binary' ? filer.toBinary() : filer.toString()
   }
 
   /**
@@ -2781,6 +2407,26 @@ export class AcDbDatabase extends AcDbObject {
       minimumChunkSize: 500,
       progress: this.createConversionProgressHandler()
     })
+  }
+
+  /**
+   * Resets this database to a blank metric (ISO) drawing.
+   *
+   * Call {@link regen} afterwards so views pick up the new content.
+   *
+   * @param options - Drawing options applied to the new drawing
+   */
+  createNewDrawing(options: AcDbOpenDatabaseOptions = {}) {
+    this.clear()
+    this._drawNoPlotLayers = options.drawNoPlotLayers ?? true
+    this.drawCircleSides = options.circleSides ?? ACDB_DRAW_CIRCLE_SIDES_DRAFT
+    acdbAssignWorkingDatabase(this)
+    new AcDbDataGenerator(this).createNewDrawing()
+    this.ensureDatabaseDefaults()
+    const sysVarManager = AcDbSysVarManager.instance()
+    for (const [name, value] of Object.entries(options.sysVars ?? {})) {
+      sysVarManager.setVar(name, value, this)
+    }
   }
 
   /**
@@ -3070,607 +2716,6 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * Writes the HEADER section for the DXF export.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeDxfHeaderSection(filer: AcDbDxfFiler) {
-    filer.startSection('HEADER')
-    filer.writeString(9, '$ACADVER')
-    filer.writeString(1, filer.version?.name ?? this.version.name)
-    filer.writeString(9, '$HANDSEED')
-    filer.writeString(5, filer.nextHandle.toString(16).toUpperCase())
-    filer.writeString(9, '$DWGCODEPAGE')
-    if (filer.capabilities.supportsUtf8CodePage) {
-      filer.writeString(3, 'UTF-8')
-    } else {
-      // Pre-R2007: declare a legacy code page. Non-ASCII text is written as
-      // `\U+nnnn` escapes (see AcDbDxfFiler) so the ASCII payload matches.
-      const name = this._dwgCodePage
-      const legacy =
-        name && !/^utf-?8$/i.test(name) ? name : 'ANSI_1252'
-      filer.writeString(3, legacy)
-    }
-    filer.writeString(9, '$INSUNITS')
-    filer.writeInt16(70, this.insunits)
-    filer.writeString(9, '$LUNITS')
-    filer.writeInt16(70, this.lunits)
-    filer.writeString(9, '$LUPREC')
-    filer.writeInt16(70, this.luprec)
-    filer.writeString(9, '$UNITMODE')
-    filer.writeInt16(70, this.unitmode)
-    filer.writeString(9, '$MEASUREMENT')
-    filer.writeInt16(70, this.measurement)
-    filer.writeString(9, '$LTSCALE')
-    filer.writeDouble(40, this.ltscale)
-    if (filer.capabilities.supportsLineWeight) {
-      filer.writeString(9, '$LWDISPLAY')
-      filer.writeInt16(70, this.lwdisplay ? 1 : 0)
-    }
-    filer.writeString(9, '$CELTSCALE')
-    filer.writeDouble(40, this.celtscale)
-    if (filer.capabilities.supportsLineWeight) {
-      filer.writeString(9, '$CELWEIGHT')
-      filer.writeLineWeight(370, this.celweight)
-    }
-    filer.writeString(9, '$CECOLOR')
-    filer.writeCmColor(this.cecolor)
-    filer.writeString(9, '$TILEMODE')
-    filer.writeInt16(70, this.tilemode)
-    filer.writeString(9, '$PSLTSCALE')
-    filer.writeInt16(70, this.psltscale ? 1 : 0)
-    filer.writeString(9, '$CLAYER')
-    filer.writeString(8, this.clayer)
-    filer.writeString(9, '$CELTYPE')
-    filer.writeString(6, this.celtype)
-    if (
-      filer.capabilities.supportsTransparency &&
-      !this.cetransparency.isInvalid
-    ) {
-      filer.writeString(9, '$CETRANSPARENCY')
-      filer.writeTransparency(this.cetransparency)
-    }
-    filer.writeString(9, '$CMLSTYLE')
-    filer.writeString(2, this.cmlstyle)
-    filer.writeString(9, '$CMLSCALE')
-    filer.writeDouble(40, this.cmlscale)
-    filer.writeString(9, '$CMLEADERSTYLE')
-    filer.writeString(2, this.cmleaderstyle)
-    if (this.hpcolor.colorMethod !== AcCmColorMethod.None) {
-      filer.writeString(9, '$HPCOLOR')
-      filer.writeCmColor(this.hpcolor, 2)
-    }
-    if (this.hpbackgroundcolor.colorMethod !== AcCmColorMethod.None) {
-      filer.writeString(9, '$HPBACKGROUNDCOLOR')
-      filer.writeCmColor(this.hpbackgroundcolor, 2)
-    }
-    filer.writeString(9, '$HPLAYER')
-    filer.writeString(8, this.hplayer)
-    if (
-      filer.capabilities.supportsTransparency &&
-      !this.hptransparency.isInvalid
-    ) {
-      filer.writeString(9, '$HPTRANSPARENCY')
-      filer.writeTransparency(this.hptransparency)
-    }
-    filer.writeString(9, '$TEXTSTYLE')
-    filer.writeString(7, this.textstyle)
-    filer.writeString(9, '$DIMSTYLE')
-    filer.writeString(2, this.dimstyle)
-    filer.writeString(9, '$ANGBASE')
-    filer.writeAngle(50, this.angbase)
-    filer.writeString(9, '$ANGDIR')
-    filer.writeInt16(70, this.angdir)
-    filer.writeString(9, '$AUNITS')
-    filer.writeInt16(70, this.aunits)
-    filer.writeString(9, '$AUPREC')
-    filer.writeInt16(70, this.auprec)
-    filer.writeString(9, '$EXTMIN')
-    filer.writePoint3d(10, this.extmin)
-    filer.writeString(9, '$EXTMAX')
-    filer.writePoint3d(10, this.extmax)
-    filer.writeString(9, '$PDMODE')
-    filer.writeInt32(70, this.pdmode)
-    filer.writeString(9, '$PDSIZE')
-    filer.writeDouble(40, this.pdsize)
-    filer.writeString(9, '$OSMODE')
-    filer.writeInt32(70, this.osmode)
-    filer.writeString(9, '$ORTHOMODE')
-    filer.writeInt16(70, this.orthomode)
-    filer.endSection()
-  }
-
-  /**
-   * Writes the CLASSES section for the DXF export.
-   *
-   * Required for proxy entities whose group code **91** indexes into this
-   * section. Skipped when no classes were loaded from the source drawing.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeDxfClassesSection(filer: AcDbDxfFiler) {
-    if (
-      !filer.capabilities.supportsClassesSection ||
-      this._classes.length === 0
-    ) {
-      return
-    }
-
-    filer.startSection('CLASSES')
-    for (const dxfClass of this._classes) {
-      filer.writeStart('CLASS')
-      filer.writeString(1, dxfClass.name)
-      filer.writeString(2, dxfClass.cppClassName)
-      filer.writeString(3, dxfClass.appName)
-      filer.writeInt32(90, dxfClass.proxyFlag)
-      filer.writeInt32(91, dxfClass.instanceCount)
-      filer.writeInt8(280, dxfClass.wasProxy ? 1 : 0)
-      filer.writeInt8(281, dxfClass.isEntity ? 1 : 0)
-    }
-    filer.endSection()
-  }
-
-  /**
-   * Writes the TABLES section for the DXF export.
-   *
-   * @param filer - DXF output writer.
-   * @param version - Target DXF/DWG version, used for conditional tables.
-   */
-  private writeDxfTablesSection(filer: AcDbDxfFiler, version: AcDbDwgVersion) {
-    filer.startSection('TABLES')
-    this.writeDxfTable(
-      filer,
-      'VPORT',
-      this.tables.viewportTable,
-      this.tables.viewportTable.newIterator(),
-      'VPORT'
-    )
-    this.writeDxfTable(
-      filer,
-      'VIEW',
-      this.tables.viewTable,
-      this.tables.viewTable.newIterator(),
-      'VIEW'
-    )
-    this.writeDxfTable(
-      filer,
-      'UCS',
-      this.tables.ucsTable,
-      this.tables.ucsTable.newIterator(),
-      'UCS'
-    )
-    this.writeDxfTable(
-      filer,
-      'LTYPE',
-      this.tables.linetypeTable,
-      this.tables.linetypeTable.newIterator(),
-      'LTYPE'
-    )
-    this.writeDxfTable(
-      filer,
-      'LAYER',
-      this.tables.layerTable,
-      this.tables.layerTable.newIterator(),
-      'LAYER'
-    )
-    this.writeDxfTable(
-      filer,
-      'STYLE',
-      this.tables.textStyleTable,
-      this.tables.textStyleTable.newIterator(true),
-      'STYLE'
-    )
-    this.writeDxfTable(
-      filer,
-      'APPID',
-      this.tables.appIdTable,
-      this.tables.appIdTable.newIterator(),
-      'APPID'
-    )
-    this.writeDxfTable(
-      filer,
-      'DIMSTYLE',
-      this.tables.dimStyleTable,
-      this.tables.dimStyleTable.newIterator(),
-      'DIMSTYLE'
-    )
-    if (version.capabilities.supportsBlockRecordTable) {
-      this.writeDxfTable(
-        filer,
-        'BLOCK_RECORD',
-        this.tables.blockTable,
-        this.tables.blockTable.newIterator(),
-        'BLOCK_RECORD'
-      )
-    }
-    filer.endSection()
-  }
-
-  /**
-   * Writes the BLOCKS section for the DXF export.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeDxfBlocksSection(filer: AcDbDxfFiler) {
-    filer.startSection('BLOCKS')
-    for (const btr of this.tables.blockTable.newIterator()) {
-      btr.dxfOutBlockBegin(filer)
-
-      if (!btr.isModelSapce && !btr.isPaperSapce) {
-        for (const entity of btr.newIterator()) {
-          this.writeDxfEntity(filer, entity)
-        }
-      }
-
-      btr.dxfOutBlockEnd(filer)
-    }
-    filer.endSection()
-  }
-
-  /**
-   * Writes the ENTITIES section for the DXF export.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeDxfEntitiesSection(filer: AcDbDxfFiler) {
-    filer.startSection('ENTITIES')
-    for (const btr of this.tables.blockTable.newIterator()) {
-      if (!btr.isModelSapce && !btr.isPaperSapce) continue
-      for (const entity of btr.newIterator()) {
-        this.writeDxfEntity(filer, entity)
-      }
-    }
-    filer.endSection()
-  }
-
-  /**
-   * Writes the OBJECTS section for the DXF export.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeDxfObjectsSection(filer: AcDbDxfFiler) {
-    if (!filer.capabilities.supportsObjectsSection) {
-      return
-    }
-    filer.startSection('OBJECTS')
-    const rootDict = this.objects.dictionary
-    rootDict.ownerId = '0'
-
-    const writeDictionary = (dict: AcDbDictionary) => {
-      // Dictionary entries (3/350 pairs) are embedded in the DICTIONARY object.
-      filer.writeStart('DICTIONARY')
-      dict.dxfOut(filer, true)
-    }
-
-    const ensureRootEntry = (key: string, dict: AcDbDictionary) => {
-      if (rootDict.getAt(key) !== dict) {
-        rootDict.setAt(key, dict)
-      }
-    }
-
-    const dropRootEntry = (key: string) => {
-      if (rootDict.getAt(key)) {
-        rootDict.remove(key)
-      }
-    }
-
-    ensureRootEntry('ACAD_LAYOUT', this.objects.layout)
-    if (this.objects.group.numEntries > 0) {
-      ensureRootEntry('ACAD_GROUP', this.objects.group)
-    } else {
-      dropRootEntry('ACAD_GROUP')
-    }
-    if (this.objects.sortentsTable.numEntries > 0) {
-      ensureRootEntry('ACAD_SORTENTS', this.objects.sortentsTable)
-    } else {
-      dropRootEntry('ACAD_SORTENTS')
-    }
-    if (this.objects.mleaderStyle.numEntries > 0) {
-      ensureRootEntry('ACAD_MLEADERSTYLE', this.objects.mleaderStyle)
-    } else {
-      dropRootEntry('ACAD_MLEADERSTYLE')
-    }
-    if (this.objects.mlineStyle.numEntries > 0) {
-      ensureRootEntry('ACAD_MLINESTYLE', this.objects.mlineStyle)
-    } else {
-      dropRootEntry('ACAD_MLINESTYLE')
-    }
-    if (this.objects.xrecord.numEntries > 0) {
-      ensureRootEntry('MLIGHT_XRECORD', this.objects.xrecord)
-    } else {
-      dropRootEntry('MLIGHT_XRECORD')
-    }
-
-    writeDictionary(rootDict)
-    writeDictionary(this.objects.layout)
-
-    if (this.objects.group.numEntries > 0) {
-      writeDictionary(this.objects.group)
-    }
-    if (this.objects.sortentsTable.numEntries > 0) {
-      writeDictionary(this.objects.sortentsTable)
-    }
-    if (this.objects.mleaderStyle.numEntries > 0) {
-      writeDictionary(this.objects.mleaderStyle)
-    }
-    if (this.objects.mlineStyle.numEntries > 0) {
-      writeDictionary(this.objects.mlineStyle)
-    }
-
-    if (this.objects.xrecord.numEntries > 0) {
-      writeDictionary(this.objects.xrecord)
-    }
-
-    for (const [_, layout] of this.objects.layout.entries()) {
-      filer.writeStart('LAYOUT')
-      layout.dxfOut(filer, true)
-    }
-
-    for (const [key, group] of this.objects.group.entries()) {
-      if (!group.name) group.name = key
-      filer.writeStart('GROUP')
-      group.dxfOut(filer, true)
-    }
-
-    for (const [_, sortents] of this.objects.sortentsTable.entries()) {
-      filer.writeStart('SORTENTSTABLE')
-      sortents.dxfOut(filer, true)
-    }
-
-    for (const [_, layerFilter] of this.objects.layerFilter.entries()) {
-      filer.writeStart('LAYER_FILTER')
-      layerFilter.dxfOut(filer, true)
-    }
-
-    for (const [_, layerIndex] of this.objects.layerIndex.entries()) {
-      filer.writeStart('LAYER_INDEX')
-      layerIndex.dxfOut(filer, true)
-    }
-
-    for (const [_, mleaderStyle] of this.objects.mleaderStyle.entries()) {
-      filer.writeStart('MLEADERSTYLE')
-      mleaderStyle.dxfOut(filer, true)
-    }
-    for (const [_, mlineStyle] of this.objects.mlineStyle.entries()) {
-      filer.writeStart('MLINESTYLE')
-      mlineStyle.dxfOut(filer, true)
-    }
-
-    for (const [_, xrecord] of this.objects.xrecord.entries()) {
-      filer.writeStart('XRECORD')
-      xrecord.dxfOut(filer, true)
-    }
-
-    this.writeAcLyLayerFilterObjects(filer)
-    filer.endSection()
-  }
-
-  /**
-   * Writes Layer Manager filter tree objects (`ACAD_LAYERFILTERS` /
-   * `ACLYDICTIONARY` + XRecords) into the OBJECTS section and attaches an
-   * extension dictionary to the Layer Table.
-   *
-   * @param filer - DXF output writer.
-   */
-  private writeAcLyLayerFilterObjects(filer: AcDbDxfFiler) {
-    const serialized = acdbSerializeLayerFilterTree(this._layerFilters)
-    if (serialized.nodes.length === 0) {
-      return
-    }
-
-    type BuiltDict = {
-      handle: string
-      ownerId: string
-      entries: { name: string; id: string }[]
-    }
-    type BuiltXRec = {
-      handle: string
-      ownerId: string
-      extensionDictionaryId?: string
-      data: AcDbSerializedFilterNode['data']
-    }
-
-    const dicts: BuiltDict[] = []
-    const xrecs: BuiltXRec[] = []
-    const layerTable = this.tables.layerTable
-    const layerExtHandle =
-      layerTable.extensionDictionary ?? this.generateHandle()
-    layerTable.extensionDictionary = layerExtHandle
-
-    const aclyHandle = this.generateHandle()
-    const acadHandle = this.generateHandle()
-    const rootAclyEntries: { name: string; id: string }[] = []
-    const rootAcadEntries: { name: string; id: string }[] = []
-
-    const emit = (
-      node: AcDbSerializedFilterNode,
-      parentAclyHandle: string,
-      addToLegacy: boolean
-    ): string => {
-      const xHandle = this.generateHandle()
-      let extensionDictionaryId: string | undefined
-      if (node.children.length > 0) {
-        const extHandle = this.generateHandle()
-        const childAclyHandle = this.generateHandle()
-        const childEntries: { name: string; id: string }[] = []
-        for (const child of node.children) {
-          childEntries.push({
-            name: child.key,
-            id: emit(child, childAclyHandle, false)
-          })
-        }
-        dicts.push({
-          handle: extHandle,
-          ownerId: xHandle,
-          entries: [{ name: ACLY_DICTIONARY_NAME, id: childAclyHandle }]
-        })
-        dicts.push({
-          handle: childAclyHandle,
-          ownerId: extHandle,
-          entries: childEntries
-        })
-        extensionDictionaryId = extHandle
-      }
-
-      xrecs.push({
-        handle: xHandle,
-        ownerId: parentAclyHandle,
-        extensionDictionaryId,
-        data: node.data
-      })
-      if (addToLegacy) {
-        rootAcadEntries.push({ name: node.key, id: xHandle })
-      }
-      return xHandle
-    }
-
-    for (const node of serialized.nodes) {
-      rootAclyEntries.push({
-        name: node.key,
-        id: emit(node, aclyHandle, true)
-      })
-    }
-
-    const layerExtEntries = new Map<string, string>()
-    const existingLayerExt = this.getObjectById(layerExtHandle)
-    if (existingLayerExt instanceof AcDbDictionary) {
-      for (const [key, value] of existingLayerExt.entries()) {
-        layerExtEntries.set(key, value.objectId)
-      }
-    }
-    layerExtEntries.set(ACLY_DICTIONARY_NAME, aclyHandle)
-    layerExtEntries.set(ACAD_LAYERFILTERS_NAME, acadHandle)
-
-    dicts.unshift(
-      {
-        handle: layerExtHandle,
-        ownerId: layerTable.objectId,
-        entries: Array.from(layerExtEntries, ([name, id]) => ({ name, id }))
-      },
-      {
-        handle: aclyHandle,
-        ownerId: layerExtHandle,
-        entries: rootAclyEntries
-      },
-      {
-        handle: acadHandle,
-        ownerId: layerExtHandle,
-        entries: rootAcadEntries
-      }
-    )
-
-    for (const dict of dicts) {
-      filer.writeStart('DICTIONARY')
-      filer.writeHandle(5, dict.handle)
-      filer.writeObjectId(330, dict.ownerId)
-      filer.writeSubclassMarker('AcDbDictionary')
-      filer.writeInt16(280, 1)
-      filer.writeInt16(281, 1)
-      for (const entry of dict.entries) {
-        filer.writeString(3, entry.name)
-        filer.writeObjectId(350, entry.id)
-      }
-    }
-
-    for (const item of xrecs) {
-      const xrecord = new AcDbXrecord()
-      xrecord.objectId = item.handle
-      xrecord.ownerId = item.ownerId
-      if (item.extensionDictionaryId) {
-        xrecord.extensionDictionary = item.extensionDictionaryId
-      }
-      xrecord.data = acdbLayerGroupsToResultBuffer(item.data)
-      filer.writeStart('XRECORD')
-      xrecord.dxfOut(filer)
-    }
-  }
-
-  /**
-   * Writes a single TABLE and its records into the TABLES section.
-   *
-   * @param filer - DXF output writer.
-   * @param tableName - DXF table name (e.g. LAYER, LTYPE).
-   * @param table - The symbol table instance.
-   * @param records - Records to serialize.
-   * @param recordType - DXF record type name for each table record.
-   */
-  private writeDxfTable<
-    TRecord extends AcDbObject,
-    TTable extends AcDbSymbolTable
-  >(
-    filer: AcDbDxfFiler,
-    tableName: string,
-    table: TTable,
-    records: Iterable<TRecord>,
-    recordType: string
-  ) {
-    const items = [...records]
-    filer.startTable(tableName)
-    table.dxfOut(filer)
-    for (const record of items) {
-      if (
-        recordType === 'BLOCK_RECORD' &&
-        record instanceof AcDbBlockTableRecord
-      ) {
-        record.dxfOutBlockRecord(filer)
-        continue
-      }
-
-      filer.writeStart(recordType)
-      record.dxfOut(filer, true)
-    }
-    filer.endTable()
-  }
-
-  /**
-   * Writes a single entity record into the DXF stream.
-   *
-   * The entity is responsible for emitting any additional records (such as
-   * VERTEX/SEQEND for polylines or ATTRIB/SEQEND for block references) inside
-   * its own `dxfOut` override.
-   *
-   * @param filer - DXF output writer.
-   * @param entity - Entity to serialize.
-   */
-  private writeDxfEntity(filer: AcDbDxfFiler, entity: AcDbEntity) {
-    if (
-      entity instanceof AcDbPolyline &&
-      !filer.capabilities.supportsLwPolyline
-    ) {
-      filer.writeStart('POLYLINE')
-      entity.dxfOutAs2dPolyline(filer, true)
-      return
-    }
-    filer.writeStart(entity.dxfTypeName)
-    entity.dxfOut(filer, true)
-  }
-
-  /**
-   * Writes THUMBNAILIMAGE when preview bytes are present and export requested.
-   */
-  private writeDxfThumbnailImageSection(
-    filer: AcDbDxfFiler,
-    saveThumbnailImage = false
-  ) {
-    const bytes = this._thumbnailImage
-    if (!saveThumbnailImage || !bytes || bytes.length === 0) {
-      return
-    }
-    if (!filer.capabilities.supportsObjectsSection) {
-      // Thumbnail section is post-R12; skip for AC1009.
-      return
-    }
-    const chunkSize = 127
-    filer.startSection('THUMBNAILIMAGE')
-    filer.writeInt32(90, bytes.length)
-    for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-      const chunk = bytes.subarray(offset, offset + chunkSize)
-      filer.writeString(310, acdbBytesToHexString(chunk))
-    }
-    filer.endSection()
-  }
-
-  /**
    * Clears all data from the database.
    *
    * This method removes all entities, tables, and objects from the database,
@@ -3766,27 +2811,6 @@ export class AcDbDatabase extends AcDbObject {
       oldVal: oldValue as AcDbSysVarType,
       newVal: newValue as AcDbSysVarType
     })
-  }
-
-  /**
-   * Extracts the file name from a URI.
-   *
-   * @param uri - The URI to extract the file name from
-   * @returns The extracted file name, or empty string if extraction fails
-   * @private
-   */
-  private getFileNameFromUri(uri: string): string {
-    try {
-      // Create a new URL object
-      const url = new URL(uri)
-      // Get the pathname from the URL
-      const pathParts = url.pathname.split('/')
-      // Return the last part of the pathname as the file name
-      return pathParts[pathParts.length - 1] || ''
-    } catch (error) {
-      console.error('Invalid URI:', error)
-      return ''
-    }
   }
 }
 /* eslint-enable simple-import-sort/imports */

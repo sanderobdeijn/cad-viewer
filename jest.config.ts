@@ -7,8 +7,7 @@ const REALDWG_PACKAGES = [
   'common',
   'geometry-engine',
   'graphic-interface',
-  'data-model',
-  'libredwg-converter'
+  'data-model'
 ]
 
 const packagesProject: ProjectConfig = {

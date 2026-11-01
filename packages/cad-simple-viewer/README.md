@@ -50,9 +50,8 @@ For the plain-DOM toolbar engine (`AcUiToolbar`, shortcut bar, and host customiz
 ### Plugins and data sources
 
 - **`pluginManager`** — load command plugins (`AcApPlugin`) via `loadPlugin` / `registerLazyPlugin`.
-- **`dataSourceManager`** — registry of drawing origins (built-in **local** and **URL**, plus any cloud data sources a host registers). Open menus in hosts rebuild from `acapBuildDataSourceMenu(dataSourceManager.list())`. Cloud sources that use a popup File Picker must keep **Sign in** and **Open** as separate clicks so browsers do not block the picker.
 
-While `cad-simple-viewer` doesn't support saving drawings to DWG/DXF files, it provides comprehensive support for **modifying drawings in real-time**. You can add, edit, and delete entities within the drawing, and the viewer will automatically update to reflect these changes.
+`cad-simple-viewer` always starts from a blank drawing created with `AcApDocManager.newDocument()`; drawings are not loaded from or saved to files. It provides comprehensive support for **modifying drawings in real-time**. You can add, edit, and delete entities within the drawing, and the viewer will automatically update to reflect these changes.
 
 When you modify entities, you're working directly with the underlying drawing database. The viewer automatically detects these changes and updates the display accordingly. This real-time synchronization ensures that:
 
@@ -65,76 +64,9 @@ This capability makes `cad-simple-viewer` suitable for applications that need to
 
 In [cad-simple-viewer-example](https://github.com/mlight-lee/cad-simple-viewer-example) it demonstrates how to create one drawing with [**realdwg-web API**](https://mlight-lee.github.io/realdwg-web/).
 
-## Layers
-
-Every drawing is flattened onto layer `0` when it is opened. Each entity keeps its appearance because its old layer's color, linetype, lineweight and transparency are baked into it, and content from hidden or frozen layers becomes visible. There are no layer commands or layer services.
-
-Inside a block, a layer `0` entity with a ByLayer property becomes ByBlock so it still inherits from the INSERT. An INSERT with an explicit color therefore shows that color on those entities, where AutoCAD would use its layer's color.
-
 ## Web Worker deployment
 
-The viewer ships an MTEXT layout worker. DXF is parsed by the built-in converter
-in `@mlightcad/data-model` (no separate worker). **DWG support is opt-in**: this
-package does not depend on or register `@mlightcad/libredwg-converter` (GPL).
-Hosts that need DWG must add that dependency (or another converter), deploy its
-worker (+ wasm) assets, register the converter, and optionally pass
-`webworkerFileUrls.dwgParser` for readiness checks.
-
-```typescript
-import {
-  AcApDocManager,
-  LIBREDWG_PARSER_WORKER_FILE,
-  MTEXT_RENDERER_WORKER_FILE
-} from '@mlightcad/cad-simple-viewer'
-import {
-  AcDbDatabaseConverterManager,
-  AcDbFileType
-} from '@mlightcad/data-model'
-import { AcDbLibreDwgConverter } from '@mlightcad/libredwg-converter'
-
-const dwgParserUrl = `./workers/${LIBREDWG_PARSER_WORKER_FILE}`
-AcDbDatabaseConverterManager.instance.register(
-  AcDbFileType.DWG,
-  new AcDbLibreDwgConverter({
-    convertByEntityType: false,
-    useWorker: true,
-    parserWorkerUrl: dwgParserUrl
-  })
-)
-
-const workerUrls = {
-  dwgParser: dwgParserUrl,
-  mtextRender: `./workers/${MTEXT_RENDERER_WORKER_FILE}`
-}
-
-// Option 1: check before creating the manager
-const ready = await AcApDocManager.checkWebworkerReadiness(workerUrls)
-if (!ready) {
-  throw new Error('CAD worker scripts are missing or blocked')
-}
-
-const manager = AcApDocManager.createInstance({ webworkerFileUrls: workerUrls })
-
-// Option 2: check on an existing manager instance
-if (!(await manager.areWorkersReady())) {
-  throw new Error('CAD worker scripts are missing or blocked')
-}
-```
-
-`areWorkersReady()` and `checkWebworkerReadiness()` use HEAD requests internally. Successful URL probes are cached for the current page lifecycle; failures are not cached at the probe layer, so a transient network error can succeed on a later `areWorkersReady()` call. After each check, `manager.workersReady` is `true` or `false` (`null` only before the first check). Only URLs you pass are probed — `dwgParser` is skipped when omitted.
-
-You can also enable automatic checks during initialization:
-
-```typescript
-AcApDocManager.createInstance({
-  webworkerFileUrls: workerUrls,
-  checkWorkersOnInit: true
-})
-
-manager.events.workersReady.addEventListener(({ ready }) => {
-  if (!ready) console.error('CAD workers are not reachable')
-})
-```
+The viewer ships one MTEXT layout worker. Deploy it next to your app and pass its URL through `webworkerFileUrls.mtextRender`.
 
 ## Available Exports
 

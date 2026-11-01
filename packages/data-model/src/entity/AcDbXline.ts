@@ -10,7 +10,6 @@ import {
   AcGeVector3dLike} from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
@@ -371,65 +370,6 @@ export class AcDbXline extends AcDbCurve {
       this._unitDir.clone().multiplyScalar(1000000).add(this._basePoint)
     )
     return renderer.lines(points)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbXline')
-    filer.writePoint3d(10, this.basePoint)
-    filer.writeVector3d(11, this.unitDir)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbXline')
-
-    let bx = this.basePoint.x
-    let by = this.basePoint.y
-    let bz = this.basePoint.z
-    let dx = this.unitDir.x
-    let dy = this.unitDir.y
-    let dz = this.unitDir.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-          bx = n
-          break
-        case 20:
-          by = n
-          break
-        case 30:
-          bz = n
-          break
-        case 11:
-          dx = n
-          break
-        case 21:
-          dy = n
-          break
-        case 31:
-          dz = n
-          break
-        default:
-          break
-      }
-    }
-
-    this.basePoint = new AcGePoint3d(bx, by, bz)
-    this.unitDir = new AcGeVector3d(dx, dy, dz)
-    return this
   }
 
   /**

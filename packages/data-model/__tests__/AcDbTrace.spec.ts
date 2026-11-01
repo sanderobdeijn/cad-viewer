@@ -3,19 +3,9 @@ import {
   AcGeMatrix3d,
   AcGePoint3d
 } from '@mlightcad/geometry-engine'
-
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
-import { AcDbDatabase } from '../src/database'
 import { AcDbTrace } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-
-const createDb = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  acdbHostApplicationServices().workingDatabase = db
-  return db
-}
 
 describe('AcDbTrace', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -191,30 +181,6 @@ describe('AcDbTrace', () => {
     expect(trace.subWorldDraw(renderer as never)).toBe(rendered)
     expect(renderer.area).toHaveBeenCalledTimes(1)
     expect(traits.fillType).toMatchObject({ solidFill: true, patternAngle: 0 })
-  })
-
-  it('writes DXF fields for trace geometry and returns self', () => {
-    const db = createDb()
-    const trace = new AcDbTrace()
-    trace.elevation = 8
-    trace.thickness = 0.75
-    trace.setPointAt(0, { x: 1, y: 2, z: 3 })
-    trace.setPointAt(1, { x: 4, y: 5, z: 6 })
-    trace.setPointAt(2, { x: 7, y: 8, z: 9 })
-    trace.setPointAt(3, { x: 10, y: 11, z: 12 })
-    db.tables.blockTable.modelSpace.appendEntity(trace)
-
-    const filer = new AcDbDxfFiler()
-    expect(trace.dxfOutFields(filer)).toBe(trace)
-
-    const out = filer.toString()
-    expect(out).toContain('100\nAcDbTrace\n')
-    expect(out).not.toContain('38\n8\n')
-    expect(out).toContain('39\n0.75\n')
-    expect(out).toContain('10\n1\n20\n2\n30\n3\n')
-    expect(out).toContain('11\n4\n21\n5\n31\n6\n')
-    expect(out).toContain('12\n7\n22\n8\n32\n9\n')
-    expect(out).toContain('13\n10\n23\n11\n33\n12\n')
   })
 
   it('computes quadrilateral area', () => {

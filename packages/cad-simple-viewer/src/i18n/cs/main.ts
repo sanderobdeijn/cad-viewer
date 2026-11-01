@@ -44,20 +44,6 @@ export default {
       'Font „{font}“ vyžaduje {count} textových objektů, ale není k dispozici. Zobrazuje se jako „{replacementFont}“.',
     fontMissedReplacement: '„{font}“ (zobrazeno fontem „{replacement}“)',
     failedToGetAvaiableFonts: 'Nepodařilo se získat fonty z „{url}“!',
-    failedToOpenFile: 'Nepodařilo se otevřít soubor „{fileName}“!',
-    failedToOpenFileToast:
-      'Nepodařilo se otevřít „{fileName}“. Podrobnosti najdete v centru oznámení.',
-    failedToOpenFileWorkerOom:
-      'Nepodařilo se otevřít „{fileName}“. Analýza selhala kvůli nedostatku dostupné paměti (LibreDWG parser). Kliknutím na {dwgParserLink} můžete zakoupit komerční DWG parser a otevírat velké výkresy bez tohoto pádu.',
-    failedToOpenFileWorkerOomLink: 'tuto stránku',
-    failedToOpenFileWorkerTimeout:
-      'Nepodařilo se otevřít „{fileName}“. Při načítání výkresu vypršel časový limit.',
-    failedToOpenFileFontLoadFailed:
-      'Nepodařilo se otevřít „{fileName}“. Potřebné fonty se nepodařilo načíst.',
-    failedToOpenFileLicenseExpired:
-      'Nepodařilo se otevřít „{fileName}“. Licence převodníku DWG vypršela.',
-    failedToOpenFileLicenseInvalid:
-      'Nepodařilo se otevřít „{fileName}“. Licence převodníku DWG chybí nebo je neplatná.',
     unknownEntities:
       'Tento výkres obsahuje {count} neznámých nebo nepodporovaných objektů! Tyto objekty nebudou zobrazeny.',
     tianzhengEntities:
@@ -81,12 +67,6 @@ export default {
       genericSummary: '{count} zpráv. Kliknutím zobrazíte podrobnosti.'
     },
     title: {
-      failedToOpenFile: 'Nepodařilo se otevřít soubor',
-      failedToOpenFileWorkerOom: 'Nedostatek paměti',
-      failedToOpenFileWorkerTimeout: 'Vypršel časový limit otevření',
-      failedToOpenFileFontLoadFailed: 'Načtení fontu selhalo',
-      failedToOpenFileLicenseExpired: 'Licence vypršela',
-      failedToOpenFileLicenseInvalid: 'Neplatná licence',
       fontNotFound: 'Font nenalezen',
       fontNotLoaded: 'Font nenačten',
       parsingWarning: 'Problémy při načítání výkresu',
@@ -117,7 +97,7 @@ export default {
     title: 'O aplikaci',
     close: 'Zavřít',
     product: 'CAD Viewer',
-    tagline: 'Vysokovýkonný webový CAD prohlížeč pro výkresy DWG a DXF.',
+    tagline: 'Vysoce výkonný webový CAD editor.',
     website: 'Web',
     docs: 'Dokumentace',
     repository: 'GitHub',
@@ -171,28 +151,5 @@ export default {
     snoozeToday: 'Dnes už nepřipomínat',
     hideForever: 'Už nepřipomínat',
     ok: 'Rozumím'
-  },
-  dataSource: {
-    open: 'Otevřít',
-    local: 'Místní soubor',
-    url: 'Z URL',
-    openFrom: 'Otevřít z {name}',
-    signInTo: 'Přihlásit se k {name}',
-    signOutOf: 'Odhlásit se z {name}',
-    signOutOfAccount: 'Odhlásit se z {name} ({account})',
-    urlDialogTitle: 'Otevřít z URL',
-    urlDialogHint: 'Zadejte URL souboru .dwg nebo .dxf.',
-    urlPlaceholder: 'https://example.com/drawing.dwg',
-    cancel: 'Zrušit',
-    or: 'nebo',
-    dropFile: 'Přetáhněte soubor sem nebo',
-    browse: 'procházet',
-    dropOrBrowse: 'Přetáhněte soubor DWG nebo DXF sem, nebo procházejte',
-    newDrawing: 'Nový výkres',
-    source: 'Zdroj',
-    unavailable: 'Tento zdroj zatím není k dispozici.',
-    selectFile: 'Vybrat soubor',
-    signInRequired: 'Nejprve se přihlaste a pak vyberte soubor.',
-    downloading: 'Stahuji soubor ...'
   }
 }

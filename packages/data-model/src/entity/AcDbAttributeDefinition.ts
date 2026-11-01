@@ -1,6 +1,5 @@
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbMText } from './AcDbMText'
 import { AcDbText } from './AcDbText'
 /**
@@ -400,84 +399,6 @@ export class AcDbAttributeDefinition extends AcDbText {
     } finally {
       this.textString = saved
     }
-  }
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbAttributeDefinition')
-    filer.writeString(3, this.prompt)
-    filer.writeString(2, this.tag)
-    // Group 70: Invisible | Constant | Verifiable | Preset bit flags
-    filer.writeInt16(70, this._flags)
-    filer.writeInt16(73, this.fieldLength)
-    // Group 74: lock position within the block (not isReallyLocked)
-    filer.writeInt16(74, this.lockPositionInBlock ? 1 : 0)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbAttributeDefinition')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        // Embedded objects (e.g. AcDbXrecord) share group 70/280 with ATTDEF.
-        // Skip their payload so those codes are not applied as attribute flags,
-        // but keep scanning until XData so dxfInXData can still run.
-        if (String(item.value) === 'AcDbAttributeDefinition') {
-          continue
-        }
-        while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-          if (!filer.readItem()) break
-        }
-        break
-      }
-      const n = Number(item.value)
-      switch (code) {
-        case 2:
-          this.tag = String(item.value)
-          break
-        case 3:
-          this.prompt = String(item.value)
-          break
-        case 70:
-          this.isInvisible = (n & AcDbAttributeFlags.Invisible) !== 0
-          this.isConst = (n & AcDbAttributeFlags.Const) !== 0
-          this.isVerifiable = (n & AcDbAttributeFlags.Verifiable) !== 0
-          this.isPreset = (n & AcDbAttributeFlags.Preset) !== 0
-          break
-        case 71:
-          this.isMTextAttribute =
-            (n & AcDbAttributeMTextFlag.MultiLine) !== 0
-          this.isConstMTextAttribute =
-            (n & AcDbAttributeMTextFlag.ConstMultiLine) !== 0
-          break
-        case 73:
-          this.fieldLength = n
-          break
-        case 74:
-          // DXF: vertical text justification for ATTDEF.
-          this.verticalMode = n
-          break
-        case 280:
-          this.lockPositionInBlock = n !== 0
-          break
-        case 340:
-          // Soft-pointer ID to FIELD object — optional; keep scanning.
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

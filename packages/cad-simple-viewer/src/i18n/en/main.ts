@@ -44,20 +44,6 @@ export default {
       'Font "{font}" is required by {count} text object(s) but is not available. Displaying with "{replacementFont}".',
     fontMissedReplacement: '"{font}" (displaying with "{replacement}")',
     failedToGetAvaiableFonts: 'Failed to get available fonts from "{url}"!',
-    failedToOpenFile: 'Failed to open file "{fileName}"!',
-    failedToOpenFileToast:
-      'Failed to open "{fileName}". Check the notification center for details.',
-    failedToOpenFileWorkerOom:
-      'Failed to open "{fileName}". Parsing failed because available memory was insufficient (LibreDWG parser). You can click {dwgParserLink} to purchase the commercial DWG parser and open large drawings without this crash.',
-    failedToOpenFileWorkerOomLink: 'this page',
-    failedToOpenFileWorkerTimeout:
-      'Failed to open "{fileName}". The operation timed out while parsing the drawing.',
-    failedToOpenFileFontLoadFailed:
-      'Failed to open "{fileName}". Required fonts could not be loaded.',
-    failedToOpenFileLicenseExpired:
-      'Failed to open "{fileName}". The DWG converter license has expired.',
-    failedToOpenFileLicenseInvalid:
-      'Failed to open "{fileName}". The DWG converter license is missing or invalid.',
     unknownEntities:
       'This drawing contains {count} unknown or unsupported entities! Those entities will not be shown.',
     tianzhengEntities:
@@ -81,12 +67,6 @@ export default {
       genericSummary: '{count} messages. Click to expand details.'
     },
     title: {
-      failedToOpenFile: 'Failed to Open File',
-      failedToOpenFileWorkerOom: 'Insufficient Memory',
-      failedToOpenFileWorkerTimeout: 'Open Timed Out',
-      failedToOpenFileFontLoadFailed: 'Font Load Failed',
-      failedToOpenFileLicenseExpired: 'License Expired',
-      failedToOpenFileLicenseInvalid: 'Invalid License',
       fontNotFound: 'Font Not Found',
       fontNotLoaded: 'Font Not Loaded',
       parsingWarning: 'Issues on Parsing Drawing',
@@ -117,7 +97,7 @@ export default {
     title: 'About',
     close: 'Close',
     product: 'CAD Viewer',
-    tagline: 'High-performance web CAD viewer for DWG and DXF drawings.',
+    tagline: 'High-performance web CAD editor.',
     website: 'Website',
     docs: 'Documentation',
     repository: 'GitHub',
@@ -171,28 +151,5 @@ export default {
     snoozeToday: 'Don\'t remind me today',
     hideForever: 'Don\'t remind me again',
     ok: 'Got it'
-  },
-  dataSource: {
-    open: 'Open',
-    local: 'Local file',
-    url: 'From URL',
-    openFrom: 'Open from {name}',
-    signInTo: 'Sign in to {name}',
-    signOutOf: 'Sign out of {name}',
-    signOutOfAccount: 'Sign out of {name} ({account})',
-    urlDialogTitle: 'Open from URL',
-    urlDialogHint: 'Enter a URL to a .dwg or .dxf file.',
-    urlPlaceholder: 'https://example.com/drawing.dwg',
-    cancel: 'Cancel',
-    or: 'or',
-    dropFile: 'Drop a file here or',
-    browse: 'browse',
-    dropOrBrowse: 'Drop a DWG or DXF file here, or browse',
-    newDrawing: 'New Drawing',
-    source: 'Source',
-    unavailable: 'This source is not available yet.',
-    selectFile: 'Select file',
-    signInRequired: 'Sign in first to select a file.',
-    downloading: 'Downloading file ...'
   }
 }

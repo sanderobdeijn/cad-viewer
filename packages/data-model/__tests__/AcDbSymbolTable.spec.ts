@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../src/base/AcDbDxfFiler'
+
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbSymbolTable } from '../src/database/AcDbSymbolTable'
 import { AcDbSymbolTableRecord } from '../src/database/AcDbSymbolTableRecord'
@@ -9,17 +9,6 @@ class LowercaseSymbolTable extends AcDbSymbolTable<AcDbSymbolTableRecord> {
   protected override normalizeName(name: string) {
     return name.toLowerCase()
   }
-}
-
-const getGroupValues = (dxfText: string, code: number) => {
-  const lines = dxfText.trim().split(/\r?\n/)
-  const values: string[] = []
-  for (let i = 0; i < lines.length - 1; i += 2) {
-    if (Number(lines[i]) === code) {
-      values.push(lines[i + 1])
-    }
-  }
-  return values
 }
 
 describe('AcDbSymbolTable', () => {
@@ -119,20 +108,5 @@ describe('AcDbSymbolTable', () => {
     expect(table.remove('MIXED')).toBe(true)
     expect(table.hasId(rec.objectId)).toBe(false)
     expect(table.getAt('mixed')).toBeUndefined()
-  })
-
-  it('writes AcDbSymbolTable DXF fields with current entry count', () => {
-    const db = new AcDbDatabase()
-    const table = new AcDbSymbolTable<AcDbSymbolTableRecord>(db)
-    table.add(new AcDbSymbolTableRecord({ name: 'R1' }))
-    table.add(new AcDbSymbolTableRecord({ name: 'R2' }))
-    const filer = new AcDbDxfFiler()
-
-    const result = table.dxfOutFields(filer)
-    const dxfText = filer.toString()
-
-    expect(result).toBe(table)
-    expect(getGroupValues(dxfText, 100)).toContain('AcDbSymbolTable')
-    expect(getGroupValues(dxfText, 70)).toContain('2')
   })
 })

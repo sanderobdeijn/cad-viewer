@@ -1,13 +1,10 @@
 import {
   AcDbDatabase,
-  AcDbFileType,
   AcDbObjectId,
-  AcDbOpenDatabaseError,
   AcDbOpenDatabaseOptions,
   log
 } from '@mlightcad/data-model'
 
-import { eventBus } from '../editor'
 import { AcEdOpenMode } from '../editor/view'
 import { AcApEntityService } from '../service/AcApEntityService'
 import { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
@@ -19,10 +16,9 @@ export const ACAP_UNTITLED_DOC_TITLE = 'Untitled'
  * Represents a CAD document that manages a drawing database and associated metadata.
  *
  * This class handles:
- * - Opening CAD files from URIs or file content (DWG/DXF formats)
+ * - Creating blank drawings
  * - Managing document properties (title, access mode)
  * - Providing access to the underlying database
- * - Handling file loading errors through event emission
  */
 export class AcApDocument {
   /** The URI of the opened document, if opened from a URI */
@@ -52,105 +48,24 @@ export class AcApDocument {
   }
 
   /**
-   * Opens a CAD document from a URI.
+   * Fills this document with a blank drawing and draws it.
    *
-   * @param uri - The URI of the CAD file to open
-   * @param options - Options for opening the database
+   * @param options - Options applied to the new drawing
    * @returns Promise resolving to true if successful, false if failed
-   *
-   * @example
-   * ```typescript
-   * const success = await document.openUri('https://example.com/drawing.dwg', {
-   *   mode: AcEdOpenMode.Read
-   * });
-   * ```
    */
-  async openUri(uri: string, options: AcApOpenDatabaseOptions) {
-    this._uri = uri
-    this._openMode = options?.mode ?? AcEdOpenMode.Read
-    this._fileName = this.getFileNameFromUri(uri)
-    const openErrorBefore = this._database.lastOpenError
-    let isSuccess = true
-    try {
-      // Convert to base options for database method. Viewer-only fields
-      // (`mode`, `progressiveRendering`, `openViewMode`, deprecated
-      // `waitForTextGeometry`) are ignored by `AcDbDatabase`; `sysVars` may
-      // include `AcCmColor` values that the published data-model type omits
-      // but `setVar` accepts at runtime.
-      const baseOptions = {
-        ...options,
-        readOnly: this._openMode === AcEdOpenMode.Read,
-        flattenLayers: true
-      } as AcDbOpenDatabaseOptions
-      await this._database.openUri(uri, baseOptions)
-      this.docTitle = this._fileName
-    } catch (error) {
-      isSuccess = false
-      this.emitOpenFileFailed(uri, openErrorBefore, error)
-    }
-    return isSuccess
-  }
-
-  /**
-   * Opens a CAD document from file content.
-   *
-   * @param fileName - The name of the file (used to determine file type from extension)
-   * @param content - The file content as string or ArrayBuffer
-   * @param options - Options for opening the database
-   * @returns Promise resolving to true if successful, false if failed
-   *
-   * @example
-   * ```typescript
-   * const fileContent = await fetch('drawing.dwg').then(r => r.arrayBuffer());
-   * const success = await document.openDocument('drawing.dwg', fileContent, {
-   *   mode: AcEdOpenMode.Write
-   * });
-   * ```
-   */
-  async openDocument(
-    fileName: string,
-    content: ArrayBuffer,
-    options: AcApOpenDatabaseOptions
-  ) {
-    let isSuccess = true
-    this._fileName = fileName
-    this._openMode = options?.mode ?? AcEdOpenMode.Read
-    const openErrorBefore = this._database.lastOpenError
-    try {
-      const fileExtension = fileName.split('.').pop()?.toLocaleLowerCase()
-      // Convert to base options for database method. Viewer-only fields
-      // (`mode`, `progressiveRendering`, `openViewMode`, deprecated
-      // `waitForTextGeometry`) are ignored by `AcDbDatabase`; `sysVars` may
-      // include `AcCmColor` values that the published data-model type omits
-      // but `setVar` accepts at runtime.
-      const baseOptions = {
-        ...options,
-        readOnly: this._openMode === AcEdOpenMode.Read,
-        flattenLayers: true
-      } as AcDbOpenDatabaseOptions
-      await this._database.read(
-        content,
-        baseOptions,
-        fileExtension == 'dwg' ? AcDbFileType.DWG : AcDbFileType.DXF
-      )
-      this.docTitle = this._fileName
-    } catch (error) {
-      isSuccess = false
-      this.emitOpenFileFailed(fileName, openErrorBefore, error)
-    }
-    return isSuccess
-  }
-
-  /**
-   * Clears file identity after creating a document from a template.
-   *
-   * Template content remains in the database; only URI, file name, and title
-   * are reset so the document presents as a new unsaved drawing.
-   */
-  resetNewDocumentIdentity() {
+  async createNewDrawing(options: AcApOpenDatabaseOptions) {
     this._uri = undefined
     this._fileName = ''
+    this._openMode = options?.mode ?? AcEdOpenMode.Write
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
+    try {
+      this._database.createNewDrawing(options as AcDbOpenDatabaseOptions)
+      await this._database.regen()
+      return true
+    } catch (error) {
+      log.error('Failed to create a new drawing:', error)
+      return false
+    }
   }
 
   /**
@@ -273,52 +188,5 @@ export class AcApDocument {
   destroy(): void {
     this._entityService = undefined
     this._hiddenObjects.clear()
-  }
-
-  /**
-   * Emits `failed-to-open-file` with structured error details from the database.
-   *
-   * Falls back to normalizing {@link caughtError} when `lastOpenError` is missing
-   * or stale (for example when the failure was re-wrapped across package copies).
-   */
-  private emitOpenFileFailed(
-    fileName: string,
-    openErrorBefore: AcDbOpenDatabaseError | null = null,
-    caughtError?: unknown
-  ): void {
-    let openError = this._database.lastOpenError
-    const isFreshOpenError = openError != null && openError !== openErrorBefore
-    if (!isFreshOpenError && caughtError != null) {
-      openError = AcDbOpenDatabaseError.from(caughtError)
-    }
-    eventBus.emit('failed-to-open-file', {
-      fileName,
-      ...(openError != null &&
-        (isFreshOpenError || caughtError != null) && {
-          errorCode: openError.code,
-          errorMessage: openError.message
-        })
-    })
-  }
-
-  /**
-   * Extracts the file name from a URI.
-   *
-   * @param uri - The URI to extract the file name from
-   * @returns The extracted file name, or empty string if extraction fails
-   * @private
-   */
-  private getFileNameFromUri(uri: string): string {
-    try {
-      // Create a new URL object
-      const url = new URL(uri)
-      // Get the pathname from the URL
-      const pathParts = url.pathname.split('/')
-      // Return the last part of the pathname as the file name
-      return pathParts[pathParts.length - 1] || ''
-    } catch (error) {
-      log.error('Invalid URI:', error)
-      return ''
-    }
   }
 }

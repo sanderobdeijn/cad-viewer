@@ -7,8 +7,8 @@
 
 <a href="https://trendshift.io/repositories/16129?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-16129" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/16129/daily?language=TypeScript" alt="mlightcad%2Fcad-viewer | Trendshift" width="250" height="55"/></a>
 
-cad-viewer は、`バックエンドサービスに一切依存せず、完全にブラウザ上で動作する世界初の Web ベース DXF/DWG ビューア兼エディタ` です。
-DWG/DXF の解析、ジオメトリ処理、レンダリングをすべてブラウザ内で行うことで、cad-viewer は真のサーバーレス CAD 閲覧・編集を実現します。クラウドアプリ、オフライン利用、プライバシーに配慮したワークフローに最適です。
+cad-viewer は、`バックエンドサービスに一切依存せず、完全にブラウザ上で動作する` CAD 図面エディタです。セッションは常に新しい空白の図面から始まり、図面をファイルから読み込んだりファイルへ保存したりすることはありません。
+ジオメトリ処理とレンダリングはブラウザ内で直接行われるため、cad-viewer はオフライン利用やプライバシーに配慮が必要なワークフローに最適です。
 
 - [**🌐 ホームページ**](https://mlightcad.com/)
 - **🌐 ライブデモ**：[Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
@@ -20,41 +20,9 @@ DWG/DXF の解析、ジオメトリ処理、レンダリングをすべてブラ
 - DEV.to: [@mlightcad](https://dev.to/mlightcad)
 - Juejin(稀土掘金): [@mlightcad](https://juejin.cn/column/7501992214283501579)
 
-### cad-viewer で構築されたアプリ
-
-[Thingraph](https://cad.thingraph.site/) チームは cad-viewer 上に本番向け DWG/DXF ビューアとプラットフォーム連携を構築し、世界中で数万ユーザーにサービスを提供しています：
-
-- [DWG Viewer Web App](https://cad.thingraph.site/dwg-viewer) — エンジニアリングチームが高速かつサーバーレスで図面にアクセスするためのブラウザベース DWG/DXF ビューア。各プラットフォーム向けインストール：
-  - [Google Drive](https://workspace.google.com/marketplace/app/dwg_viewer/641533811831) — **Open with** から Drive 上の DWG/DXF を開く
-  - [VS Code](https://marketplace.visualstudio.com/items?itemName=thingraph.dwg-viewer) — `.dwg` / `.dxf` 向けカスタム読み取り専用エディタ
-  - [Cursor](https://open-vsx.org/extension/thingraph/dwg-viewer) — Open VSX 経由の同一拡張機能
-  - [Confluence](https://marketplace.atlassian.com/apps/2890472615/dwg-viewer-for-confluence) — ページに DWG/DXF プレビューを埋め込む
-  - [Windows Explorer](https://cad.thingraph.site/install/windows) — エクスプローラーでのサムネイルとプレビュー
-
-コミュニティアプリと連携：
-
-- [flyfish-dev/cad-viewer](https://github.com/flyfish-dev/cad-viewer) — DWG、DXF、DWF、DWFx、XPS 向け本番向けブラウザ CAD ビューア（[ライブデモ](https://cad-viewer-iys.pages.dev)）
-- [Nextcloud CAD Viewer](https://github.com/ashcoft/nextcloud-cad-viewer) — ブラウザで DWG/DXF を表示する Nextcloud ネイティブアプリ（[App Store](https://apps.nextcloud.com/apps/cad_viewer)）
-
-コミュニティ Linux デスクトップパッケージ：
-
-- [CAD Viewer AppImage](https://github.com/pass-wind/cad-viewer-appimage) — Linux 向け Electron ベース AppImage（約 114 MB）、Fedora で検証済み
-- [cad-viewer (AUR)](https://aur.archlinux.org/packages/cad-viewer) — システム Electron を使用する Arch Linux ソースパッケージ（約 5.4 MB）
-- [cad-viewer-bin (AUR)](https://aur.archlinux.org/packages/cad-viewer-bin) — フォント/テンプレート同梱の Arch Linux バイナリパッケージ。完全オフラインでの図面オープンに対応
-
-### デモアプリ（Demo Apps）
-
-cad-viewer を自社プロダクトへ組み込む方法を示す公式サンプルです：
-
-- [cad-simple-viewer-example](https://github.com/mlightcad/cad-simple-viewer-example) — [`@mlightcad/cad-simple-viewer`](https://www.npmjs.com/package/@mlightcad/cad-simple-viewer) 向けの最小構成 vanilla TypeScript ホスト。ローカルまたは CDN の DXF/DWG を開き、小型ツールバーでコマンドを実行し、フル Vue UI なしで HTML/PDF/SVG エクスポートプラグインを遅延読み込みします。
-- [cad-viewer-example](https://github.com/mlightcad/cad-viewer-example) — [`@mlightcad/cad-viewer`](https://www.npmjs.com/package/@mlightcad/cad-viewer) ベースのフル機能 Vue 3 アプリ。メニュー、リボン、ダイアログ、コマンドライン、ステータスバー付き（[ライブデモ](https://mlightcad.github.io/cad-viewer-example/)）。
-- [cad-viewer-nextjs-demo](https://github.com/mlightcad/cad-viewer-nextjs-demo) — Next.js の「CAD ドライブ」デモ。DWG/DXF のチャンク再開アップロード、SQLite のファイル一覧とプレビュー、**ブラウザ側ライブ解析**（`cad-simple-viewer`）または**サーバー側 ACEX プリレンダ**（高速表示・低メモリ）での図面オープンに対応。
-
-![CAD-Viewer Quick Demo](./assets/cad-viewer.gif)
-
 ## 機能
 
-- **高性能** — 大規模 DWG/DXF ファイルを 60 FPS 以上の滑らかなレンダリングで表示
+- **高性能** — 大規模な図面を 60 FPS 以上の滑らかなレンダリングで表示
 - **バックエンド不要** — ファイルの解析と処理をすべてブラウザ内で完結
 - **データセキュリティの強化** — ファイルがデバイス外に出ないため、完全なプライバシーを確保
 - **容易な統合** — サーバー設定やバックエンドインフラが不要
@@ -63,20 +31,6 @@ cad-viewer を自社プロダクトへ組み込む方法を示す公式サンプ
 - オフラインおよびオンライン編集ワークフロー
 - 高度な最適化手法を備えた THREE.js 3D レンダリングエンジン
 - CMS、Notion、WeChat などのプラットフォームとの連携を見据えた拡張性
-
-## 1 行のコードで DWG/DXF を埋め込む
-
-単一の `<iframe>` で、任意のサイトに DWG/DXF 表示を追加できます。CAD バックエンドは不要で、図面をサードパーティのクラウドにアップロードする必要もありません。ファイルは**あなた自身の URL** から取得され、訪問者のブラウザだけで解析・描画され、レビュー機能（パン、ズーム、計測、注釈）がすぐ使えます。
-
-```html
-<iframe
-  src="https://mlightcad.com/embed.html?url=https://example.com/plans/floor.dwg&mode=review&toolbar=1"
-  style="width:100%;height:600px;border:0"
-  allowfullscreen>
-</iframe>
-```
-
-解説とライブ体験：[Embed DWG/DXF on Your Website Without Uploading a Single Byte](https://medium.com/@mlightcad/embed-dwg-dxf-on-your-website-without-uploading-a-single-byte-cf5f6ad484c4)。
 
 ## はじめに
 
@@ -165,7 +119,7 @@ CAD-Viewer は [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 内�
 
 ## パフォーマンス
 
-CAD-Viewer は **卓越したパフォーマンス** 向けに設計されており、高フレームレートを維持しながら非常に大きな DXF/DWG ファイルを処理できます。複数の高度なレンダリング技術でパフォーマンスを最適化しています：
+CAD-Viewer は **卓越したパフォーマンス** 向けに設計されており、高フレームレートを維持しながら非常に大きな図面を処理できます。複数の高度なレンダリング技術でパフォーマンスを最適化しています：
 
 - **カスタムシェーダーマテリアル**：GPU 加速シェーダーマテリアルで複雑な線種とハッチ塗りつぶしパターンを効率的にレンダリング
 - **ジオメトリバッチング**：同一マテリアルの点、線、面をマージし、ドローコールを大幅に削減
@@ -175,21 +129,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 - **WebGL 最適化**：モダン WebGL 機能でハードウェア加速レンダリングを活用
 
 これらの最適化により、CAD-Viewer は数千のエンティティを含む複雑な CAD 図面を滑らかにレンダリングし、応答性の高いユーザー操作を維持します。
-
-## 既知の問題
-
-デフォルトのオープンソース DWG パスは、オプションの `@mlightcad/libredwg-converter` パッケージ経由で [LibreDWG](https://github.com/LibreDWG/libredwg) を使用します。多くの図面で問題なく動作しますが、エンティティのカバレッジは依然として限定的で、WASM バンドルははるかに大きく、起動は遅く、メモリ使用量は高く、非常に大きな DWG ファイルではメモリ不足エラーが発生する可能性があります。商用クローズドソース製品には GPL ライセンスの考慮事項も伴います。`@mlightcad/cad-simple-viewer` はデフォルトではそのコンバーターに **依存せず、登録もしません** — ホストアプリ（各 example パッケージを参照）が明示的にオプトインします。
-
-より良い互換性、低いメモリ使用量、大容量ファイル対応、またはより明確な商用ライセンスが必要な場合は、[**プロプライエタリ DWG パーサー**](./PROPRIETARY-PARSER.md) を参照してください。
-
-| 項目 | LibreDWG ベースパーサー | プロプライエタリ DWG パーサー |
-|------|------------------------|------------------------|
-| サポートエンティティ | 限定的なカバレッジ | より広いカバレッジ |
-| バンドルサイズ | ~13 MB | ~437 KB |
-| 読み込み速度 | 起動が遅い | 起動がはるかに高速 |
-| メモリ使用量 | 高い | 低い |
-| 大容量 DWG ファイル | 大容量ファイルで OOM の可能性 | そのような問題なし |
-| ライセンス | GPL 伝播リスク | GPL 伝播の問題なし |
 
 ## ロードマップ
 
@@ -201,13 +140,6 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 - [ ] ⏳ 進行中
 
 ### コアファイルとデータ層
-
-#### ファイルサポート
-
-* [x] DXF 読み込み
-* [x] DWG 読み込み
-* [x] 大容量ファイルのストリーミング / 増分読み込み
-* [ ] ⏳ ファイルバージョン互換性（R12–Latest）
 
 #### データモデル
 
@@ -404,7 +336,3 @@ CAD-Viewer は **卓越したパフォーマンス** 向けに設計されてお
 ## ライセンス
 
 cad-viewer モノレポは主に [MIT](LICENSE) ライセンスです。
-
-DXF 読み込みは `@mlightcad/data-model` 内の組み込み MIT パーサーを使用します。DWG 読み込みは **オプトイン** です：`@mlightcad/cad-simple-viewer` は GPL の LibreDWG パッケージに依存しません。オープンソースの DWG サポートが必要なホストは、自身で `@mlightcad/libredwg-converter`（GPL-3.0）を追加し、worker と wasm を配置してコンバーターを登録します。クローズドソース製品を提供し、GPL コードを顧客に配布できない場合は、代わりに [**プロプライエタリ DWG パーサー**](./PROPRIETARY-PARSER.md) を使用してください。
-
-→ **商用パーサー：** [PROPRIETARY-PARSER.md](./PROPRIETARY-PARSER.md)（スコープ、ライセンス、価格、統合、GPL コンプライアンス、サポート）

@@ -17,7 +17,6 @@ import {
   AcApPropertiesCmd,
   AcApQSelectCmd,
   AcApTextStyleCmd,
-  AcApXrefCmd,
   hatchRibbonCommand
 } from '../command'
 import {
@@ -44,12 +43,6 @@ export const registerCmds = () => {
       'md',
       'md',
       new AcApMissedDataCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'xref',
-      'xref',
-      new AcApXrefCmd()
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,

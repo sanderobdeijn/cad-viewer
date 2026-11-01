@@ -1,7 +1,7 @@
 import { AcGeMatrix3d, AcGePoint3d, AcGeVector3d } from '@mlightcad/geometry-engine'
 import { AcGiMTextAttachmentPoint } from '@mlightcad/graphic-interface'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import {
   AcDbLeader,
@@ -356,46 +356,6 @@ describe('AcDbLeader', () => {
     const sampled = (renderer.lines.mock.calls[0] as unknown[][])[0]
     expect(sampled.length).toBeGreaterThan(1)
     expect(sampled.length).toBeLessThanOrEqual(100)
-  })
-
-  it('writes leader-specific DXF fields', () => {
-    const db = createWorkingDb()
-    const leader = new AcDbLeader()
-    db.tables.blockTable.modelSpace.appendEntity(leader)
-
-    leader.dimensionStyle = 'Standard'
-    leader.hasArrowHead = true
-    leader.hasHookLine = true
-    leader.isHookLineSameDirection = true
-    leader.isSplined = true
-    leader.annoType = AcDbLeaderAnnotationType.BlockReference
-    leader.textHeight = 2.5
-    leader.textWidth = 8
-    leader.associatedAnnotation = 'ABC'
-    leader.appendVertex(new AcGePoint3d(1, 2, 3))
-    leader.appendVertex(new AcGePoint3d(4, 5, 6))
-
-    const filer = new AcDbDxfFiler()
-    expect(leader.dxfOutFields(filer)).toBe(leader)
-
-    const dxf = filer.toString()
-    expect(dxf).toContain('100\nAcDbLeader\n')
-    expect(dxf).toContain('\n3\nStandard\n')
-    expect(dxf).toContain('\n71\n1\n')
-    expect(dxf).toContain('\n72\n1\n')
-    expect(dxf).toContain('\n73\n2\n')
-    expect(dxf).toContain('\n74\n1\n')
-    expect(dxf).toContain('\n75\n1\n')
-    expect(dxf).toContain('\n76\n2\n')
-    expect(dxf).toContain('\n40\n2.5\n')
-    expect(dxf).toContain('\n41\n8\n')
-    expect(dxf).toContain('\n340\nABC\n')
-    expect(dxf).toContain('\n10\n1\n')
-    expect(dxf).toContain('\n20\n2\n')
-    expect(dxf).toContain('\n30\n3\n')
-    expect(dxf).toContain('\n10\n4\n')
-    expect(dxf).toContain('\n20\n5\n')
-    expect(dxf).toContain('\n30\n6\n')
   })
 
   it('creates a detached clone with a new objectId', () => {

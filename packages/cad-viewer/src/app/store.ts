@@ -5,7 +5,6 @@ export const store = reactive({
     toolPalette: false,
     activePaletteTab: 'entityProperties',
     /** Sub-tab inside Missing / External Resources palette */
-    activeMissingResourceTab: 'font' as 'font' | 'xref',
     /**
      * Dev-oriented Open Performance tab. Hidden until OPENPERF runs so it
      * does not clutter the palette for ordinary users.

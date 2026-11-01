@@ -1,7 +1,6 @@
 import { AcCmColor, AcCmTransparency, defaults } from '@mlightcad/common'
 import { AcGiLineStyle, AcGiLineWeight } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import {
   AcDbSymbolTableRecord,
   AcDbSymbolTableRecordAttrs
@@ -390,80 +389,6 @@ export class AcDbLayerTableRecord extends AcDbSymbolTableRecord<AcDbLayerTableRe
   }
   set materialId(value: string) {
     this.setAttr('materialId', value)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbLayerTableRecord')
-    filer.writeString(2, this.name)
-    filer.writeInt16(70, this.standardFlags)
-    filer.writeCmColor(this.color)
-    filer.writeString(6, this.linetype)
-    filer.writeInt16(290, this.isPlottable ? 1 : 0)
-    filer.writeLineWeight(370, this.lineWeight)
-    filer.writeTransparency(this.transparency)
-    if (this.description) {
-      filer.writeString(4, this.description)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    // Tolerate optional AcDbSymbolTableRecord marker from parent writers.
-    filer.atSubclassData('AcDbSymbolTableRecord')
-    filer.atSubclassData('AcDbLayerTableRecord')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 2:
-          this.name = String(item.value)
-          break
-        case 70:
-          this.standardFlags = Number(item.value)
-          break
-        case 62: {
-          const aci = Number(item.value)
-          this.isOff = aci < 0
-          this.color.colorIndex = Math.abs(aci)
-          break
-        }
-        case 420:
-          this.color.setRGBValue(Number(item.value))
-          break
-        case 6:
-          this.linetype = String(item.value)
-          break
-        case 290:
-          this.isPlottable = Number(item.value) !== 0
-          break
-        case 370:
-          this.lineWeight = Number(item.value)
-          break
-        case 440:
-          this.transparency = AcCmTransparency.deserialize(Number(item.value))
-          break
-        case 4:
-          this.description = String(item.value)
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

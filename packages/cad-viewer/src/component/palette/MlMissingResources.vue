@@ -1,27 +1,7 @@
 <template>
   <div class="ml-missing-resources">
-    <div class="ml-missing-resources__tab-list" role="tablist">
-      <button
-        v-for="tab in subTabs"
-        :key="tab.name"
-        type="button"
-        role="tab"
-        class="ml-missing-resources__tab"
-        :class="{
-          'is-active': store.dialogs.activeMissingResourceTab === tab.name
-        }"
-        :aria-selected="store.dialogs.activeMissingResourceTab === tab.name"
-        @click="selectSubTab(tab.name)"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
     <div class="ml-missing-resources__body">
-      <div
-        v-if="store.dialogs.activeMissingResourceTab === 'font'"
-        class="ml-missing-resources__panel"
-      >
+      <div class="ml-missing-resources__panel">
         <el-checkbox
           v-if="fontRows.length > 0"
           v-model="matchFontType"
@@ -80,16 +60,9 @@
           </el-table-column>
         </el-table>
       </div>
-
-      <div
-        v-else-if="store.dialogs.activeMissingResourceTab === 'xref'"
-        class="ml-missing-resources__panel"
-      >
-        <ml-external-references />
-      </div>
     </div>
 
-    <div v-if="showApplyBar" class="ml-missing-resources__footer">
+    <div class="ml-missing-resources__footer">
       <el-button
         type="primary"
         size="small"
@@ -119,7 +92,6 @@ import {
   AcApFontUtil,
   AcApSettingManager,
   eventBus} from '@mlightcad/cad-simple-viewer'
-import type { MlOverflowTab } from '@mlightcad/ui-components'
 import {
   ElButton,
   ElCheckbox,
@@ -131,15 +103,10 @@ import {
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { store } from '../../app'
-import {
-  type MissingResourceTab,
-  useMissedData
-} from '../../composable'
-import MlExternalReferences from './MlExternalReferences.vue'
+import { useMissedData } from '../../composable'
 
 const { t } = useI18n()
-const { fonts: fontMapping, xrefs } = useMissedData()
+const { fonts: fontMapping } = useMissedData()
 
 const fontFileInput = ref<HTMLInputElement | null>(null)
 const availableFontInfos = ref<AcApFontInfo[]>([])
@@ -161,26 +128,6 @@ const fontRows = computed(() => {
   }))
 })
 
-const subTabs = computed<MlOverflowTab[]>(() => {
-  return [
-    {
-      name: 'font',
-      label: t('main.toolPalette.missingResources.fontTab')
-    },
-    {
-      name: 'xref',
-      label: t('main.toolPalette.missingResources.xrefTab')
-    }
-  ]
-})
-
-const selectSubTab = (name: string) => {
-  store.dialogs.activeMissingResourceTab = name as MissingResourceTab
-}
-const showApplyBar = computed(() => {
-  return store.dialogs.activeMissingResourceTab === 'font'
-})
-
 const canApply = computed(() => {
   for (const [missed, mapped] of fontMapping) {
     if (missed.trim() && mapped.trim()) return true
@@ -196,31 +143,6 @@ const refreshAvailableFonts = async () => {
 onMounted(() => {
   void refreshAvailableFonts()
 })
-
-watch(
-  () => store.dialogs.activeMissingResourceTab,
-  tab => {
-    if (tab === 'font') void refreshAvailableFonts()
-  }
-)
-
-watch(
-  [() => fontMapping.size, () => xrefs.length],
-  () => {
-    const tab = store.dialogs.activeMissingResourceTab as MissingResourceTab
-    const hasXrefs = xrefs.length > 0
-    const valid =
-      (tab === 'font' && fontMapping.size > 0) ||
-      (tab === 'xref' && hasXrefs) ||
-      (fontMapping.size === 0 && !hasXrefs)
-    if (valid) return
-    if (fontMapping.size > 0) {
-      store.dialogs.activeMissingResourceTab = 'font'
-    } else if (hasXrefs) {
-      store.dialogs.activeMissingResourceTab = 'xref'
-    }
-  }
-)
 
 watch(matchFontType, enabled => {
   if (!enabled) return

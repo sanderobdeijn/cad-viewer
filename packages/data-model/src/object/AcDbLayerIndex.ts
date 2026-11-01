@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import type { AcDbObjectId } from '../base/AcDbObject'
 import type { AcDbBlockTableRecord } from '../database/AcDbBlockTableRecord'
 import type { AcDbLayerTable } from '../database/AcDbLayerTable'
@@ -240,75 +240,6 @@ export class AcDbLayerIndex extends AcDbIndex {
     this.lastUpdatedAtU = Date.now()
     this.isUptoDate = true
     return true
-  }
-
-  /**
-   * Writes DXF fields for this layer index object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbLayerIndex')
-    const count = Math.max(
-      this._layerNames.length,
-      this._idBufferIds.length,
-      this._idBufferEntryCounts.length
-    )
-    for (let i = 0; i < count; i++) {
-      if (this._layerNames[i] != null) {
-        filer.writeString(8, this._layerNames[i])
-      }
-      if (this._idBufferIds[i]) {
-        filer.writeHandle(360, this._idBufferIds[i])
-      }
-      if (this._idBufferEntryCounts[i] != null) {
-        filer.writeInt32(90, this._idBufferEntryCounts[i])
-      }
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbLayerIndex')
-
-    const layerNames: string[] = []
-    const idBufferIds: AcDbObjectId[] = []
-    const idBufferEntryCounts: number[] = []
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      switch (code) {
-        case 8:
-          layerNames.push(String(item.value))
-          break
-        case 360:
-          idBufferIds.push(String(item.value))
-          break
-        case 90:
-          idBufferEntryCounts.push(Number(item.value))
-          break
-        case 100:
-          filer.pushBackItem(item)
-          this.layerNames = layerNames
-          this.idBufferIds = idBufferIds
-          this.idBufferEntryCounts = idBufferEntryCounts
-          this.isUptoDate = true
-          return this
-        default:
-          break
-      }
-    }
-
-    this.layerNames = layerNames
-    this.idBufferIds = idBufferIds
-    this.idBufferEntryCounts = idBufferEntryCounts
-    this.isUptoDate = true
-    return this
   }
 }
 

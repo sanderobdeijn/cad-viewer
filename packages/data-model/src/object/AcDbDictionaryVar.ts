@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject } from '../base/AcDbObject'
 
 /**
@@ -25,42 +25,5 @@ export class AcDbDictionaryVar extends AcDbObject {
   }
   set value(value: string) {
     this._value = value
-  }
-
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('DictionaryVariables')
-    filer.writeInt16(280, this._schema)
-    filer.writeString(1, this._value)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    // AutoCAD writes `DictionaryVariables`; tolerate either marker.
-    if (!filer.atSubclassData('DictionaryVariables')) {
-      filer.atSubclassData('AcDbDictionaryVar')
-    }
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 280:
-          this._schema = Number(item.value)
-          break
-        case 1:
-          this._value = String(item.value)
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }

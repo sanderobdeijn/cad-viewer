@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import {
   AcDbAttributeFlags,
   AcDbAttributeMTextFlag
@@ -292,82 +292,6 @@ export class AcDbAttribute extends AcDbText {
   set mtext(value: AcDbMText | undefined) {
     this._mtext = value
     this.isMTextAttribute = value != null
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbAttribute')
-    filer.writeInt16(70, this.isInvisible ? 1 : 0)
-    filer.writeInt16(73, this.fieldLength)
-    filer.writeString(2, this.tag)
-    filer.writeInt16(74, this.isReallyLocked ? 1 : 0)
-    if (this.mtext) {
-      filer.writeInt16(71, this.isMTextAttribute ? 1 : 0)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbAttribute')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        // Embedded objects (e.g. AcDbXrecord) share group 70/280 with ATTRIB.
-        // Skip their payload so those codes are not applied as attribute flags,
-        // but keep scanning until XData so dxfInXData can still run.
-        if (String(item.value) === 'AcDbAttribute') {
-          continue
-        }
-        while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-          if (!filer.readItem()) break
-        }
-        break
-      }
-      const n = Number(item.value)
-      switch (code) {
-        case 2:
-          this.tag = String(item.value)
-          break
-        case 70:
-          this.isInvisible = (n & AcDbAttributeFlags.Invisible) !== 0
-          this.isConst = (n & AcDbAttributeFlags.Const) !== 0
-          this.isVerifiable = (n & AcDbAttributeFlags.Verifiable) !== 0
-          this.isPreset = (n & AcDbAttributeFlags.Preset) !== 0
-          break
-        case 71:
-          this.isMTextAttribute =
-            (n & AcDbAttributeMTextFlag.MultiLine) !== 0
-          this.isConstMTextAttribute =
-            (n & AcDbAttributeMTextFlag.ConstMultiLine) !== 0
-          break
-        case 73:
-          this.fieldLength = n
-          break
-        case 74:
-          // DXF: vertical text justification for ATTRIB.
-          this.verticalMode = n
-          break
-        case 280:
-          this.lockPositionInBlock = n !== 0
-          break
-        case 340:
-          // Soft-pointer ID to FIELD object — optional; keep scanning.
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

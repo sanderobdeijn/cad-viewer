@@ -4,19 +4,9 @@ import {
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
-
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
-import { AcDbDatabase } from '../src/database'
 import { AcDbCircle } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-
-const createWorkingDb = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  acdbHostApplicationServices().workingDatabase = db
-  return db
-}
 
 describe('AcDbCircle', () => {
   it('exposes static and DXF type names', () => {
@@ -263,39 +253,6 @@ describe('AcDbCircle', () => {
     expect(
       (renderer as unknown as { circularArc: jest.Mock }).circularArc
     ).toHaveBeenCalledTimes(1)
-  })
-
-  it('writes circle-specific DXF fields', () => {
-    createWorkingDb()
-    const circle = new AcDbCircle(new AcGePoint3d(1.5, -2, 3.25), 4.75)
-    circle.ownerId = 'ABC'
-    const filer = new AcDbDxfFiler()
-
-    const result = circle.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(result).toBe(circle)
-    expect(dxf).toContain('100\nAcDbCircle\n')
-    expect(dxf).toContain('10\n1.5\n20\n-2\n30\n3.25\n')
-    expect(dxf).toContain('40\n4.75\n')
-    expect(dxf).toContain('210\n0\n220\n0\n230\n1\n')
-  })
-
-  it('writes CIRCLE center in OCS for non-default extrusion', () => {
-    createWorkingDb()
-    const circle = new AcDbCircle(
-      new AcGePoint3d(-1.5, -2, 3.25),
-      4.75,
-      new AcGeVector3d(0, 0, -1)
-    )
-    circle.ownerId = 'ABC'
-    const filer = new AcDbDxfFiler()
-
-    circle.dxfOutFields(filer)
-
-    const dxf = filer.toString()
-    expect(dxf).toContain('10\n1.5\n20\n-2\n30\n-3.25\n')
-    expect(dxf).toContain('210\n0\n220\n0\n230\n-1\n')
   })
 
   it('creates a detached clone with a new objectId', () => {

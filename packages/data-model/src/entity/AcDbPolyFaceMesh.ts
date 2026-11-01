@@ -9,7 +9,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
@@ -339,64 +338,6 @@ export class AcDbPolyFaceMesh extends AcDbCurve {
     })
 
     return renderer.lines(lines)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbPolyFaceMesh')
-
-    const flag = 64 // Polyface mesh flag
-
-    filer.writeInt16(66, 1) // Has vertices
-    filer.writeInt16(70, flag)
-
-    return this
-  }
-
-  /**
-   * Writes this object to the DXF output.
-   */
-  override dxfOut(filer: AcDbDxfFiler, allXdata = false) {
-    super.dxfOut(filer, allXdata)
-
-    // Write vertices
-    for (let i = 0; i < this.numberOfVertices; i++) {
-      const vertex = this.getVertexAt(i)
-      filer.writeStart('VERTEX')
-      filer.writeHandle(5, this.database.generateHandle())
-      filer.writeObjectId(330, this.objectId)
-      filer.writeSubclassMarker('AcDbEntity')
-      filer.writeSubclassMarker('AcDbVertex')
-      filer.writeSubclassMarker('AcDbPolyFaceMeshVertex')
-      filer.writePoint3d(10, vertex.position)
-      filer.writeInt16(70, 64) // Polyface mesh vertex flag
-    }
-
-    // Write faces
-    for (let i = 0; i < this.numberOfFaces; i++) {
-      const face = this.getFaceAt(i)
-      filer.writeStart('VERTEX')
-      filer.writeHandle(5, this.database.generateHandle())
-      filer.writeObjectId(330, this.objectId)
-      filer.writeSubclassMarker('AcDbEntity')
-      filer.writeSubclassMarker('AcDbVertex')
-      filer.writeSubclassMarker('AcDbPolyFaceMeshVertex')
-      filer.writeInt16(70, 128) // Polyface mesh face flag
-
-      // Write vertex indices
-      face.vertexIndices.forEach((index, j) => {
-        filer.writeInt32(10 + j, index)
-      })
-    }
-
-    filer.writeStart('SEQEND')
-    filer.writeHandle(5, this.database.generateHandle())
-    filer.writeObjectId(330, this.objectId)
-    filer.writeSubclassMarker('AcDbEntity')
-    return this
   }
 
   /**

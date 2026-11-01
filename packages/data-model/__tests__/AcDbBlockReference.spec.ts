@@ -1,7 +1,7 @@
 import { AcCmColor } from '@mlightcad/common'
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
 import {
   AcDbAttribute,
@@ -618,51 +618,5 @@ describe('AcDbBlockReference', () => {
     const empty = missing.subWorldDraw(renderer as never)
     expect(renderer.group).toHaveBeenCalledWith([])
     expect(empty).toEqual({ children: [] })
-  })
-
-  it('writes INSERT fields and ATTRIB/SEQEND records in DXF output', () => {
-    const db = createDb()
-    createNamedBlock(db, 'TEST_BLOCK')
-
-    const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(1, 2, 3)
-    blockRef.rotation = Math.PI / 6
-    blockRef.scaleFactors = new AcGePoint3d(2, 3, 4)
-    db.tables.blockTable.modelSpace.appendEntity(blockRef)
-
-    const attr = new AcDbAttribute()
-    attr.database = db
-    attr.tag = 'TAG1'
-    attr.textString = 'VALUE1'
-    blockRef.appendAttributes(attr)
-
-    const filerFields = new AcDbDxfFiler()
-    expect(blockRef.dxfOutFields(filerFields)).toBe(blockRef)
-    const fields = filerFields.toString()
-    expect(fields).toContain('100\nAcDbBlockReference\n')
-    expect(fields).toContain('10\n1\n20\n2\n30\n3\n')
-    expect(fields).toContain('2\nTEST_BLOCK\n')
-    expect(fields).toContain('41\n2\n')
-    expect(fields).toContain('42\n3\n')
-    expect(fields).toContain('43\n4\n')
-    expect(fields).toContain('50\n29.9999999999999964\n')
-    expect(fields).toContain('210\n0\n220\n0\n230\n1\n')
-
-    const filerOut = new AcDbDxfFiler()
-    expect(blockRef.dxfOut(filerOut)).toBe(blockRef)
-    const out = filerOut.toString()
-    expect(out).toContain('\n0\nATTRIB\n')
-    expect(out).toContain('\n2\nTAG1\n')
-    expect(out).toContain('\n1\nVALUE1\n')
-    expect(out).toContain('\n0\nSEQEND\n')
-
-    const withoutAttributes = new AcDbBlockReference('TEST_BLOCK')
-    db.tables.blockTable.modelSpace.appendEntity(withoutAttributes)
-    const filerWithoutAttrs = new AcDbDxfFiler()
-    expect(withoutAttributes.dxfOut(filerWithoutAttrs, true)).toBe(
-      withoutAttributes
-    )
-    expect(filerWithoutAttrs.toString()).not.toContain('\n0\nATTRIB\n')
-    expect(filerWithoutAttrs.toString()).not.toContain('\n0\nSEQEND\n')
   })
 })

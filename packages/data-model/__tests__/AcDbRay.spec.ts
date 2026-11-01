@@ -4,7 +4,7 @@ import {
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbRay } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -208,24 +208,6 @@ describe('AcDbRay', () => {
       expect.objectContaining({ x: 1, y: -2, z: 3 }),
       expect.objectContaining({ x: 500001, y: -2, z: -999997 })
     ])
-  })
-
-  it('writes ray-specific DXF fields and returns itself', () => {
-    const db = createWorkingDb()
-    const ray = new AcDbRay()
-    ray.basePoint = new AcGePoint3d(1.25, -2.5, 3.75)
-    ray.unitDir = new AcGeVector3d(0.5, 1.5, -2.5)
-    db.tables.blockTable.modelSpace.appendEntity(ray)
-    const filer = new AcDbDxfFiler()
-
-    const result = ray.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(result).toBe(ray)
-    expect(dxf).toContain('100\nAcDbEntity\n')
-    expect(dxf).toContain('100\nAcDbRay\n')
-    expect(dxf).toContain('10\n1.25\n20\n-2.5\n30\n3.75\n')
-    expect(dxf).toContain('11\n0.5\n21\n1.5\n31\n-2.5\n')
   })
   it('creates a detached clone with a new objectId', () => {
     createWorkingDb()

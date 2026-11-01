@@ -8,9 +8,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import vue from '@vitejs/plugin-vue'
 import { examplePeerPackageAliases, exampleRollupOutput } from '../vite-config/pluginRollupOutput'
 import {
-  LIBREDWG_CONVERTER_PACKAGE,
-  LIBREDWG_PARSER_WASM_FILE,
-  LIBREDWG_PARSER_WORKER_FILE,
   MTEXT_RENDERER_WORKER_FILE
 } from '../../tools/worker-assets.mjs'
 
@@ -145,14 +142,6 @@ export default defineConfig(({ command, mode }) => {
     )
   )
 
-  const libredwgDist = `./node_modules/${LIBREDWG_CONVERTER_PACKAGE}/dist`
-  const libredwgWasmSrc = resolve(
-    __dirname,
-    'node_modules',
-    LIBREDWG_CONVERTER_PACKAGE,
-    'dist',
-    LIBREDWG_PARSER_WASM_FILE
-  )
   const mtextWorkerSrc = linkLocalMtextRenderer
     ? LOCAL_MTEXT_RENDERER_WORKER
     : `./node_modules/@mlightcad/cad-simple-viewer/dist/${MTEXT_RENDERER_WORKER_FILE}`
@@ -166,21 +155,7 @@ export default defineConfig(({ command, mode }) => {
           src: mtextWorkerSrc,
           dest: 'assets',
           rename: { stripBase: true }
-        },
-        {
-          src: `${libredwgDist}/${LIBREDWG_PARSER_WORKER_FILE}`,
-          dest: 'assets',
-          rename: { stripBase: true }
-        },
-        ...(existsSync(libredwgWasmSrc)
-          ? [
-              {
-                src: `${libredwgDist}/${LIBREDWG_PARSER_WASM_FILE}`,
-                dest: 'assets',
-                rename: { stripBase: true }
-              }
-            ]
-          : [])
+        }
       ]
     })
   ]

@@ -4,9 +4,7 @@ title: Write Mode
 
 # Write Mode
 
-Write mode is the most feature-complete mode. In addition to all the capabilities of read-only mode, it supports directly creating, editing, and deleting entities on the DWG/DXF — enabling the web product to handle real drafting work, not just read-only preview.
-
-Write mode is used by default when opening a file, unless read-only mode is explicitly specified.
+Write mode supports directly creating, editing, and deleting entities — real drafting work on the web. Every session starts with a new blank drawing.
 
 ## Desktop
 
@@ -35,7 +33,7 @@ A command line window at the bottom of the canvas allows typing command names di
 
 ### Right-Side Toolbar
 
-In addition to the read-only mode tools, there is a **Select / Edit tool group**:
+The toolbar also has a **Select / Edit tool group**:
 
 - Select
 - Pan

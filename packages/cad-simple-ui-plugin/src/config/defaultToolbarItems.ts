@@ -1,12 +1,8 @@
 import {
-  acapBuildDataSourceMenu,
   AcApDocManager,
-  acapIsSingleLocalOpen,
   type AcApLocale,
-  acapRunDataSourceMenuAction,
   AcApSettingManager,
   type AcEdUiTheme,
-  acuiCopyDynamicToolbarChildren,
   isMeasurementVisible
 } from '@mlightcad/cad-simple-viewer'
 
@@ -26,7 +22,6 @@ import {
   ICON_MEASURE_DISTANCE,
   ICON_MEASURE_POINT,
   ICON_MEASUREMENT_PANEL,
-  ICON_OPEN,
   ICON_PAN,
   ICON_PLACEMENT_BOTTOM,
   ICON_PLACEMENT_LEFT,
@@ -417,56 +412,6 @@ export function acuiCreateSettingsToolbarItem(
       acuiCreateToolbarLocaleItem(context)
     ]
   }
-}
-
-/**
- * Builds an Open toolbar item whose children mirror registered data sources.
- *
- * Not included in the default toolbar. Add it with `{ preset: 'open' }` or
- * `acuiToolbarPreset('open')`, or append this item. When only the local source
- * is registered, clicking Open runs the local picker directly. Otherwise a
- * submenu lists Local / URL / cloud sources (Sign in vs Open vs Sign out for
- * auth sources).
- */
-export function acuiCreateOpenToolbarItem(): AcUiToolbarItem {
-  const item: AcUiToolbarItem = {
-    id: 'open',
-    label: 'toolbar.open',
-    icon: ICON_OPEN,
-    requiresDocument: false,
-    childrenUi: 'menu',
-    action: () => {
-      try {
-        const sources = AcApDocManager.instance.dataSourceManager.list()
-        if (acapIsSingleLocalOpen(sources)) {
-          const menu = acapBuildDataSourceMenu(sources)
-          const local = menu[0]
-          if (local) void acapRunDataSourceMenuAction(local)
-        }
-      } catch {
-        // DocManager not ready
-      }
-    }
-  }
-
-  return acuiCopyDynamicToolbarChildren(item, () => {
-    try {
-      const sources = AcApDocManager.instance.dataSourceManager.list()
-      if (acapIsSingleLocalOpen(sources)) {
-        return []
-      }
-      return acapBuildDataSourceMenu(sources).map(menuItem => ({
-        id: `ds-${menuItem.id}`,
-        label: menuItem.label,
-        requiresDocument: false,
-        action: () => {
-          void acapRunDataSourceMenuAction(menuItem)
-        }
-      }))
-    } catch {
-      return []
-    }
-  })
 }
 
 /**

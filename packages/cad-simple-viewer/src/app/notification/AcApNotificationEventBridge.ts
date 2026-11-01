@@ -1,5 +1,3 @@
-import type { AcDbParsingTaskStats, AcDbProgressdEventArgs } from '@mlightcad/data-model'
-
 import { eventBus } from '../../editor/global/eventBus'
 import { acapAnalyzeUnsupportedDrawing } from '../../util/AcApAnalyzeUnsupportedDrawing'
 import { AcApFontUtil } from '../../util/AcApFontUtil'
@@ -8,11 +6,6 @@ import {
   acapFormatUnsupportedEntitiesMessage,
   acapI18nTranslate
 } from '../../util/AcApFormatUnsupportedEntitiesMessage'
-import {
-  acapFormatOpenFileErrorMessage,
-  acapFormatOpenFileErrorTitle,
-  type AcApOpenFileErrorParams
-} from '../../util/AcApOpenFileErrorMessage'
 import type {
   AcApDocManager,
   AcDbDocumentEventArgs
@@ -193,42 +186,6 @@ export class AcApNotificationEventBridge {
   }
 
   /**
-   * Handles open-file failures and writes a persistent error notification.
-   *
-   * @param params - File name and structured error metadata.
-   */
-  private readonly _onFailedToOpenFile = (params: AcApOpenFileErrorParams) => {
-    this._getCenter().error(
-      acapFormatOpenFileErrorTitle(params.errorCode),
-      acapFormatOpenFileErrorMessage(params),
-      this.sessionOptions()
-    )
-  }
-
-  /**
-   * Captures `unknownEntityCount` from PARSE END for the active session.
-   *
-   * @param data - Open-file progress payload.
-   */
-  private readonly _onOpenFileProgress = (data: AcDbProgressdEventArgs) => {
-    if (
-      data.stage === 'CONVERSION' &&
-      data.subStage === 'PARSE' &&
-      data.subStageStatus === 'END' &&
-      data.data
-    ) {
-      const stats = data.data as AcDbParsingTaskStats
-      const sessionId = this._docManager.activeSessionId
-      if (sessionId) {
-        this._pendingUnknownBySession.set(
-          sessionId,
-          stats.unknownEntityCount ?? 0
-        )
-      }
-    }
-  }
-
-  /**
    * Resets unsupported-entity bookkeeping before a new open starts.
    */
   private readonly _onDocumentToBeOpened = () => {
@@ -304,8 +261,6 @@ export class AcApNotificationEventBridge {
     eventBus.on('font-not-found', this._onFontNotFound)
     eventBus.on('missed-data-changed', this._onMissedDataChanged)
     eventBus.on('failed-to-get-avaiable-fonts', this._onFailedToGetFonts)
-    eventBus.on('failed-to-open-file', this._onFailedToOpenFile)
-    eventBus.on('open-file-progress', this._onOpenFileProgress)
 
     this._docManager.events.documentToBeOpened.addEventListener(
       this._onDocumentToBeOpened
@@ -334,8 +289,6 @@ export class AcApNotificationEventBridge {
     eventBus.off('font-not-found', this._onFontNotFound)
     eventBus.off('missed-data-changed', this._onMissedDataChanged)
     eventBus.off('failed-to-get-avaiable-fonts', this._onFailedToGetFonts)
-    eventBus.off('failed-to-open-file', this._onFailedToOpenFile)
-    eventBus.off('open-file-progress', this._onOpenFileProgress)
 
     this._docManager.events.documentToBeOpened.removeEventListener(
       this._onDocumentToBeOpened

@@ -2,9 +2,7 @@ import {
   AcCmColor,
   AcCmEventManager,
   AcDbDatabase,
-  AcDbFileType,
   acdbHostApplicationServices,
-  AcDbOpenDatabaseOptions,
   AcDbSysVarManager,
   log
 } from '@mlightcad/data-model'
@@ -31,7 +29,6 @@ import {
   AcApMoveCmd,
   AcApMTextCmd,
   AcApOffsetCmd,
-  AcApOpenCmd,
   AcApPanCmd,
   AcApPointCmd,
   AcApPolygonCmd,
@@ -69,10 +66,8 @@ import {
 } from '../editor'
 import { AcApPluginManager } from '../plugin/AcApPluginManager'
 import { isScriptQuitCommand, parseScriptLines } from '../util/AcApScriptParser'
-import { acapWithSecondaryDatabase } from '../util/AcApSecondaryDatabase'
 import { AcTrView2d } from '../view'
 import type { AcApCompareDisplayOptions } from '../view/AcApCompareDisplay'
-import type { AcTrLayout } from '../view/AcTrLayout'
 import { AcApBusyIndicator } from './AcApBusyIndicator'
 import { acapBindCommandServices } from './AcApCommandServices'
 import { AcApContext } from './AcApContext'
@@ -87,12 +82,6 @@ import {
   AcApOpenDatabaseOptions,
   AcApOpenViewMode
 } from './AcApOpenDatabaseOptions'
-import {
-  acapInstallOpenFileDialog,
-  type AcApOpenDocumentDefaultsResolver,
-  acapUninstallOpenFileDialog,
-  acapUpdateOpenFileDialogOptions
-} from './AcApOpenFileDialog'
 import { AcApOpenFileProfiler } from './AcApOpenFileProfiler'
 import { AcApOpenFileProgressController } from './AcApOpenFileProgressController'
 import {
@@ -100,12 +89,6 @@ import {
   DEFAULT_WEBWORKER_FILE_URLS,
   resetWebworkerReadinessCache
 } from './AcApWebworkerReadiness'
-import { AcApXrefManager } from './AcApXrefManager'
-import {
-  AcApDataSourceManager,
-  AcApLocalDataSource,
-  AcApUrlDataSource
-} from './dataSource'
 import {
   acapDisposeNotificationService,
   acapInstallNotificationService,
@@ -114,8 +97,6 @@ import {
 import { syncCurrentSpaceFromTileMode } from './syncCurrentSpaceFromTileMode'
 
 const DEFAULT_BASE_URL = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data'
-/** Default ISO drawing template loaded by {@link AcApDocManager.newDocument}. */
-const DEFAULT_NEW_DRAWING_TEMPLATE = 'templates/acadiso.dxf'
 /**
  * Built-in command alias table used when users do not provide explicit alias overrides.
  *
@@ -146,7 +127,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   OFFSET: ['O'],
   COPY: ['CO'],
   ROTATE: ['RO'],
-  OPEN: ['OP'],
   PAN: ['P'],
   POINT: ['PO'],
   POLYGON: ['POL'],
@@ -180,16 +160,6 @@ export interface AcDbDocumentEventArgs {
  * off-main-thread processing such as file parsing or text rendering.
  */
 export interface AcApWebworkerFiles {
-  /**
-   * Optional URL of a Web Worker that parses DWG files.
-   *
-   * The viewer does **not** register a DWG converter by default (LibreDWG is
-   * GPL). Hosts that opt into DWG support should register their own converter
-   * (e.g. `@mlightcad/libredwg-converter`) and may pass this URL so readiness
-   * checks can verify the worker script is reachable.
-   */
-  dwgParser?: string | URL
-
   /**
    * URL of the Web Worker bundle responsible for rendering MTEXT entities.
    *
@@ -344,19 +314,6 @@ export interface AcApDocManagerOptions {
   commandAliases?: Record<string, string | string[]>
 
   /**
-   * When false, the built-in OPEN command file picker is not installed.
-   * Defaults to true.
-   */
-  builtinOpenFileDialog?: boolean
-
-  /**
-   * Default options for files opened through the built-in OPEN command dialog.
-   *
-   * Can be updated later via {@link AcApDocManager.setOpenDocumentDefaults}.
-   */
-  openDocumentDefaults?: AcApOpenDocumentDefaultsResolver
-
-  /**
    * Built-in notification center (font missing, unsupported entities, etc.).
    *
    * Notifications are scoped per document session (MDI). The default DOM UI is
@@ -431,8 +388,6 @@ export class AcApDocManager {
   private _commandManager: AcEdCommandStack
   /** Plugin manager */
   private _pluginManager: AcApPluginManager
-  /** Data source manager (local, URL, cloud plugins) */
-  private _dataSourceManager: AcApDataSourceManager
   /**
    * Alias overrides provided by caller options.
    *
@@ -444,8 +399,6 @@ export class AcApDocManager {
    * registering built-in and system-variable commands.
    */
   private _commandAliasOverrides: Map<string, string[]>
-  /** Default options for the built-in OPEN file dialog */
-  private _openDocumentDefaults?: AcApOpenDocumentDefaultsResolver
   /** Singleton instance */
   private static _instance?: AcApDocManager
   /** Worker URLs configured at initialization */
@@ -454,8 +407,6 @@ export class AcApDocManager {
   private _workersReady: boolean | null = null
   /** In-flight worker readiness check */
   private _workersReadyCheckPromise?: Promise<boolean>
-  /** Monotonically increasing counter used to generate overlay ids */
-  private _nextOverlayId = 1
   /**
    * In-flight / completed preset (default+symbol) font load started at open.
    * Reused across opens so IndexedDB/mesh parse is not repeated.
@@ -497,7 +448,6 @@ export class AcApDocManager {
     this._commandAliasOverrides = this.normalizeCommandAliasConfig(
       options.commandAliases
     )
-    this._openDocumentDefaults = options.openDocumentDefaults
     if (options.useMainThreadDraw) {
       AcTrMTextRenderer.getInstance().setRenderMode('main')
     } else {
@@ -569,9 +519,6 @@ export class AcApDocManager {
       this.context,
       this._commandManager
     )
-    this._dataSourceManager = new AcApDataSourceManager()
-    this._dataSourceManager.register(new AcApLocalDataSource())
-    this._dataSourceManager.register(new AcApUrlDataSource())
     const busyHost = options.busyIndicatorHost ?? view.container
     this._busyIndicatorHost = busyHost
     this._openFileProgress = new AcApOpenFileProgressController(busyHost)
@@ -615,10 +562,6 @@ export class AcApDocManager {
       log.error('[AcApDocManager] Error loading plugins:', error)
     })
 
-    acapInstallOpenFileDialog({
-      enabled: options.builtinOpenFileDialog !== false,
-      getOpenDocumentDefaults: () => this.resolveOpenDocumentDefaults()
-    })
 
     if (options.notificationCenter !== false) {
       const ncOptions =
@@ -702,7 +645,6 @@ export class AcApDocManager {
     this._splitView?.dispose()
     this._splitView = undefined
     this._mainView.dispose()
-    acapUninstallOpenFileDialog()
     acapDisposeNotificationService()
     AcTrMTextRenderer.resetInstance()
     resetWebworkerReadinessCache()
@@ -997,7 +939,6 @@ export class AcApDocManager {
 
     session.context.dispose()
     target.destroy()
-    this.clearSessionOverlays(session)
     acapDisposeSessionUndo(session.id)
     const closedView = session.context.view as AcTrView2d
     if (session.viewState) {
@@ -1053,15 +994,6 @@ export class AcApDocManager {
    */
   get pluginManager() {
     return this._pluginManager
-  }
-
-  /**
-   * Gets data source manager for opening drawings from local, URL, or cloud.
-   *
-   * @returns The data source manager
-   */
-  get dataSourceManager() {
-    return this._dataSourceManager
   }
 
   /**
@@ -1281,240 +1213,6 @@ export class AcApDocManager {
   }
 
   /**
-   * Opens a CAD document from a URL.
-   *
-   * This method loads a document from the specified URL. When the current
-   * drawing is a reusable Untitled, it is replaced; otherwise a new document
-   * session is created and activated.
-   *
-   * @param url - The URL of the CAD file to open
-   * @param options - Optional database opening options. If not provided, default options with font loader will be used
-   * @returns Promise that resolves to true if the document was successfully opened, false otherwise
-   *
-   * @example
-   * ```typescript
-   * const success = await docManager.openUrl('https://example.com/drawing.dwg');
-   * if (success) {
-   *   log.info('Document opened successfully');
-   * }
-   * ```
-   */
-  async openUrl(url: string, options?: AcApOpenDatabaseOptions) {
-    options = this.setOptions(options)
-    const created = await this.ensureOpenSession()
-    this.beginOpenProgress()
-    this.onBeforeOpenDocument(options, !created)
-    try {
-      await this._openFileProgress.beginOpen(this.context.doc.database)
-      const isSuccess = await this.context.doc.openUri(url, options)
-      this.onAfterOpenDocument(isSuccess, options)
-      if (!isSuccess && created) {
-        await this.closeFailedOpenSession()
-      }
-      return isSuccess
-    } catch (error) {
-      this._openFileProfiler.cancel()
-      if (created) {
-        await this.closeFailedOpenSession()
-      }
-      throw error
-    }
-  }
-
-  /**
-   * Opens a CAD document from file content.
-   *
-   * This method loads a document from the provided file content (binary data).
-   * When the current drawing is a reusable Untitled, it is replaced; otherwise
-   * a new document session is created and activated.
-   *
-   * @param fileName - The name of the file being opened (used for format detection)
-   * @param content - The file content
-   * @param options - Database opening options including font loader settings
-   * @param view - Optional canvas to convert into (split view). Defaults to the active view.
-   * @returns Promise that resolves to true if the document was successfully opened, false otherwise
-   *
-   * @example
-   * ```typescript
-   * const fileContent = await file.arrayBuffer();
-   * const success = await docManager.openDocument('drawing.dwg', fileContent, options);
-   * ```
-   */
-  async openDocument(
-    fileName: string,
-    content: ArrayBuffer,
-    options: AcApOpenDatabaseOptions,
-    view?: AcTrView2d
-  ) {
-    options = this.setOptions(options)
-    const created = await this.ensureOpenSession(view)
-    this.beginOpenProgress()
-    this.onBeforeOpenDocument(options, !created)
-    try {
-      await this._openFileProgress.beginOpen(this.context.doc.database)
-      const isSuccess = await this.context.doc.openDocument(
-        fileName,
-        content,
-        options
-      )
-      this.onAfterOpenDocument(isSuccess, options)
-      if (!isSuccess && created) {
-        await this.closeFailedOpenSession()
-      }
-      return isSuccess
-    } catch (error) {
-      this._openFileProfiler.cancel()
-      if (created) {
-        await this.closeFailedOpenSession()
-      }
-      throw error
-    }
-  }
-
-  /**
-   * Loads a DWG/DXF file as a read-only overlay (base drawing/reference)
-   * rendered alongside the currently open document in the same WCS
-   * coordinate system, without replacing it.
-   *
-   * Unlike {@link openDocument}, this parses the file into a standalone
-   * {@link AcDbDatabase} that never becomes `curDocument` — it isn't touched
-   * by undo, the layer panel/table, or selection. Overlay geometry currently
-   * covers top-level entities (lines, arcs, polylines, text, hatch, etc.);
-   * block (INSERT) expansion, viewports, and dimensions are not yet
-   * supported and are skipped.
-   *
-   * @param fileName - Input file name, used to determine DWG vs DXF from its extension.
-   * @param content - Input file content as an `ArrayBuffer`.
-   * @param options - Input options forwarded to the underlying database read.
-   * @returns The generated overlay id, used with {@link removeOverlay} and
-   * {@link setOverlayVisible}.
-   *
-   * @example
-   * ```typescript
-   * const fileContent = await file.arrayBuffer();
-   * const overlayId = await docManager.loadOverlay('base.dwg', fileContent);
-   * docManager.setOverlayVisible(overlayId, false); // hide it later
-   * docManager.removeOverlay(overlayId); // or remove it entirely
-   * ```
-   */
-  async loadOverlay(
-    fileName: string,
-    content: ArrayBuffer,
-    options: AcDbOpenDatabaseOptions & { targetView?: AcTrView2d } = {}
-  ): Promise<string> {
-    const { targetView, ...dbOptions } = options
-    const db = new AcDbDatabase()
-    const fileExtension = fileName.split('.').pop()?.toLocaleLowerCase()
-    await acapWithSecondaryDatabase(db, async () => {
-      await db.read(
-        content,
-        { readOnly: true, ...dbOptions, flattenLayers: true },
-        fileExtension === 'dwg' ? AcDbFileType.DWG : AcDbFileType.DXF
-      )
-    })
-    return this.registerOverlayDatabase(db, { targetView })
-  }
-
-  /**
-   * Registers an already-parsed read-only database as an overlay.
-   *
-   * Prefer this when the caller already loaded the secondary database to avoid
-   * reading the same file twice.
-   *
-   * @param db - Secondary database to draw into the target view.
-   * @param options.targetView - Canvas that receives the overlay (defaults to
-   *   the active view). Used by side-by-side → overlay compare without moving scenes.
-   */
-  async registerOverlayDatabase(
-    db: AcDbDatabase,
-    options?: { targetView?: AcTrView2d }
-  ): Promise<string> {
-    const view = options?.targetView ?? (this.curView as AcTrView2d)
-    const layout = await view.addOverlayEntities(db)
-    const overlayId = `overlay-${this._nextOverlayId++}`
-    // Bind overlay to the session that owns the target view when possible
-    const session =
-      this._sessions.find(s => s.context.view === view) ?? this._activeSession
-    session.overlays.set(overlayId, { db, layout })
-    view.isDirty = true
-    return overlayId
-  }
-
-  /**
-   * Removes a previously loaded overlay and disposes its rendered geometry.
-   *
-   * @param overlayId - Input the id returned by {@link loadOverlay}.
-   * @returns True when an overlay with the given id was found and removed.
-   */
-  removeOverlay(overlayId: string): boolean {
-    for (const session of this._sessions) {
-      const overlay = session.overlays.get(overlayId)
-      if (!overlay) continue
-      const scene = this.sessionCadScene(session)
-      scene.internalScene.remove(overlay.layout.internalObject)
-      overlay.layout.clear()
-      session.overlays.delete(overlayId)
-      if (!session.viewState) {
-        ;(session.context.view as AcTrView2d).isDirty = true
-      }
-      return true
-    }
-    return false
-  }
-
-  /**
-   * Shows or hides a previously loaded overlay without removing it.
-   *
-   * @param overlayId - Input the id returned by {@link loadOverlay}.
-   * @param visible - Input whether the overlay should be visible.
-   * @returns True when an overlay with the given id was found.
-   */
-  setOverlayVisible(overlayId: string, visible: boolean): boolean {
-    for (const session of this._sessions) {
-      const overlay = session.overlays.get(overlayId)
-      if (!overlay) continue
-      overlay.layout.visible = visible
-      ;(session.context.view as AcTrView2d).isDirty = true
-      return true
-    }
-    return false
-  }
-
-  /**
-   * Removes all loaded overlays and disposes their geometry.
-   *
-   * @param view - When set, only overlays on sessions bound to this canvas are cleared.
-   */
-  clearOverlays(view?: AcTrView2d): void {
-    const sessions = view
-      ? this._sessions.filter(s => s.context.view === view)
-      : this._sessions
-    for (const session of sessions) {
-      for (const overlayId of [...session.overlays.keys()]) {
-        this.removeOverlay(overlayId)
-      }
-    }
-  }
-
-  /**
-   * Ids of all currently loaded overlays on the active session (or a view).
-   *
-   * @param view - Optional canvas whose session overlays are listed.
-   */
-  getOverlayIds(view?: AcTrView2d): string[] {
-    if (!view) {
-      return Array.from(this._activeSession.overlays.keys())
-    }
-    const session = this._sessions.find(s => s.context.view === view)
-    return session ? Array.from(session.overlays.keys()) : []
-  }
-
-  /** @deprecated Prefer {@link getOverlayIds}. */
-  get overlayIds(): string[] {
-    return this.getOverlayIds()
-  }
-
-  /**
    * Enables compare-display mode on a view (default: current view).
    * Does not automatically color overlay layouts — use
    * {@link setOverlayCompareDisplay} for those.
@@ -1567,49 +1265,7 @@ export class AcApDocManager {
   }
 
   /**
-   * Applies compare-display coloring to one overlay layout.
-   *
-   * @param overlayId - Id returned by {@link loadOverlay} / {@link registerOverlayDatabase}.
-   * @param options - Compare colors and per-entity role overrides.
-   * @param view - Canvas that owns the overlay; omitted to search all sessions.
-   * @returns `true` when the overlay id was found.
-   */
-  setOverlayCompareDisplay(
-    overlayId: string,
-    options: AcApCompareDisplayOptions,
-    view?: AcTrView2d
-  ): boolean {
-    for (const session of this._sessions) {
-      const overlay = session.overlays.get(overlayId)
-      if (!overlay) continue
-      const target =
-        view ??
-        (session.context.view as AcTrView2d) ??
-        (this.curView as AcTrView2d)
-      target.setCompareDisplay(options, overlay.layout)
-      return true
-    }
-    return false
-  }
-
-  /**
-   * Returns the rendered layout for a loaded overlay, if any.
-   *
-   * Used by {@link AcApXrefManager} to apply INSERT transforms to reference
-   * geometry without registering the layout in {@link AcTrScene}.
-   */
-  getOverlayLayout(overlayId: string): AcTrLayout | undefined {
-    for (const session of this._sessions) {
-      const overlay = session.overlays.get(overlayId)
-      if (overlay) return overlay.layout
-    }
-    return undefined
-  }
-
-  /**
-   * Creates a new CAD document from the default ISO drawing template.
-   *
-   * Loads `acadiso.dxf` into a new document session (or reuses the current
+   * Creates a blank drawing in a new document session (or reuses the current
    * unused Untitled). The new drawing is presented as unsaved.
    *
    * @param options - Optional database opening options merged with write mode
@@ -1621,10 +1277,6 @@ export class AcApDocManager {
    * ```
    */
   async newDocument(options?: AcApOpenDatabaseOptions) {
-    const baseUrl = this.baseUrl.endsWith('/')
-      ? this.baseUrl
-      : `${this.baseUrl}/`
-    const templateUrl = `${baseUrl}${DEFAULT_NEW_DRAWING_TEMPLATE}`
     const openOptions = this.setOptions({
       ...options,
       mode: AcEdOpenMode.Write
@@ -1633,42 +1285,12 @@ export class AcApDocManager {
     this.beginOpenProgress()
     this.onBeforeOpenDocument(openOptions, !created)
     await this._openFileProgress.beginOpen(this.context.doc.database)
-    const isSuccess = await this.context.doc.openUri(templateUrl, openOptions)
-    if (isSuccess) {
-      this.context.doc.resetNewDocumentIdentity()
-    }
+    const isSuccess = await this.context.doc.createNewDrawing(openOptions)
     this.onAfterOpenDocument(isSuccess, openOptions)
     if (!isSuccess && created) {
       await this.closeFailedOpenSession()
     }
     return isSuccess
-  }
-
-  /**
-   * Sets default options applied when opening files through the built-in OPEN dialog.
-   */
-  setOpenDocumentDefaults(defaults?: AcApOpenDocumentDefaultsResolver) {
-    this._openDocumentDefaults = defaults
-    acapUpdateOpenFileDialogOptions({
-      enabled: true,
-      getOpenDocumentDefaults: () => this.resolveOpenDocumentDefaults()
-    })
-  }
-
-  /**
-   * Resolves default open options for the built-in OPEN file dialog.
-   */
-  resolveOpenDocumentDefaults():
-    | AcApOpenDatabaseOptions
-    | Promise<AcApOpenDatabaseOptions> {
-    const defaults = this._openDocumentDefaults
-    if (defaults == null) {
-      return { minimumChunkSize: 1000 }
-    }
-    if (typeof defaults === 'function') {
-      return defaults()
-    }
-    return defaults
   }
 
   /**
@@ -1860,7 +1482,6 @@ export class AcApDocManager {
     addSystemCommand('offset', 'offset', new AcApOffsetCmd())
     addSystemCommand('rotate', 'rotate', new AcApRotateCmd())
     addSystemCommand('log', 'log', new AcApLogCmd())
-    addSystemCommand('open', 'open', new AcApOpenCmd())
     addSystemCommand('pan', 'pan', new AcApPanCmd())
     addSystemCommand('point', 'point', new AcApPointCmd())
     addSystemCommand('polygon', 'polygon', new AcApPolygonCmd())
@@ -2180,9 +1801,6 @@ export class AcApDocManager {
       mode: this.getDocumentEventMode(options)
     })
     if (replaceCurrent) {
-      // Drop xref sessions first so their overlay ids are removed via unload.
-      AcApXrefManager.instance.clearAll()
-      this.clearOverlays()
       // Drop overlay history before view.clear() disposes HTML.
       resetMeasurementSession()
       resetSessionUndo()
@@ -2597,10 +2215,7 @@ export class AcApDocManager {
    * Initializes background workers used by the viewer runtime.
    *
    * Points the MText renderer at its Web Worker script for text layout and
-   * shaping. DXF parsing is handled by the built-in converter in
-   * `@mlightcad/data-model`. DWG converters are **not** registered here —
-   * hosts that need DWG must depend on and register a converter themselves
-   * (e.g. `@mlightcad/libredwg-converter`).
+   * shaping.
    */
   private registerWorkers(webworkerFileUrls?: AcApWebworkerFiles) {
     const mtextRenderer = AcTrMTextRenderer.getInstance()
@@ -2792,8 +2407,6 @@ export class AcApDocManager {
   private resetActiveSessionToUntitled(session: AcApDocSession) {
     const oldDoc = session.doc
     const oldId = session.id
-    AcApXrefManager.instance.clearAll()
-    this.clearOverlays()
     resetMeasurementSession()
     resetSessionUndo()
     this.curView.clear()
@@ -2813,30 +2426,5 @@ export class AcApDocManager {
     this._pluginManager.setContext(context)
     this.bindOpenProgress(doc)
     this.curView.bindDrawDatabase(doc.database)
-  }
-
-  /**
-   * Removes overlay layouts belonging to a session being closed.
-   *
-   * @param session - Session whose overlays should be disposed.
-   */
-  private clearSessionOverlays(session: AcApDocSession) {
-    const scene = this.sessionCadScene(session)
-    for (const overlay of session.overlays.values()) {
-      scene.internalScene.remove(overlay.layout.internalObject)
-      overlay.layout.clear()
-    }
-    session.overlays.clear()
-  }
-
-  /**
-   * Scene that currently owns `session`'s overlay layouts.
-   * Parked sessions keep overlays on {@link AcApDocSession.viewState}; live
-   * split-view sessions keep them on their own canvas, not {@link curView}.
-   */
-  private sessionCadScene(session: AcApDocSession) {
-    return (
-      session.viewState?.scene ?? (session.context.view as AcTrView2d).cadScene
-    )
   }
 }

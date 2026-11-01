@@ -1,7 +1,6 @@
 export default {
   mainMenu: {
     new: '新建图纸',
-    open: '打开图纸',
     drawingUnits: '图形单位',
     about: '关于'
   },
@@ -568,7 +567,6 @@ export default {
       tab: '资源',
       title: '缺失 / 外部资源',
       fontTab: '字体',
-      xrefTab: '外部参照',
       fileReferences: '文件参照',
       details: '详细信息',
       foundAt: '找到位置',
@@ -600,7 +598,6 @@ export default {
       unload: '卸载',
       load: '加载',
       empty: '当前图纸没有外部参照或图像',
-      urlPrompt: '输入 DWG 或 DXF 文件的 URL',
       urlRequired: '请输入 URL',
       loadFailed: '加载参照 "{name}" 失败'
     },
@@ -660,47 +657,6 @@ export default {
         category: '类别',
         font: '字体'
       }
-    },
-    openFileProfile: {
-      tab: '打开性能',
-      title: '打开性能',
-      refresh: '刷新',
-      copy: '复制',
-      copied: '性能数据已复制',
-      copyFailed: '复制性能数据失败',
-      collectedAt: '采集时间 {time}',
-      hint: '每次打开图纸后自动采集。设置 OPENPROF=1 可同时输出到控制台。',
-      noData: '暂无打开性能数据。请先打开图纸，再运行 OPENPERF。',
-      empty: '暂无数据',
-      timing: '墙钟耗时',
-      progressive: '渐进打开',
-      progressiveMode: '模式',
-      progressiveOn: '开启',
-      progressiveOff: '关闭',
-      midOpenPaints: '打开中绘制次数',
-      yields: '让出次数',
-      cache: 'INSERT 渲染缓存（顶层）',
-      slowBlocks: '最慢块模板 miss',
-      total: '打开总计',
-      read: 'db.read',
-      parse: 'PARSE',
-      entity: 'ENTITY 刷入',
-      convert: '场景转换',
-      cacheHits: '缓存命中',
-      cacheMisses: '缓存未命中',
-      cacheBuild: 'Miss 构建',
-      cacheCompact: 'Miss 压缩',
-      cacheHitPath: '命中路径',
-      columns: {
-        stage: '阶段',
-        duration: '耗时',
-        share: '占比',
-        metric: '指标',
-        value: '值',
-        block: '块',
-        build: '构建',
-        compact: '压缩'
-      }
     }
   },
   colorDropdown: {
@@ -727,7 +683,6 @@ export default {
   },
   message: {
     loadingFonts: '正在加载字体...',
-    loadingDwgConverter: '正在加载DWG转换器...',
     fontsNotFound: '在字体库中找不到字体：{fonts}。',
     fontsNotLoaded: '无法加载字体：{fonts}。',
     fontMissedInDrawing:
@@ -736,18 +691,6 @@ export default {
     fontCached: '字体 "{font}" 已成功缓存。',
     fontCacheFailed: '缓存字体 "{fileName}" 失败。',
     failedToGetAvaiableFonts: '无法从"{url}"获取可用的字体信息！',
-    failedToOpenFile: '无法打开文件"{fileName}"！',
-    failedToOpenFileToast: '无法打开"{fileName}"。详情请查看通知中心。',
-    failedToOpenFileWorkerOom:
-      '无法打开"{fileName}"。使用 LibreDWG 解析器时内存不足，导致打开失败。可点击{dwgParserLink}购买商用 DWG Parser，以支持更大图纸并避免此问题。',
-    failedToOpenFileWorkerOomLink: '此页面',
-    failedToOpenFileWorkerTimeout: '无法打开"{fileName}"。解析图纸时操作超时。',
-    failedToOpenFileFontLoadFailed:
-      '无法打开"{fileName}"。无法加载图纸所需的字体。',
-    failedToOpenFileLicenseExpired:
-      '无法打开"{fileName}"。DWG 转换器许可证已过期。',
-    failedToOpenFileLicenseInvalid:
-      '无法打开"{fileName}"。DWG 转换器许可证缺失或无效。',
     fetchingDrawingFile: '正在加载图纸文件...',
     unknownEntities:
       '这张图纸中包含了{count}个未知或不支持的实体，这些实体将无法显示！',
@@ -776,12 +719,6 @@ export default {
       daysAgo: '{count} 天前'
     },
     title: {
-      failedToOpenFile: '无法打开文件',
-      failedToOpenFileWorkerOom: '内存不足',
-      failedToOpenFileWorkerTimeout: '打开超时',
-      failedToOpenFileFontLoadFailed: '字体加载失败',
-      failedToOpenFileLicenseExpired: '许可证已过期',
-      failedToOpenFileLicenseInvalid: '许可证无效',
       fontNotFound: '找不到字体',
       fontNotLoaded: '无法加载字体',
       parsingWarning: '解析图纸问题',

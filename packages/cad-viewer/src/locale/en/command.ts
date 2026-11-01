@@ -7,10 +7,6 @@ export default {
       description:
         'Opens the Missing / External Resources palette for fonts, images, and xrefs'
     },
-    xref: {
-      description:
-        'Opens the Missing / External Resources palette on the Xrefs tab'
-    },
     properties: {
       description: 'Entity properties palette'
     },

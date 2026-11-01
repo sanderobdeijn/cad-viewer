@@ -9,7 +9,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
@@ -410,50 +409,6 @@ export class AcDbPolygonMesh extends AcDbCurve {
     }
 
     return renderer.lines(lines)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbPolygonMesh')
-
-    let flag = 16 // Polygon mesh flag
-    if (this._closedM) flag |= 1
-    if (this._closedN) flag |= 32
-
-    filer.writeInt16(66, 1) // Has vertices
-    filer.writeInt16(70, flag)
-    filer.writeInt32(71, this._mCount)
-    filer.writeInt32(72, this._nCount)
-
-    return this
-  }
-
-  /**
-   * Writes this object to the DXF output.
-   */
-  override dxfOut(filer: AcDbDxfFiler, allXdata = false) {
-    super.dxfOut(filer, allXdata)
-
-    for (let i = 0; i < this.numberOfVertices; i++) {
-      const vertex = this.getVertexAt(i)
-      filer.writeStart('VERTEX')
-      filer.writeHandle(5, this.database.generateHandle())
-      filer.writeObjectId(330, this.objectId)
-      filer.writeSubclassMarker('AcDbEntity')
-      filer.writeSubclassMarker('AcDbVertex')
-      filer.writeSubclassMarker('AcDbPolygonMeshVertex')
-      filer.writePoint3d(10, vertex.position)
-      filer.writeInt16(70, 16) // Polygon mesh vertex flag
-    }
-
-    filer.writeStart('SEQEND')
-    filer.writeHandle(5, this.database.generateHandle())
-    filer.writeObjectId(330, this.objectId)
-    filer.writeSubclassMarker('AcDbEntity')
-    return this
   }
 
   /**

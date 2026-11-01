@@ -2,7 +2,6 @@ import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
   AcGeLine3d,
-  AcGeMathUtil,
   AcGeMatrix3d,
   AcGePoint2dLike,
   AcGePoint3d,
@@ -18,7 +17,6 @@ import {
 } from '@mlightcad/graphic-interface'
 
 import { AcDbObjectId } from '../../base'
-import { AcDbDxfFiler } from '../../base'
 import { AcDbDimStyleTableRecord } from '../../database'
 import { AcDbRenderingCache } from '../../misc'
 import { AcDbOsnapMode } from '../../misc'
@@ -1069,168 +1067,4 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Subclasses can override this to transform their own definition points.
    */
   protected subTransformBy(_matrix: AcGeMatrix3d) {}
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    const dimStyle =
-      this.dimensionStyleName != null
-        ? this.database.tables.dimStyleTable.getAt(this.dimensionStyleName)
-        : undefined
-    filer.writeSubclassMarker('AcDbDimension')
-    filer.writeInt16(280, this.dxfVersion)
-    filer.writeString(2, this.dimBlockId ?? undefined)
-    filer.writeString(3, this.dimensionStyleName ?? this.dimensionStyle.name)
-    filer.writePoint3d(10, this._dxfDefinitionPoint)
-    filer.writeString(1, this.dimensionText ?? '')
-    filer.writeAngle(53, this.textRotation)
-    if (this.horizontalRotation !== 0) {
-      filer.writeAngle(51, this.horizontalRotation)
-    }
-    filer.writePoint3d(11, this.textPosition)
-    // Group 12 is the anonymous-block insertion point (OCS). It lives in the
-    // AcDbDimension section, before any typed subclass marker.
-    filer.writePoint3d(12, this.dimBlockPosition)
-    filer.writeInt16(70, this.dimensionType)
-    filer.writeInt16(71, this.attachmentPoint)
-    filer.writeInt16(72, this.textLineSpacingStyle)
-    filer.writeDouble(41, this.textLineSpacingFactor)
-    filer.writeDouble(42, this.measurement)
-    filer.writeVector3d(210, this.normal)
-    filer.writeObjectId(340, dimStyle?.objectId)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    // Tolerate missing AcDbDimension marker.
-    filer.atSubclassData('AcDbDimension')
-
-    // Group 10 is the definition point. Group 12 is the anonymous-block
-    // insertion point. Do not substitute group 10 for a missing group 12:
-    // *D* block geometry is often already in WCS, and using group 10 would
-    // double-offset it. Some writers place group 12 after the typed subclass
-    // marker; those are applied by the subclass and must not be cleared here.
-    let dx = this._dxfDefinitionPoint.x
-    let dy = this._dxfDefinitionPoint.y
-    let dz = this._dxfDefinitionPoint.z
-    let tx = this.textPosition.x
-    let ty = this.textPosition.y
-    let tz = this.textPosition.z
-    let ix = this._dimBlockPosition.x
-    let iy = this._dimBlockPosition.y
-    let iz = this._dimBlockPosition.z
-    let hasBlockPosition = false
-    let textRotDeg = (this.textRotation * 180) / Math.PI
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      if (code === 100) {
-        // Next dimension subclass (AcDbAlignedDimension, …).
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 1:
-          this.dimensionText = String(item.value)
-          break
-        case 2:
-          this.dimBlockId = String(item.value)
-          break
-        case 3:
-          this.dimensionStyleName = String(item.value)
-          break
-        case 10:
-          dx = n
-          break
-        case 20:
-          dy = n
-          break
-        case 30:
-          dz = n
-          break
-        case 11:
-          tx = n
-          break
-        case 21:
-          ty = n
-          break
-        case 31:
-          tz = n
-          break
-        case 12:
-          ix = n
-          hasBlockPosition = true
-          break
-        case 22:
-          iy = n
-          hasBlockPosition = true
-          break
-        case 32:
-          iz = n
-          hasBlockPosition = true
-          break
-        case 41:
-          this.textLineSpacingFactor = n
-          break
-        case 42:
-          this.measurement = n
-          break
-        case 53:
-          textRotDeg = n
-          break
-        case 51:
-          this.horizontalRotation = AcGeMathUtil.degToRad(n)
-          break
-        case 70:
-          this.dimensionType = n
-          break
-        case 71:
-          this.attachmentPoint = n as AcGiMTextAttachmentPoint
-          break
-        case 72:
-          this.textLineSpacingStyle = n as AcDbLineSpacingStyle
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        case 280:
-          this.dxfVersion = n
-          break
-        case 340:
-          // Dimstyle hard pointer — style is resolved via name (group 3).
-          break
-        default:
-          // Dimstyle overrides and other optional codes may appear here.
-          // Keep scanning so the typed subclass marker (100) is still reached.
-          break
-      }
-    }
-
-    this._dxfDefinitionPoint.set(dx, dy, dz)
-    this.textPosition.copy(new AcGePoint3d(tx, ty, tz))
-    if (hasBlockPosition) {
-      this.dimBlockPosition = { x: ix, y: iy, z: iz }
-    }
-    this.textRotation = (textRotDeg * Math.PI) / 180
-    this.normal.copy(new AcGeVector3d(nx, ny, nz))
-    return this
-  }
 }

@@ -1,14 +1,8 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
-
-import { AcDbDxfFiler } from '../src/base'
 import { AcDbPolygonMesh } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-import {
-  attachEntityToNewModelSpace,
-  getDxfGroupValues,
-  setupWorkingDatabase
-} from '../test-utils/entityTestUtils'
+import { setupWorkingDatabase } from '../test-utils/entityTestUtils'
 
 describe('AcDbPolygonMesh', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -220,64 +214,5 @@ describe('AcDbPolygonMesh', () => {
       AcGePoint3d[]
     ]
     expect(closedLines).toHaveLength(16)
-  })
-
-  it('writes polygon mesh DXF fields and vertex records', () => {
-    const mesh = new AcDbPolygonMesh(
-      2,
-      2,
-      [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 1 },
-        { x: 0, y: 1, z: 2 },
-        { x: 1, y: 1, z: 3 }
-      ],
-      true,
-      true
-    )
-    attachEntityToNewModelSpace(mesh)
-
-    const filerFields = new AcDbDxfFiler()
-    expect(mesh.dxfOutFields(filerFields)).toBe(mesh)
-    const fieldsDxf = filerFields.toString()
-    expect(getDxfGroupValues(fieldsDxf, 100)).toContain('AcDbPolygonMesh')
-    expect(getDxfGroupValues(fieldsDxf, 66)).toContain('1')
-    expect(getDxfGroupValues(fieldsDxf, 70)).toContain('49')
-    expect(getDxfGroupValues(fieldsDxf, 71)).toContain('2')
-    expect(getDxfGroupValues(fieldsDxf, 72)).toContain('2')
-
-    const filerOut = new AcDbDxfFiler()
-    expect(mesh.dxfOut(filerOut, true)).toBe(mesh)
-    const outDxf = filerOut.toString()
-
-    expect(
-      getDxfGroupValues(outDxf, 0).filter(v => v === 'VERTEX')
-    ).toHaveLength(4)
-    expect(getDxfGroupValues(outDxf, 0)).toContain('SEQEND')
-    expect(getDxfGroupValues(outDxf, 100)).toContain('AcDbPolygonMeshVertex')
-    expect(
-      getDxfGroupValues(outDxf, 70).filter(v => v === '16').length
-    ).toBeGreaterThanOrEqual(4)
-    expect(getDxfGroupValues(outDxf, 10).slice(-4)).toEqual([
-      '0',
-      '1',
-      '0',
-      '1'
-    ])
-    expect(getDxfGroupValues(outDxf, 20).slice(-4)).toEqual([
-      '0',
-      '0',
-      '1',
-      '1'
-    ])
-    expect(getDxfGroupValues(outDxf, 30).slice(-4)).toEqual([
-      '0',
-      '1',
-      '2',
-      '3'
-    ])
-
-    const filerOutWithoutAllXData = new AcDbDxfFiler()
-    expect(mesh.dxfOut(filerOutWithoutAllXData)).toBe(mesh)
   })
 })

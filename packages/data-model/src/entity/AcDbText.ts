@@ -1,6 +1,5 @@
 import {
   AcGeBox3d,
-  AcGeMathUtil,
   AcGeMatrix3d,
   AcGePoint3d,
   AcGePoint3dLike,
@@ -18,7 +17,6 @@ import {
   AcGiTextStyle
 } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbEntity } from './AcDbEntity'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
@@ -1024,169 +1022,6 @@ export class AcDbText extends AcDbEntity {
         if (h === AcDbTextHorizontalMode.RIGHT)
           return AcGiMTextAttachmentPoint.BaselineRight
         return AcGiMTextAttachmentPoint.BaselineLeft
-    }
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbText')
-    filer.writePoint3d(10, this.position)
-    filer.writeDouble(39, this.thickness)
-    filer.writeDouble(40, this.height)
-    filer.writeString(1, this.textString)
-    filer.writeAngle(50, this.rotation)
-    filer.writeDouble(41, this.widthFactor)
-    filer.writeAngle(51, this.oblique)
-    filer.writeString(7, this.styleName)
-    if (this.generationFlag !== 0) {
-      filer.writeInt16(71, this.generationFlag)
-    }
-    filer.writeInt16(72, this.horizontalMode)
-    filer.writeInt16(73, this.verticalMode)
-    // Group 11 holds the alignment point used when horizontal/vertical modes
-    // are non-default. For LEFT + BASELINE, AutoCAD writes the position again
-    // (or zero), so we mirror by emitting `alignmentPoint`, which defaults to
-    // a copy of `position` for entities created in code.
-    filer.writePoint3d(11, this.alignmentPoint)
-    filer.writeVector3d(210, this.normal)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbText')
-
-    let px = this.position.x
-    let py = this.position.y
-    let pz = this.position.z
-    let ax = this.alignmentPoint.x
-    let ay = this.alignmentPoint.y
-    let az = this.alignmentPoint.z
-    let hasAlignment = false
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-          px = n
-          break
-        case 20:
-          py = n
-          break
-        case 30:
-          pz = n
-          break
-        case 11:
-          ax = n
-          hasAlignment = true
-          break
-        case 21:
-          ay = n
-          hasAlignment = true
-          break
-        case 31:
-          az = n
-          hasAlignment = true
-          break
-        case 1:
-          this.textString = String(item.value)
-          break
-        case 7:
-          this.styleName = String(item.value)
-          break
-        case 39:
-          this.thickness = n
-          break
-        case 40:
-          this.height = n
-          break
-        case 41:
-          this.widthFactor = n
-          break
-        case 50:
-          this.rotation = AcGeMathUtil.degToRad(n)
-          break
-        case 51:
-          this.oblique = AcGeMathUtil.degToRad(n)
-          break
-        case 71:
-          this.generationFlag = n
-          break
-        case 72:
-          this.horizontalMode = n
-          break
-        case 73:
-          this.verticalMode = n
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        case 100: {
-          // TEXT uses a duplicated AcDbText marker before group 73. ATTRIB /
-          // ATTDEF follow with a different subclass — hand those off.
-          const marker = String(item.value)
-          if (marker === 'AcDbText') {
-            break
-          }
-          filer.pushBackItem(item)
-          this.finishTextDxfIn(px, py, pz, ax, ay, az, hasAlignment, nx, ny, nz)
-          return this
-        }
-        default:
-          // Unknown optional TEXT codes — keep scanning within this object.
-          break
-      }
-    }
-
-    this.finishTextDxfIn(px, py, pz, ax, ay, az, hasAlignment, nx, ny, nz)
-    return this
-  }
-
-  private finishTextDxfIn(
-    px: number,
-    py: number,
-    pz: number,
-    ax: number,
-    ay: number,
-    az: number,
-    hasAlignment: boolean,
-    nx: number,
-    ny: number,
-    nz: number
-  ) {
-    this.position = new AcGePoint3d(px, py, pz)
-    // The assignment goes through the setter (which marks the alignment
-    // point as provided), so set the flag explicitly afterwards: only a
-    // present and non-zero group 11 counts as provided; the fallback branch
-    // merely mirrors `position` into `alignmentPoint`.
-    if (hasAlignment && !(ax === 0 && ay === 0 && az === 0)) {
-      this.alignmentPoint = new AcGePoint3d(ax, ay, az)
-      this._hasAlignmentPoint = true
-    } else {
-      this.alignmentPoint = new AcGePoint3d(px, py, pz)
-      this._hasAlignmentPoint = false
-    }
-    const normal = new AcGeVector3d(nx, ny, nz)
-    if (normal.lengthSq() > 0) {
-      this.normal.copy(normal.normalize())
     }
   }
 }

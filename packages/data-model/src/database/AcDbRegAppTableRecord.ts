@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import {
   AcDbSymbolTableRecord,
   AcDbSymbolTableRecordAttrs
@@ -25,47 +25,6 @@ export class AcDbRegAppTableRecord extends AcDbSymbolTableRecord<AcDbRegAppTable
       attrs = { name: attrs }
     }
     super(attrs)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbRegAppTableRecord')
-    filer.writeString(2, this.name)
-    filer.writeInt16(70, 0)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbSymbolTableRecord')
-    filer.atSubclassData('AcDbRegAppTableRecord')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 2:
-          this.name = String(item.value)
-          break
-        case 70:
-          // Standard flags — unused beyond presence.
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

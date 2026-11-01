@@ -6,7 +6,6 @@
  */
 export const zh: Record<string, string> = {
   'toolbar.select': '选择',
-  'toolbar.open': '打开',
   'toolbar.pan': '平移',
   'toolbar.zoom': '缩放',
   'toolbar.zoomExtent': '范围',

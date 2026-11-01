@@ -7,8 +7,8 @@
 
 <a href="https://trendshift.io/repositories/16129?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-16129" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/16129/daily?language=TypeScript" alt="mlightcad%2Fcad-viewer | Trendshift" width="250" height="55"/></a>
 
-O cad-viewer é `o primeiro visualizador e editor web de DXF/DWG do mundo que funciona inteiramente no navegador, sem depender de nenhum serviço de backend`.
-Ao realizar a análise de DWG/DXF, o processamento geométrico e a renderização diretamente no navegador, o cad-viewer possibilita visualização e edição CAD verdadeiramente serverless, ideal para aplicativos em nuvem, uso offline e fluxos de trabalho sensíveis à privacidade.
+O cad-viewer é um editor de desenhos CAD que funciona `inteiramente no navegador, sem depender de nenhum serviço de backend`. Cada sessão começa com um novo desenho em branco; os desenhos não são carregados de arquivos nem salvos neles.
+O processamento geométrico e a renderização acontecem diretamente no navegador, o que torna o cad-viewer ideal para uso offline e fluxos de trabalho sensíveis à privacidade.
 
 - [**🌐 Página inicial**](https://mlightcad.com/)
 - **🌐 Demo ao vivo**: [Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
@@ -20,41 +20,9 @@ Ao realizar a análise de DWG/DXF, o processamento geométrico e a renderizaçã
 - DEV.to: [@mlightcad](https://dev.to/mlightcad)
 - Juejin(稀土掘金): [@mlightcad](https://juejin.cn/column/7501992214283501579)
 
-### Aplicativos construídos com cad-viewer
-
-A equipe [Thingraph](https://cad.thingraph.site/) constrói visualizadores DWG/DXF em produção e integrações de plataforma sobre o cad-viewer, atendendo dezenas de milhares de usuários em todo o mundo:
-
-- [DWG Viewer Web App](https://cad.thingraph.site/dwg-viewer) — Visualizador DWG/DXF baseado em navegador usado por equipes de engenharia em todo o mundo para acesso rápido e serverless a desenhos. Instale para sua plataforma:
-  - [Google Drive](https://workspace.google.com/marketplace/app/dwg_viewer/641533811831) — abra DWG/DXF do Drive com **Abrir com**
-  - [VS Code](https://marketplace.visualstudio.com/items?itemName=thingraph.dwg-viewer) — editor somente leitura personalizado para `.dwg` / `.dxf`
-  - [Cursor](https://open-vsx.org/extension/thingraph/dwg-viewer) — mesma extensão via Open VSX
-  - [Confluence](https://marketplace.atlassian.com/apps/2890472615/dwg-viewer-for-confluence) — incorpore pré-visualizações DWG/DXF em páginas
-  - [Windows Explorer](https://cad.thingraph.site/install/windows) — miniatura e pré-visualização no Explorador de Arquivos
-
-Aplicativos e integrações da comunidade:
-
-- [flyfish-dev/cad-viewer](https://github.com/flyfish-dev/cad-viewer) — Visualizador CAD orientado à produção para DWG, DXF, DWF, DWFx e XPS ([demo ao vivo](https://cad-viewer-iys.pages.dev))
-- [Nextcloud CAD Viewer](https://github.com/ashcoft/nextcloud-cad-viewer) — App nativo do Nextcloud para visualizar DWG/DXF no navegador ([App Store](https://apps.nextcloud.com/apps/cad_viewer))
-
-Pacotes desktop Linux da comunidade:
-
-- [CAD Viewer AppImage](https://github.com/pass-wind/cad-viewer-appimage) — AppImage baseado em Electron para Linux (~114 MB), testado no Fedora
-- [cad-viewer (AUR)](https://aur.archlinux.org/packages/cad-viewer) — Pacote fonte Arch Linux usando Electron do sistema (~5,4 MB)
-- [cad-viewer-bin (AUR)](https://aur.archlinux.org/packages/cad-viewer-bin) — Pacote binário Arch Linux com fontes/templates incluídos para abertura totalmente offline de desenhos
-
-### Apps de demonstração (Demo Apps)
-
-Apps de exemplo oficiais que mostram como integrar o cad-viewer no seu próprio produto:
-
-- [cad-simple-viewer-example](https://github.com/mlightcad/cad-simple-viewer-example) — Host mínimo em TypeScript vanilla para [`@mlightcad/cad-simple-viewer`](https://www.npmjs.com/package/@mlightcad/cad-simple-viewer): abra DXF/DWG locais ou de CDN, execute comandos por uma barra de ferramentas compacta e carregue sob demanda plugins de exportação HTML/PDF/SVG sem a UI Vue completa.
-- [cad-viewer-example](https://github.com/mlightcad/cad-viewer-example) — App Vue 3 completa baseada em [`@mlightcad/cad-viewer`](https://www.npmjs.com/package/@mlightcad/cad-viewer) com menus, ribbons, diálogos, linha de comando e barra de status ([demo ao vivo](https://mlightcad.github.io/cad-viewer-example/)).
-- [cad-viewer-nextjs-demo](https://github.com/mlightcad/cad-viewer-nextjs-demo) — Demo de “unidade CAD” em Next.js: upload retomável em chunks de DWG/DXF, lista de arquivos com SQLite e miniaturas de pré-visualização, e abertura com **parse ao vivo no navegador** (`cad-simple-viewer`) ou **pré-renderização ACEX no servidor** (abertura mais rápida, menos memória).
-
-![Demonstração rápida do CAD-Viewer](./assets/cad-viewer.gif)
-
 ## Recursos
 
-- Visualização **de alto desempenho** de arquivos DWG/DXF grandes com renderização suave a 60+ FPS
+- Renderização **de alto desempenho** de desenhos grandes a 60+ FPS suaves
 - **Sem backend necessário** — Os arquivos são analisados e processados inteiramente no navegador
 - **Segurança de dados aprimorada** — Os arquivos nunca saem do seu dispositivo, garantindo privacidade total
 - **Integração fácil** — Sem configuração de servidor ou infraestrutura de backend
@@ -63,20 +31,6 @@ Apps de exemplo oficiais que mostram como integrar o cad-viewer no seu próprio 
 - Fluxos de trabalho de edição offline e online
 - Motores de renderização 3D THREE.js com técnicas avançadas de otimização
 - Projetado para extensibilidade e integração com plataformas como CMS, Notion e WeChat
-
-## Incorporar DWG/DXF com uma linha de código
-
-Adicione visualização de DWG/DXF a qualquer site com um único `<iframe>` — sem backend CAD e sem enviar desenhos para a nuvem de terceiros. O arquivo é buscado da **sua** URL e analisado inteiramente no navegador do visitante, com ferramentas de revisão (pan, zoom, medição, anotação) prontas para uso.
-
-```html
-<iframe
-  src="https://mlightcad.com/embed.html?url=https://example.com/plans/floor.dwg&mode=review&toolbar=1"
-  style="width:100%;height:600px;border:0"
-  allowfullscreen>
-</iframe>
-```
-
-Artigo e playground ao vivo: [Embed DWG/DXF on Your Website Without Uploading a Single Byte](https://medium.com/@mlightcad/embed-dwg-dxf-on-your-website-without-uploading-a-single-byte-cf5f6ad484c4).
 
 ## Primeiros passos
 
@@ -165,7 +119,7 @@ Todos os widgets são agnósticos a framework (DOM puro). O app completo Vue [`c
 
 ## Desempenho
 
-O CAD-Viewer foi projetado para **desempenho excepcional** e pode lidar com arquivos DXF/DWG muito grandes mantendo altas taxas de quadros. Ele emprega múltiplas tecnologias avançadas de renderização para otimizar o desempenho:
+O CAD-Viewer foi projetado para **desempenho excepcional** e pode lidar com desenhos muito grandes mantendo altas taxas de quadros. Ele emprega múltiplas tecnologias avançadas de renderização para otimizar o desempenho:
 
 - **Materiais Shader personalizados**: Usa materiais shader acelerados por GPU para renderizar tipos de linha complexos e padrões de preenchimento hatch com eficiência
 - **Agrupamento de geometria**: Mescla pontos, linhas e áreas com o mesmo material para reduzir drasticamente draw calls
@@ -175,21 +129,6 @@ O CAD-Viewer foi projetado para **desempenho excepcional** e pode lidar com arqu
 - **Otimização WebGL**: Aproveita recursos modernos de WebGL para renderização acelerada por hardware
 
 Essas otimizações permitem que o CAD-Viewer renderize suavemente desenhos CAD complexos com milhares de entidades mantendo interações responsivas do usuário.
-
-## Problemas conhecidos
-
-O caminho DWG open-source padrão é baseado em [LibreDWG](https://github.com/LibreDWG/libredwg) por meio do pacote opcional `@mlightcad/libredwg-converter`. Funciona bem para muitos desenhos, mas sua cobertura de entidades ainda é limitada, o bundle WASM é muito maior, a inicialização é mais lenta, o uso de memória é alto e arquivos DWG muito grandes podem encontrar erros de falta de memória. Também introduz considerações de licenciamento GPL para produtos comerciais closed-source. O `@mlightcad/cad-simple-viewer` **não** depende nem registra esse conversor por padrão — os apps host (veja os pacotes de exemplo) optam explicitamente.
-
-Se você precisa de melhor compatibilidade, menor uso de memória, suporte a arquivos grandes ou uma história de licenciamento comercial mais limpa, veja nosso [**parser DWG proprietário**](./PROPRIETARY-PARSER.md).
-
-| Item | Parser baseado em LibreDWG | Parser DWG proprietário |
-|------|----------------------------|-------------------------|
-| Entidades suportadas | Cobertura limitada | Cobertura mais ampla |
-| Tamanho do bundle | ~13 MB | ~437 KB |
-| Velocidade de carregamento | Inicialização mais lenta | Inicialização muito mais rápida |
-| Uso de memória | Maior | Menor |
-| Arquivos DWG grandes | Pode causar OOM em arquivos grandes | Sem esse problema |
-| Licença | Risco de propagação GPL | Sem problema de propagação GPL |
 
 ## Roteiro
 
@@ -201,13 +140,6 @@ Legenda:
 - [ ] ⏳ Em andamento
 
 ### Camada central de arquivos e dados
-
-#### Suporte a arquivos
-
-* [x] Carregamento DXF
-* [x] Carregamento DWG
-* [x] Streaming de arquivos grandes / carregamento incremental
-* [ ] ⏳ Compatibilidade de versão de arquivo (R12–Latest)
 
 #### Modelo de dados
 
@@ -404,7 +336,3 @@ Contribuições são bem-vindas! Abra issues ou pull requests para correções d
 ## Licença
 
 O monorepo cad-viewer é licenciado principalmente sob [MIT](LICENSE).
-
-O carregamento DXF usa o parser MIT integrado em `@mlightcad/data-model`. O carregamento DWG é **opt-in**: o `@mlightcad/cad-simple-viewer` não depende de pacotes GPL do LibreDWG. Hosts que desejam suporte DWG open-source adicionam `@mlightcad/libredwg-converter` (GPL-3.0) por conta própria, implantam o worker + wasm e registram o conversor. Se você distribui um produto closed-source e não pode distribuir código GPL aos seus clientes, use o [**parser DWG proprietário**](./PROPRIETARY-PARSER.md).
-
-→ **Parser comercial:** [PROPRIETARY-PARSER.md](./PROPRIETARY-PARSER.md) (escopo, licenciamento, preços, integração, conformidade GPL, suporte)

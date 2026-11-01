@@ -20,7 +20,6 @@
     "copy:workers": "pnpm -r --filter \"./packages/**\" run copy:workers",
     "dev": "nx run @mlightcad/cad-viewer-example:dev",
     "dev:simple": "nx run @mlightcad/cad-simple-viewer-example:dev",
-    "dev:diff": "nx run @mlightcad/cad-diff-viewer-example:dev",
     "docs:api": "typedoc --skipErrorChecking",
     "docs:build": "vitepress build docs",
     "docs:all": "pnpm docs:build && pnpm docs:api",
@@ -31,7 +30,6 @@
     "lint:fix": "nx run-many -t lint:fix",
     "preview": "nx run @mlightcad/cad-viewer-example:preview",
     "preview:simple": "nx run @mlightcad/cad-simple-viewer-example:preview",
-    "preview:diff": "nx run @mlightcad/cad-diff-viewer-example:preview",
     "pre-serve": "nx run @mlightcad/cad-viewer-examples:pre-serve",
     "publish:viewer": "pnpm -r publish --access public --no-git-checks",
     "publish:viewer:preview": "pnpm -r publish --access public --no-git-checks --tag preview",
@@ -40,8 +38,7 @@
     "sync:versions:check": "node tools/sync-versions.mjs --check",
     "serve": "nx run @mlightcad/cad-viewer-examples:serve",
     "test": "jest && pnpm --filter @mlightcad/mtext-renderer --filter @mlightcad/mtext-input-box --filter @mlightcad/text-box-cursor --filter @mlightcad/ribbon test",
-    "test:e2e": "pnpm --filter @mlightcad/cad-viewer-example test:e2e",
-    "use:dwg-converter": "node tools/use-dwg-converter.mjs"
+    "test:e2e": "pnpm --filter @mlightcad/cad-viewer-example test:e2e"
   },
   "engines": {
     "node": ">=24",

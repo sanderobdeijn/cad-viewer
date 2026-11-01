@@ -17,12 +17,6 @@ export default {
         'فتح لوحة الموارد المفقودة والخارجية للخطوط والصور والمراجع الخارجية'
     },
 
-    xref: {
-      ...enCommand.ACAD.xref,
-      description:
-        'فتح لوحة الموارد المفقودة والخارجية على تبويب المراجع الخارجية'
-    },
-
     properties: {
       ...enCommand.ACAD.properties,
       description: 'فتح لوحة خصائص العناصر'

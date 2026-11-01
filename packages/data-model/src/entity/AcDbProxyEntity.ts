@@ -6,12 +6,7 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
-import {
-  acdbBytesToHexString,
-  acdbLoadProxyGraphicFromDxf,
-  AcDbProxyGraphic
-} from '../misc/proxyGraphic'
+import { acdbLoadProxyGraphicFromDxf, AcDbProxyGraphic } from '../misc/proxyGraphic'
 import { AcDbEntity } from './AcDbEntity'
 import {
   acdbForEachGripIndex,
@@ -446,99 +441,6 @@ export class AcDbProxyEntity extends AcDbEntity {
       drawable.applyMatrix(this._worldTransform)
     }
     return drawable
-  }
-
-  /**
-   * Writes DXF subclass fields for this proxy entity.
-   *
-   * Emits the `AcDbProxyEntity` subclass marker followed by Autodesk group
-   * codes **90**, **91**, **95**, **70**, **160**, and **310**, plus optional
-   * **1** / **3** when original class metadata is available.
-   *
-   * @param filer - DXF output filer.
-   * @returns This entity for chaining.
-   * @see https://help.autodesk.com/view/OARX/2024/ENU/?guid=GUID-89A690F9-E859-4D57-89EA-750F3FB76C6B
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbProxyEntity')
-    if (this._originalDxfName) {
-      filer.writeString(1, this._originalDxfName)
-    }
-    if (this._originalClassName) {
-      filer.writeString(3, this._originalClassName)
-    }
-    filer.writeInt32(90, this._proxyEntityClassId || 498)
-    if (this._applicationEntityClassId) {
-      filer.writeInt32(91, this._applicationEntityClassId)
-    }
-    if (this._objectDrawingFormat) {
-      filer.writeInt32(95, this._objectDrawingFormat)
-    }
-    filer.writeInt16(70, this._originalDataFormat)
-    if (this._proxyGraphic?.length) {
-      filer.writeInt32(160, this._proxyGraphic.length)
-      let index = 0
-      while (index < this._proxyGraphic.length) {
-        const chunk = this._proxyGraphic.subarray(index, index + 127)
-        filer.writeString(310, acdbBytesToHexString(chunk))
-        index += 127
-      }
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbProxyEntity')
-
-    // ASCII readers may leave hex as string; typed binary pairs yield Uint8Array.
-    const dataChunks: Array<string | Uint8Array> = []
-    let graphicLength: number | undefined
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 1:
-          this.originalDxfName = String(item.value)
-          break
-        case 3:
-          this.originalClassName = String(item.value)
-          break
-        case 70:
-          this.originalDataFormat = n
-          break
-        case 90:
-          this.proxyEntityClassId = n
-          break
-        case 91:
-          this.applicationEntityClassId = n
-          break
-        case 95:
-          this.objectDrawingFormat = n
-          break
-        case 160:
-          graphicLength = n
-          break
-        case 310:
-          if (item.value instanceof Uint8Array) {
-            dataChunks.push(item.value)
-          } else {
-            dataChunks.push(String(item.value))
-          }
-          break
-        default:
-          break
-      }
-    }
-
-    if (dataChunks.length > 0) {
-      this.loadProxyGraphicFromDxf(graphicLength, dataChunks)
-    }
-    return this
   }
 
   /**

@@ -3,11 +3,8 @@ import {
   AcApDocManager,
   AcApDocument,
   AcDbDocumentEventArgs,
-  type AcEdEvents,
-  AcEdOpenMode,
-  eventBus
+  AcEdOpenMode
 } from '@mlightcad/cad-simple-viewer'
-import type { AcDbOpenDatabaseErrorCode } from '@mlightcad/data-model'
 import {
   computed,
   type ComputedRef,
@@ -89,11 +86,6 @@ export interface UseDocumentReturn {
    */
   endDocumentOpening: () => void
 
-  /**
-   * Structured failure category from the most recent `failed-to-open-file`
-   * event, when available.
-   */
-  lastOpenErrorCode: DeepReadonly<Ref<AcDbOpenDatabaseErrorCode | undefined>>
 }
 
 /** Shared flag indicating whether a document open operation is in progress. */
@@ -128,7 +120,6 @@ const displayName = computed(() => {
 })
 
 /** Structured error code from the latest failed open attempt. */
-const lastOpenErrorCode = ref<AcDbOpenDatabaseErrorCode>()
 
 /** Whether lifecycle listeners have already been attached to the doc manager. */
 let isBound = false
@@ -206,19 +197,7 @@ function onDocumentToBeOpened(args: AcDbDocumentEventArgs) {
  */
 function onDocumentActivated(args: AcDbDocumentEventArgs) {
   endDocumentOpening()
-  lastOpenErrorCode.value = undefined
   syncFromDocument(args.doc)
-}
-
-/**
- * Handles the global `failed-to-open-file` event.
- *
- * Ensures {@link isDocumentOpening} is cleared when an open attempt fails.
- */
-function onFailedToOpenFile(params: AcEdEvents['failed-to-open-file']) {
-  endDocumentOpening()
-  lastOpenErrorCode.value = params.errorCode
-  syncFromDocument()
 }
 
 /**
@@ -240,7 +219,6 @@ function unbind() {
     onDocumentToBeOpened
   )
   boundManager.events.documentActivated.removeEventListener(onDocumentActivated)
-  eventBus.off('failed-to-open-file', onFailedToOpenFile)
   isBound = false
   boundManager = null
 }
@@ -270,7 +248,6 @@ function tryBind() {
     syncFromDocument(manager.curDocument)
     manager.events.documentToBeOpened.addEventListener(onDocumentToBeOpened)
     manager.events.documentActivated.addEventListener(onDocumentActivated)
-    eventBus.on('failed-to-open-file', onFailedToOpenFile)
     boundManager = manager
     isBound = true
     stopRetryTimer()
@@ -309,8 +286,6 @@ function ensureBound() {
  * - Updates {@link openMode} as soon as `documentToBeOpened` fires
  * - Synchronizes {@link fileName}, {@link docTitle}, and {@link openMode}
  *   when `documentActivated` fires
- * - Clears the opening state when `failed-to-open-file` is emitted
- * - Records {@link lastOpenErrorCode} from structured open failures
  *
  * @returns Shared reactive document state and manual open-state helpers
  */
@@ -329,6 +304,5 @@ export function useDocument(): UseDocumentReturn {
     displayName,
     beginDocumentOpening,
     endDocumentOpening,
-    lastOpenErrorCode: readonly(lastOpenErrorCode)
   }
 }

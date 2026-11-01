@@ -4,7 +4,7 @@ import {
   AcGeVector3d,
   TAU
 } from '@mlightcad/geometry-engine'
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbEllipse } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -405,41 +405,6 @@ describe('AcDbEllipse', () => {
 
     expect(ellipse.subWorldDraw(renderer as never)).toBe(drawResult)
     expect(renderer.ellipticalArc).toHaveBeenCalledTimes(1)
-  })
-
-  it('writes ellipse-specific DXF fields', () => {
-    const db = createWorkingDb()
-    const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 3),
-      AcGeVector3d.Z_AXIS,
-      AcGeVector3d.Y_AXIS,
-      4,
-      1,
-      0.25,
-      1.5
-    )
-
-    db.tables.blockTable.modelSpace.appendEntity(ellipse)
-
-    const filer = new AcDbDxfFiler()
-
-    expect(ellipse.dxfOutFields(filer)).toBe(ellipse)
-
-    const dxf = filer.toString()
-    expect(dxf).toContain('100\nAcDbEntity')
-    expect(dxf).toContain('100\nAcDbEllipse')
-    expect(dxf).toContain('10\n1')
-    expect(dxf).toContain('20\n2')
-    expect(dxf).toContain('30\n3')
-    expect(dxf).toContain('11\n0')
-    expect(dxf).toContain('21\n4')
-    expect(dxf).toContain('31\n0')
-    expect(dxf).toContain('210\n0')
-    expect(dxf).toContain('220\n0')
-    expect(dxf).toContain('230\n1')
-    expect(dxf).toContain('40\n0.25')
-    expect(dxf).toContain('41\n0.25')
-    expect(dxf).toContain('42\n1.5')
   })
 
   it('increases both radii when offsetting outward', () => {

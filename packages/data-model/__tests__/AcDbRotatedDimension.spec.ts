@@ -23,20 +23,6 @@ describe('AcDbRotatedDimension', () => {
     )
   })
 
-  it('writes AcDbRotatedDimension subclass marker in DXF output', () => {
-    const db = createDb()
-
-    const rotated = new AcDbRotatedDimension(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(10, 0, 0),
-      new AcGePoint3d(5, 2, 0)
-    )
-    db.tables.blockTable.modelSpace.appendEntity(rotated)
-
-    const dxf = db.dxfOut(undefined, 6)
-    expect(dxf).toContain('100\nAcDbRotatedDimension\n')
-  })
-
   it('returns geometricExtents and updates when dimBlockPosition changes', () => {
     const db = createDb()
 

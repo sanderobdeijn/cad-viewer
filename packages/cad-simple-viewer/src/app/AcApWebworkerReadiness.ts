@@ -9,19 +9,16 @@ export const DEFAULT_WEBWORKER_FILE_URLS = {
 /**
  * Resolves configured worker URLs to strings for readiness probes.
  *
- * Always includes the MTEXT worker. Includes `dwgParser` only when the host
- * provides one (DWG converters are optional / host-registered).
+ * Currently only the MTEXT worker.
  */
 export function resolveWebworkerFileUrls(
   webworkerFileUrls?: AcApWebworkerFiles
 ): string[] {
-  const urls = [
-    webworkerFileUrls?.mtextRender ?? DEFAULT_WEBWORKER_FILE_URLS.mtextRender
+  return [
+    String(
+      webworkerFileUrls?.mtextRender ?? DEFAULT_WEBWORKER_FILE_URLS.mtextRender
+    )
   ]
-  if (webworkerFileUrls?.dwgParser) {
-    urls.push(webworkerFileUrls.dwgParser)
-  }
-  return urls.map(url => String(url))
 }
 
 let cachedReadinessKey: string | undefined

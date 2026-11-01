@@ -5,7 +5,7 @@ import {
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler, acdbHostApplicationServices } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { TEMP_OBJECT_ID_PREFIX } from '../src/base/AcDbObject'
 import { AcDbDatabase } from '../src/database'
 import { AcDbSystemVariables } from '../src/database/AcDbSystemVariables'
@@ -13,11 +13,7 @@ import { AcDbSysVarManager } from '../src/database/AcDbSysVarManager'
 import { AcDbPolyline } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-import {
-  attachEntityToNewModelSpace,
-  getDxfGroupValues,
-  setupWorkingDatabase
-} from '../test-utils/entityTestUtils'
+import { setupWorkingDatabase } from '../test-utils/entityTestUtils'
 
 describe('AcDbPolyline', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -801,74 +797,6 @@ describe('AcDbPolyline', () => {
     expect(renderer.lines).toHaveBeenCalledTimes(1)
     expect(areaArg.loops.length).toBeGreaterThan(2)
     expect(areaArg.area).toBeLessThan(70 * 200)
-  })
-
-  it('writes LWPOLYLINE-specific dxf fields and vertices', () => {
-    const polyline = new AcDbPolyline()
-    attachEntityToNewModelSpace(polyline)
-
-    polyline.closed = true
-    polyline.elevation = 12
-    polyline.addVertexAt(0, new AcGePoint2d(1, 2))
-    polyline.addVertexAt(1, new AcGePoint2d(3, 4))
-
-    const filer = new AcDbDxfFiler()
-    expect(polyline.dxfOutFields(filer)).toBe(polyline)
-
-    const dxf = filer.toString()
-    expect(getDxfGroupValues(dxf, 100)).toContain('AcDbPolyline')
-    expect(getDxfGroupValues(dxf, 90)).toContain('2')
-    expect(getDxfGroupValues(dxf, 70)).toContain('1')
-    expect(getDxfGroupValues(dxf, 38)).toContain('12')
-    expect(getDxfGroupValues(dxf, 10)).toEqual(['1', '3'])
-    expect(getDxfGroupValues(dxf, 20)).toEqual(['2', '4'])
-  })
-
-  it('writes constant width as group 43 for uniform thick polylines', () => {
-    const polyline = new AcDbPolyline()
-    attachEntityToNewModelSpace(polyline)
-
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 40, 40)
-    polyline.addVertexAt(1, new AcGePoint2d(100, 0), 0, 40, 40)
-
-    const filer = new AcDbDxfFiler()
-    polyline.dxfOutFields(filer)
-
-    const dxf = filer.toString()
-    expect(getDxfGroupValues(dxf, 43)).toEqual(['40'])
-    expect(getDxfGroupValues(dxf, 40)).toEqual([])
-    expect(getDxfGroupValues(dxf, 41)).toEqual([])
-  })
-
-  it('writes per-vertex widths and bulges when width is not constant', () => {
-    const polyline = new AcDbPolyline()
-    attachEntityToNewModelSpace(polyline)
-
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0.5, 10, 20)
-    polyline.addVertexAt(1, new AcGePoint2d(100, 0), 0, 5, 5)
-
-    const filer = new AcDbDxfFiler()
-    polyline.dxfOutFields(filer)
-
-    const dxf = filer.toString()
-    expect(getDxfGroupValues(dxf, 43)).toEqual([])
-    expect(getDxfGroupValues(dxf, 40)).toEqual(['10', '5'])
-    expect(getDxfGroupValues(dxf, 41)).toEqual(['20', '5'])
-    expect(getDxfGroupValues(dxf, 42)).toEqual(['0.5'])
-  })
-
-  it('writes closed flag as 0 in dxf fields when polyline is open', () => {
-    const polyline = new AcDbPolyline()
-    attachEntityToNewModelSpace(polyline)
-
-    polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-
-    const filer = new AcDbDxfFiler()
-    polyline.dxfOutFields(filer)
-
-    const dxf = filer.toString()
-    expect(getDxfGroupValues(dxf, 70)).toContain('0')
   })
 
   it('offsets a closed square', () => {

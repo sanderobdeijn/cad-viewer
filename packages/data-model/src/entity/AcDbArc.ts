@@ -8,23 +8,17 @@ import {
   AcGeMatrix3d,
   AcGePoint3d,
   AcGePoint3dLike,
-  acgeTransformOcsPointToWcsInto,
-  acgeTransformWcsPointToOcs,
   AcGeVector3d,
-  AcGeVector3dLike} from '@mlightcad/geometry-engine'
+  AcGeVector3dLike
+} from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { AcDbEntityProperties } from './AcDbEntityProperties'
 import { acdbForEachGripIndex } from './AcDbGripHelpers'
 import { acdbPickNearestOsnapPoint } from './AcDbOsnapHelpers'
-
-/** Reused across dxfIn to avoid per-entity temporaries (parse is sequential). */
-const _dxfInNormal = /*@__PURE__*/ new AcGeVector3d()
 const _dxfInRefVec = /*@__PURE__*/ new AcGeVector3d()
-const _dxfInPoint = /*@__PURE__*/ new AcGePoint3d()
 
 /**
  * Represents an arc entity in AutoCAD.
@@ -679,140 +673,6 @@ export class AcDbArc extends AcDbCurve {
    */
   subWorldDraw(renderer: AcGiRenderer) {
     return renderer.circularArc(this._geo)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    const centerOcs = acgeTransformWcsPointToOcs(this.center, this.normal)
-    // AutoCAD ARC uses AcDbCircle (center/radius/normal) + AcDbArc (angles).
-    filer.writeSubclassMarker('AcDbCircle')
-    if (this.thickness !== 0) {
-      filer.writeDouble(39, this.thickness)
-    }
-    filer.writePoint3d(10, centerOcs)
-    filer.writeDouble(40, this.radius)
-    filer.writeVector3d(210, this.normal)
-    filer.writeSubclassMarker('AcDbArc')
-    filer.writeAngle(50, acgeGetOcsAngle(this.center, this.startPoint, this.normal))
-    filer.writeAngle(51, acgeGetOcsAngle(this.center, this.endPoint, this.normal))
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-
-    let x = 0
-    let y = 0
-    let z = 0
-    let radius = this.radius
-    let startDeg = AcGeMathUtil.radToDeg(this.startAngle)
-    let endDeg = AcGeMathUtil.radToDeg(this.endAngle)
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-
-    const readGeometryCodes = (
-      stopOnNextSubclass: boolean
-    ): boolean => {
-      while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-        const item = filer.readItem()
-        if (!item) break
-        const code = Number(item.code)
-        if (stopOnNextSubclass && code === 100) {
-          filer.pushBackItem(item)
-          return true
-        }
-        const n = Number(item.value)
-        switch (code) {
-          case 10:
-            x = n
-            break
-          case 20:
-            y = n
-            break
-          case 30:
-            z = n
-            break
-          case 40:
-            radius = n
-            break
-          case 39:
-            this.thickness = n
-            break
-          case 50:
-            startDeg = n
-            break
-          case 51:
-            endDeg = n
-            break
-          case 210:
-            nx = n
-            break
-          case 220:
-            ny = n
-            break
-          case 230:
-            nz = n
-            break
-          default:
-            break
-        }
-      }
-      return false
-    }
-
-    // Prefer AutoCAD layout: AcDbCircle then AcDbArc. Also accept AcDbArc-only
-    // (legacy writers that inlined center/radius under AcDbArc).
-    if (filer.atSubclassData('AcDbCircle')) {
-      readGeometryCodes(true)
-    }
-    if (filer.atSubclassData('AcDbArc')) {
-      readGeometryCodes(false)
-    } else if (!filer.peekItem() || Number(filer.peekItem()?.code) !== 100) {
-      // No subclass markers left — consume remaining geometry codes if present.
-      readGeometryCodes(false)
-    }
-
-    this.applyDxfInGeometry(x, y, z, radius, startDeg, endDeg, nx, ny, nz)
-    return this
-  }
-
-  private applyDxfInGeometry(
-    x: number,
-    y: number,
-    z: number,
-    radius: number,
-    startDeg: number,
-    endDeg: number,
-    nx: number,
-    ny: number,
-    nz: number
-  ) {
-    _dxfInNormal.set(nx, ny, nz)
-    if (_dxfInNormal.lengthSq() > 0) {
-      _dxfInNormal.normalize()
-    }
-    // DXF arcs are created with a default +Z normal/refVec, then filled via
-    // dxfIn. Sync refVec with the OCS X axis or -Z extrusions tessellate on
-    // the mirrored side of the center (messy chords for large-radius fillets).
-    acgeGetOcsReferenceVectorInto(_dxfInRefVec, _dxfInNormal)
-    acgeTransformOcsPointToWcsInto(_dxfInPoint, { x, y, z }, _dxfInNormal)
-    // Build the final geometry in one pass; the entity's default geometry is
-    // never materialized (see the lazy _geo accessor).
-    this._geo = new AcGeCircArc3d(
-      _dxfInPoint,
-      radius,
-      AcGeMathUtil.degToRad(startDeg),
-      AcGeMathUtil.degToRad(endDeg),
-      _dxfInNormal,
-      _dxfInRefVec
-    )
   }
 
   private setNormalAndRefVec(normal: AcGeVector3dLike) {

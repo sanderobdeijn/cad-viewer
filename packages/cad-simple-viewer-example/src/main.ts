@@ -7,24 +7,16 @@ import {
 import { acuiRegisterSimpleUiPlugin } from '@mlightcad/cad-simple-ui-plugin/register'
 import {
   acapAppendLinkedText,
-  type AcApDataSourceMenuItem,
   AcApDocManager,
-  acapFormatOpenFileErrorToastMessage,
   AcApOpenDatabaseOptions,
-  acapRunDataSourceMenuAction,
   AcApSettingManager,
   acedApplyUiTheme,
-  acedIsCompactUiLayout,
   AcEdOpenMode,
   ACGI_PAPER_SPACE_BACKGROUND,
-  AcUiFileOpenPanel,
-  eventBus,
   layoutBackgroundColorFromRgb,
-  LIBREDWG_PARSER_WORKER_FILE,
   MTEXT_RENDERER_WORKER_FILE
 } from '@mlightcad/cad-simple-viewer'
 import {
-  AcDbSystemVariables,
   AcDbSysVarManager,
   log
 } from '@mlightcad/data-model'
@@ -36,8 +28,6 @@ import {
   DEMO_TOOLBAR_LAYOUTS,
   getCurrentDemoToolbarLayoutId
 } from './demoToolbarPresets'
-import { setupFileSidebarResize } from './fileSidebarResize'
-import { registerLibreDwgConverter } from './registerLibreDwg'
 
 // Isolate this example's prefs from cad-viewer-example on localhost.
 AcApSettingManager.configure({
@@ -76,43 +66,13 @@ function isWorkerOpenMode(): boolean {
   return new URLSearchParams(window.location.search).has('worker')
 }
 
-function installOpenProfConsoleCapture(): void {
-  const w = window as Window & {
-    __OPENPROF_REPORT__?: string
-    __OPENPROF_DONE__?: boolean
-  }
-  w.__OPENPROF_DONE__ = false
-  const originalLog = console.log.bind(console)
-  console.log = (...args: unknown[]) => {
-    originalLog(...args)
-    const text = args
-      .map(arg => (typeof arg === 'string' ? arg : String(arg)))
-      .join(' ')
-    if (text.includes('OPENPROF (open-file profile)')) {
-      w.__OPENPROF_REPORT__ = text
-      w.__OPENPROF_DONE__ = true
-    }
-  }
-}
-
 class CadViewerApp {
   private container: HTMLDivElement
-  private fileInput: HTMLInputElement
-  private fileOpenPanelHost: HTMLElement
-  private fileOpenPanel: AcUiFileOpenPanel | null = null
   private viewerPane: HTMLElement
-  private emptyState: HTMLDivElement
-  private predefinedButtons: NodeListOf<HTMLButtonElement>
-  private fileSidebarColumn: HTMLElement
-  private fileSidebar: HTMLElement
-  private fileSidebarBody: HTMLElement
-  private fileSidebarToggle: HTMLButtonElement
-  private fileSidebarSubtitle: HTMLSpanElement
   private displayButton: HTMLButtonElement
   private displayMenu: HTMLDivElement
   private displayLineWeightCheckbox: HTMLInputElement
   private displayCommandLineCheckbox: HTMLInputElement
-  private displaySidebarCheckbox: HTMLInputElement
   private dockButton: HTMLButtonElement
   private dockMenu: HTMLDivElement
   private dockOpenToggle: HTMLButtonElement
@@ -139,30 +99,7 @@ class CadViewerApp {
 
   constructor() {
     this.container = document.getElementById('cad-container') as HTMLDivElement
-    this.fileInput = document.getElementById(
-      'fileInputElement'
-    ) as HTMLInputElement
-    this.fileOpenPanelHost = document.getElementById(
-      'fileOpenPanelHost'
-    ) as HTMLElement
     this.viewerPane = document.getElementById('viewerPane') as HTMLElement
-    this.emptyState = document.getElementById('emptyState') as HTMLDivElement
-    this.predefinedButtons = document.querySelectorAll(
-      '#predefinedFileList .file-list-item'
-    ) as NodeListOf<HTMLButtonElement>
-    this.fileSidebarColumn = document.getElementById(
-      'fileSidebarColumn'
-    ) as HTMLElement
-    this.fileSidebar = document.getElementById('fileSidebar') as HTMLElement
-    this.fileSidebarBody = document.getElementById(
-      'fileSidebarBody'
-    ) as HTMLElement
-    this.fileSidebarToggle = document.getElementById(
-      'fileSidebarToggle'
-    ) as HTMLButtonElement
-    this.fileSidebarSubtitle = document.getElementById(
-      'fileSidebarSubtitle'
-    ) as HTMLSpanElement
     this.displayButton = document.getElementById(
       'devDisplayButton'
     ) as HTMLButtonElement
@@ -174,9 +111,6 @@ class CadViewerApp {
     ) as HTMLInputElement
     this.displayCommandLineCheckbox = document.getElementById(
       'devDisplayCommandLine'
-    ) as HTMLInputElement
-    this.displaySidebarCheckbox = document.getElementById(
-      'devDisplaySidebar'
     ) as HTMLInputElement
     this.dockButton = document.getElementById(
       'devDockButton'
@@ -222,24 +156,11 @@ class CadViewerApp {
 
     acedApplyUiTheme('dark', document.documentElement)
 
-    this.setupFileHandling()
-    this.setupFileOpenPanel()
-    // Defer AcApDocManager / simple-ui creation until the user opens or creates
-    // a drawing (or signs in to a cloud source). Eager init showed the blank
-    // viewer chrome under the transparent landing panel.
-    this.setupPredefinedFileActions()
-    this.setupMobileSidebar()
-    const fileSidebarResizeHandle = document.getElementById(
-      'fileSidebarResizeHandle'
-    )
-    if (fileSidebarResizeHandle) {
-      setupFileSidebarResize(this.fileSidebarColumn, fileSidebarResizeHandle)
-    }
     this.setupDevToolbar()
     this.setupDisplayMenu()
     this.setupDockMenu()
     this.setupViewerToolbarMenu()
-    this.updateEmptyStateVisibility()
+    void this.createNewDrawing()
   }
 
   private buildOpenOptions(
@@ -279,13 +200,6 @@ class CadViewerApp {
       void this.applyCommandLineDisplay(this.displayCommandLineCheckbox.checked)
     })
 
-    this.displaySidebarCheckbox.addEventListener('click', event => {
-      event.stopPropagation()
-    })
-    this.displaySidebarCheckbox.addEventListener('change', event => {
-      event.stopPropagation()
-      this.applySidebarDisplay(this.displaySidebarCheckbox.checked)
-    })
 
     AcApSettingManager.instance.events.modified.addEventListener(args => {
       if (args.key !== 'isShowCommandLine' || !this.displayMenuOpen) return
@@ -363,29 +277,16 @@ class CadViewerApp {
     )
   }
 
-  private applySidebarDisplay(visible: boolean) {
-    this.fileSidebarColumn.classList.toggle('is-hidden', !visible)
-    this.syncDisplayMenuState()
-    this.showMessage(visible ? 'Sidebar shown' : 'Sidebar hidden', 'success')
-  }
-
-  private isFileSidebarVisible(): boolean {
-    return !this.fileSidebarColumn.classList.contains('is-hidden')
-  }
-
   private syncDisplayMenuState() {
     const enabled = this.isDevToolbarEnabled()
     const lineWeightOn = enabled && this.isLineWeightEnabled()
     const commandLineOn = AcApSettingManager.instance.isShowCommandLine
-    const sidebarOn = this.isFileSidebarVisible()
 
     this.displayButton.disabled = !enabled
     this.displayLineWeightCheckbox.disabled = !enabled
     this.displayCommandLineCheckbox.disabled = !enabled
-    this.displaySidebarCheckbox.disabled = !enabled
     this.displayLineWeightCheckbox.checked = lineWeightOn
     this.displayCommandLineCheckbox.checked = commandLineOn
-    this.displaySidebarCheckbox.checked = sidebarOn
     this.displayButton.textContent = 'Display'
   }
 
@@ -838,15 +739,6 @@ class CadViewerApp {
       this.setLoadingState(true)
     })
 
-    eventBus.on('open-local-file-started', () => {
-      this.setLoadingState(true)
-    })
-
-    eventBus.on('failed-to-open-file', params => {
-      this.showMessage(acapFormatOpenFileErrorToastMessage(params), 'error')
-      this.finishLoadingState()
-    })
-
     this.documentEventsRegistered = true
   }
 
@@ -899,8 +791,6 @@ class CadViewerApp {
       // Prefer main-thread MTEXT by default (less peak memory). Pass `?worker=1`
       // with openprof, or rely on worker mode only when explicitly requested.
       const useWorkers = openProf ? isWorkerOpenMode() : false
-      const dwgParserUrl = `./workers/${LIBREDWG_PARSER_WORKER_FILE}`
-      registerLibreDwgConverter(dwgParserUrl)
       AcApDocManager.createInstance({
         container: this.container,
         busyIndicatorHost: this.viewerPane,
@@ -909,10 +799,8 @@ class CadViewerApp {
         commandAliases: EXAMPLE_COMMAND_ALIASES,
         // Main-thread MTEXT uses less memory; worker mode is opt-in via ?worker=1.
         useMainThreadDraw: openProf ? !useWorkers : true,
-        openDocumentDefaults: () => this.buildOpenOptions(),
         webworkerFileUrls: {
-          mtextRender: `./workers/${MTEXT_RENDERER_WORKER_FILE}`,
-          dwgParser: dwgParserUrl
+          mtextRender: `./workers/${MTEXT_RENDERER_WORKER_FILE}`
         }
       })
       this.registerDocumentEvents()
@@ -921,8 +809,6 @@ class CadViewerApp {
         w.__OPEN_MODE__ = useWorkers ? 'worker-mtext' : 'main-mtext'
         console.log(`[openprof] mode=${w.__OPEN_MODE__}`)
       }
-
-      this.fileOpenPanel?.refreshSourceButtons()
 
       await acuiRegisterSimpleUiPlugin(AcApDocManager.instance.pluginManager, {
         host: this.viewerPane,
@@ -968,169 +854,9 @@ class CadViewerApp {
     }
   }
 
-  private setupFileHandling() {
-    this.fileInput.addEventListener('change', event => {
-      const file = (event.target as HTMLInputElement).files?.[0]
-      if (file) {
-        this.setLoadingState(true)
-        void this.loadLocalFile(file)
-      }
-      this.fileInput.value = ''
-    })
-  }
-
-  private setupFileOpenPanel() {
-    if (!this.fileOpenPanelHost) return
-    this.fileOpenPanel = new AcUiFileOpenPanel({
-      host: this.fileOpenPanelHost,
-      theme: 'dark',
-      onLocalFile: file => {
-        this.setLoadingState(true)
-        void this.loadLocalFile(file)
-      },
-      onUrl: url => {
-        this.setLoadingState(true)
-        void this.loadRemoteUrl(url)
-      },
-      onDataSourceAction: item => {
-        // Keep the landing panel visible while the File Picker is open.
-        // Download/open show DocManager busy + open-file progress overlays.
-        void this.handleDataSourceMenuAction(item)
-      }
-    })
-  }
-
-  private handleDataSourceMenuAction(item: AcApDataSourceMenuItem) {
-    const run = () =>
-      acapRunDataSourceMenuAction(item, this.buildOpenOptions()).finally(() =>
-        this.finishLoadingState()
-      )
-
-    // `await initialize()` is a microtask even when already done, which
-    // drops the user gesture and blocks the OneDrive File Picker popup.
-    if (this.isInitialized) {
-      void run()
-      return
-    }
-
-    if (item.action === 'pick') {
-      this.showMessage(
-        'The viewer is still starting. Sign in first, then open the file.',
-        'info'
-      )
-      this.finishLoadingState()
-      void this.initialize().then(() => {
-        this.fileOpenPanel?.refreshSourceButtons()
-      })
-      return
-    }
-
-    void this.initialize()
-      .then(() => {
-        this.fileOpenPanel?.refreshSourceButtons()
-        return acapRunDataSourceMenuAction(item, this.buildOpenOptions())
-      })
-      .finally(() => this.finishLoadingState())
-  }
-
-  private setupPredefinedFileActions() {
-    this.predefinedButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const url = button.dataset.fileUrl
-        if (!url) return
-        this.predefinedButtons.forEach(item => item.classList.remove('active'))
-        button.classList.add('active')
-        this.updateFileSidebarSubtitle(button.textContent?.trim() || '')
-        this.setFileSidebarExpanded(false)
-        this.setLoadingState(true)
-        void this.loadPredefinedFile(url)
-      })
-    })
-  }
-
-  private setupMobileSidebar() {
-    this.fileSidebarToggle.addEventListener('click', () => {
-      this.setFileSidebarExpanded(!this.isFileSidebarOpen())
-    })
-
-    document.addEventListener('pointerdown', event => {
-      if (!this.isMobileLayout() || !this.isFileSidebarOpen()) {
-        return
-      }
-
-      const target = event.target
-      if (!(target instanceof Node)) return
-      if (
-        this.fileSidebarToggle.contains(target) ||
-        this.fileSidebarBody.contains(target)
-      ) {
-        return
-      }
-      this.setFileSidebarExpanded(false)
-    })
-
-    window.addEventListener('resize', () => {
-      if (!this.isMobileLayout()) {
-        this.setFileSidebarExpanded(false)
-        return
-      }
-      if (this.isFileSidebarOpen()) {
-        this.positionMobileFilePopover()
-      }
-    })
-  }
-
-  private isMobileLayout() {
-    return acedIsCompactUiLayout()
-  }
-
-  private isFileSidebarOpen(): boolean {
-    return this.isMobileLayout()
-      ? this.fileSidebarBody.classList.contains('file-sidebar-popover')
-      : this.fileSidebar.classList.contains('expanded')
-  }
-
-  private setFileSidebarExpanded(expanded: boolean) {
-    if (this.isMobileLayout()) {
-      this.fileSidebar.classList.toggle('expanded', expanded)
-      this.fileSidebarToggle.setAttribute('aria-expanded', String(expanded))
-      this.fileSidebarBody.classList.toggle('file-sidebar-popover', expanded)
-      if (expanded) {
-        this.positionMobileFilePopover()
-      } else {
-        this.fileSidebarBody.style.top = ''
-        this.fileSidebarBody.style.maxHeight = ''
-      }
-      return
-    }
-
-    this.fileSidebar.classList.toggle('expanded', expanded)
-    this.fileSidebarToggle.setAttribute('aria-expanded', String(expanded))
-  }
-
-  private positionMobileFilePopover() {
-    const rect = this.fileSidebarToggle.getBoundingClientRect()
-    const gap = 4
-    const viewportInset = 8
-    const top = rect.bottom + gap
-    const maxHeight = Math.max(
-      120,
-      Math.min(
-        window.innerHeight * 0.5,
-        360,
-        window.innerHeight - top - viewportInset
-      )
-    )
-
-    this.fileSidebarBody.style.top = `${top}px`
-    this.fileSidebarBody.style.maxHeight = `${maxHeight}px`
-  }
-
-  private updateFileSidebarSubtitle(label: string) {
-    this.fileSidebarSubtitle.textContent = label || 'Tap to browse sample files'
-  }
-
   private async createNewDrawing() {
+    // Keeps viewer chrome visible while the viewer is created.
+    this.isLoadingFile = true
     await this.initialize()
 
     if (!this.isInitialized) {
@@ -1148,8 +874,6 @@ class CadViewerApp {
         throw new Error('Failed to create new drawing')
       }
       this.onFileOpened()
-      this.predefinedButtons.forEach(item => item.classList.remove('active'))
-      this.updateFileSidebarSubtitle('Tap to browse sample files')
       this.showMessage('New drawing created', 'success')
     } catch (error) {
       log.error('Error creating new drawing:', error)
@@ -1158,134 +882,9 @@ class CadViewerApp {
     }
   }
 
-  private async loadLocalFile(file: File) {
-    await this.initialize()
-
-    const fileName = file.name.toLowerCase()
-    if (!fileName.endsWith('.dxf') && !fileName.endsWith('.dwg')) {
-      this.showMessage('Please select a DXF or DWG file', 'error')
-      this.finishLoadingState()
-      return
-    }
-
-    this.clearMessages()
-
-    let fileContent: ArrayBuffer | null = null
-    try {
-      fileContent = await this.readFile(file)
-      const openProf = isOpenProfMode()
-      if (openProf) {
-        installOpenProfConsoleCapture()
-        // OPENPROF is session-scoped (isDbVar: false). Must be set before
-        // onBeforeOpenDocument → AcApOpenFileProfiler.begin().
-        AcDbSysVarManager.instance().setVar(
-          AcDbSystemVariables.OPENPROF,
-          true,
-          AcApDocManager.instance.curDocument.database
-        )
-      }
-      const options: AcApOpenDatabaseOptions = this.buildOpenOptions()
-
-      const openStartedAt = performance.now()
-      const success = await AcApDocManager.instance.openDocument(
-        file.name,
-        fileContent,
-        options
-      )
-      if (openProf) {
-        const w = window as Window & {
-          __OPEN_WALL_MS__?: number
-          __OPEN_SUCCESS__?: boolean
-          __OPEN_ENTITY_STATS__?: Record<string, number>
-        }
-        w.__OPEN_WALL_MS__ = performance.now() - openStartedAt
-        w.__OPEN_SUCCESS__ = success
-        try {
-          const db = AcApDocManager.instance.curDocument.database
-          const counts: Record<string, number> = {
-            modelSpace: 0,
-            paperLike: 0
-          }
-          const modelId = db.tables.blockTable.modelSpace.objectId
-          for (const btr of db.tables.blockTable.newIterator()) {
-            let n = 0
-            for (const _entity of btr.newIterator()) n++
-            if (btr.objectId === modelId || btr.isModelSapce) counts.modelSpace = n
-            else if (btr.isPaperSapce) counts.paperLike += n
-            counts.blocks = (counts.blocks ?? 0) + 1
-            counts.blockEntities = (counts.blockEntities ?? 0) + n
-          }
-          w.__OPEN_ENTITY_STATS__ = counts
-        } catch {
-          // optional diagnostics
-        }
-      }
-
-      if (success) {
-        this.onFileOpened()
-        this.predefinedButtons.forEach(item => item.classList.remove('active'))
-        this.updateFileSidebarSubtitle('Tap to browse sample files')
-        this.showMessage(`Successfully loaded: ${file.name}`, 'success')
-      }
-      // Open failures emit `failed-to-open-file` with a localized message.
-    } catch (error) {
-      log.error('Error loading file:', error)
-      this.showMessage(`Error loading file: ${error}`, 'error')
-    } finally {
-      fileContent = null
-      this.finishLoadingState()
-    }
-  }
-
-  private async loadRemoteUrl(url: string) {
-    await this.initialize()
-    this.clearMessages()
-
-    try {
-      const success = await AcApDocManager.instance.openUrl(
-        url,
-        this.buildOpenOptions()
-      )
-      if (success) {
-        this.onFileOpened()
-        const fileName = this.getFileNameFromUrl(url)
-        this.showMessage(`Successfully loaded: ${fileName}`, 'success')
-      }
-    } catch (error) {
-      log.error('Error loading remote file:', error)
-      this.showMessage(`Error loading file: ${error}`, 'error')
-    } finally {
-      this.finishLoadingState()
-    }
-  }
-
-  private async loadPredefinedFile(url: string) {
-    await this.initialize()
-    this.clearMessages()
-
-    try {
-      const options: AcApOpenDatabaseOptions = this.buildOpenOptions()
-
-      const success = await AcApDocManager.instance.openUrl(url, options)
-
-      if (success) {
-        this.onFileOpened()
-        const fileName = this.getFileNameFromUrl(url)
-        this.showMessage(`Successfully loaded: ${fileName}`, 'success')
-      }
-      // Open failures emit `failed-to-open-file` with a localized message.
-    } catch (error) {
-      log.error('Error loading predefined file:', error)
-      this.showMessage(`Error loading file: ${error}`, 'error')
-    } finally {
-      this.finishLoadingState()
-    }
-  }
-
   private onFileOpened() {
     this.hasOpenedFile = true
     this.setViewerChromeVisible(true)
-    this.updateEmptyStateVisibility()
     this.updateDevToolbarLabels()
   }
 
@@ -1294,34 +893,11 @@ class CadViewerApp {
     // Keep chrome in sync when loading starts after a deferred init that hid it
     // (e.g. OneDrive sign-in without opening a file).
     this.setViewerChromeVisible(this.shouldShowViewerChrome())
-    this.updateEmptyStateVisibility()
   }
 
   private finishLoadingState() {
     this.isLoadingFile = false
     this.setViewerChromeVisible(this.shouldShowViewerChrome())
-    this.updateEmptyStateVisibility()
-  }
-
-  private updateEmptyStateVisibility() {
-    this.emptyState.classList.toggle(
-      'hidden',
-      this.hasOpenedFile || this.isLoadingFile
-    )
-  }
-
-  private getFileNameFromUrl(url: string) {
-    const paths = url.split('/')
-    return paths[paths.length - 1] || url
-  }
-
-  private readFile(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as ArrayBuffer)
-      reader.onerror = () => reject(reader.error)
-      reader.readAsArrayBuffer(file)
-    })
   }
 
   private showMessage(

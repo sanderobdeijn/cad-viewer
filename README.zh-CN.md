@@ -7,8 +7,8 @@
 
 <a href="https://trendshift.io/repositories/16129?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-16129" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/16129/daily?language=TypeScript" alt="mlightcad%2Fcad-viewer | Trendshift" width="250" height="55"/></a>
 
-CAD-Viewer 是`全球首个完全运行在浏览器端、无需依赖任何后端服务的 Web 版 DXF/DWG 查看与编辑器`。
-通过在浏览器中直接完成 DWG/DXF 解析、几何处理和渲染，CAD-Viewer 实现了真正的无服务器（serverless）CAD 查看与编辑，非常适合云应用、离线使用以及对隐私敏感的工作场景。
+CAD-Viewer 是一款`完全运行在浏览器端、无需依赖任何后端服务`的 CAD 图纸编辑器。每次会话都从一张新的空白图纸开始；不支持从文件加载图纸，也不支持保存到文件。
+几何处理和渲染直接在浏览器中完成，非常适合离线使用以及对隐私敏感的工作场景。
 
 - [**🌐 主页**](https://mlightcad.com/)
 - **🌐 在线演示**：[Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
@@ -20,41 +20,9 @@ CAD-Viewer 是`全球首个完全运行在浏览器端、无需依赖任何后�
 - DEV.to: [@mlightcad](https://dev.to/mlightcad)
 - 稀土掘金: [@mlightcad](https://juejin.cn/column/7501992214283501579)
 
-### 基于 cad-viewer 构建的应用（Apps Built with cad-viewer）
-
-[Thingraph](https://cad.thingraph.site/) 团队在 cad-viewer 之上构建了面向生产环境的 DWG/DXF 查看器与平台集成，服务全球数万用户：
-
-- [DWG Viewer Web App](https://cad.thingraph.site/dwg-viewer) — 浏览器端 DWG/DXF 查看器，工程团队可快速、无服务器地访问图纸。各平台安装入口：
-  - [Google Drive](https://workspace.google.com/marketplace/app/dwg_viewer/641533811831) — 在 Drive 中通过 **Open with** 打开 DWG/DXF
-  - [VS Code](https://marketplace.visualstudio.com/items?itemName=thingraph.dwg-viewer) — `.dwg` / `.dxf` 只读自定义编辑器
-  - [Cursor](https://open-vsx.org/extension/thingraph/dwg-viewer) — 通过 Open VSX 安装同一扩展
-  - [Confluence](https://marketplace.atlassian.com/apps/2890472615/dwg-viewer-for-confluence) — 在页面中嵌入 DWG/DXF 预览
-  - [Windows Explorer](https://cad.thingraph.site/install/windows) — 在资源管理器中显示缩略图与预览
-
-社区应用与集成：
-
-- [flyfish-dev/cad-viewer](https://github.com/flyfish-dev/cad-viewer) — 面向生产的浏览器端 CAD 查看器，支持 DWG、DXF、DWF、DWFx 与 XPS（[在线演示](https://cad-viewer-iys.pages.dev)）
-- [Nextcloud CAD Viewer](https://github.com/ashcoft/nextcloud-cad-viewer) — Nextcloud 原生应用，可在浏览器中直接查看 DWG/DXF（[应用商店](https://apps.nextcloud.com/apps/cad_viewer)）
-
-社区 Linux 桌面包装：
-
-- [CAD Viewer AppImage](https://github.com/pass-wind/cad-viewer-appimage) — 基于 Electron 的 Linux AppImage（约 114 MB），已在 Fedora 上验证
-- [cad-viewer (AUR)](https://aur.archlinux.org/packages/cad-viewer) — Arch Linux 源码包，使用系统 Electron（约 5.4 MB）
-- [cad-viewer-bin (AUR)](https://aur.archlinux.org/packages/cad-viewer-bin) — Arch Linux 二进制包，内置字体/模板，支持完全离线打开图纸
-
-### 示例应用（Demo Apps）
-
-官方示例应用，展示如何把 cad-viewer 集成到你自己的产品中：
-
-- [cad-simple-viewer-example](https://github.com/mlightcad/cad-simple-viewer-example) — 基于 [`@mlightcad/cad-simple-viewer`](https://www.npmjs.com/package/@mlightcad/cad-simple-viewer) 的极简 vanilla TypeScript 宿主：打开本地或 CDN 的 DXF/DWG，用小型工具栏驱动命令，并懒加载 HTML/PDF/SVG 导出插件（不含完整 Vue UI）。
-- [cad-viewer-example](https://github.com/mlightcad/cad-viewer-example) — 基于 [`@mlightcad/cad-viewer`](https://www.npmjs.com/package/@mlightcad/cad-viewer) 的完整 Vue 3 应用，含菜单、功能区、对话框、命令行与状态栏（[在线演示](https://mlightcad.github.io/cad-viewer-example/)）。
-- [cad-viewer-nextjs-demo](https://github.com/mlightcad/cad-viewer-nextjs-demo) — Next.js「CAD 网盘」演示：分片断点续传上传 DWG/DXF、SQLite 文件列表与预览缩略图，并支持以**浏览器实时解析**（`cad-simple-viewer`）或**服务端 ACEX 预渲染**（打开更快、内存更少）两种方式查看图纸。
-
-![CAD-Viewer Quick Demo](./assets/cad-viewer.gif)
-
 ## 功能特性
 
-- **高性能**：大体量 DWG/DXF 文件也能以流畅的 60+ FPS 渲染
+- **高性能**：大体量图纸也能以流畅的 60+ FPS 渲染
 - **无需后端**：文件在浏览器本地解析与处理
 - **数据更安全**：文件不离开本地设备，保护隐私
 - **易于集成**：无需服务器或后端基础设施
@@ -63,20 +31,6 @@ CAD-Viewer 是`全球首个完全运行在浏览器端、无需依赖任何后�
 - 支持离线与在线编辑流程
 - 基于 THREE.js 的 3D 渲染引擎，包含多项性能优化
 - 面向可扩展与二次开发，适配 CMS、Notion、微信等平台
-
-## 一行代码嵌入 DWG/DXF
-
-用一行 `<iframe>` 即可在任意网页中打开 DWG/DXF——**无需 CAD 后端，也无需把图纸上传到第三方云**。文件从你自己的 URL 拉取，并在访客浏览器中完成解析与渲染，开箱即用审查能力（平移、缩放、测量、批注）。
-
-```html
-<iframe
-  src="https://mlightcad.com/embed.html?url=https://example.com/plans/floor.dwg&mode=review&toolbar=1"
-  style="width:100%;height:600px;border:0"
-  allowfullscreen>
-</iframe>
-```
-
-完整介绍与在线体验：[Embed DWG/DXF on Your Website Without Uploading a Single Byte](https://medium.com/@mlightcad/embed-dwg-dxf-on-your-website-without-uploading-a-single-byte-cf5f6ad484c4)。
 
 ## 快速开始
 
@@ -165,7 +119,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 
 ## 性能优化
 
-CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率的同时处理大规模 DXF/DWG 文件：
+CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率的同时处理大规模图纸：
 
 - **自定义着色器材质**：在 GPU 侧高效绘制复杂线型与剖面填充
 - **几何体合批**：对相同材质的点/线/面进行合并，显著减少 draw call
@@ -175,21 +129,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 - **WebGL 优化**：充分利用现代 WebGL 的硬件加速能力
 
 这些优化使得 CAD-Viewer 能够在渲染大量复杂实体的同时保持交互顺畅。
-
-## 已知问题
-
-默认的开源 DWG 方案基于 [LibreDWG](https://github.com/LibreDWG/libredwg)，通过可选的 `@mlightcad/libredwg-converter` 包提供。它可以处理不少图纸，但支持的 entity 类型仍然比较少，WASM bundle 体积更大、启动更慢、内存占用更高，解析大型 DWG 时还可能出现内存溢出；另外，对于闭源商业产品还需要考虑 GPL license 的传导问题。`@mlightcad/cad-simple-viewer` **默认不依赖、也不注册**该 converter — 宿主应用（参见各 example 包）需自行显式接入。
-
-如果你需要更好的兼容性、更低的内存占用、更大的文件支持，或者更清晰的商业授权方案，请查看我们的 [**专有 DWG 解析器**](./PROPRIETARY-PARSER.zh-CN.md)。
-
-| 项目 | 基于 LibreDWG 的解析器 | 专有 DWG 解析器 |
-|------|-------------------------|------------------|
-| 支持的 entities | 类型较少 | 覆盖更广 |
-| Bundle 体积 | ~13 MB | ~437 KB |
-| 加载速度 | 启动较慢 | 启动很快 |
-| 内存占用 | 更高 | 更低 |
-| 大型 DWG 文件 | 可能内存溢出 | 无此问题 |
-| License | 有 GPL 传导风险 | 无 GPL 传导问题 |
 
 ## 路线图（Roadmap）
 
@@ -202,13 +141,6 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 -   [ ] ⏳ 进行中
 
 ### 核心文件与数据层
-
-#### 文件支持
-
--   [x] DXF 加载
--   [x] DWG 加载
--   [x] 大文件流式加载 / 增量加载
--   [ ] ⏳ 文件版本兼容（R12–最新版本）
 
 #### 数据模型
 
@@ -405,9 +337,3 @@ CAD-Viewer 针对复杂图纸渲染进行了多项优化，可在保持高帧率
 ## 许可证
 
 cad-viewer monorepo 主体采用 [MIT](LICENSE) 授权。
-
-DXF 加载使用 `@mlightcad/data-model` 中内置的 MIT 解析器。DWG 加载为**按需接入（opt-in）**：`@mlightcad/cad-simple-viewer` 不依赖 GPL 的 LibreDWG 包。若宿主需要开源 DWG 支持，需自行添加 `@mlightcad/libredwg-converter`（GPL-3.0）、部署其 worker 与 wasm，并注册 converter。若您交付闭源产品且无法向客户分发 GPL 代码，请改用 [**专有 DWG 解析器**](./PROPRIETARY-PARSER.zh-CN.md)。
-
-→ **专有解析器说明：** [PROPRIETARY-PARSER.zh-CN.md](./PROPRIETARY-PARSER.zh-CN.md)（支持范围、授权条款、价格、集成方式、GPL 合规、支持维护）
-
-

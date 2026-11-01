@@ -1,6 +1,6 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbShape } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -92,65 +92,6 @@ describe('AcDbShape', () => {
     )
     expect(snapPoints).toHaveLength(1)
     expect(snapPoints[0]).toBe(shape.position)
-  })
-
-  it('writes expected DXF fields', () => {
-    createWorkingDb()
-    const shape = new AcDbShape()
-    shape.name = 'ARROW'
-    shape.position = { x: 100, y: 200, z: 0 }
-    shape.size = 2.5
-    shape.rotation = Math.PI / 4
-    shape.widthFactor = 1.5
-    shape.oblique = Math.PI / 18
-    shape.thickness = 0.5
-    shape.styleName = 'STANDARD'
-    shape.ownerId = '0'
-    const filer = new AcDbDxfFiler()
-
-    shape.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(dxf).toContain('100\nAcDbShape\n')
-    expect(dxf).toContain('2\nARROW\n')
-    expect(dxf).toContain('3\nSTANDARD\n')
-    expect(dxf).toContain('10\n100\n')
-    expect(dxf).toContain('20\n200\n')
-    expect(dxf).toContain('40\n2.5\n')
-    expect(dxf).toContain('41\n1.5\n')
-    expect(dxf).toContain('39\n0.5\n')
-  })
-
-  it('writes shapeNumber as DXF group 2 when name is empty', () => {
-    createWorkingDb()
-    const shape = new AcDbShape()
-    shape.shapeNumber = 9
-    shape.styleName = 'TECOGISSHAPE0'
-    shape.position = { x: 1, y: 2, z: 0 }
-    shape.size = 0.01
-    shape.ownerId = '0'
-    const filer = new AcDbDxfFiler()
-
-    shape.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(dxf).toContain('2\n9\n')
-    expect(dxf).not.toContain('2\n0\n')
-    expect(dxf).toContain('3\nTECOGISSHAPE0\n')
-  })
-
-  it('prefers shape name over shapeNumber for DXF group 2', () => {
-    createWorkingDb()
-    const shape = new AcDbShape()
-    shape.name = '_GV_'
-    shape.shapeNumber = 9
-    shape.ownerId = '0'
-    const filer = new AcDbDxfFiler()
-
-    shape.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(dxf).toContain('2\n_GV_\n')
   })
 
   it('transforms position, size, and orientation', () => {

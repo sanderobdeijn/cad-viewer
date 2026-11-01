@@ -4,7 +4,6 @@ import {
   AcGePoint3dLike
 } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler } from '../../base'
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
 import { AcDbDimension } from './AcDbDimension'
 
@@ -236,105 +235,5 @@ export class AcDbDiametricDimension extends AcDbDimension {
       }
     }
     return this.getGeometricExtentsFromDimBlockOrPoints(points)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbDiametricDimension')
-    filer.writePoint3d(15, this.chordPoint)
-    filer.writePoint3d(16, this.farChordPoint)
-    filer.writeDouble(40, this.leaderLength)
-    filer.writeAngle(52, this.extArcStartAngle)
-    filer.writeAngle(53, this.extArcEndAngle)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbDiametricDimension')
-
-    // AutoCAD DXF: group 10 = one chord end, group 15 = opposite end.
-    // ObjectARX write may also emit group 16 for the far chord.
-    let cx = this._dxfDefinitionPoint.x
-    let cy = this._dxfDefinitionPoint.y
-    let cz = this._dxfDefinitionPoint.z
-    let fx = this.farChordPoint.x
-    let fy = this.farChordPoint.y
-    let fz = this.farChordPoint.z
-    let hasSubDef = false
-    let hasFar = false
-    let startDeg = (this.extArcStartAngle * 180) / Math.PI
-    let endDeg = (this.extArcEndAngle * 180) / Math.PI
-
-    const commit = () => {
-      if (hasFar) {
-        // ObjectARX-style: 15 = chord, 16 = far
-        this.chordPoint = new AcGePoint3d(cx, cy, cz)
-        this.farChordPoint = new AcGePoint3d(fx, fy, fz)
-      } else if (hasSubDef) {
-        // AutoCAD DXF / dxf-json-converter: 10 = chord, 15 = far
-        this.chordPoint = new AcGePoint3d(
-          this._dxfDefinitionPoint.x,
-          this._dxfDefinitionPoint.y,
-          this._dxfDefinitionPoint.z
-        )
-        this.farChordPoint = new AcGePoint3d(cx, cy, cz)
-      }
-      this.extArcStartAngle = (startDeg * Math.PI) / 180
-      this.extArcEndAngle = (endDeg * Math.PI) / 180
-    }
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 15:
-          cx = n
-          hasSubDef = true
-          break
-        case 25:
-          cy = n
-          hasSubDef = true
-          break
-        case 35:
-          cz = n
-          hasSubDef = true
-          break
-        case 16:
-          fx = n
-          hasFar = true
-          break
-        case 26:
-          fy = n
-          hasFar = true
-          break
-        case 36:
-          fz = n
-          hasFar = true
-          break
-        case 40:
-          this.leaderLength = n
-          break
-        case 52:
-          startDeg = n
-          break
-        case 53:
-          endDeg = n
-          break
-        default:
-          break
-      }
-    }
-
-    commit()
-    return this
   }
 }

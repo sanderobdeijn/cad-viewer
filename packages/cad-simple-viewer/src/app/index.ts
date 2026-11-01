@@ -8,24 +8,13 @@ export * from './AcApDocument'
 export * from './AcApDocManager'
 export * from './AcApWorkerAssets'
 export * from './AcApOpenFileProfiler'
-export * from './AcApXrefManager'
 export * from './AcApObjectDisplay'
 export * from './AcApProgress'
 export * from './openFileProgress'
 export * from './AcApSettingManager'
-export * from './dataSource'
 export type {
   AcApOpenDatabaseOptions,
   AcApOpenSysVars
 } from './AcApOpenDatabaseOptions'
 export { AcApOpenViewMode } from './AcApOpenDatabaseOptions'
-export type {
-  AcApOpenDocumentDefaultsResolver,
-  AcApOpenFileDialogOptions
-} from './AcApOpenFileDialog'
-export {
-  acapInstallOpenFileDialog,
-  acapUninstallOpenFileDialog,
-  acapUpdateOpenFileDialogOptions
-} from './AcApOpenFileDialog'
 export * from './notification'

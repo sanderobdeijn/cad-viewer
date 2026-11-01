@@ -7,8 +7,8 @@
 
 <a href="https://trendshift.io/repositories/16129?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-16129" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/16129/daily?language=TypeScript" alt="mlightcad%2Fcad-viewer | Trendshift" width="250" height="55"/></a>
 
-cad-viewer je `první webový prohlížeč a editor DXF/DWG na světě, který běží zcela v prohlížeči a nevyžaduje žádné backendové služby`.
-Tím, že parsování DWG/DXF, zpracování geometrie a vykreslování probíhá přímo v prohlížeči, cad-viewer umožňuje skutečné bezserverové prohlížení a úpravy CAD — ideální pro cloudové aplikace, offline použití a pracovní postupy citlivé na soukromí.
+cad-viewer je CAD editor výkresů, který běží `zcela v prohlížeči a nevyžaduje žádné backendové služby`. Každá relace začíná novým prázdným výkresem; výkresy se nenačítají ze souborů ani se do nich neukládají.
+Zpracování geometrie a vykreslování probíhá přímo v prohlížeči, díky čemuž je cad-viewer ideální pro offline použití a pracovní postupy citlivé na soukromí.
 
 - [**🌐 Domovská stránka**](https://mlightcad.com/)
 - **🌐 Živé demo**: [Netlify](https://mlightcad.netlify.app/) · [GitHub Pages](https://mlightcad.github.io/cad-viewer/)
@@ -20,41 +20,9 @@ Tím, že parsování DWG/DXF, zpracování geometrie a vykreslování probíhá
 - DEV.to: [@mlightcad](https://dev.to/mlightcad)
 - Juejin(稀土掘金): [@mlightcad](https://juejin.cn/column/7501992214283501579)
 
-### Aplikace postavené na cad-viewer
-
-Tým [Thingraph](https://cad.thingraph.site/) staví produkční prohlížeče DWG/DXF a integrace platforem na základě cad-viewer a obsluhuje desítky tisíc uživatelů po celém světě:
-
-- [DWG Viewer Web App](https://cad.thingraph.site/dwg-viewer) — webový prohlížeč DWG/DXF využívaný inženýrskými týmy po celém světě pro rychlý, bezserverový přístup k výkresům. Instalace pro vaši platformu:
-  - [Google Drive](https://workspace.google.com/marketplace/app/dwg_viewer/641533811831) — otevření DWG/DXF z Disku pomocí **Open with**
-  - [VS Code](https://marketplace.visualstudio.com/items?itemName=thingraph.dwg-viewer) — vlastní editor pouze pro čtení souborů `.dwg` / `.dxf`
-  - [Cursor](https://open-vsx.org/extension/thingraph/dwg-viewer) — stejné rozšíření přes Open VSX
-  - [Confluence](https://marketplace.atlassian.com/apps/2890472615/dwg-viewer-for-confluence) — vložení náhledů DWG/DXF na stránky
-  - [Windows Explorer](https://cad.thingraph.site/install/windows) — náhled a miniatury v Průzkumníku souborů
-
-Komunitní aplikace a integrace:
-
-- [flyfish-dev/cad-viewer](https://github.com/flyfish-dev/cad-viewer) — produkční webový CAD prohlížeč pro DWG, DXF, DWF, DWFx a XPS ([živé demo](https://cad-viewer-iys.pages.dev))
-- [Nextcloud CAD Viewer](https://github.com/ashcoft/nextcloud-cad-viewer) — nativní aplikace Nextcloud pro prohlížení DWG/DXF v prohlížeči ([App Store](https://apps.nextcloud.com/apps/cad_viewer))
-
-Komunitní desktopové balíčky pro Linux:
-
-- [CAD Viewer AppImage](https://github.com/pass-wind/cad-viewer-appimage) — AppImage založená na Electronu pro Linux (~114 MB), testováno na Fedoře
-- [cad-viewer (AUR)](https://aur.archlinux.org/packages/cad-viewer) — zdrojový balíček pro Arch Linux využívající systémový Electron (~5,4 MB)
-- [cad-viewer-bin (AUR)](https://aur.archlinux.org/packages/cad-viewer-bin) — binární balíček pro Arch Linux se součástí fontů/šablon pro plně offline otevírání výkresů
-
-### Demo aplikace (Demo Apps)
-
-Oficiální ukázkové aplikace, které ukazují, jak integrovat cad-viewer do vlastního produktu:
-
-- [cad-simple-viewer-example](https://github.com/mlightcad/cad-simple-viewer-example) — Minimální vanilla TypeScript host pro [`@mlightcad/cad-simple-viewer`](https://www.npmjs.com/package/@mlightcad/cad-simple-viewer): otevření lokálních nebo CDN DXF/DWG, ovládání příkazů malým toolbarem a líné načítání pluginů pro export HTML/PDF/SVG bez plného Vue UI.
-- [cad-viewer-example](https://github.com/mlightcad/cad-viewer-example) — Plnohodnotná Vue 3 aplikace na [`@mlightcad/cad-viewer`](https://www.npmjs.com/package/@mlightcad/cad-viewer) s nabídkami, ribbonem, dialogy, příkazovým řádkem a stavovým řádkem ([živé demo](https://mlightcad.github.io/cad-viewer-example/)).
-- [cad-viewer-nextjs-demo](https://github.com/mlightcad/cad-viewer-nextjs-demo) — Next.js demo „CAD disk“: obnovitelné chunkované nahrávání DWG/DXF, seznam souborů v SQLite s náhledy a otevření výkresů buď **živým parsováním v prohlížeči** (`cad-simple-viewer`), nebo **serverovým ACEX prerenderem** (rychlejší otevření, méně paměti).
-
-![CAD-Viewer Quick Demo](./assets/cad-viewer.gif)
-
 ## Funkce
 
-- **Vysoký výkon** — prohlížení rozsáhlých souborů DWG/DXF s plynulým vykreslováním 60+ FPS
+- **Vysoký výkon** — vykreslování rozsáhlých výkresů s plynulými 60+ FPS
 - **Bez backendu** — soubory se parsují a zpracovávají zcela v prohlížeči
 - **Vyšší bezpečnost dat** — soubory nikdy neopustí vaše zařízení, zajištění úplného soukromí
 - **Snadná integrace** — není potřeba nastavení serveru ani backendové infrastruktury
@@ -63,20 +31,6 @@ Oficiální ukázkové aplikace, které ukazují, jak integrovat cad-viewer do v
 - Offline i online editační pracovní postupy
 - 3D vykreslovací engine THREE.js s pokročilými optimalizačními technikami
 - Navrženo pro rozšiřitelnost a integraci s platformami jako CMS, Notion a WeChat
-
-## Vložení DWG/DXF jedním řádkem kódu
-
-Přidejte prohlížení DWG/DXF na libovolný web jediným `<iframe>` — bez CAD backendu a bez nahrávání výkresů do cizího cloudu. Soubor se načte z **vaší** URL a kompletně zpracuje v prohlížeči návštěvníka; nástroje pro review (posun, zoom, měření, anotace) jsou ihned k dispozici.
-
-```html
-<iframe
-  src="https://mlightcad.com/embed.html?url=https://example.com/plans/floor.dwg&mode=review&toolbar=1"
-  style="width:100%;height:600px;border:0"
-  allowfullscreen>
-</iframe>
-```
-
-Podrobný návod a živé demo: [Embed DWG/DXF on Your Website Without Uploading a Single Byte](https://medium.com/@mlightcad/embed-dwg-dxf-on-your-website-without-uploading-a-single-byte-cf5f6ad484c4).
 
 ## Začínáme
 
@@ -165,7 +119,7 @@ Všechny widgety jsou nezávislé na frameworku (čisté DOM). Plná Vue aplikac
 
 ## Výkon
 
-CAD-Viewer je navržen pro **výjimečný výkon** a zvládne velmi rozsáhlé soubory DXF/DWG při zachování vysoké snímkové frekvence. Využívá několik pokročilých vykreslovacích technologií pro optimalizaci výkonu:
+CAD-Viewer je navržen pro **výjimečný výkon** a zvládne velmi rozsáhlé výkresy při zachování vysoké snímkové frekvence. Využívá několik pokročilých vykreslovacích technologií pro optimalizaci výkonu:
 
 - **Vlastní shader materiály**: GPU-akcelerované shader materiály pro efektivní vykreslování složitých typů čar a vzorů výplně šrafování
 - **Dávkování geometrie**: slučování bodů, čar a ploch se stejným materiálem pro výrazné snížení počtu draw callů
@@ -175,21 +129,6 @@ CAD-Viewer je navržen pro **výjimečný výkon** a zvládne velmi rozsáhlé s
 - **WebGL optimalizace**: využití moderních WebGL funkcí pro hardwarově akcelerované vykreslování
 
 Tyto optimalizace umožňují CAD-Viewer plynule vykreslovat složité CAD výkresy s tisíci entitami při zachování responzivní interakce s uživatelem.
-
-## Známé problémy
-
-Výchozí open-source cesta pro DWG je založena na [LibreDWG](https://github.com/LibreDWG/libredwg) prostřednictvím volitelného balíčku `@mlightcad/libredwg-converter`. Funguje dobře pro mnoho výkresů, ale pokrytí entit je stále omezené, WASM balíček je mnohem větší, spuštění je pomalejší, spotřeba paměti je vysoká a velmi rozsáhlé soubory DWG mohou skončit chybou nedostatku paměti. Také zavádí licenční aspekty GPL pro komerční produkty s uzavřeným zdrojovým kódem. `@mlightcad/cad-simple-viewer` na tomto konvertoru **nezávisí** a ve výchozím stavu jej neregistruje — hostitelské aplikace (viz ukázkové balíčky) se připojují explicitně.
-
-Pokud potřebujete lepší kompatibilitu, nižší spotřebu paměti, podporu velkých souborů nebo čistší komerční licenční model, podívejte se na náš [**vlastní parser DWG**](./PROPRIETARY-PARSER.md).
-
-| Položka | Parser založený na LibreDWG | Vlastní parser DWG |
-|------|------------------------|------------------------|
-| Podporované entity | Omezené pokrytí | Širší pokrytí |
-| Velikost balíčku | ~13 MB | ~437 KB |
-| Rychlost načítání | Pomalejší spuštění | Výrazně rychlejší spuštění |
-| Spotřeba paměti | Vyšší | Nižší |
-| Velké soubory DWG | U velkých souborů může dojít k OOM | Žádný takový problém |
-| Licence | Riziko šíření GPL | Bez rizika šíření GPL |
 
 ## Plán vývoje
 
@@ -201,13 +140,6 @@ Legenda:
 - [ ] ⏳ Probíhá
 
 ### Jádro souborů a datové vrstvy
-
-#### Podpora souborů
-
-* [x] Načítání DXF
-* [x] Načítání DWG
-* [x] Streamování / přírůstkové načítání velkých souborů
-* [ ] ⏳ Kompatibilita verzí souborů (R12–Latest)
 
 #### Datový model
 
@@ -404,7 +336,3 @@ Příspěvky jsou vítány! Otevírejte issue nebo pull requesty pro opravy chyb
 ## Licence
 
 Monorepo cad-viewer je primárně licencováno pod [MIT](LICENSE).
-
-Načítání DXF používá vestavěný MIT parser v `@mlightcad/data-model`. Načítání DWG je **opt-in**: `@mlightcad/cad-simple-viewer` nezávisí na GPL balíčcích LibreDWG. Hostitelé, kteří chtějí open-source podporu DWG, si sami přidají `@mlightcad/libredwg-converter` (GPL-3.0), nasadí jeho worker + wasm a zaregistrují konvertor. Pokud dodáváte produkt s uzavřeným zdrojovým kódem a nemůžete zákazníkům distribuovat GPL kód, použijte místo toho [**vlastní parser DWG**](./PROPRIETARY-PARSER.md).
-
-→ **Komerční parser:** [PROPRIETARY-PARSER.md](./PROPRIETARY-PARSER.md) (rozsah, licencování, ceny, integrace, soulad s GPL, podpora)

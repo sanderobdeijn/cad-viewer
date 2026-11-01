@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@mlightcad/three-renderer.svg)](https://www.npmjs.com/package/@mlightcad/three-renderer)
 
-This package implements the **high-performance** THREE.js-based rendering engine for MLightCAD. It renders DWG/DXF entities as interactive 2D/3D graphics using advanced THREE.js optimization techniques to deliver exceptional performance for large CAD files.
+This package implements the **high-performance** THREE.js-based rendering engine for MLightCAD. It renders CAD entities as interactive 2D/3D graphics using advanced THREE.js optimization techniques to deliver exceptional performance for large CAD files.
 
 ## Key Features
 - **High-performance** rendering of CAD entities as THREE.js objects with 60+ FPS

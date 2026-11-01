@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject, AcDbObjectId } from '../base/AcDbObject'
 import { AcDbDatabase } from '../database/AcDbDatabase'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
@@ -342,62 +342,5 @@ export class AcDbDictionary<
    */
   entries() {
     return this._recordsByName.entries()
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbDictionary')
-    // 280 Hard-owner flag. If set to 1, indicates that elements of the dictionary are to
-    // be treated as hard-owned
-    // TODO: Different dictionary may have different value
-    filer.writeInt16(280, 1)
-    filer.writeInt16(281, 1)
-    for (const [key, value] of this._recordsByName) {
-      filer.writeString(3, key)
-      filer.writeObjectId(350, value.objectId)
-    }
-    return this
-  }
-
-  /**
-   * Reads dictionary entry name/handle pairs.
-   *
-   * Note: resolved object instances are wired later by
-   * {@link AcDbDxfObjectsReader} after child objects are loaded.
-   */
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbDictionary')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 3:
-        case 350:
-        case 340:
-        case 360:
-          // Entry name/pointer pairs are consumed here; object-graph linking
-          // is done by AcDbDxfObjectsReader once child objects exist.
-          break
-        case 280:
-        case 281:
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }

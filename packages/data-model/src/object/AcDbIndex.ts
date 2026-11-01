@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject, AcDbObjectId } from '../base/AcDbObject'
 import type { AcDbFilter } from './AcDbFilter'
 
@@ -175,42 +175,5 @@ export abstract class AcDbIndex extends AcDbObject {
   protected abstract rebuildModified(
     changeIterator?: AcDbBlockChangeIterator
   ): boolean
-
-  /**
-   * Writes DXF fields for this index object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbIndex')
-    filer.writeDouble(40, this.lastUpdatedAt)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbIndex')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      switch (code) {
-        case 40:
-          this.lastUpdatedAt = Number(item.value)
-          this.lastUpdatedAtU = this.lastUpdatedAt
-          break
-        case 100:
-          // Next subclass (e.g. AcDbLayerIndex).
-          filer.pushBackItem(item)
-          return this
-        default:
-          break
-      }
-    }
-    return this
-  }
 }
 

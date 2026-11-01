@@ -4,9 +4,7 @@ title: Yazma Modu
 
 # Yazma Modu
 
-Yazma modu, özellikleri en eksiksiz olan moddur. Salt okunur modun tüm yeteneklerine ek olarak, DWG/DXF üzerinde doğrudan öğe oluşturma, düzenleme ve silme destekler; web ürününün yalnızca salt okunur önizleme değil, gerçek çizim işlerini de üstlenmesini sağlar.
-
-Salt okunur mod açıkça belirtilmedikçe, bir dosya açıldığında varsayılan olarak yazma modu kullanılır.
+Yazma modu, öğeleri doğrudan oluşturmayı, düzenlemeyi ve silmeyi destekler; web üzerinde gerçek çizim çalışması. Her oturum yeni boş bir çizimle başlar.
 
 ## Masaüstü
 
@@ -35,7 +33,7 @@ Tuvalin altında bir komut satırı penceresi, komut adlarının doğrudan yazı
 
 ### Sağ Taraf Araç Çubuğu
 
-Salt okunur mod araçlarına ek olarak, bir **Seç / Düzenle araç grubu** vardır:
+Araç çubuğunda ayrıca bir **Seç / Düzenle araç grubu** vardır:
 
 - Seç
 - Pan

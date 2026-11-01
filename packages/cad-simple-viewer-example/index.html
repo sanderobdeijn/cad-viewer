@@ -489,89 +489,6 @@
   </head>
   <body>
     <div class="app-shell">
-      <div class="file-sidebar-column" id="fileSidebarColumn">
-      <aside class="file-sidebar" id="fileSidebar">
-        <h2 class="sidebar-title sidebar-title-desktop">Predefined Files</h2>
-        <button
-          type="button"
-          class="file-sidebar-toggle"
-          id="fileSidebarToggle"
-          aria-expanded="false"
-          aria-controls="fileSidebarBody"
-        >
-          <span class="file-sidebar-toggle-label">
-            <span class="sidebar-title">Predefined Files</span>
-            <span class="file-sidebar-toggle-subtitle" id="fileSidebarSubtitle">
-              Tap to browse sample files
-            </span>
-          </span>
-          <span class="file-sidebar-chevron" aria-hidden="true">&#x25BC;</span>
-        </button>
-        <div class="file-sidebar-body" id="fileSidebarBody">
-          <p class="sidebar-help">Select one file below or open a local DXF/DWG file.</p>
-          <div class="file-list" id="predefinedFileList">
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/canteen.dwg"
-          >
-            canteen.dwg
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/baseline-sample.dwg"
-          >
-            baseline-sample.dwg
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/hatch.dxf"
-          >
-            hatch.dxf
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/block-color.dxf"
-          >
-            block-color.dxf
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/lockers.dwg"
-          >
-            lockers.dwg
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/map-of-uae.dwg"
-          >
-            map-of-uae.dwg
-          </button>
-          <button
-            type="button"
-            class="file-list-item"
-            data-file-url="https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/data/patient-chairs.dwg"
-          >
-            patient-chairs.dwg
-          </button>
-          </div>
-        </div>
-      </aside>
-      <div
-        class="file-sidebar-resize-handle"
-        id="fileSidebarResizeHandle"
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize predefined files panel"
-        tabindex="-1"
-      ></div>
-      </div>
-
       <main class="viewer-pane" id="viewerPane">
         <div class="dev-toolbar is-disabled" id="devToolbar" role="toolbar" aria-label="Viewer demo controls">
           <button type="button" id="devNewButton" class="dev-toolbar-primary" aria-label="New drawing">
@@ -673,25 +590,10 @@
                   <span>Command line</span>
                 </label>
               </div>
-              <div class="dev-toolbar-menu-section">
-                <label class="dev-toolbar-menu-check" for="devDisplaySidebar">
-                  <input type="checkbox" id="devDisplaySidebar" disabled />
-                  <span>Sidebar</span>
-                </label>
-              </div>
             </div>
           </div>
         </div>
         <section class="viewer-canvas-area">
-          <div class="empty-state" id="emptyState">
-            <div class="file-open-panel-host" id="fileOpenPanelHost"></div>
-            <p class="empty-font-cdn-notice">
-              If you are in a country or region with network access restrictions, please turn on a
-              VPN. Default font files are hosted on GitHub; when access is limited they load very
-              slowly, which can make opening drawings slow or cause text not to display correctly.
-            </p>
-          </div>
-          <input type="file" id="fileInputElement" accept=".dxf,.dwg" />
           <div id="cad-container"></div>
         </section>
       </main>

@@ -146,32 +146,9 @@ export interface AcDbDatabaseConverterReadOptions {
   progress?: AcDbConversionProgressCallback
 
   /**
-   * Timeout for parser web worker operations in milliseconds.
-   */
-  timeout?: number
-
-  /**
-   * Override the text encoding used to decode strings in the source file.
-   *
-   * When omitted, converters auto-detect the encoding (DXF reads
-   * `$DWGCODEPAGE`; DWG reads the header code page). When provided, it wins
-   * over auto-detection — for example `'cp949'` (normalized to the supported
-   * `'euc-kr'` `TextDecoder` label) for Korean drawings. Applies to
-   * converters that read text in the main thread, such as the native DXF
-   * converter; worker-based converters may ignore it.
-   */
-  encoding?: string
-
-  /**
    * System variables to override in the database after HEADER is processed.
    */
   sysVars?: Record<string, number | boolean | string>
-
-  /**
-   * Collapses the drawing onto layer `0` while reading. See
-   * {@link AcDbLayerFlattener}.
-   */
-  flattenLayers?: boolean
 }
 
 /**
@@ -227,9 +204,6 @@ export interface AcDbConvertDatabasePerformanceData {
 }
 
 const PERFORMANCE_ENTRY_NAME = 'Load Database'
-const DEFAULT_WORKER_TIMEOUT_MS = 30000
-const MAX_WORKER_TIMEOUT_MS = 120000
-const BYTES_PER_MEBIBYTE = 1024 * 1024
 
 /**
  * Task class for database conversion operations.
@@ -298,50 +272,6 @@ class AcDbConversionTask<TIn, TOut> extends AcCmTask<TIn, TOut> {
  */
 export interface AcDbDatabaseConverterConfig {
   /**
-   * Optional URL for web worker scripts used in the conversion process.
-   *
-   * When provided, this URL points to a web worker script that can be used
-   * for offloading computationally intensive parsing tasks to a background
-   * thread, improving performance and preventing UI blocking.
-   *
-   * @example
-   * ```typescript
-   * const config: AcDbDatabaseConverterConfig = {
-   *   parserWorkerUrl: '/assets/dxf-parser-worker.js'
-   * };
-   * ```
-   */
-  parserWorkerUrl?: string | URL
-  /**
-   * Timeout for parser web worker operations in milliseconds.
-   *
-   * This applies only when parsing runs in a web worker.
-   *
-   * @default 30000
-   */
-  timeout?: number
-  /**
-   * Whether to use web workers for parser execution.
-   *
-   * When set to `true`, the converter uses a web worker for parsing, which
-   * keeps copyleft parser code out of the main bundle and avoids blocking
-   * the UI thread.
-   *
-   * Copyleft converters (DXF/DWG) require worker parsing. Setting this to
-   * `false` is only meaningful for converters that still support main-thread
-   * parsing.
-   *
-   * @default true
-   *
-   * @example
-   * ```typescript
-   * const config: AcDbDatabaseConverterConfig = {
-   *   parserWorkerUrl: '/assets/dxf-parser-worker.js'
-   * };
-   * ```
-   */
-  useWorker?: boolean
-  /**
    * Whether to convert entities grouped by type.
    *
    * When set to `true`, the converter will process entities one type
@@ -398,26 +328,10 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
   /**
    * Creates a new instance of the database converter.
    *
-   * @param config - Configuration options for the converter. This includes settings
-   *                 such as worker URL for web workers used in the conversion process.
-   *                 If not provided, an empty configuration object will be used.
-   *
-   * @example
-   * ```typescript
-   * // Create converter with default configuration
-   * const converter = new AcDbDxfConverter();
-   *
-   * // Create converter with custom worker URL
-   * const converter = new AcDbDxfConverter({
-   *   parserWorkerUrl: '/assets/dxf-parser-worker.js'
-   * });
-   * ```
+   * @param config - Configuration options for the converter.
    */
   constructor(config: AcDbDatabaseConverterConfig = {}) {
-    this.config = {
-      useWorker: config.useWorker ?? true,
-      ...config
-    }
+    this.config = { ...config }
   }
 
   /**
@@ -438,13 +352,7 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
     db: AcDbDatabase,
     options: AcDbDatabaseConverterReadOptions = {}
   ) {
-    const {
-      minimumChunkSize = 10,
-      progress,
-      timeout,
-      sysVars,
-      flattenLayers
-    } = options
+    const { minimumChunkSize = 10, progress, sysVars } = options
 
     const loadDbTimeEntry: AcCmPerformanceEntry<AcDbConvertDatabasePerformanceData> =
       {
@@ -489,7 +397,7 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
           step: 5,
           progress: percentage,
           task: async (data: ArrayBuffer) => {
-            return await this.parse(data, timeout)
+            return await this.parse(data)
           }
         },
         progress
@@ -550,7 +458,6 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
             if (db.tables.layerTable.numEntries === 0) {
               db.createDefaultData({ layer: true })
             }
-            if (flattenLayers) db.beginLayerFlatten()
             return data
           }
         },
@@ -666,7 +573,6 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
           step: 0,
           progress: percentage,
           task: async (data: { model: TModel }) => {
-            db.endLayerFlatten()
             return data
           }
         },
@@ -715,30 +621,8 @@ export abstract class AcDbDatabaseConverter<TModel = unknown> {
     }
   }
 
-  /**
-   * Resolves the parser worker timeout in milliseconds.
-   *
-   * Explicit timeout always takes precedence. Otherwise the timeout scales
-   * linearly with file size at one extra second per MiB, clamped to the
-   * range of 30 seconds to 2 minutes.
-   */
-  protected getParserWorkerTimeout(data: ArrayBuffer, timeout?: number) {
-    const resolvedTimeout = timeout ?? this.config.timeout
-    if (resolvedTimeout != null) {
-      return resolvedTimeout
-    }
-
-    const sizeInMiB = Math.ceil(data.byteLength / BYTES_PER_MEBIBYTE)
-    const dynamicTimeout = DEFAULT_WORKER_TIMEOUT_MS + sizeInMiB * 1000
-    return Math.min(
-      MAX_WORKER_TIMEOUT_MS,
-      Math.max(DEFAULT_WORKER_TIMEOUT_MS, dynamicTimeout)
-    )
-  }
-
   protected async parse(
-    _data: ArrayBuffer,
-    _timeout?: number
+    _data: ArrayBuffer
   ): Promise<AcDbParsingTaskResult<TModel>> {
     throw new Error('Not impelemented yet!')
   }

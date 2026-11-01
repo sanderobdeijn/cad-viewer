@@ -13,7 +13,6 @@ This package contains the core classes for defining and manipulating AutoCAD ent
 
 - **Database Management**: Complete AutoCAD database structure with tables and records
 - **Entity Support**: All major AutoCAD entity types (lines, circles, polylines, blocks, etc.)
-- **File Conversion**: Built-in MIT DXF converter (`AcDbNativeDxfConverter`, registered by default); extensible converter registration for DWG and alternate DXF readers
 - **Symbol Tables**: Layer, linetype, text style, and dimension style management
 - **Block Management**: Block table and block reference handling
 - **Dimension Support**: Comprehensive dimension entity types
@@ -73,14 +72,6 @@ npm install @mlightcad/data-model
 - **AcDbLayout**: Layout object for paper space
 - **AcDbLayoutDictionary**: Layout dictionary management
 - **AcDbLayoutManager**: Layout manager for switching between layouts
-
-### File Conversion
-- **AcDbDatabaseConverter**: Base class for file format converters
-- **AcDbDatabaseConverterManager**: Manages registered file converters
-- **AcDbBatchProcessing**: Batch processing utilities
-- **AcDbBaseWorker**, **acdbCreateWorkerApi**: Web Worker infrastructure for parsers
-
-DXF import is built in via `AcDbNativeDxfConverter` (registered by default). An optional GPL alternative is [@mlightcad/dxf-json-converter](https://github.com/mlightcad/dwg-dxf-converter/tree/main/packages/dxf-json-converter). DWG import is provided by converter packages such as [@mlightcad/libredwg-converter](../libredwg-converter/README.md); register a DWG converter with `AcDbDatabaseConverterManager` before calling `AcDbDatabase.read()` on DWG files.
 
 ### Utilities
 - **AcDbConstants**: Database constants
@@ -157,48 +148,6 @@ const modelSpace = database.getModelSpace();
 modelSpace.appendEntity(blockRef);
 ```
 
-### File Conversion
-
-DXF support is registered by default via `AcDbNativeDxfConverter` (MIT, main-thread
-streaming). You only need to register a converter when you want a different DXF
-implementation or when reading DWG files.
-
-```typescript
-import {
-  AcDbDatabase,
-  AcDbDatabaseConverterManager,
-  AcDbFileType,
-  acdbHostApplicationServices,
-  AcDbOpenDatabaseOptions
-} from '@mlightcad/data-model'
-import { AcDbLibreDwgConverter } from '@mlightcad/libredwg-converter'
-
-// Optional: replace the default native DXF converter (e.g. GPL worker-based parser)
-// import { AcDbDxfConverter } from '@mlightcad/dxf-json-converter'
-// AcDbDatabaseConverterManager.instance.register(
-//   AcDbFileType.DXF,
-//   new AcDbDxfConverter({
-//     useWorker: true,
-//     parserWorkerUrl: './assets/dxf-parser-worker.js'
-//   })
-// )
-
-// DWG still requires an explicit converter registration
-AcDbDatabaseConverterManager.instance.register(
-  AcDbFileType.DWG,
-  new AcDbLibreDwgConverter({
-    useWorker: true,
-    parserWorkerUrl: './assets/libredwg-parser-worker.js'
-  })
-)
-
-// Read a file into the database
-const database = new AcDbDatabase()
-acdbHostApplicationServices().workingDatabase = database
-const buffer = await file.arrayBuffer()
-await database.read(buffer, { readOnly: true }, AcDbFileType.DXF)
-```
-
 ### Font Loading
 
 Fonts referenced by text entities are loaded on demand by the mtext renderer when a
@@ -251,8 +200,6 @@ newLayout.setPlotCentered(true);
 - **@mlightcad/graphic-interface**: For graphics interface (peer dependency)
 - **iconv-lite**: For text encoding conversion
 - **uid**: For unique ID generation
-
-DXF reading works out of the box. For DWG, install a converter such as [@mlightcad/libredwg-converter](../libredwg-converter/README.md). An optional GPL DXF alternative is [@mlightcad/dxf-json-converter](https://github.com/mlightcad/dwg-dxf-converter/tree/main/packages/dxf-json-converter).
 
 ## API Documentation
 

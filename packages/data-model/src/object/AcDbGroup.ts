@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject, type AcDbObjectId } from '../base/AcDbObject'
 
 /**
@@ -43,53 +43,6 @@ export class AcDbGroup extends AcDbObject {
 
   addEntityId(id: AcDbObjectId) {
     this._entityIds.push(id)
-  }
-
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbGroup')
-    if (this.name) {
-      filer.writeString(300, this.name)
-    }
-    filer.writeInt16(70, this.unnamed ? 1 : 0)
-    filer.writeInt16(71, this.selectable ? 1 : 0)
-    for (const id of this._entityIds) {
-      filer.writeObjectId(340, id)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbGroup')
-    this._entityIds = []
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 300:
-          this._name = String(item.value)
-          break
-        case 70:
-          this._unnamed = Number(item.value) !== 0
-          break
-        case 71:
-          this._selectable = Number(item.value) !== 0
-          break
-        case 340:
-          this._entityIds.push(String(item.value))
-          break
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

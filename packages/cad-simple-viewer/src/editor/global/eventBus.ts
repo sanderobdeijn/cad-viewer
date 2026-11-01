@@ -1,11 +1,9 @@
 import {
-  AcDbOpenDatabaseErrorCode,
   AcDbProgressdEventArgs
 } from '@mlightcad/data-model'
 import mitt, { type Emitter } from 'mitt'
 
 import { AcEdMessageType } from '../input/ui/AcEdMessageType'
-import { AcEdOpenMode } from '../view/AcEdOpenMode'
 
 export interface AcEdFontNotLoadedInfo {
   /** Font name */
@@ -21,7 +19,7 @@ export interface AcEdFontNotLoadedInfo {
  * type safety for event emission and listening throughout the application.
  *
  * ## Event Categories
- * - **File Operations**: `open-file`, `open-local-file-started`, `open-file-progress`, `failed-to-open-file`, `cache-font`, `font-file-selected`
+ * - **File Operations**: `open-file-progress`, `cache-font`, `font-file-selected`
  * - **Font Management**: `fonts-not-loaded`, `failed-to-get-avaiable-fonts`, `font-not-found`
  * - **Missing Resources**: `missed-data-changed`
  * - **User Messages**: `message`
@@ -35,20 +33,13 @@ export type AcEdBusyIndicatorEventArgs = {
 }
 
 export type AcEdEvents = {
-  /** Emitted to request opening a file dialog (handled by {@link acapInstallOpenFileDialog}) */
-  'open-file': {}
-  /** Emitted when a local file is about to be opened through the built-in OPEN dialog */
-  'open-local-file-started': {
-    /** Requested document access mode for the pending open operation */
-    mode: AcEdOpenMode
-  }
   /** Emitted to request opening a font file dialog for IndexedDB caching */
   'cache-font': {}
   /** Emitted when the user selects a font file in the cache-font dialog */
   'font-file-selected': {
     file?: File
   }
-  /** Emitted during file opening to report progress */
+  /** Emitted while a drawing is being prepared to report progress */
   'open-file-progress': AcDbProgressdEventArgs
   /** Emitted to display a message to the user */
   message: {
@@ -69,15 +60,6 @@ export type AcEdEvents = {
   'failed-to-get-avaiable-fonts': {
     /** URL where the fonts list was attempted to be retrieved from */
     url: string
-  }
-  /** Emitted when a file fails to open */
-  'failed-to-open-file': {
-    /** Name/path of the file that failed to open */
-    fileName: string
-    /** Structured failure category from {@link AcDbDatabase.lastOpenError} */
-    errorCode?: AcDbOpenDatabaseErrorCode
-    /** Human-readable failure description */
-    errorMessage?: string
   }
   /** Emitted when a required font is not found */
   'font-not-found': {
@@ -116,11 +98,6 @@ export type AcEdEvents = {
  * @example
  * ```typescript
  * import { eventBus } from './eventBus';
- *
- * // Listen for file opening events
- * eventBus.on('open-file', () => {
- *   console.log('File open requested');
- * });
  *
  * // Emit a progress update
  * eventBus.emit('open-file-progress', {

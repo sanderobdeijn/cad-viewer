@@ -1,108 +1,130 @@
 import { expect, test, type Page } from '@playwright/test'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 
-import { uploadFixture } from '../helpers/fileUpload'
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url))
-const fixturePath = path.resolve(
-  currentDir,
-  '..',
-  'fixtures',
-  'minimal-line.dxf'
-)
-const blockColorFixturePath = path.resolve(
-  currentDir,
-  '..',
-  'fixtures',
-  'block-color.dxf'
-)
-
-async function getInsertInheritedColorPixelCounts(page: Page) {
-  const canvas = page.locator('.ml-cad-container canvas').first()
-  const pngBase64 = (await canvas.screenshot()).toString('base64')
-
-  return await page.evaluate(async imageBase64 => {
-    const image = new Image()
-    image.src = `data:image/png;base64,${imageBase64}`
-    await image.decode()
-
-    const probe = document.createElement('canvas')
-    probe.width = image.naturalWidth
-    probe.height = image.naturalHeight
-    const ctx = probe.getContext('2d')
-    if (!ctx) {
-      throw new Error('Failed to create 2d context for screenshot probe')
-    }
-
-    ctx.drawImage(image, 0, 0)
-    const imageData = ctx.getImageData(0, 0, probe.width, probe.height)
-    const { data } = imageData
-    const width = probe.width
-    const height = probe.height
-
-    const isNear = (
-      r: number,
-      g: number,
-      b: number,
-      tr: number,
-      tg: number,
-      tb: number,
-      tolerance: number
-    ) =>
-      Math.abs(r - tr) <= tolerance &&
-      Math.abs(g - tg) <= tolerance &&
-      Math.abs(b - tb) <= tolerance
-
-    const counts = {
-      white: 0,
-      yellow: 0,
-      blue: 0,
-      magenta: 0
-    }
-
-    // Sample every other pixel for speed. This still captures enough signal
-    // for stable color-presence checks across CI environments.
-    for (let y = 0; y < height; y += 2) {
-      for (let x = 0; x < width; x += 2) {
-        const index = (y * width + x) * 4
-        const r = data[index]
-        const g = data[index + 1]
-        const b = data[index + 2]
-        const a = data[index + 3]
-        if (a < 220) continue
-
-        if (isNear(r, g, b, 255, 255, 255, 30)) counts.white++
-        if (isNear(r, g, b, 255, 255, 0, 45)) counts.yellow++
-        if (isNear(r, g, b, 0, 128, 255, 70)) counts.blue++
-        if (isNear(r, g, b, 255, 0, 255, 45)) counts.magenta++
+async function readNewDrawing(page: Page) {
+  return page.evaluate(() => {
+    type Named = { name: string }
+    const mgr = (
+      window as Window & {
+        AcApDocManager?: {
+          instance: {
+            curDocument: {
+              docTitle: string
+              database: {
+                clayer: string
+                dimstyle: string
+                insunits: number
+                tables: {
+                  layerTable: { newIterator: () => Iterable<Named> }
+                  dimStyleTable: { newIterator: () => Iterable<Named> }
+                  textStyleTable: { newIterator: () => Iterable<Named> }
+                  blockTable: {
+                    newIterator: () => Iterable<{
+                      newIterator: () => Iterable<unknown>
+                    }>
+                  }
+                }
+                objects: {
+                  layout: {
+                    newIterator: () => Iterable<{ layoutName: string }>
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+    ).AcApDocManager?.instance
+    if (!mgr) return null
+    const doc = mgr.curDocument
+    const db = doc.database
+    const names = (table: { newIterator: () => Iterable<Named> }) =>
+      [...table.newIterator()].map(record => record.name)
+    let entityCount = 0
+    for (const block of db.tables.blockTable.newIterator()) {
+      entityCount += [...block.newIterator()].length
     }
-
-    return counts
-  }, pngBase64)
+    return {
+      title: doc.docTitle,
+      clayer: db.clayer,
+      dimstyle: db.dimstyle,
+      insunits: db.insunits,
+      layers: names(db.tables.layerTable),
+      dimStyles: names(db.tables.dimStyleTable),
+      textStyles: names(db.tables.textStyleTable),
+      layouts: [...db.objects.layout.newIterator()].map(l => l.layoutName),
+      entityCount
+    }
+  })
 }
 
-test('shows upload screen on first load', async ({ page }) => {
+test('opens straight into a blank drawing', async ({ page }) => {
+  const drawingRequests: string[] = []
+  page.on('request', request => {
+    if (/\.(dxf|dwg|wasm)(\?|$)/i.test(request.url())) {
+      drawingRequests.push(request.url())
+    }
+  })
+
   await page.goto('/')
-  await expect(page.locator('.upload-screen')).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: 'Select CAD File to View' })
-  ).toBeVisible()
+  await expect(page.locator('.ml-cad-viewer-container')).toBeVisible()
+  await expect(page.locator('.ml-cad-container canvas').first()).toBeVisible()
+  await page.waitForTimeout(1500)
+
+  await expect(page.locator('input[type="file"][accept*="dxf"]')).toHaveCount(0)
+  expect(drawingRequests).toEqual([])
+
+  const drawing = await readNewDrawing(page)
+  expect(drawing).toEqual({
+    title: 'Untitled',
+    clayer: '0',
+    dimstyle: 'ISO-25',
+    insunits: 4,
+    layers: ['0'],
+    dimStyles: ['Standard', 'Annotative', 'ISO-25'],
+    textStyles: ['Standard', 'Annotative'],
+    layouts: ['Model', 'Layout1', 'Layout2'],
+    entityCount: 0
+  })
 })
 
-test('loads local DXF and renders viewer shell', async ({ page }) => {
+test('has no Open command', async ({ page }) => {
   await page.goto('/')
-  await uploadFixture(page, fixturePath)
+  await page.waitForFunction(
+    () => (window as Window & { AcApDocManager?: unknown }).AcApDocManager
+  )
 
-  await expect(page.locator('.ml-cad-viewer-container')).toBeVisible()
-  await expect(page.locator('.ml-cad-container')).toBeVisible()
+  const hasOpen = await page.evaluate(() => {
+    const mgr = (
+      window as Window & {
+        AcApDocManager?: {
+          instance: { lookupGlobalCmd: (name: string) => unknown }
+        }
+      }
+    ).AcApDocManager?.instance
+    return mgr ? mgr.lookupGlobalCmd('open') != null : null
+  })
+  expect(hasOpen).toBe(false)
+})
 
-  const hasCanvas = await page
-    .locator('.ml-cad-container canvas')
-    .count()
-    .then(count => count > 0)
-  expect(hasCanvas).toBeTruthy()
+test('switches between the model and paper layouts of a new drawing', async ({
+  page
+}) => {
+  const pageErrors: string[] = []
+  page.on('pageerror', error => {
+    pageErrors.push(error.message)
+  })
+
+  await page.goto('/')
+  const tabs = page.locator('.ml-layout-tabs-button')
+  await expect(tabs.filter({ hasText: 'Layout1' })).toBeVisible()
+
+  await tabs.filter({ hasText: 'Layout1' }).click()
+  await page.waitForTimeout(500)
+  await tabs.filter({ hasText: 'Model' }).click()
+  await page.waitForTimeout(500)
+
+  await expect(page.locator('.ml-cad-container canvas').first()).toBeVisible()
+  expect(pageErrors).toEqual([])
 })
 
 test('supports basic mouse interactions without runtime errors', async ({
@@ -114,7 +136,6 @@ test('supports basic mouse interactions without runtime errors', async ({
   })
 
   await page.goto('/')
-  await uploadFixture(page, fixturePath)
   await expect(page.locator('.ml-cad-container')).toBeVisible()
 
   const container = page.locator('.ml-cad-container')
@@ -132,24 +153,4 @@ test('supports basic mouse interactions without runtime errors', async ({
 
   await expect(page.locator('.ml-cad-viewer-container')).toBeVisible()
   expect(pageErrors).toEqual([])
-})
-
-test('keeps block layer-0 ByLayer entities inheriting INSERT layer colors', async ({
-  page
-}) => {
-  await page.goto('/')
-  await uploadFixture(page, blockColorFixturePath)
-
-  const container = page.locator('.ml-cad-container')
-  await expect(container).toBeVisible()
-  await page.waitForTimeout(1200)
-
-  const canvas = page.locator('.ml-cad-container canvas').first()
-  await expect(canvas).toBeVisible()
-
-  const colorCounts = await getInsertInheritedColorPixelCounts(page)
-  expect(colorCounts.white).toBeGreaterThan(20)
-  expect(colorCounts.yellow).toBeGreaterThan(20)
-  expect(colorCounts.blue).toBeGreaterThan(20)
-  expect(colorCounts.magenta).toBeGreaterThan(10)
 })

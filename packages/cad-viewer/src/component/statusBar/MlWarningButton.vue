@@ -15,10 +15,10 @@ import { computed } from 'vue'
 
 import { openMissingResourcesPalette, useMissedData } from '../../composable'
 
-const { fonts, xrefs } = useMissedData()
+const { fonts } = useMissedData()
 
 const hasMissing = computed(() => {
-  return fonts.size > 0 || xrefs.length > 0
+  return fonts.size > 0
 })
 
 const click = () => {

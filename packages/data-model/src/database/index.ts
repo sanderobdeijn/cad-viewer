@@ -7,13 +7,10 @@ export type {
   AcDbLayerEventArgs,
   AcDbLayerModifiedEventArgs,
   AcDbOpenDatabaseOptions,
-  AcDbOpenFailedEventArgs,
   AcDbOpenFileStage,
   AcDbProgressdEventArgs,
   AcDbTables
 } from './AcDbDatabase'
-export { AcDbOpenDatabaseError } from './AcDbOpenDatabaseError'
-export type { AcDbOpenDatabaseErrorCode } from './AcDbOpenDatabaseError'
 export { AcDbBlockTable } from './AcDbBlockTable'
 export {
   AcDbBlockScaling,
@@ -21,25 +18,12 @@ export {
   AcDbBlockTableRecordFlag
 } from './AcDbBlockTableRecord'
 export type { AcDbBlockTableRecordAttrs } from './AcDbBlockTableRecord'
-export { AcDbDatabaseConverter } from './AcDbDatabaseConverter'
 export type {
   AcDbConversionProgressCallback,
   AcDbConversionStage,
   AcDbConvertDatabasePerformanceData,
-  AcDbDatabaseConverterConfig,
-  AcDbDatabaseConverterReadOptions,
-  AcDbParsingTaskResult,
-  AcDbParsingTaskStats,
   AcDbStageStatus
 } from './AcDbDatabaseConverter'
-export {
-  AcDbDatabaseConverterManager,
-  AcDbFileType
-} from './AcDbDatabaseConverterManager'
-export type {
-  AcDbConverterType,
-  AcDbDatabaseConverterManagerEventArgs
-} from './AcDbDatabaseConverterManager'
 export { AcDbDimStyleTable } from './AcDbDimStyleTable'
 export {
   AcDbDimStyleTableRecord,

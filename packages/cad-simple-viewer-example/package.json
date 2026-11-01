@@ -20,7 +20,6 @@
     "@mlightcad/cad-simple-ui-plugin": "workspace:*",
     "@mlightcad/cad-simple-viewer": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
-    "@mlightcad/libredwg-converter": "workspace:*",
     "@mlightcad/mtext-parser": "workspace:*",
     "@mlightcad/mtext-renderer": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",

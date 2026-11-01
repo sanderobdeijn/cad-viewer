@@ -7,7 +7,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbEntity } from './AcDbEntity'
 import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
@@ -159,20 +158,5 @@ export class AcDb3dVertex extends AcDbEntity {
    */
   subWorldDraw(_renderer: AcGiRenderer): undefined {
     return undefined
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbVertex')
-    filer.writeSubclassMarker('AcDb3dPolylineVertex')
-    filer.writePoint3d(10, this.position)
-    filer.writeInt16(70, this.vertexType | 32)
-    return this
   }
 }

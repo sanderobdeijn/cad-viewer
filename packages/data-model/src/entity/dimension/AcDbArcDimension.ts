@@ -4,7 +4,6 @@ import {
   AcGePoint3dLike
 } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler } from '../../base'
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
 import { AcDbDimension } from './AcDbDimension'
 
@@ -189,91 +188,5 @@ export class AcDbArcDimension extends AcDbDimension {
       this.centerPoint,
       this.arcPoint
     ])
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbArcDimension')
-    filer.writePoint3d(13, this.xLine1Point)
-    filer.writePoint3d(14, this.xLine2Point)
-    filer.writePoint3d(15, this.centerPoint)
-    filer.writePoint3d(16, this.arcPoint)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbArcDimension')
-
-    let x1 = this.xLine1Point.x
-    let y1 = this.xLine1Point.y
-    let z1 = this.xLine1Point.z
-    let x2 = this.xLine2Point.x
-    let y2 = this.xLine2Point.y
-    let z2 = this.xLine2Point.z
-    let cx = this.centerPoint.x
-    let cy = this.centerPoint.y
-    let cz = this.centerPoint.z
-    let ax = this.arcPoint.x
-    let ay = this.arcPoint.y
-    let az = this.arcPoint.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 13:
-          x1 = n
-          break
-        case 23:
-          y1 = n
-          break
-        case 33:
-          z1 = n
-          break
-        case 14:
-          x2 = n
-          break
-        case 24:
-          y2 = n
-          break
-        case 34:
-          z2 = n
-          break
-        case 15:
-          cx = n
-          break
-        case 25:
-          cy = n
-          break
-        case 35:
-          cz = n
-          break
-        case 16:
-          ax = n
-          break
-        case 26:
-          ay = n
-          break
-        case 36:
-          az = n
-          break
-        default:
-          break
-      }
-    }
-    this.xLine1Point = new AcGePoint3d(x1, y1, z1)
-    this.xLine2Point = new AcGePoint3d(x2, y2, z2)
-    this.centerPoint = new AcGePoint3d(cx, cy, cz)
-    this.arcPoint = new AcGePoint3d(ax, ay, az)
-    return this
   }
 }

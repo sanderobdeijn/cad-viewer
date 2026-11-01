@@ -1,7 +1,6 @@
 import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
-  AcGeMathUtil,
   AcGeMatrix3d,
   AcGePoint3d,
   AcGePoint3dLike,
@@ -11,7 +10,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbObjectId } from '../base/AcDbObject'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
@@ -342,7 +340,6 @@ export class AcDbBlockReference extends AcDbEntity {
       const next = new Map<string, AcDbAttribute>()
       this._attribs.forEach(attrib => {
         attrib.database = db
-        db.flattenEntityLayer(attrib, true)
         db.commitObjectHandle(attrib)
         attrib.ownerId = this.objectId
         next.set(attrib.objectId, attrib)
@@ -925,36 +922,6 @@ export class AcDbBlockReference extends AcDbEntity {
   }
 
   /**
-   * Writes this INSERT entity to DXF, including its attribute sequence.
-   *
-   * The output order follows DXF conventions:
-   *
-   * 1. Emit INSERT common/object fields via the base implementation
-   * 2. Emit one `ATTRIB` section for each attached attribute
-   * 3. Emit a terminating `SEQEND` record when attributes were written
-   *
-   * @param filer - DXF output writer.
-   * @param allXdata - When true, emits all XData attached to this entity.
-   * @returns The current entity instance.
-   */
-  override dxfOut(filer: AcDbDxfFiler, allXdata = false) {
-    super.dxfOut(filer, allXdata)
-    let hasAttributes = false
-    for (const attrib of this.attributeIterator()) {
-      hasAttributes = true
-      filer.writeStart('ATTRIB')
-      attrib.dxfOut(filer, allXdata)
-    }
-    if (hasAttributes) {
-      filer.writeStart('SEQEND')
-      filer.writeHandle(5, this.database.generateHandle())
-      filer.writeObjectId(330, this.objectId)
-      filer.writeSubclassMarker('AcDbEntity')
-    }
-    return this
-  }
-
-  /**
    * Collects object snap points from all entities in this block reference.
    */
   private collectBlockOsnapPoints(
@@ -1177,135 +1144,5 @@ export class AcDbBlockReference extends AcDbEntity {
   private getFullInsertionTransform() {
     const extrusion = new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
     return new AcGeMatrix3d().multiplyMatrices(extrusion, this.blockTransform)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbBlockReference')
-    filer.writePoint3d(10, this.position)
-    filer.writeString(2, this.blockName)
-    filer.writeDouble(41, this.scaleFactors.x)
-    filer.writeDouble(42, this.scaleFactors.y)
-    filer.writeDouble(43, this.scaleFactors.z)
-    filer.writeAngle(50, this.rotation)
-    if (this.columnCount > 1) {
-      filer.writeInt16(70, this.columnCount)
-    }
-    if (this.rowCount > 1) {
-      filer.writeInt16(71, this.rowCount)
-    }
-    if (this.columnSpacing !== 0) {
-      filer.writeDouble(44, this.columnSpacing)
-    }
-    if (this.rowSpacing !== 0) {
-      filer.writeDouble(45, this.rowSpacing)
-    }
-    filer.writeVector3d(210, this.normal)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbBlockReference')
-
-    let x = this.position.x
-    let y = this.position.y
-    let z = this.position.z
-    let sx = this.scaleFactors.x
-    let sy = this.scaleFactors.y
-    let sz = this.scaleFactors.z
-    let rotDeg = AcGeMathUtil.radToDeg(this.rotation)
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-    let columnCount = this.columnCount
-    let rowCount = this.rowCount
-    let columnSpacing = this.columnSpacing
-    let rowSpacing = this.rowSpacing
-
-    const commit = () => {
-      this.position = new AcGePoint3d(x, y, z)
-      this.scaleFactors = new AcGePoint3d(sx, sy, sz)
-      this.rotation = AcGeMathUtil.degToRad(rotDeg)
-      this.normal.copy(new AcGeVector3d(nx, ny, nz))
-      this.columnCount = columnCount > 0 ? columnCount : 1
-      this.rowCount = rowCount > 0 ? rowCount : 1
-      this.columnSpacing = columnSpacing
-      this.rowSpacing = rowSpacing
-    }
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-          x = n
-          break
-        case 20:
-          y = n
-          break
-        case 30:
-          z = n
-          break
-        case 2:
-          this.blockName = String(item.value)
-          break
-        case 41:
-          sx = n
-          break
-        case 42:
-          sy = n
-          break
-        case 43:
-          sz = n
-          break
-        case 44:
-          columnSpacing = n
-          break
-        case 45:
-          rowSpacing = n
-          break
-        case 50:
-          rotDeg = n
-          break
-        case 66:
-          // Attributes-follow flag — ATTRIB entities are streamed separately.
-          break
-        case 70:
-          columnCount = n
-          break
-        case 71:
-          rowCount = n
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        case 100:
-          // Next subclass (e.g. AcDbTable) — hand off.
-          filer.pushBackItem(item)
-          commit()
-          return this
-        default:
-          // Unknown optional INSERT codes — keep scanning within this subclass.
-          break
-      }
-    }
-
-    commit()
-    return this
   }
 }

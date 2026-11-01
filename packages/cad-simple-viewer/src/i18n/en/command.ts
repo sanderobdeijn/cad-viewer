@@ -252,9 +252,6 @@ export default {
     mtext: {
       description: 'Creates one mtext entity'
     },
-    open: {
-      description: 'Opens an existing drawing file'
-    },
     openprof: {
       description:
         'Controls whether open-file stage timing profiles are logged to the console'

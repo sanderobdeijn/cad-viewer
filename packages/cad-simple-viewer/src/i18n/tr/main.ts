@@ -44,20 +44,6 @@ export default {
       '"{font}" yazı tipi {count} metin nesnesi tarafından gerekli, ancak kullanılamıyor. "{replacementFont}" ile gösteriliyor.',
     fontMissedReplacement: '"{font}" ("{replacement}" ile gösteriliyor)',
     failedToGetAvaiableFonts: '"{url}" adresinden yazı tipleri alınamadı!',
-    failedToOpenFile: '"{fileName}" dosyası açılamadı!',
-    failedToOpenFileToast:
-      '"{fileName}" açılamadı. Ayrıntılar için bildirim merkezine bakın.',
-    failedToOpenFileWorkerOom:
-      '"{fileName}" açılamadı. Ayrıştırma, yetersiz bellek nedeniyle başarısız oldu (LibreDWG parser). Büyük çizimleri çökmeden açmak için ticari DWG parser satın almak üzere {dwgParserLink} bağlantısına tıklayabilirsiniz.',
-    failedToOpenFileWorkerOomLink: 'bu sayfa',
-    failedToOpenFileWorkerTimeout:
-      '"{fileName}" açılamadı. Çizim ayrıştırılırken işlem zaman aşımına uğradı.',
-    failedToOpenFileFontLoadFailed:
-      '"{fileName}" açılamadı. Gerekli yazı tipleri yüklenemedi.',
-    failedToOpenFileLicenseExpired:
-      '"{fileName}" açılamadı. DWG dönüştürücü lisansı süresi dolmuş.',
-    failedToOpenFileLicenseInvalid:
-      '"{fileName}" açılamadı. DWG dönüştürücü lisansı eksik veya geçersiz.',
     unknownEntities:
       'Bu çizim {count} bilinmeyen veya desteklenmeyen varlık içeriyor! Bu varlıklar gösterilmeyecek.',
     tianzhengEntities:
@@ -81,12 +67,6 @@ export default {
       genericSummary: '{count} mesaj. Ayrıntılar için tıklayın.'
     },
     title: {
-      failedToOpenFile: 'Dosya Açılamadı',
-      failedToOpenFileWorkerOom: 'Yetersiz Bellek',
-      failedToOpenFileWorkerTimeout: 'Açma Zaman Aşımı',
-      failedToOpenFileFontLoadFailed: 'Yazı Tipi Yüklenemedi',
-      failedToOpenFileLicenseExpired: 'Lisans Süresi Doldu',
-      failedToOpenFileLicenseInvalid: 'Geçersiz Lisans',
       fontNotFound: 'Yazı Tipi Bulunamadı',
       fontNotLoaded: 'Yazı Tipi Yüklenemedi',
       parsingWarning: 'Çizim Ayrıştırma Sorunları',
@@ -118,7 +98,7 @@ export default {
     close: 'Kapat',
     product: 'CAD Viewer',
     tagline:
-      'DWG ve DXF çizimleri için yüksek performanslı web CAD görüntüleyici.',
+      'Yüksek performanslı web CAD düzenleyicisi.',
     website: 'Web sitesi',
     docs: 'Belgeler',
     repository: 'GitHub',
@@ -172,28 +152,5 @@ export default {
     snoozeToday: 'Bugün tekrar hatırlatma',
     hideForever: 'Bir daha hatırlatma',
     ok: 'Anladım'
-  },
-  dataSource: {
-    open: 'Aç',
-    local: 'Yerel dosya',
-    url: 'URL\'den',
-    openFrom: '{name} konumundan aç',
-    signInTo: '{name} oturumu aç',
-    signOutOf: '{name} oturumunu kapat',
-    signOutOfAccount: '{name} oturumunu kapat ({account})',
-    urlDialogTitle: 'URL\'den aç',
-    urlDialogHint: '.dwg veya .dxf dosyasının URL\'sini girin.',
-    urlPlaceholder: 'https://example.com/drawing.dwg',
-    cancel: 'İptal',
-    or: 'veya',
-    dropFile: 'Dosyayı buraya bırakın veya',
-    browse: 'göz atın',
-    dropOrBrowse: 'DWG veya DXF dosyasını buraya bırakın veya göz atın',
-    newDrawing: 'Yeni çizim',
-    source: 'Kaynak',
-    unavailable: 'Bu kaynak henüz kullanılamıyor.',
-    selectFile: 'Dosya seç',
-    signInRequired: 'Dosya seçmek için önce oturum açın.',
-    downloading: 'Dosya indiriliyor ...'
   }
 }

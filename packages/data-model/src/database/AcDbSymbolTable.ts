@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbObject, AcDbObjectId } from '../base/AcDbObject'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
 import { AcDbDatabase } from './AcDbDatabase'
@@ -363,21 +363,6 @@ export class AcDbSymbolTable<
    */
   protected get dxfEntryCount() {
     return this.numEntries
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbSymbolTable')
-    // DXF common symbol table group code 70: maximum number of entries.
-    // We emit the current count, which matches typical DXF output behavior.
-    filer.writeInt16(70, this.dxfEntryCount)
-    return this
   }
 
   /**

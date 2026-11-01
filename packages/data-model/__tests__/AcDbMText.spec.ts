@@ -9,7 +9,7 @@ import {
   AcGiMTextFlowDirection
 } from '@mlightcad/graphic-interface'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbMText } from '../src/entity'
 import { AcDbOsnapMode, DEFAULT_TEXT_STYLE } from '../src/misc'
@@ -318,106 +318,5 @@ describe('AcDbMText', () => {
     expect(() => mtext.subWorldDraw(renderer as never)).not.toThrow()
     expect(renderer.mtext).toHaveBeenCalled()
     expect(db.tables.textStyleTable.getAt('Standard')).toBeDefined()
-  })
-
-  it('writes MTEXT DXF fields with encoded content and optional background fields', () => {
-    createWorkingDb()
-    const mtext = new AcDbMText()
-    mtext.ownerId = 'ABC'
-    mtext.location = { x: 1, y: 2, z: 3 }
-    mtext.height = 2
-    mtext.width = 10
-    mtext.contents = 'a\r\nb\nc\rd'
-    mtext.styleName = 'MyTextStyle'
-    mtext.rotation = Math.PI / 2
-    mtext.direction = { x: 1, y: 0, z: 0 }
-    mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopCenter
-    mtext.drawingDirection = AcGiMTextFlowDirection.TOP_TO_BOTTOM
-    mtext.lineSpacingStyle = 3
-    mtext.lineSpacingFactor = 1.5
-    mtext.backgroundFill = false
-
-    const filerWithoutBackground = new AcDbDxfFiler()
-    expect(mtext.dxfOutFields(filerWithoutBackground)).toBe(mtext)
-    const dxfWithoutBackground = filerWithoutBackground.toString()
-
-    expect(dxfWithoutBackground).toContain('100\nAcDbEntity')
-    expect(dxfWithoutBackground).toContain('100\nAcDbMText')
-    expect(dxfWithoutBackground).toContain('10\n1')
-    expect(dxfWithoutBackground).toContain('20\n2')
-    expect(dxfWithoutBackground).toContain('30\n3')
-    expect(dxfWithoutBackground).toContain('40\n2')
-    expect(dxfWithoutBackground).toContain('41\n10')
-    expect(dxfWithoutBackground).not.toContain('42\n')
-    expect(dxfWithoutBackground).toContain('1\na\\Pb\\Pc\\Pd')
-    expect(dxfWithoutBackground).toContain('7\nMyTextStyle')
-    expect(dxfWithoutBackground).toContain('50\n90')
-    expect(dxfWithoutBackground).toContain('11\n1')
-    expect(dxfWithoutBackground).toContain('21\n0')
-    expect(dxfWithoutBackground).toContain('31\n0')
-    expect(dxfWithoutBackground).toContain(
-      `71\n${AcGiMTextAttachmentPoint.TopCenter}`
-    )
-    expect(dxfWithoutBackground).toContain(
-      `72\n${AcGiMTextFlowDirection.TOP_TO_BOTTOM}`
-    )
-    expect(dxfWithoutBackground).toContain('73\n3')
-    expect(dxfWithoutBackground).toContain('44\n1.5')
-    expect(dxfWithoutBackground).not.toContain('\n90\n1\n')
-    expect(dxfWithoutBackground).not.toContain('63\n')
-    expect(dxfWithoutBackground).not.toContain('441\n')
-    expect(dxfWithoutBackground).not.toContain('45\n')
-
-    mtext.backgroundFill = true
-    mtext.backgroundFillColor = 0x112233
-    mtext.backgroundFillTransparency = 128
-    mtext.backgroundScaleFactor = 2.5
-
-    const filerWithBackground = new AcDbDxfFiler()
-    mtext.dxfOutFields(filerWithBackground)
-    const dxfWithBackground = filerWithBackground.toString()
-
-    expect(dxfWithBackground).toContain('90\n1')
-    expect(dxfWithBackground).toContain('63\n1122867')
-    expect(dxfWithBackground).toContain('441\n128')
-    expect(dxfWithBackground).toContain('45\n2.5')
-  })
-
-  it('writes actual text width as DXF group 42 when extentsWidth is set', () => {
-    createWorkingDb()
-    const mtext = new AcDbMText()
-    mtext.ownerId = 'ABC'
-    mtext.location = { x: 0, y: 0, z: 0 }
-    mtext.height = 2
-    mtext.width = 10
-    mtext.extentsWidth = 18.5
-
-    const filer = new AcDbDxfFiler()
-    mtext.dxfOutFields(filer)
-
-    expect(filer.toString()).toContain('42\n18.5')
-    expect(filer.toString()).not.toContain('414\n')
-  })
-
-  it('splits MTEXT contents longer than 250 chars into group 3 + group 1', () => {
-    createWorkingDb()
-    const mtext = new AcDbMText()
-    mtext.ownerId = 'ABC'
-    mtext.location = { x: 0, y: 0, z: 0 }
-    mtext.height = 2
-    // 520 chars → two full group-3 chunks (250 each) + group-1 remainder (20).
-    mtext.contents = 'A'.repeat(520)
-
-    const outFiler = new AcDbDxfFiler()
-    mtext.dxfOutFields(outFiler)
-    const dxf = outFiler.toString()
-
-    const group3Matches = dxf.match(/\n3\n[A]{250}/g) ?? []
-    expect(group3Matches).toHaveLength(2)
-    expect(dxf).toContain('\n1\n' + 'A'.repeat(20))
-
-    const roundTrip = new AcDbMText()
-    roundTrip.dxfIn(AcDbDxfFiler.fromString(dxf))
-    expect(roundTrip.contents).toBe('A'.repeat(520))
   })
 })

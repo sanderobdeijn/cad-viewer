@@ -7,7 +7,6 @@ import {
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbEntity } from './AcDbEntity'
 import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
@@ -240,23 +239,5 @@ export class AcDb2dVertex extends AcDbEntity {
    */
   subWorldDraw(_renderer: AcGiRenderer): undefined {
     return undefined
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbVertex')
-    filer.writeSubclassMarker('AcDb2dVertex')
-    filer.writePoint2d(10, this.position)
-    filer.writeDouble(40, this.startWidth)
-    filer.writeDouble(41, this.endWidth)
-    filer.writeDouble(42, this.bulge)
-    filer.writeInt16(70, this.vertexType)
-    return this
   }
 }

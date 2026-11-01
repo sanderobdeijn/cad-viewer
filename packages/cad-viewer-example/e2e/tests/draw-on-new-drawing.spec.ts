@@ -1,20 +1,4 @@
 import { expect, test, type Page } from '@playwright/test'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url))
-const fixturePath = path.resolve(
-  currentDir,
-  '..',
-  'fixtures',
-  'minimal-line.dxf'
-)
-
-async function uploadFixture(page: Page) {
-  const fileInput = page.locator('input[type="file"]').first()
-  await expect(fileInput).toBeAttached()
-  await fileInput.setInputFiles(fixturePath)
-}
 
 /**
  * Counts non-background canvas pixels. Used as a coarse signal that newly
@@ -56,14 +40,13 @@ async function countNonBackgroundPixels(page: Page) {
 /**
  * Regression for https://github.com/mlightcad/cad-viewer/issues/286
  *
- * Entities committed after the initial load must render without requiring a
+ * Entities committed after the drawing is created must render without requiring a
  * camera change (pan/resize) to refresh the batched renderer.
  */
 test('drawn lines appear immediately without panning the view', async ({
   page
 }) => {
   await page.goto('/')
-  await uploadFixture(page)
   await expect(page.locator('.ml-cad-container')).toBeVisible({
     timeout: 30000
   })

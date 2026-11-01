@@ -7,7 +7,7 @@ import {
 import type { AcGeKnotParameterizationType } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbSpline, AcDbPolyline } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -285,56 +285,6 @@ describe('AcDbSpline', () => {
     ).lines.mock.calls[0][0] as unknown[]
     expect(sampled.length).toBeGreaterThan(1)
     expect(sampled.length).toBeLessThanOrEqual(100)
-  })
-
-  it('writes spline-specific DXF fields for control points', () => {
-    const spline = new AcDbSpline(
-      controlPoints,
-      knots,
-      [1, 1.5, 2, 2.5],
-      3,
-      true
-    )
-    const filer = new AcDbDxfFiler()
-    db.tables.blockTable.modelSpace.appendEntity(spline)
-
-    const result = spline.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(result).toBe(spline)
-    expect(dxf).toContain('100\nAcDbSpline\n')
-    expect(dxf).toContain('70\n1\n')
-    expect(dxf).toContain('71\n3\n')
-    expect(dxf).toContain('72\n8\n')
-    expect(dxf).toContain('73\n4\n')
-    expect(dxf).toContain('74\n0\n')
-    expect(dxf).toContain('40\n0\n')
-    expect(dxf).toContain('41\n1.5\n')
-    expect(dxf).toContain('10\n0\n20\n0\n30\n0\n')
-  })
-
-  it('writes fit points in DXF when underlying geometry exposes them', () => {
-    const spline = new AcDbSpline(controlPoints, knots)
-    const filer = new AcDbDxfFiler()
-    db.tables.blockTable.modelSpace.appendEntity(spline)
-    ;(spline as unknown as { _geo: unknown })._geo = {
-      degree: 3,
-      knots: [0, 0, 0, 0, 1, 1, 1, 1],
-      weights: [1, 1, 1, 1],
-      controlPoints,
-      fitPoints: [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 }
-      ],
-      closed: false
-    }
-
-    spline.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(dxf).toContain('74\n2\n')
-    expect(dxf).toContain('11\n0\n21\n0\n31\n0\n')
-    expect(dxf).toContain('11\n1\n21\n1\n31\n0\n')
   })
   it('creates a detached clone with a new objectId', () => {
     expectDetachedClone(

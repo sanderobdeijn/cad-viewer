@@ -1,4 +1,4 @@
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
+
 import { AcDbFilter } from './AcDbFilter'
 
 /**
@@ -171,43 +171,6 @@ export class AcDbLayerFilter extends AcDbFilter {
    */
   isValid(): boolean {
     return this._layerNames.some(name => name.length > 0)
-  }
-
-  /**
-   * Writes DXF fields for this layer filter object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbLayerFilter')
-    for (const layerName of this._layerNames) {
-      filer.writeString(8, layerName)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbLayerFilter')
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      switch (code) {
-        case 8:
-          this.add(String(item.value))
-          break
-        case 100:
-          filer.pushBackItem(item)
-          return this
-        default:
-          break
-      }
-    }
-    return this
   }
 }
 

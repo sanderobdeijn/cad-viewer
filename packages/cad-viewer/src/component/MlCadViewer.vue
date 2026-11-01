@@ -1,15 +1,14 @@
 <!--
   MlCadViewer - Main CAD Viewer Component
   
-  This is the primary component for displaying and interacting with CAD files (DWG, DXF, etc.).
-  It provides a complete CAD viewing experience with file loading, 
+  This is the primary component for creating and editing CAD drawings.
+  It opens with a new blank drawing and provides a complete editing experience with
   command execution, and various viewing tools.
   
   USAGE EXAMPLE:
-  MlCadViewer with locale="en", url="path/to/file.dwg"
+  MlCadViewer with locale="en"
   
   FEATURES:
-  - File loading from local files (drag & drop or file dialog) or remote URLs
   - Command line interface for CAD operations
   - Toolbars with common CAD tools (zoom, pan, select, etc.)
   - Entity information display
@@ -49,24 +48,12 @@
  *
  * @example
  * ```vue
- * // Basic usage with remote file
- * <MlCadViewer
- *   :locale="'en'"
- *   :url="'https://example.com/drawing.dwg'"
- * />
- *
- * // Basic usage with local file (File object)
- * <MlCadViewer
- *   :locale="'en'"
- *   :local-file="selectedFile"
- * />
- *
- * // Basic usage for manual file loading (no URL or localFile needed)
+ * // Basic usage
  * <MlCadViewer
  *   :locale="'en'"
  * />
  *
- * // Usage with custom baseUrl for fonts and templates
+ * // Usage with custom baseUrl for fonts
  * <MlCadViewer
  *   :locale="'en'"
  *   :base-url="'https://my-cdn.com/cad-data/'"
@@ -88,7 +75,6 @@
 import {
   AcApDocManager,
   AcApOpenDatabaseOptions,
-  AcApOpenViewMode,
   AcEdMTextEditor,
   AcEdOpenMode,
   eventBus,
@@ -120,7 +106,6 @@ import {
   useSettings
 } from '../composable'
 import { LocaleProp } from '../locale'
-import { resolveOpenFileErrorToastMessage } from '../util/openFileErrorMessage'
 import { MlDialogManager, MlFontFileReader } from './common'
 import { MlEntityInfo, MlToolBars } from './layout'
 import { MlNotificationCenter } from './notification'
@@ -144,13 +129,9 @@ const emit = defineEmits<{
 interface Props {
   /** Language locale for internationalization ('en', 'zh', or 'default') */
   locale?: LocaleProp
-  /** Optional URL to automatically load a CAD file on component mount */
-  url?: string
-  /** Optional local File object to automatically load a CAD file on component mount */
-  localFile?: File
   /** Background color as 24-bit hexadecimal RGB number (e.g., 0x000000) */
   background?: number
-  /** Base URL for loading fonts, templates, and example files (e.g., 'https://example.com/cad-data/') */
+  /** Base URL for loading fonts (e.g., 'https://example.com/cad-data/') */
   baseUrl?: string
   /**
    * Absolute root URL for localized user-guide pages (trailing slash optional).
@@ -166,12 +147,6 @@ interface Props {
   useMainThreadDraw?: boolean
   /** Initial theme of the viewer */
   theme?: 'light' | 'dark'
-  /**
-   * Access mode for opening CAD files.
-   * - Read (0): Read-only access
-   * - Write (8): Full read/write access, compatible with Read
-   */
-  mode?: AcEdOpenMode
   /**
    * Whether opening a drawing is progressive.
    *
@@ -189,12 +164,6 @@ interface Props {
    */
   waitForTextGeometry?: boolean
   /**
-   * How to frame the view when the document finishes opening.
-   * When omitted, Read uses {@link AcApOpenViewMode.Extents};
-   * Write uses {@link AcApOpenViewMode.Saved}.
-   */
-  openViewMode?: AcApOpenViewMode
-  /**
    * Maximum segments used to tessellate a full circle when drawing.
    * Lower values save memory; higher values look smoother.
    * When omitted, {@link ACDB_DRAW_CIRCLE_SIDES_DRAFT} (50) is used,
@@ -211,29 +180,23 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   locale: 'default',
-  url: undefined,
-  localFile: undefined,
   background: undefined,
   baseUrl: undefined,
   docsBaseUrl: undefined,
   useMainThreadDraw: true,
   theme: 'dark',
-  mode: AcEdOpenMode.Write,
   progressiveRendering: false,
-  openViewMode: undefined,
   circleSides: ACDB_DRAW_CIRCLE_SIDES_DRAFT,
   paperSpaceBackground: ACGI_PAPER_SPACE_BACKGROUND
 })
 
 const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
   minimumChunkSize: 1000,
-  mode: props.mode,
   progressiveRendering: props.progressiveRendering,
   circleSides: props.circleSides,
   sysVars: {
     paperbkcolor: layoutBackgroundColorFromRgb(props.paperSpaceBackground)
-  },
-  ...(props.openViewMode != null ? { openViewMode: props.openViewMode } : {})
+  }
 })
 
 const { t } = useI18n()
@@ -318,126 +281,12 @@ watch(isDocumentOpening, (opening, wasOpening) => {
   }
 })
 
-/**
- * Fetches and opens a CAD file from a remote URL
- * Used when the url prop is provided to automatically load files
- *
- * @param url - Remote URL to the CAD file
- */
-const openFileFromUrl = async (url: string) => {
-  const options = buildOpenOptions()
-  beginDocumentOpening()
-  beginPendingOpen(options.mode ?? AcEdOpenMode.Read)
-  try {
-    await AcApDocManager.instance.openUrl(url, options)
-  } catch (error) {
-    log.error('Failed to open file from URL:', error)
-    ElMessage({
-      message: resolveOpenFileErrorToastMessage(t, { fileName: url }),
-      grouping: true,
-      type: 'error',
-      showClose: true
-    })
-  } finally {
-    endDocumentOpening()
-    endPendingOpen()
-  }
-}
-
-/**
- * Opens a local CAD file from a File object
- * Used when the localFile prop is provided to automatically load files
- *
- * @param file - Local File object containing the CAD file
- */
-const openLocalFile = async (file: File) => {
-  const options = buildOpenOptions()
-  beginDocumentOpening()
-  beginPendingOpen(options.mode ?? AcEdOpenMode.Read)
-  let fileContent: ArrayBuffer | null = null
-  try {
-    const reader = new FileReader()
-    reader.readAsArrayBuffer(file)
-
-    // Wait for file reading to complete
-    fileContent = await new Promise<ArrayBuffer>((resolve, reject) => {
-      reader.onload = event => {
-        const result = event.target?.result
-        if (result) {
-          resolve(result as ArrayBuffer)
-        } else {
-          reject(new Error('Failed to read file content'))
-        }
-      }
-      reader.onerror = () => reject(new Error('Failed to read file'))
-    })
-
-    // Open the file using the document manager
-    const success = await AcApDocManager.instance.openDocument(
-      file.name,
-      fileContent,
-      options
-    )
-    if (!success) {
-      return
-    }
-  } catch {
-    ElMessage({
-      message: resolveOpenFileErrorToastMessage(t, { fileName: file.name }),
-      grouping: true,
-      type: 'error',
-      showClose: true
-    })
-  } finally {
-    fileContent = null
-    endDocumentOpening()
-    endPendingOpen()
-  }
-}
-
-// Watch for URL changes and automatically open new files
-// This allows dynamic loading of different CAD files without component remounting
-watch(
-  () => props.url,
-  async newUrl => {
-    if (newUrl) {
-      openFileFromUrl(newUrl)
-    }
-  }
-)
-
-// Watch for local file changes and automatically open new files
-// This allows dynamic loading of different local CAD files without component remounting
-watch(
-  () => props.localFile,
-  async newFile => {
-    if (newFile) {
-      openLocalFile(newFile)
-    }
-  }
-)
-
 // Watch for background color changes and apply to the view
 watch(
   () => props.background,
   newBg => {
     if (newBg != null) {
       AcApDocManager.instance.curView.backgroundColor = newBg
-    }
-  }
-)
-
-watch(
-  () => [
-    props.mode,
-    props.progressiveRendering,
-    props.openViewMode,
-    props.circleSides,
-    props.paperSpaceBackground
-  ],
-  () => {
-    if (editorRef.value) {
-      AcApDocManager.instance.setOpenDocumentDefaults(buildOpenOptions)
     }
   }
 )
@@ -449,6 +298,20 @@ watch(
     setColorTheme(newTheme)
   }
 )
+
+/**
+ * Fills the viewer with a blank drawing.
+ */
+const createInitialDrawing = async () => {
+  beginDocumentOpening()
+  beginPendingOpen(AcEdOpenMode.Write)
+  try {
+    await AcApDocManager.instance.newDocument(buildOpenOptions())
+  } finally {
+    endDocumentOpening()
+    endPendingOpen()
+  }
+}
 
 /**
  * Ctrl/Cmd+F opens the Find palette. The browser's own page search cannot
@@ -464,14 +327,10 @@ const onFindShortcut = (e: KeyboardEvent) => {
   openFindPalette()
 }
 
-// Component lifecycle: Initialize and load initial file if URL or localFile is provided
+// Component lifecycle: Initialize and create the initial drawing
 onMounted(async () => {
   window.addEventListener('keydown', onFindShortcut, true)
-  beginPendingOpen(props.mode)
-
-  if (props.url || props.localFile) {
-    beginDocumentOpening()
-  }
+  beginPendingOpen(AcEdOpenMode.Write)
 
   // Initialize the CAD viewer with the internal canvas
   if (containerRef.value && layoutRef.value) {
@@ -481,8 +340,7 @@ onMounted(async () => {
       baseUrl: props.baseUrl,
       docsBaseUrl: props.docsBaseUrl,
       autoResize: true,
-      useMainThreadDraw: props.useMainThreadDraw,
-      openDocumentDefaults: buildOpenOptions
+      useMainThreadDraw: props.useMainThreadDraw
     })
     // AcApDocManager.instance is guaranteed only after viewer initialization.
     editorRef.value = AcApDocManager.instance
@@ -494,14 +352,7 @@ onMounted(async () => {
   await nextTick()
   bindHeaderObserver()
 
-  // If URL prop is provided, automatically load the file on mount
-  if (props.url) {
-    openFileFromUrl(props.url)
-  }
-  // If localFile prop is provided, automatically load the file on mount
-  else if (props.localFile) {
-    openLocalFile(props.localFile)
-  }
+  await createInitialDrawing()
 
   // Apply initial background color if provided
   if (props.background != null) {
@@ -559,23 +410,6 @@ eventBus.on('failed-to-get-avaiable-fonts', params => {
     grouping: true,
     type: 'error',
     showClose: true
-  })
-})
-
-// Restore pending open mode for files opened through the built-in OPEN dialog
-eventBus.on('open-local-file-started', ({ mode }) => {
-  beginPendingOpen(mode)
-})
-
-// Handle file opening failures with user-friendly error messages
-eventBus.on('failed-to-open-file', params => {
-  endPendingOpen()
-  ElMessage({
-    message: resolveOpenFileErrorToastMessage(t, params),
-    grouping: true,
-    type: 'error',
-    showClose: true,
-    duration: 8000
   })
 })
 

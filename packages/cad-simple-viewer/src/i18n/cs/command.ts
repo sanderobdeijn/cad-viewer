@@ -253,9 +253,6 @@ export default {
     mtext: {
       description: 'Vytvoří jeden objekt víceřádkového textu'
     },
-    open: {
-      description: 'Otevře existující soubor výkresu'
-    },
     openprof: {
       description:
         'Řídí, zda se do konzole zaznamenávají časové profily fází otevírání souboru'

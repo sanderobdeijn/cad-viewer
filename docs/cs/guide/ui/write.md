@@ -4,9 +4,7 @@ title: Režim zápisu
 
 # Režim zápisu
 
-Režim zápisu je režim s nejúplnějšími funkcemi. Kromě všech možností režimu pouze pro čtení podporuje přímé vytváření, úpravu a mazání entit v DWG/DXF — což umožňuje webovému produktu zpracovávat skutečné kreslící práce, ne jen náhled pouze pro čtení.
-
-Režim zápisu je ve výchozím stavu použit při otevírání souboru, pokud není výslovně zadán režim pouze pro čtení.
+Režim zápisu podporuje přímé vytváření, úpravy a mazání entit — skutečné kreslení na webu. Každá relace začíná novým prázdným výkresem.
 
 ## Desktop
 
@@ -35,7 +33,7 @@ Okno Command Line ve spodní části plátna umožňuje přímo zadávat názvy 
 
 ### Pravý panel nástrojů
 
-Kromě nástrojů režimu pouze pro čtení je k dispozici **Skupina nástrojů pro výběr / úpravy**:
+Panel nástrojů obsahuje také **Skupinu nástrojů pro výběr / úpravy**:
 
 - Vybrat
 - Posun

@@ -8,7 +8,6 @@ function guideSidebar(prefix: string, labels: Record<string, string>) {
       text: labels.ui,
       collapsed: false,
       items: [
-        { text: labels.uiReadOnly, link: `${prefix}/guide/ui/read-only` },
         { text: labels.uiWrite, link: `${prefix}/guide/ui/write` },
       ],
     },
@@ -56,13 +55,12 @@ export default defineConfig({
       label: '中文',
       themeConfig: {
         nav: [
-          { text: '指南', link: '/zh/guide/ui/read-only' },
+          { text: '指南', link: '/zh/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/zh', {
           ui: '用户界面',
-          uiReadOnly: '只读模式',
           uiWrite: '读写模式',
           gesturesGroup: '操作和辅助显示',
           gestures: '操作方式',
@@ -88,13 +86,12 @@ export default defineConfig({
       label: 'English',
       themeConfig: {
         nav: [
-          { text: 'Guide', link: '/guide/ui/read-only' },
+          { text: 'Guide', link: '/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('', {
           ui: 'User Interface',
-          uiReadOnly: 'Read-Only Mode',
           uiWrite: 'Write Mode',
           gesturesGroup: 'Operations and Aids',
           gestures: 'Operations',
@@ -120,13 +117,12 @@ export default defineConfig({
       label: '日本語',
       themeConfig: {
         nav: [
-          { text: 'ガイド', link: '/ja/guide/ui/read-only' },
+          { text: 'ガイド', link: '/ja/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/ja', {
           ui: 'ユーザーインターフェース',
-          uiReadOnly: '閲覧専用モード',
           uiWrite: '編集モード',
           gesturesGroup: '操作と補助表示',
           gestures: '操作方法',
@@ -152,13 +148,12 @@ export default defineConfig({
       label: '한국어',
       themeConfig: {
         nav: [
-          { text: '가이드', link: '/ko/guide/ui/read-only' },
+          { text: '가이드', link: '/ko/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/ko', {
           ui: '사용자 인터페이스',
-          uiReadOnly: '읽기 전용 모드',
           uiWrite: '쓰기 모드',
           gesturesGroup: '조작 및 보조 표시',
           gestures: '조작 방법',
@@ -185,13 +180,12 @@ export default defineConfig({
       dir: 'rtl',
       themeConfig: {
         nav: [
-          { text: 'الدليل', link: '/ar/guide/ui/read-only' },
+          { text: 'الدليل', link: '/ar/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/ar', {
           ui: 'واجهة المستخدم',
-          uiReadOnly: 'وضع القراءة فقط',
           uiWrite: 'وضع القراءة والكتابة',
           gesturesGroup: 'العمليات والمساعدات',
           gestures: 'طرق التشغيل',
@@ -217,13 +211,12 @@ export default defineConfig({
       label: 'Čeština',
       themeConfig: {
         nav: [
-          { text: 'Průvodce', link: '/cs/guide/ui/read-only' },
+          { text: 'Průvodce', link: '/cs/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/cs', {
           ui: 'Uživatelské rozhraní',
-          uiReadOnly: 'Režim pouze pro čtení',
           uiWrite: 'Režim čtení a zápisu',
           gesturesGroup: 'Ovládání a pomůcky',
           gestures: 'Způsoby ovládání',
@@ -249,13 +242,12 @@ export default defineConfig({
       label: 'Türkçe',
       themeConfig: {
         nav: [
-          { text: 'Rehber', link: '/tr/guide/ui/read-only' },
+          { text: 'Rehber', link: '/tr/guide/ui/write' },
           { text: 'API', link: 'https://cad-viewer.readthedocs.io/en/latest/' },
           { text: 'GitHub', link: 'https://github.com/mlightcad/cad-viewer' },
         ],
         sidebar: guideSidebar('/tr', {
           ui: 'Kullanıcı Arayüzü',
-          uiReadOnly: 'Salt Okunur Mod',
           uiWrite: 'Okuma-Yazma Modu',
           gesturesGroup: 'İşlemler ve Yardımcılar',
           gestures: 'İşlem Yöntemleri',

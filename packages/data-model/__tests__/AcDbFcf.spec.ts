@@ -1,6 +1,6 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbFcf } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -119,25 +119,6 @@ describe('AcDbFcf', () => {
 
     fcf.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 0))
     expect(fcf.location).toMatchObject({ x: 4, y: 6, z: 0 })
-  })
-
-  it('writes DXF fields for TOLERANCE entity', () => {
-    createWorkingDb()
-    const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(10, 20, 0)
-    fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|'
-    fcf.dimensionStyle = 'Standard'
-    fcf.direction = { x: 0, y: 1, z: 0 }
-    fcf.ownerId = '0'
-
-    const filer = new AcDbDxfFiler()
-    fcf.dxfOutFields(filer)
-    const dxf = filer.toString()
-
-    expect(dxf).toContain('100\nAcDbFcf\n')
-    expect(dxf).toContain('3\nStandard\n')
-    expect(dxf).toContain('1\n')
-    expect(dxf).toContain('11\n0\n21\n1\n31\n0\n')
   })
 
   it('deep-clones as a detached object', () => {

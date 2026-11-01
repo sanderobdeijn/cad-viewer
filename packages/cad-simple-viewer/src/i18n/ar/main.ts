@@ -44,20 +44,6 @@ export default {
       'الخط "{font}" مطلوب بواسطة {count} من كائنات النص ولكنه غير متاح. يتم العرض باستخدام "{replacementFont}".',
     fontMissedReplacement: '"{font}" (يُعرض بـ "{replacement}")',
     failedToGetAvaiableFonts: 'تعذر الحصول على الخطوط من "{url}"!',
-    failedToOpenFile: 'فشل فتح الملف "{fileName}"!',
-    failedToOpenFileToast:
-      'فشل فتح "{fileName}". راجع مركز الإشعارات للتفاصيل.',
-    failedToOpenFileWorkerOom:
-      'فشل فتح "{fileName}". فشل التحليل بسبب نفاد الذاكرة المتاحة (محلل LibreDWG). يمكنك النقر على {dwgParserLink} لشراء محلل DWG التجاري وفتح الرسومات الكبيرة دون حدوث هذا الانهيار.',
-    failedToOpenFileWorkerOomLink: 'هذه الصفحة',
-    failedToOpenFileWorkerTimeout:
-      'فشل فتح "{fileName}". انتهت مهلة العملية أثناء تحليل الرسم.',
-    failedToOpenFileFontLoadFailed:
-      'فشل فتح "{fileName}". تعذر تحميل الخطوط المطلوبة.',
-    failedToOpenFileLicenseExpired:
-      'فشل فتح "{fileName}". انتهت صلاحية ترخيص محول DWG.',
-    failedToOpenFileLicenseInvalid:
-      'فشل فتح "{fileName}". ترخيص محول DWG مفقود أو غير صالح.',
     unknownEntities:
       'يحتوي هذا الرسم على {count} عنصر غير معروف أو غير مدعوم. لن يتم عرض هذه العناصر.',
     tianzhengEntities:
@@ -80,12 +66,6 @@ export default {
       genericSummary: '{count} رسائل. انقر للتفاصيل.'
     },
     title: {
-      failedToOpenFile: 'فشل فتح الملف',
-      failedToOpenFileWorkerOom: 'نفاد الذاكرة',
-      failedToOpenFileWorkerTimeout: 'انتهت مهلة فتح الرسم',
-      failedToOpenFileFontLoadFailed: 'فشل تحميل الخطوط',
-      failedToOpenFileLicenseExpired: 'انتهت صلاحية الترخيص',
-      failedToOpenFileLicenseInvalid: 'ترخيص غير صالح',
       fontNotFound: 'الخط غير موجود',
       fontNotLoaded: 'لم يتم تحميل الخط',
       parsingWarning: 'مشكلات أثناء تحليل الرسم',
@@ -116,7 +96,7 @@ export default {
     title: 'حول',
     close: 'إغلاق',
     product: 'عارض CAD',
-    tagline: 'عارض CAD عالي الأداء للويب لملفات DWG وDXF.',
+    tagline: 'محرر CAD عالي الأداء على الويب.',
     website: 'الموقع الإلكتروني',
     docs: 'التوثيق',
     repository: 'GitHub',
@@ -170,28 +150,5 @@ export default {
     snoozeToday: 'لا تذكرني اليوم',
     hideForever: 'لا تذكرني مرة أخرى',
     ok: 'فهمت'
-  },
-  dataSource: {
-    open: 'فتح',
-    local: 'ملف محلي',
-    url: 'من عنوان URL',
-    openFrom: 'فتح من {name}',
-    signInTo: 'تسجيل الدخول إلى {name}',
-    signOutOf: 'تسجيل الخروج من {name}',
-    signOutOfAccount: 'تسجيل الخروج من {name} ({account})',
-    urlDialogTitle: 'فتح من عنوان URL',
-    urlDialogHint: 'أدخل عنوان URL لملف .dwg أو .dxf.',
-    urlPlaceholder: 'https://example.com/drawing.dwg',
-    cancel: 'إلغاء',
-    or: 'أو',
-    dropFile: 'أسقط ملفًا هنا أو',
-    browse: 'تصفح',
-    dropOrBrowse: 'أسقط ملف DWG أو DXF هنا، أو تصفح',
-    newDrawing: 'رسم جديد',
-    source: 'المصدر',
-    unavailable: 'هذا المصدر غير متاح حاليًا.',
-    selectFile: 'اختيار ملف',
-    signInRequired: 'سجّل الدخول أولاً لاختيار ملف.',
-    downloading: 'جارٍ تنزيل الملف ...'
   }
 }

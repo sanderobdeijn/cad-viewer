@@ -1,6 +1,6 @@
 import { AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler, acdbHostApplicationServices } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
 import {
   AcDbAttributeDefinition,
@@ -225,119 +225,6 @@ describe('AcDbAttributeDefinition', () => {
     expect(renderer.mtext.mock.calls[0][0]).toMatchObject({
       text: 'mtext fixed'
     })
-  })
-
-  it('does not mutate group 70 when skipping non-constant block ATTDEFs', () => {
-    const db = setWorkingDb()
-    const blockRecord = new AcDbBlockTableRecord()
-    blockRecord.name = 'FLAGS_BLOCK'
-    db.tables.blockTable.add(blockRecord)
-
-    const attDef = new AcDbAttributeDefinition()
-    attDef.tag = 'TAG_01'
-    attDef.textString = 'ghost'
-    attDef.height = 2.5
-    blockRecord.appendEntity(attDef)
-
-    const renderer = {
-      mtext: jest.fn(() => ({ objectId: 'ATTDEF' }))
-    } as unknown as {
-      mtext: jest.Mock
-    }
-
-    expect(attDef.isInvisible).toBe(false)
-    expect(attDef.subWorldDraw(renderer as never)).toBeUndefined()
-    expect(attDef.isInvisible).toBe(false)
-
-    const filer = new AcDbDxfFiler()
-    attDef.ownerId = blockRecord.objectId
-    attDef.layer = '0'
-    attDef.lineWeight = 0
-    attDef.linetypeScale = 1
-    attDef.dxfOutFields(filer)
-    expect(filer.toString()).toContain('\n70\n0\n')
-  })
-
-  it('writes expected ATTDEF-specific fields in dxfOutFields', () => {
-    const db = setWorkingDb()
-    const attDef = new AcDbAttributeDefinition()
-    const filer = new AcDbDxfFiler()
-
-    attDef.ownerId = db.tables.blockTable.modelSpace.objectId
-    attDef.layer = '0'
-    attDef.lineWeight = 0
-    attDef.linetypeScale = 1
-    attDef.prompt = 'Prompt text'
-    attDef.tag = 'A_TAG'
-    attDef.isInvisible = true
-    attDef.isConst = true
-    attDef.isVerifiable = true
-    attDef.isPreset = true
-    attDef.fieldLength = 42
-    attDef.lockPositionInBlock = true
-    attDef.isReallyLocked = false
-
-    const result = attDef.dxfOutFields(filer)
-    const out = filer.toString()
-
-    expect(result).toBe(attDef)
-    expect(out).toContain('AcDbAttributeDefinition')
-    expect(out).toContain('\n3\nPrompt text\n')
-    expect(out).toContain('\n2\nA_TAG\n')
-    // Invisible(1) | Const(2) | Verifiable(4) | Preset(8) = 15
-    expect(out).toContain('\n70\n15\n')
-    expect(out).toContain('\n73\n42\n')
-    expect(out).toContain('\n74\n1\n')
-  })
-
-  it('does not treat an embedded Xrecord group 70 as attribute flags', () => {
-    setWorkingDb()
-    const groups = [
-      '100',
-      'AcDbEntity',
-      '8',
-      '0',
-      '100',
-      'AcDbText',
-      '10',
-      0,
-      '20',
-      0,
-      '30',
-      0,
-      '40',
-      3.2,
-      '1',
-      'default',
-      '100',
-      'AcDbAttributeDefinition',
-      '3',
-      'Prompt',
-      '2',
-      'PROJEKT',
-      '70',
-      0,
-      '74',
-      1,
-      '280',
-      0,
-      '100',
-      'AcDbXrecord',
-      '280',
-      0,
-      '70',
-      1,
-      '1001',
-      'MYAPP',
-      '1000',
-      'xdata-value'
-    ]
-    const attDef = new AcDbAttributeDefinition()
-    attDef.dxfIn(AcDbDxfFiler.fromString(groups.join('\n') + '\n'))
-    expect(attDef.isInvisible).toBe(false)
-    expect(attDef.tag).toBe('PROJEKT')
-    expect(attDef.prompt).toBe('Prompt')
-    expect(attDef.getXData('MYAPP')?.at(1)?.value).toBe('xdata-value')
   })
 
   it('creates a detached clone with a new objectId', () => {

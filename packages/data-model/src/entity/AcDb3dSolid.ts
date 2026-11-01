@@ -9,11 +9,8 @@ import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
 import {
   acdbAcisWireframeSegmentsFromSab,
-  acdbAcisWireframeSegmentsFromSatText,
-  acdbAppendAcisPayloadFragment,
-  acdbJoinAcisPayloadLines
+  acdbAcisWireframeSegmentsFromSatText
 } from '../acis'
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbEntity } from './AcDbEntity'
 
 /**
@@ -412,96 +409,6 @@ export class AcDb3dSolid extends AcDbEntity {
       0, 4, 1, 5, 2, 6, 3, 7
     ])
     return renderer.lineSegments(buffer, 3, indices)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDb3dSolid')
-    if (this._version != null) {
-      filer.writeInt16(70, this._version)
-    }
-    if (this._guid != null) {
-      filer.writeString(2, this._guid)
-    }
-    if (this._satCache != null) {
-      filer.writeInt16(290, this._satCache ? 1 : 0)
-    }
-    const maxChunkLength = 255
-    const lines = this._acisData.split('\n')
-    for (let i = 0; i < lines.length; i++) {
-      const isLast = i === lines.length - 1
-      let line = lines[i]!
-      while (line.length > maxChunkLength) {
-        filer.writeString(3, line.slice(0, maxChunkLength))
-        line = line.slice(maxChunkLength)
-      }
-      filer.writeString(isLast ? 1 : 3, line)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-
-    // DXF order: AcDbModelerGeometry (version + SAT chunks) then AcDb3dSolid
-    // (history / guid / satCache). Consume both subclass markers when present.
-    filer.atSubclassData('AcDbModelerGeometry')
-
-    const lines: string[] = []
-    let version = this._version
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.peekItem()
-      if (!item) break
-      const code = Number(item.code)
-
-      // Nested subclass marker for AcDb3dSolid — consume and continue.
-      if (code === 100) {
-        filer.readItem()
-        const marker = String(item.value)
-        if (marker === 'AcDb3dSolid') {
-          continue
-        }
-        // Unknown subclass — push back and stop so callers can handle it.
-        filer.pushBackItem(item)
-        break
-      }
-
-      filer.readItem()
-      const n = Number(item.value)
-      switch (code) {
-        case 1:
-          acdbAppendAcisPayloadFragment(lines, 1, String(item.value))
-          break
-        case 3:
-          acdbAppendAcisPayloadFragment(lines, 3, String(item.value))
-          break
-        case 70:
-          version = n
-          break
-        case 350:
-          this._historyObjectSoftId = String(item.value)
-          break
-        case 2:
-          this._guid = String(item.value)
-          break
-        case 290:
-          this._satCache = n !== 0
-          break
-        default:
-          break
-      }
-    }
-
-    // Decrypt obfuscated SAT fragments (DXF groups 1/3) the same way dxf-json does.
-    this.setAcisData(acdbJoinAcisPayloadLines(lines), version)
-    return this
   }
 }
 

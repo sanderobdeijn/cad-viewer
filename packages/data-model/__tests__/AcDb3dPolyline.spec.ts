@@ -1,14 +1,7 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
-
-import { AcDbDxfFiler } from '../src/base'
 import { AcDb3dPolyline, AcDbPoly3dType } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-import {
-  appendEntityToModelSpace,
-  getDxfGroupValues,
-  setupWorkingDatabase
-} from '../test-utils/entityTestUtils'
 
 describe('AcDb3dPolyline', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -186,91 +179,5 @@ describe('AcDb3dPolyline', () => {
       expect.objectContaining({ x: 1, y: 2, z: 0 }),
       expect.objectContaining({ x: 4, y: 5, z: 6 })
     ])
-  })
-
-  it('writes dxfOutFields flags for closed/polyType/vertex-count combinations', () => {
-    const db = setupWorkingDatabase()
-    const cases = [
-      {
-        polyline: new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 1, z: 1 }
-        ]),
-        expectedFlag: 8,
-        expected66: 1
-      },
-      {
-        polyline: new AcDb3dPolyline(
-          AcDbPoly3dType.SimplePoly,
-          [{ x: 0, y: 0, z: 0 }],
-          true
-        ),
-        expectedFlag: 9,
-        expected66: 1
-      },
-      {
-        polyline: new AcDb3dPolyline(AcDbPoly3dType.QuadSplinePoly, [
-          { x: 0, y: 0, z: 0 }
-        ]),
-        expectedFlag: 24,
-        expected66: 1
-      },
-      {
-        polyline: new AcDb3dPolyline(AcDbPoly3dType.CubicSplinePoly, []),
-        expectedFlag: 40,
-        expected66: 0
-      }
-    ]
-
-    cases.forEach(({ polyline, expectedFlag, expected66 }) => {
-      appendEntityToModelSpace(db, polyline)
-      const filer = new AcDbDxfFiler()
-      polyline.dxfOutFields(filer)
-      const dxfText = filer.toString()
-
-      expect(getDxfGroupValues(dxfText, 100)).toContain('AcDb3dPolyline')
-      expect(getDxfGroupValues(dxfText, 66)).toContain(String(expected66))
-      expect(getDxfGroupValues(dxfText, 70)).toContain(String(expectedFlag))
-    })
-  })
-
-  it('writes vertex and seqend records in dxfOut', () => {
-    const db = setupWorkingDatabase()
-    const polyline = appendEntityToModelSpace(
-      db,
-      new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, [
-        { x: 1, y: 2, z: 3 },
-        { x: 4, y: 5, z: 6 }
-      ])
-    )
-    const filer = new AcDbDxfFiler({ database: db })
-
-    const result = polyline.dxfOut(filer, true)
-    const dxfText = filer.toString()
-
-    expect(result).toBe(polyline)
-    expect((dxfText.match(/\n0\nVERTEX\n/g) || []).length).toBe(2)
-    expect(dxfText).toContain('\n0\nSEQEND\n')
-    expect((dxfText.match(/\n100\nAcDb3dPolylineVertex\n/g) || []).length).toBe(
-      2
-    )
-    expect(dxfText).toContain('\n10\n1\n20\n2\n30\n3\n')
-    expect(dxfText).toContain('\n10\n4\n20\n5\n30\n6\n')
-  })
-
-  it('writes dxfOut without allXdata argument and handles zero vertices', () => {
-    const db = setupWorkingDatabase()
-    const polyline = appendEntityToModelSpace(
-      db,
-      new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, [])
-    )
-    const filer = new AcDbDxfFiler({ database: db })
-
-    polyline.dxfOut(filer)
-    const dxfText = filer.toString()
-
-    expect(getDxfGroupValues(dxfText, 66)).toContain('0')
-    expect(dxfText).not.toContain('\n0\nVERTEX\n')
-    expect(dxfText).toContain('\n0\nSEQEND\n')
   })
 })

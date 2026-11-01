@@ -1,6 +1,5 @@
 import { AcCmStringKey, defaults } from '@mlightcad/common'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbObject, AcDbObjectAttrs } from '../base/AcDbObject'
 
 /**
@@ -125,17 +124,5 @@ export class AcDbSymbolTableRecord<
         `Symbol table record "${this.name || this.objectId}" is not open for write. Use openObjectForWrite().`
       )
     }
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbSymbolTableRecord')
-    return this
   }
 }

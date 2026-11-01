@@ -226,9 +226,6 @@ export default {
     mtext: {
       description: '创建多行文本'
     },
-    open: {
-      description: '打开图纸'
-    },
     openprof: {
       description: '控制是否在控制台记录文件打开阶段的耗时分析'
     },

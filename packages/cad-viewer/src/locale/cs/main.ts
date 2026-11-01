@@ -1,7 +1,6 @@
 export default {
   mainMenu: {
     new: 'Nový výkres',
-    open: 'Otevřít výkres',
     drawingUnits: 'Jednotky výkresu',
     about: 'O aplikaci'
   },
@@ -588,7 +587,6 @@ export default {
       tab: 'Zdroje',
       title: 'Chybějící / externí zdroje',
       fontTab: 'Font',
-      xrefTab: 'Externí reference',
       fileReferences: 'Odkazy na soubory',
       details: 'Podrobnosti',
       foundAt: 'Nalezeno v',
@@ -620,7 +618,6 @@ export default {
       unload: 'Uvolnit',
       load: 'Načíst',
       empty: 'V tomto výkresu nejsou žádné externí reference ani obrázky',
-      urlPrompt: 'Zadejte URL souboru DWG nebo DXF',
       urlRequired: 'Zadejte prosím URL',
       loadFailed: 'Nepodařilo se načíst referenci „{name}“'
     },
@@ -681,47 +678,6 @@ export default {
         category: 'Kategorie',
         font: 'Font'
       }
-    },
-    openFileProfile: {
-      tab: 'Otevření',
-      title: 'Výkon otevření',
-      refresh: 'Obnovit',
-      copy: 'Kopírovat',
-      copied: 'Data o výkonu zkopírována',
-      copyFailed: 'Kopírování dat o výkonu selhalo',
-      collectedAt: 'Shromážděno v {time}',
-      hint: 'Automaticky po posledním otevření výkresu. OPENPROF=1 také zapíše do konzole.',
-      noData: 'Zatím žádný profil. Nejprve otevřete výkres a spusťte OPENPERF.',
-      empty: 'Žádná data',
-      timing: 'Časování',
-      progressive: 'Progresivní otevření',
-      progressiveMode: 'Režim',
-      progressiveOn: 'Zapnuto',
-      progressiveOff: 'Vypnuto',
-      midOpenPaints: 'Vykreslení během otevření',
-      yields: 'Výnosy (yields)',
-      cache: 'Cache renderování INSERT (top-level)',
-      slowBlocks: 'Nejpomalejší miss šablon bloků',
-      total: 'Celkem',
-      read: 'db.read',
-      parse: 'PARSE',
-      entity: 'ENTITY flush',
-      convert: 'Převod scény',
-      cacheHits: 'Zásahy cache',
-      cacheMisses: 'Miss cache',
-      cacheBuild: 'Miss build',
-      cacheCompact: 'Miss compact',
-      cacheHitPath: 'Hit path',
-      columns: {
-        stage: 'Fáze',
-        duration: 'Trvání',
-        share: 'Podíl',
-        metric: 'Metrika',
-        value: 'Hodnota',
-        block: 'Blok',
-        build: 'Build',
-        compact: 'Compact'
-      }
     }
   },
   colorDropdown: {
@@ -748,7 +704,6 @@ export default {
   },
   message: {
     loadingFonts: 'Načítám fonty…',
-    loadingDwgConverter: 'Načítám převodník DWG…',
     fontsNotFound: 'Fonty {fonts} nebyly nalezeny v úložišti fontů!',
     fontsNotLoaded: 'Fonty {fonts} se nepodařilo načíst!',
     fontMissedInDrawing:
@@ -757,20 +712,6 @@ export default {
     fontCached: 'Font „{font}“ byl úspěšně uložen do mezipaměti.',
     fontCacheFailed: 'Nepodařilo se uložit font „{fileName}“ do mezipaměti.',
     failedToGetAvaiableFonts: 'Nepodařilo se získat dostupné fonty z „{url}“!',
-    failedToOpenFile: 'Nepodařilo se otevřít soubor „{fileName}“!',
-    failedToOpenFileToast:
-      'Nepodařilo se otevřít „{fileName}“. Podrobnosti najdete v centru oznámení.',
-    failedToOpenFileWorkerOom:
-      'Nepodařilo se otevřít „{fileName}“. Analýza selhala kvůli nedostatku dostupné paměti (LibreDWG parser). Kliknutím na {dwgParserLink} můžete zakoupit komerční DWG parser a otevírat velké výkresy bez tohoto pádu.',
-    failedToOpenFileWorkerOomLink: 'tuto stránku',
-    failedToOpenFileWorkerTimeout:
-      'Nepodařilo se otevřít „{fileName}“. Při načítání výkresu vypršel časový limit.',
-    failedToOpenFileFontLoadFailed:
-      'Nepodařilo se otevřít „{fileName}“. Potřebné fonty se nepodařilo načíst.',
-    failedToOpenFileLicenseExpired:
-      'Nepodařilo se otevřít „{fileName}“. Licence převodníku DWG vypršela.',
-    failedToOpenFileLicenseInvalid:
-      'Nepodařilo se otevřít „{fileName}“. Licence převodníku DWG chybí nebo je neplatná.',
     fetchingDrawingFile: 'Načítám soubor…',
     unknownEntities:
       'Tento výkres obsahuje {count} neznámých nebo nepodporovaných objektů! Tyto objekty nebudou zobrazeny.',
@@ -801,12 +742,6 @@ export default {
       daysAgo: 'před {count} dnem | před {count} dny'
     },
     title: {
-      failedToOpenFile: 'Nepodařilo se otevřít soubor',
-      failedToOpenFileWorkerOom: 'Nedostatek paměti',
-      failedToOpenFileWorkerTimeout: 'Vypršel časový limit otevření',
-      failedToOpenFileFontLoadFailed: 'Načtení fontu selhalo',
-      failedToOpenFileLicenseExpired: 'Licence vypršela',
-      failedToOpenFileLicenseInvalid: 'Neplatná licence',
       fontNotFound: 'Font nenalezen',
       fontNotLoaded: 'Font nenačten',
       parsingWarning: 'Problémy při načítání výkresu',

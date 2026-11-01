@@ -1,18 +1,11 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices, AcDbDxfFiler } from '../src/base'
+import { acdbHostApplicationServices } from '../src/base'
 import { TEMP_OBJECT_ID_PREFIX } from '../src/base/AcDbObject'
 import { AcDbDatabase } from '../src/database'
 import { AcDbFace } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-
-const createWorkingDb = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  acdbHostApplicationServices().workingDatabase = db
-  return db
-}
 
 describe('AcDbFace', () => {
   it('exposes type names and default vertex behavior', () => {
@@ -191,41 +184,6 @@ describe('AcDbFace', () => {
     expect(stride).toBe(3)
     expect(buffer).toHaveLength(12)
     expect(indices).toEqual(new Uint16Array([0, 1, 0, 0, 2, 3, 3, 0]))
-  })
-
-  it('writes face-specific DXF fields and edge visibility mask', () => {
-    const db = createWorkingDb()
-    const face = new AcDbFace()
-
-    db.tables.blockTable.modelSpace.appendEntity(face)
-
-    face.setVertexAt(0, { x: 1, y: 2, z: 3 })
-    face.setVertexAt(1, { x: 4, y: 5, z: 6 })
-    face.setVertexAt(2, { x: 7, y: 8, z: 9 })
-    face.setVertexAt(3, { x: 10, y: 11, z: 12 })
-    face.setEdgeInvisibilities(0)
-    face.makeEdgeInvisibleAt(1)
-    face.makeEdgeInvisibleAt(3)
-
-    const filer = new AcDbDxfFiler()
-    expect(face.dxfOutFields(filer)).toBe(face)
-
-    const dxf = filer.toString()
-    expect(dxf).toContain('100\nAcDbEntity\n')
-    expect(dxf).toContain('100\nAcDbFace\n')
-    expect(dxf).toContain('10\n1\n')
-    expect(dxf).toContain('20\n2\n')
-    expect(dxf).toContain('30\n3\n')
-    expect(dxf).toContain('11\n4\n')
-    expect(dxf).toContain('21\n5\n')
-    expect(dxf).toContain('31\n6\n')
-    expect(dxf).toContain('12\n7\n')
-    expect(dxf).toContain('22\n8\n')
-    expect(dxf).toContain('32\n9\n')
-    expect(dxf).toContain('13\n10\n')
-    expect(dxf).toContain('23\n11\n')
-    expect(dxf).toContain('33\n12\n')
-    expect(dxf).toContain('70\n10\n')
   })
 
   it('clone creates a detached clone with a new objectId', () => {

@@ -8,13 +8,11 @@ import {
   AcGePoint3dLike,
   AcGePointLike,
   AcGePolyline2d,
-  acgeTransformOcsPointToWcs,
-  acgeTransformWcsPointToOcs,
   AcGeVector3d,
-  AcGeVector3dLike} from '@mlightcad/geometry-engine'
+  AcGeVector3dLike
+} from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 import { AcDbCurve } from './AcDbCurve'
 import { acdbMovePointArrayGripAt } from './AcDbGripHelpers'
@@ -356,94 +354,6 @@ export class AcDbTrace extends AcDbCurve {
       definitionLines: []
     }
     return renderer.area(area)
-  }
-
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbTrace')
-    // SOLID/TRACE have no group 38 in the DXF reference; Z lives on corner
-    // points (10–13). Writing 38 aborts parsers that stop on unknown codes
-    // (e.g. @mlightcad/dxf-json), leaving `points` unset.
-    if (this.thickness !== 0) {
-      filer.writeDouble(39, this.thickness)
-    }
-    filer.writePoint3d(10, acgeTransformWcsPointToOcs(this.getPointAt(0), this.normal))
-    filer.writePoint3d(11, acgeTransformWcsPointToOcs(this.getPointAt(1), this.normal))
-    filer.writePoint3d(12, acgeTransformWcsPointToOcs(this.getPointAt(2), this.normal))
-    filer.writePoint3d(13, acgeTransformWcsPointToOcs(this.getPointAt(3), this.normal))
-    filer.writeVector3d(210, this.normal)
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbTrace')
-
-    const pts = [
-      { x: this.getPointAt(0).x, y: this.getPointAt(0).y, z: this.getPointAt(0).z },
-      { x: this.getPointAt(1).x, y: this.getPointAt(1).y, z: this.getPointAt(1).z },
-      { x: this.getPointAt(2).x, y: this.getPointAt(2).y, z: this.getPointAt(2).z },
-      { x: this.getPointAt(3).x, y: this.getPointAt(3).y, z: this.getPointAt(3).z }
-    ]
-    let nx = this.normal.x
-    let ny = this.normal.y
-    let nz = this.normal.z
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      const n = Number(item.value)
-      switch (code) {
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-          pts[code - 10].x = n
-          break
-        case 20:
-        case 21:
-        case 22:
-        case 23:
-          pts[code - 20].y = n
-          break
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-          pts[code - 30].z = n
-          break
-        case 39:
-          this.thickness = n
-          break
-        case 210:
-          nx = n
-          break
-        case 220:
-          ny = n
-          break
-        case 230:
-          nz = n
-          break
-        default:
-          break
-      }
-    }
-
-    const normal = new AcGeVector3d(nx, ny, nz)
-    if (normal.lengthSq() > 0) {
-      this.normal.copy(normal.normalize())
-    }
-    pts.forEach((p, i) =>
-      this.setPointAt(i, acgeTransformOcsPointToWcs(p, this.normal))
-    )
-    return this
   }
 
   /**

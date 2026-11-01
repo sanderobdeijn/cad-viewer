@@ -48,7 +48,6 @@ const format = (percentage: number) => {
 
 onMounted(() => {
   eventBus.on('open-file-progress', updateProgress)
-  eventBus.on('failed-to-open-file', resetProgress)
   AcApDocManager.instance.events.documentToBeOpened.addEventListener(
     resetProgress
   )
@@ -56,7 +55,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   eventBus.off('open-file-progress', updateProgress)
-  eventBus.off('failed-to-open-file', resetProgress)
   AcApDocManager.instance.events.documentToBeOpened.removeEventListener(
     resetProgress
   )

@@ -1,12 +1,10 @@
 import { defaults } from '@mlightcad/common'
 import { AcGePoint3d } from '@mlightcad/geometry-engine'
 
-import { AcDbDxfFiler } from '../base/AcDbDxfFiler'
 import { AcDbObjectId } from '../base/AcDbObject'
 import { AcDbEntity } from '../entity/AcDbEntity'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
 import { AcDbUnitsValue } from '../misc/AcDbUnitsValue'
-import { acdbHexStringsToBytes } from '../misc/proxyGraphic/AcDbProxyGraphicBinaryStream'
 import {
   AcDbSymbolTableRecord,
   AcDbSymbolTableRecordAttrs
@@ -426,10 +424,6 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
       this.database.commitObjectHandle(item, id => this.hasEntityId(id))
       item.ownerId = this.objectId
       item.resolveEffectiveProperties()
-      this.database.flattenEntityLayer(
-        item,
-        !this.isModelSapce && !this.isPaperSapce
-      )
       this._entities.push(item)
       if (
         item.dxfTypeName === 'INSERT' &&
@@ -567,137 +561,6 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
    */
   hasEntityId(id: AcDbObjectId) {
     return this.getIdAt(id) !== undefined
-  }
-
-  /**
-   * Writes the BLOCK_RECORD table entry for this block table record.
-   *
-   * @param filer - DXF output writer.
-   * @returns The block table record instance (for chaining).
-   */
-  dxfOutBlockRecord(filer: AcDbDxfFiler) {
-    filer.writeStart('BLOCK_RECORD')
-    this.dxfOut(filer)
-    return this
-  }
-
-  /**
-   * Writes the BLOCK entity that begins a block definition in the BLOCKS section.
-   *
-   * @param filer - DXF output writer.
-   * @returns The block table record instance (for chaining).
-   */
-  dxfOutBlockBegin(filer: AcDbDxfFiler) {
-    filer.writeStart('BLOCK')
-    // DWG/DXF parser doesn't parse AcDbBlockBegin and AcDbBlockEnd.
-    // There is no handle data avaiable for AcDbBlockBegin. So generate
-    // one new handle dynamically.
-    filer.writeHandle(5, this.database.generateHandle())
-    filer.writeObjectId(330, this.objectId)
-    filer.writeSubclassMarker('AcDbEntity')
-    // TODO: Assign the correct layer name
-    filer.writeString(8, '0')
-    filer.writeSubclassMarker('AcDbBlockBegin')
-    filer.writeString(2, this.name)
-    filer.writeInt16(70, this.flags)
-    filer.writePoint3d(10, this.origin)
-    filer.writeString(3, this.name)
-    if (this.pathName) {
-      filer.writeString(1, this.pathName)
-    }
-    return this
-  }
-
-  /**
-   * Writes the ENDBLK entity that terminates a block definition.
-   *
-   * @param filer - DXF output writer.
-   * @returns The block table record instance (for chaining).
-   */
-  dxfOutBlockEnd(filer: AcDbDxfFiler) {
-    filer.writeStart('ENDBLK')
-    // DWG/DXF parser doesn't parse AcDbBlockBegin and AcDbBlockEnd.
-    // There is no handle data avaiable for AcDbBlockBegin. So generate
-    // one new handle dynamically.
-    filer.writeHandle(5, this.database.generateHandle())
-    filer.writeObjectId(330, this.objectId)
-    filer.writeSubclassMarker('AcDbEntity')
-    filer.writeSubclassMarker('AcDbBlockEnd')
-    return this
-  }
-
-  /**
-   * Writes the BLOCK_RECORD fields for this block table record.
-   *
-   * @param filer - DXF output writer.
-   * @returns The block table record instance (for chaining).
-   */
-  /**
-   * Writes DXF fields for this object.
-   *
-   * @param filer - DXF output writer.
-   * @returns The instance (for chaining).
-   */
-  override dxfOutFields(filer: AcDbDxfFiler) {
-    super.dxfOutFields(filer)
-    filer.writeSubclassMarker('AcDbBlockTableRecord')
-    filer.writeString(2, this.name)
-    filer.writeInt16(70, this.blockInsertUnits)
-    filer.writeInt16(280, this.explodability)
-    filer.writeInt16(281, this.blockScaling)
-    // TODO: Output PreviewIcon (group 310) with the correct DIB/hex format
-    // if (this.previewIcon?.length) { ... }
-    if (this.isModelSapce || this.isPaperSapce) {
-      filer.writeObjectId(340, this.layoutId)
-    }
-    return this
-  }
-
-  override dxfInFields(filer: AcDbDxfFiler): this {
-    super.dxfInFields(filer)
-    filer.atSubclassData('AcDbSymbolTableRecord')
-    filer.atSubclassData('AcDbBlockTableRecord')
-
-    const previewChunks: string[] = []
-
-    while (!filer.atEndOfObject && !filer.atEof && !filer.atExtendedData) {
-      const item = filer.readItem()
-      if (!item) break
-      const code = Number(item.code)
-      if (code === 100) {
-        filer.pushBackItem(item)
-        break
-      }
-      switch (code) {
-        case 2:
-          this.name = String(item.value)
-          break
-        case 70:
-          this.blockInsertUnits = Number(item.value)
-          break
-        case 280:
-          this.explodability = Number(item.value)
-          break
-        case 281:
-          this.blockScaling = Number(item.value) as AcDbBlockScaling
-          break
-        case 340:
-          this.layoutId = String(item.value)
-          break
-        case 310: {
-          const hex = String(item.value).replace(/\s+/g, '')
-          if (hex) previewChunks.push(hex)
-          break
-        }
-        default:
-          break
-      }
-    }
-
-    if (previewChunks.length > 0) {
-      this.previewIcon = acdbHexStringsToBytes(previewChunks)
-    }
-    return this
   }
 }
 

@@ -29,7 +29,6 @@ test('measure distance does not log ElForm unexpected width NaN', async ({
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: 'New Drawing' }).click()
   await expect(page.locator('.ml-cad-container')).toBeVisible({
     timeout: 30_000
   })

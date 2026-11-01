@@ -1,13 +1,7 @@
 import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
-
-import { AcDbDxfFiler } from '../src/base'
 import { AcDb2dPolyline, AcDbPoly2dType, AcDbPolyline } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
-import {
-  attachEntityToNewModelSpace,
-  getDxfGroupValues
-} from '../test-utils/entityTestUtils'
 
 describe('AcDb2dPolyline', () => {
   it('creates a detached clone with a new objectId', () => {
@@ -251,85 +245,6 @@ describe('AcDb2dPolyline', () => {
     const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint3d[]]
     expect(points.length).toBeGreaterThan(1)
     expect(points.every(p => p.z === 6)).toBe(true)
-  })
-
-  it('writes dxf fields with expected flags and vertex-follow marker', () => {
-    const cases = [
-      {
-        polyline: new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, [
-          { x: 0, y: 0, z: 0 }
-        ]),
-        expected66: 1,
-        expectedFlag: 0
-      },
-      {
-        polyline: new AcDb2dPolyline(AcDbPoly2dType.FitCurvePoly, []),
-        expected66: 0,
-        expectedFlag: 2
-      },
-      {
-        polyline: new AcDb2dPolyline(AcDbPoly2dType.QuadSplinePoly, [
-          { x: 0, y: 0, z: 0 }
-        ]),
-        expected66: 1,
-        expectedFlag: 4
-      },
-      {
-        polyline: new AcDb2dPolyline(AcDbPoly2dType.CubicSplinePoly, [
-          { x: 0, y: 0, z: 0 }
-        ]),
-        expected66: 1,
-        expectedFlag: 9,
-        closed: true,
-        elevation: 12
-      }
-    ]
-
-    cases.forEach(
-      ({ polyline, expected66, expectedFlag, closed, elevation }) => {
-        if (closed != null) polyline.closed = closed
-        if (elevation != null) polyline.elevation = elevation
-        attachEntityToNewModelSpace(polyline)
-        const filer = new AcDbDxfFiler()
-        polyline.dxfOutFields(filer)
-        const out = filer.toString()
-
-        expect(getDxfGroupValues(out, 100)).toContain('AcDb2dPolyline')
-        expect(getDxfGroupValues(out, 66)).toContain(String(expected66))
-        expect(getDxfGroupValues(out, 70)).toContain(String(expectedFlag))
-        if (elevation != null) {
-          expect(getDxfGroupValues(out, 30)).toContain(String(elevation))
-        }
-      }
-    )
-  })
-
-  it('writes full dxf records including VERTEX and SEQEND records', () => {
-    const polyline = new AcDb2dPolyline(
-      AcDbPoly2dType.SimplePoly,
-      [
-        { x: 0, y: 0, z: 0 },
-        { x: 2, y: 0, z: 0 }
-      ],
-      3,
-      false,
-      0,
-      0,
-      [0.5, 0]
-    )
-    attachEntityToNewModelSpace(polyline)
-
-    const filer = new AcDbDxfFiler()
-    const result = polyline.dxfOut(filer)
-    expect(result).toBe(polyline)
-
-    const out = filer.toString()
-    const vertexRecords = out.match(/\n0\nVERTEX\n/g) ?? []
-    expect(vertexRecords.length).toBe(2)
-    expect(out).toContain('\n0\nSEQEND\n')
-    expect(out).toContain('\n100\nAcDb2dVertex\n')
-    expect(out).toContain('\n42\n0.5\n')
-    expect(out).toContain('\n30\n3\n')
   })
 
   it('offsets a simple 2d polyline path', () => {

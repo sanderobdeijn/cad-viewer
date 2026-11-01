@@ -392,11 +392,6 @@ export default {
       description: 'إنشاء عنصر نص متعدد الأسطر'
     },
 
-    open: {
-      ...enCommand.ACAD.open,
-      description: 'فتح ملف رسم موجود'
-    },
-
     openprof: {
       ...enCommand.ACAD.openprof,
       description: 'التحكم في تسجيل أزمنة مراحل فتح الملفات داخل وحدة التحكم'

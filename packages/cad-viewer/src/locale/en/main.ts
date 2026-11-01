@@ -1,7 +1,6 @@
 export default {
   mainMenu: {
     new: 'New Drawing',
-    open: 'Open Drawing',
     drawingUnits: 'Drawing Units',
     about: 'About'
   },
@@ -601,7 +600,6 @@ export default {
       tab: 'Resources',
       title: 'Missing / External Resources',
       fontTab: 'Font',
-      xrefTab: 'External References',
       fileReferences: 'File References',
       details: 'Details',
       foundAt: 'Found at',
@@ -633,7 +631,6 @@ export default {
       unload: 'Unload',
       load: 'Load',
       empty: 'No external references or images in this drawing',
-      urlPrompt: 'Enter a URL to a DWG or DXF file',
       urlRequired: 'Please enter a URL',
       loadFailed: 'Failed to load reference "{name}"'
     },
@@ -694,47 +691,6 @@ export default {
         category: 'Category',
         font: 'Font'
       }
-    },
-    openFileProfile: {
-      tab: 'Open Perf',
-      title: 'Open Performance',
-      refresh: 'Refresh',
-      copy: 'Copy',
-      copied: 'Performance data copied',
-      copyFailed: 'Failed to copy performance data',
-      collectedAt: 'Collected at {time}',
-      hint: 'Captured automatically on the last drawing open. Set OPENPROF=1 to also log to the console.',
-      noData: 'No open profile yet. Open a drawing first, then run OPENPERF.',
-      empty: 'No data',
-      timing: 'Wall-clock timing',
-      progressive: 'Progressive open',
-      progressiveMode: 'Mode',
-      progressiveOn: 'On',
-      progressiveOff: 'Off',
-      midOpenPaints: 'Mid-open paints',
-      yields: 'Yields',
-      cache: 'INSERT rendering cache (top-level)',
-      slowBlocks: 'Slowest block template misses',
-      total: 'Total open',
-      read: 'db.read',
-      parse: 'PARSE',
-      entity: 'ENTITY flush',
-      convert: 'Scene convert',
-      cacheHits: 'Cache hits',
-      cacheMisses: 'Cache misses',
-      cacheBuild: 'Miss build',
-      cacheCompact: 'Miss compact',
-      cacheHitPath: 'Hit path',
-      columns: {
-        stage: 'Stage',
-        duration: 'Duration',
-        share: 'Share',
-        metric: 'Metric',
-        value: 'Value',
-        block: 'Block',
-        build: 'Build',
-        compact: 'Compact'
-      }
     }
   },
   colorDropdown: {
@@ -761,7 +717,6 @@ export default {
   },
   message: {
     loadingFonts: 'Loading fonts ...',
-    loadingDwgConverter: 'Loading DWG converter...',
     fontsNotFound: 'Fonts {fonts} can not be found in font repository!',
     fontsNotLoaded: 'Fonts {fonts} can not be loaded!',
     fontMissedInDrawing:
@@ -770,20 +725,6 @@ export default {
     fontCached: 'Font "{font}" cached successfully.',
     fontCacheFailed: 'Failed to cache font "{fileName}".',
     failedToGetAvaiableFonts: 'Failed to get avaiable fonts from "{url}"!',
-    failedToOpenFile: 'Failed to open file "{fileName}"!',
-    failedToOpenFileToast:
-      'Failed to open "{fileName}". Check the notification center for details.',
-    failedToOpenFileWorkerOom:
-      'Failed to open "{fileName}". Parsing failed because available memory was insufficient (LibreDWG parser). You can click {dwgParserLink} to purchase the commercial DWG parser and open large drawings without this crash.',
-    failedToOpenFileWorkerOomLink: 'this page',
-    failedToOpenFileWorkerTimeout:
-      'Failed to open "{fileName}". The operation timed out while parsing the drawing.',
-    failedToOpenFileFontLoadFailed:
-      'Failed to open "{fileName}". Required fonts could not be loaded.',
-    failedToOpenFileLicenseExpired:
-      'Failed to open "{fileName}". The DWG converter license has expired.',
-    failedToOpenFileLicenseInvalid:
-      'Failed to open "{fileName}". The DWG converter license is missing or invalid.',
     fetchingDrawingFile: 'Fetching file ...',
     unknownEntities:
       'This drawing contains {count} unknown or unsupported entities! Those entities will not be shown.',
@@ -814,12 +755,6 @@ export default {
       daysAgo: '{count} day ago | {count} days ago'
     },
     title: {
-      failedToOpenFile: 'Failed to Open File',
-      failedToOpenFileWorkerOom: 'Insufficient Memory',
-      failedToOpenFileWorkerTimeout: 'Open Timed Out',
-      failedToOpenFileFontLoadFailed: 'Font Load Failed',
-      failedToOpenFileLicenseExpired: 'License Expired',
-      failedToOpenFileLicenseInvalid: 'Invalid License',
       fontNotFound: 'Font Not Found',
       fontNotLoaded: 'Font Not Loaded',
       parsingWarning: 'Issues on Parsing Drawing',

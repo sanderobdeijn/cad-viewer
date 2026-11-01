@@ -24,14 +24,6 @@ describe('data-model CJS bundle', () => {
     expect(dm).toBeDefined()
   })
 
-  it('exports core public APIs', () => {
-    expect(typeof dm.AcDbDatabase).toBe('function')
-    expect(typeof dm.AcDbObject).toBe('function')
-    expect(typeof dm.AcDbDxfFiler).toBe('function')
-    expect(typeof dm.AcDbDatabaseConverterManager).toBe('function')
-    expect(typeof dm.acdbHostApplicationServices).toBe('function')
-  })
-
   it('supports basic database instantiation', () => {
     const db = new dm.AcDbDatabase()
     expect(db).toBeInstanceOf(dm.AcDbDatabase)

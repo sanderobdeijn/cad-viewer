@@ -117,15 +117,6 @@ describe('acuiResolveToolbarItems', () => {
     expect(items[0].id).toBe('zoom')
   })
 
-  it('resolves the open preset without placing it on the default toolbar', () => {
-    const items = acuiResolveToolbarItems({
-      items: [{ preset: 'open' }, { preset: 'select' }]
-    })
-    expect(items.map(item => item.id)).toEqual(['open', 'select'])
-    expect(items[0].requiresDocument).toBe(false)
-    expect(String(items[0].icon)).toContain('viewBox="0 0 24 24"')
-  })
-
   it('appends custom items after defaults', () => {
     const items = acuiResolveToolbarItems({
       items: 'default',
