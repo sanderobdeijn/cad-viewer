@@ -234,6 +234,40 @@ const effectiveOpenMode = computed(
 const isWriteMode = computed(
   () => effectiveOpenMode.value === AcEdOpenMode.Write
 )
+const bodyRef = ref<HTMLElement>()
+const sidePanelRef = ref<HTMLElement>()
+const SIDE_PANEL_MIN_FRACTION = 0.15
+const SIDE_PANEL_MAX_FRACTION = 0.85
+const SIDE_PANEL_KEY_STEP = 0.02
+/** Share of the viewer width given to the side panel. */
+const sidePanelFraction = ref(1 / 3)
+
+const setSidePanelFraction = (fraction: number) => {
+  sidePanelFraction.value = Math.min(
+    SIDE_PANEL_MAX_FRACTION,
+    Math.max(SIDE_PANEL_MIN_FRACTION, fraction)
+  )
+}
+
+const onDividerPointerDown = (e: PointerEvent) => {
+  e.preventDefault()
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+const onDividerPointerMove = (e: PointerEvent) => {
+  const divider = e.currentTarget as HTMLElement
+  const rect = bodyRef.value?.getBoundingClientRect()
+  if (!rect || !divider.hasPointerCapture(e.pointerId)) return
+  setSidePanelFraction((e.clientX - rect.left) / rect.width)
+}
+
+const onDividerKeyDown = (e: KeyboardEvent) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+  e.preventDefault()
+  const direction = e.key === 'ArrowLeft' ? -1 : 1
+  setSidePanelFraction(sidePanelFraction.value + direction * SIDE_PANEL_KEY_STEP)
+}
+
 const headerHeightPx = ref(0)
 
 watch(
@@ -321,6 +355,7 @@ const createInitialDrawing = async () => {
 const onFindShortcut = (e: KeyboardEvent) => {
   if (!isFindShortcut(e) || e.defaultPrevented) return
   if (AcEdMTextEditor.getActiveInputBox()) return
+  if (sidePanelRef.value?.contains(e.target as Node)) return
   if (!isFindShortcutInViewer(e.target, layoutRef.value)) return
   e.preventDefault()
   e.stopPropagation()
@@ -442,30 +477,56 @@ const closeNotificationCenter = () => {
           />
         </header>
 
-        <!-- Main content area with CAD viewing tools and controls -->
-        <main class="ml-cad-main">
-          <!-- Canvas element for CAD rendering -->
-          <div
-            :class="viewerThemeClass"
-            ref="containerRef"
-            class="ml-cad-container"
-          ></div>
+        <div ref="bodyRef" class="ml-cad-body">
+          <!-- Optional host content beside the drawing, below the ribbon -->
+          <template v-if="$slots['side-panel']">
+            <aside
+              ref="sidePanelRef"
+              :style="{ '--ml-side-panel-size': `${sidePanelFraction * 100}%` }"
+              class="ml-cad-side-panel"
+            >
+              <slot name="side-panel" />
+            </aside>
+            <div
+              :aria-valuenow="Math.round(sidePanelFraction * 100)"
+              :aria-valuemin="SIDE_PANEL_MIN_FRACTION * 100"
+              :aria-valuemax="SIDE_PANEL_MAX_FRACTION * 100"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize side panel"
+              tabindex="0"
+              class="ml-cad-side-panel-divider"
+              @pointerdown="onDividerPointerDown"
+              @pointermove="onDividerPointerMove"
+              @keydown="onDividerKeyDown"
+            />
+          </template>
 
-          <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
-          <ml-tool-bars v-if="editorRef" />
+          <!-- Main content area with CAD viewing tools and controls -->
+          <main class="ml-cad-main">
+            <!-- Canvas element for CAD rendering -->
+            <div
+              :class="viewerThemeClass"
+              ref="containerRef"
+              class="ml-cad-container"
+            ></div>
 
-          <!-- Entity properties palette for controlling entity visibility and properties -->
-          <ml-palette-manager v-if="editorRef" />
+            <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
+            <ml-tool-bars v-if="editorRef" />
 
-          <!-- Dialog manager for modal dialogs and settings -->
-          <ml-dialog-manager v-if="editorRef" />
+            <!-- Entity properties palette for controlling entity visibility and properties -->
+            <ml-palette-manager v-if="editorRef" />
 
-          <!-- Notification center (anchored to the canvas / main area) -->
-          <ml-notification-center
-            v-if="editorRef && showNotificationCenter"
-            @close="closeNotificationCenter"
-          />
-        </main>
+            <!-- Dialog manager for modal dialogs and settings -->
+            <ml-dialog-manager v-if="editorRef" />
+
+            <!-- Notification center (anchored to the canvas / main area) -->
+            <ml-notification-center
+              v-if="editorRef && showNotificationCenter"
+              @close="closeNotificationCenter"
+            />
+          </main>
+        </div>
 
         <!-- Footer section with command line and status information -->
         <footer v-if="editorRef" class="ml-cad-footer">
@@ -527,13 +588,56 @@ const closeNotificationCenter = () => {
   z-index: 6;
 }
 
-.ml-cad-main {
+.ml-cad-body {
   position: absolute;
   top: var(--ml-header-height);
   left: 0;
   right: 0;
   bottom: var(--ml-status-bar-height);
+  display: flex;
   min-height: 0;
+}
+
+.ml-cad-main,
+.ml-cad-side-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ml-cad-main {
+  flex: 1 1 0;
+}
+
+.ml-cad-side-panel {
+  flex: 0 0 var(--ml-side-panel-size);
+}
+
+.ml-cad-side-panel-divider {
+  flex: 0 0 5px;
+  background: var(--el-border-color);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.ml-cad-side-panel-divider:hover,
+.ml-cad-side-panel-divider:focus-visible {
+  background: var(--el-color-primary);
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .ml-cad-body {
+    flex-direction: column;
+  }
+
+  .ml-cad-side-panel {
+    flex: 0 0 35%;
+  }
+
+  .ml-cad-side-panel-divider {
+    display: none;
+  }
 }
 
 .ml-cad-footer {

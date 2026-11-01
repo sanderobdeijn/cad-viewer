@@ -5,7 +5,17 @@
       :base-url="BASE_URL"
       :use-main-thread-draw="useMainThreadDraw"
       @create="exposeForTests"
-    />
+    >
+      <template #side-panel>
+        <textarea
+          v-model="editorText"
+          class="text-editor"
+          aria-label="Text editor"
+          spellcheck="false"
+          wrap="off"
+        />
+      </template>
+    </MlCadViewer>
   </div>
 </template>
 
@@ -15,7 +25,7 @@ import {
   AcApSettingManager
 } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
-
+import { ref } from 'vue'
 
 // Isolate this example's prefs from cad-simple-viewer-example on localhost.
 AcApSettingManager.configure({
@@ -27,6 +37,8 @@ const BASE_URL = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/'
 const useMainThreadDraw = !new URLSearchParams(window.location.search).has(
   'worker'
 )
+
+const editorText = ref('')
 
 const exposeForTests = () => {
   if (import.meta.env.DEV) {
@@ -41,5 +53,27 @@ const exposeForTests = () => {
 #app-root {
   height: 100vh;
   position: fixed;
+}
+
+.text-editor {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 0;
+  outline: none;
+  resize: none;
+  font-family: Consolas, Menlo, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color);
+}
+
+@media (max-width: 767px) {
+  .text-editor {
+    border-bottom: 1px solid var(--el-border-color);
+  }
 }
 </style>
