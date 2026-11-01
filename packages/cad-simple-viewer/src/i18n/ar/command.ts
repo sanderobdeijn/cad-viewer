@@ -210,18 +210,6 @@ export default {
         'حدد العناصر'
     },
 
-    '-insert': {
-      ...enCommand.ACAD['-insert'],
-      description:
-        'إدراج تعريف كتلة داخل الرسم الحالي باستخدام سطر الأوامر'
-    },
-
-    xattach: {
-      ...enCommand.ACAD.xattach,
-      description:
-        'إرفاق رسم DWG أو DXF كمرجع خارجي إلى الرسم الحالي'
-    },
-
     gripcolor: {
       ...enCommand.ACAD.gripcolor,
       description:

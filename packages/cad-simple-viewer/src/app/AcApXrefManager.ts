@@ -1,10 +1,6 @@
 import {
-  AcDbBlockReference,
-  AcDbBlockTableRecord,
-  AcDbBlockTableRecordFlag,
   AcDbDatabase,
   AcDbObjectId,
-  AcGePoint3d,
   AcGePoint3dLike
 } from '@mlightcad/data-model'
 
@@ -12,7 +8,7 @@ import type { AcTrLayout } from '../view/AcTrLayout'
 import { AcApDocManager } from './AcApDocManager'
 
 /**
- * Transform applied to a reference overlay (from XATTACH INSERT).
+ * Transform applied to a reference overlay.
  *
  * Position, uniform scale, and Z-axis rotation are applied to the overlay
  * layout's internal scene object so the xref appears aligned with the host INSERT.
@@ -73,7 +69,7 @@ export interface AcApXrefAttachOptions {
 /**
  * Manages read-only reference drawing sessions overlaid on the active document.
  *
- * XATTACH and the External References palette should go through this manager
+ * The External References palette should go through this manager
  * instead of binding source entities into the host database.
  */
 export class AcApXrefManager {
@@ -139,7 +135,9 @@ export class AcApXrefManager {
    * @returns The newly registered {@link AcApXrefSession}.
    * @throws If neither `sourceDb` nor `content` is provided.
    */
-  async attachOverlay(options: AcApXrefAttachOptions): Promise<AcApXrefSession> {
+  async attachOverlay(
+    options: AcApXrefAttachOptions
+  ): Promise<AcApXrefSession> {
     const existing = this.getSessionByBlockName(options.blockName)
     if (existing) {
       this.unload(existing.id)
@@ -244,53 +242,6 @@ export class AcApXrefManager {
     for (const id of [...this._sessions.keys()]) {
       this.unload(id)
     }
-  }
-
-  /**
-   * Creates an empty xref block-table record and INSERT on the host database.
-   *
-   * Source entities are intentionally not bound into the BTR; geometry is shown
-   * via a separate overlay session managed by this class.
-   *
-   * @param hostDb - Host drawing database that receives the BTR and INSERT.
-   * @param blockName - Name for the new xref block-table record.
-   * @param pathName - Path stored on the BTR (`pathName` property).
-   * @param transform - Position, scale, and rotation applied to the INSERT.
-   * @param origin - Optional block origin for the xref BTR.
-   * @returns The created block-table record and block reference.
-   */
-  static createHostXrefInsert(
-    hostDb: AcDbDatabase,
-    blockName: string,
-    pathName: string,
-    transform: AcApXrefTransform,
-    origin?: AcGePoint3dLike
-  ): { record: AcDbBlockTableRecord; insert: AcDbBlockReference } {
-    // Set initial attrs via constructor — setters call assertOpenForWrite(),
-    // which fails if a detached BTR already holds a real host handle while
-    // undo is recording (workingDatabase.generateHandle in older data-model).
-    const xrefRecord = new AcDbBlockTableRecord({
-      name: blockName,
-      pathName,
-      flags:
-        AcDbBlockTableRecordFlag.Xref |
-        AcDbBlockTableRecordFlag.Resolved |
-        AcDbBlockTableRecordFlag.Referenced,
-      ...(origin ? { origin: new AcGePoint3d(origin) } : {})
-    })
-    hostDb.tables.blockTable.add(xrefRecord)
-
-    const insert = new AcDbBlockReference(blockName)
-    insert.position = new AcGePoint3d(transform.position)
-    insert.scaleFactors = new AcGePoint3d(
-      transform.scale,
-      transform.scale,
-      transform.scale
-    )
-    insert.rotation = transform.rotationRad
-    hostDb.tables.blockTable.modelSpace.appendEntity(insert)
-
-    return { record: xrefRecord, insert }
   }
 }
 

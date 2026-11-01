@@ -8,7 +8,6 @@ export default {
   ribbon: {
     tab: {
       home: 'Domů',
-      insert: 'Vložit',
       measurement: 'Měření',
       hatchContext: 'Šrafování',
       mtextEditorContext: 'Editor textu'
@@ -210,14 +209,7 @@ export default {
       measurement: 'Měření',
       style: 'Styl',
       lengthUnits: 'Jednotky délky',
-      angleUnits: 'Jednotky úhlu',
-      reference: 'Reference',
-      block: 'Blok'
-    },
-    insertBlock: {
-      empty: 'Žádné bloky nejsou k dispozici',
-      currentDrawing: 'Aktuální výkres',
-      previewMenu: 'Galerie náhledů bloků'
+      angleUnits: 'Jednotky úhlu'
     },
     property: {
       color: 'Barva',
@@ -293,14 +285,6 @@ export default {
         'Otevře paletu Chybějící / externí zdroje pro fonty, obrázky a externí reference.',
       drawingUnits:
         'Otevře Jednotky výkresu pro nastavení formátu souřadnic, přesnosti a měřítka vkládání.',
-      attachDwg:
-        'Připojí výkres DWG nebo DXF jako externí referenci (XATTACH).',
-      insert:
-        'Otevře paletu Bloky pro procházení a vkládání definic bloků (INSERT).',
-      editAttributes:
-        'Otevře Rozšířený editor atributů pro úpravu hodnot a zobrazovacích vlastností atributů bloku (ATTEDIT).',
-      defineAttribute:
-        'Vytvoří definici atributu pro použití v bloku (ATTDEF).',
       propertyColor: 'Nastaví barvu nových nebo vybraných objektů.',
       propertyLineType: 'Nastaví typ čáry nových nebo vybraných objektů.',
       propertyLineWeight:
@@ -396,11 +380,7 @@ export default {
       quickSelect: 'Rychlý\nvýběr',
       find: 'Hledat',
       countList: 'Počet',
-      drawingUnits: 'Jednotky\nvýkresu',
-      attachDwg: 'Připojit\nDWG',
-      insert: 'Vložit',
-      editAttributes: 'Upravit\natributy',
-      defineAttribute: 'Definovat\natribut'
+      drawingUnits: 'Jednotky\nvýkresu'
     }
   },
   verticalToolbar: {
@@ -706,8 +686,6 @@ export default {
       title: 'Chybějící / externí zdroje',
       fontTab: 'Font',
       xrefTab: 'Externí reference',
-      attach: 'Připojit',
-      attachDwg: 'Připojit DWG/DXF…',
       fileReferences: 'Odkazy na soubory',
       details: 'Podrobnosti',
       foundAt: 'Nalezeno v',
@@ -841,32 +819,6 @@ export default {
         build: 'Build',
         compact: 'Compact'
       }
-    },
-    blocks: {
-      tab: 'Bloky',
-      title: 'Bloky',
-      tabCurrentDrawing: 'Aktuální výkres',
-      tabRecent: 'Nedávné',
-      tabFavorites: 'Oblíbené',
-      tabLibraries: 'Knihovny',
-      sectionCurrentDrawing: 'Bloky aktuálního výkresu',
-      sectionRecent: 'Nedávno vložené bloky',
-      sectionFavorites: 'Oblíbené bloky',
-      sectionLibraries: 'Knihovny bloků',
-      filterPlaceholder: 'Filtrovat…',
-      empty: 'Nejsou k dispozici žádné bloky',
-      emptyRecent: 'Žádné nedávno vložené bloky',
-      emptyFavorites: 'Žádné oblíbené bloky',
-      emptyLibraries: 'Nejsou nakonfigurovány žádné knihovny',
-      toggleFavorite: 'Přepnout oblíbené',
-      options: 'Možnosti',
-      insertionPoint: 'Vložení',
-      scale: 'Měřítko',
-      rotation: 'Otočení',
-      angle: 'Úhel',
-      autoPlacement: 'Automatické umístění',
-      repeatPlacement: 'Opakovat umístění',
-      explode: 'Rozložit'
     }
   },
   colorDropdown: {

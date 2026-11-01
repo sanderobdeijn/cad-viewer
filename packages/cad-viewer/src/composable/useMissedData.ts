@@ -77,7 +77,7 @@ function syncFromCurrentView(): void {
     xrefList.splice(0, xrefList.length, ...nextXrefs)
 
     // Drop overlay UI state for xrefs that no longer exist and have no session.
-    // XATTACH / toolbar sessions live in AcApXrefManager even when not "missed".
+    // Sessions live in AcApXrefManager even when not "missed".
     const names = new Set(nextXrefs.map(x => x.name))
     for (const name of [...xrefOverlays.keys()]) {
       if (names.has(name)) continue
@@ -85,7 +85,7 @@ function syncFromCurrentView(): void {
       xrefOverlays.delete(name)
     }
 
-    // Mirror manager sessions into reactive UI state (XATTACH + palette resolve).
+    // Mirror manager sessions into reactive UI state (palette resolve).
     for (const session of AcApXrefManager.instance.sessions) {
       xrefOverlays.set(session.blockName, {
         overlayId: session.overlayId,

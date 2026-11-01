@@ -8,7 +8,6 @@ export default {
   ribbon: {
     tab: {
       home: 'Home',
-      insert: 'Insert',
       measurement: 'Measurement',
       hatchContext: 'Hatch',
       mtextEditorContext: 'Text Editor'
@@ -210,14 +209,7 @@ export default {
       measurement: 'Measurement',
       style: 'Style',
       lengthUnits: 'Length Units',
-      angleUnits: 'Angle Units',
-      reference: 'Reference',
-      block: 'Block'
-    },
-    insertBlock: {
-      empty: 'No blocks available',
-      currentDrawing: 'Current Drawing',
-      previewMenu: 'Block preview gallery'
+      angleUnits: 'Angle Units'
     },
     property: {
       color: 'Color',
@@ -294,14 +286,6 @@ export default {
         'Open the Missing / External Resources palette for fonts, images, and xrefs.',
       drawingUnits:
         'Open Drawing Units to set coordinate formats, precision, and insertion scale.',
-      attachDwg:
-        'Attach a DWG or DXF drawing as an external reference (XATTACH).',
-      insert:
-        'Open the Blocks palette to browse and insert block definitions (INSERT).',
-      editAttributes:
-        'Open the Enhanced Attribute Editor to edit block attribute values and display properties (ATTEDIT).',
-      defineAttribute:
-        'Create an attribute definition for use in a block (ATTDEF).',
       propertyColor:
         'Set the color for newly created objects or selected entities.',
       propertyLineType:
@@ -402,11 +386,7 @@ export default {
       quickSelect: 'Quick\nSelect',
       find: 'Find',
       countList: 'Count',
-      drawingUnits: 'Drawing\nUnits',
-      attachDwg: 'Attach\nDWG',
-      insert: 'Insert',
-      editAttributes: 'Edit\nAttributes',
-      defineAttribute: 'Define\nAttribute'
+      drawingUnits: 'Drawing\nUnits'
     }
   },
   verticalToolbar: {
@@ -719,8 +699,6 @@ export default {
       title: 'Missing / External Resources',
       fontTab: 'Font',
       xrefTab: 'External References',
-      attach: 'Attach',
-      attachDwg: 'Attach DWG/DXF...',
       fileReferences: 'File References',
       details: 'Details',
       foundAt: 'Found at',
@@ -854,32 +832,6 @@ export default {
         build: 'Build',
         compact: 'Compact'
       }
-    },
-    blocks: {
-      tab: 'Blocks',
-      title: 'Blocks',
-      tabCurrentDrawing: 'Current Drawing',
-      tabRecent: 'Recent',
-      tabFavorites: 'Favorites',
-      tabLibraries: 'Libraries',
-      sectionCurrentDrawing: 'Current Drawing Blocks',
-      sectionRecent: 'Recent Blocks',
-      sectionFavorites: 'Favorite Blocks',
-      sectionLibraries: 'Block Libraries',
-      filterPlaceholder: 'Filter...',
-      empty: 'No blocks available',
-      emptyRecent: 'No recently inserted blocks',
-      emptyFavorites: 'No favorite blocks',
-      emptyLibraries: 'No libraries configured',
-      toggleFavorite: 'Toggle favorite',
-      options: 'Options',
-      insertionPoint: 'Insertion Point',
-      scale: 'Scale',
-      rotation: 'Rotation',
-      angle: 'Angle',
-      autoPlacement: 'Auto-Placement',
-      repeatPlacement: 'Repeat Placement',
-      explode: 'Explode'
     }
   },
   colorDropdown: {

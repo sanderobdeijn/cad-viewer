@@ -699,25 +699,6 @@ export default {
   mtext: {
     point: 'Specify mtext insertion point'
   },
-  insert: {
-    blockName: 'Enter block name:',
-    insertionPoint: 'Specify insertion point:',
-    scale: 'Specify scale factor:',
-    rotation: 'Specify rotation angle:',
-    invalidScale: 'Scale factor must be greater than 0.',
-    invalidBlockName: 'Invalid block name.',
-    blockNotFound: 'Block not found',
-    xrefNotAllowed: 'Cannot insert an external reference with -INSERT.'
-  },
-  xattach: {
-    insertionPoint: 'Specify insertion point:',
-    scale: 'Specify scale factor:',
-    rotation: 'Specify rotation angle:',
-    invalidScale: 'Scale factor must be greater than 0.',
-    unsupportedFile: 'Please select a DWG or DXF file.',
-    loading: 'Loading external reference...',
-    loadFailed: 'Failed to read the selected drawing file.'
-  },
   point: {
     point: 'Specify a point'
   },

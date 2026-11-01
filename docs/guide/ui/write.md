@@ -21,7 +21,7 @@ The Ribbon fully displays all AutoCAD-style tabs:
 | Tab | Commands |
 |---|---|
 | File | Open |
-| Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, Block Insert, etc. |
+| Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, etc. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, etc. |
 | Layers | Layer management (on/off, freeze/thaw, lock, isolate, new, delete) |
 | Properties | Color, linetype, lineweight, layer selector |

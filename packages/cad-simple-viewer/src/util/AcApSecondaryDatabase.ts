@@ -9,7 +9,7 @@ import {
  *
  * Detached object construction historically fell back to
  * `workingDatabase.generateHandle()`. When the host document is recording an
- * undo transaction (e.g. during XATTACH), that minted non-TEMP handles owned by
+ * undo transaction, that minted non-TEMP handles owned by
  * the host and caused `assertOpenForWrite` failures while converting the
  * secondary file. Switching workingDatabase for the duration of the secondary
  * read keeps symbol-table import mutations against the correct database.

@@ -6,12 +6,9 @@ import {
 import { markRaw } from 'vue'
 
 import {
-  AcApAttDefCmd,
-  AcApAttEditCmd,
   AcApCountListCmd,
   AcApDrawingUnitsCmd,
   AcApFindCmd,
-  AcApInsertPaletteCmd,
   AcApLayerStateCmd,
   AcApMeasurementPanelCmd,
   AcApMemCmd,
@@ -26,8 +23,6 @@ import {
 } from '../command'
 import {
   createMlColorIndexPickerToolbarFactory,
-  MlAttDefDlg,
-  MlAttEditDlg,
   MlDrawingUnitsDlg,
   MlPointStyleDlg,
   MlQuickSelectDlg,
@@ -89,13 +84,6 @@ export const registerCmds = () => {
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'insert',
-      'insert',
-      new AcApInsertPaletteCmd(),
-      'blockspalette'
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'find',
       'find',
       new AcApFindCmd()
@@ -133,20 +121,6 @@ export const registerCmds = () => {
       new AcApTextStyleCmd(),
       'st'
     )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'attedit',
-      'attedit',
-      new AcApAttEditCmd(),
-      ['eattedit', 'ate']
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'attdef',
-      'attdef',
-      new AcApAttDefCmd(),
-      'ddattdef'
-    )
     isCommandRegistered = true
   }
 }
@@ -173,16 +147,6 @@ export const registerDialogs = () => {
     registerDialog({
       name: 'TextStyleDlg',
       component: markRaw(MlTextStyleDlg),
-      props: {}
-    })
-    registerDialog({
-      name: 'AttEditDlg',
-      component: markRaw(MlAttEditDlg),
-      props: {}
-    })
-    registerDialog({
-      name: 'AttDefDlg',
-      component: markRaw(MlAttDefDlg),
       props: {}
     })
     isDialogRegistered = true

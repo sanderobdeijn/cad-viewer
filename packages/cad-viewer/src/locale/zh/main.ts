@@ -8,7 +8,6 @@ export default {
   ribbon: {
     tab: {
       home: '常用',
-      insert: '插入',
       measurement: '测量',
       hatchContext: '填充',
       mtextEditorContext: '文字编辑器'
@@ -207,14 +206,7 @@ export default {
       measurement: '测量',
       style: '样式',
       lengthUnits: '长度单位',
-      angleUnits: '角度单位',
-      reference: '参照',
-      block: '块'
-    },
-    insertBlock: {
-      empty: '没有可用的块',
-      currentDrawing: '当前图形',
-      previewMenu: '块预览画廊'
+      angleUnits: '角度单位'
     },
     property: {
       color: '颜色',
@@ -287,10 +279,6 @@ export default {
       countList: '打开计数面板以查看并管理块计数。',
       missingResources: '打开缺失/外部资源面板以处理字体、图片和外部参照。',
       drawingUnits: '打开图形单位对话框，设置坐标格式、精度与插入缩放单位。',
-      attachDwg: '将 DWG 或 DXF 图纸作为外部参照附着（XATTACH）。',
-      insert: '打开块工具选项板以浏览并插入块定义（INSERT）。',
-      editAttributes: '打开增强属性编辑器，编辑块属性值与显示特性（ATTEDIT）。',
-      defineAttribute: '创建用于块的属性定义（ATTDEF）。',
       propertyColor: '设置新建对象或当前选中对象使用的颜色。',
       propertyLineType: '设置新建对象或当前选中对象使用的线型。',
       propertyLineWeight: '设置新建对象或当前选中对象使用的线宽。',
@@ -368,11 +356,7 @@ export default {
       quickSelect: '快速选择',
       find: '查找',
       countList: '计数',
-      drawingUnits: '图形单位',
-      attachDwg: '附着\nDWG',
-      insert: '插入',
-      editAttributes: '编辑属性',
-      defineAttribute: '定义属性'
+      drawingUnits: '图形单位'
     }
   },
   verticalToolbar: {
@@ -676,8 +660,6 @@ export default {
       title: '缺失 / 外部资源',
       fontTab: '字体',
       xrefTab: '外部参照',
-      attach: '附着',
-      attachDwg: '附着 DWG/DXF ...',
       fileReferences: '文件参照',
       details: '详细信息',
       foundAt: '找到位置',
@@ -810,32 +792,6 @@ export default {
         build: '构建',
         compact: '压缩'
       }
-    },
-    blocks: {
-      tab: '块',
-      title: '块',
-      tabCurrentDrawing: '当前图形',
-      tabRecent: '最近使用',
-      tabFavorites: '收藏夹',
-      tabLibraries: '库',
-      sectionCurrentDrawing: '当前图形中的块',
-      sectionRecent: '最近使用的块',
-      sectionFavorites: '收藏的块',
-      sectionLibraries: '块库',
-      filterPlaceholder: '过滤器...',
-      empty: '没有可用的块',
-      emptyRecent: '没有最近插入的块',
-      emptyFavorites: '没有收藏的块',
-      emptyLibraries: '尚未配置块库',
-      toggleFavorite: '切换收藏',
-      options: '选项',
-      insertionPoint: '插入点',
-      scale: '比例',
-      rotation: '旋转',
-      angle: '角度',
-      autoPlacement: '自动放置',
-      repeatPlacement: '重复放置',
-      explode: '分解'
     }
   },
   colorDropdown: {

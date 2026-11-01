@@ -112,14 +112,6 @@ export default {
       description: 'Temporarily suppresses the display of selected objects',
       prompt: 'Select objects'
     },
-    '-insert': {
-      description:
-        'Inserts a block definition into the current drawing (command-line)'
-    },
-    xattach: {
-      description:
-        'Attaches a DWG or DXF drawing as an external reference to the current drawing'
-    },
     gripcolor: {
       description:
         'Sets the color of unselected grips displayed on selected objects'

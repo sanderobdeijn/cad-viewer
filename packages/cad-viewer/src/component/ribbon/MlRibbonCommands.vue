@@ -88,7 +88,6 @@ import {
   arcStartEndDirection,
   arcStartEndRadius,
   arcThreePoints,
-  attachDwg,
   circleCenterDiameter,
   circleCenterRadius,
   circleTanTanRadius,
@@ -96,8 +95,6 @@ import {
   circleThreePoints,
   circleTwoPoints,
   countlist,
-  defineAttribute,
-  editAttribute,
   ellipseArc,
   ellipseCenter,
   find,
@@ -143,7 +140,6 @@ import {
   measurePoint,
   revCloud
 } from '../../svg/toolbarIcons'
-import MlBlockInsertGallery from '../common/MlBlockInsertGallery.vue'
 import MlLayerSelect from '../common/MlLayerSelect.vue'
 import MlCharacterMapDialog from '../dialog/MlCharacterMapDialog.vue'
 import MlRibbonFileName from './MlRibbonFileName.vue'
@@ -1006,10 +1002,6 @@ const buildBaseTabs = (
     countList: t('main.ribbon.tooltip.countList'),
     find: t('main.ribbon.tooltip.find'),
     drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
-    attachDwg: t('main.ribbon.tooltip.attachDwg'),
-    insert: t('main.ribbon.tooltip.insert'),
-    editAttributes: t('main.ribbon.tooltip.editAttributes'),
-    defineAttribute: t('main.ribbon.tooltip.defineAttribute'),
     propertyColor: t('main.ribbon.tooltip.propertyColor'),
     propertyLineType: t('main.ribbon.tooltip.propertyLineType'),
     propertyLineWeight: t('main.ribbon.tooltip.propertyLineWeight')
@@ -1981,89 +1973,7 @@ const buildBaseTabs = (
       ]
     },
     buildHatchContextualTab(t),
-    buildMTextContextualTab(t),
-    {
-      id: 'insert',
-      title: t('main.ribbon.tab.insert'),
-      groups: [
-        {
-          id: 'insert-block',
-          title: t('main.ribbon.group.block'),
-          orientation: 'row',
-          collections: [
-            {
-              id: 'insert-block-main',
-              layout: 'row',
-              items: [
-                {
-                  id: 'cmd-insert-block',
-                  type: 'custom',
-                  label: t('main.ribbon.command.insert'),
-                  tooltip: ribbonTooltips.insert,
-                  size: 'large',
-                  props: {
-                    component: MlBlockInsertGallery,
-                    componentProps: {
-                      label: t('main.ribbon.command.insert'),
-                      tooltip: ribbonTooltips.insert
-                    }
-                  }
-                },
-                {
-                  id: 'cmd-attdef',
-                  type: 'button',
-                  label: t('main.ribbon.command.defineAttribute'),
-                  tooltip: ribbonTooltips.defineAttribute,
-                  size: 'large',
-                  props: {
-                    icon: defineAttribute,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                },
-                {
-                  id: 'cmd-attedit',
-                  type: 'button',
-                  label: t('main.ribbon.command.editAttributes'),
-                  tooltip: ribbonTooltips.editAttributes,
-                  size: 'large',
-                  props: {
-                    icon: editAttribute,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 'insert-reference',
-          title: t('main.ribbon.group.reference'),
-          orientation: 'row',
-          collections: [
-            {
-              id: 'insert-reference-main',
-              layout: 'row',
-              items: [
-                {
-                  id: 'cmd-xattach',
-                  type: 'button',
-                  label: t('main.ribbon.command.attachDwg'),
-                  tooltip: ribbonTooltips.attachDwg,
-                  size: 'large',
-                  props: {
-                    icon: attachDwg,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
+    buildMTextContextualTab(t)
   ]
 
   tabs.push({
@@ -2142,9 +2052,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-find', 'find')
   commandByItemId.set('cmd-countlist', 'countlist')
   commandByItemId.set('cmd-drawing-units', 'units')
-  commandByItemId.set('cmd-xattach', 'xattach')
-  commandByItemId.set('cmd-attedit', 'attedit')
-  commandByItemId.set('cmd-attdef', 'attdef')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-continuous', 'measurecontinuous')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')

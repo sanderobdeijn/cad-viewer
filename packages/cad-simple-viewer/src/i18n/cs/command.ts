@@ -112,14 +112,6 @@ export default {
       description: 'Dočasně potlačí zobrazení vybraných objektů',
       prompt: 'Vyberte objekty'
     },
-    '-insert': {
-      description:
-        'Vloží definici bloku do aktuálního výkresu (příkazový řádek)'
-    },
-    xattach: {
-      description:
-        'Připojí výkres DWG nebo DXF jako externí referenci k aktuálnímu výkresu'
-    },
     gripcolor: {
       description:
         'Nastaví barvu nevybraných gripů zobrazených na vybraných objektech'

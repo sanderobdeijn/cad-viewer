@@ -75,18 +75,6 @@ export default {
       ...enCommand.ACAD.style,
       description:
         'إنشاء أنماط النص وتعديلها وتحديدها للنص والنص متعدد الأسطر'
-    },
-
-    attedit: {
-      ...enCommand.ACAD.attedit,
-      description:
-        'تعديل قيم السمات وخصائص عرض سمات مرجع الكتلة'
-    },
-
-    attdef: {
-      ...enCommand.ACAD.attdef,
-      description:
-        'إنشاء تعريف سمة لاستخدامه داخل كتلة'
     }
   },
 

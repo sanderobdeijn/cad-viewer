@@ -21,7 +21,7 @@ Ribbon, tüm AutoCAD tarzı sekmeleri tam olarak görüntüler:
 | Sekme | Komutlar |
 |---|---|
 | File | Aç |
-| Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, Block Insert, vb. |
+| Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, vb. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, vb. |
 | Layers | Katman yönetimi (açma/kapama, dondurma/çözme, kilitleme, yalıtma, yeni, silme) |
 | Properties | Renk, çizgi tipi, çizgi kalınlığı, katman seçici |

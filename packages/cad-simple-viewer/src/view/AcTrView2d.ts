@@ -2009,50 +2009,10 @@ export class AcTrView2d extends AcEdBaseView {
       )
     if (!entity) return
 
-    const attributedBlock = this.resolveAttributedBlockReference(entity)
-    if (attributedBlock) {
-      e.preventDefault()
-      this.selectionSet.clear()
-      this.selectionSet.add(attributedBlock.objectId)
-      AcApDocManager.instance.sendStringToExecute('attedit')
-      return
-    }
-
     if (!(entity instanceof AcDbMText)) return
 
     e.preventDefault()
     await this.editMTextEntity(entity)
-  }
-
-  /**
-   * Resolves an attributed INSERT from a picked block reference or attribute.
-   */
-  private resolveAttributedBlockReference(
-    entity: AcDbEntity
-  ): AcDbBlockReference | undefined {
-    if (entity instanceof AcDbBlockReference) {
-      if (entity.attributeIterator().count > 0) return entity
-      return undefined
-    }
-
-    if (
-      entity instanceof AcDbAttribute ||
-      entity.type === 'Attrib' ||
-      entity.type === 'Attribute'
-    ) {
-      const owner =
-        AcApDocManager.instance.curDocument.database.tables.blockTable.getEntityById(
-          entity.ownerId
-        )
-      if (
-        owner instanceof AcDbBlockReference &&
-        owner.attributeIterator().count > 0
-      ) {
-        return owner
-      }
-    }
-
-    return undefined
   }
 
   private async editMTextEntity(mtext: AcDbMText) {

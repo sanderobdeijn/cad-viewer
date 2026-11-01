@@ -8,7 +8,6 @@ export default {
   ribbon: {
     tab: {
       home: 'Ana Sayfa',
-      insert: 'Ekle',
       measurement: 'Ölçüm',
       hatchContext: 'Tarama',
       mtextEditorContext: 'Metin Düzenleyici'
@@ -211,14 +210,7 @@ export default {
       measurement: 'Ölçüm',
       style: 'Stil',
       lengthUnits: 'Uzunluk Birimleri',
-      angleUnits: 'Açı Birimleri',
-      reference: 'Referans',
-      block: 'Blok'
-    },
-    insertBlock: {
-      empty: 'Kullanılabilir blok yok',
-      currentDrawing: 'Geçerli Çizim',
-      previewMenu: 'Blok önizleme galerisi'
+      angleUnits: 'Açı Birimleri'
     },
     property: {
       color: 'Renk',
@@ -300,14 +292,6 @@ export default {
         'Yazı tipleri, görseller ve xref’ler için Eksik / Harici Kaynaklar paletini açın.',
       drawingUnits:
         'Koordinat biçimlerini, hassasiyeti ve ekleme ölçeğini ayarlamak için Çizim Birimlerini açın.',
-      attachDwg:
-        'Bir DWG veya DXF çizimini harici referans olarak ekleyin (XATTACH).',
-      insert:
-        'Blok tanımlarını göz atmak ve eklemek için Bloklar paletini açın (INSERT).',
-      editAttributes:
-        'Blok öznitelik değerlerini ve görüntü özelliklerini düzenlemek için Gelişmiş Öznitelik Düzenleyiciyi açın (ATTEDIT).',
-      defineAttribute:
-        'Bir blokta kullanılacak öznitelik tanımı oluşturun (ATTDEF).',
       propertyColor:
         'Yeni oluşturulan nesneler veya seçili varlıklar için rengi ayarlayın.',
       propertyLineType:
@@ -406,11 +390,7 @@ export default {
       quickSelect: 'Hızlı\nSeçim',
       find: 'Bul',
       countList: 'Sayım',
-      drawingUnits: 'Çizim\nBirimleri',
-      attachDwg: 'DWG\nEkle',
-      insert: 'Ekle',
-      editAttributes: 'Öznitelikleri\nDüzenle',
-      defineAttribute: 'Öznitelik\nTanımla'
+      drawingUnits: 'Çizim\nBirimleri'
     }
   },
   verticalToolbar: {
@@ -719,8 +699,6 @@ export default {
       title: 'Eksik / Harici Kaynaklar',
       fontTab: 'Yazı tipi',
       xrefTab: 'Harici Referanslar',
-      attach: 'Ekle',
-      attachDwg: 'DWG/DXF ekle...',
       fileReferences: 'Dosya Referansları',
       details: 'Ayrıntılar',
       foundAt: 'Bulunduğu yer',
@@ -855,32 +833,6 @@ export default {
         build: 'Build',
         compact: 'Compact'
       }
-    },
-    blocks: {
-      tab: 'Bloklar',
-      title: 'Bloklar',
-      tabCurrentDrawing: 'Geçerli Çizim',
-      tabRecent: 'Son Kullanılanlar',
-      tabFavorites: 'Favoriler',
-      tabLibraries: 'Kitaplıklar',
-      sectionCurrentDrawing: 'Geçerli Çizim Blokları',
-      sectionRecent: 'Son Kullanılan Bloklar',
-      sectionFavorites: 'Favori Bloklar',
-      sectionLibraries: 'Blok Kitaplıkları',
-      filterPlaceholder: 'Filtrele...',
-      empty: 'Kullanılabilir blok yok',
-      emptyRecent: 'Son eklenen blok yok',
-      emptyFavorites: 'Favori blok yok',
-      emptyLibraries: 'Yapılandırılmış kitaplık yok',
-      toggleFavorite: 'Favoriyi değiştir',
-      options: 'Seçenekler',
-      insertionPoint: 'Ekleme Noktası',
-      scale: 'Ölçek',
-      rotation: 'Döndürme',
-      angle: 'Açı',
-      autoPlacement: 'Otomatik Yerleştirme',
-      repeatPlacement: 'Yerleştirmeyi Tekrarla',
-      explode: 'Patlat'
     }
   },
   colorDropdown: {

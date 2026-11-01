@@ -697,25 +697,6 @@ export default {
   mtext: {
     point: 'Zadejte bod vložení víceřádkového textu'
   },
-  insert: {
-    blockName: 'Zadejte název bloku:',
-    insertionPoint: 'Zadejte bod vložení:',
-    scale: 'Zadejte faktor měřítka:',
-    rotation: 'Zadejte úhel otočení:',
-    invalidScale: 'Faktor měřítka musí být větší než 0.',
-    invalidBlockName: 'Neplatný název bloku.',
-    blockNotFound: 'Blok nenalezen',
-    xrefNotAllowed: 'Nelze vložit externí referenci pomocí -INSERT.'
-  },
-  xattach: {
-    insertionPoint: 'Zadejte bod vložení:',
-    scale: 'Zadejte faktor měřítka:',
-    rotation: 'Zadejte úhel otočení:',
-    invalidScale: 'Faktor měřítka musí být větší než 0.',
-    unsupportedFile: 'Vyberte soubor DWG nebo DXF.',
-    loading: 'Načítám externí referenci...',
-    loadFailed: 'Nepodařilo se načíst vybraný soubor výkresu.'
-  },
   point: {
     point: 'Zadejte bod'
   },

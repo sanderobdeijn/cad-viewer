@@ -8,7 +8,6 @@
           <div class="wml-ribbon__tabs">
             <span class="wml-ribbon__filetab">File</span>
             <span class="wml-ribbon__tab wml-ribbon__tab--active">Home</span>
-            <span class="wml-ribbon__tab">Insert</span>
             <span class="wml-ribbon__tab">Measurement</span>
             <!-- Minimizer / chevron (▼) -->
             <span class="wml-ribbon__chev" title="Collapse ribbon">▼</span>

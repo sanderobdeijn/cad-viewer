@@ -25,7 +25,6 @@ import {
   AcApEraseCmd,
   AcApHatchCmd,
   AcApHideObjectsCmd,
-  AcApInsertCmd,
   AcApLayerCloseCmd,
   AcApLayerCmd,
   AcApLayerCurCmd,
@@ -65,7 +64,6 @@ import {
   AcApSysVarCmd,
   AcApUndoCmd,
   AcApUnisolateObjectsCmd,
-  AcApXAttachCmd,
   AcApXLineCmd,
   AcApZoomCmd,
   resetMeasurementSession,
@@ -154,9 +152,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   MEASUREAREA: ['AA', 'AREA'],
   MEASUREANGLE: ['ANG'],
   '-HATCH': ['-H'],
-  IMAGEATTACH: ['IAT'],
-  '-INSERT': ['I'],
-  XATTACH: ['XA'],
   LAYER: ['LA'],
   '-LAYER': ['-LA'],
   LINE: ['L'],
@@ -1438,8 +1433,8 @@ export class AcApDocManager {
   /**
    * Registers an already-parsed read-only database as an overlay.
    *
-   * Prefer this when the caller already loaded the secondary database (e.g.
-   * XATTACH extents preview) to avoid reading the same file twice.
+   * Prefer this when the caller already loaded the secondary database to avoid
+   * reading the same file twice.
    *
    * @param db - Secondary database to draw into the target view.
    * @param options.targetView - Canvas that receives the overlay (defaults to
@@ -1872,8 +1867,6 @@ export class AcApDocManager {
       commandManager: this._commandManager
     })
     addSystemCommand('-hatch', '-hatch', new AcApHatchCmd())
-    addSystemCommand('-insert', '-insert', new AcApInsertCmd())
-    addSystemCommand('xattach', 'xattach', new AcApXAttachCmd())
     addSystemCommand('-layer', '-layer', new AcApLayerCmd())
     addSystemCommand('laycur', 'laycur', new AcApLayerCurCmd())
     addSystemCommand('laydel', 'laydel', new AcApLayerDelCmd())

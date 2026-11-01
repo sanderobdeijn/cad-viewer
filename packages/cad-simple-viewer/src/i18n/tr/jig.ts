@@ -697,25 +697,6 @@ export default {
   mtext: {
     point: 'Çok satırlı metin ekleme noktasını belirtin'
   },
-  insert: {
-    blockName: 'Blok adını girin:',
-    insertionPoint: 'Ekleme noktasını belirtin:',
-    scale: 'Ölçek faktörünü belirtin:',
-    rotation: 'Döndürme açısını belirtin:',
-    invalidScale: 'Ölçek faktörü 0 dan büyük olmalıdır.',
-    invalidBlockName: 'Geçersiz blok adı.',
-    blockNotFound: 'Blok bulunamadı',
-    xrefNotAllowed: 'Harici referans -INSERT ile eklenemez.'
-  },
-  xattach: {
-    insertionPoint: 'Ekleme noktasını belirtin:',
-    scale: 'Ölçek faktörünü belirtin:',
-    rotation: 'Döndürme açısını belirtin:',
-    invalidScale: 'Ölçek faktörü 0 dan büyük olmalıdır.',
-    unsupportedFile: 'Lütfen bir DWG veya DXF dosyası seçin.',
-    loading: 'Harici referans yükleniyor...',
-    loadFailed: 'Seçilen çizim dosyası okunamadı.'
-  },
   point: {
     point: 'Bir nokta belirtin'
   },

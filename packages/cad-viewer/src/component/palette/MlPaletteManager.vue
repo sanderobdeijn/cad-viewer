@@ -65,12 +65,6 @@
         >
           <ml-open-file-profile />
         </div>
-        <div
-          v-else-if="store.dialogs.activePaletteTab === 'blocks'"
-          class="ml-blocks-palette-wrapper"
-        >
-          <ml-blocks-palette />
-        </div>
       </ml-overflow-tabs>
     </ml-tool-palette>
   </el-config-provider>
@@ -93,7 +87,6 @@ import { computed, nextTick, watch } from 'vue'
 import { store } from '../../app'
 import { useSelectionSet, useViewerRect } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
-import MlBlocksPalette from './MlBlocksPalette.vue'
 import MlCountList from './MlCountList.vue'
 import MlEntityProperties from './MlEntityProperties.vue'
 import MlFindPalette from './MlFindPalette.vue'
@@ -204,7 +197,6 @@ const baseTabNames = [
   'countList',
   'find',
   'measurements',
-  'blocks',
   'missingResources',
   'memoryProfile'
 ] as const
@@ -345,15 +337,6 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
 }
 
 .ml-open-file-profile-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-blocks-palette-wrapper {
   overflow: hidden;
   width: 100%;
   height: 100%;

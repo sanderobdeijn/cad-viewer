@@ -44,13 +44,6 @@ export default {
     style: {
       description:
         'Metin ve çok satırlı metin için metin stilleri oluşturur, değiştirir veya belirler'
-    },
-    attedit: {
-      description:
-        'Bir blok referansının öznitelik değerlerini ve görüntü özelliklerini düzenler'
-    },
-    attdef: {
-      description: 'Bir blok için öznitelik tanımı oluşturur'
     }
   },
   USER: {}

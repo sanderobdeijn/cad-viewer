@@ -43,13 +43,6 @@ export default {
     style: {
       description:
         'Creates, modifies, or specifies text styles for text and multiline text'
-    },
-    attedit: {
-      description:
-        'Edits attribute values and display properties of a block reference'
-    },
-    attdef: {
-      description: 'Creates an attribute definition for a block'
     }
   },
   USER: {}

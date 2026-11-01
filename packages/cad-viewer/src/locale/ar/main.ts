@@ -17,7 +17,6 @@ export default {
     tab: {
       ...enMain.ribbon.tab,
       home: 'الرئيسية',
-      insert: 'إدراج',
       measurement: 'القياس',
       hatchContext: 'التهشير',
       mtextEditorContext: 'محرر النص'
@@ -34,9 +33,7 @@ export default {
       measurement: 'القياس',
       style: 'النمط',
       lengthUnits: 'وحدات الطول',
-      angleUnits: 'وحدات الزوايا',
-      reference: 'المراجع',
-      block: 'الكتل'
+      angleUnits: 'وحدات الزوايا'
     },
 
     property: {
@@ -89,14 +86,8 @@ export default {
       properties: 'الخصائص',
       find: 'بحث',
       countList: 'العد',
-      insert: 'إدراج',
-
       quickSelect: 'تحديد\nسريع',
       drawingUnits: 'وحدات\nالرسم',
-      attachDwg: 'إرفاق\nDWG',
-      editAttributes: 'تعديل\nالسمات',
-      defineAttribute: 'تعريف\nسمة'
-,
   mline: 'خط متعدد',
   ray: 'شعاع',
   xline: 'خط إنشائي',
@@ -353,13 +344,6 @@ export default {
       arc: 'قوس بيضاوي'
     },
 
-    insertBlock: {
-      ...enMain.ribbon.insertBlock,
-      empty: 'لا توجد كتل متاحة',
-      currentDrawing: 'الرسم الحالي',
-      previewMenu: 'معرض معاينة الكتل'
-    },
-
     tooltip: {
       ...enMain.ribbon.tooltip,
 
@@ -443,18 +427,6 @@ export default {
 
       drawingUnits:
         'افتح وحدات الرسم لتحديد تنسيق الإحداثيات والدقة ومقياس الإدراج.',
-
-      attachDwg:
-        'أرفق رسم DWG أو DXF كمرجع خارجي (XATTACH).',
-
-      insert:
-        'افتح لوحة الكتل لاستعراض تعريفات الكتل وإدراجها (INSERT).',
-
-      editAttributes:
-        'افتح محرر السمات المتقدم لتعديل قيم وخصائص عرض سمات الكتلة (ATTEDIT).',
-
-      defineAttribute:
-        'أنشئ تعريف سمة لاستخدامه داخل كتلة (ATTDEF).',
 
       propertyColor:
         'حدد لون العناصر الجديدة أو العناصر المحددة.',
@@ -1013,9 +985,6 @@ export default {
       fontTab: 'الخطوط',
       xrefTab: 'المراجع الخارجية',
 
-      attach: 'إرفاق',
-      attachDwg: 'إرفاق DWG/DXF...',
-
       fileReferences: 'مراجع الملفات',
 
       details: 'التفاصيل',
@@ -1227,44 +1196,6 @@ export default {
         build: 'البناء',
         compact: 'الضغط'
       }
-    },
-
-    blocks: {
-      ...enMain.toolPalette.blocks,
-
-      tab: 'الكتل',
-      title: 'الكتل',
-
-      tabCurrentDrawing: 'الرسم الحالي',
-      tabRecent: 'الأخيرة',
-      tabFavorites: 'المفضلة',
-      tabLibraries: 'المكتبات',
-
-      sectionCurrentDrawing: 'كتل الرسم الحالي',
-      sectionRecent: 'الكتل الأخيرة',
-      sectionFavorites: 'الكتل المفضلة',
-      sectionLibraries: 'مكتبات الكتل',
-
-      filterPlaceholder: 'تصفية...',
-
-      empty: 'لا توجد كتل متاحة',
-      emptyRecent: 'لا توجد كتل تم إدراجها مؤخرًا',
-      emptyFavorites: 'لا توجد كتل مفضلة',
-      emptyLibraries: 'لم يتم إعداد أي مكتبات',
-
-      toggleFavorite: 'إضافة أو إزالة من المفضلة',
-
-      options: 'الخيارات',
-
-      insertionPoint: 'نقطة الإدراج',
-      scale: 'المقياس',
-      rotation: 'الدوران',
-      angle: 'الزاوية',
-
-      autoPlacement: 'الوضع التلقائي',
-      repeatPlacement: 'تكرار الإدراج',
-
-      explode: 'تفكيك'
     }
 },
 

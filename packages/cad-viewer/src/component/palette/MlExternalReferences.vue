@@ -1,28 +1,5 @@
 <template>
   <div class="ml-external-references">
-    <div class="ml-external-references__toolbar">
-      <el-dropdown trigger="click" @command="handleAttachCommand">
-        <el-button
-          size="small"
-          class="ml-external-references__attach-btn"
-          :title="t('main.toolPalette.missingResources.attach')"
-          :aria-label="t('main.toolPalette.missingResources.attach')"
-        >
-          <el-icon :size="16"><Paperclip /></el-icon>
-          <el-icon :size="12" class="ml-external-references__attach-caret">
-            <ArrowDown />
-          </el-icon>
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="dwg">
-              {{ t('main.toolPalette.missingResources.attachDwg') }}
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-    </div>
-
     <div class="ml-external-references__upper">
       <div class="ml-external-references__section-header">
         {{ t('main.toolPalette.missingResources.fileReferences') }}
@@ -78,7 +55,9 @@
                 <el-checkbox
                   :model-value="row.visible"
                   :aria-label="t('main.toolPalette.missingResources.visible')"
-                  @change="(v: CheckboxValueType) => handleXrefVisibility(row, v)"
+                  @change="
+                    (v: CheckboxValueType) => handleXrefVisibility(row, v)
+                  "
                 />
                 <el-button
                   link
@@ -128,10 +107,7 @@
       <span class="ml-external-references__splitter-dots" aria-hidden="true" />
     </button>
 
-    <div
-      v-show="detailsExpanded"
-      class="ml-external-references__lower"
-    >
+    <div v-show="detailsExpanded" class="ml-external-references__lower">
       <div class="ml-external-references__section-header">
         {{ t('main.toolPalette.missingResources.details') }}
       </div>
@@ -188,20 +164,11 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowDown, Paperclip } from '@element-plus/icons-vue'
-import {
-  AcApDocManager,
-  AcApXrefManager,
-  eventBus
-} from '@mlightcad/cad-simple-viewer'
+import { AcApXrefManager, eventBus } from '@mlightcad/cad-simple-viewer'
 import {
   type CheckboxValueType,
   ElButton,
   ElCheckbox,
-  ElDropdown,
-  ElDropdownItem,
-  ElDropdownMenu,
-  ElIcon,
   ElMessageBox,
   ElTable,
   ElTableColumn
@@ -301,7 +268,10 @@ watch(
       selectedKey.value = null
       return
     }
-    if (!selectedKey.value || !list.some(row => row.key === selectedKey.value)) {
+    if (
+      !selectedKey.value ||
+      !list.some(row => row.key === selectedKey.value)
+    ) {
       selectedKey.value = list[0].key
     }
   },
@@ -354,13 +324,6 @@ const loadBufferAsOverlay = async (
       type: 'error'
     })
     throw error
-  }
-}
-
-const handleAttachCommand = (command: string | number) => {
-  if (command === 'dwg') {
-    // XATTACH (XA): file picker → insertion point → scale → rotation
-    AcApDocManager.instance.sendStringToExecute('xattach')
   }
 }
 
@@ -432,7 +395,10 @@ const handleUrlXref = async (row: ExternalRefRow) => {
   }
 }
 
-const handleXrefVisibility = (row: ExternalRefRow, value: CheckboxValueType) => {
+const handleXrefVisibility = (
+  row: ExternalRefRow,
+  value: CheckboxValueType
+) => {
   if (!row.overlayId) return
   const visible = value === true
   AcApXrefManager.instance.setVisibleByBlockName(row.name, visible)
@@ -459,27 +425,6 @@ const handleUnloadXref = (row: ExternalRefRow) => {
   overflow: hidden;
   font-size: 12px;
   color: var(--el-text-color-regular);
-}
-
-.ml-external-references__toolbar {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 4px;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--el-border-color-lighter, #ebeef5);
-}
-
-.ml-external-references__attach-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 8px;
-}
-
-.ml-external-references__attach-caret {
-  margin-left: 0;
-  opacity: 0.75;
 }
 
 .ml-external-references__upper {

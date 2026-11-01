@@ -1553,59 +1553,6 @@ export default {
     }
   },
 
-  insert: {
-    ...enJig.insert,
-
-    blockName:
-      'أدخل اسم الكتلة:',
-
-    insertionPoint:
-      'حدد نقطة الإدراج:',
-
-    scale:
-      'حدد معامل المقياس:',
-
-    rotation:
-      'حدد زاوية الدوران:',
-
-    invalidScale:
-      'يجب أن يكون معامل المقياس أكبر من 0.',
-
-    invalidBlockName:
-      'اسم الكتلة غير صالح.',
-
-    blockNotFound:
-      'الكتلة غير موجودة',
-
-    xrefNotAllowed:
-      'لا يمكن إدراج مرجع خارجي باستخدام -INSERT.'
-  },
-
-  xattach: {
-    ...enJig.xattach,
-
-    insertionPoint:
-      'حدد نقطة الإدراج:',
-
-    scale:
-      'حدد معامل المقياس:',
-
-    rotation:
-      'حدد زاوية الدوران:',
-
-    invalidScale:
-      'يجب أن يكون معامل المقياس أكبر من 0.',
-
-    unsupportedFile:
-      'اختر ملف DWG أو DXF.',
-
-    loading:
-      'جارٍ تحميل المرجع الخارجي...',
-
-    loadFailed:
-      'فشلت قراءة ملف الرسم المحدد.'
-  },
-
   revcloud: {
     ...enJig.revcloud,
 

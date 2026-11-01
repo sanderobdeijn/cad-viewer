@@ -688,25 +688,6 @@ export default {
   mtext: {
     point: '指定多行文本插入点'
   },
-  insert: {
-    blockName: '输入块名：',
-    insertionPoint: '指定插入点：',
-    scale: '指定比例因子：',
-    rotation: '指定旋转角度：',
-    invalidScale: '比例因子必须大于 0。',
-    invalidBlockName: '无效的块名。',
-    blockNotFound: '未找到块',
-    xrefNotAllowed: '不能使用 -INSERT 插入外部参照。'
-  },
-  xattach: {
-    insertionPoint: '指定插入点：',
-    scale: '指定比例因子：',
-    rotation: '指定旋转角度：',
-    invalidScale: '比例因子必须大于 0。',
-    unsupportedFile: '请选择 DWG 或 DXF 文件。',
-    loading: '正在加载外部参照...',
-    loadFailed: '无法读取所选图形文件。'
-  },
   point: {
     point: '指定点'
   },
