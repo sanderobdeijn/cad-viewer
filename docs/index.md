@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: CAD viewing and review in the browser
-  tagline: Open DWG / DXF drawings instantly — no install, no backend, with full markup and measurement tools.
+  tagline: Open DWG / DXF drawings instantly — no install, no backend, with full measurement tools.
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: DWG / DXF support
     details: High-fidelity drawing display with model space, layouts, layers, blocks and external references.
   - icon: 📏
-    title: Measure & markup
-    details: Precise distance, area, angle and arc-length measurement, plus arrows, clouds, text and callouts — everything a design review needs.
+    title: Measure
+    details: Precise distance, area, angle and arc-length measurement, right in the browser.
   - icon: ✏️
     title: More than a viewer
     details: Select, modify and create geometry with an AutoCAD-like command experience — real drafting work on the web, not just read-only preview.

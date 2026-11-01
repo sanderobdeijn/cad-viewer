@@ -13,7 +13,6 @@ import {
   AcApFindCmd,
   AcApInsertPaletteCmd,
   AcApLayerStateCmd,
-  AcApMarkupPanelCmd,
   AcApMeasurementPanelCmd,
   AcApMemCmd,
   AcApMissedDataCmd,
@@ -106,12 +105,6 @@ export const registerCmds = () => {
       'countlist',
       'countlist',
       new AcApCountListCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'markuppanel',
-      'markuppanel',
-      new AcApMarkupPanelCmd()
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,

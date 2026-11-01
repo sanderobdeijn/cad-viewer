@@ -4,7 +4,7 @@ title: Režim pouze pro čtení
 
 # Režim pouze pro čtení
 
-Režim pouze pro čtení slouží výhradně k prohlížení a měření výkresů. Pozadí DWG/DXF je zcela neupravitelné; příkazy pro značky, kreslení a úpravy jsou nedostupné.
+Režim pouze pro čtení slouží výhradně k prohlížení a měření výkresů. Pozadí DWG/DXF je zcela neupravitelné; příkazy pro kreslení a úpravy jsou nedostupné.
 
 Při vstupu do režimu pouze pro čtení se rozhraní automaticky přizpůsobí svému rozložení podle typu zařízení.
 
@@ -52,7 +52,7 @@ Mobil používá design **spodní lišta karet + zásuvkový panel**, který sou
 
 ### Spodní lišta karet
 
-V dolní části obrazovky se zobrazuje šest tlačítek s ikonami:
+V dolní části obrazovky se zobrazuje pět tlačítek s ikonami:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,7 +60,6 @@ V dolní části obrazovky se zobrazuje šest tlačítek s ikonami:
 |---|---|
 | Zoom | Skupina nástrojů přiblížení: přiblížit, oddálit, přiblížit na rozsah, přiblížit oknem |
 | Measure | Skupina měřicích nástrojů: vzdálenost, průběžná vzdálenost, plocha, souřadnice, délka oblouku, úhel |
-| Review | Vstup do značek (v režimu pouze pro čtení zakázán, zobrazen šedě) |
 | Layers | Otevře zásuvku panelu vrstev |
 | Layout | Přepne rozložení |
 | Setting | Nabídka nastavení: motiv, simulovaná myš, OSNAP atd. |

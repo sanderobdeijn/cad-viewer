@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: Tarayıcıda CAD görüntüleme ve inceleme
-  tagline: DWG / DXF çizimlerini anında açın — kurulum yok, arka uç yok; tam kapsamlı işaretleme ve ölçüm araçlarıyla.
+  tagline: DWG / DXF çizimlerini anında açın — kurulum yok, arka uç yok; tam kapsamlı ölçüm araçlarıyla.
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: DWG / DXF desteği
     details: Model uzayı, düzenler, katmanlar, bloklar ve dış referanslar dahil yüksek doğrulukta çizim görüntüleme.
   - icon: 📏
-    title: Ölçüm ve işaretleme
-    details: Mesafe, alan, açı ve yay uzunluğu ölçümü; ayrıca oklar, revizyon bulutları, metinler ve balon açıklamalarla eksiksiz tasarım incelemesi.
+    title: Ölçüm
+    details: Mesafe, alan, açı ve yay uzunluğunu doğrudan tarayıcıda hassas biçimde ölçün.
   - icon: ✏️
     title: Görüntüleyiciden fazlası
     details: Nesneleri seçin, düzenleyin ve yeni geometri oluşturun; AutoCAD benzeri komut deneyimiyle web'de gerçek çizim işleri, salt okunur önizleme değil.

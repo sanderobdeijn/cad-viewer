@@ -192,11 +192,11 @@ Two-state items merge `on` / `off` fields from `getValue()`:
 
 ```ts
 {
-  id: 'markup-visibility',
+  id: 'measurement-visibility',
   toggle: {
-    getValue: () => isMarkupVisible(),
-    on: { label: 'toolbar.hideMarkup', icon: ICON_HIDE, action: () => hide() },
-    off: { label: 'toolbar.showMarkup', icon: ICON_SHOW, action: () => show() }
+    getValue: () => isMeasurementVisible(),
+    on: { label: 'toolbar.hideMeasurements', icon: ICON_HIDE, action: () => hide() },
+    off: { label: 'toolbar.showMeasurements', icon: ICON_SHOW, action: () => show() }
   }
 }
 ```
@@ -226,7 +226,7 @@ Preset **catalogs** (concrete button definitions for `'select'`, `'measure'`, �
 
 ## 5. Document state and open mode
 
-Items can require a document and/or a minimum `AcEdOpenMode` (`Read` / `Review` / `Write`). Drive that state from the host:
+Items can require a document and/or a minimum `AcEdOpenMode` (`Read` / `Write`). Drive that state from the host:
 
 ```ts
 import { acapBindToolbarDocState } from '@mlightcad/cad-simple-viewer'
@@ -315,7 +315,7 @@ AcApSettingManager.instance.isShowShortCutToolbar = false
 
 ## 8. Using `@mlightcad/cad-simple-ui-plugin`
 
-For a batteries-included toolbar (measure, markup, layer, layout, theme, …), register the plugin and pass `toolbar` / `layouts` options. The plugin builds items, mounts `AcUiToolbar`, and binds DocManager for you:
+For a batteries-included toolbar (measure, layer, layout, theme, …), register the plugin and pass `toolbar` / `layouts` options. The plugin builds items, mounts `AcUiToolbar`, and binds DocManager for you:
 
 ```ts
 import { acuiRegisterSimpleUiPlugin } from '@mlightcad/cad-simple-ui-plugin'

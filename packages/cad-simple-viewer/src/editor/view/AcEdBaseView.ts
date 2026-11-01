@@ -232,7 +232,7 @@ export abstract class AcEdBaseView {
   private _selectionSet: AcEdSelectionSet
   /**
    * When false, pointer hover and click/box gestures do not select or
-   * highlight CAD entities. Markup overlays can still be picked.
+   * highlight CAD entities. Measurement overlays can still be picked.
    */
   private _entitySelectionEnabled = true
 
@@ -264,7 +264,7 @@ export abstract class AcEdBaseView {
   /** Resolves object snap points using this view's pick and coordinate APIs. */
   private _osnapResolver: AcEdOsnapResolver
 
-  /** OSNAP markers shown while dragging overlay measurement / markup grips. */
+  /** OSNAP markers shown while dragging overlay measurement grips. */
   private _overlayGripOsnapMarkers: AcEdMarkerManager | null = null
   /** Last object snap acquired during {@link resolveOverlayGripPoint}, if any. */
   private _lastOverlayGripOsnap: AcEdOsnapPoint | null = null
@@ -1188,7 +1188,7 @@ export abstract class AcEdBaseView {
   /**
    * Whether CAD entities can be selected and hover-highlighted.
    *
-   * Markup / review overlays are unaffected. Default is `true`.
+   * Measurement overlays are unaffected. Default is `true`.
    */
   get entitySelectionEnabled() {
     return this._entitySelectionEnabled
@@ -1241,7 +1241,7 @@ export abstract class AcEdBaseView {
 
   /**
    * Resolves a world XY cursor through object snap and updates overlay grip
-   * snap markers. Used by HTML overlay endpoint drags (measure / markup).
+   * snap markers. Used by HTML overlay endpoint drags (measure).
    *
    * @param cursor - Raw world XY under the pointer.
    * @param lastPoint - Grip origin passed to the osnap resolver as lastPoint.

@@ -3,18 +3,6 @@ import {
   acdbHostApplicationServices
 } from '@mlightcad/data-model'
 
-import { applyMarkupStyleToSelection } from '../command/markup/AcApMarkupPresenter'
-import { getMarkupStore } from '../command/markup/AcApMarkupStore'
-import {
-  cssToMarkupColor,
-  defaultMarkupColor,
-  getMarkupCustomTextHeightWcs,
-  getMarkupFontSize,
-  getMarkupTextHeightMode,
-  markupColorToCss,
-  setMarkupDrawColor,
-  setMarkupTextHeight
-} from '../command/markup/AcApMarkupUtil'
 import {
   applyMeasurementStyleToSelection,
   getActiveMeasurementStyle,
@@ -171,7 +159,7 @@ function ensureStyles(): void {
 }
 
 /**
- * Color / font-size session accessory for measurement and markup drawing.
+ * Color / font-size session accessory for measurement drawing.
  *
  * Mounted into the desktop top-center slot or the phone/pad session panel.
  */
@@ -197,7 +185,7 @@ export class AcUiDrawStyleSessionAccessory {
   /** Root row reparented into session accessory hosts. */
   private readonly controlsRow: HTMLDivElement
 
-  /** Active measure/markup session, or `undefined` when inactive. */
+  /** Active measure session, or `undefined` when inactive. */
   private kind: AcUiDrawStyleKind | undefined
 
   /** True when mounted in the mobile session panel (drop-up palette). */
@@ -310,7 +298,7 @@ export class AcUiDrawStyleSessionAccessory {
   /**
    * Updates the active session kind before controls mount or sync.
    *
-   * @param kind - `'measure'`, `'markup'`, or `undefined` when inactive.
+   * @param kind - `'measure'`, or `undefined` when inactive.
    */
   setActiveKind(kind: AcUiDrawStyleKind | undefined): void {
     this.kind = kind
@@ -399,25 +387,14 @@ export class AcUiDrawStyleSessionAccessory {
   }
 
   /**
-   * Reads color and font size from the active measure/markup session or defaults.
+   * Reads color from the active measure session or defaults.
    */
   private syncFromSession(): void {
-    if (this.kind === 'measure') {
-      const selected = getActiveMeasurementStyle()
-      const db = acdbHostApplicationServices().workingDatabase
-      const color =
-        selected?.color ??
-        (db ? acapGetMeasurementColor(db) : acapCssToMeasurementColor('#7b8794'))
-      this.paint(color)
-      return
-    }
-
-    const selected = getMarkupStore().selectedId
-      ? getMarkupStore().get(getMarkupStore().selectedId!)
-      : undefined
-    const color = selected
-      ? cssToMarkupColor(selected.style.color)
-      : defaultMarkupColor()
+    const selected = getActiveMeasurementStyle()
+    const db = acdbHostApplicationServices().workingDatabase
+    const color =
+      selected?.color ??
+      (db ? acapGetMeasurementColor(db) : acapCssToMeasurementColor('#7b8794'))
     this.paint(color)
   }
 
@@ -440,13 +417,8 @@ export class AcUiDrawStyleSessionAccessory {
   private applyColor(color: AcCmColor): void {
     this.swatchFill.style.background = acapCssColor(color)
     this.aciStacks.setSelected(aciIndexOf(color))
-    if (this.kind === 'measure') {
-      acapSetMeasurementDrawColor(color)
-      applyMeasurementStyleToSelection(this.view, { color })
-      return
-    }
-    setMarkupDrawColor(color)
-    applyMarkupStyleToSelection(this.view, { color: markupColorToCss(color) })
+    acapSetMeasurementDrawColor(color)
+    applyMeasurementStyleToSelection(this.view, { color })
   }
 
   /** Closes the inline ACI palette popover if it was left open. */
@@ -503,35 +475,19 @@ export class AcUiDrawStyleSessionAccessory {
     this.textHeightDialogOpen = true
     this.hideColorPanel()
     try {
-      const isMeasure = this.kind === 'measure'
-      const selectedMeasure = isMeasure
-        ? getActiveMeasurementStyle()
-        : undefined
-      const markupSelectedId = getMarkupStore().selectedId
-      const selectedMarkup =
-        !isMeasure && markupSelectedId
-          ? getMarkupStore().get(markupSelectedId)
-          : undefined
-      const hasSelection =
-        selectedMeasure != null || selectedMarkup != null
-      const sessionMode = isMeasure
-        ? selectedMeasure?.textHeightMode ??
-          acapGetMeasurementTextHeightMode()
-        : selectedMarkup?.style.textHeightMode ?? getMarkupTextHeightMode()
-      const fontSizePx = isMeasure
-        ? selectedMeasure?.fontSize ?? acapGetMeasurementFontSize()
-        : selectedMarkup?.style.fontSize ?? getMarkupFontSize()
+      const selectedMeasure = getActiveMeasurementStyle()
+      const hasSelection = selectedMeasure != null
+      const sessionMode =
+        selectedMeasure?.textHeightMode ?? acapGetMeasurementTextHeightMode()
+      const fontSizePx =
+        selectedMeasure?.fontSize ?? acapGetMeasurementFontSize()
       const measureId = getSelectedMeasurementId()
-      const selectedTextHeightWcs = isMeasure
-        ? hasSelection
-          ? selectedMeasure?.textHeightWcs ??
-            (measureId
-              ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-              : undefined)
-          : acapGetMeasurementCustomTextHeightWcs()
-        : hasSelection
-          ? selectedMarkup?.style.textHeightWcs
-          : getMarkupCustomTextHeightWcs()
+      const selectedTextHeightWcs = hasSelection
+        ? selectedMeasure?.textHeightWcs ??
+          (measureId
+            ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
+            : undefined)
+        : acapGetMeasurementCustomTextHeightWcs()
 
       const initials = acuiResolveTextHeightDialogInitials({
         hasSelection,
@@ -551,23 +507,13 @@ export class AcUiDrawStyleSessionAccessory {
         result,
         initials.initialFontSizePx
       )
-      if (isMeasure) {
-        acapSetMeasurementTextHeight(
-          patch.textHeightMode,
-          patch.textHeightMode === 'custom'
-            ? (patch.textHeightWcs ?? patch.fontSize)
-            : patch.fontSize
-        )
-        applyMeasurementStyleToSelection(this.view, patch)
-      } else {
-        setMarkupTextHeight(
-          patch.textHeightMode,
-          patch.textHeightMode === 'custom'
-            ? (patch.textHeightWcs ?? patch.fontSize)
-            : patch.fontSize
-        )
-        applyMarkupStyleToSelection(this.view, patch)
-      }
+      acapSetMeasurementTextHeight(
+        patch.textHeightMode,
+        patch.textHeightMode === 'custom'
+          ? (patch.textHeightWcs ?? patch.fontSize)
+          : patch.fontSize
+      )
+      applyMeasurementStyleToSelection(this.view, patch)
     } finally {
       this.textHeightDialogOpen = false
     }

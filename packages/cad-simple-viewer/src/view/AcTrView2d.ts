@@ -45,7 +45,6 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 import { AcApDocManager, AcApSettingManager } from '../app'
 import { AcApZoomCmd } from '../command/AcApZoomCmd'
-import { isMarkupHtmlTextEditing } from '../command/markup/AcApMarkupTextEdit'
 import { notifyMeasurementLayoutChanged } from '../command/measure/AcApMeasurementStore'
 import {
   acedAttachMobileBoxGesture,
@@ -703,7 +702,6 @@ export class AcTrView2d extends AcEdBaseView {
       return (
         !this.editor.isActive &&
         !AcEdMTextEditor.getActiveInputBox() &&
-        !isMarkupHtmlTextEditing() &&
         !this._gripManager.isDragging
       )
     }
@@ -1124,7 +1122,7 @@ export class AcTrView2d extends AcEdBaseView {
    *
    * Camera, CAD entities, and WebGL transients set this flag. CSS2D / HTML
    * overlay mutations should use {@link isHtmlDirty} instead so a badge or
-   * markup DOM change does not clear and redraw the drawing.
+   * overlay DOM change does not clear and redraw the drawing.
    *
    * @returns True if the WebGL view is dirty and needs re-rendering
    */
@@ -2409,7 +2407,7 @@ export class AcTrView2d extends AcEdBaseView {
   addTransientEntity(entity: AcDbEntity | AcDbEntity[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     const epoch = this._convertEpoch
-    // Overlay transients (markup / measurement / jigs) must honor entity
+    // Overlay transients (measurement / jigs) must honor entity
     // lineweight even when LWDISPLAY is off; otherwise ribbon style is a no-op.
     const previousForce = this._renderer.forceShowLineWeight
     this._renderer.forceShowLineWeight = true
@@ -3440,7 +3438,7 @@ export class AcTrView2d extends AcEdBaseView {
       height: this.height
     })
     // CSS2D badges reproject via `_isDirty`. Canvas overlays (measure /
-    // markup strokes, live preview) paint with `worldToScreen` and listen to
+    // measurement strokes, live preview) paint with `worldToScreen` and listen to
     // `viewChanged` only — resize must notify them too.
     this.events.viewChanged.dispatch()
   }
@@ -3496,7 +3494,7 @@ export class AcTrView2d extends AcEdBaseView {
       needsRedraw = this._layoutViewManager.render(this._scene)
     }
     // Camera / WebGL dirty also reprojects CSS2D overlays. HTML-only dirty
-    // skips the WebGL pass so measurement badges and markup DOM can update
+    // skips the WebGL pass so measurement badges can update
     // without clearing and redrawing the drawing.
     if (this.internalCamera && (this._isDirty || this._htmlDirty)) {
       this._css2dRenderer.render(this._scene.internalScene, this.internalCamera)

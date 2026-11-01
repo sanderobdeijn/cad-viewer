@@ -63,15 +63,6 @@ export const ICON_THEME_SUNNY =
 export const ICON_THEME_MOON =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" d="M240.448 240.448a384 384 0 1 0 543.104 543.104 476.16 476.16 0 0 1-543.104-543.104"/></svg>'
 
-/** Toolbar: generate markup clouds from compare change sets. */
-export const ICON_COMPARE_CLOUDS = `
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 0 0 4.06 2.25h9.44a3.75 3.75 0 1 0-.3-7.49 5.25 5.25 0 0 0-10.12 1.5A4.5 4.5 0 0 0 2.25 15Z" />
-  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75 16.82 4.61 17.68 4.93 16.82 5.25 16.5 6.11 16.18 5.25 15.32 4.93 16.18 4.61 16.5 3.75Z" />
-  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5 20.5 8.16 21.16 8.41 20.5 8.66 20.25 9.32 20 8.66 19.34 8.41 20 8.16 20.25 7.5Z" />
-</svg>
-`.trim()
-
 /** Inline SVG markup for the empty-pane illustration. */
 const EMPTY_FILE_ICON = `
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">

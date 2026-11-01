@@ -389,49 +389,6 @@ export default {
     revcloud: {
       description: 'Revizyon bulutu oluşturur veya değiştirir'
     },
-    markuptext: {
-      description: 'Metin işareti yerleştirir'
-    },
-    markupline: {
-      description: 'Çizgi işareti oluşturur'
-    },
-    markuparrow: {
-      description: 'Ok işareti oluşturur'
-    },
-    markupcloud: {
-      description: 'Revizyon bulutu işareti oluşturur'
-    },
-    markuprect: {
-      description: 'Dikdörtgen işareti oluşturur'
-    },
-    markupcircle: {
-      description: 'Daire işareti oluşturur'
-    },
-    markuphighlight: {
-      description: 'Vurgu dikdörtgeni işareti oluşturur'
-    },
-    markupcallout: {
-      description:
-        'Çağrı notu oluşturur: önce lider ucunu, sonra metin kutusunu belirtin, ardından metni girin'
-    },
-    markupstamp: {
-      description: 'Damga veya özel sembol yerleştirir'
-    },
-    markupvis: {
-      description: 'İşaretleri gösterir veya gizler'
-    },
-    clearmarkups: {
-      description: 'Geçerli yerleşimdeki tüm işaretleri temizler'
-    },
-    markupexport: {
-      description: 'İşaretleri sidecar JSON dosyasına dışa aktarır'
-    },
-    markupimport: {
-      description: 'İşaretleri sidecar JSON dosyasından içe aktarır'
-    },
-    markuppanel: {
-      description: 'İşaret paletini açar'
-    },
     rotate: {
       description: 'Seçili varlıkları bir taban noktası etrafında döndürür',
       prompt: 'Varlıkları seçin'

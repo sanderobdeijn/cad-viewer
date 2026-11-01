@@ -32,7 +32,7 @@ export interface AcEdGripAppearance {
 
 /**
  * Writes CAD entity square-grip appearance onto a host so `.ml-grip-handle`
- * inherits `GRIPSIZE` / `GRIPCOLOR` / `GRIPHOT`. Overlay measure/markup
+ * inherits `GRIPSIZE` / `GRIPCOLOR` / `GRIPHOT`. Overlay measure
  * endpoint circles keep their own colored-dot styling and ignore these vars.
  */
 export function applyGripAppearanceToHost(

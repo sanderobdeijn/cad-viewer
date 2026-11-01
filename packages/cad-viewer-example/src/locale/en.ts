@@ -34,8 +34,6 @@ export default {
       accessMode: 'Access mode',
       read: 'Read',
       readHint: 'View only',
-      review: 'Review',
-      reviewHint: 'View & review',
       write: 'Write',
       writeHint: 'Full access',
 

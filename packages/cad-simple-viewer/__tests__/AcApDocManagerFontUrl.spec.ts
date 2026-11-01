@@ -167,9 +167,6 @@ jest.mock('../src/command/measure/AcApRegisterMeasureCommands', () => ({
   registerMeasureCommands: jest.fn()
 }))
 
-jest.mock('../src/command/markup/AcApRegisterMarkupCommands', () => ({
-  registerMarkupCommands: jest.fn()
-}))
 
 jest.mock('../src/command/AcApInstallDrawStyleSessionAccessory', () => ({
   acapInstallDrawStyleSessionAccessory: jest.fn(),
@@ -198,7 +195,6 @@ jest.mock('../src/command', () => {
     'AcApArcCmd',
     'AcApCacheFontCmd',
     'AcApCircleCmd',
-    'AcApClearMarkupsCmd',
     'AcApClearMeasurementsCmd',
     'AcApCloseCmd',
     'AcApCopyCmd',
@@ -223,18 +219,6 @@ jest.mock('../src/command', () => {
     'AcApLayoffCmd',
     'AcApLineCmd',
     'AcApLogCmd',
-    'AcApMarkupArrowCmd',
-    'AcApMarkupCalloutCmd',
-    'AcApMarkupCircleCmd',
-    'AcApMarkupCloudCmd',
-    'AcApMarkupExportCmd',
-    'AcApMarkupHighlightCmd',
-    'AcApMarkupImportCmd',
-    'AcApMarkupLineCmd',
-    'AcApMarkupRectCmd',
-    'AcApMarkupStampCmd',
-    'AcApMarkupTextCmd',
-    'AcApMarkupVisibilityCmd',
     'AcApMeasureAngleCmd',
     'AcApMeasureArcCmd',
     'AcApMeasureAreaCmd',
@@ -279,9 +263,9 @@ jest.mock('../src/command', () => {
         jest.fn().mockImplementation(() => ({ trigger: jest.fn() }))
       ])
     ),
-    acapBindMarkupSession: jest.fn(),
-    acapDisposeMarkupSession: jest.fn(),
-    resetMarkupSession: jest.fn(),
+    acapBindSessionUndo: jest.fn(),
+    acapDisposeSessionUndo: jest.fn(),
+    resetSessionUndo: jest.fn(),
     resetMeasurementSession: jest.fn()
   }
 })

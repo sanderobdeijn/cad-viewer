@@ -1,6 +1,6 @@
 # @mlightcad/cad-simple-ui-plugin
 
-Framework-agnostic toolbar, layer manager, and review palette UI for [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer).
+Framework-agnostic toolbar, layer manager, and measurement palette UI for [`@mlightcad/cad-simple-viewer`](https://github.com/mlightcad/cad-viewer).
 
 This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Element Plus. All UI uses plain DOM and respects the cad-simple-viewer `--ml-ui-*` theme tokens.
 
@@ -14,12 +14,10 @@ This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Eleme
 - UI theme follows `COLORTHEME` sysvar and `--ml-ui-*` tokens on `host` automatically
 - Locale follows `AcApI18n.currentLocale` automatically
 - Layer list in a dock panel tab (name, visibility, color), opened from the toolbar layer button
-- Review palette in a dock panel tab (markup list, status, comments), opened from the Review toolbar button (`markuppanel`)
 - Text search (**Find**) in a dock panel tab: TEXT, MTEXT, block attributes and block-definition text, dimension, multileader and table text of the whole drawing (or the current layout), click-to-zoom with selection, opened from the Find toolbar button (`find`)
 - Chrome DevTools-style **dock panel** with tabs, open/close, dock side (bottom/left/right), and resize handle
 - ACI color picker for layer colors
 - Layer UI opens from the toolbar button or the `layer` command (opens dock when closed, switches to layers tab when open)
-- Review palette opens from the Review toolbar button or the `markuppanel` command
 - Dock panel closes via the close button or `close-layer-manager` event
 - Optional collapsible toolbar: hide tool buttons and show only a chevron toggle
 
@@ -137,7 +135,7 @@ Dock panel behavior:
 - By default the dock mounts on the viewer canvas parent (inside `host`), so sibling header toolbars are not stretched
 - Override mount element with `dockPanel.mountTarget` when needed
 - Drag the resize handle on the panel edge to adjust height or width
-- Multiple tabs supported (layers and review tabs registered automatically when those toolbar buttons are present)
+- Multiple tabs supported (layers, measurements, and find tabs registered automatically when those toolbar buttons are present)
 - Canvas area shrinks when the panel is open (flex layout on `host`)
 
 Runtime dock panel controls:
@@ -164,26 +162,6 @@ acuiCreateSimpleUiPlugin({
 ```
 
 The built-in `layerclose` command emits `close-layer-manager`, which the plugin listens for.
-
-### Review palette (dock panel)
-
-The review palette is enabled automatically when the resolved toolbar includes the Review button (`id: 'markup-panel'`, included in the default `annotation` preset). It lists HTML markups from `getMarkupStore()` and supports the same workflow as cad-viewer's Vue review palette: search, clear all, select a row, edit status/label/comment, zoom to, and delete.
-
-```typescript
-acuiCreateSimpleUiPlugin({
-  host,
-  toolbar: {
-    items: [acuiToolbarPreset('annotation')]
-  }
-})
-```
-
-Review palette behavior:
-
-- Click **Review** in the annotation toolbar menu (runs `markuppanel`) to open the dock panel when it is closed, or switch to the review tab when it is already open
-- Open or focus the palette via `AcApDocManager.sendStringToExecute('markuppanel')`
-- Row click selects the markup overlay and opens the details pane
-- Status, label, and comment edits go through `runMarkupEdit` so they stay on the undo stack
 
 ### Find text (dock panel)
 
@@ -279,9 +257,9 @@ By default the plugin uses `layout: 'auto'` and follows viewport width via `aced
 
 | Kind | Viewport | Chrome | Default buttons (`items: 'default'`) |
 | --- | --- | --- | --- |
-| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `annotation`, `layer`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
+| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `layer`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
 | **pad** | 601–960px | Same floating chrome as desktop (right, icons only, `edgeOffset: 8`). | Desktop set **without** `select` and `pan` (`excludeItems: ['select', 'pan']`). Touch drag pans; a long-press starts window/crossing box select. |
-| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layer`, `layout`, `measure`, `annotation`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
+| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layer`, `layout`, `measure`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
 
 Phone does **not** inherit top-level `toolbar.items`, `appendItems`, or chrome (placement, labels, size). It only inherits `enabled`, `mountTarget`, and `inCanvasParent`. Pad and desktop inherit the full top-level `toolbar` baseline on top of the built-ins above.
 
@@ -395,7 +373,7 @@ See `cad-simple-viewer-example` (`demoToolbarPresets.ts`) for a working layout s
 | `action` | Custom click handler (e.g. open a dialog). Used when no `command` is set |
 | `anchorAction` | Popover-style handler that receives the anchor button element. Takes precedence over `command` and `action` |
 | `requiresDocument` | When `false`, button stays enabled before a drawing is opened |
-| `minOpenMode` | Hide below Review/Write (`AcEdOpenMode.Review`) |
+| `minOpenMode` | Hide below this open mode (e.g. `AcEdOpenMode.Write`) |
 | `children` | Nested items shown as a sub-toolbar or popover when the parent is clicked |
 | `childrenUi` | `'menu'` (popover, default), `'toolbar'` (closes on child or canvas click), or `'sticky-toolbar'` (stays until the parent is clicked again) |
 | `childIcon` | `'fixed'` (default): parent keeps its own icon; `'selected'`: parent icon follows the active child item |
@@ -424,7 +402,7 @@ acuiCreateSimpleUiPlugin({
         id: 'my-redline',
         label: 'Redline',
         command: 'sketch',
-        minOpenMode: AcEdOpenMode.Review
+        minOpenMode: AcEdOpenMode.Write
       }
     ]
   }
@@ -545,7 +523,7 @@ Popover menu (default when `childrenUi` is omitted):
 }
 ```
 
-Icon sub-toolbar beside the parent. Measure, Review, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
+Icon sub-toolbar beside the parent. Measure, Toolbar Position, and Language use `'toolbar'` so clicking a child button or the canvas closes the strip:
 
 ```typescript
 {
@@ -576,9 +554,9 @@ When the parent icon should reflect the active submenu item:
 }
 ```
 
-Built-in buttons using `childIcon: 'selected'`: `toolbar-placement` and `locale`. `annotation` and `measure` use fixed parent icons.
+Built-in buttons using `childIcon: 'selected'`: `toolbar-placement` and `locale`. `measure` uses a fixed parent icon.
 
-Built-in `childrenUi`: `measure`, `annotation`, `toolbar-placement`, and `locale` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
+Built-in `childrenUi`: `measure`, `toolbar-placement`, and `locale` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
 
 Submenu flyout direction follows toolbar placement (e.g. arrow points left when the toolbar is on the right).
 

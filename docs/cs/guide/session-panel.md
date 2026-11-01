@@ -20,9 +20,9 @@ V rozbaleném režimu je panel rozdělen shora dolů do následujících oblast�
 
 ### Příslušenství / Řádek titulu
 
-Levá strana prvního řádku zobrazuje **Příslušenství relace**, které namontuje aktivní příkaz. Různé příkazy montují různá příslušenství — příkazy měření a poznámek montují **Příslušenství relace stylu kresby** (barva + výška textu), zatímco jiné příkazy (PLine, Text atd.) mohou namontovat vlastní specializované ovládací prvky. Pokud aktivní příkaz **namontuje žádné příslušenství relace vůbec**, zobrazí se na levé straně prvního řádku přímo text výzvy příkazu (a níže popsaný řádek výzvy se neobjeví).
+Levá strana prvního řádku zobrazuje **Příslušenství relace**, které namontuje aktivní příkaz. Různé příkazy montují různá příslušenství — příkazy měření montují **Příslušenství relace stylu kresby** (barva + výška textu), zatímco jiné příkazy (PLine, Text atd.) mohou namontovat vlastní specializované ovládací prvky. Pokud aktivní příkaz **namontuje žádné příslušenství relace vůbec**, zobrazí se na levé straně prvního řádku přímo text výzvy příkazu (a níže popsaný řádek výzvy se neobjeví).
 
-Níže uvedená ukázka zobrazuje scénář měření / poznámek, kde je namontováno příslušenství stylu kresby:
+Níže uvedená ukázka zobrazuje scénář měření, kde je namontováno příslušenství stylu kresby:
 
 | Ovládací prvek | Ikona | Účel |
 |---|---|---|

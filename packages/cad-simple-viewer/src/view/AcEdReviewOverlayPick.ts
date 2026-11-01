@@ -1,13 +1,5 @@
 import { AcGeBox2d } from '@mlightcad/data-model'
 
-import {
-  hitTestMarkupGeometry,
-  hitTestMarkupShapeOutline,
-  isAttachableShapeMarkup,
-  markupGeometryBounds
-} from '../command/markup/AcApMarkupGeometry'
-import { getMarkupStore } from '../command/markup/AcApMarkupStore'
-import type { AcApMarkupRecord } from '../command/markup/AcApMarkupTypes'
 import { measurementGeometryBounds } from '../command/measure/AcApMeasurementGeometry'
 import {
   getMeasurementGeometry,
@@ -22,7 +14,7 @@ import {
 } from '../spatialIndex/AcTrSpatialIndex'
 import type { AcTrView2d } from './AcTrView2d'
 
-/** Pixel radius used when clicking markup / measurement strokes. */
+/** Pixel radius used when clicking measurement strokes. */
 export const REVIEW_OVERLAY_HIT_THRESHOLD_PX = 10
 
 function toSpatialBBox(box: AcGeBox2d): AcTrSpatialIndexBBox {
@@ -58,69 +50,8 @@ function overlayMatchesBox(
   return boxesIntersect(item, selection)
 }
 
-function pickMarkupAt(
-  view: AcTrView2d,
-  canvasX: number,
-  canvasY: number,
-  threshold: number
-): string | undefined {
-  const canvas = { x: canvasX, y: canvasY }
-  const worldToScreen = (point: { x: number; y: number }) =>
-    view.worldToScreen(point)
-  const layoutId = view.activeLayoutBtrId
-  const records = getMarkupStore().list()
-  for (let i = records.length - 1; i >= 0; i--) {
-    const record = records[i]
-    if (record.layoutId != null && record.layoutId !== layoutId) continue
-    const group = view.htmlTransientManager.getGroup(record.id)
-    if (!group?.visible) continue
-    if (
-      hitTestMarkupGeometry(record.geometry, canvas, worldToScreen, threshold)
-    ) {
-      return record.id
-    }
-  }
-  return undefined
-}
-
 /**
- * Find a visible cloud / rect / circle with no attached callout whose outer
- * frame is under the given world point (used when placing a callout tip).
- */
-export function pickAttachableShapeMarkupAt(
-  view: AcTrView2d,
-  world: { x: number; y: number }
-): AcApMarkupRecord | undefined {
-  const canvas = view.worldToScreen(world)
-  // Stroke-band picking: do not use the full overlay hit radius (10px), which
-  // would match hollow interiors on small shapes.
-  const threshold = Math.max(view.selectionBoxSize * 2, 4)
-  const worldToScreen = (point: { x: number; y: number }) =>
-    view.worldToScreen(point)
-  const layoutId = view.activeLayoutBtrId
-  const records = getMarkupStore().list()
-  for (let i = records.length - 1; i >= 0; i--) {
-    const record = records[i]
-    if (record.layoutId != null && record.layoutId !== layoutId) continue
-    const group = view.htmlTransientManager.getGroup(record.id)
-    if (!group?.visible) continue
-    if (!isAttachableShapeMarkup(record.geometry)) continue
-    if (
-      hitTestMarkupShapeOutline(
-        record.geometry,
-        canvas,
-        worldToScreen,
-        threshold
-      )
-    ) {
-      return record
-    }
-  }
-  return undefined
-}
-
-/**
- * Collect markup / measurement group ids whose geometry AABB matches the
+ * Collect measurement group ids whose geometry AABB matches the
  * selection box (window = fully inside, crossing = intersects).
  */
 export function collectReviewOverlayIdsByBox(
@@ -131,17 +62,6 @@ export function collectReviewOverlayIdsByBox(
   const selection = toSpatialBBox(box)
   const layoutId = view.activeLayoutBtrId
   const ids: string[] = []
-
-  for (const record of getMarkupStore().list()) {
-    if (record.layoutId != null && record.layoutId !== layoutId) continue
-    const group = view.htmlTransientManager.getGroup(record.id)
-    if (!group?.visible) continue
-    const bounds = markupGeometryBounds(record.geometry)
-    if (!bounds) continue
-    if (overlayMatchesBox(bounds, selection, mode)) {
-      ids.push(record.id)
-    }
-  }
 
   if (!isMeasurementVisible()) return ids
 
@@ -219,7 +139,7 @@ function applyOverlayBoxSelection(
 }
 
 /**
- * Select a markup or measurement overlay under a canvas click on its
+ * Select a measurement overlay under a canvas click on its
  * drawn stroke (CAD transient or canvas leader), not just HTML handles.
  *
  * @returns `true` when an overlay was hit and this click should not fall
@@ -235,9 +155,7 @@ export function trySelectReviewOverlay(
     view.selectionBoxSize * 2,
     REVIEW_OVERLAY_HIT_THRESHOLD_PX
   )
-  const markupId = pickMarkupAt(view, canvasX, canvasY, threshold)
-  const measurementId = pickMeasurementAt(view, canvasX, canvasY, threshold)
-  const id = markupId ?? measurementId
+  const id = pickMeasurementAt(view, canvasX, canvasY, threshold)
   if (!id) return false
   const consumed = applyOverlaySelection(view, id, action)
   if (consumed) view.isHtmlDirty = true
@@ -245,7 +163,7 @@ export function trySelectReviewOverlay(
 }
 
 /**
- * Select markup / measurement overlays by window or crossing box.
+ * Select measurement overlays by window or crossing box.
  *
  * @returns `true` when HTML selection state changed.
  */

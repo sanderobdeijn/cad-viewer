@@ -2,8 +2,8 @@
  * Wires {@link AcUiShortCutToolbar} to DocManager undo/selection state.
  *
  * Kept separate from the UI module so the offline HTML viewer-runtime can
- * import {@link AcUiShortCutToolbar} without pulling DocManager / markup /
- * measure into the IIFE.
+ * import {@link AcUiShortCutToolbar} without pulling DocManager / measure
+ * into the IIFE.
  *
  * @module AcApShortCutToolbarDocBind
  * @packageDocumentation
@@ -16,8 +16,7 @@ import type {
   AcUiShortCutToolbar,
   AcUiShortCutToolbarActionState
 } from '../ui/AcUiShortCutToolbar'
-import { getSessionUndo, runMarkupEdit } from './markup/AcApMarkupHistory'
-import { getMarkupStore } from './markup/AcApMarkupStore'
+import { getSessionUndo } from './AcApSessionUndo'
 import { runMeasurementEdit } from './measure/AcApMeasurementHistory'
 import {
   MEASUREMENT_LAYER,
@@ -71,14 +70,6 @@ export function acapBindShortCutToolbarDocState(
             for (const group of measurements) {
               if (ht.detach(group.id)) removed = true
             }
-          })
-        }
-        const hasMarkupSelection =
-          selected.some(group => group.layer !== MEASUREMENT_LAYER) ||
-          (selected.length === 0 && ht.hasSelection())
-        if (hasMarkupSelection) {
-          runMarkupEdit(view, 'Delete Markup', () => {
-            removed = ht.deleteSelected() || removed
           })
         }
       }
@@ -137,13 +128,11 @@ export function acapBindShortCutToolbarDocState(
   }
 
   eventBus.on('undo-stack-changed', onUndoStackChanged)
-  const offMarkup = getMarkupStore().subscribe(onSelectionChanged)
   const offMeasure = subscribeMeasurementSelection(onSelectionChanged)
   attachDocManager()
 
   return () => {
     eventBus.off('undo-stack-changed', onUndoStackChanged)
-    offMarkup()
     offMeasure()
     unbindViewSelection?.()
     const dm = AcApDocManager.tryGetInstance()

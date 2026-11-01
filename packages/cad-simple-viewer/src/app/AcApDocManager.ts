@@ -14,13 +14,13 @@ import { AcTrMTextRenderer } from '@mlightcad/three-renderer'
 import {
   AcApAboutCmd,
   AcApArcCmd,
-  acapBindMarkupSession,
+  acapBindSessionUndo,
   AcApCacheFontCmd,
   AcApCircleCmd,
   AcApCloseCmd,
   AcApCopyCmd,
   AcApDimLinearCmd,
-  acapDisposeMarkupSession,
+  acapDisposeSessionUndo,
   AcApEllipseCmd,
   AcApEraseCmd,
   AcApHatchCmd,
@@ -68,13 +68,12 @@ import {
   AcApXAttachCmd,
   AcApXLineCmd,
   AcApZoomCmd,
-  resetMarkupSession,
-  resetMeasurementSession
+  resetMeasurementSession,
+  resetSessionUndo
 } from '../command'
 import {
   acapGetDrawStyleSessionAccessory
 } from '../command/AcApDrawStyleSession'
-import { registerMarkupCommands } from '../command/markup/AcApRegisterMarkupCommands'
 import { registerMeasureCommands } from '../command/measure/AcApRegisterMeasureCommands'
 import {
   AcEdCalculateSizeCallback,
@@ -569,7 +568,7 @@ export class AcApDocManager {
       context
     )
     this._sessions = [this._activeSession]
-    acapBindMarkupSession(this._activeSession.id)
+    acapBindSessionUndo(this._activeSession.id)
 
     this._fontLoader = new AcApFontLoader()
     // Share one DefaultFontLoader cache between UI catalog and on-demand draws.
@@ -886,7 +885,7 @@ export class AcApDocManager {
       this._activeSession = session
       session.context.resume()
     }
-    acapBindMarkupSession(session.id)
+    acapBindSessionUndo(session.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(session.context)
     this.curView.bindDrawDatabase(doc.database)
@@ -1019,7 +1018,7 @@ export class AcApDocManager {
     session.context.dispose()
     target.destroy()
     this.clearSessionOverlays(session)
-    acapDisposeMarkupSession(session.id)
+    acapDisposeSessionUndo(session.id)
     const closedView = session.context.view as AcTrView2d
     if (session.viewState) {
       closedView.disposeSessionState(session.viewState)
@@ -1086,7 +1085,7 @@ export class AcApDocManager {
   }
 
   /**
-   * Color / font-size session accessory for measurement and markup drawing.
+   * Color / font-size session accessory for measurement drawing.
    */
   get drawStyleSessionAccessory() {
     return acapGetDrawStyleSessionAccessory(this._mainView)
@@ -1906,10 +1905,6 @@ export class AcApDocManager {
     addSystemCommand('rectang', 'rectang', new AcApRectCmd())
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
     addSystemCommand('revcloud', 'revcloud', new AcApRevCloudCmd())
-    registerMarkupCommands(addSystemCommand, {
-      view: this._mainView,
-      commandManager: this._commandManager
-    })
     addSystemCommand('select', 'select', new AcApSelectCmd())
     addSystemCommand('sketch', 'sketch', new AcApSketchCmd())
     addSystemCommand('spline', 'spline', new AcApSplineCmd())
@@ -2223,9 +2218,9 @@ export class AcApDocManager {
       // Drop xref sessions first so their overlay ids are removed via unload.
       AcApXrefManager.instance.clearAll()
       this.clearOverlays()
-      // Drop overlay / markup history before view.clear() disposes HTML.
+      // Drop overlay history before view.clear() disposes HTML.
       resetMeasurementSession()
-      resetMarkupSession()
+      resetSessionUndo()
       AcApZoomCmd.clearOriginalViews()
       this.openProgressView.clear()
     }
@@ -2307,7 +2302,7 @@ export class AcApDocManager {
       //    dominated by the largest-scale outliers and shrinks the
       //    actual paper to a grain.
       //
-      // 2. **Extents** (Read/Review default): poll `zoomToFitDrawing`
+      // 2. **Extents** (Read default): poll `zoomToFitDrawing`
       //    and frame batch-derived geometry bounds once entities land.
       //
       // 3. **Saved** (Write default) in model space: restore VPORT
@@ -2524,7 +2519,7 @@ export class AcApDocManager {
   /**
    * Resolves how the view is framed when a document finishes opening.
    *
-   * Explicit `openViewMode` wins; otherwise Read/Review zoom to the drawing and
+   * Explicit `openViewMode` wins; otherwise Read zooms to the drawing and
    * Write restores AutoCAD's saved view.
    */
   private resolveOpenViewMode(
@@ -2807,7 +2802,7 @@ export class AcApDocManager {
     const session = new AcApDocSession(`doc-${this._nextSessionId++}`, context)
     this._sessions.push(session)
     this._activeSession = session
-    acapBindMarkupSession(session.id)
+    acapBindSessionUndo(session.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
     this.bindOpenProgress(doc)
@@ -2839,11 +2834,11 @@ export class AcApDocManager {
     AcApXrefManager.instance.clearAll()
     this.clearOverlays()
     resetMeasurementSession()
-    resetMarkupSession()
+    resetSessionUndo()
     this.curView.clear()
     session.context.dispose()
     oldDoc.destroy()
-    acapDisposeMarkupSession(oldId)
+    acapDisposeSessionUndo(oldId)
     const doc = new AcApDocument()
     const context = new AcApContext(this.curView, doc)
     const replacement = new AcApDocSession(
@@ -2852,7 +2847,7 @@ export class AcApDocManager {
     )
     this._sessions = [replacement]
     this._activeSession = replacement
-    acapBindMarkupSession(replacement.id)
+    acapBindSessionUndo(replacement.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
     this.bindOpenProgress(doc)

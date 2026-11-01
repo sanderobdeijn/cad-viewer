@@ -1,13 +1,13 @@
 /**
- * Persistable overlay entity contract shared by markup and measure.
+ * Persistable overlay entity contract (used by measurements).
  *
  * Serialization is an instance method ({@link toRecord}). Deserialization is
  * deliberately **not** on this interface — concrete types are chosen by domain
- * factories (`createMarkupEntityFromRecord` / `createMeasureEntityFromRecord`)
+ * factories (e.g. `createMeasureEntityFromRecord`)
  * from discriminated record geometry.
  *
- * Record schemas stay domain-specific (`AcApMarkupRecord`,
- * `AcApMeasurementRecord`); this interface only unifies the capability.
+ * Record schemas stay domain-specific (`AcApMeasurementRecord`); this
+ * interface only unifies the capability.
  */
 export interface AcApOverlaySerializable<TRecord> {
   /**

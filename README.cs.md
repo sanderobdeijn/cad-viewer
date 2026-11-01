@@ -146,7 +146,7 @@ Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jedn
 
 | Balíček | Účel | Příkazy / schopnosti |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Panel nástrojů, správce vrstev a paleta revizí** pro `cad-simple-viewer` (čisté DOM, bez Vue/React) | `layer`, `markuppanel`, výchozí panel nástrojů (zobrazení, měření, export, revize, motiv, jazyk) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Panel nástrojů, správce vrstev a paleta měření** pro `cad-simple-viewer` (čisté DOM, bez Vue/React) | `layer`, `measurementpanel`, výchozí panel nástrojů (zobrazení, měření, motiv, jazyk) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI vrstva pro jednoduchý prohlížeč
 
@@ -155,7 +155,7 @@ Monorepo dodává několik oficiálních pluginů. Každý se zaměřuje na jedn
 Poskytuje:
 
 - **Konfigurovatelný panel nástrojů** (umístění na libovolném okraji, výchozí CAD příkazy, vnořená menu, vlastní položky)
-- **Dokovací panel** se záložkou **správce vrstev** (zapnutí/vypnutí vrstvy, výběr barvy ACI, přiblížení na vrstvu dvojklikem) a záložkou **palety revizí** (seznam značek, stav, komentáře)
+- **Dokovací panel** se záložkou **správce vrstev** (zapnutí/vypnutí vrstvy, výběr barvy ACI, přiblížení na vrstvu dvojklikem) a záložkou **měření**
 - **Synchronizaci motivu** se sysvar `COLORTHEME` a CSS tokeny `--ml-ui-*` na hostitelském elementu
 - **Synchronizaci jazyka** s `AcApI18n` (angličtina / čínština / čeština / turečtina)
 

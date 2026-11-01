@@ -6,9 +6,6 @@ export const commandCs = {
     layer: {
       description: 'Otevře nebo zavře dokovací panel správce hladin'
     },
-    markuppanel: {
-      description: 'Otevře dokovací panel kontroly'
-    },
     measurementpanel: {
       description: 'Otevře dokovací panel seznamu měření'
     },

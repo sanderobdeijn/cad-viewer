@@ -8,7 +8,7 @@
  */
 
 /**
- * Builds an Element Plus icon SVG so review toolbar buttons match cad-viewer.
+ * Builds an Element Plus icon SVG so toolbar buttons match cad-viewer.
  *
  * @param pathDs - Path `d` attributes from `@element-plus/icons-vue`.
  */
@@ -59,7 +59,7 @@ const MEASURE_ICON_RULER =
   '<path fill="currentColor" fill-rule="evenodd" d="M2.25 15h15.5v3.4H2.25Zm1.5 0h.7v1.45h-.7Zm2.95 0h.7v1.45h-.7Zm2.95 0h.7v1.45h-.7Zm2.95 0h.7v1.45h-.7Zm2.95 0h.7v1.45h-.7Z"/>'
 
 /**
- * Accent for measure/markup grips and highlighted glyph parts.
+ * Accent for measure grips and highlighted glyph parts.
  *
  * `--el-color-primary` is set by Element Plus in cad-viewer. cad-simple-viewer
  * maps it through `--ml-ui-accent`. Exported HTML aliases both to `--mlcad-accent`.
@@ -125,10 +125,6 @@ export const ICON_SWITCH_BG =
 export const ICON_READING_MODE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><g fill="none" stroke="#000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h4.5M5.5 10h7M5.5 13.5h9"/><path d="M13.25 6.5v4.25h-3.25"/></g></svg>'
 
-/** Review tools parent icon (pencil on a rounded square). */
-export const ICON_ANNOTATION =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none" style="fill:none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.4 3.25H5.5A2.25 2.25 0 0 0 3.25 5.5v9A2.25 2.25 0 0 0 5.5 16.75h9A2.25 2.25 0 0 0 16.75 14.5V8.6"/><g transform="rotate(45 13.2 6.7)"><rect x="11.7" y="1.55" width="3" height="7.45" rx="1.45"/><path d="M11.7 3.2h3"/><path d="M11.7 9 13.2 12.15 14.7 9"/><rect x="12.8" y="7.05" width="0.8" height="1.2" rx="0.4"/></g></g></svg>'
-
 /**
  * Shared callout-corner base under each markup-tool glyph
  * (L-stroke with a speech-bubble notch).
@@ -136,63 +132,21 @@ export const ICON_ANNOTATION =
 const MARKUP_ICON_BASE =
   '<path fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="butt" stroke-linejoin="miter" d="M2.6 6.8v8.5h5.2l2.2 2.4 2.2-2.4h5.2"/>'
 
-/** Compact pencil used beside rectangle and ellipse markup glyphs. */
-const MARKUP_ICON_PENCIL =
-  '<g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" transform="rotate(46 14.8 9)"><rect x="13.65" y="4.7" width="2.3" height="5.6" rx="1.05"/><path d="M13.65 10.3 14.8 12.9 15.95 10.3"/></g>'
-
 /** Composes a markup-tool icon: unique glyph on top of the shared callout base. */
 function markupToolIcon(glyph: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${MARKUP_ICON_BASE}${glyph}</svg>`
 }
 
-/** Markup / revision cloud icon (filled cloud over a callout base). */
+/** Revision cloud icon (filled cloud over a callout base). */
 export const ICON_REV_CLOUD = markupToolIcon(
   '<path fill="currentColor" d="M6.4 12.2c-1.85 0-3.3-1.25-3.3-2.85 0-1.35.95-2.5 2.3-2.8.45-1.7 1.95-2.85 3.7-2.85 1.25 0 2.35.55 3.05 1.45.55-.7 1.45-1.15 2.5-1.15 1.85 0 3.25 1.3 3.25 2.95 0 .3-.05.55-.1.8 1.2.4 2.05 1.4 2.05 2.65 0 1.55-1.5 2.8-3.4 2.8H6.4Z"/>'
 )
 
-/** Markup rectangle icon (outlined rect, corner grips, and pencil over a callout base). */
-export const ICON_REV_RECT = markupToolIcon(
-  `<rect fill="none" stroke="currentColor" stroke-width="1.35" x="5" y="2.8" width="8.2" height="7.2"/><rect fill="${TOOL_ICON_ACCENT}" x="4.2" y="2" width="2" height="2"/><rect fill="${TOOL_ICON_ACCENT}" x="12.2" y="9" width="2" height="2"/>${MARKUP_ICON_PENCIL}`
-)
-
-/** Markup circle icon (outlined ellipse, quadrant grips, and pencil over a callout base). */
-export const ICON_REV_CIRCLE = markupToolIcon(
-  `<ellipse fill="none" stroke="currentColor" stroke-width="1.35" cx="9" cy="6.6" rx="4" ry="3.6"/><rect fill="${TOOL_ICON_ACCENT}" x="8" y="2.1" width="2" height="2"/><rect fill="${TOOL_ICON_ACCENT}" x="4" y="5.6" width="2" height="2"/>${MARKUP_ICON_PENCIL}`
-)
-
-/** Markup callout / leader icon (text box and leader over a callout base). */
-export const ICON_MARKUP_CALLOUT = markupToolIcon(
-  '<path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M4.4 12.6 10.2 7"/><rect fill="currentColor" x="10.2" y="1.2" width="7.8" height="5.8" rx=".35"/>'
-)
-
-/** Markup text icon (capital A over a callout base). */
-export const ICON_MARKUP_TEXT = markupToolIcon(
-  '<path fill="currentColor" fill-rule="evenodd" d="M10 2.2 15.3 13.1h-2.2l-1.05-2.95H7.95L6.9 13.1H4.7L10 2.2Zm0 3.4-1.15 3.2h2.3L10 5.6Z"/>'
-)
-
-/** Markup line icon (diagonal segment with endpoints). */
-export const ICON_MARKUP_LINE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M4 16 16 4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="16" cy="4" r="1.6" fill="currentColor"/></svg>'
-
-/** Markup highlight icon (filled rounded rectangle). */
-export const ICON_MARKUP_HIGHLIGHT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="5.5" width="14" height="9" rx="1.5" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.5"/></svg>'
-
-/** Markup arrow icon (filled NE arrow over a callout base). */
-export const ICON_MARKUP_ARROW = markupToolIcon(
-  '<g transform="rotate(-40 10 7.6)" fill="currentColor"><path d="M3.5 6.75h9V5.15L16.7 7.6 12.5 10.05V8.45h-9Z"/></g>'
-)
-
-/** Markup stamp icon (Element Plus Stamp, same as cad-viewer). */
-export const ICON_MARKUP_STAMP = elementPlusIcon(
-  'M624 475.968V640h144a128 128 0 0 1 128 128H128a128 128 0 0 1 128-128h144V475.968a192 192 0 1 1 224 0M128 896v-64h768v64z'
-)
-
-/** Markup / review panel icon (list page with a search loupe). */
+/** List panel icon (list page with a search loupe). */
 export const ICON_MARKUP_PANEL =
   `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="3" width="13" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3.5 6.5h13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6.5 9.5h7M6.5 12h7M6.5 14.5h3.2"/><g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.7" stroke-linecap="round"><circle cx="14.5" cy="14.7" r="4.2"/><path d="M17.5 17.7 19.5 19.7"/></g></svg>`
 
-/** Measurement list panel icon (same list glyph as the review panel). */
+/** Measurement list panel icon. */
 export const ICON_MEASUREMENT_PANEL = ICON_MARKUP_PANEL
 
 /**
@@ -216,15 +170,12 @@ export const ICON_OPEN =
 export const ICON_MARKUP_EXPORT =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" d="M15.5 2H9.1L4.5 6.6V16.5A1.5 1.5 0 0 0 6 18h9.5A1.5 1.5 0 0 0 17 16.5V3.5A1.5 1.5 0 0 0 15.5 2z"/><path stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" d="M9.1 2v4.6H4.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10 14.2V8M7.2 10.4 10 7.5l2.8 2.9"/></svg>'
 
-/** Clear markups toolbar icon. */
-export const ICON_CLEAR_MARKUPS = ICON_CLEAR
-
-/** Show markups icon (Element Plus View, same as cad-viewer). */
+/** Show overlays icon (Element Plus View, same as cad-viewer). */
 export const ICON_ANNOTATION_SHOW = elementPlusIcon(
   'M512 160c320 0 512 352 512 352S832 864 512 864 0 512 0 512s192-352 512-352m0 64c-225.28 0-384.128 208.064-436.8 288 52.608 79.872 211.456 288 436.8 288 225.28 0 384.128-208.064 436.8-288-52.608-79.872-211.456-288-436.8-288m0 64a224 224 0 1 1 0 448 224 224 0 0 1 0-448m0 64a160.19 160.19 0 0 0-160 160c0 88.192 71.744 160 160 160s160-71.808 160-160-71.744-160-160-160'
 )
 
-/** Hide markups icon (Element Plus Hide, same as cad-viewer). */
+/** Hide overlays icon (Element Plus Hide, same as cad-viewer). */
 export const ICON_ANNOTATION_HIDE = elementPlusIcon(
   'M876.8 156.8c0-9.6-3.2-16-9.6-22.4s-12.8-9.6-22.4-9.6-16 3.2-22.4 9.6L736 220.8c-64-32-137.6-51.2-224-60.8-160 16-288 73.6-377.6 176S0 496 0 512s48 73.6 134.4 176c22.4 25.6 44.8 48 73.6 67.2l-86.4 89.6c-6.4 6.4-9.6 12.8-9.6 22.4s3.2 16 9.6 22.4 12.8 9.6 22.4 9.6 16-3.2 22.4-9.6l704-710.4c3.2-6.4 6.4-12.8 6.4-22.4m-646.4 528Q115.2 579.2 76.8 512q43.2-72 153.6-172.8C304 272 400 230.4 512 224c64 3.2 124.8 19.2 176 44.8l-54.4 54.4C598.4 300.8 560 288 512 288c-64 0-115.2 22.4-160 64s-64 96-64 160c0 48 12.8 89.6 35.2 124.8L256 707.2c-9.6-6.4-19.2-16-25.6-22.4m140.8-96Q352 555.2 352 512c0-44.8 16-83.2 48-112s67.2-48 112-48c28.8 0 54.4 6.4 73.6 19.2zM889.599 336c-12.8-16-28.8-28.8-41.6-41.6l-48 48c73.6 67.2 124.8 124.8 150.4 169.6q-43.2 72-153.6 172.8c-73.6 67.2-172.8 108.8-284.8 115.2-51.2-3.2-99.2-12.8-140.8-28.8l-48 48c57.6 22.4 118.4 38.4 188.8 44.8 160-16 288-73.6 377.6-176S1024 528 1024 512s-48.001-73.6-134.401-176',
   'M511.998 672c-12.8 0-25.6-3.2-38.4-6.4l-51.2 51.2c28.8 12.8 57.6 19.2 89.6 19.2 64 0 115.2-22.4 160-64 41.6-41.6 64-96 64-160 0-32-6.4-64-19.2-89.6l-51.2 51.2c3.2 12.8 6.4 25.6 6.4 38.4 0 44.8-16 83.2-48 112s-67.2 48-112 48'
@@ -337,18 +288,6 @@ export const ICON_MEASURE_COORDINATE = ICON_MEASURE_POINT
 
 /** Alias for {@link ICON_REV_CLOUD}. */
 export const ICON_MARKUP_CLOUD = ICON_REV_CLOUD
-
-/** Alias for {@link ICON_REV_RECT}. */
-export const ICON_MARKUP_RECT = ICON_REV_RECT
-
-/** Alias for {@link ICON_REV_CIRCLE}. */
-export const ICON_MARKUP_CIRCLE = ICON_REV_CIRCLE
-
-/** Alias for {@link ICON_ANNOTATION_SHOW}. */
-export const ICON_MARKUP_SHOW = ICON_ANNOTATION_SHOW
-
-/** Alias for {@link ICON_ANNOTATION_HIDE}. */
-export const ICON_MARKUP_HIDE = ICON_ANNOTATION_HIDE
 
 /** Overflow / more menu icon (horizontal ellipsis). */
 export const ICON_MORE =

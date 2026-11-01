@@ -5,23 +5,11 @@
  */
 
 import {
-  ICON_ANNOTATION,
-  ICON_ANNOTATION_HIDE,
-  ICON_ANNOTATION_SHOW,
-  ICON_CLEAR_MARKUPS,
   ICON_CLEAR_MEASUREMENTS,
   ICON_LAYER,
-  ICON_MARKUP_ARROW,
-  ICON_MARKUP_CALLOUT,
-  ICON_MARKUP_CIRCLE,
   ICON_MARKUP_CLOUD,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
-  ICON_MARKUP_LINE,
-  ICON_MARKUP_PANEL,
-  ICON_MARKUP_RECT,
-  ICON_MARKUP_STAMP,
-  ICON_MARKUP_TEXT,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
   ICON_MEASURE_ARC,
@@ -66,20 +54,8 @@ export const clearMeasurements = acapSvgIcon(
 )
 export const importIcon = acapSvgIcon(ICON_MARKUP_IMPORT, 'IconImport')
 export const exportIcon = acapSvgIcon(ICON_MARKUP_EXPORT, 'IconExport')
-export const markupTools = acapSvgIcon(ICON_ANNOTATION, 'IconMarkupTools')
 export const revCloud = acapSvgIcon(ICON_MARKUP_CLOUD, 'IconRevCloud')
-export const markupCallout = acapSvgIcon(ICON_MARKUP_CALLOUT, 'IconMarkupCallout')
-export const revText = acapSvgIcon(ICON_MARKUP_TEXT, 'IconRevText')
-export const revRect = acapSvgIcon(ICON_MARKUP_RECT, 'IconRevRect')
-export const revCircle = acapSvgIcon(ICON_MARKUP_CIRCLE, 'IconRevCircle')
-export const markupArrow = acapSvgIcon(ICON_MARKUP_ARROW, 'IconMarkupArrow')
-export const markupLine = acapSvgIcon(ICON_MARKUP_LINE, 'IconMarkupLine')
-export const markupStamp = acapSvgIcon(ICON_MARKUP_STAMP, 'IconMarkupStamp')
-export const markupPanel = acapSvgIcon(ICON_MARKUP_PANEL, 'IconMarkupPanel')
 export const measurementPanel = acapSvgIcon(
   ICON_MEASUREMENT_PANEL,
   'IconMeasurementPanel'
 )
-export const markupShow = acapSvgIcon(ICON_ANNOTATION_SHOW, 'IconMarkupShow')
-export const markupHide = acapSvgIcon(ICON_ANNOTATION_HIDE, 'IconMarkupHide')
-export const clearMarkups = acapSvgIcon(ICON_CLEAR_MARKUPS, 'IconClearMarkups')

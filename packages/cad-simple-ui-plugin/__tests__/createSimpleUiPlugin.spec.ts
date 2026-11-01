@@ -79,7 +79,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
         clearSessionOverride: jest.fn()
       }
     },
-    isMarkupVisible: () => true,
     isMeasurementVisible: () => true,
     AcEdCommand: class {},
     AcEdCommandStack: class {
@@ -98,7 +97,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
     },
     AcEdOpenMode: {
       Read: 0,
-      Review: 4,
       Write: 8
     },
     acapBindToolbarDocState: (tb: { setDocState: (s: object) => void }) => {
@@ -116,23 +114,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
       on: jest.fn(),
       off: jest.fn()
     },
-    getMarkupStore: () => ({
-      list: () => [],
-      selectedId: undefined,
-      subscribe: () => () => undefined,
-      updateMeta: jest.fn()
-    }),
-    getMarkupPresenter: () => ({
-      select: jest.fn(),
-      focus: jest.fn(),
-      unpublish: jest.fn(),
-      publish: jest.fn(),
-      clearVisuals: jest.fn()
-    }),
-    runMarkupEdit: (_view: unknown, _label: string, mutate: () => void) => {
-      mutate()
-    },
-    MARKUP_STATUSES: ['open', 'question', 'answered', 'closed'],
     listLayoutMeasurements: () => [],
     getMeasurementValueText: () => '',
     getSelectedMeasurementId: () => undefined,
@@ -539,61 +520,6 @@ describe('AcApSimpleUiPlugin', () => {
 
     plugin.setToolbarItems([acuiToolbarPreset('select')])
     expect(mockCommands.has('SYSTEM:layer')).toBe(false)
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).toBeNull()
-  })
-
-  it('loads review UI in the dock panel and opens it from markuppanel', async () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('annotation')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:markuppanel')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).not.toBeNull()
-    expect(host.querySelector('.ml-ex-ui-review-palette')).not.toBeNull()
-
-    const getActiveTabId = () =>
-      (
-        plugin as unknown as {
-          dockPanel?: { activeTab?: string }
-        }
-      ).dockPanel?.activeTab
-
-    expect(plugin.isDockPanelOpen()).toBe(false)
-
-    const cmd = mockCommands.get('SYSTEM:markuppanel') as {
-      execute: (context: unknown) => Promise<void>
-    }
-    await cmd.execute({})
-
-    expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(getActiveTabId()).toBe('review')
-    expect(host.querySelector('.ml-ex-ui-review-palette')).not.toBeNull()
-  })
-
-  it('setToolbarItems dynamically adds the markuppanel command', () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('select')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:markuppanel')).toBe(false)
-
-    plugin.setToolbarItems([
-      acuiToolbarPreset('select'),
-      acuiToolbarPreset('annotation')
-    ])
-    expect(mockCommands.has('SYSTEM:markuppanel')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).not.toBeNull()
-
-    plugin.setToolbarItems([acuiToolbarPreset('select')])
-    expect(mockCommands.has('SYSTEM:markuppanel')).toBe(false)
     expect(host.querySelector('.ml-ex-ui-dock-panel')).toBeNull()
   })
 

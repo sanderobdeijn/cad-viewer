@@ -37,23 +37,8 @@ export const ar: Record<string, string> = {
   'toolbar.switchBg': 'خلفية',
   'toolbar.readingMode': 'قراءة',
 
-  'toolbar.annotation': 'أدوات المراجعة',
-  'toolbar.annotationShort': 'مراجعة',
 
-  'toolbar.markupCloud': 'سحابة',
-  'toolbar.markupCallout': 'وسيلة شرح',
-  'toolbar.markupText': 'نص',
-  'toolbar.markupRect': 'مستطيل',
-  'toolbar.markupCircle': 'دائرة',
-  'toolbar.markupArrow': 'سهم',
-  'toolbar.markupStamp': 'ختم',
-  'toolbar.markupPanel': 'نتائج',
 
-  'toolbar.markupImport': 'استيراد',
-  'toolbar.markupExport': 'تصدير',
-  'toolbar.clearMarkups': 'مسح',
-  'toolbar.showMarkup': 'إظهار',
-  'toolbar.hideMarkup': 'إخفاء',
 
 
   'toolbar.placement': 'موضع شريط الأدوات',
@@ -111,44 +96,14 @@ export const ar: Record<string, string> = {
   'dockPanel.moreTabs': 'المزيد من علامات التبويب',
 
   'dockPanel.tab.layers': 'الطبقات',
-  'dockPanel.tab.review': 'المراجعة',
   'dockPanel.tab.find': 'بحث',
   'dockPanel.tab.measurements': 'القياسات',
   'dockPanel.resize': 'تغيير ارتفاع اللوحة',
 
-  'reviewPalette.searchPlaceholder':
-    'البحث في علامات المراجعة',
 
-  'reviewPalette.empty':
-    'لا توجد علامات مراجعة حتى الآن',
 
-  'reviewPalette.type': 'النوع',
-  'reviewPalette.status': 'الحالة',
-  'reviewPalette.author': 'المؤلف',
-  'reviewPalette.summary': 'الملخص',
-  'reviewPalette.details': 'التفاصيل',
-  'reviewPalette.closeDetails': 'إغلاق التفاصيل',
-  'reviewPalette.label': 'التسمية',
-  'reviewPalette.comment': 'التعليق',
-  'reviewPalette.zoomTo': 'تكبير إلى',
-  'reviewPalette.delete': 'حذف',
-  'reviewPalette.clear': 'مسح الكل',
 
-  'reviewPalette.statusValues.open': 'مفتوح',
-  'reviewPalette.statusValues.question': 'سؤال',
-  'reviewPalette.statusValues.answered': 'تمت الإجابة',
-  'reviewPalette.statusValues.closed': 'مغلق',
 
-  'reviewPalette.typeValues.cloud': 'سحابة',
-  'reviewPalette.typeValues.callout': 'وسيلة شرح',
-  'reviewPalette.typeValues.text': 'نص',
-  'reviewPalette.typeValues.rect': 'مستطيل',
-  'reviewPalette.typeValues.circle': 'دائرة',
-  'reviewPalette.typeValues.arrow': 'سهم',
-  'reviewPalette.typeValues.stamp': 'ختم',
-  'reviewPalette.typeValues.line': 'خط',
-  'reviewPalette.typeValues.highlight': 'تمييز',
-  'reviewPalette.typeValues.symbol': 'رمز',
 
   'measurePalette.filterGroup': 'التصفية حسب النوع',
   'measurePalette.empty': 'لا توجد قياسات حتى الآن',

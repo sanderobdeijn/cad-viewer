@@ -9,7 +9,6 @@ export default {
     tab: {
       home: 'Home',
       insert: 'Insert',
-      review: 'Review',
       measurement: 'Measurement',
       hatchContext: 'Hatch',
       mtextEditorContext: 'Text Editor'
@@ -208,7 +207,6 @@ export default {
       properties: 'Properties',
       utilities: 'Utilities',
       annotation: 'Annotation',
-      review: 'Review',
       measurement: 'Measurement',
       style: 'Style',
       lengthUnits: 'Length Units',
@@ -458,10 +456,6 @@ export default {
       text: 'Export',
       description: 'Export measurements to a sidecar JSON file'
     },
-    annotation: {
-      text: 'Annotation',
-      description: 'Review tools'
-    },
     layer: {
       text: 'Layer',
       description: 'Manages layers'
@@ -470,61 +464,6 @@ export default {
       text: 'Pan',
       description:
         'Shifts the view without changing the viewing direction or magnification'
-    },
-    markupPanel: {
-      text: 'Panel',
-      description: 'Open the markup palette'
-    },
-    markupText: {
-      text: 'Text',
-      description: 'Place a text markup'
-    },
-    markupCloud: {
-      text: 'Cloud',
-      description: 'Create a cloud markup'
-    },
-    markupRect: {
-      text: 'Rectangle',
-      description: 'Create a rectangle markup'
-    },
-    markupCircle: {
-      text: 'Circle',
-      description: 'Create a circle markup'
-    },
-    markupArrow: {
-      text: 'Arrow',
-      description: 'Create an arrow markup'
-    },
-    markupLine: {
-      text: 'Line',
-      description: 'Create a line markup'
-    },
-    markupCallout: {
-      text: 'Callout',
-      description: 'Create a callout'
-    },
-    markupStamp: {
-      text: 'Stamp',
-      description: 'Place a stamp'
-    },
-    markupImport: {
-      text: 'Import',
-      description: 'Import markups from a sidecar JSON file'
-    },
-    markupExport: {
-      text: 'Export',
-      description: 'Export markups to a sidecar JSON file'
-    },
-    markupColor: {
-      text: 'Color',
-      description: 'Set the color for new markup drawings'
-    },
-    markupFontSize: {
-      text: 'Text height',
-      description:
-        'Open text height settings for markups (Fit to screen or world height)',
-      fit: 'Fit',
-      wcs: 'WCS'
     },
     measurementColor: {
       text: 'Color',
@@ -538,14 +477,6 @@ export default {
       fit: 'Fit',
       wcs: 'WCS'
     },
-    showMarkup: {
-      text: 'Show',
-      description: 'Shows markups'
-    },
-    hideMarkup: {
-      text: 'Hide',
-      description: 'Hides markups'
-    },
     showMeasurements: {
       text: 'Show',
       description: 'Shows measurements'
@@ -553,10 +484,6 @@ export default {
     hideMeasurements: {
       text: 'Hide',
       description: 'Hides measurements'
-    },
-    clearMarkups: {
-      text: 'Clear',
-      description: 'Clears all markups on the current layout'
     },
     select: {
       text: 'Select',
@@ -768,29 +695,6 @@ export default {
       prompt: {
         firstCorner: 'Specify first corner of count area or [Entire]: ',
         secondCorner: 'Specify opposite corner: '
-      }
-    },
-    designReview: {
-      tab: 'Review',
-      title: 'Review',
-      searchPlaceholder: 'Search markups',
-      empty: 'No markups yet',
-      type: 'Type',
-      status: 'Status',
-      author: 'Author',
-      summary: 'Summary',
-      details: 'Details',
-      closeDetails: 'Close details',
-      label: 'Label',
-      comment: 'Comment',
-      zoomTo: 'Zoom to',
-      delete: 'Delete',
-      clear: 'Clear all',
-      statusValues: {
-        open: 'Open',
-        question: 'Question',
-        answered: 'Answered',
-        closed: 'Closed'
       }
     },
     measurements: {

@@ -4,7 +4,7 @@ title: Salt Okunur Mod
 
 # Salt Okunur Mod
 
-Salt okunur mod, çizimleri yalnızca görüntülemek ve ölçmek içindir. DWG/DXF arka planı tamamen düzenlenemez; işaretleme, çizim ve değiştirme komutlarının tümü kullanılamaz.
+Salt okunur mod, çizimleri yalnızca görüntülemek ve ölçmek içindir. DWG/DXF arka planı tamamen düzenlenemez; çizim ve değiştirme komutları kullanılamaz.
 
 Salt okunur moda girildiğinde, arayüz düzenini cihaz türüne göre otomatik olarak uyarlar.
 
@@ -52,7 +52,7 @@ Mobil, **alt sekme çubuğu + çekmece paneli** tasarımı kullanır; tüm etkil
 
 ### Alt Sekme Çubuğu
 
-Ekranın altında altı simge düğmesi görüntülenir:
+Ekranın altında beş simge düğmesi görüntülenir:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,7 +60,6 @@ Ekranın altında altı simge düğmesi görüntülenir:
 |---|---|
 | Zoom | Yakınlaştırma araç grubu: yakınlaştır, uzaklaştır, sınırlara yakınlaştır, pencere yakınlaştırma |
 | Measure | Ölçüm araç grubu: mesafe, sürekli mesafe, alan, koordinatlar, yay uzunluğu, açı |
-| Review | İşaretleme girişi (salt okunur modda devre dışı, gri tonlu) |
 | Layers | Katman panel çekmecesini açar |
 | Layout | Düzeni değiştir |
 | Setting | Ayarlar menüsü: tema, simüle fare, OSNAP, vb. |

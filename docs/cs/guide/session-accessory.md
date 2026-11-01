@@ -17,7 +17,7 @@ Existují dva druhy příslušenství relace —— **příslušenství relace p
 
 Příslušenství relace příkazu je **připojeno příkazem během jeho provádění** a poskytuje další ovládací prvky specifické pro daný příkaz. Jakmile příkaz skončí nebo je zrušen, příslušenství se automaticky skryje.
 
-Kanonickým příkladem je **příslušenství stylu kresby**, které připojují příkazy měření a poznámek —— během měření nebo přidávání poznámek se v prvním řádku panelu relace objeví tlačítka pro barvu a výšku textu, takže uživatel může upravovat vzhled během práce, aniž by musel přerušit příkaz a hledat to na pásu karet.
+Kanonickým příkladem je **příslušenství stylu kresby**, které připojují příkazy měření —— během měření se v prvním řádku panelu relace objeví tlačítka pro barvu a výšku textu, takže uživatel může upravovat vzhled během práce, aniž by musel přerušit příkaz a hledat to na pásu karet.
 
 V ukázce níže je červeně zvýrazněná oblast příslušenství relace příkazu:
 
@@ -29,7 +29,7 @@ V ukázce níže je červeně zvýrazněná oblast příslušenství relace př�
 
 Příslušenství relace výběru se objeví **při výběru jednoho nebo více grafických objektů** a je připevněno k levé straně **lišty zkratek (Shortcut Toolbar)**, odděleno svislým oddělovačem od tlačítek rychlých akcí vpravo. Při zrušení výběru příslušenství relace výběru automaticky zmizí.
 
-Úloha příslušenství relace výběru je podobná příslušenství relace příkazu —— poskytuje kontextové vstupní body pro vybrané objekty. Například při výběru textu poznámky může příslušenství relace výběru zobrazit ovládací prvky pro nastavení barvy a výšky textu.
+Úloha příslušenství relace výběru je podobná příslušenství relace příkazu —— poskytuje kontextové vstupní body pro vybrané objekty. Například při výběru měření může příslušenství relace výběru zobrazit ovládací prvky pro nastavení barvy a výšky textu.
 
 V ukázce níže je červeně zvýrazněná oblast příslušenství relace výběru. Oddělovač a skupina kruhových tlačítek vpravo patří samotné liště zkratek:
 

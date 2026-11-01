@@ -49,11 +49,11 @@ export const ACED_DRAW_STYLE_SESSION_PROVIDER_ID = 'draw-style'
  */
 export interface AcEdDrawStyleSessionHost {
   /**
-   * Updates the active measure/markup session before controls mount.
+   * Updates the active measure session before controls mount.
    *
-   * @param kind - `'measure'`, `'markup'`, or `undefined` when inactive.
+   * @param kind - `'measure'`, or `undefined` when inactive.
    */
-  setActiveKind(kind: 'measure' | 'markup' | undefined): void
+  setActiveKind(kind: 'measure' | undefined): void
   /** Builds the session accessory that reparents draw-style controls. */
   createSessionAccessory(): AcEdSessionAccessory
 }

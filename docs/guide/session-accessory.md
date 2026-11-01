@@ -17,7 +17,7 @@ There are two kinds of session accessory — **command session accessories** and
 
 A command session accessory is mounted **by a command while it is active** and provides extra UI controls specific to that command. Once the command finishes or is cancelled, the accessory is automatically hidden.
 
-The canonical example is the **Draw-style Accessory** mounted by measurement and markup commands — while measuring or adding annotations, the first row of the session panel shows color and text-height buttons so the user can tweak appearance mid-command without having to go back to a Ribbon.
+The canonical example is the **Draw-style Accessory** mounted by measurement commands — while measuring, the first row of the session panel shows color and text-height buttons so the user can tweak appearance mid-command without having to go back to a Ribbon.
 
 In the demo below, the area highlighted in red is the command session accessory:
 
@@ -29,7 +29,7 @@ In the demo below, the area highlighted in red is the command session accessory:
 
 A selection session accessory appears **when one or more entities are selected**. It is attached to the left side of the **Shortcut Toolbar**, separated from the quick-action buttons on the right by a vertical divider. When the selection is cleared, the selection session accessory disappears.
 
-The role of a selection session accessory is similar to its command counterpart — it provides context-aware controls for the selected objects. For example, selecting a markup text item can surface color and text-height controls in the accessory area.
+The role of a selection session accessory is similar to its command counterpart — it provides context-aware controls for the selected objects. For example, selecting a measurement can surface color and text-height controls in the accessory area.
 
 In the demo below, the area highlighted in red is the selection session accessory; the divider and the circular button group to its right belong to the Shortcut Toolbar itself:
 

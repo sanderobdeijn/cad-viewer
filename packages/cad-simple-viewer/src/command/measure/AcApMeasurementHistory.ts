@@ -8,10 +8,7 @@ import {
   type AcApMeasurementStyle
 } from '../../util/AcApMeasurementUtil'
 import type { AcTrView2d } from '../../view'
-import {
-  bindOverlayHistory,
-  getSessionUndo
-} from '../markup/AcApMarkupHistory'
+import { bindOverlayHistory, getSessionUndo } from '../AcApSessionUndo'
 import {
   applyMeasurementStyle,
   getMeasurementStyle,

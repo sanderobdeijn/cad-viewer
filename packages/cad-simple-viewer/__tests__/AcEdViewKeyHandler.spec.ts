@@ -14,21 +14,8 @@ jest.mock('../src/editor/input/ui/AcEdMTextEditor', () => ({
 }))
 
 import { AcApDocManager } from '../src/app'
-import {
-  AcApMarkupHistory,
-  AcApSessionUndo
-} from '../src/command/markup/AcApMarkupHistory'
-import { acapSetMarkupBagFactory } from '../src/command/markup/AcApMarkupSession'
-import { AcApMarkupStore } from '../src/command/markup/AcApMarkupStore'
 import { AcEdViewKeyHandler } from '../src/view/AcEdViewKeyHandler'
 import type { AcTrView2d } from '../src/view/AcTrView2d'
-
-acapSetMarkupBagFactory(() => ({
-  store: new AcApMarkupStore(),
-  presenter: {} as never,
-  history: new AcApMarkupHistory(),
-  sessionUndo: new AcApSessionUndo()
-}))
 
 function keyboardEvent(partial: Partial<KeyboardEvent>): KeyboardEvent {
   return {
@@ -152,28 +139,6 @@ describe('AcEdViewKeyHandler', () => {
     expect(event.preventDefault).toHaveBeenCalled()
   })
 
-  test('Delete removes a selected HTML overlay without dispatching erase', () => {
-    const view = createMockView(false, { hasSelection: true, deleted: true })
-    const handler = new AcEdViewKeyHandler(view)
-    const sendCommand = AcApDocManager.instance.sendStringToExecute as jest.Mock
-    const event = keyboardEvent({ code: 'Delete' })
-
-    expect(handler.handleKeyDown(event)).toBe(true)
-    expect(view.htmlTransientManager.deleteSelected).toHaveBeenCalled()
-    expect(sendCommand).not.toHaveBeenCalled()
-    expect(event.preventDefault).toHaveBeenCalled()
-  })
-
-  test('Delete falls through to erase when HTML overlay deletion fails', () => {
-    const view = createMockView(false, { hasSelection: true, deleted: false })
-    const handler = new AcEdViewKeyHandler(view)
-    const sendCommand = AcApDocManager.instance.sendStringToExecute as jest.Mock
-
-    expect(handler.handleKeyDown(keyboardEvent({ code: 'Delete' }))).toBe(false)
-    expect(view.htmlTransientManager.deleteSelected).toHaveBeenCalled()
-    expect(sendCommand).toHaveBeenCalledWith('erase')
-  })
-
   test('Delete dispatches erase when no HTML overlay is selected', () => {
     const handler = new AcEdViewKeyHandler(createMockView())
     const sendCommand = AcApDocManager.instance.sendStringToExecute as jest.Mock
@@ -184,7 +149,7 @@ describe('AcEdViewKeyHandler', () => {
     expect(sendCommand).toHaveBeenCalledWith('erase')
   })
 
-  test('Delete skips erase in read/review mode when no HTML overlay is selected', () => {
+  test('Delete skips erase in read mode when no HTML overlay is selected', () => {
     const lookup = AcApDocManager.instance.lookupGlobalCmd as jest.Mock
     lookup.mockReturnValueOnce(undefined)
     const handler = new AcEdViewKeyHandler(createMockView())
@@ -195,7 +160,7 @@ describe('AcEdViewKeyHandler', () => {
     expect(sendCommand).not.toHaveBeenCalled()
   })
 
-  test('Delete still removes measurement overlay in read/review mode', () => {
+  test('Delete still removes measurement overlay in read mode', () => {
     const lookup = AcApDocManager.instance.lookupGlobalCmd as jest.Mock
     lookup.mockReturnValue(undefined)
     const view = createMockView(false, {

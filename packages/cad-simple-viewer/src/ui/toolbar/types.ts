@@ -114,7 +114,7 @@ export interface AcUiSubToolbarOptions extends Partial<AcUiToolbarChromeOptions>
    * the new strip is visible (saves vertical space on phone). When false,
    * nested strips stack beside/above the ancestor (pad/desktop).
    *
-   * Also, when true, layers / measurements / review dock panels, sub-toolbars,
+   * Also, when true, layers / measurements dock panels, sub-toolbars,
    * and menus are mutually exclusive: opening one closes the others.
    * @default false
    */
@@ -202,7 +202,7 @@ export interface AcUiToolbarItem {
    * Defaults to true when `command` is set, otherwise false.
    */
   requiresDocument?: boolean
-  /** Minimum open mode required to show this item (Review shows in Review+Write). */
+  /** Minimum open mode required to show this item (Write shows in Write only). */
   minOpenMode?: AcEdOpenMode
   /** Static or dynamic disabled state evaluated at render time. */
   disabled?: boolean | (() => boolean)

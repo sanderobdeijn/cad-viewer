@@ -146,7 +146,7 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 
 | Package | Role | Commands / capabilities |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar, layer manager & review palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `layer`, `markuppanel`, default toolbar (view, measure, export, review, theme, locale) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar, layer manager & measurement palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `layer`, `measurementpanel`, default toolbar (view, measure, theme, locale) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — UI chrome for the simple viewer
 
@@ -155,7 +155,7 @@ The monorepo ships several first-party plugins. Each focuses on one concern; com
 It provides:
 
 - A **configurable toolbar** (placement on any edge, default CAD commands, nested menus, custom items)
-- A **dock panel** with a **layer manager** tab (layer on/off, ACI color picker, zoom-to-layer on double-click) and a **review palette** tab (markup list, status, comments)
+- A **dock panel** with a **layer manager** tab (layer on/off, ACI color picker, zoom-to-layer on double-click) and a **measurements** tab
 - **Theme sync** with the `COLORTHEME` sysvar and `--ml-ui-*` CSS tokens on your host element
 - **Locale sync** with `AcApI18n` (English / Chinese / Czech / Turkish)
 

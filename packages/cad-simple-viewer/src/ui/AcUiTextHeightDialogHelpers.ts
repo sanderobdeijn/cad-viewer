@@ -25,7 +25,7 @@ export interface AcUiOpenTextHeightDialogOptions {
 
 /** Input for {@link acuiResolveTextHeightDialogInitials}. */
 export interface AcUiTextHeightDialogInitialsInput {
-  /** True when a measure/markup overlay is selected. */
+  /** True when a measurement overlay is selected. */
   hasSelection: boolean
   /** Session or selected authoring mode. */
   sessionMode: AcUiTextHeightMode

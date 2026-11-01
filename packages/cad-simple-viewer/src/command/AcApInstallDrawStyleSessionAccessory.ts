@@ -22,7 +22,6 @@ import { acapDrawStyleKindForCommand } from '../util/AcApCommandUtil'
 import type { AcTrView2d } from '../view'
 import type { AcApDrawStyleSessionInstallContext } from './AcApDrawStyleSession'
 import { acapBindShortCutToolbarDocState } from './AcApShortCutToolbarDocBind'
-import { getMarkupStore } from './markup/AcApMarkupStore'
 import {
   getSelectedMeasurementId,
   subscribeMeasurementSelection
@@ -32,7 +31,7 @@ import {
  * Registers draw-style controls, shortcut toolbar, and selection-driven
  * shortcut embedding for a view.
  *
- * Idempotent: safe to call from both measure and markup command registration.
+ * Idempotent: safe to call more than once per view.
  * The provider is stored on {@link AcEdBaseView.sessionProviders} under
  * {@link ACED_DRAW_STYLE_SESSION_PROVIDER_ID}.
  *
@@ -105,7 +104,7 @@ function ensureShortCutToolbar(view: AcTrView2d): AcUiShortCutToolbar {
  * Keeps draw-style controls embedded in the shortcut toolbar.
  *
  * Mounts the shared draw-style controls into {@link AcUiShortCutToolbar.accessoryHost}
- * when a measure/markup overlay is selected (no draw command running), or when a
+ * when a measurement overlay is selected (no draw command running), or when a
  * draw command is active on **desktop** layout. Phone and pad draw commands use
  * the session-panel accessory slot instead; this binder clears the shortcut
  * accessory in those cases so controls can remount on the panel.
@@ -159,9 +158,7 @@ function bindSelectionSessionAccessory(
       acapDrawStyleKindForCommand(commandManager.activeCommand?.globalName) !=
       null
 
-    const measureSelected = getSelectedMeasurementId() != null
-    const markupSelected = getMarkupStore().selectedId != null
-    const selected = measureSelected || markupSelected
+    const selected = getSelectedMeasurementId() != null
 
     // Desktop draw commands share the shortcut slot with selection styling.
     // Phone/pad draw commands use the session panel — clear the shortcut slot
@@ -181,7 +178,6 @@ function bindSelectionSessionAccessory(
     }
   }
 
-  const offMarkup = getMarkupStore().subscribe(sync)
   const offMeasure = subscribeMeasurementSelection(sync)
   const onSettingsModified = (args: AcApSettingManagerEventArgs) => {
     if (args.key === 'isShowRibbon' || args.key === 'isShowShortCutToolbar') {
@@ -202,7 +198,6 @@ function bindSelectionSessionAccessory(
   sync()
 
   return () => {
-    offMarkup()
     offMeasure()
     offLayout()
     AcApSettingManager.instance.events.modified.removeEventListener(
@@ -221,8 +216,8 @@ function bindSelectionSessionAccessory(
 /**
  * Resolves the draw-style session kind from the active command and overlay selection.
  *
- * @param commandManager - Stack whose active command may own measure/markup.
- * @returns `'measure'` or `'markup'`, or `undefined` when the accessory should hide.
+ * @param commandManager - Stack whose active command may own measure.
+ * @returns `'measure'`, or `undefined` when the accessory should hide.
  */
 function resolveKind(
   commandManager: AcEdCommandStack
@@ -231,7 +226,6 @@ function resolveKind(
     commandKind: acapDrawStyleKindForCommand(
       commandManager.activeCommand?.globalName
     ),
-    markupSelected: getMarkupStore().selectedId != null,
     measurementSelected: getSelectedMeasurementId() != null
   })
 }

@@ -16,7 +16,7 @@ import { AcApI18n } from '../i18n'
 export class AcApSysVarCmd extends AcEdCommand {
   constructor() {
     super()
-    this.mode = AcEdOpenMode.Review
+    this.mode = AcEdOpenMode.Write
   }
 
   /**

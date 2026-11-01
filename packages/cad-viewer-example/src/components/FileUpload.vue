@@ -480,11 +480,6 @@ const accessModes = computed(() => [
     description: t('example.fileUpload.readHint')
   },
   {
-    value: AcEdOpenMode.Review,
-    label: t('example.fileUpload.review'),
-    description: t('example.fileUpload.reviewHint')
-  },
-  {
     value: AcEdOpenMode.Write,
     label: t('example.fileUpload.write'),
     description: t('example.fileUpload.writeHint')

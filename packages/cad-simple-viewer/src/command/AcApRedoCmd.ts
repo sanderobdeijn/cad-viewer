@@ -2,11 +2,10 @@ import { AcApContext } from '../app'
 import { AcEdCommand } from '../editor'
 import { AcApI18n } from '../i18n'
 import { acapNotifyUndoStackChanged } from '../util/AcApDatabaseEdit'
-import { getSessionUndo } from './markup/AcApMarkupHistory'
-import { getMarkupPresenter } from './markup/AcApMarkupPresenter'
+import { getSessionUndo } from './AcApSessionUndo'
 
 /**
- * Redoes the last undone session editing operation (database, markup, or measurement).
+ * Redoes the last undone session editing operation (database or measurement).
  */
 export class AcApRedoCmd extends AcEdCommand {
   constructor() {
@@ -26,9 +25,6 @@ export class AcApRedoCmd extends AcEdCommand {
         msgKey
       )
       return
-    }
-    if (result === 'markup') {
-      getMarkupPresenter().republishAll(context.view)
     }
     acapNotifyUndoStackChanged()
   }

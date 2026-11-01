@@ -27,17 +27,6 @@ import {
   acapSetMeasurementTextHeight
 } from '../util/AcApMeasurementUtil'
 import type { AcTrView2d } from '../view'
-import { applyMarkupStyleToSelection } from './markup/AcApMarkupPresenter'
-import { getMarkupStore } from './markup/AcApMarkupStore'
-import {
-  cssToMarkupColor,
-  getMarkupCustomTextHeightWcs,
-  getMarkupFontSize,
-  getMarkupTextHeightMode,
-  markupColorToCss,
-  setMarkupDrawColor,
-  setMarkupTextHeight
-} from './markup/AcApMarkupUtil'
 import {
   applyMeasurementStyleToSelection,
   getActiveMeasurementStyle,
@@ -63,7 +52,7 @@ function createColorIcon(css: string): HTMLElement {
 }
 
 /**
- * Builds and syncs shortcut-toolbar extension items for measure/markup selection.
+ * Builds and syncs shortcut-toolbar extension items for measurement selection.
  */
 export function acapBindShortCutSelectionAccessory(
   view: AcTrView2d,
@@ -80,24 +69,14 @@ export function acapBindShortCutSelectionAccessory(
       return
     }
 
-    const measureSelected =
-      kind === 'measure' ? getSelectedMeasurementId() != null : false
-    const markupSelected =
-      kind === 'markup' ? getMarkupStore().selectedId != null : false
-    if (!measureSelected && !markupSelected) {
+    if (getSelectedMeasurementId() == null) {
       shortcut.setExtensionItems([])
       return
     }
 
     let colorCss = '#7b8794'
-    if (kind === 'measure') {
-      const style = getActiveMeasurementStyle()
-      if (style) colorCss = `rgb(${style.color.red},${style.color.green},${style.color.blue})`
-    } else {
-      const id = getMarkupStore().selectedId
-      const record = id ? getMarkupStore().get(id) : undefined
-      if (record) colorCss = record.style.color
-    }
+    const style = getActiveMeasurementStyle()
+    if (style) colorCss = `rgb(${style.color.red},${style.color.green},${style.color.blue})`
 
     const items: AcUiSimpleToolbarItem[] = [
       {
@@ -105,7 +84,7 @@ export function acapBindShortCutSelectionAccessory(
         icon: () => createColorIcon(colorCss),
         label: AcApI18n.t('main.drawStyle.color'),
         onClick: () => {
-          void openColor(kind)
+          void openColor()
         }
       },
       {
@@ -113,32 +92,21 @@ export function acapBindShortCutSelectionAccessory(
         icon: ICON_TEXT_HEIGHT,
         label: AcApI18n.t('main.drawStyle.fontSize'),
         onClick: () => {
-          void openTextHeight(kind)
+          void openTextHeight()
         }
       }
     ]
     shortcut.setExtensionItems(items)
   }
 
-  const openColor = async (kind: AcUiDrawStyleKind) => {
+  const openColor = async () => {
     if (colorDialogOpen) return
     colorDialogOpen = true
     try {
       let initial: number | null = null
-      if (kind === 'measure') {
-        const style = getActiveMeasurementStyle()
-        if (style?.color.isByACI && style.color.colorIndex != null) {
-          initial = style.color.colorIndex
-        }
-      } else {
-        const id = getMarkupStore().selectedId
-        const record = id ? getMarkupStore().get(id) : undefined
-        if (record) {
-          const color = cssToMarkupColor(record.style.color)
-          if (color.isByACI && color.colorIndex != null) {
-            initial = color.colorIndex
-          }
-        }
+      const style = getActiveMeasurementStyle()
+      if (style?.color.isByACI && style.color.colorIndex != null) {
+        initial = style.color.colorIndex
       }
       const index = await AcUiAciColorDialog.open({
         host: view.container,
@@ -157,53 +125,31 @@ export function acapBindShortCutSelectionAccessory(
       })
       if (index == null) return
       const color = colorFromAci(index)
-      if (kind === 'measure') {
-        acapSetMeasurementDrawColor(color)
-        applyMeasurementStyleToSelection(view, { color })
-      } else {
-        setMarkupDrawColor(color)
-        applyMarkupStyleToSelection(view, { color: markupColorToCss(color) })
-      }
+      acapSetMeasurementDrawColor(color)
+      applyMeasurementStyleToSelection(view, { color })
       sync()
     } finally {
       colorDialogOpen = false
     }
   }
 
-  const openTextHeight = async (kind: AcUiDrawStyleKind) => {
+  const openTextHeight = async () => {
     if (textHeightDialogOpen) return
     textHeightDialogOpen = true
     try {
-      const selectedMeasure =
-        kind === 'measure' ? getActiveMeasurementStyle() : undefined
-      const markupSelectedId = getMarkupStore().selectedId
-      const selectedMarkup =
-        kind === 'markup' && markupSelectedId
-          ? getMarkupStore().get(markupSelectedId)
-          : undefined
-      const hasSelection =
-        selectedMeasure != null || selectedMarkup != null
+      const selectedMeasure = getActiveMeasurementStyle()
+      const hasSelection = selectedMeasure != null
       const sessionMode =
-        kind === 'measure'
-          ? selectedMeasure?.textHeightMode ??
-            acapGetMeasurementTextHeightMode()
-          : selectedMarkup?.style.textHeightMode ?? getMarkupTextHeightMode()
+        selectedMeasure?.textHeightMode ?? acapGetMeasurementTextHeightMode()
       const fontSizePx =
-        kind === 'measure'
-          ? selectedMeasure?.fontSize ?? acapGetMeasurementFontSize()
-          : selectedMarkup?.style.fontSize ?? getMarkupFontSize()
+        selectedMeasure?.fontSize ?? acapGetMeasurementFontSize()
       const measureId = getSelectedMeasurementId()
-      const selectedTextHeightWcs =
-        kind === 'measure'
-          ? hasSelection
-            ? selectedMeasure?.textHeightWcs ??
-              (measureId
-                ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-                : undefined)
-            : acapGetMeasurementCustomTextHeightWcs()
-          : hasSelection
-            ? selectedMarkup?.style.textHeightWcs
-            : getMarkupCustomTextHeightWcs()
+      const selectedTextHeightWcs = hasSelection
+        ? selectedMeasure?.textHeightWcs ??
+          (measureId
+            ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
+            : undefined)
+        : acapGetMeasurementCustomTextHeightWcs()
 
       const initials = acuiResolveTextHeightDialogInitials({
         hasSelection,
@@ -223,23 +169,13 @@ export function acapBindShortCutSelectionAccessory(
         result,
         initials.initialFontSizePx
       )
-      if (kind === 'measure') {
-        acapSetMeasurementTextHeight(
-          patch.textHeightMode,
-          patch.textHeightMode === 'custom'
-            ? (patch.textHeightWcs ?? patch.fontSize)
-            : patch.fontSize
-        )
-        applyMeasurementStyleToSelection(view, patch)
-      } else {
-        setMarkupTextHeight(
-          patch.textHeightMode,
-          patch.textHeightMode === 'custom'
-            ? (patch.textHeightWcs ?? patch.fontSize)
-            : patch.fontSize
-        )
-        applyMarkupStyleToSelection(view, patch)
-      }
+      acapSetMeasurementTextHeight(
+        patch.textHeightMode,
+        patch.textHeightMode === 'custom'
+          ? (patch.textHeightWcs ?? patch.fontSize)
+          : patch.fontSize
+      )
+      applyMeasurementStyleToSelection(view, patch)
       sync()
     } finally {
       textHeightDialogOpen = false

@@ -172,8 +172,7 @@ interface Props {
   /**
    * Access mode for opening CAD files.
    * - Read (0): Read-only access
-   * - Review (4): Review access, compatible with Read
-   * - Write (8): Full read/write access, compatible with Review and Read
+   * - Write (8): Full read/write access, compatible with Read
    */
   mode?: AcEdOpenMode
   /**
@@ -199,7 +198,7 @@ interface Props {
   waitForTextGeometry?: boolean
   /**
    * How to frame the view when the document finishes opening.
-   * When omitted, Read and Review use {@link AcApOpenViewMode.Extents};
+   * When omitted, Read uses {@link AcApOpenViewMode.Extents};
    * Write uses {@link AcApOpenViewMode.Saved}.
    */
   openViewMode?: AcApOpenViewMode

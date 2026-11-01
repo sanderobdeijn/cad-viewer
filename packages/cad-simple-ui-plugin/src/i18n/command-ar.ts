@@ -8,11 +8,6 @@ export const commandAr = {
         'فتح أو إغلاق لوحة مدير الطبقات'
     },
 
-    markuppanel: {
-      description:
-        'فتح لوحة المراجعة'
-    },
-
     measurementpanel: {
       description:
         'فتح لوحة قائمة القياسات'

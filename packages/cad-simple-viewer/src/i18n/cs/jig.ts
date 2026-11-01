@@ -674,68 +674,6 @@ export default {
       chooseFile: 'Vyberte sidecar JSON soubor měření'
     }
   },
-  markup: {
-    author: 'Zadejte autora kontroly (uloží se pro pozdější použití)',
-    text: {
-      point: 'Zadejte bod textové poznámky',
-      content: 'Zadejte text poznámky'
-    },
-    line: {
-      firstPoint: 'Zadejte první bod úsečkové poznámky',
-      secondPoint: 'Zadejte druhý bod úsečkové poznámky'
-    },
-    arrow: {
-      firstPoint: 'Zadejte počáteční bod šipky',
-      secondPoint: 'Zadejte hrot šipky'
-    },
-    cloud: {
-      firstCorner: 'Zadejte první roh obláčku',
-      secondCorner: 'Zadejte protilehlý roh obláčku'
-    },
-    rect: {
-      firstCorner: 'Zadejte první roh obdélníku',
-      secondCorner: 'Zadejte protilehlý roh obdélníku'
-    },
-    circle: {
-      center: 'Zadejte střed kružnice',
-      radius: 'Zadejte poloměr kružnice'
-    },
-    shape: {
-      calloutOn: '[Odkaz zapnut]',
-      calloutOff: '[Odkaz vypnut]',
-      calloutAnchor: 'Zadejte umístění textu odkazu',
-      keywords: {
-        callout: {
-          display: 'Odkaz(C)',
-          local: 'Odkaz',
-          global: 'Callout'
-        },
-        noCallout: {
-          display: 'BezOdkazu(N)',
-          local: 'BezOdkazu',
-          global: 'NoCallout'
-        }
-      }
-    },
-    highlight: {
-      firstCorner: 'Zadejte první roh zvýraznění',
-      secondCorner: 'Zadejte protilehlý roh zvýraznění'
-    },
-    callout: {
-      tip: 'Zadejte hrot vodítka, nebo obrys obláčku/obdélníku/kružnice bez odkazu',
-      anchor: 'Zadejte umístění textu odkazu',
-      content: 'Zadejte text odkazu'
-    },
-    stamp: {
-      kind: 'Zadejte identifikátor razítka [approved/rejected/revised/for-review/custom]',
-      imageUrl: 'Zadejte URL vlastního obrázku razítka (volitelné)',
-      caption: 'Zadejte popisek razítka (volitelné)',
-      point: 'Zadejte bod vložení razítka'
-    },
-    import: {
-      chooseFile: 'Vyberte sidecar JSON soubor poznámek'
-    }
-  },
   move: {
     basePointOrDisplacement: 'Zadejte základní bod nebo',
     secondPointOrDisplacement: 'Zadejte druhý bod nebo',

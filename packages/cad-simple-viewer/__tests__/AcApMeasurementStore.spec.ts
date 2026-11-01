@@ -1,12 +1,6 @@
 import { AcCmColor } from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
-import {
-  AcApMarkupHistory,
-  AcApSessionUndo
-} from '../src/command/markup/AcApMarkupHistory'
-import { acapSetMarkupBagFactory } from '../src/command/markup/AcApMarkupSession'
-import { AcApMarkupStore } from '../src/command/markup/AcApMarkupStore'
 import { resetMeasurementSession } from '../src/command/measure/AcApMeasurementHistory'
 import { stringifyMeasurementSidecar } from '../src/command/measure/AcApMeasurementSidecar'
 import {
@@ -22,15 +16,6 @@ import {
   OVERLAY_HAIRLINE_LINE_WEIGHT
 } from '../src/util/AcApMeasurementUtil'
 import type { AcTrView2d } from '../src/view'
-
-acapSetMarkupBagFactory(() => ({
-  store: new AcApMarkupStore(),
-  presenter: {
-    forgetPublished() {}
-  } as never,
-  history: new AcApMarkupHistory(),
-  sessionUndo: new AcApSessionUndo()
-}))
 
 function createView() {
   const groups = new Map<string, AcTrHtmlGroup>()

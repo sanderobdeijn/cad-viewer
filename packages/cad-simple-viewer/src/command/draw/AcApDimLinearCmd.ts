@@ -80,7 +80,7 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint3dLike> {
 export class AcApDimLinearCmd extends AcEdCommand {
   constructor() {
     super()
-    this.mode = AcEdOpenMode.Review
+    this.mode = AcEdOpenMode.Write
   }
 
   async execute(context: AcApContext) {

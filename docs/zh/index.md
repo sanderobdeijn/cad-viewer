@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: 浏览器里的 CAD 查看与审阅
-  tagline: 直接打开 DWG / DXF 图纸，无需安装、无需后端；批注、测量，一气呵成。
+  tagline: 直接打开 DWG / DXF 图纸，无需安装、无需后端；测量一气呵成。
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: DWG / DXF 支持
     details: 高保真还原图纸内容，支持模型空间、布局、图层、块、外部参照等核心特性。
   - icon: 📏
-    title: 测量与批注
-    details: 长度、面积、角度、弧长精确测量；箭头、云线、文字、标注随手添加，覆盖设计审阅全流程。
+    title: 测量
+    details: 长度、面积、角度、弧长，在浏览器中精确测量。
   - icon: ✏️
     title: 不止于查看
     details: 支持选择、修改与创建几何图形，提供接近 AutoCAD 的命令体验，让 Web 端承载真实的绘图工作。

@@ -15,7 +15,7 @@ const SELECTION_MODE = 0 as AcEdViewMode
 const CROSSHAIR_CURSOR = 0 as AcEdCorsorType
 
 /**
- * Selection mode + crosshair used by measure-draw and markup-draw commands.
+ * Selection mode + crosshair used by measure-draw commands.
  */
 export async function withDrawOverlayInput(
   context: AcApContext,

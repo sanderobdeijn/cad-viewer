@@ -146,7 +146,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 
 | 包名 | 作用 | 命令 / 能力 |
 |------|------|-------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏、图层管理器与批注列表面板 UI**（纯 DOM，不依赖 Vue/React） | `layer`、`markuppanel`、默认工具栏（视图、测量、导出、审阅、主题、语言） |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | 为 `cad-simple-viewer` 提供**工具栏、图层管理器与测量列表面板 UI**（纯 DOM，不依赖 Vue/React） | `layer`、`measurementpanel`、默认工具栏（视图、测量、主题、语言） |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 简易查看器的 UI 层
 
@@ -155,7 +155,7 @@ CAD-Viewer 在 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer) 中�
 主要能力：
 
 - **可配置工具栏**（四边任意放置、内置 CAD 命令、嵌套菜单、自定义按钮）
-- **停靠面板**：含**图层管理器**标签页（图层开关、ACI 颜色选择、双击缩放至图层）与**批注/审阅列表**标签页（批注列表、状态、批注说明）
+- **停靠面板**：含**图层管理器**标签页（图层开关、ACI 颜色选择、双击缩放至图层）与**测量**标签页
 - **主题同步**：跟随 `COLORTHEME` 系统变量及 host 上的 `--ml-ui-*` CSS 变量
 - **语言同步**：跟随 `AcApI18n`（英 / 中 / 捷克语 / 土耳其语）
 

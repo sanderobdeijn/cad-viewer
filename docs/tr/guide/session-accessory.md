@@ -17,7 +17,7 @@ Oturum aksesuarları öncelikle iki durumda kullanılır:
 
 Komut oturum aksesuarı, **komut yürütülürken komut tarafından monte edilir** ve o komuta özgü ek kullanıcı arayüzü kontrollerini sağlar. Komut tamamlandığında veya iptal edildiğinde aksesuar otomatik olarak gizlenir.
 
-Tipik bir örnek, ölçüm ve açıklama komutlarının monte ettiği **Çizim Stili Aksesuarı**'dır —— ölçüm yaparken veya açıklama eklerken, oturum panelinin ilk satırında renk ve metin yüksekliği düğmeleri görünür ve kullanıcı komutu kesintiye uğratıp şeridi aramak zorunda kalmadan görünümü anında ayarlayabilir.
+Tipik bir örnek, ölçüm komutlarının monte ettiği **Çizim Stili Aksesuarı**'dır —— ölçüm yaparken, oturum panelinin ilk satırında renk ve metin yüksekliği düğmeleri görünür ve kullanıcı komutu kesintiye uğratıp şeridi aramak zorunda kalmadan görünümü anında ayarlayabilir.
 
 Aşağıdaki demoda kırmızıyla vurgulanan alan komut oturum aksesuarıdır:
 
@@ -29,7 +29,7 @@ Aşağıdaki demoda kırmızıyla vurgulanan alan komut oturum aksesuarıdır:
 
 Seçim oturum aksesuarı **bir veya daha fazla grafik nesne seçildiğinde** görünür ve **Kısayol Araç Çubuğu**'nun (Shortcut Toolbar) sol tarafına eklenir; sağdaki hızlı eylem düğmelerinden dikey bir ayırıcı ile ayrılır. Seçim kaldırıldığında seçim oturum aksesuarı otomatik olarak kaybolur.
 
-Seçim oturum aksesuarının rolü, komut oturum aksesuarına benzer —— seçilen nesneler için bağlama dayalı işlem giriş noktaları sağlamaktır. Örneğin bir açıklama metni seçildiğinde, seçim oturum aksesuarı renk ve metin yüksekliği ayarlama kontrollerini gösterebilir.
+Seçim oturum aksesuarının rolü, komut oturum aksesuarına benzer —— seçilen nesneler için bağlama dayalı işlem giriş noktaları sağlamaktır. Örneğin bir ölçüm seçildiğinde, seçim oturum aksesuarı renk ve metin yüksekliği ayarlama kontrollerini gösterebilir.
 
 Aşağıdaki demoda kırmızıyla vurgulanan alan seçim oturum aksesuarıdır. Sağdaki ayırıcı ve dairesel düğme grubu, kısayol araç çubuğunun kendisine aittir:
 

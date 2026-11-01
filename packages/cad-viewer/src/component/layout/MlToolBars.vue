@@ -6,22 +6,14 @@ import {
   acapBindToolbarDocState,
   AcApDocManager,
   AcApI18n,
-  AcEdOpenMode,
   AcUiToolbar,
   type AcUiToolbarItem,
-  ICON_ANNOTATION,
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
-  ICON_CLEAR_MARKUPS,
   ICON_CLEAR_MEASUREMENTS,
   ICON_LAYER,
-  ICON_MARKUP_ARROW,
-  ICON_MARKUP_CALLOUT,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
-  ICON_MARKUP_PANEL,
-  ICON_MARKUP_STAMP,
-  ICON_MARKUP_TEXT,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
   ICON_MEASURE_ARC,
@@ -32,16 +24,12 @@ import {
   ICON_MEASUREMENT_PANEL,
   ICON_PAN,
   ICON_READING_MODE,
-  ICON_REV_CIRCLE,
-  ICON_REV_CLOUD,
-  ICON_REV_RECT,
   ICON_SELECT,
   ICON_SWITCH_BG,
   ICON_ZOOM_EXTENT,
   ICON_ZOOM_ORIGINAL,
   ICON_ZOOM_SMART,
   ICON_ZOOM_WINDOW,
-  isMarkupVisible,
   isMeasurementVisible
 } from '@mlightcad/cad-simple-viewer'
 import {
@@ -61,13 +49,8 @@ const hostRef = ref<HTMLElement | null>(null)
 let toolbar: AcUiToolbar | undefined
 let unbindDoc: (() => void) | undefined
 
-const markupVisible = ref(isMarkupVisible())
 const measurementVisible = ref(isMeasurementVisible())
 const readingModeEnabled = ref(false)
-
-const syncMarkupVisibility = () => {
-  markupVisible.value = isMarkupVisible()
-}
 
 const syncMeasurementVisibility = () => {
   measurementVisible.value = isMeasurementVisible()
@@ -262,102 +245,6 @@ const buildItems = (): AcUiToolbarItem[] => {
     }
   ]
 
-  items.push({
-    id: 'annotation',
-    label: 'main.verticalToolbar.annotation.text',
-    icon: ICON_ANNOTATION,
-    minOpenMode: AcEdOpenMode.Review,
-    childrenUi: 'sticky-toolbar',
-    children: [
-      {
-        id: 'markup-cloud',
-        label: 'main.verticalToolbar.markupCloud.text',
-        icon: ICON_REV_CLOUD,
-        command: 'markupcloud'
-      },
-      {
-        id: 'markup-callout',
-        label: 'main.verticalToolbar.markupCallout.text',
-        icon: ICON_MARKUP_CALLOUT,
-        command: 'markupcallout'
-      },
-      {
-        id: 'markup-text',
-        label: 'main.verticalToolbar.markupText.text',
-        icon: ICON_MARKUP_TEXT,
-        command: 'markuptext'
-      },
-      {
-        id: 'markup-rect',
-        label: 'main.verticalToolbar.markupRect.text',
-        icon: ICON_REV_RECT,
-        command: 'markuprect'
-      },
-      {
-        id: 'markup-circle',
-        label: 'main.verticalToolbar.markupCircle.text',
-        icon: ICON_REV_CIRCLE,
-        command: 'markupcircle'
-      },
-      {
-        id: 'markup-arrow',
-        label: 'main.verticalToolbar.markupArrow.text',
-        icon: ICON_MARKUP_ARROW,
-        command: 'markuparrow'
-      },
-      {
-        id: 'markup-stamp',
-        label: 'main.verticalToolbar.markupStamp.text',
-        icon: ICON_MARKUP_STAMP,
-        command: 'markupstamp'
-      },
-      {
-        id: 'markup-panel',
-        label: 'main.verticalToolbar.markupPanel.text',
-        icon: ICON_MARKUP_PANEL,
-        command: 'markuppanel'
-      },
-      {
-        id: 'markup-vis',
-        label: markupVisible.value
-          ? 'main.verticalToolbar.hideMarkup.text'
-          : 'main.verticalToolbar.showMarkup.text',
-        icon: markupVisible.value ? ICON_ANNOTATION_HIDE : ICON_ANNOTATION_SHOW,
-        command: 'markupvis',
-        toggle: {
-          getValue: () => markupVisible.value,
-          on: {
-            label: 'main.verticalToolbar.hideMarkup.text',
-            icon: ICON_ANNOTATION_HIDE
-          },
-          off: {
-            label: 'main.verticalToolbar.showMarkup.text',
-            icon: ICON_ANNOTATION_SHOW
-          }
-        }
-      },
-      {
-        id: 'clear-markups',
-        label: 'main.verticalToolbar.clearMarkups.text',
-        icon: ICON_CLEAR_MARKUPS,
-        command: 'clearmarkups'
-      },
-      toolbarSeparator(),
-      {
-        id: 'markup-import',
-        label: 'main.verticalToolbar.markupImport.text',
-        icon: ICON_MARKUP_IMPORT,
-        command: 'markupimport'
-      },
-      {
-        id: 'markup-export',
-        label: 'main.verticalToolbar.markupExport.text',
-        icon: ICON_MARKUP_EXPORT,
-        command: 'markupexport'
-      }
-    ]
-  })
-
   void readingOn
   void docOpenMode
   return items
@@ -400,14 +287,11 @@ const refreshToolbarItems = () => {
 
 onMounted(() => {
   const docs = AcApDocManager.instance
-  docs.editor.events.commandEnded.addEventListener(syncMarkupVisibility)
   docs.editor.events.commandEnded.addEventListener(syncMeasurementVisibility)
   docs.editor.events.commandEnded.addEventListener(syncReadingMode)
-  docs.events.documentActivated.addEventListener(syncMarkupVisibility)
   docs.events.documentActivated.addEventListener(syncMeasurementVisibility)
   docs.events.documentActivated.addEventListener(syncReadingMode)
   AcApI18n.events.localeChanged.addEventListener(handleLocaleChanged)
-  syncMarkupVisibility()
   syncMeasurementVisibility()
   syncReadingMode()
 
@@ -418,10 +302,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   const docs = AcApDocManager.instance
-  docs.editor.events.commandEnded.removeEventListener(syncMarkupVisibility)
   docs.editor.events.commandEnded.removeEventListener(syncMeasurementVisibility)
   docs.editor.events.commandEnded.removeEventListener(syncReadingMode)
-  docs.events.documentActivated.removeEventListener(syncMarkupVisibility)
   docs.events.documentActivated.removeEventListener(syncMeasurementVisibility)
   docs.events.documentActivated.removeEventListener(syncReadingMode)
   AcApI18n.events.localeChanged.removeEventListener(handleLocaleChanged)
@@ -441,7 +323,7 @@ watch(
 )
 
 watch(
-  [markupVisible, measurementVisible, readingModeEnabled, docOpenMode],
+  [measurementVisible, readingModeEnabled, docOpenMode],
   () => {
     refreshToolbarItems()
   }

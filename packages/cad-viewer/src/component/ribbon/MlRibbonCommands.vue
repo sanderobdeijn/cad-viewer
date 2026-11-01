@@ -2,14 +2,11 @@
 import '@mlightcad/ribbon/style.css'
 
 import {
-  ChatLineSquare,
   Delete,
   DocumentCopy,
   Hide,
   RefreshLeft,
   RefreshRight,
-  Right,
-  Stamp,
   View
 } from '@element-plus/icons-vue'
 import {
@@ -34,25 +31,14 @@ import {
   acuiOpenTextHeightDialog,
   acuiResolveTextHeightDialogInitials,
   acuiResolveTextHeightPatch,
-  applyMarkupStyleToSelection,
   applyMeasurementStyleToSelection,
-  cssToMarkupColor,
-  defaultMarkupColor,
   getActiveMeasurementStyle,
   getEffectiveMeasurementUnits,
-  getMarkupCustomTextHeightWcs,
-  getMarkupFontSize,
-  getMarkupStore,
-  getMarkupTextHeightMode,
   getMeasurementSnapshot,
   getSelectedMeasurementId,
-  isMarkupVisible,
   isMeasurementVisible,
-  markupColorToCss,
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING,
   refreshMeasurementValueLabels,
-  setMarkupDrawColor,
-  setMarkupTextHeight,
   setMeasurementUnitOverride,
   subscribeMeasurementSelection
 } from '@mlightcad/cad-simple-viewer'
@@ -144,13 +130,10 @@ import {
   xline
 } from '../../svg'
 import {
-  clearMarkups,
   clearMeasurements,
   exportIcon,
   importIcon,
   layer,
-  markupLine,
-  markupPanel,
   measureAngle,
   measureArc,
   measureArea,
@@ -158,10 +141,7 @@ import {
   measureDistance,
   measurementPanel,
   measurePoint,
-  revCircle,
-  revCloud,
-  revRect,
-  revText
+  revCloud
 } from '../../svg/toolbarIcons'
 import MlBlockInsertGallery from '../common/MlBlockInsertGallery.vue'
 import MlLayerSelect from '../common/MlLayerSelect.vue'
@@ -207,14 +187,7 @@ const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 const { canUndo, canRedo } = useUndoRedo()
 const { menuItems: dataSourceMenuItems, isSingleLocalOpen } = useDataSources()
 const { t, locale } = useI18n()
-const isMarkupOverlayVisible = ref(true)
 const isMeasurementOverlayVisible = ref(true)
-const markupDrawColor = shallowRef(defaultMarkupColor())
-const markupDrawColorDisplay = ref(markupColorToCss(markupDrawColor.value))
-const markupTextHeightMode = ref<OverlayTextHeightMode>(getMarkupTextHeightMode())
-const markupTextHeightWcs = ref<number | undefined>(
-  getMarkupCustomTextHeightWcs()
-)
 const measurementDrawColor = shallowRef(new AcCmColor())
 const measurementDrawColorDisplay = ref('#7b8794')
 const measurementTextHeightMode = ref<OverlayTextHeightMode>(
@@ -412,10 +385,6 @@ const syncRibbonProperties = (db = getCurrentDatabase()) => {
       : resolveRibbonColorDisplay(db.cecolor, db, db.clayer)
 }
 
-const syncMarkupVisibility = () => {
-  isMarkupOverlayVisible.value = isMarkupVisible()
-}
-
 const syncMeasurementVisibility = () => {
   isMeasurementOverlayVisible.value = isMeasurementVisible()
 }
@@ -549,11 +518,8 @@ const handleDocumentActivated = () => {
   bindAnnotationVisibilityEvents(AcApDocManager.instance?.curDocument?.database)
   ribbonLayerIsolationSnapshot.value = null
   ribbonLayerPreviousSnapshot.value = null
-  lastActivatedMarkupId = undefined
   lastActivatedMeasurementId = undefined
-  syncMarkupVisibility()
   syncMeasurementVisibility()
-  syncMarkupStyleControls()
   syncMeasurementStyleControls()
   syncMeasurementUnitControls()
   syncRibbonProperties(AcApDocManager.instance?.curDocument?.database)
@@ -581,9 +547,7 @@ const applyToSelectedEntities = (mutator: (entity: AcDbEntity) => void) => {
   })
 }
 
-let unsubscribeMarkupStore: (() => void) | undefined
 let unsubscribeMeasurementSelection: (() => void) | undefined
-let lastActivatedMarkupId: string | undefined
 let lastActivatedMeasurementId: string | undefined
 let overlayTabActivationScheduled = false
 let overlayTabActivationDisposed = false
@@ -596,35 +560,20 @@ const overlaySelectionSnapshot = () => {
   return {
     selectedGroups: view?.htmlTransientManager?.getSelectedGroups(),
     cadEntityCount: view?.selectionSet?.count ?? 0,
-    markupSelectedId: getMarkupStore().selectedId,
     measurementSelected: getSelectedMeasurementId() != null
   }
 }
 
 /**
- * When the ribbon is showing, selecting only markups switches to the Review
- * tab and selecting only measurements switches to the Measurement tab.
- * Mixed selections (markup + measurement, drawing entities + overlay, …)
- * and deselect do not change the tab; only a newly selected exclusive
- * overlay does.
+ * When the ribbon is showing, selecting only measurements switches to the
+ * Measurement tab. Mixed selections (drawing entities + overlay, …) and
+ * deselect do not change the tab; only a newly selected exclusive overlay
+ * does.
  */
 const activateRibbonTabForOverlaySelection = () => {
   const kind = classifyOverlaySelection(overlaySelectionSnapshot())
 
   if (kind === 'mixed') return
-
-  if (kind === 'markup') {
-    const markupId = getMarkupStore().selectedId
-    const markupNewlySelected = markupId !== lastActivatedMarkupId
-    lastActivatedMarkupId = markupId
-    lastActivatedMeasurementId = undefined
-    if (markupNewlySelected && docOpenMode.value >= AcEdOpenMode.Review) {
-      activeRibbonTabId.value = 'review'
-    }
-    return
-  }
-
-  lastActivatedMarkupId = undefined
 
   if (kind === 'measurement') {
     const measurementId = getSelectedMeasurementId()
@@ -654,28 +603,22 @@ const scheduleActivateRibbonTabForOverlaySelection = () => {
 }
 
 /**
- * Switches to Measurement or Review while a drawing command is active so
+ * Switches to Measurement while a drawing command is active so
  * color / text-height can be changed before the overlay is committed.
  */
 const activateRibbonTabForDrawCommand = (args: AcEdCommandEventArgs) => {
   const kind = acapDrawStyleKindForCommand(args.command?.globalName)
   if (kind === 'measure') {
     activeRibbonTabId.value = 'measurement'
-    return
-  }
-  if (kind === 'markup' && docOpenMode.value >= AcEdOpenMode.Review) {
-    activeRibbonTabId.value = 'review'
   }
 }
 
 /**
- * After a markup / measurement draw command ends, restore the tab from the
- * current exclusive overlay selection. IDs are cleared so a markup that
- * stayed selected across a measurement command still switches back to Review.
+ * After a measurement draw command ends, restore the tab from the current
+ * exclusive overlay selection.
  */
 const activateRibbonTabAfterDrawCommand = (args: AcEdCommandEventArgs) => {
   if (!acapDrawStyleKindForCommand(args.command?.globalName)) return
-  lastActivatedMarkupId = undefined
   lastActivatedMeasurementId = undefined
   scheduleActivateRibbonTabForOverlaySelection()
 }
@@ -700,9 +643,6 @@ onMounted(() => {
     handleMTextCommandEnded
   )
   AcApDocManager.instance.editor.events.commandEnded.addEventListener(
-    syncMarkupVisibility
-  )
-  AcApDocManager.instance.editor.events.commandEnded.addEventListener(
     syncMeasurementVisibility
   )
   AcApDocManager.instance.editor.events.commandEnded.addEventListener(
@@ -711,8 +651,6 @@ onMounted(() => {
   AcApDocManager.instance.events.documentActivated.addEventListener(
     handleDocumentActivated
   )
-  unsubscribeMarkupStore = getMarkupStore().subscribe(syncMarkupStyleControls)
-  syncMarkupStyleControls()
   unsubscribeMeasurementSelection = subscribeMeasurementSelection(
     syncMeasurementStyleControls
   )
@@ -722,8 +660,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   overlayTabActivationDisposed = true
-  unsubscribeMarkupStore?.()
-  unsubscribeMarkupStore = undefined
   unsubscribeMeasurementSelection?.()
   unsubscribeMeasurementSelection = undefined
   AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
@@ -743,9 +679,6 @@ onUnmounted(() => {
   )
   AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
     handleMTextCommandEnded
-  )
-  AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
-    syncMarkupVisibility
   )
   AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
     syncMeasurementVisibility
@@ -794,125 +727,6 @@ const handleRibbonLineWeightChange = (value: AcGiLineWeight) => {
     })
   })
   syncRibbonProperties(db)
-}
-
-/**
- * Push Review ribbon style controls from the selected markup (or session defaults).
- */
-const syncMarkupStyleControls = () => {
-  const store = getMarkupStore()
-  const selected = store.selectedId
-    ? store.get(store.selectedId)
-    : undefined
-  if (selected) {
-    const color = cssToMarkupColor(selected.style.color)
-    markupDrawColor.value = color
-    markupDrawColorDisplay.value = selected.style.color
-    const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
-    const fontSize =
-      selected.style.fontSize != null && selected.style.fontSize > 0
-        ? selected.style.fontSize
-        : getMarkupFontSize()
-    const wcs =
-      selected.style.textHeightWcs != null &&
-      selected.style.textHeightWcs > 0
-        ? selected.style.textHeightWcs
-        : view
-          ? acapScreenPxToWcs(fontSize, view)
-          : undefined
-    // Selected overlays always summarize as Custom + first-element WCS.
-    markupTextHeightMode.value = 'custom'
-    markupTextHeightWcs.value = wcs
-  } else {
-    markupDrawColor.value = defaultMarkupColor()
-    markupDrawColorDisplay.value = markupColorToCss(markupDrawColor.value)
-    markupTextHeightMode.value = getMarkupTextHeightMode()
-    markupTextHeightWcs.value =
-      markupTextHeightMode.value === 'custom'
-        ? getMarkupCustomTextHeightWcs()
-        : undefined
-  }
-  scheduleActivateRibbonTabForOverlaySelection()
-}
-
-/**
- * Apply a style patch to the currently selected markup and republish it.
- */
-const patchSelectedMarkupStyle = (
-  patch: Partial<{
-    color: string
-    fontSize: number
-    textHeightMode: OverlayTextHeightMode
-    textHeightWcs: number
-  }>
-) => {
-  const view = AcApDocManager.instance?.curView
-  if (view) applyMarkupStyleToSelection(view, patch)
-}
-
-/**
- * Updates the session markup draw color used by subsequent markup commands.
- * When a markup is selected, also updates that markup's color.
- */
-const handleMarkupDrawColorChange = (value?: AcCmColor) => {
-  if (!value) return
-  setMarkupDrawColor(value)
-  markupDrawColor.value = value.clone()
-  markupDrawColorDisplay.value = markupColorToCss(value)
-  patchSelectedMarkupStyle({ color: markupColorToCss(value) })
-}
-
-/**
- * Opens the shared text-height dialog for Review markups.
- */
-const handleMarkupTextHeightClick = async () => {
-  if (textHeightDialogOpen) return
-  const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
-  if (!view) return
-  textHeightDialogOpen = true
-  try {
-    const store = getMarkupStore()
-    const selected = store.selectedId
-      ? store.get(store.selectedId)
-      : undefined
-    const hasSelection = selected != null
-    const fontSizePx =
-      selected?.style.fontSize != null && selected.style.fontSize > 0
-        ? selected.style.fontSize
-        : getMarkupFontSize()
-    const selectedTextHeightWcs = hasSelection
-      ? selected?.style.textHeightWcs
-      : getMarkupCustomTextHeightWcs()
-    const initials = acuiResolveTextHeightDialogInitials({
-      hasSelection,
-      sessionMode: hasSelection
-        ? 'custom'
-        : getMarkupTextHeightMode(),
-      fontSizePx,
-      selectedTextHeightWcs,
-      view
-    })
-    const result = await acuiOpenTextHeightDialog({
-      view,
-      ...initials
-    })
-    if (!result) return
-    const patch = acuiResolveTextHeightPatch(
-      view,
-      result,
-      initials.initialFontSizePx
-    )
-    setMarkupTextHeight(
-      patch.textHeightMode,
-      patch.textHeightMode === 'custom'
-        ? (patch.textHeightWcs ?? patch.fontSize)
-        : patch.fontSize
-    )
-    applyMarkupStyleToSelection(view, patch)
-    syncMarkupStyleControls()
-  } finally {
-    textHeightDialogOpen = false
-  }
 }
 
 const syncMeasurementStyleControls = () => {
@@ -1145,7 +959,7 @@ const handleRibbonLayerStateToggle = (payload: {
 }
 
 /**
- * Read: measurement only. Review: measurement + review. Write: all tabs.
+ * Read: measurement only. Write: all tabs.
  * Contextual tabs keep the visibility their builders already set.
  */
 const applyOpenModeTabVisibility = (
@@ -1155,18 +969,13 @@ const applyOpenModeTabVisibility = (
   return tabs.map(tab => {
     if (tab.contextual) return tab
     const visible =
-      tab.id === 'measurement'
-        ? true
-        : tab.id === 'review'
-          ? openMode >= AcEdOpenMode.Review
-          : openMode === AcEdOpenMode.Write
+      tab.id === 'measurement' ? true : openMode === AcEdOpenMode.Write
     return { ...tab, visible }
   })
 }
 
 const buildBaseTabs = (
   openMode: AcEdOpenMode,
-  markupVisible: boolean,
   measurementVisible: boolean
 ): RibbonTabModel[] => {
   const ribbonTooltips = {
@@ -1250,178 +1059,9 @@ const buildBaseTabs = (
     measurementImport: t('main.verticalToolbar.measurementImport.description'),
     measurementExport: t('main.verticalToolbar.measurementExport.description'),
     layer: t('main.verticalToolbar.layer.description'),
-    hideMarkup: t('main.verticalToolbar.hideMarkup.description'),
-    showMarkup: t('main.verticalToolbar.showMarkup.description'),
     hideMeasurements: t('main.verticalToolbar.hideMeasurements.description'),
-    showMeasurements: t('main.verticalToolbar.showMeasurements.description'),
-    clearMarkups: t('main.verticalToolbar.clearMarkups.description'),
-    markupImport: t('main.verticalToolbar.markupImport.description'),
-    markupExport: t('main.verticalToolbar.markupExport.description')
+    showMeasurements: t('main.verticalToolbar.showMeasurements.description')
   }
-
-  const reviewPrimaryItems: RibbonItemModel[] = [
-    {
-      id: 'cmd-tool-markup-cloud',
-      type: 'button',
-      label: t('main.verticalToolbar.markupCloud.text'),
-      tooltip: t('main.verticalToolbar.markupCloud.description'),
-      size: 'large',
-      props: { icon: revCloud }
-    },
-    {
-      id: 'cmd-tool-markup-rect',
-      type: 'button',
-      label: t('main.verticalToolbar.markupRect.text'),
-      tooltip: t('main.verticalToolbar.markupRect.description'),
-      size: 'large',
-      props: { icon: revRect }
-    },
-    {
-      id: 'cmd-tool-markup-circle',
-      type: 'button',
-      label: t('main.verticalToolbar.markupCircle.text'),
-      tooltip: t('main.verticalToolbar.markupCircle.description'),
-      size: 'large',
-      props: { icon: revCircle }
-    },
-    {
-      id: 'cmd-tool-markup-callout',
-      type: 'button',
-      label: t('main.verticalToolbar.markupCallout.text'),
-      tooltip: t('main.verticalToolbar.markupCallout.description'),
-      size: 'large',
-      props: { icon: ChatLineSquare }
-    }
-  ]
-
-  const reviewShapeItems: RibbonItemModel[] = [
-    {
-      id: 'cmd-tool-markup-arrow',
-      type: 'button',
-      label: t('main.verticalToolbar.markupArrow.text'),
-      tooltip: t('main.verticalToolbar.markupArrow.description'),
-      size: 'small',
-      props: { icon: Right }
-    },
-    {
-      id: 'cmd-tool-markup-line',
-      type: 'button',
-      label: t('main.verticalToolbar.markupLine.text'),
-      tooltip: t('main.verticalToolbar.markupLine.description'),
-      size: 'small',
-      props: { icon: markupLine }
-    },
-    {
-      id: 'cmd-tool-markup-text',
-      type: 'button',
-      label: t('main.verticalToolbar.markupText.text'),
-      tooltip: t('main.verticalToolbar.markupText.description'),
-      size: 'small',
-      props: { icon: revText }
-    }
-  ]
-
-  const reviewMoreItems: RibbonItemModel[] = [
-    {
-      id: 'cmd-tool-markup-stamp',
-      type: 'button',
-      label: t('main.verticalToolbar.markupStamp.text'),
-      tooltip: t('main.verticalToolbar.markupStamp.description'),
-      size: 'small',
-      props: { icon: Stamp }
-    },
-    {
-      id: 'cmd-tool-markup-import',
-      type: 'button',
-      label: t('main.verticalToolbar.markupImport.text'),
-      tooltip: verticalToolbarDescriptions.markupImport,
-      size: 'small',
-      props: { icon: importIcon }
-    },
-    {
-      id: 'cmd-tool-markup-export',
-      type: 'button',
-      label: t('main.verticalToolbar.markupExport.text'),
-      tooltip: verticalToolbarDescriptions.markupExport,
-      size: 'small',
-      props: { icon: exportIcon }
-    }
-  ]
-
-  const reviewManageItems: RibbonItemModel[] = [
-    {
-      id: 'cmd-tool-markup-panel',
-      type: 'button',
-      label: t('main.verticalToolbar.markupPanel.text'),
-      tooltip: t('main.verticalToolbar.markupPanel.description'),
-      size: 'small',
-      props: { icon: markupPanel }
-    },
-    {
-      id: 'cmd-tool-markup-vis',
-      type: 'toggle',
-      label: t('main.verticalToolbar.showMarkup.text'),
-      tooltip: markupVisible
-        ? verticalToolbarDescriptions.hideMarkup
-        : verticalToolbarDescriptions.showMarkup,
-      size: 'small',
-      props: {
-        modelValue: markupVisible,
-        activeIcon: View,
-        inactiveIcon: Hide,
-        activeLabel: t('main.verticalToolbar.showMarkup.text'),
-        inactiveLabel: t('main.verticalToolbar.hideMarkup.text'),
-        activeValue: 'cmd-tool-markup-vis',
-        inactiveValue: 'cmd-tool-markup-vis'
-      }
-    },
-    {
-      id: 'cmd-tool-markup-clear',
-      type: 'button',
-      label: t('main.verticalToolbar.clearMarkups.text'),
-      tooltip: verticalToolbarDescriptions.clearMarkups,
-      size: 'small',
-      props: { icon: clearMarkups }
-    }
-  ]
-
-  const reviewStyleItems: RibbonItemModel[] = [
-    {
-      id: 'markup-draw-color',
-      type: 'custom',
-      size: 'small',
-      tooltip: t('main.verticalToolbar.markupColor.description'),
-      props: {
-        component: MlRibbonPropertyColorDropdown,
-        componentProps: {
-          modelValue: markupDrawColor.value,
-          displayColor: markupDrawColorDisplay.value,
-          placeholder: t('main.ribbon.property.color'),
-          controlWidth: OVERLAY_STYLE_CONTROL_WIDTH,
-          'onUpdate:modelValue': handleMarkupDrawColorChange
-        }
-      }
-    },
-    {
-      id: 'markup-draw-text-height',
-      type: 'custom',
-      size: 'small',
-      tooltip: t('main.verticalToolbar.markupFontSize.description'),
-      props: {
-        component: MlRibbonTextHeightButton,
-        componentProps: {
-          mode: markupTextHeightMode.value,
-          textHeightWcs: markupTextHeightWcs.value,
-          fitLabel: t('main.verticalToolbar.markupFontSize.fit'),
-          wcsLabel: t('main.verticalToolbar.markupFontSize.wcs'),
-          placeholder: t('main.verticalToolbar.markupFontSize.text'),
-          ariaLabel: t('main.verticalToolbar.markupFontSize.description'),
-          controlWidth: OVERLAY_STYLE_CONTROL_WIDTH,
-          onClick: handleMarkupTextHeightClick
-        }
-      }
-    }
-  ]
 
   const measureItems: RibbonItemModel[] = [
     {
@@ -1524,52 +1164,6 @@ const buildBaseTabs = (
       tooltip: verticalToolbarDescriptions.clearMeasurements,
       size: 'small',
       props: { icon: clearMeasurements }
-    }
-  ]
-
-  const reviewGroups: RibbonGroupModel[] = [
-    {
-      id: 'review-review',
-      title: t('main.ribbon.group.review'),
-      orientation: 'row',
-      collections: [
-        {
-          id: 'review-primary',
-          layout: 'row',
-          items: reviewPrimaryItems
-        },
-        {
-          id: 'review-shapes',
-          layout: 'column',
-          rows: 3,
-          items: reviewShapeItems
-        },
-        {
-          id: 'review-more',
-          layout: 'column',
-          rows: 3,
-          items: reviewMoreItems
-        },
-        {
-          id: 'review-manage',
-          layout: 'column',
-          rows: 3,
-          items: reviewManageItems
-        }
-      ]
-    },
-    {
-      id: 'review-style',
-      title: t('main.ribbon.group.style'),
-      orientation: 'row',
-      collections: [
-        {
-          id: 'review-style-main',
-          layout: 'column',
-          rows: 3,
-          items: reviewStyleItems
-        }
-      ]
     }
   ]
 
@@ -2473,12 +2067,6 @@ const buildBaseTabs = (
   ]
 
   tabs.push({
-    id: 'review',
-    title: t('main.ribbon.tab.review'),
-    groups: reviewGroups
-  })
-
-  tabs.push({
     id: 'measurement',
     title: t('main.ribbon.tab.measurement'),
     groups: measurementGroups
@@ -2490,13 +2078,7 @@ const buildBaseTabs = (
 const ribbonData = computed(() => {
   locale.value
   const openMode = docOpenMode.value
-  const markupVisible = isMarkupOverlayVisible.value
   const measurementVisible = isMeasurementOverlayVisible.value
-  // Track markup draw style so Review ribbon color / text-height controls refresh.
-  markupDrawColor.value
-  markupDrawColorDisplay.value
-  markupTextHeightMode.value
-  markupTextHeightWcs.value
   // Track measurement draw style so Measurement ribbon controls refresh.
   measurementDrawColor.value
   measurementDrawColorDisplay.value
@@ -2563,19 +2145,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-xattach', 'xattach')
   commandByItemId.set('cmd-attedit', 'attedit')
   commandByItemId.set('cmd-attdef', 'attdef')
-  commandByItemId.set('cmd-tool-markup-panel', 'markuppanel')
-  commandByItemId.set('cmd-tool-markup-text', 'markuptext')
-  commandByItemId.set('cmd-tool-markup-cloud', 'markupcloud')
-  commandByItemId.set('cmd-tool-markup-rect', 'markuprect')
-  commandByItemId.set('cmd-tool-markup-circle', 'markupcircle')
-  commandByItemId.set('cmd-tool-markup-arrow', 'markuparrow')
-  commandByItemId.set('cmd-tool-markup-line', 'markupline')
-  commandByItemId.set('cmd-tool-markup-callout', 'markupcallout')
-  commandByItemId.set('cmd-tool-markup-stamp', 'markupstamp')
-  commandByItemId.set('cmd-tool-markup-import', 'markupimport')
-  commandByItemId.set('cmd-tool-markup-export', 'markupexport')
-  commandByItemId.set('cmd-tool-markup-vis', 'markupvis')
-  commandByItemId.set('cmd-tool-markup-clear', 'clearmarkups')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-continuous', 'measurecontinuous')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')
@@ -2598,11 +2167,7 @@ const ribbonData = computed(() => {
   commandByItemId.set('layer-action-unlock', 'layulk')
   commandByItemId.set('layer-action-restore', 'layerp')
 
-  const tabs: RibbonTabModel[] = buildBaseTabs(
-    openMode,
-    markupVisible,
-    measurementVisible
-  )
+  const tabs: RibbonTabModel[] = buildBaseTabs(openMode, measurementVisible)
   return {
     tabs,
     commandByItemId

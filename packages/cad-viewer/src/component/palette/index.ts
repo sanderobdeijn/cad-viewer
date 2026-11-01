@@ -1,6 +1,5 @@
 export { default as MlBlocksPalette } from './MlBlocksPalette.vue'
 export { default as MlCountList } from './MlCountList.vue'
-export { default as MlDesignReviewPalette } from './MlDesignReviewPalette.vue'
 export { default as MlFindPalette } from './MlFindPalette.vue'
 export { default as MlMeasurementPalette } from './MlMeasurementPalette.vue'
 export { default as MlExternalReferences } from './MlExternalReferences.vue'

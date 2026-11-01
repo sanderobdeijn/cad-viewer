@@ -56,9 +56,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-type Mode = 'readonly' | 'review'
+type Mode = 'readonly' | 'write'
 const props = withDefaults(defineProps<{
-  /** Viewer mode; in review mode the Review tab is enabled (active), otherwise disabled (grayed). */
+  /** Viewer mode. */
   mode?: Mode
   /** Show the "3.25 m" measurement badge on the canvas (default true). */
   showBadge?: boolean
@@ -74,9 +74,6 @@ const ICON_ZOOM_EXTENT =
 const ICON_MEASURE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" fill-rule="evenodd" d="M1.5 7h17v6h-17ZM4.25 7h1v2.5h-1ZM7.5 7h.75v1.5H7.5ZM10.25 7h1v2.5h-1ZM13.5 7h.75v1.5H13.5ZM16.25 7h1v2.5h-1Z"/></svg>'
 
-const ICON_ANNOTATION =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.4 3.25H5.5A2.25 2.25 0 0 0 3.25 5.5v9A2.25 2.25 0 0 0 5.5 16.75h9A2.25 2.25 0 0 0 16.75 14.5V8.6"/><g transform="rotate(45 13.2 6.7)"><rect x="11.7" y="1.55" width="3" height="7.45" rx="1.45"/><path d="M11.7 3.2h3"/><path d="M11.7 9 13.2 12.15 14.7 9"/><rect x="12.8" y="7.05" width="0.8" height="1.2" rx="0.4"/></g></g></svg>'
-
 const ICON_LAYER =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="m434.8 137.65l-149.36-68.1c-16.19-7.4-42.69-7.4-58.88 0L77.3 137.65c-17.6 8-17.6 21.09 0 29.09l148 67.5c16.89 7.7 44.69 7.7 61.58 0l148-67.5c17.52-8 17.52-21.1-.08-29.09M160 308.52l-82.7 37.11c-17.6 8-17.6 21.1 0 29.1l148 67.5c16.89 7.69 44.69 7.69 61.58 0l148-67.5c17.6-8 17.6-21.1 0-29.1l-79.94-38.47"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="m160 204.48l-82.8 37.16c-17.6 8-17.6 21.1 0 29.1l148 67.49c16.89 7.7 44.69 7.7 61.58 0l148-67.49c17.7-8 17.7-21.1.1-29.1L352 204.48"/></svg>'
 
@@ -89,14 +86,13 @@ const ICON_SETTINGS =
 const tabs = [
   { key: 'zoom',   label: 'Zoom',    title: 'Zoom tools', icon: ICON_ZOOM_EXTENT },
   { key: 'measure',label: 'Measure', title: 'Measure tools', icon: ICON_MEASURE },
-  { key: 'review', label: 'Review',  title: 'Markup (Review) tools', icon: ICON_ANNOTATION },
   { key: 'layers', label: 'Layers',  title: 'Layer drawer', icon: ICON_LAYER },
   { key: 'layout', label: 'Layout',  title: 'Switch layout', icon: ICON_LAYOUT },
   { key: 'setting',label: 'Setting', title: 'Display / Input settings', icon: ICON_SETTINGS },
 ]
 
-const disabledKeys = computed(() => (props.mode === 'readonly' ? ['review'] : []))
-const activeKey = props.mode === 'review' ? 'review' : 'measure'
+const disabledKeys = computed((): string[] => [])
+const activeKey = 'measure'
 </script>
 
 <style>

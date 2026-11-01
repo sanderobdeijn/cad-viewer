@@ -9,9 +9,6 @@ describe('acEdShouldShowGrips', () => {
     expect(acedShouldShowGrips(AcEdOpenMode.Read, false, false, 1, 100)).toBe(
       false
     )
-    expect(acedShouldShowGrips(AcEdOpenMode.Review, false, false, 1, 100)).toBe(
-      false
-    )
   })
 
   test('blocks grips while command input is active', () => {

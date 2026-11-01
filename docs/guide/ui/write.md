@@ -4,9 +4,9 @@ title: Write Mode
 
 # Write Mode
 
-Write mode is the most feature-complete mode. In addition to all the capabilities of review mode, it supports directly creating, editing, and deleting entities on the DWG/DXF — enabling the web product to handle real drafting work, not just read-only preview.
+Write mode is the most feature-complete mode. In addition to all the capabilities of read-only mode, it supports directly creating, editing, and deleting entities on the DWG/DXF — enabling the web product to handle real drafting work, not just read-only preview.
 
-Write mode is used by default when opening a file, unless read-only or review mode is explicitly specified.
+Write mode is used by default when opening a file, unless read-only mode is explicitly specified.
 
 ## Desktop
 
@@ -26,7 +26,6 @@ The Ribbon fully displays all AutoCAD-style tabs:
 | Layers | Layer management (on/off, freeze/thaw, lock, isolate, new, delete) |
 | Properties | Color, linetype, lineweight, layer selector |
 | Measure | All measurement commands |
-| Markup | All markup commands |
 
 ### Command Line
 
@@ -37,7 +36,7 @@ A command line window at the bottom of the canvas allows typing command names di
 
 ### Right-Side Toolbar
 
-In addition to the review mode tools, there is a **Select / Edit tool group**:
+In addition to the read-only mode tools, there is a **Select / Edit tool group**:
 
 - Select
 - Pan
@@ -45,7 +44,6 @@ In addition to the review mode tools, there is a **Select / Edit tool group**:
 - Window Zoom
 - Layer Management
 - Measure tool group
-- Markup tool group
 - Reading Mode
 - Toggle Light/Dark Background
 
@@ -56,7 +54,6 @@ In addition to the review mode tools, there is a **Select / Edit tool group**:
 | Layers | Full layer management |
 | Properties | Selected entity properties (type, coordinates, layer, color, linetype, lineweight, etc.), editable |
 | Measurements | Measurement result management |
-| Review (Markup) | Markup management |
 | Statistics | Block usage statistics |
 | Missing Resources | Font / external reference alerts |
 

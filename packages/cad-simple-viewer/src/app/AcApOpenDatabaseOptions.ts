@@ -71,8 +71,7 @@ export interface AcApOpenDatabaseOptions extends Omit<
    * The access mode for opening the database.
    * Higher value modes are compatible with lower value modes.
    * - Read (0): Read-only access
-   * - Review (4): Review access, compatible with Read
-   * - Write (8): Full read/write access, compatible with Review and Read
+   * - Write (8): Full read/write access, compatible with Read
    */
   mode?: AcEdOpenMode
   /**
@@ -115,7 +114,7 @@ export interface AcApOpenDatabaseOptions extends Omit<
   /**
    * How to frame the view when the document finishes opening.
    *
-   * When omitted, Read and Review modes use {@link AcApOpenViewMode.Extents};
+   * When omitted, Read mode uses {@link AcApOpenViewMode.Extents};
    * Write mode uses {@link AcApOpenViewMode.Saved} (AutoCAD VPORT behavior).
    */
   openViewMode?: AcApOpenViewMode

@@ -6,9 +6,6 @@ export const commandTr = {
     layer: {
       description: 'Katman yöneticisi yerleştirme panelini açar veya kapatır'
     },
-    markuppanel: {
-      description: 'İnceleme paleti yerleştirme panelini açar'
-    },
     measurementpanel: {
       description: 'Ölçüm listesi yerleştirme panelini açar'
     },

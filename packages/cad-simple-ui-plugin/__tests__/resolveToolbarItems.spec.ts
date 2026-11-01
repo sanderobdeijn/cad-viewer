@@ -18,8 +18,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
         toggle: jest.fn()
       }
     },
-    /** Minimal mock used by {@link acuiCreateDefaultToolbarItems} markup visibility toggle. */
-    isMarkupVisible: () => true,
     isMeasurementVisible: () => true,
     AcEdOpenMode: openMode.AcEdOpenMode
   })
@@ -66,7 +64,6 @@ describe('acuiResolveToolbarItems', () => {
       'zoom',
       'find',
       'measure',
-      'annotation',
       'layer',
       'layout',
       'settings'
@@ -192,32 +189,24 @@ describe('acuiResolveToolbarItems', () => {
 })
 
 describe('toolbar visibility', () => {
-  it('hides review-only items in read mode', () => {
+  it('keeps default items visible in read mode', () => {
     const defaults = acuiCreateDefaultToolbarItems()
     const visible = acuiFilterVisibleToolbarItems(defaults, AcEdOpenMode.Read)
-    expect(visible.some(item => item.id === 'annotation')).toBe(false)
     expect(visible.some(item => item.id === 'settings')).toBe(true)
     expect(visible.some(item => item.id === 'layout')).toBe(true)
     expect(visible.some(item => item.id === 'select')).toBe(true)
   })
 
-  it('shows review-only items in review mode', () => {
-    const defaults = acuiCreateDefaultToolbarItems()
-    const visible = acuiFilterVisibleToolbarItems(defaults, AcEdOpenMode.Review)
-    expect(visible.some(item => item.id === 'annotation')).toBe(true)
-    expect(visible.some(item => item.id === 'settings')).toBe(true)
-  })
-
   it('respects minOpenMode on individual items', () => {
     expect(
       acuiIsToolbarItemVisible(
-        { id: 'x', minOpenMode: AcEdOpenMode.Review },
+        { id: 'x', minOpenMode: AcEdOpenMode.Write },
         AcEdOpenMode.Read
       )
     ).toBe(false)
     expect(
       acuiIsToolbarItemVisible(
-        { id: 'x', minOpenMode: AcEdOpenMode.Review },
+        { id: 'x', minOpenMode: AcEdOpenMode.Write },
         AcEdOpenMode.Write
       )
     ).toBe(true)
@@ -230,9 +219,9 @@ describe('toolbar visibility', () => {
         children: [
           { id: 'read-child', command: 'a' },
           {
-            id: 'review-child',
+            id: 'write-child',
             command: 'b',
-            minOpenMode: AcEdOpenMode.Review
+            minOpenMode: AcEdOpenMode.Write
           }
         ]
       }
@@ -320,9 +309,6 @@ describe('default toolbar items', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
     expect(
-      items.find(item => item.id === 'annotation')?.childIcon
-    ).toBeUndefined()
-    expect(
       settings?.children?.find(child => child.id === 'toolbar-placement')
         ?.childIcon
     ).toBe('selected')
@@ -330,37 +316,6 @@ describe('default toolbar items', () => {
       settings?.children?.find(child => child.id === 'locale')?.childIcon
     ).toBe('selected')
     expect(items.find(item => item.id === 'measure')?.childIcon).toBeUndefined()
-  })
-
-  it('uses markup commands from the review panel in the annotation submenu', () => {
-    const items = acuiCreateDefaultToolbarItems()
-    const annotation = items.find(item => item.id === 'annotation')
-    expect(
-      annotation?.children?.map(child =>
-        child.type === 'separator'
-          ? 'separator'
-          : (child.command ?? child.toggle?.on.command)
-      )
-    ).toEqual([
-      'markupcloud',
-      'markupcallout',
-      'markuptext',
-      'markuprect',
-      'markupcircle',
-      'markuparrow',
-      'markupstamp',
-      'markuppanel',
-      'markupvis',
-      'clearmarkups',
-      'separator',
-      'markupimport',
-      'markupexport'
-    ])
-    expect(items.some(item => item.id === 'markup-vis')).toBe(false)
-    expect(items.some(item => item.id === 'markup-panel')).toBe(false)
-    expect(
-      annotation?.children?.find(child => child.id === 'markup-vis')?.toggle
-    ).toBeDefined()
   })
 
   it('places measurement visibility in the measure submenu', () => {
@@ -391,19 +346,10 @@ describe('default toolbar items', () => {
     ).toBeDefined()
   })
 
-  it('places review tools after measure', () => {
-    const items = acuiCreateDefaultToolbarItems()
-    const measureIndex = items.findIndex(item => item.id === 'measure')
-    expect(items[measureIndex + 1]?.id).toBe('annotation')
-  })
-
-  it('uses dismissible sub-toolbars for measure, review, and settings', () => {
+  it('uses dismissible sub-toolbars for measure and settings', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
     expect(items.find(item => item.id === 'measure')?.childrenUi).toBe('toolbar')
-    expect(items.find(item => item.id === 'annotation')?.childrenUi).toBe(
-      'toolbar'
-    )
     expect(items.find(item => item.id === 'layout')?.childrenUi).toBe('menu')
     expect(settings?.childrenUi).toBe('toolbar')
     expect(
@@ -413,44 +359,6 @@ describe('default toolbar items', () => {
     expect(
       settings?.children?.find(child => child.id === 'locale')?.childrenUi
     ).toBe('toolbar')
-  })
-
-  it('uses the same annotation parent icon as cad-viewer toolbar and ribbon', () => {
-    const items = acuiCreateDefaultToolbarItems()
-    expect(items.find(item => item.id === 'annotation')?.icon).toContain(
-      'M12.4 3.25H5.5'
-    )
-  })
-
-  it('uses the same review submenu icons as cad-viewer', () => {
-    const items = acuiCreateDefaultToolbarItems()
-    const annotation = items.find(item => item.id === 'annotation')
-    const iconOf = (id: string) =>
-      annotation?.children?.find(child => child.id === id)?.icon
-
-    expect(iconOf('markup-cloud')).toContain('M6.4 12.2c-1.85 0-3.3-1.25')
-    expect(iconOf('markup-callout')).toContain('M4.4 12.6 10.2 7')
-    expect(iconOf('markup-callout')).toContain(
-      'x="10.2" y="1.2" width="7.8" height="5.8"'
-    )
-    expect(iconOf('markup-text')).toContain('M10 2.2 15.3 13.1h-2.2')
-    expect(iconOf('markup-rect')).toContain('x="5" y="2.8" width="8.2"')
-    expect(iconOf('markup-rect')).toContain('--el-color-primary')
-    expect(iconOf('markup-circle')).toContain('cx="9" cy="6.6" rx="4"')
-    expect(iconOf('markup-circle')).toContain('--el-color-primary')
-    expect(iconOf('markup-arrow')).toContain('rotate(-40 10 7.6)')
-    expect(iconOf('markup-stamp')).toContain('M624 475.968V640h144')
-    expect(iconOf('markup-panel')).toContain('M6.5 9.5h7M6.5 12h7')
-    expect(iconOf('markup-panel')).toContain('cx="14.5" cy="14.7" r="4.2"')
-    expect(iconOf('markup-panel')).toContain('--el-color-primary')
-    expect(iconOf('markup-import')).toContain('M4.5 2h6.4L15.5 6.6')
-    expect(iconOf('markup-export')).toContain('M15.5 2H9.1L4.5 6.6')
-    expect(iconOf('clear-markups')).toContain('viewBox="0 0 512 512"')
-    expect(iconOf('clear-markups')).toContain('M 459.5 0')
-    expect(
-      annotation?.children?.find(child => child.id === 'markup-vis')?.toggle?.on
-        .icon
-    ).toContain('M512 160c320 0 512 352')
   })
 
   it('uses the same measurement submenu icons as cad-viewer', () => {
@@ -577,37 +485,32 @@ describe('toolbar presets and separators', () => {
     const items = acuiResolveToolbarItems({
       items: [
         { preset: 'layer' },
-        { preset: 'annotation' },
         { preset: 'zoom' },
         { preset: 'settings' }
       ]
     })
     expect(items[0].label).toBe('toolbar.layer')
-    expect(items[1].label).toBe('toolbar.annotation')
-    expect(items[2].id).toBe('zoom')
-    expect(items[3].id).toBe('settings')
+    expect(items[1].id).toBe('zoom')
+    expect(items[2].id).toBe('settings')
   })
 
   it('uses phone labels for shared presets when layout is phone', () => {
     const items = acuiResolveToolbarItems(
-      { items: [{ preset: 'layer' }, { preset: 'annotation' }] },
+      { items: [{ preset: 'layer' }] },
       undefined,
       'phone'
     )
     expect(items[0].label).toBe('toolbar.layerShort')
-    expect(items[1].label).toBe('toolbar.annotationShort')
   })
 
   it('does not let phone variants overwrite desktop shared presets', () => {
     const desktop = acuiCreateDefaultToolbarPresetMap(undefined, 'desktop')
     expect(desktop.get('layer')?.label).toBe('toolbar.layer')
-    expect(desktop.get('annotation')?.label).toBe('toolbar.annotation')
     expect(desktop.get('zoom')?.id).toBe('zoom')
     expect(desktop.get('settings')?.id).toBe('settings')
 
     const phone = acuiCreateDefaultToolbarPresetMap(undefined, 'phone')
     expect(phone.get('layer')?.label).toBe('toolbar.layerShort')
-    expect(phone.get('annotation')?.label).toBe('toolbar.annotationShort')
   })
 
   it('preserves live layout children when expanding the layout preset', () => {
@@ -625,12 +528,12 @@ describe('toolbar presets and separators', () => {
       items: [
         { preset: 'select' },
         acuiCreateToolbarSeparator(),
-        { preset: 'annotation' }
+        { preset: 'measure' }
       ]
     })
     const visible = acuiFilterVisibleToolbarItems(items, AcEdOpenMode.Read)
     expect(visible.some(item => item.type === 'separator')).toBe(true)
     expect(visible.some(item => item.id === 'select')).toBe(true)
-    expect(visible.some(item => item.id === 'annotation')).toBe(false)
+    expect(visible.some(item => item.id === 'measure')).toBe(true)
   })
 })

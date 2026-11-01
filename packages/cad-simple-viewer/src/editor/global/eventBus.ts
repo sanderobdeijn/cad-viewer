@@ -95,7 +95,7 @@ export type AcEdEvents = {
   'undo-stack-changed': {}
   /**
    * Emitted when an outermost database undo mark is committed so session
-   * undo can interleave DB edits with Design Review markup history.
+   * undo can interleave DB edits with measurement history.
    */
   'session-db-edit-committed': {}
   /** Emitted when the application busy indicator is shown or hidden */

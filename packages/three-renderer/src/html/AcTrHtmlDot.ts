@@ -25,7 +25,7 @@ export interface AcTrHtmlDotOptions extends AcTrHtmlElementOptions {
 /**
  * Small circular HTML marker used as an overlay endpoint.
  *
- * Diameter and border use `em` so the marker tracks the measurement / markup
+ * Diameter and border use `em` so the marker tracks the measurement
  * badge font size (including Fit-to-screen clamps).
  */
 export class AcTrHtmlDot extends AcTrHtmlElement {

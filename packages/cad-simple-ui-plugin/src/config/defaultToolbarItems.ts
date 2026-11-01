@@ -5,29 +5,20 @@ import {
   type AcApLocale,
   acapRunDataSourceMenuAction,
   AcApSettingManager,
-  AcEdOpenMode,
   type AcEdUiTheme,
   acuiCopyDynamicToolbarChildren,
-  isMarkupVisible,
   isMeasurementVisible
 } from '@mlightcad/cad-simple-viewer'
 
 import {
-  ICON_ANNOTATION,
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
-  ICON_CLEAR_MARKUPS,
   ICON_CLEAR_MEASUREMENTS,
   ICON_FIND,
   ICON_LANGUAGE,
   ICON_LAYER,
-  ICON_MARKUP_ARROW,
-  ICON_MARKUP_CALLOUT,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
-  ICON_MARKUP_PANEL,
-  ICON_MARKUP_STAMP,
-  ICON_MARKUP_TEXT,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
   ICON_MEASURE_ARC,
@@ -43,9 +34,6 @@ import {
   ICON_PLACEMENT_RIGHT,
   ICON_PLACEMENT_TOP,
   ICON_READING_MODE,
-  ICON_REV_CIRCLE,
-  ICON_REV_CLOUD,
-  ICON_REV_RECT,
   ICON_SELECT,
   ICON_SETTINGS,
   ICON_SIMULATED_MOUSE,
@@ -351,104 +339,6 @@ function acuiCreateMeasureToolbarItem(): AcUiToolbarItem {
   }
 }
 
-function acuiCreateAnnotationToolbarItem(): AcUiToolbarItem {
-  return {
-    id: 'annotation',
-    label: 'toolbar.annotation',
-    icon: ICON_ANNOTATION,
-    minOpenMode: AcEdOpenMode.Review,
-    childrenUi: 'toolbar',
-    children: [
-      {
-        id: 'markup-cloud',
-        label: 'toolbar.markupCloud',
-        icon: ICON_REV_CLOUD,
-        command: 'markupcloud'
-      },
-      {
-        id: 'markup-callout',
-        label: 'toolbar.markupCallout',
-        icon: ICON_MARKUP_CALLOUT,
-        command: 'markupcallout'
-      },
-      {
-        id: 'markup-text',
-        label: 'toolbar.markupText',
-        icon: ICON_MARKUP_TEXT,
-        command: 'markuptext'
-      },
-      {
-        id: 'markup-rect',
-        label: 'toolbar.markupRect',
-        icon: ICON_REV_RECT,
-        command: 'markuprect'
-      },
-      {
-        id: 'markup-circle',
-        label: 'toolbar.markupCircle',
-        icon: ICON_REV_CIRCLE,
-        command: 'markupcircle'
-      },
-      {
-        id: 'markup-arrow',
-        label: 'toolbar.markupArrow',
-        icon: ICON_MARKUP_ARROW,
-        command: 'markuparrow'
-      },
-      {
-        id: 'markup-stamp',
-        label: 'toolbar.markupStamp',
-        icon: ICON_MARKUP_STAMP,
-        command: 'markupstamp'
-      },
-      {
-        id: 'markup-panel',
-        label: 'toolbar.markupPanel',
-        icon: ICON_MARKUP_PANEL,
-        command: 'markuppanel'
-      },
-      {
-        id: 'markup-vis',
-        toggle: {
-          getValue: isMarkupVisible,
-          on: {
-            label: 'toolbar.showMarkup',
-            icon: ICON_ANNOTATION_SHOW,
-            command: 'markupvis'
-          },
-          off: {
-            label: 'toolbar.hideMarkup',
-            icon: ICON_ANNOTATION_HIDE,
-            command: 'markupvis'
-          }
-        }
-      },
-      {
-        id: 'clear-markups',
-        label: 'toolbar.clearMarkups',
-        icon: ICON_CLEAR_MARKUPS,
-        command: 'clearmarkups'
-      },
-      {
-        type: 'separator',
-        id: 'sep-markup-import-export'
-      },
-      {
-        id: 'markup-import',
-        label: 'toolbar.markupImport',
-        icon: ICON_MARKUP_IMPORT,
-        command: 'markupimport'
-      },
-      {
-        id: 'markup-export',
-        label: 'toolbar.markupExport',
-        icon: ICON_MARKUP_EXPORT,
-        command: 'markupexport'
-      }
-    ]
-  }
-}
-
 /**
  * Builds the zoom parent with saved / extents / smart / window children.
  *
@@ -612,7 +502,6 @@ export function acuiCreateDefaultToolbarItems(
     },
     acuiCreateLayoutToolbarItem(),
     acuiCreateMeasureToolbarItem(),
-    acuiCreateAnnotationToolbarItem(),
     {
       type: 'separator',
       id: 'sep-settings'
@@ -624,7 +513,7 @@ export function acuiCreateDefaultToolbarItems(
 }
 
 /**
- * Builds the phone-layout toolbar: zoom, measure, annotation, layer, layout, settings.
+ * Builds the phone-layout toolbar: zoom, measure, layer, layout, settings.
  *
  * @param context - Optional callbacks for theme and locale items under settings.
  * @returns Default phone {@link AcUiToolbarItem} array.
@@ -636,10 +525,6 @@ export function acuiCreatePhoneToolbarItems(
     acuiCreateZoomToolbarItem(),
     acuiCreateFindToolbarItem(),
     acuiCreateMeasureToolbarItem(),
-    {
-      ...acuiCreateAnnotationToolbarItem(),
-      label: 'toolbar.annotationShort'
-    },
     {
       id: 'layer',
       label: 'toolbar.layerShort',

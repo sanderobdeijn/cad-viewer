@@ -9,7 +9,6 @@ export default {
     tab: {
       home: 'Domů',
       insert: 'Vložit',
-      review: 'Kontrola',
       measurement: 'Měření',
       hatchContext: 'Šrafování',
       mtextEditorContext: 'Editor textu'
@@ -208,7 +207,6 @@ export default {
       properties: 'Vlastnosti',
       utilities: 'Nástroje',
       annotation: 'Poznámky',
-      review: 'Kontrola',
       measurement: 'Měření',
       style: 'Styl',
       lengthUnits: 'Jednotky délky',
@@ -451,10 +449,6 @@ export default {
       text: 'Exportovat',
       description: 'Exportuje měření do sidecar JSON souboru'
     },
-    annotation: {
-      text: 'Poznámky',
-      description: 'Nástroje kontroly'
-    },
     layer: {
       text: 'Hladiny',
       description: 'Spravuje hladiny'
@@ -462,61 +456,6 @@ export default {
     pan: {
       text: 'Posun',
       description: 'Posune pohled beze změny směru pohledu a zvětšení'
-    },
-    markupPanel: {
-      text: 'Panel poznámek',
-      description: 'Otevře paletu poznámek'
-    },
-    markupText: {
-      text: 'Text',
-      description: 'Umístí textovou poznámku'
-    },
-    markupCloud: {
-      text: 'Obláček',
-      description: 'Vytvoří obláčkovou poznámku'
-    },
-    markupRect: {
-      text: 'Obdélník',
-      description: 'Vytvoří obdélníkovou poznámku'
-    },
-    markupCircle: {
-      text: 'Kružnice',
-      description: 'Vytvoří kruhovou poznámku'
-    },
-    markupArrow: {
-      text: 'Šipka',
-      description: 'Vytvoří šipkovou poznámku'
-    },
-    markupLine: {
-      text: 'Úsečka',
-      description: 'Vytvoří liniovou poznámku'
-    },
-    markupCallout: {
-      text: 'Odkaz',
-      description: 'Vytvoří odkazovou poznámku'
-    },
-    markupStamp: {
-      text: 'Razítko',
-      description: 'Umístí razítko'
-    },
-    markupImport: {
-      text: 'Importovat',
-      description: 'Importuje poznámky ze sidecar JSON souboru'
-    },
-    markupExport: {
-      text: 'Exportovat',
-      description: 'Exportuje poznámky do sidecar JSON souboru'
-    },
-    markupColor: {
-      text: 'Barva',
-      description: 'Nastaví barvu nových poznámek'
-    },
-    markupFontSize: {
-      text: 'Výška textu',
-      description:
-        'Otevře nastavení výšky textu poznámek (přizpůsobit obrazovce nebo světová výška)',
-      fit: 'Fit',
-      wcs: 'WCS'
     },
     measurementColor: {
       text: 'Barva',
@@ -530,14 +469,6 @@ export default {
       fit: 'Fit',
       wcs: 'WCS'
     },
-    showMarkup: {
-      text: 'Zobrazit',
-      description: 'Zobrazí poznámky'
-    },
-    hideMarkup: {
-      text: 'Skrýt',
-      description: 'Skryje poznámky'
-    },
     showMeasurements: {
       text: 'Zobrazit',
       description: 'Zobrazí měření'
@@ -545,10 +476,6 @@ export default {
     hideMeasurements: {
       text: 'Skrýt',
       description: 'Skryje měření'
-    },
-    clearMarkups: {
-      text: 'Vymazat',
-      description: 'Vymaže všechny poznámky na aktuálním rozvržení'
     },
     select: {
       text: 'Vybrat',
@@ -755,29 +682,6 @@ export default {
       prompt: {
         firstCorner: 'Zadejte první roh oblasti počítání nebo [Celý]: ',
         secondCorner: 'Zadejte protilehlý roh: '
-      }
-    },
-    designReview: {
-      tab: 'Kontrola',
-      title: 'Kontrola',
-      searchPlaceholder: 'Hledat poznámky',
-      empty: 'Zatím žádné poznámky',
-      type: 'Typ',
-      status: 'Stav',
-      author: 'Autor',
-      summary: 'Souhrn',
-      details: 'Podrobnosti',
-      closeDetails: 'Zavřít podrobnosti',
-      label: 'Popisek',
-      comment: 'Komentář',
-      zoomTo: 'Přiblížit na',
-      delete: 'Odstranit',
-      clear: 'Vymazat vše',
-      statusValues: {
-        open: 'Otevřeno',
-        question: 'Otázka',
-        answered: 'Zodpovězeno',
-        closed: 'Uzavřeno'
       }
     },
     measurements: {

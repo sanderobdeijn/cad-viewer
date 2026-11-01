@@ -104,10 +104,8 @@ Each entity then gets two strings:
 | no match | — | deleted (left only) or added (right only) |
 
 Modified pairs emit **two** hits (one per side) with `pairedId` pointing at the
-other entity. Nearby differences are grouped into **change sets**. The markup
-toolbar can create built-in cloud markups around those sets. A cloud uses the
-Settings color for its single change kind (added, deleted, or modified);
-mixed-kind sets use the modified color. The results panel navigates
+other entity. Nearby differences are grouped into **change sets**. The results
+panel navigates
 `deleted → modified (left) → added`.
 
 The Settings dialog (Colors / Objects / Geometry tabs) edits compare colors
@@ -196,8 +194,5 @@ await viewer.openDocument('left', file.name, await file.arrayBuffer())
 - Side-by-side or overlay view modes
 - Drop a DWG/DXF onto a pane, or click the pane / open-file icon
 - Compare results panel (by change kind or entity type) with prev/next navigation
-- Markup tools (cloud, callout, text, rect, circle, arrow, stamp, …)
-- Show / hide markups, and clear markups on both drawings
-- Generate cloud markups from compare change sets
 - Compare display mode: gray base, deleted red, added green (configurable)
 - Strings go through `AcApI18n` (`diffViewer.*`)

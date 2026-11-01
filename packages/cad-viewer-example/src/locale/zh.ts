@@ -34,8 +34,6 @@ export default {
       accessMode: '访问模式',
       read: '只读',
       readHint: '仅查看',
-      review: '审阅',
-      reviewHint: '查看和审阅',
       write: '可写',
       writeHint: '完整权限',
 

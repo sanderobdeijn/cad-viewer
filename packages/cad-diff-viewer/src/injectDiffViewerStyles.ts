@@ -572,8 +572,7 @@ const CSS = `
   border-left-color: var(--ml-diff-modified);
 }
 
-.ml-diff-result-item,
-.ml-diff-markup-item {
+.ml-diff-result-item {
   display: block;
   width: 100%;
   padding: 0.4rem 0.7rem;
@@ -630,7 +629,6 @@ const CSS = `
 }
 
 .ml-diff-result-item:hover,
-.ml-diff-markup-item:hover,
 .ml-diff-result-item.is-active,
 .ml-diff-result-row:hover,
 .ml-diff-result-row.is-active {
@@ -654,8 +652,7 @@ const CSS = `
   border-left-color: var(--ml-diff-modified);
 }
 
-.ml-diff-result-meta,
-.ml-diff-markup-meta {
+.ml-diff-result-meta {
   display: block;
   margin-top: 0.15rem;
   font-size: 0.7rem;

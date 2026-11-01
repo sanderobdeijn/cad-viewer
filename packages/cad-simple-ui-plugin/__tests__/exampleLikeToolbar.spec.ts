@@ -68,7 +68,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
         clearSessionOverride: jest.fn()
       }
     },
-    isMarkupVisible: () => true,
     isMeasurementVisible: () => true,
     AcEdCommand: class {},
     AcEdCommandStack: class {
@@ -88,22 +87,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
     acedApplyUiTheme: jest.fn(),
     isLightColorTheme: jest.fn(() => false),
     eventBus: { on: jest.fn(), off: jest.fn() },
-    getMarkupStore: () => ({
-      list: () => [],
-      subscribe: () => () => undefined,
-      updateMeta: jest.fn()
-    }),
-    getMarkupPresenter: () => ({
-      select: jest.fn(),
-      focus: jest.fn(),
-      unpublish: jest.fn(),
-      publish: jest.fn(),
-      clearVisuals: jest.fn()
-    }),
-    runMarkupEdit: (_view: unknown, _label: string, mutate: () => void) => {
-      mutate()
-    },
-    MARKUP_STATUSES: ['open', 'question', 'answered', 'closed'],
     listLayoutMeasurements: () => [],
     getMeasurementValueText: () => '',
     getSelectedMeasurementId: () => undefined,

@@ -9,7 +9,6 @@ export default {
     tab: {
       home: '常用',
       insert: '插入',
-      review: '审阅',
       measurement: '测量',
       hatchContext: '填充',
       mtextEditorContext: '文字编辑器'
@@ -205,7 +204,6 @@ export default {
       properties: '属性',
       utilities: '实用工具',
       annotation: '批注',
-      review: '审阅',
       measurement: '测量',
       style: '样式',
       lengthUnits: '长度单位',
@@ -422,10 +420,6 @@ export default {
       text: '导出',
       description: '将测量标注导出为 sidecar JSON 文件'
     },
-    annotation: {
-      text: '批注',
-      description: '审阅工具'
-    },
     layer: {
       text: '图层',
       description: '管理图层'
@@ -433,60 +427,6 @@ export default {
     pan: {
       text: '移动',
       description: '平移视图'
-    },
-    markupPanel: {
-      text: '批注面板',
-      description: '打开批注面板'
-    },
-    markupText: {
-      text: '文字',
-      description: '放置文字批注'
-    },
-    markupCloud: {
-      text: '云线',
-      description: '创建云线批注'
-    },
-    markupRect: {
-      text: '矩形',
-      description: '创建矩形批注'
-    },
-    markupCircle: {
-      text: '圆',
-      description: '创建圆形批注'
-    },
-    markupArrow: {
-      text: '箭头',
-      description: '创建箭头批注'
-    },
-    markupLine: {
-      text: '直线',
-      description: '创建直线批注'
-    },
-    markupCallout: {
-      text: '标注',
-      description: '创建引线标注'
-    },
-    markupStamp: {
-      text: '图章',
-      description: '放置图章'
-    },
-    markupImport: {
-      text: '导入',
-      description: '从 sidecar JSON 文件导入批注'
-    },
-    markupExport: {
-      text: '导出',
-      description: '将批注导出为 sidecar JSON 文件'
-    },
-    markupColor: {
-      text: '颜色',
-      description: '设置新建批注的颜色'
-    },
-    markupFontSize: {
-      text: '字高',
-      description: '打开字高设置（适应屏幕或世界坐标高度）',
-      fit: '适应',
-      wcs: 'WCS'
     },
     measurementColor: {
       text: '颜色',
@@ -498,14 +438,6 @@ export default {
       fit: '适应',
       wcs: 'WCS'
     },
-    showMarkup: {
-      text: '显示批注',
-      description: '显示批注'
-    },
-    hideMarkup: {
-      text: '隐藏批注',
-      description: '隐藏批注'
-    },
     showMeasurements: {
       text: '显示测量',
       description: '显示测量标注'
@@ -513,10 +445,6 @@ export default {
     hideMeasurements: {
       text: '隐藏测量',
       description: '隐藏测量标注'
-    },
-    clearMarkups: {
-      text: '清除',
-      description: '清除当前布局上的所有批注'
     },
     select: {
       text: '选择',
@@ -724,29 +652,6 @@ export default {
       prompt: {
         firstCorner: '指定计数区域的第一个角点或 [Entire(整个)]: ',
         secondCorner: '指定对角点: '
-      }
-    },
-    designReview: {
-      tab: '批注',
-      title: '批注',
-      searchPlaceholder: '搜索批注',
-      empty: '暂无批注',
-      type: '类型',
-      status: '状态',
-      author: '作者',
-      summary: '摘要',
-      details: '详情',
-      closeDetails: '关闭详情',
-      label: '标签',
-      comment: '评论',
-      zoomTo: '缩放到',
-      delete: '删除',
-      clear: '全部清除',
-      statusValues: {
-        open: '打开',
-        question: '疑问',
-        answered: '已答复',
-        closed: '已关闭'
       }
     },
     measurements: {

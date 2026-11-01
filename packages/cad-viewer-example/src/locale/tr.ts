@@ -34,8 +34,6 @@ export default {
       accessMode: 'Erişim modu',
       read: 'Oku',
       readHint: 'Yalnızca görüntüle',
-      review: 'İnceleme',
-      reviewHint: 'Görüntüle ve incele',
       write: 'Yaz',
       writeHint: 'Tam erişim',
 

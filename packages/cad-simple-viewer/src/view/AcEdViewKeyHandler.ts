@@ -1,5 +1,4 @@
 import { AcApDocManager } from '../app'
-import { runMarkupEdit } from '../command/markup/AcApMarkupHistory'
 import { runMeasurementEdit } from '../command/measure/AcApMeasurementHistory'
 import { MEASUREMENT_LAYER } from '../command/measure/AcApMeasurementStore'
 import { AcEdMTextEditor } from '../editor/input/ui/AcEdMTextEditor'
@@ -82,14 +81,6 @@ export class AcEdViewKeyHandler {
                 }
               })
             }
-            const hasMarkupSelection =
-              selected.some(group => group.layer !== MEASUREMENT_LAYER) ||
-              (selected.length === 0 && ht.hasSelection())
-            if (hasMarkupSelection) {
-              runMarkupEdit(this.view, 'Delete Markup', () => {
-                removed = ht.deleteSelected() || removed
-              })
-            }
           }
           if (removed) {
             this.view.isHtmlDirty = true
@@ -97,7 +88,7 @@ export class AcEdViewKeyHandler {
             return true
           }
           // lookupGlobalCmd applies the current document's open mode, so it
-          // returns undefined in read/review mode and the keypress is
+          // returns undefined in read mode and the keypress is
           // silently ignored instead of surfacing an error message.
           if (AcApDocManager.instance.lookupGlobalCmd('erase')) {
             AcApDocManager.instance.sendStringToExecute('erase')

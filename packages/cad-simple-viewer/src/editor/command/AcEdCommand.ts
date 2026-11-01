@@ -184,7 +184,7 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
   /**
    * Sets the minimum access mode required to execute this command.
    *
-   * @param value - The minimum access mode (Read, Review, or Write)
+   * @param value - The minimum access mode (Read or Write)
    */
   set mode(value: AcEdOpenMode) {
     this._mode = value
@@ -342,8 +342,8 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
       return false
     }
     return (
-      context.doc.openMode >= AcEdOpenMode.Review &&
-      this.mode >= AcEdOpenMode.Review
+      context.doc.openMode >= AcEdOpenMode.Write &&
+      this.mode >= AcEdOpenMode.Write
     )
   }
 

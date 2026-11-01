@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: 브라우저에서 CAD 보기 및 검토
-  tagline: DWG / DXF 도면을 설치나 백엔드 없이 바로 여세요. 주석과 측정도 완비.
+  tagline: DWG / DXF 도면을 설치나 백엔드 없이 바로 여세요. 측정도 완비.
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: DWG / DXF 지원
     details: 모델 공간, 레이아웃, 레이어, 블록, 외부 참조를 포함한 고충실도 도면 표시.
   - icon: 📏
-    title: 측정 및 주석
-    details: 정확한 거리, 면적, 각도, 호 길이 측정에 더해 화살표, 구름, 텍스트, 풍선 주석 — 설계 검토에 필요한 모든 것.
+    title: 측정
+    details: 브라우저에서 바로 정확한 거리, 면적, 각도, 호 길이를 측정합니다.
   - icon: ✏️
     title: 뷰어 그 이상
     details: AutoCAD 같은 명령 경험으로 지오메트리를 선택, 편집, 생성 — 읽기 전용 미리보기가 아닌 웹에서의 실제 작업.

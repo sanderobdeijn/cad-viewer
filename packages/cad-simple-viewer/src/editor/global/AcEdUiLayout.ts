@@ -28,7 +28,7 @@ export const ML_UI_SESSION_PANEL_INSET = 24
 export const ML_UI_SESSION_PANEL_MAX_WIDTH = `calc(100vw - ${ML_UI_SESSION_PANEL_INSET}px)`
 
 /**
- * Z-index for screen-space stroke canvases (measure / markup lines, arcs,
+ * Z-index for screen-space stroke canvases (measure lines, arcs,
  * fills). Kept below capsule labels; see {@link ML_UI_Z_CANVAS_HTML_OVERLAY}.
  *
  * Must match `.ml-html-canvas` in `@mlightcad/three-renderer`.
@@ -36,7 +36,7 @@ export const ML_UI_SESSION_PANEL_MAX_WIDTH = `calc(100vw - ${ML_UI_SESSION_PANEL
 export const ML_UI_Z_CANVAS_HTML_STROKE = 1
 
 /**
- * Z-index for world-anchored HTML labels (CSS2D measure / markup capsules).
+ * Z-index for world-anchored HTML labels (CSS2D measure capsules).
  *
  * Above stroke canvases ({@link ML_UI_Z_CANVAS_HTML_STROKE}); below command
  * line, mobile chrome, draw-style toolbar, and modal dialogs.

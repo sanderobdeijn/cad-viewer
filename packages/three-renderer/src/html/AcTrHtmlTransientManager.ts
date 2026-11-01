@@ -452,7 +452,7 @@ export class AcTrHtmlTransientManager {
   /**
    * Enable or disable pointer hit-testing on published HTML overlays.
    *
-   * Disabled while a CAD command is acquiring points so measurement / markup
+   * Disabled while a CAD command is acquiring points so measurement
    * endpoint DOM cannot swallow OSNAP clicks meant for the canvas.
    *
    * @param enabled - `true` to allow overlay grips/badges to receive pointers

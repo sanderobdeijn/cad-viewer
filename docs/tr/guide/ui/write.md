@@ -4,9 +4,9 @@ title: Yazma Modu
 
 # Yazma Modu
 
-Yazma modu, özellikleri en eksiksiz olan moddur. İnceleme modunun tüm yeteneklerine ek olarak, DWG/DXF üzerinde doğrudan öğe oluşturma, düzenleme ve silme destekler; web ürününün yalnızca salt okunur önizleme değil, gerçek çizim işlerini de üstlenmesini sağlar.
+Yazma modu, özellikleri en eksiksiz olan moddur. Salt okunur modun tüm yeteneklerine ek olarak, DWG/DXF üzerinde doğrudan öğe oluşturma, düzenleme ve silme destekler; web ürününün yalnızca salt okunur önizleme değil, gerçek çizim işlerini de üstlenmesini sağlar.
 
-Salt okunur veya inceleme modu açıkça belirtilmedikçe, bir dosya açıldığında varsayılan olarak yazma modu kullanılır.
+Salt okunur mod açıkça belirtilmedikçe, bir dosya açıldığında varsayılan olarak yazma modu kullanılır.
 
 ## Masaüstü
 
@@ -26,7 +26,6 @@ Ribbon, tüm AutoCAD tarzı sekmeleri tam olarak görüntüler:
 | Layers | Katman yönetimi (açma/kapama, dondurma/çözme, kilitleme, yalıtma, yeni, silme) |
 | Properties | Renk, çizgi tipi, çizgi kalınlığı, katman seçici |
 | Measure | Tüm ölçüm komutları |
-| Markup | Tüm işaretleme komutları |
 
 ### Command Line
 
@@ -37,7 +36,7 @@ Tuvalin altında bir komut satırı penceresi, komut adlarının doğrudan yazı
 
 ### Sağ Taraf Araç Çubuğu
 
-İnceleme mod araçlarına ek olarak, bir **Seç / Düzenle araç grubu** vardır:
+Salt okunur mod araçlarına ek olarak, bir **Seç / Düzenle araç grubu** vardır:
 
 - Seç
 - Pan
@@ -45,7 +44,6 @@ Tuvalin altında bir komut satırı penceresi, komut adlarının doğrudan yazı
 - Pencere Yakınlaştırma
 - Katman Yönetimi
 - Ölçüm araç grubu
-- İşaretleme araç grubu
 - Okuma Modu
 - Açık/Koyu Arka Planı Değiştir
 
@@ -56,7 +54,6 @@ Tuvalin altında bir komut satırı penceresi, komut adlarının doğrudan yazı
 | Layers | Tam katman yönetimi |
 | Properties | Seçili öğenin özellikleri (tür, koordinatlar, katman, renk, çizgi tipi, çizgi kalınlığı, vb.), düzenlenebilir |
 | Measurements | Ölçüm sonucu yönetimi |
-| Review (Markup) | İşaretleme yönetimi |
 | Statistics | Blok kullanım istatistikleri |
 | Missing Resources | Yazı tipi / dış referans uyarıları |
 

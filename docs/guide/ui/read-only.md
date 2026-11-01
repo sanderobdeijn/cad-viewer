@@ -4,7 +4,7 @@ title: Read-Only Mode
 
 # Read-Only Mode
 
-Read-only mode is for purely viewing and measuring drawings. The DWG/DXF background is completely non-editable; markup, drawing, and modification commands are all unavailable.
+Read-only mode is for purely viewing and measuring drawings. The DWG/DXF background is completely non-editable; drawing and modification commands are unavailable.
 
 Upon entering read-only mode, the interface automatically adapts its layout based on the device type.
 
@@ -52,7 +52,7 @@ Mobile uses a **bottom tab bar + drawer panel** design, concentrating all intera
 
 ### Bottom Tab Bar
 
-Six icon buttons are displayed at the bottom of the screen:
+Five icon buttons are displayed at the bottom of the screen:
 
 <MobileBottomTabBar mode="readonly" />
 
@@ -60,7 +60,6 @@ Six icon buttons are displayed at the bottom of the screen:
 |---|---|
 | Zoom | Zoom tool group: zoom in, zoom out, zoom to extents, window zoom |
 | Measure | Measure tool group: distance, continuous distance, area, coordinates, arc length, angle |
-| Review | Markup entry (disabled in read-only mode, grayed out) |
 | Layers | Opens layer panel drawer |
 | Layout | Switch layout |
 | Setting | Settings menu: theme, simulated mouse, OSNAP, etc. |

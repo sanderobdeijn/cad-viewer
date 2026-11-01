@@ -56,7 +56,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
     },
     AcEdOpenMode: {
       Read: 0,
-      Review: 4,
       Write: 8
     },
     AcApI18n: {
@@ -87,7 +86,6 @@ jest.mock('@mlightcad/cad-simple-viewer', () => {
         clearSessionOverride: jest.fn()
       }
     },
-    isMarkupVisible: () => true,
     isMeasurementVisible: () => true
   })
 })

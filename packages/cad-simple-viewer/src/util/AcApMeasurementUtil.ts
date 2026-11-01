@@ -21,7 +21,7 @@ export const MEASUREMENT_LINE_WEIGHT = OVERLAY_HAIRLINE_LINE_WEIGHT
 /** Factory default screen font size (CSS px) for measurement badges. */
 export const MEASUREMENT_FONT_SIZE = 13
 
-/** Authoring mode for measurement / markup text height. */
+/** Authoring mode for measurement text height. */
 export type AcApTextHeightMode = 'adaptive' | 'custom'
 
 /** Session draw color for newly created measurements (undefined = use sysvar). */

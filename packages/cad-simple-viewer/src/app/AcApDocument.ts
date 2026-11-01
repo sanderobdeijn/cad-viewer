@@ -227,7 +227,7 @@ export class AcApDocument {
   /**
    * Gets the access mode of the document.
    *
-   * @returns The access mode (Read, Review, or Write)
+   * @returns The access mode (Read or Write)
    */
   get openMode() {
     return this._openMode

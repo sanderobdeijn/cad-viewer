@@ -1,5 +1,5 @@
 /**
- * Shared canvas helpers for markup / measure overlay drawing.
+ * Shared canvas helpers for measure overlay drawing.
  */
 
 import type { AcTrHtmlElement } from '@mlightcad/three-renderer'
@@ -128,7 +128,7 @@ export function acapOverlayArrowSize(
 /**
  * Arrow-head length in CSS pixels that stays a fixed world size.
  *
- * Used by committed distance measurements and arrow markups. Seeds
+ * Used by committed distance measurements. Seeds
  * {@link ACAP_OVERLAY_ARROW_SIZE_PX} as WCS on first paint (the size shown
  * during the jig) unless `arrowSizeWcs` is provided.
  */

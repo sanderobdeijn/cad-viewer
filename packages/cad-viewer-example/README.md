@@ -6,7 +6,7 @@ A Vue 3 demo that embeds [`@mlightcad/cad-viewer`](https://github.com/mlightcad/
 
 - **Full CAD UI** — `MlCadViewer` with toolbars, layer manager, command line, dialogs, and status bar
 - **Local files** — Drag-and-drop or file picker for `.dxf` / `.dwg` before entering the viewer
-- **Open modes** — Read, Review, or Write access when opening a drawing
+- **Open modes** — Read or Write access when opening a drawing
 - **Internationalization** — Built-in English/Chinese UI via `vue-i18n`; host app can merge custom messages
 - **Custom commands** — Example `quit` / `exit` commands return to the upload screen
 - **CDN assets** — Fonts and templates loaded from [cad-data](https://github.com/mlightcad/cad-data)
@@ -63,7 +63,7 @@ The build runs `vue-tsc`, then copies parser workers into `dist/` (see `vite.con
 ## Usage
 
 1. Start the dev server and open the URL shown in the terminal.
-2. On the upload screen, choose **Read**, **Review**, or **Write**, then drop or select a `.dxf` or `.dwg` file — or **From URL**.
+2. On the upload screen, choose **Read** or **Write**, then drop or select a `.dxf` or `.dwg` file — or **From URL**.
 3. The full `MlCadViewer` UI loads with your file. Use menus, ribbons, and the command line as in a desktop CAD host.
 4. Run `quit` or `exit` in the command line to close the drawing and return to the upload screen.
 
@@ -82,7 +82,7 @@ Integration patterns useful when embedding `@mlightcad/cad-viewer` in your own V
 |-------|----------------|
 | Viewer component | `<MlCadViewer :local-file="file" :mode="openMode" locale="en" base-url="…" @create="onCreate" />` |
 | App bootstrap | `createApp(App).use(i18n).mount('#app')` — `i18n` exported from `@mlightcad/cad-viewer` |
-| Open modes | `AcEdOpenMode` (Read / Review / Write) passed via `:mode` |
+| Open modes | `AcEdOpenMode` (Read / Write) passed via `:mode` |
 | Custom i18n | `AcApI18n.mergeLocaleMessage('en' \| 'zh', messages)` in `@create` (`src/locale/`) |
 | Custom commands | `AcApDocManager.instance.commandManager.addCommand(…)` — see `quit` / `exit` in `src/commands/` |
 | Upload flow | Reactive store + conditional render: upload screen until `selectedFile` is set |

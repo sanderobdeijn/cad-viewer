@@ -9,7 +9,6 @@
             <span class="wml-ribbon__filetab">File</span>
             <span class="wml-ribbon__tab wml-ribbon__tab--active">Home</span>
             <span class="wml-ribbon__tab">Insert</span>
-            <span class="wml-ribbon__tab">Review</span>
             <span class="wml-ribbon__tab">Measurement</span>
             <!-- Minimizer / chevron (▼) -->
             <span class="wml-ribbon__chev" title="Collapse ribbon">▼</span>
@@ -245,11 +244,8 @@ const rightBar = [
   { key: 'properties',   title: 'Properties',         icon: I.rbProperties },
   { key: 'layers',       title: 'Layers',             icon: I.rbLayers },
   { key: 'measurements', title: 'Measurements',       icon: I.rbMeasurements },
-  { key: 'review',       title: 'Review (markups)',   icon: I.rbReview },
-  { key: 'annotate',     title: 'Annotation tools',   icon: I.rbAnnotate },
   { key: 'window',       title: 'Select Window',      icon: I.rbSelectWindow },
   { key: 'mPanel',       title: 'Measurement Panel',  icon: I.rbMeasurementPanel },
-  { key: 'agent',        title: 'CAD Agent',          icon: I.rbAgent },
 ]
 
 const statusBar = [

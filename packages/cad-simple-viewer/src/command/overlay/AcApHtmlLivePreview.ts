@@ -1,5 +1,5 @@
 /**
- * HTML-only live preview stroke for markup / measure jigs.
+ * HTML-only live preview stroke for measure jigs.
  *
  * Uses {@link AcTrHtmlCanvasOverlay} on a live layer; never adds AcDb entities.
  * Updates set {@link AcTrView2d.isHtmlDirty} only (not {@link AcTrView2d.isDirty}),

@@ -6,9 +6,6 @@ export const commandEn = {
     layer: {
       description: 'Opens or closes the layer manager dock panel'
     },
-    markuppanel: {
-      description: 'Opens the review palette dock panel'
-    },
     measurementpanel: {
       description: 'Opens the measurement list dock panel'
     },

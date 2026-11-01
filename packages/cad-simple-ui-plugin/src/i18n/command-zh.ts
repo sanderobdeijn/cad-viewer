@@ -6,9 +6,6 @@ export const commandZh = {
     layer: {
       description: '打开或关闭图层管理器停靠面板'
     },
-    markuppanel: {
-      description: '打开批注面板停靠页'
-    },
     measurementpanel: {
       description: '打开测量列表面板'
     },

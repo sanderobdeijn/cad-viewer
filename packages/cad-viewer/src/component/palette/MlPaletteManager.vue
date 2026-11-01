@@ -42,12 +42,6 @@
           <ml-find-palette />
         </div>
         <div
-          v-else-if="store.dialogs.activePaletteTab === 'designReview'"
-          class="ml-design-review-wrapper"
-        >
-          <ml-design-review-palette />
-        </div>
-        <div
           v-else-if="store.dialogs.activePaletteTab === 'measurements'"
           class="ml-measurement-palette-wrapper"
         >
@@ -101,7 +95,6 @@ import { useSelectionSet, useViewerRect } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlBlocksPalette from './MlBlocksPalette.vue'
 import MlCountList from './MlCountList.vue'
-import MlDesignReviewPalette from './MlDesignReviewPalette.vue'
 import MlEntityProperties from './MlEntityProperties.vue'
 import MlFindPalette from './MlFindPalette.vue'
 import MlLayerList from './MlLayerList.vue'
@@ -210,7 +203,6 @@ const baseTabNames = [
   'entityProperties',
   'countList',
   'find',
-  'designReview',
   'measurements',
   'blocks',
   'missingResources',
@@ -317,15 +309,6 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
 }
 
 .ml-find-palette-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-design-review-wrapper {
   overflow: hidden;
   width: 100%;
   height: 100%;

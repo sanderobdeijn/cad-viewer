@@ -52,7 +52,7 @@ export class AcTrStyleManager {
   private fillMgr: AcTrFillMaterialManager
   /**
    * When true, fat-line materials are used even if {@link showLineWeight}
-   * (LWDISPLAY) is off. Overlay transients (markup / measurement) set this
+   * (LWDISPLAY) is off. Overlay transients (measurement) set this
    * for the duration of conversion so ribbon lineweight is visible.
    */
   private _forceShowLineWeight = false

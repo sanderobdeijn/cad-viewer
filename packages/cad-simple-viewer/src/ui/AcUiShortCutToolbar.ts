@@ -2,7 +2,7 @@
  * Floating shortcut toolbar (undo / redo / erase) with an extension slot for
  * selection accessories.
  *
- * Keep this module free of {@link AcApDocManager} / markup / measure imports so
+ * Keep this module free of {@link AcApDocManager} / measure imports so
  * the offline HTML viewer-runtime can tree-shake it without pulling the full
  * viewer package.
  *

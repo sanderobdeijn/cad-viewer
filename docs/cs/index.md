@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: Prohlížení a revize CAD výkresů v prohlížeči
-  tagline: Otevírejte výkresy DWG / DXF okamžitě — bez instalace a bez backendu, s kompletními nástroji pro komentáře a měření.
+  tagline: Otevírejte výkresy DWG / DXF okamžitě — bez instalace a bez backendu, s kompletními nástroji pro měření.
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: Podpora DWG / DXF
     details: Věrné zobrazení výkresů včetně modelového prostoru, rozvržení, hladin, bloků a externích referencí.
   - icon: 📏
-    title: Měření a komentáře
-    details: Přesné měření vzdálenosti, plochy, úhlu a délky oblouku plus šipky, revizní oblaky, texty a bubliny — vše, co revize návrhu potřebuje.
+    title: Měření
+    details: Přesné měření vzdálenosti, plochy, úhlu a délky oblouku přímo v prohlížeči.
   - icon: ✏️
     title: Více než prohlížeč
     details: Vybírejte, upravujte a vytvářejte geometrii s ovládáním známým z AutoCADu — skutečné kreslení na webu, ne jen náhled ke čtení.

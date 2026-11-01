@@ -602,8 +602,7 @@ export class AcEdCommandStack {
    * Checks if a document mode is compatible with a command's required mode.
    *
    * Higher value modes are compatible with lower value modes.
-   * - Write mode (8) is compatible with Review (4) and Read (0) commands
-   * - Review mode (4) is compatible with Read (0) commands
+   * - Write mode (8) is compatible with Write (8) and Read (0) commands
    * - Read mode (0) is only compatible with Read (0) commands
    *
    * @param documentMode - The mode of the document

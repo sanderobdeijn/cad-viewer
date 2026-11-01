@@ -18,7 +18,6 @@ export default {
       ...enMain.ribbon.tab,
       home: 'الرئيسية',
       insert: 'إدراج',
-      review: 'مراجعة',
       measurement: 'القياس',
       hatchContext: 'التهشير',
       mtextEditorContext: 'محرر النص'
@@ -32,7 +31,6 @@ export default {
       properties: 'الخصائص',
       utilities: 'أدوات',
       annotation: 'تعليقات توضيحية',
-      review: 'مراجعة',
       measurement: 'القياس',
       style: 'النمط',
       lengthUnits: 'وحدات الطول',
@@ -648,12 +646,6 @@ export default {
       description: 'تصدير القياسات إلى ملف JSON جانبي'
     },
 
-    annotation: {
-      ...enMain.verticalToolbar.annotation,
-      text: 'تعليقات',
-      description: 'أدوات المراجعة'
-    },
-
     layer: {
       ...enMain.verticalToolbar.layer,
       text: 'الطبقات',
@@ -664,84 +656,6 @@ export default {
       ...enMain.verticalToolbar.pan,
       text: 'تحريك',
       description: 'تحريك العرض دون تغيير اتجاه الرؤية أو مستوى التكبير'
-    },
-
-    markupPanel: {
-      ...enMain.verticalToolbar.markupPanel,
-      text: 'لوحة المراجعة',
-      description: 'فتح لوحة المراجعة'
-    },
-
-    markupText: {
-      ...enMain.verticalToolbar.markupText,
-      text: 'نص',
-      description: 'إضافة تعليق نصي'
-    },
-
-    markupCloud: {
-      ...enMain.verticalToolbar.markupCloud,
-      text: 'سحابة',
-      description: 'إنشاء سحابة مراجعة'
-    },
-
-    markupRect: {
-      ...enMain.verticalToolbar.markupRect,
-      text: 'مستطيل',
-      description: 'إنشاء تعليق على شكل مستطيل'
-    },
-
-    markupCircle: {
-      ...enMain.verticalToolbar.markupCircle,
-      text: 'دائرة',
-      description: 'إنشاء تعليق على شكل دائرة'
-    },
-
-    markupArrow: {
-      ...enMain.verticalToolbar.markupArrow,
-      text: 'سهم',
-      description: 'إنشاء سهم مراجعة'
-    },
-
-    markupLine: {
-      ...enMain.verticalToolbar.markupLine,
-      text: 'خط',
-      description: 'إنشاء خط مراجعة'
-    },
-
-    markupCallout: {
-      ...enMain.verticalToolbar.markupCallout,
-      text: 'وسيلة شرح',
-      description: 'إنشاء وسيلة شرح'
-    },
-
-    markupStamp: {
-      ...enMain.verticalToolbar.markupStamp,
-      text: 'ختم',
-      description: 'إضافة ختم'
-    },
-
-    markupImport: {
-      ...enMain.verticalToolbar.markupImport,
-      text: 'استيراد',
-      description: 'استيراد علامات المراجعة من ملف JSON جانبي'
-    },
-
-    markupExport: {
-      ...enMain.verticalToolbar.markupExport,
-      text: 'تصدير',
-      description: 'تصدير علامات المراجعة إلى ملف JSON جانبي'
-    },
-
-    markupColor: {
-      ...enMain.verticalToolbar.markupColor,
-      text: 'اللون',
-      description: 'تحديد لون علامات المراجعة الجديدة'
-    },
-
-    markupFontSize: {
-      ...enMain.verticalToolbar.markupFontSize,
-      text: 'ارتفاع النص',
-      description: 'فتح إعدادات ارتفاع النص لعلامات المراجعة'
     },
 
     measurementColor: {
@@ -756,18 +670,6 @@ export default {
       description: 'فتح إعدادات ارتفاع النص للقياس المحدد أو القياسات الجديدة'
     },
 
-    showMarkup: {
-      ...enMain.verticalToolbar.showMarkup,
-      text: 'إظهار',
-      description: 'إظهار علامات المراجعة'
-    },
-
-    hideMarkup: {
-      ...enMain.verticalToolbar.hideMarkup,
-      text: 'إخفاء',
-      description: 'إخفاء علامات المراجعة'
-    },
-
     showMeasurements: {
       ...enMain.verticalToolbar.showMeasurements,
       text: 'إظهار',
@@ -778,12 +680,6 @@ export default {
       ...enMain.verticalToolbar.hideMeasurements,
       text: 'إخفاء',
       description: 'إخفاء القياسات'
-    },
-
-    clearMarkups: {
-      ...enMain.verticalToolbar.clearMarkups,
-      text: 'مسح',
-      description: 'حذف جميع علامات المراجعة من المخطط الحالي'
     },
 
     select: {
@@ -1082,40 +978,6 @@ export default {
 
         secondCorner:
           'حدد الركن المقابل: '
-      }
-    },
-
-    designReview: {
-      ...enMain.toolPalette.designReview,
-
-      tab: 'مراجعة',
-      title: 'المراجعة',
-
-      searchPlaceholder: 'البحث في علامات المراجعة',
-      empty: 'لا توجد علامات مراجعة حتى الآن',
-
-      type: 'النوع',
-      status: 'الحالة',
-      author: 'المؤلف',
-
-      summary: 'الملخص',
-      details: 'التفاصيل',
-      closeDetails: 'إغلاق التفاصيل',
-
-      label: 'التسمية',
-      comment: 'التعليق',
-
-      zoomTo: 'تكبير إلى',
-      delete: 'حذف',
-      clear: 'مسح الكل',
-
-      statusValues: {
-        ...enMain.toolPalette.designReview.statusValues,
-
-        open: 'مفتوح',
-        question: 'سؤال',
-        answered: 'تمت الإجابة',
-        closed: 'مغلق'
       }
     },
 

@@ -20,9 +20,9 @@ Genişletilmiş modda panel yukarıdan aşağıya doğru aşağıdaki bölümler
 
 ### Aksesuar / Başlık Satırı
 
-İlk satırın sol tarafında aktif komutun yerleştirdiği **Oturum Aksesuarı** gösterilir. Farklı komutlar farklı aksesuarlar yerleştirir — ölçüm ve açıklama komutları **Çizim Stili Oturum Aksesuarı** (renk + metin yüksekliği) yerleştirirken, PLine, Text gibi diğer komutlar kendi özel aksesuar kontrollerini yerleştirebilir. Eğer aktif komut **hiçbir oturum aksesuarı yerleştirmiyorsa**, ilk satırın sol tarafında komut istemi metni doğrudan gösterilir (ve aşağıda açıklanan istem satırı görünmez).
+İlk satırın sol tarafında aktif komutun yerleştirdiği **Oturum Aksesuarı** gösterilir. Farklı komutlar farklı aksesuarlar yerleştirir — ölçüm komutları **Çizim Stili Oturum Aksesuarı** (renk + metin yüksekliği) yerleştirirken, PLine, Text gibi diğer komutlar kendi özel aksesuar kontrollerini yerleştirebilir. Eğer aktif komut **hiçbir oturum aksesuarı yerleştirmiyorsa**, ilk satırın sol tarafında komut istemi metni doğrudan gösterilir (ve aşağıda açıklanan istem satırı görünmez).
 
-Aşağıdaki demo, bir çizim stili aksesuarının yerleştirildiği ölçüm / açıklama senaryosunu gösterir:
+Aşağıdaki demo, bir çizim stili aksesuarının yerleştirildiği ölçüm senaryosunu gösterir:
 
 | Kontrol | Simge | Amaç |
 |---|---|---|

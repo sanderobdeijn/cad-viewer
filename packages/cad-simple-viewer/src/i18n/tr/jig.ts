@@ -674,68 +674,6 @@ export default {
       chooseFile: 'Bir ölçüm sidecar JSON dosyası seçin'
     }
   },
-  markup: {
-    author: 'İnceleme yazarını belirtin (sonraki kullanımlar için kaydedilir)',
-    text: {
-      point: 'Metin işaretinin noktasını belirtin',
-      content: 'İşaret metnini girin'
-    },
-    line: {
-      firstPoint: 'Çizgi işaretinin ilk noktasını belirtin',
-      secondPoint: 'Çizgi işaretinin ikinci noktasını belirtin'
-    },
-    arrow: {
-      firstPoint: 'Okun başlangıç noktasını belirtin',
-      secondPoint: 'Ok ucunu belirtin'
-    },
-    cloud: {
-      firstCorner: 'Bulutun ilk köşesini belirtin',
-      secondCorner: 'Bulutun karşı köşesini belirtin'
-    },
-    rect: {
-      firstCorner: 'Dikdörtgenin ilk köşesini belirtin',
-      secondCorner: 'Dikdörtgenin karşı köşesini belirtin'
-    },
-    circle: {
-      center: 'Dairenin merkezini belirtin',
-      radius: 'Dairenin yarıçapını belirtin'
-    },
-    shape: {
-      calloutOn: '[Çağrı açık]',
-      calloutOff: '[Çağrı kapalı]',
-      calloutAnchor: 'Çağrı metninin konumunu belirtin',
-      keywords: {
-        callout: {
-          display: 'Çağrı(C)',
-          local: 'Çağrı',
-          global: 'Callout'
-        },
-        noCallout: {
-          display: 'ÇağrıYok(N)',
-          local: 'ÇağrıYok',
-          global: 'NoCallout'
-        }
-      }
-    },
-    highlight: {
-      firstCorner: 'Vurgu dikdörtgeninin ilk köşesini belirtin',
-      secondCorner: 'Vurgu dikdörtgeninin karşı köşesini belirtin'
-    },
-    callout: {
-      tip: 'Lider ucunu veya çağrısı olmayan bulut/dikdörtgen/daire dış çerçevesini belirtin',
-      anchor: 'Çağrı metninin konumunu belirtin',
-      content: 'Çağrı metnini girin'
-    },
-    stamp: {
-      kind: 'Damga kimliğini girin [approved/rejected/revised/for-review/custom]',
-      imageUrl: 'Özel damga görüntüsü URL’sini girin (isteğe bağlı)',
-      caption: 'Damga açıklamasını girin (isteğe bağlı)',
-      point: 'Damga ekleme noktasını belirtin'
-    },
-    import: {
-      chooseFile: 'Bir işaret sidecar JSON dosyası seçin'
-    }
-  },
   move: {
     basePointOrDisplacement: 'Temel noktayı belirtin veya',
     secondPointOrDisplacement: 'İkinci noktayı belirtin veya',

@@ -146,7 +146,7 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 
 | 패키지 | 역할 | 명령 / 기능 |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer`용 **툴바·레이어 관리자·검토 팔레트 UI**(순수 DOM, Vue/React 없음) | `layer`, `markuppanel`, 기본 툴바(보기, 측정, 내보내기, 검토, 테마, 로케일) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | `cad-simple-viewer`용 **툴바·레이어 관리자·측정 팔레트 UI**(순수 DOM, Vue/React 없음) | `layer`, `measurementpanel`, 기본 툴바(보기, 측정, 테마, 로케일) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — 간단한 뷰어용 UI 크롬
 
@@ -155,7 +155,7 @@ CAD-Viewer는 [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer)의 �
 제공 기능:
 
 - **구성 가능한 툴바**(임의의 가장자리 배치, 기본 CAD 명령, 중첩 메뉴, 커스텀 항목)
-- **독 패널**: **레이어 관리자** 탭(레이어 켜기/끄기, ACI 색상 선택기, 더블클릭으로 레이어로 줌)과 **검토 팔레트** 탭(마크업 목록, 상태, 댓글)
+- **독 패널**: **레이어 관리자** 탭(레이어 켜기/끄기, ACI 색상 선택기, 더블클릭으로 레이어로 줌)과 **측정** 탭
 - **`COLORTHEME` sysvar 및 호스트 요소의 `--ml-ui-*` CSS 토큰과 테마 동기화**
 - **`AcApI18n`과 로케일 동기화**(영어 / 중국어 / 체코어 / 터키어)
 

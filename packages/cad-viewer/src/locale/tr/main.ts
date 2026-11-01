@@ -9,7 +9,6 @@ export default {
     tab: {
       home: 'Ana Sayfa',
       insert: 'Ekle',
-      review: 'İnceleme',
       measurement: 'Ölçüm',
       hatchContext: 'Tarama',
       mtextEditorContext: 'Metin Düzenleyici'
@@ -209,7 +208,6 @@ export default {
       properties: 'Özellikler',
       utilities: 'Yardımcı Araçlar',
       annotation: 'Açıklama',
-      review: 'İnceleme',
       measurement: 'Ölçüm',
       style: 'Stil',
       lengthUnits: 'Uzunluk Birimleri',
@@ -461,10 +459,6 @@ export default {
       text: 'Dışa Aktar',
       description: 'Ölçümleri sidecar JSON dosyasına dışa aktarır'
     },
-    annotation: {
-      text: 'Açıklama',
-      description: 'İnceleme araçları'
-    },
     layer: {
       text: 'Katman',
       description: 'Katmanları yönetir'
@@ -473,61 +467,6 @@ export default {
       text: 'Kaydır',
       description:
         'Görüntüleme yönünü veya büyütmeyi değiştirmeden görünümü kaydırır'
-    },
-    markupPanel: {
-      text: 'İşaret paneli',
-      description: 'İşaret paletini açar'
-    },
-    markupText: {
-      text: 'Metin',
-      description: 'Metin işareti yerleştirir'
-    },
-    markupCloud: {
-      text: 'Bulut',
-      description: 'Bulut işareti oluşturur'
-    },
-    markupRect: {
-      text: 'Dikdörtgen',
-      description: 'Dikdörtgen işareti oluşturur'
-    },
-    markupCircle: {
-      text: 'Daire',
-      description: 'Daire işareti oluşturur'
-    },
-    markupArrow: {
-      text: 'Ok',
-      description: 'Ok işareti oluşturur'
-    },
-    markupLine: {
-      text: 'Çizgi',
-      description: 'Çizgi işareti oluşturur'
-    },
-    markupCallout: {
-      text: 'Çağrı',
-      description: 'Çağrı notu oluşturur'
-    },
-    markupStamp: {
-      text: 'Damga',
-      description: 'Damga yerleştirir'
-    },
-    markupImport: {
-      text: 'İçe Aktar',
-      description: 'İşaretleri sidecar JSON dosyasından içe aktarır'
-    },
-    markupExport: {
-      text: 'Dışa Aktar',
-      description: 'İşaretleri sidecar JSON dosyasına dışa aktarır'
-    },
-    markupColor: {
-      text: 'Renk',
-      description: 'Yeni işaret çizimleri için rengi ayarlar'
-    },
-    markupFontSize: {
-      text: 'Yazı yüksekliği',
-      description:
-        'İşaretler için yazı yüksekliği ayarlarını açar (ekrana sığdır veya dünya yüksekliği)',
-      fit: 'Fit',
-      wcs: 'WCS'
     },
     measurementColor: {
       text: 'Renk',
@@ -540,14 +479,6 @@ export default {
       fit: 'Fit',
       wcs: 'WCS'
     },
-    showMarkup: {
-      text: 'Göster',
-      description: 'İşaretleri gösterir'
-    },
-    hideMarkup: {
-      text: 'Gizle',
-      description: 'İşaretleri gizler'
-    },
     showMeasurements: {
       text: 'Göster',
       description: 'Ölçümleri gösterir'
@@ -555,10 +486,6 @@ export default {
     hideMeasurements: {
       text: 'Gizle',
       description: 'Ölçümleri gizler'
-    },
-    clearMarkups: {
-      text: 'Temizle',
-      description: 'Geçerli yerleşimdeki tüm işaretleri temizler'
     },
     select: {
       text: 'Seç',
@@ -768,29 +695,6 @@ export default {
       prompt: {
         firstCorner: 'Sayım alanının ilk köşesini belirtin veya [Entire]: ',
         secondCorner: 'Karşı köşeyi belirtin: '
-      }
-    },
-    designReview: {
-      tab: 'İnceleme',
-      title: 'İnceleme',
-      searchPlaceholder: 'İşaretlerde ara',
-      empty: 'Henüz işaret yok',
-      type: 'Tür',
-      status: 'Durum',
-      author: 'Yazar',
-      summary: 'Özet',
-      details: 'Ayrıntılar',
-      closeDetails: 'Ayrıntıları kapat',
-      label: 'Etiket',
-      comment: 'Yorum',
-      zoomTo: 'Yakınlaştır',
-      delete: 'Sil',
-      clear: 'Tümünü temizle',
-      statusValues: {
-        open: 'Açık',
-        question: 'Soru',
-        answered: 'Yanıtlandı',
-        closed: 'Kapalı'
       }
     },
     measurements: {

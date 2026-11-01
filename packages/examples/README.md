@@ -50,7 +50,6 @@ The host supplies one parent container; the component creates both canvases.
 - Drop a DWG/DXF onto a pane, or click the pane / open-file icon
 - Side-by-side or overlay view modes with compare coloring (gray / red / green)
 - Results panel grouped by change kind or entity type, with prev/next navigation
-- Markup tools and a markups tab listing annotations from both drawings
 - Click a loaded pane to pan, zoom, and send commands to that drawing
 - Loading overlay stays on the pane that is opening
 - UI strings use `@mlightcad/cad-simple-viewer` i18n (`en` / `zh` / `tr` / `cs`)

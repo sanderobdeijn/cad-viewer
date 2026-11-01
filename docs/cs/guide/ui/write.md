@@ -4,9 +4,9 @@ title: Režim zápisu
 
 # Režim zápisu
 
-Režim zápisu je režim s nejúplnějšími funkcemi. Kromě všech možností režimu kontroly podporuje přímé vytváření, úpravu a mazání entit v DWG/DXF — což umožňuje webovému produktu zpracovávat skutečné kreslící práce, ne jen náhled pouze pro čtení.
+Režim zápisu je režim s nejúplnějšími funkcemi. Kromě všech možností režimu pouze pro čtení podporuje přímé vytváření, úpravu a mazání entit v DWG/DXF — což umožňuje webovému produktu zpracovávat skutečné kreslící práce, ne jen náhled pouze pro čtení.
 
-Režim zápisu je ve výchozím stavu použit při otevírání souboru, pokud není výslovně zadán režim pouze pro čtení nebo režim kontroly.
+Režim zápisu je ve výchozím stavu použit při otevírání souboru, pokud není výslovně zadán režim pouze pro čtení.
 
 ## Desktop
 
@@ -26,7 +26,6 @@ Ribbon plně zobrazuje všechny karty ve stylu AutoCAD:
 | Vrstvy | Správa vrstev (zapnuto/vypnuto, zmrazit/rozmrazit, uzamknout, izolovat, nová, smazat) |
 | Vlastnosti | Barva, typ čáry, tloušťka čáry, výběr vrstvy |
 | Měření | Všechny příkazy měření |
-| Značky | Všechny příkazy značek |
 
 ### Command Line
 
@@ -37,7 +36,7 @@ Okno Command Line ve spodní části plátna umožňuje přímo zadávat názvy 
 
 ### Pravý panel nástrojů
 
-Kromě nástrojů režimu kontroly je k dispozici **Skupina nástrojů pro výběr / úpravy**:
+Kromě nástrojů režimu pouze pro čtení je k dispozici **Skupina nástrojů pro výběr / úpravy**:
 
 - Vybrat
 - Posun
@@ -45,7 +44,6 @@ Kromě nástrojů režimu kontroly je k dispozici **Skupina nástrojů pro výb�
 - Přiblížit oknem
 - Správa vrstev
 - Skupina měřicích nástrojů
-- Skupina nástrojů pro značky
 - Režim čtení
 - Přepnout světlé/tmavé pozadí
 
@@ -56,7 +54,6 @@ Kromě nástrojů režimu kontroly je k dispozici **Skupina nástrojů pro výb�
 | Vrstvy | Úplná správa vrstev |
 | Vlastnosti | Vlastnosti vybrané entity (typ, souřadnice, vrstva, barva, typ čáry, tloušťka čáry atd.), upravitelné |
 | Měření | Správa výsledků měření |
-| Kontrola (značky) | Správa značek |
 | Statistiky | Statistiky používání bloků |
 | Chybějící prostředky | Upozornění na písma / externí odkazy |
 

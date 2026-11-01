@@ -146,7 +146,7 @@ El monorepo incluye varios plugins propios. Cada uno se centra en un aspecto; co
 
 | Paquete | Función | Comandos / capacidades |
 |---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Barra de herramientas, administrador de capas y paleta de revisión** para `cad-simple-viewer` (DOM plano, sin Vue/React) | `layer`, `markuppanel`, barra de herramientas predeterminada (vista, medición, exportación, revisión, tema, idioma) |
+| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Barra de herramientas, administrador de capas y paleta de mediciones** para `cad-simple-viewer` (DOM plano, sin Vue/React) | `layer`, `measurementpanel`, barra de herramientas predeterminada (vista, medición, tema, idioma) |
 
 ### `@mlightcad/cad-simple-ui-plugin` — Interfaz de usuario para el visor simple
 
@@ -155,7 +155,7 @@ El monorepo incluye varios plugins propios. Cada uno se centra en un aspecto; co
 Proporciona:
 
 - Una **barra de herramientas configurable** (colocación en cualquier borde, comandos CAD predeterminados, menús anidados, elementos personalizados)
-- Un **panel acoplable** con pestaña de **administrador de capas** (capa activa/inactiva, selector de color ACI, zoom a capa con doble clic) y pestaña de **paleta de revisión** (lista de marcas, estado, comentarios)
+- Un **panel acoplable** con pestaña de **administrador de capas** (capa activa/inactiva, selector de color ACI, zoom a capa con doble clic) y pestaña de **mediciones**
 - **Sincronización de tema** con la sysvar `COLORTHEME` y los tokens CSS `--ml-ui-*` en su elemento host
 - **Sincronización de idioma** con `AcApI18n` (inglés / chino / checo / turco)
 

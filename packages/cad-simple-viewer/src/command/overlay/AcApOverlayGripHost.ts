@@ -1,5 +1,5 @@
 /**
- * Pointer-drag grip host for overlay HTML handles (markup / measure).
+ * Pointer-drag grip host for overlay HTML handles (measure).
  * Domain entities expose grip semantics; this module only wires pointer events.
  */
 
@@ -156,7 +156,7 @@ export interface AcApOverlayPointerDragOptions {
   onCommit: () => void
   /**
    * When true (default), pointer world points go through object snap so
-   * measurement / markup endpoint edits match create-tool snapping.
+   * measurement endpoint edits match create-tool snapping.
    * Set false for whole-object moves that should follow the cursor
    * (callout bubble, text/stamp). Shape center grips pass true.
    */
@@ -367,7 +367,7 @@ export interface AcApOverlayCalloutGripState {
 export interface AcApOverlayCalloutGripOptions {
   /** Active 2D view. */
   view: AcTrView2d
-  /** Parent markup / measure group (unused by host; reserved for callers). */
+  /** Parent measure group (unused by host; reserved for callers). */
   group: AcTrHtmlGroup
   /** Tip handle overlay. */
   tipEl: AcTrHtmlElement

@@ -20,9 +20,9 @@ In expanded mode the panel is divided, top to bottom, into the following regions
 
 ### Accessory / Title Row
 
-The left side of the first row shows the **Session Accessory** mounted by the active command. Different commands mount different accessories — measurement and markup commands mount the **Draw-style Session Accessory** (color + text-height), while other commands (PLine, Text, etc.) may mount their own dedicated accessory controls. If the active command **mounts no session accessory at all**, the left side of the first row shows the command prompt text directly (and the prompt row described below does not appear).
+The left side of the first row shows the **Session Accessory** mounted by the active command. Different commands mount different accessories — measurement commands mount the **Draw-style Session Accessory** (color + text-height), while other commands (PLine, Text, etc.) may mount their own dedicated accessory controls. If the active command **mounts no session accessory at all**, the left side of the first row shows the command prompt text directly (and the prompt row described below does not appear).
 
-The demo below shows the measurement / markup scenario, where a draw-style accessory is mounted:
+The demo below shows the measurement scenario, where a draw-style accessory is mounted:
 
 | Control | Icon | Purpose |
 |---|---|---|

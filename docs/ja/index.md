@@ -4,7 +4,7 @@ layout: home
 hero:
   name: MLightCAD Viewer
   text: ブラウザでの CAD 表示とレビュー
-  tagline: DWG / DXF 図面をインストール不要、バックエンド不要で即座に開始。注釈と計測も完備。
+  tagline: DWG / DXF 図面をインストール不要、バックエンド不要で即座に開始。計測も完備。
   image:
     src: /logo.svg
     alt: MLightCAD Viewer
@@ -27,8 +27,8 @@ features:
     title: DWG / DXF サポート
     details: モデル空間、レイアウト、レイヤー、ブロック、外部参照を含む高忠実度な図面表示。
   - icon: 📏
-    title: 計測と注釈
-    details: 距離、面積、角度、円弧長の正確な計測に加え、矢印、クラウド、テキスト、引出注釈 — 設計レビューに必要なすべてが揃います。
+    title: 計測
+    details: 距離、面積、角度、円弧長をブラウザー上で正確に計測できます。
   - icon: ✏️
     title: ビューワー以上のもの
     details: AutoCAD ライクなコマンド体験でジオメトリを選択、修正、作成 — 読み取り専用プレビューではなく、Web 上での本物の作図作業。

@@ -382,49 +382,6 @@ export default {
     revcloud: {
       description: 'Creates or modifies a revision cloud'
     },
-    markuptext: {
-      description: 'Places a text markup label'
-    },
-    markupline: {
-      description: 'Creates a line markup'
-    },
-    markuparrow: {
-      description: 'Creates an arrow markup'
-    },
-    markupcloud: {
-      description: 'Creates a revision cloud markup'
-    },
-    markuprect: {
-      description: 'Creates a rectangle markup'
-    },
-    markupcircle: {
-      description: 'Creates a circle markup'
-    },
-    markuphighlight: {
-      description: 'Creates a highlight rectangle markup'
-    },
-    markupcallout: {
-      description:
-        'Creates a callout: pick leader tip, place text box, then enter text'
-    },
-    markupstamp: {
-      description: 'Places a stamp or custom symbol'
-    },
-    markupvis: {
-      description: 'Shows or hides markups'
-    },
-    clearmarkups: {
-      description: 'Clears all markups on the current layout'
-    },
-    markupexport: {
-      description: 'Exports markups to a sidecar JSON file'
-    },
-    markupimport: {
-      description: 'Imports markups from a sidecar JSON file'
-    },
-    markuppanel: {
-      description: 'Opens the markup palette'
-    },
     rotate: {
       description: 'Rotates selected entities around a base point',
       prompt: 'Select entities'

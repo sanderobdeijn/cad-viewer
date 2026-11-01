@@ -21,7 +21,6 @@
 
           <!-- Read-only badge -->
           <div v-if="mode === 'readonly'" class="umr-badge umr-badge--read">READ-ONLY</div>
-          <div v-if="mode === 'review'" class="umr-badge umr-badge--review">REVIEW MODE</div>
         </div>
 
         <!-- Vertical right toolbar -->
@@ -34,13 +33,6 @@
             <span class="uml-ico" v-html="icons.measure" aria-hidden="true"></span>
             <span class="umr-group__chev">▾</span>
           </button>
-          <!-- Markup (review only) -->
-          <template v-if="mode === 'review'">
-            <button class="umr-btn umr-btn--icon umr-group__trigger" title="Markup">
-              <span class="uml-ico" v-html="icons.markupTools" aria-hidden="true"></span>
-              <span class="umr-group__chev">▾</span>
-            </button>
-          </template>
           <div class="umr-vertbar__sep"></div>
           <button class="umr-btn umr-btn--icon" title="Reading mode">
             <span class="uml-ico" v-html="icons.reading" aria-hidden="true"></span>
@@ -77,7 +69,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-type Mode = 'readonly' | 'review'
+type Mode = 'readonly'
 const props = withDefaults(defineProps<{
   mode?: Mode
 }>(), { mode: 'readonly' })
@@ -98,8 +90,6 @@ const ICON_SWITCH_BG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" fill="currentColor"/><rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M12 4a8 8 0 0 1 7.25 7.25" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M20.75 10 L17.25 10 L19 12.5 Z" fill="currentColor"/><path d="M12 20a8 8 0 0 1-8-8" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 14 L2.5 14 L4 11 Z" fill="currentColor"/></svg>'
 const ICON_MEASURE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" fill-rule="evenodd" d="M1.5 7h17v6h-17ZM4.25 7h1v2.5h-1ZM7.5 7h.75v1.5H7.5ZM10.25 7h1v2.5h-1ZM13.5 7h.75v1.5H13.5ZM16.25 7h1v2.5h-1Z"/></svg>'
-const ICON_ANNOTATION =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.4 3.25H5.5A2.25 2.25 0 0 0 3.25 5.5v9A2.25 2.25 0 0 0 5.5 16.75h9A2.25 2.25 0 0 0 16.75 14.5V8.6"/><g transform="rotate(45 13.2 6.7)"><rect x="11.7" y="1.55" width="3" height="7.45" rx="1.45"/><path d="M11.7 3.2h3"/><path d="M11.7 9 13.2 12.15 14.7 9"/><rect x="12.8" y="7.05" width="0.8" height="1.2" rx="0.4"/></g></g></svg>'
 const ICON_ANNOTATION_SHOW = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024"><path fill="currentColor" d="M512 160c320 0 512 352 512 352S832 864 512 864 0 512 0 512s192-352 512-352m0 64c-225.28 0-384.128 208.064-436.8 288 52.608 79.872 211.456 288 436.8 288 225.28 0 384.128-208.064 436.8-288-52.608-79.872-211.456-288-436.8-288m0 64a224 224 0 1 1 0 448 224 224 0 0 1 0-448m0 64a160.19 160.19 0 0 0-160 160c0 88.192 71.744 160 160 160s160-71.808 160-160-71.744-160-160-160"/></svg>`
 
 const icons = {
@@ -111,8 +101,6 @@ const icons = {
   reading: ICON_READING_MODE,
   switchBg: ICON_SWITCH_BG,
   measure: ICON_MEASURE,
-  markupTools: ICON_ANNOTATION,
-  markupShow: ICON_ANNOTATION_SHOW,
   measurementShow: ICON_ANNOTATION_SHOW,
 }
 
@@ -126,7 +114,6 @@ const coreButtons = [
 
 const dockTabs = computed(() => {
   const base = ['Layers', 'Measurements', 'Entity Info', 'Statistics', 'Missing Resources']
-  if (props.mode === 'review') return ['Layers', 'Review', 'Measurements', 'Entity Info', 'Statistics']
   return base
 })
 const activeDock = 'Entity Info'
@@ -196,11 +183,6 @@ const dockRows = [
   color: #d97706;
   background: rgba(217, 119, 6, 0.08);
   border-color: rgba(217, 119, 6, 0.3);
-}
-.umr-badge--review {
-  color: #16a34a;
-  background: rgba(22, 163, 74, 0.08);
-  border-color: rgba(22, 163, 74, 0.3);
 }
 
 /* Vertical toolbar */

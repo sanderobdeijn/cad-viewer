@@ -343,48 +343,6 @@ export default {
     revcloud: {
       description: '创建或修改修订云线'
     },
-    markuptext: {
-      description: '放置文字批注'
-    },
-    markupline: {
-      description: '创建直线批注'
-    },
-    markuparrow: {
-      description: '创建箭头批注'
-    },
-    markupcloud: {
-      description: '创建修订云线批注'
-    },
-    markuprect: {
-      description: '创建矩形批注'
-    },
-    markupcircle: {
-      description: '创建圆形批注'
-    },
-    markuphighlight: {
-      description: '创建高亮矩形批注'
-    },
-    markupcallout: {
-      description: '创建标注：先指定引线尖端，再放置文字框，最后输入文字'
-    },
-    markupstamp: {
-      description: '放置图章或自定义符号'
-    },
-    markupvis: {
-      description: '显示或隐藏批注'
-    },
-    clearmarkups: {
-      description: '清除当前布局上的所有批注'
-    },
-    markupexport: {
-      description: '将批注导出为 sidecar JSON 文件'
-    },
-    markupimport: {
-      description: '从 sidecar JSON 文件导入批注'
-    },
-    markuppanel: {
-      description: '打开批注面板'
-    },
     rotate: {
       description: '绕基点旋转所选图元',
       prompt: '选择对象'
