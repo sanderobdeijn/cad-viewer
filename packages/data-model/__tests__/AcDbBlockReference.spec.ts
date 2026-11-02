@@ -140,7 +140,7 @@ describe('AcDbBlockReference', () => {
     const db = createDb()
     const stamp = createNamedBlock(db, 'STAMP')
     stamp.appendEntity(
-      new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 })
+      new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 })
     )
 
     const titleBlock = createNamedBlock(db, 'TITLE_BLOCK')
@@ -462,7 +462,7 @@ describe('AcDbBlockReference', () => {
   it('computes geometric extents from referenced block geometry and transform', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
-    block.appendEntity(new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 2, y: 3, z: 0 }))
+    block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 2, y: 3 }))
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
     blockRef.position = new AcGePoint3d(5, 6, 0)
@@ -478,7 +478,7 @@ describe('AcDbBlockReference', () => {
   it('updates geometricExtents when block reference position changes', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'MOVE_BLOCK')
-    block.appendEntity(new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 0 }))
+    block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 1 }))
 
     const blockRef = new AcDbBlockReference('MOVE_BLOCK')
     blockRef.position = new AcGePoint3d(0, 0, 0)
@@ -495,7 +495,7 @@ describe('AcDbBlockReference', () => {
   it('includes extrusion in geometricExtents for normal (0,0,-1)', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'MIRROR_BLOCK')
-    block.appendEntity(new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }))
+    block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 }))
 
     const blockRef = new AcDbBlockReference('MIRROR_BLOCK')
     blockRef.position = new AcGePoint3d(1000, 500, 0)
@@ -513,12 +513,12 @@ describe('AcDbBlockReference', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'INV_BLK')
     const visibleLine = new AcDbLine(
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }
     )
     const invisibleLine = new AcDbLine(
-      { x: 0, y: 5, z: 0 },
-      { x: 10, y: 5, z: 0 }
+      { x: 0, y: 5 },
+      { x: 10, y: 5 }
     )
     invisibleLine.visibility = false
     block.appendEntity(visibleLine)
@@ -548,7 +548,7 @@ describe('AcDbBlockReference', () => {
   it('applies black block color to ByBlock entities inside block definitions', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'BYBLOCK_BLK')
-    const line = new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 })
+    const line = new AcDbLine({ x: 0, y: 0 }, { x: 10, y: 0 })
     line.color.setByBlock()
     block.appendEntity(line)
 

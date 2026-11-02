@@ -1,10 +1,10 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3dLike,
-  AcGePointLike,
-  AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
@@ -25,11 +25,11 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * // Create a point at the origin
  * const point = new AcDbPoint();
- * point.position = new AcGePoint3d(0, 0, 0);
+ * point.position = new AcGePoint2d(0, 0);
  *
  * // Create a point at a specific location
  * const point2 = new AcDbPoint();
- * point2.position = new AcGePoint3d(10, 20, 5);
+ * point2.position = new AcGePoint2d(10, 20);
  *
  * // Access point properties
  * console.log(`Point position: ${point.position}`);
@@ -44,11 +44,7 @@ export class AcDbPoint extends AcDbEntity {
   }
 
   /** The underlying geometric point object */
-  private _geo: AcGePoint3d
-  /** Thickness along the normal (DXF group 39) */
-  private _thickness = 0
-  /** Extrusion / plane normal (DXF group 210) */
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _geo: AcGePoint2d
   /**
    * Angle of the X axis for the UCS in effect when the point was drawn
    * (DXF group 50). Used when PDMODE is nonzero.
@@ -64,18 +60,18 @@ export class AcDbPoint extends AcDbEntity {
    * @example
    * ```typescript
    * const point = new AcDbPoint();
-   * point.position = new AcGePoint3d(5, 10, 0);
+   * point.position = new AcGePoint2d(5, 10);
    * ```
    */
   constructor() {
     super()
-    this._geo = new AcGePoint3d()
+    this._geo = new AcGePoint2d()
   }
 
   /**
    * Gets the position of this point in WCS coordinates.
    *
-   * @returns The position as a 3D point
+   * @returns The position as a 2D point
    *
    * @example
    * ```typescript
@@ -83,7 +79,7 @@ export class AcDbPoint extends AcDbEntity {
    * console.log(`Point at: ${position.x}, ${position.y}, ${position.z}`);
    * ```
    */
-  get position(): AcGePoint3d {
+  get position(): AcGePoint2d {
     return this._geo
   }
 
@@ -94,31 +90,11 @@ export class AcDbPoint extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * point.position = new AcGePoint3d(15, 25, 0);
+   * point.position = new AcGePoint2d(15, 25);
    * ```
    */
-  set position(value: AcGePointLike) {
-    this._geo.set(value.x, value.y, value.z || 0)
-  }
-
-  /**
-   * Thickness along the entity normal (DXF group 39).
-   */
-  get thickness() {
-    return this._thickness
-  }
-  set thickness(value: number) {
-    this._thickness = value
-  }
-
-  /**
-   * Extrusion direction / plane normal (DXF group 210).
-   */
-  get normal(): AcGeVector3d {
-    return this._normal
-  }
-  set normal(value: AcGeVector3dLike) {
-    this._normal.copy(value)
+  set position(value: AcGePoint2dLike) {
+    this._geo.set(value.x, value.y)
   }
 
   /**
@@ -146,7 +122,7 @@ export class AcDbPoint extends AcDbEntity {
    * ```
    */
   get geometricExtents(): AcGeBox3d {
-    return new AcGeBox3d().expandByPoint(this._geo)
+    return new AcGeBox3d().expandByPoint(acgePoint2dTo3d(this._geo))
   }
 
   /**
@@ -167,7 +143,7 @@ export class AcDbPoint extends AcDbEntity {
    * @returns Array containing the point position.
    */
   subGetGripPoints() {
-    return [this._geo]
+    return [acgePoint2dTo3d(this._geo)]
   }
 
   /** @inheritdoc */
@@ -183,7 +159,7 @@ export class AcDbPoint extends AcDbEntity {
     snapPoints: AcGePoint3dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Node) {
-      snapPoints.push(this._geo)
+      snapPoints.push(acgePoint2dTo3d(this._geo))
     }
   }
 
@@ -226,17 +202,6 @@ export class AcDbPoint extends AcDbEntity {
                   this.position.y = v
                 }
               }
-            },
-            {
-              name: 'positionZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.position.z,
-                set: (v: number) => {
-                  this.position.z = v
-                }
-              }
             }
           ]
         }
@@ -261,7 +226,7 @@ export class AcDbPoint extends AcDbEntity {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo.applyMatrix4(matrix)
+    this._geo.copy(acgePoint2dTo3d(this._geo).applyMatrix4(matrix))
     return this
   }
 
@@ -286,10 +251,9 @@ export class AcDbPoint extends AcDbEntity {
    * @returns The rendered point entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.point(this._geo, {
+    return renderer.point(acgePoint2dTo3d(this._geo), {
       displayMode: this.database.pdmode,
       displaySize: this.database.pdsize
     })
   }
 }
-

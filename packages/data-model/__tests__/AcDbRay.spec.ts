@@ -36,8 +36,8 @@ describe('AcDbRay', () => {
     base.set(10, 20, 30)
     dir.set(-3, -4, -5)
 
-    expect(ray.basePoint).toMatchObject({ x: 1, y: 2, z: 3 })
-    expect(ray.unitDir).toMatchObject({ x: 0, y: 1, z: -2 })
+    expect(ray.basePoint).toMatchObject({ x: 1, y: 2 })
+    expect(ray.unitDir).toMatchObject({ x: 0, y: 1 })
   })
 
   it('returns geometric extents expanded from base point in both direction offsets', () => {
@@ -47,8 +47,8 @@ describe('AcDbRay', () => {
 
     const extents = ray.geometricExtents
 
-    expect(extents.min).toMatchObject({ x: 1, y: -18, z: -7 })
-    expect(extents.max).toMatchObject({ x: 1, y: 22, z: 13 })
+    expect(extents.min).toMatchObject({ x: 1, y: -18, z: 0 })
+    expect(extents.max).toMatchObject({ x: 1, y: 22, z: 0 })
   })
 
   it('updates geometricExtents when basePoint changes', () => {
@@ -76,10 +76,8 @@ describe('AcDbRay', () => {
     expect(geometryGroup?.properties.map(p => p.name)).toEqual([
       'basePointX',
       'basePointY',
-      'basePointZ',
       'unitDirX',
-      'unitDirY',
-      'unitDirZ'
+      'unitDirY'
     ])
 
     const byName = new Map(
@@ -88,19 +86,15 @@ describe('AcDbRay', () => {
 
     byName.get('basePointX')!.accessor.set!(3.5)
     byName.get('basePointY')!.accessor.set!(-4.25)
-    byName.get('basePointZ')!.accessor.set!(5.75)
     byName.get('unitDirX')!.accessor.set!(-1)
     byName.get('unitDirY')!.accessor.set!(2)
-    byName.get('unitDirZ')!.accessor.set!(0.5)
 
     expect(byName.get('basePointX')!.accessor.get()).toBe(3.5)
     expect(byName.get('basePointY')!.accessor.get()).toBe(-4.25)
-    expect(byName.get('basePointZ')!.accessor.get()).toBe(5.75)
     expect(byName.get('unitDirX')!.accessor.get()).toBe(-1)
     expect(byName.get('unitDirY')!.accessor.get()).toBe(2)
-    expect(byName.get('unitDirZ')!.accessor.get()).toBe(0.5)
-    expect(ray.basePoint).toMatchObject({ x: 3.5, y: -4.25, z: 5.75 })
-    expect(ray.unitDir).toMatchObject({ x: -1, y: 2, z: 0.5 })
+    expect(ray.basePoint).toMatchObject({ x: 3.5, y: -4.25 })
+    expect(ray.unitDir).toMatchObject({ x: -1, y: 2 })
   })
 
   it('returns base point as the only grip point', () => {
@@ -110,7 +104,11 @@ describe('AcDbRay', () => {
     const gripPoints = ray.subGetGripPoints()
 
     expect(gripPoints).toHaveLength(1)
-    expect(gripPoints[0]).toBe(ray.basePoint)
+    expect(gripPoints[0]).toMatchObject({
+      x: ray.basePoint.x,
+      y: ray.basePoint.y,
+      z: 0
+    })
   })
 
   it('adds endpoint osnap for EndPoint mode and ignores unsupported modes', () => {
@@ -133,7 +131,9 @@ describe('AcDbRay', () => {
       unsupportedSnaps
     )
 
-    expect(endpointSnaps).toEqual([ray.basePoint])
+    expect(endpointSnaps).toEqual([
+      new AcGePoint3d(ray.basePoint.x, ray.basePoint.y, 0)
+    ])
     expect(unsupportedSnaps).toHaveLength(0)
   })
 
@@ -177,16 +177,15 @@ describe('AcDbRay', () => {
     const ray = new AcDbRay()
     ray.basePoint = new AcGePoint3d(1, 2, 3)
     ray.unitDir = new AcGeVector3d(4, -5, 6)
-    const expectedNormalized = new AcGeVector3d(4, -5, 6).normalize()
+    const expectedNormalized = new AcGeVector3d(4, -5, 0).normalize()
 
     const result = ray.transformBy(new AcGeMatrix3d().makeTranslation(7, -8, 9))
 
     expect(result).toBe(ray)
-    expect(ray.basePoint).toMatchObject({ x: 8, y: -6, z: 12 })
+    expect(ray.basePoint).toMatchObject({ x: 8, y: -6 })
     expect(ray.unitDir).toMatchObject({
       x: expectedNormalized.x,
-      y: expectedNormalized.y,
-      z: expectedNormalized.z
+      y: expectedNormalized.y
     })
   })
 
@@ -205,8 +204,8 @@ describe('AcDbRay', () => {
     expect(result).toBe(rendered)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
     expect(renderer.lines).toHaveBeenCalledWith([
-      expect.objectContaining({ x: 1, y: -2, z: 3 }),
-      expect.objectContaining({ x: 500001, y: -2, z: -999997 })
+      expect.objectContaining({ x: 1, y: -2, z: 0 }),
+      expect.objectContaining({ x: 500001, y: -2, z: 0 })
     ])
   })
   it('creates a detached clone with a new objectId', () => {

@@ -4,10 +4,16 @@ import {
   AcGeLine3d,
   AcGeMatrix3d,
   acgeOffsetPointByDirectionInXY,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3d,
   AcGePoint3dLike,
+  AcGeVector2d,
+  AcGeVector2dLike,
   AcGeVector3d,
-  AcGeVector3dLike} from '@mlightcad/geometry-engine'
+  AcGeVector3dLike
+} from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
@@ -18,7 +24,7 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
 /**
  * Represents a ray entity in AutoCAD.
  *
- * A ray is a 3D geometric object that extends infinitely in one direction from a base point.
+ * A ray is a 2D geometric object that extends infinitely in one direction from a base point.
  * Rays are commonly used for construction lines, reference lines, and temporary geometry.
  * Unlike lines, rays have no end point and extend to infinity.
  *
@@ -26,8 +32,8 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * // Create a ray from origin in the positive X direction
  * const ray = new AcDbRay();
- * ray.basePoint = new AcGePoint3d(0, 0, 0);
- * ray.unitDir = new AcGeVector3d(1, 0, 0);
+ * ray.basePoint = new AcGePoint2d(0, 0);
+ * ray.unitDir = new AcGeVector2d(1, 0);
  *
  * // Access ray properties
  * console.log(`Base point: ${ray.basePoint}`);
@@ -43,9 +49,9 @@ export class AcDbRay extends AcDbCurve {
   }
 
   /** The base point of the ray */
-  private _basePoint: AcGePoint3d
+  private _basePoint: AcGePoint2d
   /** The unit direction vector of the ray */
-  private _unitDir: AcGeVector3d
+  private _unitDir: AcGeVector2d
 
   /**
    * Creates a new ray entity.
@@ -56,14 +62,14 @@ export class AcDbRay extends AcDbCurve {
    * @example
    * ```typescript
    * const ray = new AcDbRay();
-   * ray.basePoint = new AcGePoint3d(5, 10, 0);
-   * ray.unitDir = new AcGeVector3d(0, 1, 0); // Positive Y direction
+   * ray.basePoint = new AcGePoint2d(5, 10);
+   * ray.unitDir = new AcGeVector2d(0, 1); // Positive Y direction
    * ```
    */
   constructor() {
     super()
-    this._basePoint = new AcGePoint3d()
-    this._unitDir = new AcGeVector3d()
+    this._basePoint = new AcGePoint2d()
+    this._unitDir = new AcGeVector2d()
   }
 
   /**
@@ -71,7 +77,7 @@ export class AcDbRay extends AcDbCurve {
    *
    * The base point is the starting point from which the ray extends infinitely.
    *
-   * @returns The base point as a 3D point
+   * @returns The base point as a 2D point
    *
    * @example
    * ```typescript
@@ -79,7 +85,7 @@ export class AcDbRay extends AcDbCurve {
    * console.log(`Ray base point: ${basePoint.x}, ${basePoint.y}, ${basePoint.z}`);
    * ```
    */
-  get basePoint() {
+  get basePoint(): AcGePoint2d {
     return this._basePoint
   }
 
@@ -90,10 +96,10 @@ export class AcDbRay extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * ray.basePoint = new AcGePoint3d(10, 20, 0);
+   * ray.basePoint = new AcGePoint2d(10, 20);
    * ```
    */
-  set basePoint(value: AcGePoint3d) {
+  set basePoint(value: AcGePoint2dLike) {
     this._basePoint.copy(value)
   }
 
@@ -111,7 +117,7 @@ export class AcDbRay extends AcDbCurve {
    * console.log(`Ray direction: ${unitDir.x}, ${unitDir.y}, ${unitDir.z}`);
    * ```
    */
-  get unitDir() {
+  get unitDir(): AcGeVector2d {
     return this._unitDir
   }
 
@@ -122,10 +128,10 @@ export class AcDbRay extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * ray.unitDir = new AcGeVector3d(0, 0, 1); // Positive Z direction
+   * ray.unitDir = new AcGeVector2d(0, 0); // Positive Z direction
    * ```
    */
-  set unitDir(value: AcGePoint3d) {
+  set unitDir(value: AcGeVector2dLike) {
     this._unitDir.copy(value)
   }
 
@@ -162,21 +168,26 @@ export class AcDbRay extends AcDbCurve {
   get geometricExtents(): AcGeBox3d {
     const extents = new AcGeBox3d()
     extents.expandByPoint(
-      this._unitDir.clone().multiplyScalar(10).add(this._basePoint)
+      acgePoint2dTo3d(
+        this._unitDir.clone().multiplyScalar(10).add(this._basePoint)
+      )
     )
     extents.expandByPoint(
-      this._unitDir.clone().multiplyScalar(-10).add(this._basePoint)
+      acgePoint2dTo3d(
+        this._unitDir.clone().multiplyScalar(-10).add(this._basePoint)
+      )
     )
     return extents
   }
 
   /** @inheritdoc */
   override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
-    const end = this._basePoint.clone().add(this._unitDir)
+    const base = acgePoint2dTo3d(this._basePoint)
+    const end = acgePoint2dTo3d(this._basePoint.clone().add(this._unitDir))
     return [
       {
         kind: 'line',
-        line: new AcGeLine3d(this._basePoint, end),
+        line: new AcGeLine3d(base, end),
         extent: 'ray'
       }
     ]
@@ -223,17 +234,6 @@ export class AcDbRay extends AcDbCurve {
               }
             },
             {
-              name: 'basePointZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.basePoint.z,
-                set: (v: number) => {
-                  this.basePoint.z = v
-                }
-              }
-            },
-            {
               name: 'unitDirX',
               type: 'float',
               editable: true,
@@ -252,17 +252,6 @@ export class AcDbRay extends AcDbCurve {
                 get: () => this.unitDir.y,
                 set: (v: number) => {
                   this.unitDir.y = v
-                }
-              }
-            },
-            {
-              name: 'unitDirZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.unitDir.z,
-                set: (v: number) => {
-                  this.unitDir.z = v
                 }
               }
             }
@@ -288,7 +277,7 @@ export class AcDbRay extends AcDbCurve {
    */
   subGetGripPoints() {
     const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(this.basePoint)
+    gripPoints.push(acgePoint2dTo3d(this.basePoint))
     return gripPoints
   }
 
@@ -316,14 +305,14 @@ export class AcDbRay extends AcDbCurve {
     _lastPoint: AcGePoint3dLike,
     snapPoints: AcGePoint3dLike[]
   ) {
-    const origin = this.basePoint
+    const origin = acgePoint2dTo3d(this.basePoint)
 
     if (osnapMode === AcDbOsnapMode.EndPoint) {
       snapPoints.push(origin)
       return
     }
 
-    const direction = this.unitDir.clone()
+    const direction = new AcGeVector3d(this.unitDir.x, this.unitDir.y, 0)
     if (direction.lengthSq() === 0) return
 
     direction.normalize()
@@ -349,8 +338,12 @@ export class AcDbRay extends AcDbCurve {
    * Transforms this ray by the specified matrix.
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._basePoint.applyMatrix4(matrix)
-    this._unitDir.transformDirection(matrix)
+    this._basePoint.copy(acgePoint2dTo3d(this._basePoint).applyMatrix4(matrix))
+    this._unitDir.copy(
+      new AcGeVector3d(this._unitDir.x, this._unitDir.y, 0).transformDirection(
+        matrix
+      )
+    )
     return this
   }
 
@@ -375,9 +368,11 @@ export class AcDbRay extends AcDbCurve {
    */
   subWorldDraw(renderer: AcGiRenderer) {
     const points: AcGePoint3d[] = []
-    points.push(this.basePoint)
+    points.push(acgePoint2dTo3d(this.basePoint))
     points.push(
-      this._unitDir.clone().multiplyScalar(1000000).add(this._basePoint)
+      acgePoint2dTo3d(
+        this._unitDir.clone().multiplyScalar(1000000).add(this._basePoint)
+      )
     )
     return renderer.lines(points)
   }
@@ -416,8 +411,8 @@ export class AcDbRay extends AcDbCurve {
    */
   private createOffsetCurve(offsetDist: number): AcDbRay | null {
     const offsetPoint = acgeOffsetPointByDirectionInXY(
-      this.basePoint,
-      this.unitDir,
+      acgePoint2dTo3d(this.basePoint),
+      { x: this.unitDir.x, y: this.unitDir.y, z: 0 },
       offsetDist
     )
     if (!offsetPoint) return null
@@ -427,4 +422,3 @@ export class AcDbRay extends AcDbCurve {
     return ray
   }
 }
-

@@ -4,14 +4,14 @@ import {
   AcGeBox2d,
   AcGeMatrix2d,
   AcGePoint2d,
-  AcGePoint3d,
+  AcGePoint2dLike,
   AcGePointLike
 } from '../math'
 import { AcGeMathUtil, TAU } from '../util'
 import { AcGeCurve2d } from './AcGeCurve2d'
 
 /**
- * Class representing a 3d ellipse arc defined by center, normal, majorAxis, majorAxisRadius,
+ * Class representing a 2d ellipse arc defined by center, normal, majorAxis, majorAxisRadius,
  * minorAxisRadius, startAngle, and endAngle.
  * - The majorAxis vector represents half the major axis of the ellipse (that is, from the center
  * point to the start point of the ellipse) and is the zero angle for startAngle and endAngle.
@@ -20,8 +20,8 @@ import { AcGeCurve2d } from './AcGeCurve2d'
  * - If startAngle is equal to 0 and endAngle is equal to 2 * Math.PI, it represents a full 3d ellipse.
  */
 export class AcGeEllipseArc2d extends AcGeCurve2d {
-  // Center of the ellipse in 3d space
-  private _center!: AcGePoint3d
+  // Center of the ellipse
+  private _center!: AcGePoint2d
   // Major axis radius of the ellipse
   private _majorAxisRadius!: number
   // Minor axis radius of the ellipse
@@ -48,7 +48,7 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
    * axis (optional). Default is 0.
    */
   constructor(
-    center: AcGePointLike,
+    center: AcGePoint2dLike,
     majorAxisRadius: number,
     minorAxisRadius: number,
     startAngle: number = 0,
@@ -73,13 +73,13 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
   }
 
   /**
-   * Center of the ellipse in 3d space
+   * Center of the ellipse
    */
-  get center(): AcGePoint3d {
+  get center(): AcGePoint2d {
     return this._center
   }
-  set center(value: AcGePointLike) {
-    this._center = new AcGePoint3d(value.x, value.y, value.z || 0)
+  set center(value: AcGePoint2dLike) {
+    this._center = new AcGePoint2d(value.x, value.y)
     this._boundingBoxNeedsUpdate = true
   }
 
@@ -257,11 +257,6 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
     const transformedCenter2d = new AcGePoint2d(this.center).applyMatrix2d(
       matrix
     )
-    const transformedCenter = new AcGePoint3d(
-      transformedCenter2d.x,
-      transformedCenter2d.y,
-      this.center.z
-    )
     const transformedMajorPoint = this.getPointAtAngle(0)
       .clone()
       .applyMatrix2d(matrix)
@@ -296,7 +291,7 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
 
     const transformedEllipse = this.closed
       ? new AcGeEllipseArc2d(
-          transformedCenter,
+          transformedCenter2d,
           majorAxisRadius,
           minorAxisRadius,
           0,
@@ -305,7 +300,7 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
           rotation
         )
       : new AcGeEllipseArc2d(
-          transformedCenter,
+          transformedCenter2d,
           majorAxisRadius,
           minorAxisRadius,
           getAngle(this.startPoint.clone().applyMatrix2d(matrix)),
@@ -325,7 +320,8 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
     return this
   }
 
-  private getPointAtAngle(angle: number) {
+  /** Returns the point at the given ellipse angle. */
+  getPointAtAngle(angle: number) {
     return this.getPoint(
       this.closed
         ? angle / TAU

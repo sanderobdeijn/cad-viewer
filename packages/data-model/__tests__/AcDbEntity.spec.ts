@@ -46,12 +46,13 @@ import { AcDbXline } from '../src/entity/AcDbXline'
 import { AcDbOsnapMode } from '../src/misc'
 
 const expectPoint3dClose = (
-  actual: { x: number; y: number; z: number },
+  actual: { x: number; y: number; z?: number },
   expected: { x: number; y: number; z: number }
 ) => {
   expect(actual.x).toBeCloseTo(expected.x, 8)
   expect(actual.y).toBeCloseTo(expected.y, 8)
-  expect(actual.z).toBeCloseTo(expected.z, 8)
+  // 2D entities have no Z to compare.
+  if (actual.z !== undefined) expect(actual.z).toBeCloseTo(expected.z, 8)
 }
 
 const expectVector3dClose = (
@@ -279,15 +280,10 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms lightweight and legacy polylines', () => {
     const lwPolyline = new AcDbPolyline()
-    lwPolyline.elevation = 1
     lwPolyline.addVertexAt(0, new AcGePoint2d(0, 0), 1)
     lwPolyline.addVertexAt(1, new AcGePoint2d(2, 0))
 
     lwPolyline.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 5))
-
-    expect(lwPolyline.elevation).toBeCloseTo(6, 8)
-    expect(lwPolyline.getPoint3dAt(0)).toMatchObject({ x: 3, y: 4, z: 6 })
-    expect(lwPolyline.getPoint3dAt(1)).toMatchObject({ x: 5, y: 4, z: 6 })
 
     const legacyPolyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
@@ -433,10 +429,10 @@ describe('AcDbEntity.transformBy', () => {
 
     const spline = new AcDbSpline(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ],
       [0, 0, 0, 0, 1, 1, 1, 1]
     )
@@ -448,11 +444,10 @@ describe('AcDbEntity.transformBy', () => {
       new AcGePoint3d(),
       splineSnapPoints
     )
-    expect(splineSnapPoints[0]).toMatchObject({ x: 2, y: 3, z: 4 })
+    expect(splineSnapPoints[0]).toMatchObject({ x: 2, y: 3, z: 0 })
 
     const ellipse = new AcDbEllipse(
       new AcGePoint3d(0, 0, 0),
-      AcGeVector3d.Z_AXIS,
       AcGeVector3d.X_AXIS,
       4,
       2,
@@ -460,7 +455,7 @@ describe('AcDbEntity.transformBy', () => {
       Math.PI / 2
     )
     ellipse.transformBy(new AcGeMatrix3d().makeTranslation(1, 2, 3))
-    expect(ellipse.center).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(ellipse.center).toMatchObject({ x: 1, y: 2 })
 
     const leader = new AcDbLeader()
     leader.appendVertex({ x: 0, y: 0, z: 0 })

@@ -1,11 +1,14 @@
 import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
-  AcGeLine3d,
+  AcGeLine2d,
+  acgeLine2dTo3d,
   AcGeMatrix3d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3d,
   AcGePoint3dLike,
-  AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
@@ -18,16 +21,16 @@ import { acdbForEachGripIndex } from './AcDbGripHelpers'
 /**
  * Represents a line entity in AutoCAD.
  *
- * A line is a 3D geometric object defined by its start point and end point.
+ * A line is a 2D geometric object defined by its start point and end point.
  * Lines are fundamental drawing entities that can be used to create straight
- * line segments in 2D or 3D space.
+ * line segments in the XY plane.
  *
  * @example
  * ```typescript
  * // Create a line from point (0,0,0) to point (10,10,0)
  * const line = new AcDbLine(
- *   new AcGePoint3d(0, 0, 0),
- *   new AcGePoint3d(10, 10, 0)
+ *   new AcGePoint2d(0, 0),
+ *   new AcGePoint2d(10, 10)
  * );
  *
  * // Access line properties
@@ -45,37 +48,29 @@ export class AcDbLine extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric line object. */
-  private _geoData: AcGeLine3d | null = null
-  /**
-   * Backing for the lazily materialized extrusion / OCS normal (DXF group
-   * 210). `null` means "not yet materialized"; the default `+Z` vector is
-   * created on first access.
-   */
-  private _normal: AcGeVector3d | null = null
+  private _geoData: AcGeLine2d | null = null
 
   /**
    * The underlying geometric line object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate a default line
    * that dxfIn would immediately replace.
    */
-  private get _geo(): AcGeLine3d {
+  private get _geo(): AcGeLine2d {
     if (this._geoData == null) {
-      this._geoData = new AcGeLine3d(new AcGePoint3d(), new AcGePoint3d())
+      this._geoData = new AcGeLine2d(new AcGePoint2d(), new AcGePoint2d())
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeLine3d) {
+  private set _geo(value: AcGeLine2d) {
     this._geoData = value
   }
-  /** Thickness along the normal (DXF group 39) */
-  private _thickness = 0
 
   /**
    * Creates a new line entity.
    *
    * This constructor initializes the line object with the specified start and end points.
-   * Both points must be in World Coordinate System (WCS) coordinates.
+   * Both points must be in World Coordinate System (WCS) XY coordinates.
    *
    * @param start - The starting point of the line in WCS coordinates
    * @param end - The ending point of the line in WCS coordinates
@@ -83,24 +78,24 @@ export class AcDbLine extends AcDbCurve {
    * @example
    * ```typescript
    * const line = new AcDbLine(
-   *   new AcGePoint3d(0, 0, 0),
-   *   new AcGePoint3d(100, 50, 0)
+   *   new AcGePoint2d(0, 0),
+   *   new AcGePoint2d(100, 50)
    * );
    * ```
    */
   constructor()
-  constructor(start: AcGePoint3dLike, end: AcGePoint3dLike)
-  constructor(start?: AcGePoint3dLike, end?: AcGePoint3dLike) {
+  constructor(start: AcGePoint2dLike, end: AcGePoint2dLike)
+  constructor(start?: AcGePoint2dLike, end?: AcGePoint2dLike) {
     super()
     if (start !== undefined && end !== undefined) {
-      this._geo = new AcGeLine3d(start, end)
+      this._geo = new AcGeLine2d(start, end)
     }
   }
 
   /**
    * Gets the starting point of this line.
    *
-   * @returns The starting point as a 3D point
+   * @returns The starting point as a 2D point
    *
    * @example
    * ```typescript
@@ -108,7 +103,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line starts at: ${startPoint.x}, ${startPoint.y}, ${startPoint.z}`);
    * ```
    */
-  get startPoint(): AcGePoint3d {
+  get startPoint(): AcGePoint2d {
     return this._geo.startPoint
   }
 
@@ -119,17 +114,17 @@ export class AcDbLine extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * line.startPoint = new AcGePoint3d(5, 5, 0);
+   * line.startPoint = new AcGePoint2d(5, 5);
    * ```
    */
-  set startPoint(value: AcGePoint3dLike) {
+  set startPoint(value: AcGePoint2dLike) {
     this._geo.startPoint = value
   }
 
   /**
    * Gets the ending point of this line.
    *
-   * @returns The ending point as a 3D point
+   * @returns The ending point as a 2D point
    *
    * @example
    * ```typescript
@@ -137,7 +132,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line ends at: ${endPoint.x}, ${endPoint.y}, ${endPoint.z}`);
    * ```
    */
-  get endPoint(): AcGePoint3d {
+  get endPoint(): AcGePoint2d {
     return this._geo.endPoint
   }
 
@@ -148,41 +143,11 @@ export class AcDbLine extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * line.endPoint = new AcGePoint3d(15, 15, 0);
+   * line.endPoint = new AcGePoint2d(15, 15);
    * ```
    */
-  set endPoint(value: AcGePoint3dLike) {
+  set endPoint(value: AcGePoint2dLike) {
     this._geo.endPoint = value
-  }
-
-  /**
-   * Thickness along the entity normal (DXF group 39).
-   */
-  get thickness() {
-    return this._thickness
-  }
-  set thickness(value: number) {
-    this._thickness = value
-  }
-
-  /**
-   * Extrusion direction / OCS normal (DXF group 210).
-   *
-   * The default `+Z` vector is materialized on first access. A DXF import only
-   * assigns a normal for the rare records that carry a 210/220/230 group, so
-   * the LINE/SOLID/TRACE entities of a large drawing never allocate the
-   * default vector at all.
-   */
-  get normal(): AcGeVector3d {
-    let normal = this._normal
-    if (normal == null) {
-      normal = new AcGeVector3d(0, 0, 1)
-      this._normal = normal
-    }
-    return normal
-  }
-  set normal(value: AcGeVector3dLike) {
-    this.normal.copy(value).normalize()
   }
 
   /**
@@ -190,7 +155,7 @@ export class AcDbLine extends AcDbCurve {
    *
    * The middle point is calculated as the midpoint between the start and end points.
    *
-   * @returns The middle point as a 3D point
+   * @returns The middle point as a 2D point
    *
    * @example
    * ```typescript
@@ -198,7 +163,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line midpoint: ${midPoint.x}, ${midPoint.y}, ${midPoint.z}`);
    * ```
    */
-  get midPoint(): AcGePoint3d {
+  get midPoint(): AcGePoint2d {
     return this._geo.midPoint
   }
 
@@ -214,7 +179,7 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   get geometricExtents(): AcGeBox3d {
-    return this._geo.box
+    return acgeLine2dTo3d(this._geo).box
   }
 
   /** @inheritdoc */
@@ -222,7 +187,7 @@ export class AcDbLine extends AcDbCurve {
     return [
       {
         kind: 'line',
-        line: this._geo.clone(),
+        line: acgeLine2dTo3d(this._geo),
         extent: 'bounded'
       }
     ]
@@ -285,17 +250,6 @@ export class AcDbLine extends AcDbCurve {
               }
             },
             {
-              name: 'startZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.startPoint.z,
-                set: (v: number) => {
-                  this.startPoint.z = v
-                }
-              }
-            },
-            {
               name: 'endX',
               type: 'float',
               editable: true,
@@ -314,17 +268,6 @@ export class AcDbLine extends AcDbCurve {
                 get: () => this.endPoint.y,
                 set: (v: number) => {
                   this.endPoint.y = v
-                }
-              }
-            },
-            {
-              name: 'endZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.endPoint.z,
-                set: (v: number) => {
-                  this.endPoint.z = v
                 }
               }
             },
@@ -358,9 +301,9 @@ export class AcDbLine extends AcDbCurve {
    */
   subGetGripPoints() {
     const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(this.midPoint)
-    gripPoints.push(this.startPoint)
-    gripPoints.push(this.endPoint)
+    gripPoints.push(acgePoint2dTo3d(this.midPoint))
+    gripPoints.push(acgePoint2dTo3d(this.startPoint))
+    gripPoints.push(acgePoint2dTo3d(this.endPoint))
     return gripPoints
   }
 
@@ -407,28 +350,26 @@ export class AcDbLine extends AcDbCurve {
     _lastPoint: AcGePoint3dLike,
     snapPoints: AcGePoint3dLike[]
   ) {
-    const startPoint = this.startPoint
-    const endPoint = this.endPoint
-
+    const geo = acgeLine2dTo3d(this._geo)
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
-        snapPoints.push(startPoint)
-        snapPoints.push(endPoint)
+        snapPoints.push(geo.startPoint)
+        snapPoints.push(geo.endPoint)
         break
       case AcDbOsnapMode.MidPoint:
-        snapPoints.push(this.midPoint)
+        snapPoints.push(geo.midPoint)
         break
       case AcDbOsnapMode.Nearest:
         // Nearest snap: project the pick point onto the line and return that point
         {
-          const projectedPoint = this._geo.project(pickPoint)
+          const projectedPoint = geo.project(pickPoint)
           snapPoints.push(projectedPoint)
         }
         break
       case AcDbOsnapMode.Perpendicular:
         // Perpendicular snap: find a perpendicular point from the pick point to the line
         {
-          const perpPoint = this._geo.perpPoint(pickPoint)
+          const perpPoint = geo.perpPoint(pickPoint)
           snapPoints.push(perpPoint)
         }
         break
@@ -457,7 +398,8 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo.transform(matrix)
+    const geo = acgeLine2dTo3d(this._geo).transform(matrix)
+    this._geo = new AcGeLine2d(geo.startPoint, geo.endPoint)
     return this
   }
 
@@ -480,13 +422,10 @@ export class AcDbLine extends AcDbCurve {
    * @returns The rendered line entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const start = this.startPoint
-    const end = this.endPoint
-    const points = [
-      new AcGePoint3d(start.x, start.y, 0),
-      new AcGePoint3d(end.x, end.y, 0)
-    ]
-    return renderer.lines(points)
+    return renderer.lines([
+      acgePoint2dTo3d(this.startPoint),
+      acgePoint2dTo3d(this.endPoint)
+    ])
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {
@@ -502,4 +441,3 @@ export class AcDbLine extends AcDbCurve {
       : -1
   }
 }
-

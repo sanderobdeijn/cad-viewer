@@ -11,6 +11,7 @@ import {
   AcGeCircArc2d,
   AcGeMatrix3d,
   AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3d,
   AcGePoint3dLike
 } from '@mlightcad/data-model'
@@ -178,7 +179,7 @@ function collectPolylineArcCenter(
   return markFromPoint({
     x: bestArc.center.x,
     y: bestArc.center.y,
-    z: entity.elevation
+    z: entity instanceof AcDb2dPolyline ? entity.elevation : 0
   })
 }
 
@@ -348,13 +349,13 @@ export function collectCenterMarksFromEntity(
     return collectBlockCenterMarks(entity, pickPoint, gsMark)
   }
   if (entity instanceof AcDbCircle) {
-    return [markFromPoint(entity.center)]
+    return [markFromPoint(acgePoint2dTo3d(entity.center))]
   }
   if (entity instanceof AcDbArc) {
-    return [markFromPoint(entity.center)]
+    return [markFromPoint(acgePoint2dTo3d(entity.center))]
   }
   if (entity instanceof AcDbEllipse) {
-    return [markFromPoint(entity.center)]
+    return [markFromPoint(acgePoint2dTo3d(entity.center))]
   }
   if (entity instanceof AcDbPolyline || entity instanceof AcDb2dPolyline) {
     const mark = collectPolylineArcCenter(entity, pickPoint)

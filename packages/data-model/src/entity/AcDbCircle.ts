@@ -1,14 +1,15 @@
 import {
-  AcGeCircArc3d,
-  acgeGetOcsReferenceVector,
+  AcGeCircArc2d,
+  acgeCircArc2dTo3d,
+  acgeCircArc3dTo2d,
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3d,
   AcGePoint3dLike,
-  AcGePointLike,
-  AcGeVector3d,
-  AcGeVector3dLike,
-  TAU
+  AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -26,13 +27,13 @@ const CIRCLE_QUADRANT_GRIP_ANGLES = [0, Math.PI / 2, Math.PI, (Math.PI / 2) * 3]
  *
  * A circle is a 2D geometric object defined by its center point and radius.
  * Circles are closed curves that can be used to create circular shapes
- * in drawings. The circle is always drawn in the plane defined by its normal vector.
+ * in drawings. The circle is always drawn in the XY plane.
  *
  * @example
  * ```typescript
- * // Create a circle with center at (0,0,0) and radius 5
+ * // Create a circle with center at (0,0) and radius 5
  * const circle = new AcDbCircle(
- *   new AcGePoint3d(0, 0, 0),
+ *   new AcGePoint2d(0, 0),
  *   5
  * );
  *
@@ -51,29 +52,26 @@ export class AcDbCircle extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric circular arc object. */
-  private _geoData: AcGeCircArc3d | null = null
-  /** Thickness along the normal (DXF group 39) */
-  private _thickness = 0
+  private _geoData: AcGeCircArc2d | null = null
 
   /**
    * The underlying geometric circular arc object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate default geometry.
    */
-  private get _geo(): AcGeCircArc3d {
+  private get _geo(): AcGeCircArc2d {
     if (this._geoData == null) {
-      this._geoData = new AcGeCircArc3d(
-        new AcGePoint3d(),
+      this._geoData = AcGeCircArc2d.fromMathAngles(
+        new AcGePoint2d(),
         1,
         0,
-        TAU,
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS
+        0,
+        false
       )
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeCircArc3d) {
+  private set _geo(value: AcGeCircArc2d) {
     this._geoData = value
   }
 
@@ -81,51 +79,34 @@ export class AcDbCircle extends AcDbCurve {
    * Creates a new circle entity.
    *
    * This constructor creates a circle using the specified center point and radius.
-   * The center point must be in World Coordinate System (WCS) coordinates.
+   * The center point must be in World Coordinate System (WCS) XY coordinates.
    * The circle is created as a full circle (0 to 2π radians).
    *
    * @param center - The center point of the circle in WCS coordinates
    * @param radius - The radius of the circle (must be positive)
-   * @param normal - The normal vector defining the plane of the circle (defaults to Z-axis)
    *
    * @example
    * ```typescript
    * // Create a circle in the XY plane
    * const circle = new AcDbCircle(
-   *   new AcGePoint3d(10, 20, 0),
+   *   new AcGePoint2d(10, 20),
    *   15
-   * );
-   *
-   * // Create a circle in a different plane
-   * const circleInYZ = new AcDbCircle(
-   *   new AcGePoint3d(0, 0, 0),
-   *   10,
-   *   AcGeVector3d.X_AXIS
    * );
    * ```
    */
   constructor()
-  constructor(
-    center: AcGePointLike,
-    radius: number,
-    normal?: AcGeVector3dLike
-  )
-  constructor(
-    center?: AcGePointLike,
-    radius?: number,
-    normal: AcGeVector3dLike = AcGeVector3d.Z_AXIS
-  ) {
+  constructor(center: AcGePoint2dLike, radius: number)
+  constructor(center?: AcGePoint2dLike, radius?: number) {
     super()
     if (center !== undefined && radius !== undefined) {
-      const refVec = acgeGetOcsReferenceVector(normal)
-      this._geo = new AcGeCircArc3d(center, radius, 0, TAU, normal, refVec)
+      this._geo = AcGeCircArc2d.fromMathAngles(center, radius, 0, 0, false)
     }
   }
 
   /**
    * Gets the center point of this circle.
    *
-   * @returns The center point as a 3D point
+   * @returns The center point as a 2D point
    *
    * @example
    * ```typescript
@@ -133,7 +114,7 @@ export class AcDbCircle extends AcDbCurve {
    * console.log(`Circle center: ${centerPoint.x}, ${centerPoint.y}, ${centerPoint.z}`);
    * ```
    */
-  get center(): AcGePoint3d {
+  get center(): AcGePoint2d {
     return this._geo.center
   }
 
@@ -144,10 +125,10 @@ export class AcDbCircle extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * circle.center = new AcGePoint3d(5, 5, 0);
+   * circle.center = new AcGePoint2d(5, 5);
    * ```
    */
-  set center(value: AcGePoint3dLike) {
+  set center(value: AcGePoint2dLike) {
     this._geo.center = value
   }
 
@@ -181,33 +162,6 @@ export class AcDbCircle extends AcDbCurve {
   }
 
   /**
-   * Gets the normal vector of this circle.
-   *
-   * The normal vector defines the plane in which the circle lies.
-   *
-   * @returns The unit normal vector in WCS coordinates
-   *
-   * @example
-   * ```typescript
-   * const normal = circle.normal;
-   * console.log(`Circle normal: ${normal.x}, ${normal.y}, ${normal.z}`);
-   * ```
-   */
-  get normal() {
-    return this._geo.normal
-  }
-
-  /**
-   * Thickness along the entity normal (DXF group 39).
-   */
-  get thickness() {
-    return this._thickness
-  }
-  set thickness(value: number) {
-    this._thickness = value
-  }
-
-  /**
    * Gets the geometric extents (bounding box) of this circle.
    *
    * @returns The bounding box that encompasses the entire circle
@@ -219,7 +173,7 @@ export class AcDbCircle extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return this._geo.box
+    return acgeCircArc2dTo3d(this._geo).box
   }
 
   /** @inheritdoc */
@@ -227,7 +181,7 @@ export class AcDbCircle extends AcDbCurve {
     return [
       {
         kind: 'circArc',
-        arc: this._geo.clone(),
+        arc: acgeCircArc2dTo3d(this._geo),
         extendable: false
       }
     ]
@@ -246,7 +200,7 @@ export class AcDbCircle extends AcDbCurve {
 
   /** @inheritdoc */
   override get area(): number {
-    return this._geo.area
+    return acgeCircArc2dTo3d(this._geo).area
   }
 
   /**
@@ -267,30 +221,33 @@ export class AcDbCircle extends AcDbCurve {
     _lastPoint: AcGePoint3dLike,
     snapPoints: AcGePoint3dLike[]
   ) {
+    const geo = acgeCircArc2dTo3d(this._geo)
     switch (osnapMode) {
       case AcDbOsnapMode.Center:
       case AcDbOsnapMode.Centroid:
-        snapPoints.push(this._geo.center)
+        snapPoints.push(geo.center)
         break
       case AcDbOsnapMode.Quadrant:
-        snapPoints.push(this._geo.getPointAtAngle(0))
-        snapPoints.push(this._geo.getPointAtAngle(Math.PI / 2))
-        snapPoints.push(this._geo.getPointAtAngle(Math.PI))
-        snapPoints.push(this._geo.getPointAtAngle((Math.PI / 2) * 3))
+        snapPoints.push(geo.getPointAtAngle(0))
+        snapPoints.push(geo.getPointAtAngle(Math.PI / 2))
+        snapPoints.push(geo.getPointAtAngle(Math.PI))
+        snapPoints.push(geo.getPointAtAngle((Math.PI / 2) * 3))
         break
       case AcDbOsnapMode.Nearest:
         {
-          const projectedPoint = this._geo.nearestPoint(pickPoint)
+          const projectedPoint = acgePoint2dTo3d(this._geo.nearestPoint(pickPoint))
           snapPoints.push(projectedPoint)
         }
         break
       case AcDbOsnapMode.Tangent: {
-        const points = this._geo.tangentPoints(pickPoint)
+        const points = this._geo.tangentPoints(pickPoint).map(acgePoint2dTo3d)
         snapPoints.push(...points)
         break
       }
       case AcDbOsnapMode.Perpendicular: {
-        const candidates = this._geo.perpendicularPoints(pickPoint)
+        const candidates = this._geo
+          .perpendicularPoints(pickPoint)
+          .map(acgePoint2dTo3d)
         const nearest = acdbPickNearestOsnapPoint(pickPoint, candidates)
         if (nearest) snapPoints.push(nearest)
         break
@@ -341,17 +298,6 @@ export class AcDbCircle extends AcDbCurve {
               }
             },
             {
-              name: 'centerZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.center.z,
-                set: (v: number) => {
-                  this.center.z = v
-                }
-              }
-            },
-            {
               name: 'radius',
               type: 'float',
               editable: true,
@@ -359,39 +305,6 @@ export class AcDbCircle extends AcDbCurve {
                 get: () => this.radius,
                 set: (v: number) => {
                   this.radius = v
-                }
-              }
-            },
-            {
-              name: 'normalX',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.x,
-                set: (v: number) => {
-                  this.normal.x = v
-                }
-              }
-            },
-            {
-              name: 'normalY',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.y,
-                set: (v: number) => {
-                  this.normal.y = v
-                }
-              }
-            },
-            {
-              name: 'normalZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.z,
-                set: (v: number) => {
-                  this.normal.z = v
                 }
               }
             },
@@ -408,7 +321,7 @@ export class AcDbCircle extends AcDbCurve {
               type: 'float',
               editable: false,
               accessor: {
-                get: () => this._geo.length
+                get: () => acgeCircArc2dTo3d(this._geo).length
               }
             },
             {
@@ -442,9 +355,10 @@ export class AcDbCircle extends AcDbCurve {
    */
   subGetGripPoints() {
     const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(this.center)
+    const geo = acgeCircArc2dTo3d(this._geo)
+    gripPoints.push(geo.center)
     for (const angle of CIRCLE_QUADRANT_GRIP_ANGLES) {
-      gripPoints.push(this._geo.getPointAtAngle(angle))
+      gripPoints.push(geo.getPointAtAngle(angle))
     }
     return gripPoints
   }
@@ -461,7 +375,7 @@ export class AcDbCircle extends AcDbCurve {
    * Transforms this circle by the specified matrix.
    *
    * This method applies a geometric transformation to the circle, updating
-   * the center point, radius, and normal vector according to the transformation matrix.
+   * the center point and radius according to the transformation matrix.
    *
    * @param matrix - The transformation matrix to apply
    * @returns This circle after transformation
@@ -474,7 +388,9 @@ export class AcDbCircle extends AcDbCurve {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo.transform(matrix)
+    this._geo = acgeCircArc3dTo2d(
+      acgeCircArc2dTo3d(this._geo).transform(matrix)
+    )
     return this
   }
 
@@ -497,7 +413,7 @@ export class AcDbCircle extends AcDbCurve {
    * @returns The rendered circle entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.circularArc(this._geo)
+    return renderer.circularArc(acgeCircArc2dTo3d(this._geo))
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {
@@ -512,9 +428,9 @@ export class AcDbCircle extends AcDbCurve {
   }
 
   private createOffsetCurve(offsetDist: number): AcDbCircle | null {
-    const geo = this._geo.offset(offsetDist)
+    const geo = acgeCircArc2dTo3d(this._geo).offset(offsetDist)
     if (!geo) return null
-    return new AcDbCircle(geo.center, geo.radius, geo.normal)
+    return new AcDbCircle(geo.center, geo.radius)
   }
 
   private moveGripAt(gripIndex: number, offset: AcGeVector3dLike) {
@@ -528,11 +444,7 @@ export class AcDbCircle extends AcDbCurve {
       case 4: {
         const angle = CIRCLE_QUADRANT_GRIP_ANGLES[gripIndex - 1]
         const point = this._geo.getPointAtAngle(angle)
-        const newPoint = new AcGePoint3d(
-          point.x + offset.x,
-          point.y + offset.y,
-          (point.z ?? 0) + (offset.z ?? 0)
-        )
+        const newPoint = new AcGePoint2d(point.x + offset.x, point.y + offset.y)
         const newRadius = newPoint.distanceTo(this.center)
         if (newRadius > 0) {
           this.radius = newRadius
@@ -544,4 +456,3 @@ export class AcDbCircle extends AcDbCurve {
     }
   }
 }
-

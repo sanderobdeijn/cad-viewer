@@ -1,12 +1,16 @@
 import {
-  AcGeEllipseArc3d,
+  AcGeEllipseArc2d,
+  acgeEllipseArc2dTo3d,
+  acgeEllipseArc3dTo2d,
   acgeGetOcsAngle,
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGePoint3d,
   AcGePoint3dLike,
-  AcGePointLike,
-  AcGeVector3d,
+  AcGeVector2d,
+  AcGeVector2dLike,
   AcGeVector3dLike,
   TAU
 } from '@mlightcad/geometry-engine'
@@ -31,16 +35,14 @@ const ELLIPSE_QUADRANT_GRIP_ANGLES = [
  *
  * An ellipse is a 2D geometric object defined by its center point, major and minor axes,
  * and optional start and end angles. Ellipses are curved shapes that can be used to
- * create elliptical shapes in drawings. The ellipse is always drawn in the plane
- * defined by its normal vector.
+ * create elliptical shapes in drawings. The ellipse is always drawn in the XY plane.
  *
  * @example
  * ```typescript
  * // Create a full ellipse
  * const ellipse = new AcDbEllipse(
- *   new AcGePoint3d(0, 0, 0),
- *   AcGeVector3d.Z_AXIS,
- *   AcGeVector3d.X_AXIS,
+ *   new AcGePoint2d(0, 0),
+ *   { x: 1, y: 0 },
  *   10, // major axis radius
  *   5,  // minor axis radius
  *   0,  // start angle
@@ -62,39 +64,30 @@ export class AcDbEllipse extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric ellipse arc object. */
-  private _geoData: AcGeEllipseArc3d | null = null
+  private _geoData: AcGeEllipseArc2d | null = null
 
   /**
    * The underlying geometric ellipse arc object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate default geometry.
    */
-  private get _geo(): AcGeEllipseArc3d {
+  private get _geo(): AcGeEllipseArc2d {
     if (this._geoData == null) {
-      this._geoData = new AcGeEllipseArc3d(
-        new AcGePoint3d(),
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS,
-        1,
-        1,
-        0,
-        Math.PI * 2
-      )
+      this._geoData = new AcGeEllipseArc2d(new AcGePoint2d(), 1, 1, 0, TAU)
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeEllipseArc3d) {
+  private set _geo(value: AcGeEllipseArc2d) {
     this._geoData = value
   }
 
   /**
    * Creates a new ellipse entity.
    *
-   * This constructor creates an ellipse using the specified center point, normal vector,
-   * major axis, and radii. The center point must be in World Coordinate System (WCS) coordinates.
+   * This constructor creates an ellipse using the specified center point,
+   * major axis, and radii. The center point must be in World Coordinate System (WCS) XY coordinates.
    *
    * @param center - The center point of the ellipse in WCS coordinates
-   * @param normal - The normal vector defining the plane of the ellipse
    * @param majorAxis - The major axis vector in WCS coordinates
    * @param majorAxisRadius - The radius of the major axis (must be positive)
    * @param minorAxisRadius - The radius of the minor axis (must be positive)
@@ -105,9 +98,8 @@ export class AcDbEllipse extends AcDbCurve {
    * ```typescript
    * // Create a full ellipse in the XY plane
    * const fullEllipse = new AcDbEllipse(
-   *   new AcGePoint3d(0, 0, 0),
-   *   AcGeVector3d.Z_AXIS,
-   *   AcGeVector3d.X_AXIS,
+   *   new AcGePoint2d(0, 0),
+   *   { x: 1, y: 0 },
    *   20, // major radius
    *   10, // minor radius
    *   0,
@@ -116,9 +108,8 @@ export class AcDbEllipse extends AcDbCurve {
    *
    * // Create a quarter ellipse
    * const quarterEllipse = new AcDbEllipse(
-   *   new AcGePoint3d(10, 20, 0),
-   *   AcGeVector3d.Z_AXIS,
-   *   AcGeVector3d.X_AXIS,
+   *   new AcGePoint2d(10, 20),
+   *   { x: 1, y: 0 },
    *   15,
    *   8,
    *   0,
@@ -128,18 +119,16 @@ export class AcDbEllipse extends AcDbCurve {
    */
   constructor()
   constructor(
-    center: AcGePointLike,
-    normal: AcGeVector3dLike,
-    majorAxis: AcGeVector3dLike,
+    center: AcGePoint2dLike,
+    majorAxis: AcGeVector2dLike,
     majorAxisRadius: number,
     minorAxisRadius: number,
     startAngle: number,
     endAngle: number
   )
   constructor(
-    center?: AcGePointLike,
-    normal?: AcGeVector3dLike,
-    majorAxis?: AcGeVector3dLike,
+    center?: AcGePoint2dLike,
+    majorAxis?: AcGeVector2dLike,
     majorAxisRadius?: number,
     minorAxisRadius?: number,
     startAngle?: number,
@@ -148,21 +137,20 @@ export class AcDbEllipse extends AcDbCurve {
     super()
     if (
       center !== undefined &&
-      normal !== undefined &&
       majorAxis !== undefined &&
       majorAxisRadius !== undefined &&
       minorAxisRadius !== undefined &&
       startAngle !== undefined &&
       endAngle !== undefined
     ) {
-      this._geo = new AcGeEllipseArc3d(
+      this._geo = new AcGeEllipseArc2d(
         center,
-        normal,
-        majorAxis,
         majorAxisRadius,
         minorAxisRadius,
         startAngle,
-        endAngle
+        endAngle,
+        false,
+        new AcGeVector2d(majorAxis.x, majorAxis.y).angle()
       )
     }
   }
@@ -170,7 +158,7 @@ export class AcDbEllipse extends AcDbCurve {
   /**
    * Gets the center point of this ellipse.
    *
-   * @returns The center point as a 3D point
+   * @returns The center point as a 2D point
    *
    * @example
    * ```typescript
@@ -178,7 +166,7 @@ export class AcDbEllipse extends AcDbCurve {
    * console.log(`Ellipse center: ${centerPoint.x}, ${centerPoint.y}, ${centerPoint.z}`);
    * ```
    */
-  get center(): AcGePoint3d {
+  get center(): AcGePoint2d {
     return this._geo.center
   }
 
@@ -189,10 +177,10 @@ export class AcDbEllipse extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * ellipse.center = new AcGePoint3d(5, 5, 0);
+   * ellipse.center = new AcGePoint2d(5, 5);
    * ```
    */
-  set center(value: AcGePoint3dLike) {
+  set center(value: AcGePoint2dLike) {
     this._geo.center = value
   }
 
@@ -207,8 +195,12 @@ export class AcDbEllipse extends AcDbCurve {
    * console.log(`Major radius: ${majorRadius}`);
    * ```
    */
-  get majorAxis(): AcGeVector3dLike {
-    return this._geo.majorAxis
+  get majorAxis(): AcGeVector2d {
+    const rotation = this._geo.rotation
+    return new AcGeVector2d(Math.cos(rotation), Math.sin(rotation))
+  }
+  set majorAxis(value: AcGeVector2dLike) {
+    this._geo.rotation = new AcGeVector2d(value.x, value.y).angle()
   }
 
   get majorAxisRadius(): number {
@@ -317,37 +309,6 @@ export class AcDbEllipse extends AcDbCurve {
   }
 
   /**
-   * Gets the normal vector of this ellipse.
-   *
-   * The normal vector defines the plane in which the ellipse lies.
-   *
-   * @returns The unit normal vector in WCS coordinates
-   *
-   * @example
-   * ```typescript
-   * const normal = ellipse.normal;
-   * console.log(`Ellipse normal: ${normal.x}, ${normal.y}, ${normal.z}`);
-   * ```
-   */
-  get normal() {
-    return this._geo.normal
-  }
-
-  /**
-   * Sets the normal vector of this ellipse.
-   *
-   * @param value - The new normal vector
-   *
-   * @example
-   * ```typescript
-   * ellipse.normal = AcGeVector3d.Y_AXIS;
-   * ```
-   */
-  set normal(value: AcGeVector3dLike) {
-    this._geo.normal = value
-  }
-
-  /**
    * Gets the geometric extents (bounding box) of this ellipse.
    *
    * @returns The bounding box that encompasses the entire ellipse
@@ -359,7 +320,7 @@ export class AcDbEllipse extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return this._geo.box
+    return acgeEllipseArc2dTo3d(this._geo).box
   }
 
   /** @inheritdoc */
@@ -367,7 +328,7 @@ export class AcDbEllipse extends AcDbCurve {
     return [
       {
         kind: 'ellipseArc',
-        arc: this._geo.clone(),
+        arc: acgeEllipseArc2dTo3d(this._geo),
         extendable: !this.closed
       }
     ]
@@ -382,12 +343,12 @@ export class AcDbEllipse extends AcDbCurve {
    * @returns True if the ellipse is closed (forms a complete ellipse), false otherwise
    */
   get closed(): boolean {
-    return this._geo.closed || Math.abs(this._geo.deltaAngle - TAU) < 1e-10
+    return this._geo.closed
   }
 
   /** @inheritdoc */
   get area(): number {
-    return this._geo.area
+    return acgeEllipseArc2dTo3d(this._geo).area
   }
 
   /**
@@ -400,14 +361,15 @@ export class AcDbEllipse extends AcDbCurve {
    */
   subGetGripPoints() {
     const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(this._geo.center)
+    const geo = acgeEllipseArc2dTo3d(this._geo)
+    gripPoints.push(geo.center)
     if (this.closed) {
       for (const angle of ELLIPSE_QUADRANT_GRIP_ANGLES) {
-        gripPoints.push(this._geo.getPointAtAngle(angle))
+        gripPoints.push(geo.getPointAtAngle(angle))
       }
     } else {
-      gripPoints.push(this._geo.startPoint)
-      gripPoints.push(this._geo.endPoint)
+      gripPoints.push(geo.startPoint)
+      gripPoints.push(geo.endPoint)
     }
     return gripPoints
   }
@@ -438,37 +400,38 @@ export class AcDbEllipse extends AcDbCurve {
     _lastPoint: AcGePoint3dLike,
     snapPoints: AcGePoint3dLike[]
   ) {
+    const geo = acgeEllipseArc2dTo3d(this._geo)
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
         if (!this.closed) {
-          snapPoints.push(this._geo.startPoint)
-          snapPoints.push(this._geo.endPoint)
+          snapPoints.push(geo.startPoint)
+          snapPoints.push(geo.endPoint)
         }
         break
       case AcDbOsnapMode.MidPoint:
         if (!this.closed) {
-          snapPoints.push(this._geo.midPoint)
+          snapPoints.push(geo.midPoint)
         }
         break
       case AcDbOsnapMode.Center:
       case AcDbOsnapMode.Centroid:
-        snapPoints.push(this._geo.center)
+        snapPoints.push(geo.center)
         break
       case AcDbOsnapMode.Quadrant:
         if (this.closed) {
           for (const angle of ELLIPSE_QUADRANT_GRIP_ANGLES) {
-            snapPoints.push(this._geo.getPointAtAngle(angle))
+            snapPoints.push(geo.getPointAtAngle(angle))
           }
         }
         break
       case AcDbOsnapMode.Nearest:
-        snapPoints.push(this._geo.nearestPoint(pickPoint))
+        snapPoints.push(geo.nearestPoint(pickPoint))
         break
       case AcDbOsnapMode.Tangent:
-        snapPoints.push(...this._geo.tangentPoints(pickPoint))
+        snapPoints.push(...geo.tangentPoints(pickPoint))
         break
       case AcDbOsnapMode.Perpendicular: {
-        const candidates = this._geo.perpendicularPoints(pickPoint)
+        const candidates = geo.perpendicularPoints(pickPoint)
         const nearest = acdbPickNearestOsnapPoint(pickPoint, candidates)
         if (nearest) snapPoints.push(nearest)
         break
@@ -482,7 +445,9 @@ export class AcDbEllipse extends AcDbCurve {
    * Transforms this ellipse by the specified matrix.
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo.transform(matrix)
+    this._geo = acgeEllipseArc3dTo2d(
+      acgeEllipseArc2dTo3d(this._geo).transform(matrix)
+    )
     return this
   }
 
@@ -522,17 +487,6 @@ export class AcDbEllipse extends AcDbCurve {
                 get: () => this.center.y,
                 set: (v: number) => {
                   this.center.y = v
-                }
-              }
-            },
-            {
-              name: 'centerZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.center.z,
-                set: (v: number) => {
-                  this.center.z = v
                 }
               }
             },
@@ -581,44 +535,11 @@ export class AcDbEllipse extends AcDbCurve {
               }
             },
             {
-              name: 'normalX',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.x,
-                set: (v: number) => {
-                  this.normal.x = v
-                }
-              }
-            },
-            {
-              name: 'normalY',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.y,
-                set: (v: number) => {
-                  this.normal.y = v
-                }
-              }
-            },
-            {
-              name: 'normalZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.normal.z,
-                set: (v: number) => {
-                  this.normal.z = v
-                }
-              }
-            },
-            {
               name: 'length',
               type: 'float',
               editable: false,
               accessor: {
-                get: () => this._geo.length
+                get: () => acgeEllipseArc2dTo3d(this._geo).length
               }
             },
             {
@@ -654,7 +575,7 @@ export class AcDbEllipse extends AcDbCurve {
    * @returns The rendered ellipse entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.ellipticalArc(this._geo)
+    return renderer.ellipticalArc(acgeEllipseArc2dTo3d(this._geo))
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {
@@ -688,32 +609,36 @@ export class AcDbEllipse extends AcDbCurve {
         if (this.closed) {
           this.moveQuadrantGripAt(ELLIPSE_QUADRANT_GRIP_ANGLES[0], offset)
         } else {
-          const point = this._geo.startPoint
-          this._geo.startAngle = acgeGetOcsAngle(
-            this._geo.center,
+          const geo = acgeEllipseArc2dTo3d(this._geo)
+          const point = geo.startPoint
+          geo.startAngle = acgeGetOcsAngle(
+            geo.center,
             {
               x: point.x + offset.x,
               y: point.y + offset.y,
               z: (point.z ?? 0) + (offset.z ?? 0)
             },
-            this._geo.normal
+            geo.normal
           )
+          this._geo = acgeEllipseArc3dTo2d(geo)
         }
         break
       case 2:
         if (this.closed) {
           this.moveQuadrantGripAt(ELLIPSE_QUADRANT_GRIP_ANGLES[1], offset)
         } else {
-          const point = this._geo.endPoint
-          this._geo.endAngle = acgeGetOcsAngle(
-            this._geo.center,
+          const geo = acgeEllipseArc2dTo3d(this._geo)
+          const point = geo.endPoint
+          geo.endAngle = acgeGetOcsAngle(
+            geo.center,
             {
               x: point.x + offset.x,
               y: point.y + offset.y,
               z: (point.z ?? 0) + (offset.z ?? 0)
             },
-            this._geo.normal
+            geo.normal
           )
+          this._geo = acgeEllipseArc3dTo2d(geo)
         }
         break
       case 3:
@@ -742,20 +667,19 @@ export class AcDbEllipse extends AcDbCurve {
    * @private
    */
   private moveQuadrantGripAt(angle: number, offset: AcGeVector3dLike) {
-    const point = this._geo.getPointAtAngle(angle)
+    const geo = acgeEllipseArc2dTo3d(this._geo)
+    const point = geo.getPointAtAngle(angle)
     const newPoint = new AcGePoint3d(
       point.x + offset.x,
       point.y + offset.y,
       (point.z ?? 0) + (offset.z ?? 0)
     )
-    const c = this._geo.center
+    const c = geo.center
     const dx = newPoint.x - c.x
     const dy = newPoint.y - c.y
     const dz = (newPoint.z ?? 0) - (c.z ?? 0)
     const axis =
-      angle === 0 || angle === Math.PI
-        ? this._geo.majorAxis
-        : this._geo.minorAxis
+      angle === 0 || angle === Math.PI ? geo.majorAxis : geo.minorAxis
     const projected = dx * axis.x + dy * axis.y + dz * axis.z
     const newRadius = Math.abs(projected)
     if (newRadius <= 0) return
@@ -767,11 +691,10 @@ export class AcDbEllipse extends AcDbCurve {
   }
 
   private createOffsetCurve(offsetDist: number): AcDbEllipse | null {
-    const geo = this._geo.offset(offsetDist)
+    const geo = acgeEllipseArc2dTo3d(this._geo).offset(offsetDist)
     if (!geo) return null
     return new AcDbEllipse(
       geo.center,
-      geo.normal,
       geo.majorAxis,
       geo.majorAxisRadius,
       geo.minorAxisRadius,
@@ -780,4 +703,3 @@ export class AcDbEllipse extends AcDbCurve {
     )
   }
 }
-

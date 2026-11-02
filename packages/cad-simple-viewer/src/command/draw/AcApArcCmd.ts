@@ -4,7 +4,6 @@ import {
   AcGeMathUtil,
   AcGePoint3d,
   AcGePoint3dLike,
-  AcGeVector3dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -21,20 +20,17 @@ import {
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
 
-const POSITIVE_NORMAL: AcGeVector3dLike = { x: 0, y: 0, z: 1 }
-const NEGATIVE_NORMAL: AcGeVector3dLike = { x: 0, y: 0, z: -1 }
-
-// Arc orientation in this command is encoded by the normal direction:
-// 1  -> +Z (counterclockwise in XY)
-// -1 -> -Z (clockwise in XY)
-type ArcNormalSign = 1 | -1
+// Arc orientation in this command:
+// 1  -> counterclockwise in XY
+// -1 -> clockwise in XY
+type ArcDirectionSign = 1 | -1
 
 interface ArcDefinition {
   center: AcGePoint3dLike
   radius: number
   startAngle: number
   endAngle: number
-  normalSign: ArcNormalSign
+  directionSign: ArcDirectionSign
 }
 
 /**
@@ -49,27 +45,16 @@ function directionAngleDeg(from: AcGePoint3dLike, to: AcGePoint3dLike) {
 }
 
 /**
- * Computes point angle around a center under a given arc orientation.
- *
- * For `normalSign = -1` (clockwise), the X component is mirrored so that
- * angle growth still follows the selected arc direction convention.
+ * Computes the polar angle of a point around a center.
  *
  * @param center - Arc center.
  * @param point - Point on the arc/circle.
- * @param normalSign - Arc orientation sign (+Z / -Z).
- * @returns Direction-aware normalized angle in radians.
+ * @returns Normalized angle in radians.
  */
-function angleByNormalSign(
-  center: AcGePoint3dLike,
-  point: AcGePoint3dLike,
-  normalSign: ArcNormalSign
-) {
-  // AcDbArc stores start/end in OCS. For a -Z extrusion, data-model chooses
-  // OCS X = -WCS X and OCS Y = WCS Y, so mirror X rather than Y.
-  const dx = point.x - center.x
-  const dy = point.y - center.y
-  const raw = normalSign === 1 ? Math.atan2(dy, dx) : Math.atan2(dy, -dx)
-  return AcGeMathUtil.normalizeAngle(raw)
+function polarAngle(center: AcGePoint3dLike, point: AcGePoint3dLike) {
+  return AcGeMathUtil.normalizeAngle(
+    Math.atan2(point.y - center.y, point.x - center.x)
+  )
 }
 
 /**
@@ -77,37 +62,19 @@ function angleByNormalSign(
  */
 function toArcDefinition(arc: AcGeCircArc2d | null): ArcDefinition | undefined {
   if (!arc) return undefined
-  const normalSign: ArcNormalSign = arc.clockwise ? -1 : 1
+  const directionSign: ArcDirectionSign = arc.clockwise ? -1 : 1
   const center = { x: arc.center.x, y: arc.center.y, z: 0 }
   return {
     center,
     radius: arc.radius,
-    startAngle: angleByNormalSign(
-      center,
-      { x: arc.startPoint.x, y: arc.startPoint.y, z: 0 },
-      normalSign
-    ),
-    endAngle: angleByNormalSign(
-      center,
-      { x: arc.endPoint.x, y: arc.endPoint.y, z: 0 },
-      normalSign
-    ),
-    normalSign
+    startAngle: polarAngle(center, { x: arc.startPoint.x, y: arc.startPoint.y, z: 0 }),
+    endAngle: polarAngle(center, { x: arc.endPoint.x, y: arc.endPoint.y, z: 0 }),
+    directionSign
   }
 }
 
-/**
- * Maps orientation sign to 3D normal vector.
- *
- * @param sign - Orientation sign.
- * @returns Unit normal vector used by `AcDbArc`.
- */
-function toNormal(sign: ArcNormalSign): AcGeVector3dLike {
-  return sign === 1 ? POSITIVE_NORMAL : NEGATIVE_NORMAL
-}
-
-function normalSignOf(entity: AcDbArc): ArcNormalSign {
-  return entity.normal.z >= 0 ? 1 : -1
+function directionSignOf(entity: AcDbArc): ArcDirectionSign {
+  return entity.clockwise ? -1 : 1
 }
 
 /**
@@ -122,7 +89,7 @@ function createArcEntity(definition: ArcDefinition) {
     definition.radius,
     definition.startAngle,
     definition.endAngle,
-    toNormal(definition.normalSign)
+    definition.directionSign === -1
   )
 }
 
@@ -138,9 +105,9 @@ function createArcEntity(definition: ArcDefinition) {
 function applyArcDefinition(entity: AcDbArc, definition: ArcDefinition) {
   entity.center = definition.center
   entity.radius = definition.radius
+  entity.clockwise = definition.directionSign === -1
   entity.startAngle = definition.startAngle
   entity.endAngle = definition.endAngle
-  entity.normal = toNormal(definition.normalSign)
 }
 
 /**
@@ -155,7 +122,7 @@ function createFallbackArc(point: AcGePoint3dLike): ArcDefinition {
     radius: 1e-6,
     startAngle: 0,
     endAngle: Math.PI / 2,
-    normalSign: 1
+    directionSign: 1
   }
 }
 
@@ -183,14 +150,14 @@ function createArcFromCenterStartEnd(
   center: AcGePoint3dLike,
   start: AcGePoint3dLike,
   end: AcGePoint3dLike,
-  normalSign: ArcNormalSign
+  directionSign: ArcDirectionSign
 ) {
   return toArcDefinition(
     AcGeCircArc2d.tryCreateByCenterStartEnd(
       center,
       start,
       end,
-      normalSign === -1
+      directionSign === -1
     )
   )
 }
@@ -202,21 +169,21 @@ function createArcFromCenterStartProjectedEnd(
   center: AcGePoint3dLike,
   start: AcGePoint3dLike,
   rawEnd: AcGePoint3dLike,
-  normalSign: ArcNormalSign
+  directionSign: ArcDirectionSign
 ) {
   return toArcDefinition(
     AcGeCircArc2d.tryCreateByCenterStartProjectedEnd(
       center,
       start,
       rawEnd,
-      normalSign === -1
+      directionSign === -1
     )
   )
 }
 
 /**
  * Builds center-start arc from included sweep angle.
- * Positive sweep = +Z orientation, negative sweep = -Z orientation.
+ * Positive sweep = counterclockwise, negative sweep = clockwise.
  */
 function createArcFromCenterStartSweep(
   center: AcGePoint3dLike,
@@ -330,7 +297,7 @@ class AcApArcJig extends AcEdPreviewJig<AcGePoint3dLike> {
     // Ignore invalid intermediate states while the cursor moves.
     const definition = this._builder(point)
     if (!definition) return
-    if (definition.normalSign !== normalSignOf(this._arc)) {
+    if (definition.directionSign !== directionSignOf(this._arc)) {
       this.end()
       this._arc = createArcEntity(definition)
       return
@@ -390,7 +357,7 @@ class AcApArcValueJig<T> extends AcEdPreviewJig<T> {
   update(value: T) {
     const definition = this._builder(value)
     if (!definition) return
-    if (definition.normalSign !== normalSignOf(this._arc)) {
+    if (definition.directionSign !== directionSignOf(this._arc)) {
       this.end()
       this._arc = createArcEntity(definition)
       return
@@ -1240,8 +1207,8 @@ export class AcApArcCmd extends AcEdCommand {
    * @param sign - Base orientation sign.
    * @returns Possibly flipped orientation sign.
    */
-  private applyCtrlDirectionSign(sign: ArcNormalSign): ArcNormalSign {
-    return (sign * this.getArcDirectionFactor()) as ArcNormalSign
+  private applyCtrlDirectionSign(sign: ArcDirectionSign): ArcDirectionSign {
+    return (sign * this.getArcDirectionFactor()) as ArcDirectionSign
   }
 
   /**

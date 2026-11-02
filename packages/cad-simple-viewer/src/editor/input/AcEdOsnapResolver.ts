@@ -134,8 +134,7 @@ function transformedEntityCopy(
     if (!(scale > 0) || !Number.isFinite(scale)) return undefined
     return new AcDbCircle(
       new AcGePoint3d(entity.center).applyMatrix4(matrix),
-      entity.radius * scale,
-      entity.normal
+      entity.radius * scale
     )
   }
 
@@ -147,7 +146,7 @@ function transformedEntityCopy(
       entity.radius * scale,
       entity.startAngle,
       entity.endAngle,
-      entity.normal
+      entity.clockwise
     )
   }
 

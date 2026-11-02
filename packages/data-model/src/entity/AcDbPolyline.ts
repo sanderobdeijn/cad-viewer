@@ -11,8 +11,6 @@ import {
   AcGePolyline2d,
   AcGePolyline2dVertex,
   type AcGeTessellateOptions,
-  acgeTransformOcsPointToWcs,
-  acgeTransformWcsPointToOcs,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -87,13 +85,6 @@ export class AcDbPolyline extends AcDbCurve {
   override get dxfTypeName() {
     return 'LWPOLYLINE'
   }
-
-  /** The elevation (Z-coordinate) of the polyline plane */
-  private _elevation: number
-  /** Thickness along the normal (DXF group 39) */
-  private _thickness = 0
-  /** Extrusion / plane normal (DXF group 210) */
-  private _normal = new AcGeVector3d(0, 0, 1)
   /** The underlying geometric polyline object */
   private _geo: AcGePolyline2d<AcDbPolylineVertex>
 
@@ -112,7 +103,6 @@ export class AcDbPolyline extends AcDbCurve {
    */
   constructor() {
     super()
-    this._elevation = 0
     this._geo = new AcGePolyline2d()
   }
 
@@ -129,58 +119,6 @@ export class AcDbPolyline extends AcDbCurve {
    */
   get numberOfVertices(): number {
     return this._geo.numberOfVertices
-  }
-
-  /**
-   * Gets the elevation of this polyline.
-   *
-   * The elevation is the distance of the polyline's plane from the WCS origin
-   * along the Z-axis.
-   *
-   * @returns The elevation value
-   *
-   * @example
-   * ```typescript
-   * const elevation = polyline.elevation;
-   * console.log(`Polyline elevation: ${elevation}`);
-   * ```
-   */
-  get elevation(): number {
-    return this._elevation
-  }
-
-  /**
-   * Sets the elevation of this polyline.
-   *
-   * @param value - The new elevation value
-   *
-   * @example
-   * ```typescript
-   * polyline.elevation = 10;
-   * ```
-   */
-  set elevation(value: number) {
-    this._elevation = value
-  }
-
-  /**
-   * Thickness along the entity normal (DXF group 39).
-   */
-  get thickness() {
-    return this._thickness
-  }
-  set thickness(value: number) {
-    this._thickness = value
-  }
-
-  /**
-   * Extrusion direction / plane normal (DXF group 210).
-   */
-  get normal(): AcGeVector3d {
-    return this._normal
-  }
-  set normal(value: AcGeVector3dLike) {
-    this._normal.copy(value)
   }
 
   /**
@@ -306,24 +244,10 @@ export class AcDbPolyline extends AcDbCurve {
     return this._geo.getPointAt(index)
   }
 
-  /**
-   * Gets the 3D location of a vertex at the specified index.
-   *
-   * The point is returned in World Coordinates, with the Z-coordinate
-   * set to the polyline's elevation.
-   *
-   * @param index - The index (0-based) of the vertex
-   * @returns The 3D point location of the vertex
-   *
-   * @example
-   * ```typescript
-   * const point3d = polyline.getPoint3dAt(0);
-   * console.log(`Vertex 0: ${point3d.x}, ${point3d.y}, ${point3d.z}`);
-   * ```
-   */
-  getPoint3dAt(index: number): AcGePoint3d {
+  /** Gets a vertex as a 3D point at Z = 0, for the shared grip and snap APIs. */
+  private getPoint3dAt(index: number): AcGePoint3d {
     const vertex = this.getPoint2dAt(index)
-    return this.ocsPointToWcs(vertex.x, vertex.y)
+    return new AcGePoint3d(vertex.x, vertex.y, 0)
   }
 
   /**
@@ -339,27 +263,15 @@ export class AcDbPolyline extends AcDbCurve {
    */
   get geometricExtents(): AcGeBox3d {
     const box = this._geo.box
-    // Empty OCS box uses ±Infinity; transforming those through the OCS matrix
-    // yields NaN and can poison spatial indexes downstream.
     if (box.isEmpty()) {
       return new AcGeBox3d()
     }
     return new AcGeBox3d().setFromPoints([
-      this.ocsPointToWcs(box.min.x, box.min.y),
-      this.ocsPointToWcs(box.max.x, box.min.y),
-      this.ocsPointToWcs(box.max.x, box.max.y),
-      this.ocsPointToWcs(box.min.x, box.max.y)
+      new AcGePoint3d(box.min.x, box.min.y, 0),
+      new AcGePoint3d(box.max.x, box.min.y, 0),
+      new AcGePoint3d(box.max.x, box.max.y, 0),
+      new AcGePoint3d(box.min.x, box.max.y, 0)
     ])
-  }
-
-  /**
-   * Maps an OCS polyline point (plus elevation) into WCS using {@link normal}.
-   */
-  private ocsPointToWcs(x: number, y: number): AcGePoint3d {
-    return acgeTransformOcsPointToWcs(
-      { x, y, z: this._elevation },
-      this._normal
-    )
   }
 
   /** @inheritdoc */
@@ -367,8 +279,8 @@ export class AcDbPolyline extends AcDbCurve {
     return acdbIntersectPrimitivesFromPolyline2d(
       this._geo.vertices,
       this.closed,
-      this._elevation,
-      this._normal
+      0,
+      AcGeVector3d.Z_AXIS
     )
   }
 
@@ -403,23 +315,21 @@ export class AcDbPolyline extends AcDbCurve {
     const vertexCount = this.numberOfVertices
     const includeMidpoints = this.shouldIncludeSegmentMidpointGrips()
     const segmentCount = includeMidpoints ? this.getSegmentCount() : 0
-    // Grips are exposed in WCS; 2D vertices are stored in OCS.
-    const ocsOffset = acgeTransformWcsPointToOcs(offset, this._normal)
 
     acdbForEachGripIndex(indices, index => {
       if (index < vertexCount) {
-        acdbMovePolyline2dVertexAt(this._geo.vertices, index, ocsOffset)
+        acdbMovePolyline2dVertexAt(this._geo.vertices, index, offset)
         return
       }
       if (!includeMidpoints || index >= vertexCount + segmentCount) {
         return
       }
       const segmentIndex = index - vertexCount
-      acdbMovePolyline2dVertexAt(this._geo.vertices, segmentIndex, ocsOffset)
+      acdbMovePolyline2dVertexAt(this._geo.vertices, segmentIndex, offset)
       acdbMovePolyline2dVertexAt(
         this._geo.vertices,
         (segmentIndex + 1) % vertexCount,
-        ocsOffset
+        offset
       )
     })
     return this
@@ -465,7 +375,6 @@ export class AcDbPolyline extends AcDbCurve {
    */
   private appendSegmentMidpointGrips(gripPoints: AcGePoint3d[]) {
     const geo = this._geo
-    const elevation = this._elevation
     const segmentCount = this.getSegmentCount()
     const vertexCount = geo.numberOfVertices
 
@@ -475,13 +384,13 @@ export class AcDbPolyline extends AcDbCurve {
         geo.getPointAt(index),
         geo.getPointAt((index + 1) % vertexCount),
         geo.vertices[index]?.bulge,
-        elevation,
+        0,
         AcDbOsnapMode.MidPoint,
         { x: 0, y: 0, z: 0 },
         segmentSnaps
       )
       for (const snap of segmentSnaps) {
-        gripPoints.push(this.ocsPointToWcs(snap.x, snap.y))
+        gripPoints.push(new AcGePoint3d(snap.x, snap.y, 0))
       }
     }
   }
@@ -505,7 +414,6 @@ export class AcDbPolyline extends AcDbCurve {
     snapPoints: AcGePoint3dLike[]
   ) {
     const geo = this._geo
-    const elevation = this._elevation
     const vertexCount = geo.numberOfVertices
     if (vertexCount === 0) return
 
@@ -527,13 +435,13 @@ export class AcDbPolyline extends AcDbCurve {
             geo.getPointAt(index),
             geo.getPointAt((index + 1) % vertexCount),
             geo.vertices[index]?.bulge,
-            elevation,
+            0,
             osnapMode,
             pickPoint,
             segmentSnaps
           )
           for (const snap of segmentSnaps) {
-            candidates.push(this.ocsPointToWcs(snap.x, snap.y))
+            candidates.push(new AcGePoint3d(snap.x, snap.y, 0))
           }
         }
         if (osnapMode === AcDbOsnapMode.MidPoint) {
@@ -552,28 +460,24 @@ export class AcDbPolyline extends AcDbCurve {
   /**
    * Transforms this polyline by the specified matrix.
    *
-   * The lightweight polyline stores 2D vertices plus a shared elevation, so we
-   * transform each vertex in 3D and then write the projected XY values back.
+   * The lightweight polyline stores 2D vertices, so we transform each vertex in
+   * 3D and then write the projected XY values back.
    */
   transformBy(matrix: AcGeMatrix3d) {
     const flipBulge = matrix.determinant() < 0
-    let elevation = this._elevation
 
     this._geo.vertices.forEach(vertex => {
       const transformedPoint = new AcGePoint3d(
         vertex.x,
         vertex.y,
-        this._elevation
+        0
       ).applyMatrix4(matrix)
       vertex.x = transformedPoint.x
       vertex.y = transformedPoint.y
-      elevation = transformedPoint.z
       if (flipBulge && vertex.bulge != null) {
         vertex.bulge = -vertex.bulge
       }
     })
-
-    this._elevation = elevation
     ;(
       this._geo as AcGePolyline2d<AcDbPolylineVertex> & {
         _boundingBoxNeedsUpdate: boolean
@@ -619,17 +523,6 @@ export class AcDbPolyline extends AcDbCurve {
               },
               accessor: {
                 get: () => this._geo.vertices
-              }
-            },
-            {
-              name: 'elevation',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.elevation,
-                set: (v: number) => {
-                  this.elevation = v
-                }
               }
             },
             {
@@ -702,23 +595,22 @@ export class AcDbPolyline extends AcDbCurve {
         const ring = createClosedWidePolylineOffsetRing(widthProfile)
         if (ring != null) {
           return renderer.offsetRing(
-            ring.outer.map(point => this.ocsPointToWcs(point.x, point.y)),
-            ring.inner.map(point => this.ocsPointToWcs(point.x, point.y))
+            ring.outer.map(point => new AcGePoint3d(point.x, point.y, 0)),
+            ring.inner.map(point => new AcGePoint3d(point.x, point.y, 0))
           )
         }
       }
       const areas = createWidePolylineArea(widthProfile, this.closed)
       if (areas != null) {
         const entities = areas.map(area => {
-          this.mapAreaLoopsToWcs(area)
           return renderer.area(area)
         })
         // Restore before the hairline stroke — lines must not inherit solid fill.
         // Hairline centerline so open wide bands stay visible when their
         // world-space width projects to ≪ 1 device pixel (title blocks).
         // Closed rings already get a centerline from renderer.offsetRing.
-        const strokePoints = widthProfile.map(sample =>
-          this.ocsPointToWcs(sample.x, sample.y)
+        const strokePoints = widthProfile.map(
+          sample => new AcGePoint3d(sample.x, sample.y, 0)
         )
         // createWidthProfile omits the seam for closed paths; close the stroke.
         if (this.closed && strokePoints.length >= 2) {
@@ -733,31 +625,9 @@ export class AcDbPolyline extends AcDbCurve {
 
     const points: AcGePoint3d[] = []
     centerline.forEach(point =>
-      points.push(this.ocsPointToWcs(point.x, point.y))
+      points.push(new AcGePoint3d(point.x, point.y, 0))
     )
     return renderer.lines(points)
-  }
-
-  /**
-   * Remaps filled wide-polyline loops from OCS into WCS XY for plan drawing.
-   * Full 3D tipping of area fills is not supported by {@link AcGeArea2d}.
-   */
-  private mapAreaLoopsToWcs(area: AcGeArea2d) {
-    if (
-      this._normal.x === 0 &&
-      this._normal.y === 0 &&
-      this._normal.z === 1
-    ) {
-      return
-    }
-    for (const loop of area.loops) {
-      if (!('vertices' in loop)) continue
-      for (const vertex of loop.vertices) {
-        const wcs = this.ocsPointToWcs(vertex.x, vertex.y)
-        vertex.x = wcs.x
-        vertex.y = wcs.y
-      }
-    }
   }
 
   /**
@@ -1290,7 +1160,12 @@ function addOpenWidePolylineBand(
     const leftEnd = left[i + 1]
     const rightStart = right[i]
     const rightEnd = right[i + 1]
-    if (leftStart == null || leftEnd == null || rightStart == null || rightEnd == null) {
+    if (
+      leftStart == null ||
+      leftEnd == null ||
+      rightStart == null ||
+      rightEnd == null
+    ) {
       continue
     }
     if (
@@ -1316,7 +1191,9 @@ function countBoundaryPoints(boundary: (AcGePolyline2dVertex | null)[]) {
 }
 
 function compactBoundaryLoop(boundary: (AcGePolyline2dVertex | null)[]) {
-  return boundary.filter((point): point is AcGePolyline2dVertex => point != null)
+  return boundary.filter(
+    (point): point is AcGePolyline2dVertex => point != null
+  )
 }
 
 /**
@@ -1476,4 +1353,3 @@ function isRenderableLoop(points: AcGePolyline2dVertex[]) {
 function lerp(start: number, end: number, t: number) {
   return start + (end - start) * t
 }
-

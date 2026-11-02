@@ -1,8 +1,7 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGeVector3d
-} from '@mlightcad/geometry-engine'
+  AcGePoint2d,
+  AcGePoint3d,} from '@mlightcad/geometry-engine'
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbArc } from '../src/entity'
@@ -25,39 +24,27 @@ describe('AcDbArc', () => {
   it('supports public geometric getters and setters', () => {
     createWorkingDb()
     const arc = new AcDbArc(new AcGePoint3d(1, 2, 0), 2, 0, Math.PI / 2)
-    const arcWithNormal = new AcDbArc(
-      new AcGePoint3d(0, 0, 0),
-      1,
-      0,
-      Math.PI / 2,
-      new AcGeVector3d(0, 0, 1)
-    )
 
     expect(arc.dxfTypeName).toBe('ARC')
-    expect(arc.center).toBeInstanceOf(AcGePoint3d)
+    expect(arc.center).toBeInstanceOf(AcGePoint2d)
     expect(arc.radius).toBe(2)
     expect(arc.startAngle).toBe(0)
     expect(arc.endAngle).toBeCloseTo(Math.PI / 2)
-    expect(arc.normal).toBeInstanceOf(AcGeVector3d)
-    expect(arcWithNormal.normal.z).toBeCloseTo(1)
 
     arc.center = new AcGePoint3d(3, 4, 1)
     arc.radius = 5
     arc.startAngle = Math.PI / 4
     arc.endAngle = Math.PI
-    arc.normal = new AcGeVector3d(0, 0, 1)
 
     expect(arc.center.x).toBeCloseTo(3)
     expect(arc.center.y).toBeCloseTo(4)
-    expect(arc.center.z).toBeCloseTo(1)
     expect(arc.radius).toBe(5)
     expect(arc.startAngle).toBeCloseTo(Math.PI / 4)
     expect(arc.endAngle).toBeCloseTo(Math.PI)
-    expect(arc.normal.z).toBeCloseTo(1)
 
-    expect(arc.startPoint).toBeInstanceOf(AcGePoint3d)
-    expect(arc.endPoint).toBeInstanceOf(AcGePoint3d)
-    expect(arc.midPoint).toBeInstanceOf(AcGePoint3d)
+    expect(arc.startPoint).toBeInstanceOf(AcGePoint2d)
+    expect(arc.endPoint).toBeInstanceOf(AcGePoint2d)
+    expect(arc.midPoint).toBeInstanceOf(AcGePoint2d)
     expect(arc.geometricExtents).toBeDefined()
     expect(typeof arc.closed).toBe('boolean')
   })
@@ -133,11 +120,9 @@ describe('AcDbArc', () => {
 
     expect(arc.center.x).toBeCloseTo(11)
     expect(arc.center.y).toBeCloseTo(12)
-    expect(arc.center.z).toBeCloseTo(13)
     expect(arc.radius).toBeCloseTo(14)
     expect(arc.startAngle).toBeCloseTo(Math.PI / 6)
     expect(arc.endAngle).toBeCloseTo(Math.PI / 3)
-    expect(arc.normal.z).toBeCloseTo(1)
   })
 
   it('returns grip points for center/start/end', () => {
@@ -146,29 +131,26 @@ describe('AcDbArc', () => {
     const gripPoints = arc.subGetGripPoints()
 
     expect(gripPoints).toHaveLength(3)
-    expect(gripPoints[0]).toBe(arc.center)
-    expect(gripPoints[1]).toEqual(arc.startPoint)
-    expect(gripPoints[2]).toEqual(arc.endPoint)
+    expect(gripPoints[0]).toMatchObject({
+      x: arc.center.x,
+      y: arc.center.y,
+      z: 0
+    })
+    expect(gripPoints[1]).toMatchObject({
+      x: arc.startPoint.x,
+      y: arc.startPoint.y,
+      z: 0
+    })
+    expect(gripPoints[2]).toMatchObject({
+      x: arc.endPoint.x,
+      y: arc.endPoint.y,
+      z: 0
+    })
   })
 
   it('computes osnap points for all supported modes', () => {
     createWorkingDb()
     const arc = new AcDbArc(new AcGePoint3d(0, 0, 0), 5, 0, Math.PI)
-    const geo = (
-      arc as unknown as {
-        _geo: {
-          nearestPoint: (pick: AcGePoint3d) => AcGePoint3d
-          tangentPoints: (pick: AcGePoint3d) => AcGePoint3d[]
-        }
-      }
-    )._geo
-
-    const nearest = new AcGePoint3d(1, 1, 0)
-    const tangentA = new AcGePoint3d(2, 2, 0)
-    const tangentB = new AcGePoint3d(3, 3, 0)
-    jest.spyOn(geo, 'nearestPoint').mockReturnValue(nearest)
-    jest.spyOn(geo, 'tangentPoints').mockReturnValue([tangentA, tangentB])
-
     const endPoints: AcGePoint3d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
@@ -194,7 +176,9 @@ describe('AcDbArc', () => {
       new AcGePoint3d(),
       nearestPoints
     )
-    expect(nearestPoints).toEqual([nearest])
+    expect(nearestPoints).toHaveLength(1)
+    expect(nearestPoints[0].x).toBeCloseTo(5 / Math.SQRT2, 8)
+    expect(nearestPoints[0].y).toBeCloseTo(5 / Math.SQRT2, 8)
 
     const perpendicularPoints: AcGePoint3d[] = []
     arc.subGetOsnapPoints(
@@ -213,7 +197,11 @@ describe('AcDbArc', () => {
       new AcGePoint3d(),
       tangentPoints
     )
-    expect(tangentPoints).toEqual([tangentA, tangentB])
+    expect(tangentPoints.length).toBeGreaterThan(0)
+    for (const point of tangentPoints) {
+      // The radius meets the line from the pick point at a right angle.
+      expect(point.x * (point.x - 9) + point.y * (point.y - 9)).toBeCloseTo(0, 6)
+    }
 
     const centerPoints: AcGePoint3d[] = []
     arc.subGetOsnapPoints(
@@ -223,7 +211,11 @@ describe('AcDbArc', () => {
       centerPoints
     )
     expect(centerPoints).toHaveLength(1)
-    expect(centerPoints[0]).toBe(arc.center)
+    expect(centerPoints[0]).toMatchObject({
+      x: arc.center.x,
+      y: arc.center.y,
+      z: 0
+    })
 
     const unsupportedPoints: AcGePoint3d[] = []
     arc.subGetOsnapPoints(
@@ -243,7 +235,6 @@ describe('AcDbArc', () => {
     expect(arc.transformBy(matrix)).toBe(arc)
     expect(arc.center.x).toBeCloseTo(11)
     expect(arc.center.y).toBeCloseTo(0)
-    expect(arc.center.z).toBeCloseTo(4)
 
     const drawResult = { id: 'arc-rendered' }
     const renderer = {

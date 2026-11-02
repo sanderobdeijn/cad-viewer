@@ -26,7 +26,7 @@ describe('AcDbPoint', () => {
     createWorkingDb()
     const point = new AcDbPoint()
 
-    expect(point.position).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(point.position).toMatchObject({ x: 0, y: 0 })
 
     const source = new AcGePoint3d(1, 2, 3)
     point.position = source
@@ -34,39 +34,39 @@ describe('AcDbPoint', () => {
     source.y = 200
     source.z = 300
 
-    expect(point.position).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(point.position).toMatchObject({ x: 1, y: 2 })
 
     point.position = { x: -4, y: 5 }
-    expect(point.position).toMatchObject({ x: -4, y: 5, z: 0 })
+    expect(point.position).toMatchObject({ x: -4, y: 5 })
   })
 
   it('returns point-like geometric extents', () => {
     createWorkingDb()
     const point = new AcDbPoint()
-    point.position = { x: 7.5, y: -2, z: 9 }
+    point.position = { x: 7.5, y: -2 }
 
     const extents = point.geometricExtents
-    expect(extents.min).toMatchObject({ x: 7.5, y: -2, z: 9 })
-    expect(extents.max).toMatchObject({ x: 7.5, y: -2, z: 9 })
+    expect(extents.min).toMatchObject({ x: 7.5, y: -2, z: 0 })
+    expect(extents.max).toMatchObject({ x: 7.5, y: -2, z: 0 })
   })
 
   it('updates geometricExtents when position changes', () => {
     createWorkingDb()
     const point = new AcDbPoint()
-    point.position = { x: 1, y: 2, z: 3 }
+    point.position = { x: 1, y: 2 }
 
-    expect(point.geometricExtents.min).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(point.geometricExtents.min).toMatchObject({ x: 1, y: 2, z: 0 })
 
-    point.position = { x: 10, y: -5, z: 8 }
+    point.position = { x: 10, y: -5 }
 
-    expect(point.geometricExtents.min).toMatchObject({ x: 10, y: -5, z: 8 })
-    expect(point.geometricExtents.max).toMatchObject({ x: 10, y: -5, z: 8 })
+    expect(point.geometricExtents.min).toMatchObject({ x: 10, y: -5, z: 0 })
+    expect(point.geometricExtents.max).toMatchObject({ x: 10, y: -5, z: 0 })
   })
 
   it('adds osnap point only in Node mode', () => {
     createWorkingDb()
     const point = new AcDbPoint()
-    point.position = { x: 3, y: 4, z: 5 }
+    point.position = { x: 3, y: 4 }
 
     const nodePoints: AcGePoint3d[] = []
     point.subGetOsnapPoints(
@@ -76,7 +76,11 @@ describe('AcDbPoint', () => {
       nodePoints
     )
     expect(nodePoints).toHaveLength(1)
-    expect(nodePoints[0]).toBe(point.position)
+    expect(nodePoints[0]).toMatchObject({
+      x: point.position.x,
+      y: point.position.y,
+      z: 0
+    })
 
     const unsupportedModePoints: AcGePoint3d[] = []
     point.subGetOsnapPoints(
@@ -91,10 +95,14 @@ describe('AcDbPoint', () => {
   it('returns position as grip point', () => {
     createWorkingDb()
     const point = new AcDbPoint()
-    point.position = { x: 7, y: 8, z: 9 }
+    point.position = { x: 7, y: 8 }
     const grips = point.subGetGripPoints()
     expect(grips).toHaveLength(1)
-    expect(grips[0]).toBe(point.position)
+    expect(grips[0]).toMatchObject({
+      x: point.position.x,
+      y: point.position.y,
+      z: 0
+    })
   })
 
   it('exposes geometry properties with editable accessors', () => {
@@ -114,28 +122,25 @@ describe('AcDbPoint', () => {
 
     byName.get('positionX')!.accessor.set!(10)
     byName.get('positionY')!.accessor.set!(-20)
-    byName.get('positionZ')!.accessor.set!(30)
 
     expect(byName.get('positionX')!.editable).toBe(true)
     expect(byName.get('positionY')!.editable).toBe(true)
-    expect(byName.get('positionZ')!.editable).toBe(true)
     expect(byName.get('positionX')!.accessor.get()).toBe(10)
     expect(byName.get('positionY')!.accessor.get()).toBe(-20)
-    expect(byName.get('positionZ')!.accessor.get()).toBe(30)
-    expect(point.position).toMatchObject({ x: 10, y: -20, z: 30 })
+    expect(point.position).toMatchObject({ x: 10, y: -20 })
   })
 
   it('transforms by matrix and returns itself', () => {
     createWorkingDb()
     const point = new AcDbPoint()
-    point.position = { x: 1, y: 2, z: 3 }
+    point.position = { x: 1, y: 2 }
 
     const result = point.transformBy(
       new AcGeMatrix3d().makeTranslation(4, -2, 1)
     )
 
     expect(result).toBe(point)
-    expect(point.position).toMatchObject({ x: 5, y: 0, z: 4 })
+    expect(point.position).toMatchObject({ x: 5, y: 0 })
   })
 
   it('draws through renderer.point with database point style', () => {
@@ -144,7 +149,7 @@ describe('AcDbPoint', () => {
     db.pdsize = 2.5
 
     const point = new AcDbPoint()
-    point.position = { x: 9, y: 8, z: 7 }
+    point.position = { x: 9, y: 8 }
 
     const rendered = { id: 'point-rendered' }
     const renderer = {
@@ -155,10 +160,13 @@ describe('AcDbPoint', () => {
 
     expect(result).toBe(rendered)
     expect(renderer.point).toHaveBeenCalledTimes(1)
-    expect(renderer.point).toHaveBeenCalledWith(point.position, {
-      displayMode: 34,
-      displaySize: 2.5
-    })
+    expect(renderer.point).toHaveBeenCalledWith(
+      new AcGePoint3d(point.position.x, point.position.y, 0),
+      {
+        displayMode: 34,
+        displaySize: 2.5
+      }
+    )
   })
   it('creates a detached clone with a new objectId', () => {
     createWorkingDb()

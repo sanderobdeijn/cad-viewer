@@ -4,10 +4,14 @@ import {
   AcGeCircArc3d,
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  acgePoint2dTo3d,
   AcGePoint3d,
   AcGePoint3dLike,
   AcGePolyline2d,
-  AcGeVector3d,
+  AcGeVector2d,
+  AcGeVector2dLike,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
@@ -163,15 +167,15 @@ export interface AcDbMLineSegmentLike {
   /**
    * Segment vertex in world coordinates.
    */
-  position: AcGePoint3dLike
+  position: AcGePoint2dLike
   /**
    * Segment direction vector along the reference path.
    */
-  direction: AcGeVector3dLike
+  direction: AcGeVector2dLike
   /**
    * Miter direction used to offset each style element.
    */
-  miterDirection: AcGeVector3dLike
+  miterDirection: AcGeVector2dLike
   /**
    * Optional per-element parameter data for this segment.
    */
@@ -185,15 +189,15 @@ export interface AcDbMLineSegment {
   /**
    * Segment vertex in world coordinates.
    */
-  position: AcGePoint3d
+  position: AcGePoint2d
   /**
    * Segment direction vector along the reference path.
    */
-  direction: AcGeVector3d
+  direction: AcGeVector2d
   /**
    * Miter direction used to offset each style element.
    */
-  miterDirection: AcGeVector3d
+  miterDirection: AcGeVector2d
   /**
    * Resolved per-element parameter data for the segment.
    */
@@ -222,8 +226,7 @@ export class AcDbMLine extends AcDbEntity {
   private _justification: AcDbMLineJustification
   private _flags: number
   private _styleCount: number
-  private _startPosition: AcGePoint3d
-  private _normal: AcGeVector3d
+  private _startPosition: AcGePoint2d
   private _segments: AcDbMLineSegment[]
 
   /**
@@ -237,8 +240,7 @@ export class AcDbMLine extends AcDbEntity {
     this._justification = AcDbMLineJustification.Zero
     this._flags = 0
     this._styleCount = 0
-    this._startPosition = new AcGePoint3d()
-    this._normal = new AcGeVector3d(0, 0, 1)
+    this._startPosition = new AcGePoint2d()
     this._segments = []
   }
 
@@ -358,25 +360,8 @@ export class AcDbMLine extends AcDbEntity {
    *
    * @param value New start point.
    */
-  set startPosition(value: AcGePoint3dLike) {
+  set startPosition(value: AcGePoint2dLike) {
     this._startPosition.copy(value)
-  }
-
-  /**
-   * Gets the MLINE plane normal.
-   *
-   * @returns Normal vector instance.
-   */
-  get normal() {
-    return this._normal
-  }
-  /**
-   * Sets the MLINE plane normal.
-   *
-   * @param value New normal vector.
-   */
-  set normal(value: AcGeVector3dLike) {
-    this._normal.copy(value)
   }
 
   /**
@@ -486,7 +471,7 @@ export class AcDbMLine extends AcDbEntity {
   get geometricExtents() {
     const points = this.collectGeometryPoints()
     const box = new AcGeBox3d()
-    return box.setFromPoints(points)
+    return box.setFromPoints(points.map(acgePoint2dTo3d))
   }
 
   /** @inheritdoc */
@@ -496,14 +481,14 @@ export class AcDbMLine extends AcDbEntity {
     const elementCount = this.getRenderableElementCount(mlineStyle)
     if (elementCount <= 0) {
       return acdbIntersectPrimitivesFromPointPath(
-        this.getReferencePath(),
+        this.getReferencePath().map(acgePoint2dTo3d),
         this.closed
       )
     }
     for (let i = 0; i < elementCount; i++) {
       primitives.push(
         ...acdbIntersectPrimitivesFromPointPath(
-          this.getElementPath(i, mlineStyle),
+          this.getElementPath(i, mlineStyle).map(acgePoint2dTo3d),
           this.closed
         )
       )
@@ -520,13 +505,12 @@ export class AcDbMLine extends AcDbEntity {
    * @returns The same entity instance for chaining.
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._startPosition.applyMatrix4(matrix)
+    this.transformPoint(this._startPosition, matrix)
     this._segments.forEach(segment => {
-      segment.position.applyMatrix4(matrix)
+      this.transformPoint(segment.position, matrix)
       this.transformVector(segment.direction, matrix)
       this.transformVector(segment.miterDirection, matrix)
     })
-    this.transformVector(this._normal, matrix)
     return this
   }
 
@@ -607,12 +591,14 @@ export class AcDbMLine extends AcDbEntity {
    * Grip points are placed at the start point and each segment vertex,
    * matching AutoCAD MLINE grip behavior on the reference path.
    *
-   * @returns Array of grip points as 3D points
+   * @returns Array of grip points as 3D points at Z = 0
    */
   subGetGripPoints() {
     const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(this._startPosition.clone())
-    this._segments.forEach(segment => gripPoints.push(segment.position.clone()))
+    gripPoints.push(acgePoint2dTo3d(this._startPosition))
+    this._segments.forEach(segment =>
+      gripPoints.push(acgePoint2dTo3d(segment.position))
+    )
     return gripPoints
   }
 
@@ -646,7 +632,7 @@ export class AcDbMLine extends AcDbEntity {
 
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
-        snapPoints.push(...path)
+        snapPoints.push(...path.map(acgePoint2dTo3d))
         break
       case AcDbOsnapMode.MidPoint:
       case AcDbOsnapMode.Nearest:
@@ -655,8 +641,8 @@ export class AcDbMLine extends AcDbEntity {
         for (let index = 0; index < path.length - 1; index++) {
           const segmentSnaps: AcGePoint3d[] = []
           acdbCollectLineSegmentOsnapPoints(
-            path[index],
-            path[index + 1],
+            acgePoint2dTo3d(path[index]),
+            acgePoint2dTo3d(path[index + 1]),
             osnapMode,
             pickPoint,
             segmentSnaps
@@ -705,7 +691,8 @@ export class AcDbMLine extends AcDbEntity {
 
     if (elementCount <= 0) {
       const reference = this.getReferencePath()
-      if (reference.length >= 2) entities.push(renderer.lines(reference))
+      if (reference.length >= 2)
+        entities.push(renderer.lines(reference.map(acgePoint2dTo3d)))
     } else {
       for (let elementIndex = 0; elementIndex < elementCount; elementIndex++) {
         traits.color = originalColor
@@ -713,7 +700,7 @@ export class AcDbMLine extends AcDbEntity {
         this.applyStyleElementTraits(mlineStyle, elementIndex, traits)
         const points = this.getElementPath(elementIndex, mlineStyle)
         if (points.length >= 2) {
-          entities.push(renderer.lines(points))
+          entities.push(renderer.lines(points.map(acgePoint2dTo3d)))
         }
       }
       this.appendStyleDrivenJointAndCapEntities(
@@ -774,7 +761,7 @@ export class AcDbMLine extends AcDbEntity {
         segmentIndex === 0
           ? this._startPosition
           : this._segments[segmentIndex - 1].position
-      const direction = new AcGeVector3d().subVectors(
+      const direction = new AcGeVector2d().subVectors(
         segment.position,
         previousPoint
       )
@@ -803,9 +790,9 @@ export class AcDbMLine extends AcDbEntity {
 
   private createSegment(segment: AcDbMLineSegmentLike): AcDbMLineSegment {
     return {
-      position: new AcGePoint3d().copy(segment.position),
-      direction: new AcGeVector3d().copy(segment.direction),
-      miterDirection: new AcGeVector3d().copy(segment.miterDirection),
+      position: new AcGePoint2d().copy(segment.position),
+      direction: new AcGeVector2d().copy(segment.direction),
+      miterDirection: new AcGeVector2d().copy(segment.miterDirection),
       elements:
         segment.elements?.map(element => this.createElement(element)) ?? []
     }
@@ -856,7 +843,7 @@ export class AcDbMLine extends AcDbEntity {
    * @returns Geometry point list in world coordinates.
    */
   private collectGeometryPoints() {
-    const points: AcGePoint3d[] = [this._startPosition]
+    const points: AcGePoint2d[] = [this._startPosition]
     if (this._segments.length === 0) return points
 
     const mlineStyle = this.getMLineStyle()
@@ -910,7 +897,7 @@ export class AcDbMLine extends AcDbEntity {
    * @returns Offset path points, optionally closed when needed.
    */
   private getElementPath(elementIndex: number, mlineStyle?: AcDbMlineStyle) {
-    const points: AcGePoint3d[] = []
+    const points: AcGePoint2d[] = []
     const first = this._segments[0]
     points.push(
       this.getElementBoundaryPoint('start', first, elementIndex, mlineStyle)
@@ -1069,7 +1056,7 @@ export class AcDbMLine extends AcDbEntity {
    */
   private getStartSegmentDirection() {
     const first = this._segments[0]
-    const direction = new AcGeVector3d()
+    const direction = new AcGeVector2d()
     if (first) {
       // Prefer actual geometry direction. The serialized first segment direction can be noisy
       // in some files and may not match the true start-edge direction.
@@ -1089,9 +1076,9 @@ export class AcDbMLine extends AcDbEntity {
    */
   private getEndSegmentDirection() {
     const last = this._segments[this._segments.length - 1]
-    if (!last) return new AcGeVector3d()
+    if (!last) return new AcGeVector2d()
 
-    const direction = new AcGeVector3d()
+    const direction = new AcGeVector2d()
     const previousPoint =
       this._segments.length > 1
         ? this._segments[this._segments.length - 2].position
@@ -1278,15 +1265,14 @@ export class AcDbMLine extends AcDbEntity {
    * @param points Candidate closed path.
    * @returns Path without duplicated terminal point.
    */
-  private stripClosingPoint(points: AcGePoint3d[]) {
+  private stripClosingPoint(points: AcGePoint2d[]) {
     if (points.length < 2) return points
     const first = points[0]
     const last = points[points.length - 1]
     const epsilon = 1e-9
     const isClosed =
       Math.abs(first.x - last.x) <= epsilon &&
-      Math.abs(first.y - last.y) <= epsilon &&
-      Math.abs(first.z - last.z) <= epsilon
+      Math.abs(first.y - last.y) <= epsilon
     return isClosed ? points.slice(0, -1) : points
   }
 
@@ -1299,8 +1285,8 @@ export class AcDbMLine extends AcDbEntity {
    * @returns Offset point clone.
    */
   private offsetPoint(
-    point: AcGePoint3d,
-    miterDirection: AcGeVector3d,
+    point: AcGePoint2d,
+    miterDirection: AcGeVector2d,
     distance: number
   ) {
     if (distance === 0 || miterDirection.lengthSq() === 0) {
@@ -1319,15 +1305,14 @@ export class AcDbMLine extends AcDbEntity {
    * @param points Path points to inspect.
    * @returns Original or explicitly closed path array.
    */
-  private closePathIfNeeded(points: AcGePoint3d[]) {
+  private closePathIfNeeded(points: AcGePoint2d[]) {
     if (!this.closed || points.length < 2) return points
     const first = points[0]
     const last = points[points.length - 1]
     const epsilon = 1e-9
     const isClosed =
       Math.abs(first.x - last.x) <= epsilon &&
-      Math.abs(first.y - last.y) <= epsilon &&
-      Math.abs(first.z - last.z) <= epsilon
+      Math.abs(first.y - last.y) <= epsilon
     if (!isClosed) points.push(first.clone())
     return points
   }
@@ -1431,7 +1416,12 @@ export class AcDbMLine extends AcDbEntity {
           mlineStyle,
           points[i].elementIndex
         )
-        entities.push(renderer.lines([points[i].point, points[i + 1].point]))
+        entities.push(
+          renderer.lines([
+            acgePoint2dTo3d(points[i].point),
+            acgePoint2dTo3d(points[i + 1].point)
+          ])
+        )
       }
     }
 
@@ -1531,7 +1521,12 @@ export class AcDbMLine extends AcDbEntity {
           mlineStyle,
           points[i].elementIndex
         )
-        entities.push(renderer.lines([points[i].point, points[i + 1].point]))
+        entities.push(
+          renderer.lines([
+            acgePoint2dTo3d(points[i].point),
+            acgePoint2dTo3d(points[i + 1].point)
+          ])
+        )
       }
     }
 
@@ -1624,9 +1619,9 @@ export class AcDbMLine extends AcDbEntity {
   private drawCapArcBetweenElements(
     renderer: AcGiRenderer,
     side: 'start' | 'end',
-    startPointPair: { elementIndex: number; point: AcGePoint3d },
-    endPointPair: { elementIndex: number; point: AcGePoint3d },
-    capDirection: AcGeVector3d,
+    startPointPair: { elementIndex: number; point: AcGePoint2d },
+    endPointPair: { elementIndex: number; point: AcGePoint2d },
+    capDirection: AcGeVector2d,
     traits: AcGiRenderer['subEntityTraits'],
     originalColor: AcGiRenderer['subEntityTraits']['color'],
     originalLineType: AcGiRenderer['subEntityTraits']['lineType'],
@@ -1644,7 +1639,7 @@ export class AcDbMLine extends AcDbEntity {
     const midpoint = arcStartPoint
       .clone()
       .add(
-        new AcGeVector3d()
+        new AcGeVector2d()
           .subVectors(arcEndPoint, arcStartPoint)
           .multiplyScalar(0.5)
       )
@@ -1655,9 +1650,9 @@ export class AcDbMLine extends AcDbEntity {
         .multiplyScalar(chord / 2)
     )
     const arc = AcGeCircArc3d.createByThreePoints(
-      arcStartPoint,
-      arcEndPoint,
-      pointOnArc
+      acgePoint2dTo3d(arcStartPoint),
+      acgePoint2dTo3d(arcEndPoint),
+      acgePoint2dTo3d(pointOnArc)
     )
     if (!arc) return undefined
 
@@ -1699,16 +1694,15 @@ export class AcDbMLine extends AcDbEntity {
    * @param vector Vector to transform in place.
    * @param matrix Transformation matrix.
    */
-  private transformVector(vector: AcGeVector3d, matrix: AcGeMatrix3d) {
-    const origin = new AcGePoint3d()
-    const endpoint = new AcGePoint3d(vector.x, vector.y, vector.z)
-    origin.applyMatrix4(matrix)
-    endpoint.applyMatrix4(matrix)
-    vector.set(
-      endpoint.x - origin.x,
-      endpoint.y - origin.y,
-      endpoint.z - origin.z
-    )
+  private transformVector(vector: AcGeVector2d, matrix: AcGeMatrix3d) {
+    const origin = new AcGePoint3d().applyMatrix4(matrix)
+    const endpoint = new AcGePoint3d(vector.x, vector.y, 0).applyMatrix4(matrix)
+    vector.set(endpoint.x - origin.x, endpoint.y - origin.y)
+  }
+
+  /** Transforms a point in place, keeping the XY part of the result. */
+  private transformPoint(point: AcGePoint2d, matrix: AcGeMatrix3d) {
+    point.copy(acgePoint2dTo3d(point).applyMatrix4(matrix))
   }
 
   /**
@@ -1859,4 +1853,3 @@ export class AcDbMLine extends AcDbEntity {
     }
   }
 }
-

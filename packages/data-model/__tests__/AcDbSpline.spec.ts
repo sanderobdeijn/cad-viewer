@@ -15,10 +15,10 @@ import { expectDetachedClone } from '../test-utils/cloneTestUtils'
 
 describe('AcDbSpline', () => {
   const controlPoints = [
-    { x: 0, y: 0, z: 0 },
-    { x: 1, y: 1, z: 0 },
-    { x: 2, y: -1, z: 0 },
-    { x: 3, y: 0, z: 0 }
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+    { x: 2, y: -1 },
+    { x: 3, y: 0 }
   ]
   const knots = [0, 0, 0, 0, 1, 1, 1, 1]
   let db: AcDbDatabase
@@ -53,10 +53,10 @@ describe('AcDbSpline', () => {
 
     spline.rebuild(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 },
-        { x: 10, y: 5, z: 0 },
-        { x: 0, y: 5, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 5 },
+        { x: 0, y: 5 }
       ],
       knots
     )
@@ -67,10 +67,10 @@ describe('AcDbSpline', () => {
 
   it('supports fit-point constructor and rebuild overloads', () => {
     const fitPoints = [
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 0.5, z: 0 },
-      { x: 2, y: 0, z: 0 },
-      { x: 3, y: 0.5, z: 0 }
+      { x: 0, y: 0 },
+      { x: 1, y: 0.5 },
+      { x: 2, y: 0 },
+      { x: 3, y: 0.5 }
     ]
     const spline = new AcDbSpline(
       fitPoints,
@@ -126,8 +126,8 @@ describe('AcDbSpline', () => {
     )
 
     expect(endpointSnaps).toHaveLength(2)
-    expect(endpointSnaps[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(endpointSnaps[1]).toMatchObject({ x: 3, y: 0, z: 0 })
+    expect(endpointSnaps[0]).toMatchObject({ x: 0, y: 0 })
+    expect(endpointSnaps[1]).toMatchObject({ x: 3, y: 0 })
     expect(unsupportedSnaps).toHaveLength(0)
   })
 
@@ -151,8 +151,8 @@ describe('AcDbSpline', () => {
     const spline = new AcDbSpline(controlPoints, knots)
     const grips = spline.subGetGripPoints()
     expect(grips).toHaveLength(4)
-    expect(grips[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(grips[3]).toMatchObject({ x: 3, y: 0, z: 0 })
+    expect(grips[0]).toMatchObject({ x: 0, y: 0 })
+    expect(grips[3]).toMatchObject({ x: 3, y: 0 })
   })
 
   it('uses control vertices rather than derived fit data for CV splines', () => {
@@ -186,7 +186,7 @@ describe('AcDbSpline', () => {
       endAfter
     )
 
-    expect(spline.subGetGripPoints()[3]).toMatchObject({ x: 3, y: 2, z: 0 })
+    expect(spline.subGetGripPoints()[3]).toMatchObject({ x: 3, y: 2 })
     expect(endAfter[1].y).toBeGreaterThan(endBefore[1].y)
   })
 
@@ -208,7 +208,7 @@ describe('AcDbSpline', () => {
       expect(grip).toMatchObject({
         x: fitPoints[index].x,
         y: fitPoints[index].y,
-        z: fitPoints[index].z
+        z: 0
       })
     })
   })
@@ -227,7 +227,7 @@ describe('AcDbSpline', () => {
 
     spline.subMoveGripPointsAt([1], new AcGeVector3d(0, 3, 0))
 
-    expect(spline.subGetGripPoints()[1]).toMatchObject({ x: 3, y: 7, z: 0 })
+    expect(spline.subGetGripPoints()[1]).toMatchObject({ x: 3, y: 7 })
     expect(spline.subGetGripPoints()).toHaveLength(fitPoints.length)
   })
 
@@ -258,12 +258,12 @@ describe('AcDbSpline', () => {
     expect(after[0]).toMatchObject({
       x: before[0].x + 2,
       y: before[0].y - 1,
-      z: before[0].z + 5
+      z: 0
     })
     expect(after[1]).toMatchObject({
       x: before[1].x + 2,
       y: before[1].y - 1,
-      z: before[1].z + 5
+      z: 0
     })
   })
 
@@ -291,10 +291,10 @@ describe('AcDbSpline', () => {
       () =>
         new AcDbSpline(
           [
-            { x: 0, y: 0, z: 0 },
-            { x: 1, y: 0, z: 0 },
-            { x: 2, y: 0, z: 0 },
-            { x: 3, y: 0, z: 0 }
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+            { x: 2, y: 0 },
+            { x: 3, y: 0 }
           ],
           [0, 0, 0, 0, 1, 1, 1, 1]
         )

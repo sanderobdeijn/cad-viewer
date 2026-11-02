@@ -34,16 +34,16 @@ describe('AcDbLine', () => {
       new AcGePoint3d(3, 2, -4)
     )
 
-    line.startPoint = { x: 2, y: 6, z: 8 }
-    line.endPoint = { x: 10, y: 14, z: 16 }
+    line.startPoint = { x: 2, y: 6 }
+    line.endPoint = { x: 10, y: 14 }
 
-    expect(line.startPoint).toMatchObject({ x: 2, y: 6, z: 8 })
-    expect(line.endPoint).toMatchObject({ x: 10, y: 14, z: 16 })
-    expect(line.midPoint).toMatchObject({ x: 6, y: 10, z: 12 })
+    expect(line.startPoint).toMatchObject({ x: 2, y: 6 })
+    expect(line.endPoint).toMatchObject({ x: 10, y: 14 })
+    expect(line.midPoint).toMatchObject({ x: 6, y: 10 })
 
     const extents = line.geometricExtents
-    expect(extents.min).toMatchObject({ x: 2, y: 6, z: 8 })
-    expect(extents.max).toMatchObject({ x: 10, y: 14, z: 16 })
+    expect(extents.min).toMatchObject({ x: 2, y: 6, z: 0 })
+    expect(extents.max).toMatchObject({ x: 10, y: 14, z: 0 })
   })
 
   it('exposes editable geometry properties through accessors', () => {
@@ -60,40 +60,31 @@ describe('AcDbLine', () => {
     expect(geometryGroup?.properties.map(p => p.name)).toEqual([
       'startX',
       'startY',
-      'startZ',
       'endX',
       'endY',
-      'endZ',
       'length'
     ])
 
     const startX = geometryGroup?.properties.find(p => p.name === 'startX')
     const startY = geometryGroup?.properties.find(p => p.name === 'startY')
-    const startZ = geometryGroup?.properties.find(p => p.name === 'startZ')
     const endX = geometryGroup?.properties.find(p => p.name === 'endX')
     const endY = geometryGroup?.properties.find(p => p.name === 'endY')
-    const endZ = geometryGroup?.properties.find(p => p.name === 'endZ')
     const length = geometryGroup?.properties.find(p => p.name === 'length')
 
     startX?.accessor.set?.(1.5)
     startY?.accessor.set?.(-2.5)
-    startZ?.accessor.set?.(3.25)
     endX?.accessor.set?.(4.5)
     endY?.accessor.set?.(5.5)
-    endZ?.accessor.set?.(6.5)
 
     expect(startX?.accessor.get()).toBe(1.5)
     expect(startY?.accessor.get()).toBe(-2.5)
-    expect(startZ?.accessor.get()).toBe(3.25)
     expect(endX?.accessor.get()).toBe(4.5)
     expect(endY?.accessor.get()).toBe(5.5)
-    expect(endZ?.accessor.get()).toBe(6.5)
     expect(length?.editable).toBe(false)
     expect(length?.accessor.get()).toBeCloseTo(
       Math.sqrt(
         (4.5 - 1.5) * (4.5 - 1.5) +
-          (5.5 - -2.5) * (5.5 - -2.5) +
-          (6.5 - 3.25) * (6.5 - 3.25)
+          (5.5 - -2.5) * (5.5 - -2.5)
       )
     )
   })
@@ -108,8 +99,16 @@ describe('AcDbLine', () => {
 
     expect(gripPoints).toHaveLength(3)
     expect(gripPoints[0]).toMatchObject({ x: 4, y: 1, z: 0 })
-    expect(gripPoints[1]).toBe(line.startPoint)
-    expect(gripPoints[2]).toBe(line.endPoint)
+    expect(gripPoints[1]).toMatchObject({
+      x: line.startPoint.x,
+      y: line.startPoint.y,
+      z: 0
+    })
+    expect(gripPoints[2]).toMatchObject({
+      x: line.endPoint.x,
+      y: line.endPoint.y,
+      z: 0
+    })
   })
 
   it('moves grip points by index', () => {
@@ -119,15 +118,15 @@ describe('AcDbLine', () => {
     )
 
     line.subMoveGripPointsAt([0], new AcGeVector3d(1, 2, 3))
-    expect(line.startPoint).toMatchObject({ x: 1, y: 2, z: 3 })
-    expect(line.endPoint).toMatchObject({ x: 11, y: 2, z: 3 })
+    expect(line.startPoint).toMatchObject({ x: 1, y: 2 })
+    expect(line.endPoint).toMatchObject({ x: 11, y: 2 })
 
     line.subMoveGripPointsAt([1], new AcGeVector3d(-1, 0, 0))
-    expect(line.startPoint).toMatchObject({ x: 0, y: 2, z: 3 })
-    expect(line.endPoint).toMatchObject({ x: 11, y: 2, z: 3 })
+    expect(line.startPoint).toMatchObject({ x: 0, y: 2 })
+    expect(line.endPoint).toMatchObject({ x: 11, y: 2 })
 
     line.subMoveGripPointsAt([2], new AcGeVector3d(0, 1, 0))
-    expect(line.endPoint).toMatchObject({ x: 11, y: 3, z: 3 })
+    expect(line.endPoint).toMatchObject({ x: 11, y: 3 })
   })
 
   it('computes osnap points for all supported modes', () => {
@@ -135,20 +134,6 @@ describe('AcDbLine', () => {
       new AcGePoint3d(0, 0, 0),
       new AcGePoint3d(10, 0, 0)
     )
-    const geo = (
-      line as unknown as {
-        _geo: {
-          project: (pickPoint: AcGePoint3d) => AcGePoint3d
-          perpPoint: (pickPoint: AcGePoint3d) => AcGePoint3d
-        }
-      }
-    )._geo
-
-    const projectedPoint = new AcGePoint3d(7, 0, 0)
-    const perpendicularPoint = new AcGePoint3d(2, 0, 0)
-    jest.spyOn(geo, 'project').mockReturnValue(projectedPoint)
-    jest.spyOn(geo, 'perpPoint').mockReturnValue(perpendicularPoint)
-
     const endPoints: AcGePoint3d[] = []
     line.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
@@ -156,7 +141,10 @@ describe('AcDbLine', () => {
       new AcGePoint3d(),
       endPoints
     )
-    expect(endPoints).toEqual([line.startPoint, line.endPoint])
+    expect(endPoints).toEqual([
+      new AcGePoint3d(0, 0, 0),
+      new AcGePoint3d(10, 0, 0)
+    ])
 
     const midPoints: AcGePoint3d[] = []
     line.subGetOsnapPoints(
@@ -175,10 +163,7 @@ describe('AcDbLine', () => {
       new AcGePoint3d(),
       nearestPoints
     )
-    expect(geo.project).toHaveBeenCalledWith(
-      expect.objectContaining({ x: 2, y: 3, z: 0 })
-    )
-    expect(nearestPoints).toEqual([projectedPoint])
+    expect(nearestPoints).toEqual([new AcGePoint3d(2, 0, 0)])
 
     const perpendicularPoints: AcGePoint3d[] = []
     line.subGetOsnapPoints(
@@ -187,10 +172,7 @@ describe('AcDbLine', () => {
       new AcGePoint3d(),
       perpendicularPoints
     )
-    expect(geo.perpPoint).toHaveBeenCalledWith(
-      expect.objectContaining({ x: 4, y: 3, z: 0 })
-    )
-    expect(perpendicularPoints).toEqual([perpendicularPoint])
+    expect(perpendicularPoints).toEqual([new AcGePoint3d(4, 0, 0)])
 
     const tangentPoints: AcGePoint3d[] = []
     line.subGetOsnapPoints(
@@ -223,8 +205,8 @@ describe('AcDbLine', () => {
     }
 
     expect(line.transformBy(matrix)).toBe(line)
-    expect(line.startPoint).toMatchObject({ x: 11, y: -1, z: 5 })
-    expect(line.endPoint).toMatchObject({ x: 14, y: 2, z: 8 })
+    expect(line.startPoint).toMatchObject({ x: 11, y: -1 })
+    expect(line.endPoint).toMatchObject({ x: 14, y: 2 })
 
     expect(line.subWorldDraw(renderer as never)).toBe(drawResult)
     expect(renderer.lines).toHaveBeenCalledTimes(1)

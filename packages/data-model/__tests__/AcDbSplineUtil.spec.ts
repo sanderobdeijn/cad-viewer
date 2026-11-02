@@ -68,10 +68,10 @@ describe('AcDbSpline factory methods', () => {
   it('creates control-point splines with mismatched declared degree', () => {
     const spline = AcDbSpline.fromControlPoints(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ],
       [0, 0, 0, 0, 1, 1, 1, 1],
       undefined,
@@ -86,14 +86,14 @@ describe('AcDbSpline factory methods', () => {
   it('creates fit-point splines with start/end tangents and only two fit points', () => {
     const spline = AcDbSpline.fromFitPoints(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       'Uniform',
       3,
       false,
-      { x: 1, y: 0, z: 0 },
-      { x: 1, y: 0, z: 0 }
+      { x: 1, y: 0 },
+      { x: 1, y: 0 }
     )
 
     expect(spline).not.toBeNull()
@@ -108,15 +108,15 @@ describe('AcDbSpline factory methods', () => {
       numberOfKnots: 8,
       numberOfFitPoints: 4,
       controlPoints: [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 0 }
       ],
       knots: [0, 0, 0, 0, 1, 1, 1, 1],
       fitPoints: [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ]
     })
 
@@ -133,10 +133,10 @@ describe('AcDbSpline factory methods', () => {
       controlPoints: [],
       knots: [],
       fitPoints: [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ]
     })
 

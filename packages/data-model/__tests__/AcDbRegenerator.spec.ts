@@ -56,8 +56,8 @@ describe('AcDbRegenerator', () => {
   it('exposes parse and processes entity/object/layer events', async () => {
     const db = new AcDbDatabase()
     new AcDbDataGenerator(db).createDefaultLayer()
-    const lineA = new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 })
-    const lineB = new AcDbLine({ x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 })
+    const lineA = new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 })
+    const lineB = new AcDbLine({ x: 0, y: 1 }, { x: 1, y: 1 })
     db.tables.blockTable.modelSpace.appendEntity([lineA, lineB])
 
     const layerFilter = new AcDbLayerFilter()

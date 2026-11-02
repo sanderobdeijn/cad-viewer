@@ -19,14 +19,13 @@ describe('AcDbCircle', () => {
   it('initializes center radius normal and closed state', () => {
     const circle = new AcDbCircle(new AcGePoint3d(1, 2, 3), 4)
 
-    expect(circle.center).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(circle.center).toMatchObject({ x: 1, y: 2 })
     expect(circle.radius).toBe(4)
-    expect(circle.normal).toMatchObject({ x: 0, y: 0, z: 1 })
     expect(circle.closed).toBe(true)
 
     const extents = circle.geometricExtents
-    expect(extents.min).toMatchObject({ x: -3, y: -2, z: 3 })
-    expect(extents.max).toMatchObject({ x: 5, y: 6, z: 3 })
+    expect(extents.min).toMatchObject({ x: -3, y: -2, z: 0 })
+    expect(extents.max).toMatchObject({ x: 5, y: 6, z: 0 })
   })
 
   it('supports center and radius setters', () => {
@@ -35,15 +34,15 @@ describe('AcDbCircle', () => {
     circle.center = new AcGePoint3d(-2, 3, 5)
     circle.radius = 7
 
-    expect(circle.center).toMatchObject({ x: -2, y: 3, z: 5 })
+    expect(circle.center).toMatchObject({ x: -2, y: 3 })
     expect(circle.radius).toBe(7)
   })
 
   it('updates geometricExtents when center and radius change', () => {
     const circle = new AcDbCircle(new AcGePoint3d(1, 2, 3), 4)
 
-    expect(circle.geometricExtents.min).toMatchObject({ x: -3, y: -2, z: 3 })
-    expect(circle.geometricExtents.max).toMatchObject({ x: 5, y: 6, z: 3 })
+    expect(circle.geometricExtents.min).toMatchObject({ x: -3, y: -2, z: 0 })
+    expect(circle.geometricExtents.max).toMatchObject({ x: 5, y: 6, z: 0 })
 
     circle.center = new AcGePoint3d(10, 20, 0)
     circle.radius = 2
@@ -58,7 +57,11 @@ describe('AcDbCircle', () => {
     const grips = circle.subGetGripPoints()
 
     expect(grips).toHaveLength(5)
-    expect(grips[0]).toBe(circle.center)
+    expect(grips[0]).toMatchObject({
+      x: circle.center.x,
+      y: circle.center.y,
+      z: 0
+    })
     expect(grips[0]).toMatchObject({ x: 1, y: 2, z: 0 })
     expect(grips[1].x).toBeCloseTo(4, 8)
     expect(grips[1].y).toBeCloseTo(2, 8)
@@ -75,7 +78,7 @@ describe('AcDbCircle', () => {
 
     circle.subMoveGripPointsAt([0], new AcGeVector3d(1, -2, 3))
 
-    expect(circle.center).toMatchObject({ x: 3, y: 1, z: 7 })
+    expect(circle.center).toMatchObject({ x: 3, y: 1 })
     expect(circle.radius).toBe(5)
   })
 
@@ -84,7 +87,7 @@ describe('AcDbCircle', () => {
 
     circle.subMoveGripPointsAt([1], new AcGeVector3d(3, 0, 0))
 
-    expect(circle.center).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(circle.center).toMatchObject({ x: 0, y: 0 })
     expect(circle.radius).toBeCloseTo(8, 8)
   })
 
@@ -99,7 +102,11 @@ describe('AcDbCircle', () => {
       centerPoints
     )
     expect(centerPoints).toHaveLength(1)
-    expect(centerPoints[0]).toBe(circle.center)
+    expect(centerPoints[0]).toMatchObject({
+      x: circle.center.x,
+      y: circle.center.y,
+      z: 0
+    })
 
     const centroidPoints: AcGePoint3d[] = []
     circle.subGetOsnapPoints(
@@ -109,7 +116,11 @@ describe('AcDbCircle', () => {
       centroidPoints
     )
     expect(centroidPoints).toHaveLength(1)
-    expect(centroidPoints[0]).toBe(circle.center)
+    expect(centroidPoints[0]).toMatchObject({
+      x: circle.center.x,
+      y: circle.center.y,
+      z: 0
+    })
   })
 
   it('collects quadrant osnap points', () => {
@@ -136,20 +147,6 @@ describe('AcDbCircle', () => {
 
   it('collects nearest and tangent osnap points and ignores unsupported mode', () => {
     const circle = new AcDbCircle(new AcGePoint3d(0, 0, 0), 2)
-    const geo = (
-      circle as unknown as {
-        _geo: {
-          nearestPoint: (pick: AcGePoint3d) => AcGePoint3d
-          tangentPoints: (pick: AcGePoint3d) => AcGePoint3d[]
-        }
-      }
-    )._geo
-    const nearest = new AcGePoint3d(1, 1, 0)
-    const tangentA = new AcGePoint3d(2, 0, 0)
-    const tangentB = new AcGePoint3d(0, 2, 0)
-    jest.spyOn(geo, 'nearestPoint').mockReturnValue(nearest)
-    jest.spyOn(geo, 'tangentPoints').mockReturnValue([tangentA, tangentB])
-
     const nearestPoints: AcGePoint3d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
@@ -158,7 +155,8 @@ describe('AcDbCircle', () => {
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
-    expect(nearestPoints[0]).toEqual(nearest)
+    expect(nearestPoints[0].x).toBeCloseTo((2 * 3) / Math.sqrt(10), 8)
+    expect(nearestPoints[0].y).toBeCloseTo(2 / Math.sqrt(10), 8)
 
     const tangentPoints: AcGePoint3d[] = []
     circle.subGetOsnapPoints(
@@ -167,7 +165,11 @@ describe('AcDbCircle', () => {
       new AcGePoint3d(),
       tangentPoints
     )
-    expect(tangentPoints).toEqual([tangentA, tangentB])
+    expect(tangentPoints).toHaveLength(2)
+    for (const point of tangentPoints) {
+      expect(point.x).toBeCloseTo(2 / 3, 8)
+      expect(Math.abs(point.y)).toBeCloseTo(2 * Math.sqrt(8 / 9), 8)
+    }
 
     const perpendicularPoints: AcGePoint3d[] = []
     circle.subGetOsnapPoints(
@@ -202,22 +204,13 @@ describe('AcDbCircle', () => {
 
     byName.get('centerX')!.accessor.set!(10)
     byName.get('centerY')!.accessor.set!(20)
-    byName.get('centerZ')!.accessor.set!(30)
     byName.get('radius')!.accessor.set!(5)
-    byName.get('normalX')!.accessor.set!(0)
-    byName.get('normalY')!.accessor.set!(1)
-    byName.get('normalZ')!.accessor.set!(0)
 
     expect(byName.get('centerX')!.accessor.get()).toBe(10)
     expect(byName.get('centerY')!.accessor.get()).toBe(20)
-    expect(byName.get('centerZ')!.accessor.get()).toBe(30)
     expect(byName.get('radius')!.accessor.get()).toBe(5)
-    expect(byName.get('normalX')!.accessor.get()).toBe(0)
-    expect(byName.get('normalY')!.accessor.get()).toBe(1)
-    expect(byName.get('normalZ')!.accessor.get()).toBe(0)
-    expect(circle.center).toMatchObject({ x: 10, y: 20, z: 30 })
+    expect(circle.center).toMatchObject({ x: 10, y: 20 })
     expect(circle.radius).toBe(5)
-    expect(circle.normal).toMatchObject({ x: 0, y: 1, z: 0 })
     expect(byName.get('diameter')!.editable).toBe(false)
     expect(byName.get('diameter')!.accessor.get()).toBeCloseTo(10, 8)
     expect(byName.get('perimeter')!.accessor.get()).toBeCloseTo(Math.PI * 10, 8)
@@ -225,18 +218,14 @@ describe('AcDbCircle', () => {
   })
 
   it('transforms by matrix and returns itself', () => {
-    const circle = new AcDbCircle(
-      new AcGePoint3d(1, 2, 3),
-      2,
-      new AcGeVector3d(0, 0, 1)
-    )
+    const circle = new AcDbCircle(new AcGePoint3d(1, 2, 3), 2)
 
     const result = circle.transformBy(
       new AcGeMatrix3d().makeTranslation(4, -2, 5)
     )
 
     expect(result).toBe(circle)
-    expect(circle.center).toMatchObject({ x: 5, y: 0, z: 8 })
+    expect(circle.center).toMatchObject({ x: 5, y: 0 })
     expect(circle.radius).toBeCloseTo(2, 8)
   })
 

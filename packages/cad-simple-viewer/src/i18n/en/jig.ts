@@ -426,8 +426,6 @@ export default {
     chamferSecond: 'Specify second chamfer distance',
     filletRadius: 'Specify fillet radius',
     segmentWidth: 'Specify rectangle line width',
-    elevationValue: 'Specify elevation',
-    thicknessValue: 'Specify thickness',
     rotationAngle: 'Specify rectangle rotation angle',
     dimensionLength: 'Specify rectangle length',
     dimensionWidth: 'Specify rectangle width',
@@ -437,28 +435,16 @@ export default {
     invalidPositive: 'Invalid input. Please enter a value greater than 0.',
     invalidRect:
       'Unable to create rectangle. Please specify valid corners or dimensions.',
-    thicknessNotSupported:
-      'Rectangle thickness is currently not written to entity data. The thickness setting is ignored.',
     keywords: {
       chamfer: {
         display: 'Chamfer(C)',
         local: 'Chamfer',
         global: 'Chamfer'
       },
-      elevation: {
-        display: 'Elevation(E)',
-        local: 'Elevation',
-        global: 'Elevation'
-      },
       fillet: {
         display: 'Fillet(F)',
         local: 'Fillet',
         global: 'Fillet'
-      },
-      thickness: {
-        display: 'Thickness(T)',
-        local: 'Thickness',
-        global: 'Thickness'
       },
       width: {
         display: 'Width(W)',

@@ -94,27 +94,6 @@ export function sameCircleGeom(
   )
 }
 
-/**
- * WCS point on a circular arc from OCS start/end angles.
- *
- * AutoCAD stores those angles in OCS; a `-Z` extrusion mirrors X
- * (`OCS X = -WCS X`, `OCS Y = WCS Y`). Passing the angles straight into
- * {@link AcGeCircArc2d} with only `clockwise` does not apply that mirror.
- */
-function ocsAngleToWcsPoint(
-  cx: number,
-  cy: number,
-  r: number,
-  angle: number,
-  normalSign: 1 | -1
-) {
-  const sx = normalSign === -1 ? -1 : 1
-  return {
-    x: cx + sx * r * Math.cos(angle),
-    y: cy + r * Math.sin(angle)
-  }
-}
-
 function ccwDelta(startAngle: number, endAngle: number): number {
   let delta = endAngle - startAngle
   while (delta <= 0) delta += TAU
@@ -124,18 +103,15 @@ function ccwDelta(startAngle: number, endAngle: number): number {
 
 function lockCurveFromDbArc(entity: AcDbArc): AcGeCircArc2d | undefined {
   if (!(entity.radius > 0)) return undefined
-  const normalSign: 1 | -1 = entity.normal.z >= 0 ? 1 : -1
-  const cx = entity.center.x
-  const cy = entity.center.y
-  const r = entity.radius
-  const start = ocsAngleToWcsPoint(cx, cy, r, entity.startAngle, normalSign)
-  const end = ocsAngleToWcsPoint(cx, cy, r, entity.endAngle, normalSign)
-  const delta = ccwDelta(entity.startAngle, entity.endAngle)
+  const clockwise = entity.clockwise
+  const delta = clockwise
+    ? ccwDelta(entity.endAngle, entity.startAngle)
+    : ccwDelta(entity.startAngle, entity.endAngle)
   if (!(delta > 1e-12) || delta >= TAU - 1e-12) return undefined
   const curve = new AcGeCircArc2d(
-    start,
-    end,
-    normalSign * Math.tan(delta / 4)
+    entity.startPoint,
+    entity.endPoint,
+    (clockwise ? -1 : 1) * Math.tan(delta / 4)
   )
   return curve.radius > 0 ? curve : undefined
 }

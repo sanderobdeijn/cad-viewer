@@ -546,7 +546,6 @@ describe('AcEdOsnapResolver', () => {
     withWorkingDatabase(db => {
       const ellipse = new AcDbEllipse(
         new AcGePoint3d(2, 3, 0),
-        AcGeVector3d.Z_AXIS,
         AcGeVector3d.X_AXIS,
         40,
         20,

@@ -26,12 +26,12 @@ const createBasicMline = (style: AcDbMlineStyle) => {
   mline.styleName = style.styleName
   mline.styleObjectHandle = style.objectId
   mline.styleCount = 2
-  mline.startPosition = { x: 0, y: 0, z: 0 }
+  mline.startPosition = { x: 0, y: 0 }
   mline.segments = [
     {
-      position: { x: 10, y: 0, z: 0 },
-      direction: { x: 1, y: 0, z: 0 },
-      miterDirection: { x: 0, y: 1, z: 0 },
+      position: { x: 10, y: 0 },
+      direction: { x: 1, y: 0 },
+      miterDirection: { x: 0, y: 1 },
       elements: [
         {
           parameterCount: 1,
@@ -48,9 +48,9 @@ const createBasicMline = (style: AcDbMlineStyle) => {
       ]
     },
     {
-      position: { x: 20, y: 0, z: 0 },
-      direction: { x: 1, y: 0, z: 0 },
-      miterDirection: { x: 0, y: 1, z: 0 },
+      position: { x: 20, y: 0 },
+      direction: { x: 1, y: 0 },
+      miterDirection: { x: 0, y: 1 },
       elements: [
         {
           parameterCount: 1,
@@ -82,7 +82,7 @@ describe('AcDbMLine', () => {
     db.objects.mlineStyle.setAt(style.styleName, style)
 
     const mline = createBasicMline(style)
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
 
     const endPoints: Array<{ x: number; y: number; z: number }> = []
     mline.subGetOsnapPoints(
@@ -133,12 +133,12 @@ describe('AcDbMLine', () => {
     db.cmlstyle = 'AUTO_MLINE_STYLE'
 
     const mline = new AcDbMLine()
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -412,12 +412,12 @@ describe('AcDbMLine', () => {
     mline.styleName = style.styleName
     mline.styleObjectHandle = style.objectId
     mline.styleCount = 4
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -464,12 +464,12 @@ describe('AcDbMLine', () => {
     mline.styleObjectHandle = style.objectId
     mline.styleCount = 2
     mline.suppressStartCaps = true
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -519,12 +519,12 @@ describe('AcDbMLine', () => {
     mline.styleObjectHandle = style.objectId
     mline.styleCount = 2
     mline.scale = 20
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -574,12 +574,12 @@ describe('AcDbMLine', () => {
     mline.styleCount = 2
     mline.scale = 20
     mline.justification = AcDbMLineJustification.Top
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -629,12 +629,12 @@ describe('AcDbMLine', () => {
     mline.styleObjectHandle = ''
     mline.styleCount = 0
     mline.scale = 1
-    mline.startPosition = { x: 0, y: 0, z: 0 }
+    mline.startPosition = { x: 0, y: 0 }
     mline.segments = [
       {
-        position: { x: 10, y: 0, z: 0 },
-        direction: { x: 1, y: 0, z: 0 },
-        miterDirection: { x: 0, y: 1, z: 0 },
+        position: { x: 10, y: 0 },
+        direction: { x: 1, y: 0 },
+        miterDirection: { x: 0, y: 1 },
         elements: []
       }
     ]
@@ -671,7 +671,7 @@ describe('AcDbMLine', () => {
     expect(before.max.x).toBeCloseTo(20)
 
     const updatedSegments = mline.segments
-    updatedSegments[1].position = { x: 40, y: 10, z: 0 }
+    updatedSegments[1].position = { x: 40, y: 10 }
     mline.segments = updatedSegments
 
     const after = mline.geometricExtents
@@ -712,14 +712,14 @@ describe('AcDbMLine', () => {
 
     mline.subMoveGripPointsAt([1], new AcGeVector3d(0, 5, 0))
 
-    expect(mline.startPosition).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5, z: 0 })
-    expect(mline.segments[1].position).toMatchObject({ x: 20, y: 0, z: 0 })
+    expect(mline.startPosition).toMatchObject({ x: 0, y: 0 })
+    expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5 })
+    expect(mline.segments[1].position).toMatchObject({ x: 20, y: 0 })
 
     mline.subMoveGripPointsAt([0], new AcGeVector3d(2, 0, 0))
 
-    expect(mline.startPosition).toMatchObject({ x: 2, y: 0, z: 0 })
-    expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5, z: 0 })
-    expect(mline.segments[1].position).toMatchObject({ x: 20, y: 0, z: 0 })
+    expect(mline.startPosition).toMatchObject({ x: 2, y: 0 })
+    expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5 })
+    expect(mline.segments[1].position).toMatchObject({ x: 20, y: 0 })
   })
 })

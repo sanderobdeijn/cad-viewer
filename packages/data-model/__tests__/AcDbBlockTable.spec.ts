@@ -42,8 +42,8 @@ describe('AcDbBlockTable', () => {
     block.name = 'MyBlock'
     table.add(block)
 
-    const modelLine = new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 })
-    const blockLine = new AcDbLine({ x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 })
+    const modelLine = new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 })
+    const blockLine = new AcDbLine({ x: 0, y: 1 }, { x: 1, y: 1 })
     modelSpace.appendEntity(modelLine)
     block.appendEntity(blockLine)
 

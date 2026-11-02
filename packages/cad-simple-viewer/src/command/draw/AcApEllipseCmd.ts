@@ -21,7 +21,6 @@ import {
 import { AcApI18n } from '../../i18n'
 import { AcApLineJig } from './AcApLineCmd'
 
-const POSITIVE_NORMAL: AcGeVector3dLike = { x: 0, y: 0, z: 1 }
 
 type EllipseKeywordKey = 'arc' | 'center' | 'rotation'
 
@@ -150,8 +149,7 @@ function normalizeFullEllipseAngles(startAngle: number, endAngle: number) {
 function createFallbackEllipse(point: AcGePoint3dLike) {
   return new AcDbEllipse(
     point,
-    POSITIVE_NORMAL,
-    { x: 1, y: 0, z: 0 },
+    { x: 1, y: 0 },
     1e-6,
     1e-6,
     0,
@@ -164,18 +162,12 @@ function applyEllipseDefinition(
   definition: EllipseDefinition
 ) {
   entity.center = definition.center
-  entity.normal = POSITIVE_NORMAL
   entity.majorAxisRadius = definition.majorRadius
   entity.minorAxisRadius = definition.minorRadius
   entity.startAngle = definition.startAngle
   entity.endAngle = definition.endAngle
 
-  const ellipseWithGeo = entity as unknown as {
-    _geo?: { majorAxis?: AcGeVector3dLike }
-  }
-  if (ellipseWithGeo._geo) {
-    ellipseWithGeo._geo.majorAxis = definition.majorAxis
-  }
+  entity.majorAxis = definition.majorAxis
 }
 
 /**
@@ -344,7 +336,6 @@ export class AcApEllipseCmd extends AcEdCommand {
   private appendEllipse(context: AcApContext, definition: EllipseDefinition) {
     const ellipse = new AcDbEllipse(
       definition.center,
-      POSITIVE_NORMAL,
       definition.majorAxis,
       definition.majorRadius,
       definition.minorRadius,

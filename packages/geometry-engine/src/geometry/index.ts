@@ -22,7 +22,16 @@ export { AcGeLine2d } from './AcGeLine2d'
 export { AcGeLine3d } from './AcGeLine3d'
 export { AcGeLoop2d } from './AcGeLoop2d'
 export type { AcGeBoundaryEdgeType } from './AcGeLoop2d'
+export { AcGeSpline2d } from './AcGeSpline2d'
 export { AcGeSpline3d } from './AcGeSpline3d'
+export {
+  acgeCircArc2dTo3d,
+  acgeCircArc3dTo2d,
+  acgeEllipseArc2dTo3d,
+  acgeEllipseArc3dTo2d,
+  acgeLine2dTo3d,
+  acgePoint2dTo3d
+} from './AcGeCurve2dConvert'
 export { AcGeNurbsCurve } from './AcGeNurbsCurve'
 export type { AcGeKnotParameterizationType } from './AcGeNurbsCurve'
 export { AcGeCatmullRomCurve3d } from './AcGeCatmullRomCurve3d'

@@ -27,9 +27,7 @@ const FILLET_BULGE_BASE = Math.tan(Math.PI / 8)
 
 type RectKeywordKey =
   | 'chamfer'
-  | 'elevation'
   | 'fillet'
-  | 'thickness'
   | 'width'
   | 'area'
   | 'dimensions'
@@ -53,8 +51,6 @@ interface RectSettings {
   chamferDist2: number
   filletRadius: number
   width: number
-  elevation: number
-  thickness: number
   rotation: number
 }
 
@@ -68,8 +64,6 @@ const DEFAULT_RECT_SETTINGS: RectSettings = {
   chamferDist2: 0,
   filletRadius: 0,
   width: 0,
-  elevation: 0,
-  thickness: 0,
   rotation: 0
 }
 
@@ -248,7 +242,6 @@ function updateRect(
       rect.addVertexAt(index, worldPoint, vertex.bulge)
     }
   })
-  rect.elevation = settings.elevation
   rect.closed = true
   return true
 }
@@ -365,8 +358,6 @@ function cloneRectSettings(settings: RectSettings): RectSettings {
     chamferDist2: settings.chamferDist2,
     filletRadius: settings.filletRadius,
     width: settings.width,
-    elevation: settings.elevation,
-    thickness: settings.thickness,
     rotation: settings.rotation
   }
 }
@@ -424,10 +415,6 @@ export class AcApRectCmd extends AcEdCommand {
       return
     }
 
-    if (AcGeTol.isPositive(settings.thickness)) {
-      this.warnRectMessage('thicknessNotSupported')
-    }
-
     context.doc.database.tables.blockTable.modelSpace.appendEntity(rect)
     AcApRectCmd._settings = cloneRectSettings(settings)
   }
@@ -444,7 +431,7 @@ export class AcApRectCmd extends AcEdCommand {
   /**
    * Prompts for the first rectangle corner while handling setup keywords.
    *
-   * Supported options at this step: Chamfer, Elevation, Fillet, Thickness, Width.
+   * Supported options at this step: Chamfer, Fillet, Width.
    *
    * @param settings - Mutable settings object updated in-place by options.
    * @returns First corner point, or `undefined` when user cancels.
@@ -455,9 +442,7 @@ export class AcApRectCmd extends AcEdCommand {
         AcApI18n.t('jig.rect.firstPointWithOptions')
       )
       addKeyword(prompt, 'chamfer')
-      addKeyword(prompt, 'elevation')
       addKeyword(prompt, 'fillet')
-      addKeyword(prompt, 'thickness')
       addKeyword(prompt, 'width')
 
       const result = await AcApDocManager.instance.editor.getPoint(prompt)
@@ -470,14 +455,8 @@ export class AcApRectCmd extends AcEdCommand {
       if (keyword === 'Chamfer') {
         const ok = await this.promptChamfer(settings)
         if (!ok) return undefined
-      } else if (keyword === 'Elevation') {
-        const ok = await this.promptElevation(settings)
-        if (!ok) return undefined
       } else if (keyword === 'Fillet') {
         const ok = await this.promptFillet(settings)
-        if (!ok) return undefined
-      } else if (keyword === 'Thickness') {
-        const ok = await this.promptThickness(settings)
         if (!ok) return undefined
       } else if (keyword === 'Width') {
         const ok = await this.promptWidth(settings)
@@ -672,42 +651,6 @@ export class AcApRectCmd extends AcEdCommand {
     const result = await AcApDocManager.instance.editor.getDouble(prompt)
     if (result.status !== AcEdPromptStatus.OK) return false
     settings.width = normalizeNonNegative(result.value)
-    return true
-  }
-
-  /**
-   * Prompts elevation and updates settings.
-   *
-   * @param settings - Mutable rectangle settings.
-   * @returns `true` when value is accepted, otherwise `false`.
-   */
-  private async promptElevation(settings: RectSettings) {
-    const prompt = new AcEdPromptDoubleOptions(
-      AcApI18n.t('jig.rect.elevationValue')
-    )
-    prompt.allowNegative = true
-    prompt.allowZero = true
-    const result = await AcApDocManager.instance.editor.getDouble(prompt)
-    if (result.status !== AcEdPromptStatus.OK) return false
-    settings.elevation = result.value ?? 0
-    return true
-  }
-
-  /**
-   * Prompts thickness and updates settings.
-   *
-   * @param settings - Mutable rectangle settings.
-   * @returns `true` when value is accepted, otherwise `false`.
-   */
-  private async promptThickness(settings: RectSettings) {
-    const prompt = new AcEdPromptDoubleOptions(
-      AcApI18n.t('jig.rect.thicknessValue')
-    )
-    prompt.allowNegative = false
-    prompt.allowZero = true
-    const result = await AcApDocManager.instance.editor.getDouble(prompt)
-    if (result.status !== AcEdPromptStatus.OK) return false
-    settings.thickness = normalizeNonNegative(result.value)
     return true
   }
 

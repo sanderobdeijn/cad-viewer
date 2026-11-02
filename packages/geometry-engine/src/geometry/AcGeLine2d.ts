@@ -2,7 +2,7 @@ import { AcGeBox2d, AcGeMatrix2d, AcGePoint2d, AcGePoint2dLike } from '../math'
 import { AcGeCurve2d } from './AcGeCurve2d'
 
 /**
- * The class represents one 3d line geometry specified by its start point and end point.
+ * The class represents one 2d line geometry specified by its start point and end point.
  */
 export class AcGeLine2d extends AcGeCurve2d {
   private _start: AcGePoint2d
@@ -39,6 +39,30 @@ export class AcGeLine2d extends AcGeCurve2d {
   set endPoint(value: AcGePoint2dLike) {
     this._end.copy(value)
     this._boundingBoxNeedsUpdate = true
+  }
+
+  /** Middle point of the line. */
+  get midPoint(): AcGePoint2d {
+    return new AcGePoint2d(
+      (this._start.x + this._end.x) / 2,
+      (this._start.y + this._end.y) / 2
+    )
+  }
+
+  /**
+   * Returns the line offset to the left of its direction by `offsetDist`.
+   */
+  offset(offsetDist: number): AcGeLine2d {
+    const dx = this._end.x - this._start.x
+    const dy = this._end.y - this._start.y
+    const length = Math.hypot(dx, dy)
+    if (length === 0) return this.clone()
+    const nx = (-dy / length) * offsetDist
+    const ny = (dx / length) * offsetDist
+    return new AcGeLine2d(
+      { x: this._start.x + nx, y: this._start.y + ny },
+      { x: this._end.x + nx, y: this._end.y + ny }
+    )
   }
 
   /**

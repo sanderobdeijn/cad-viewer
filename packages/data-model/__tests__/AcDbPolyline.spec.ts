@@ -25,13 +25,8 @@ describe('AcDbPolyline', () => {
     expect(AcDbPolyline.typeName).toBe('Polyline')
     expect(polyline.dxfTypeName).toBe('LWPOLYLINE')
     expect(polyline.numberOfVertices).toBe(0)
-    expect(polyline.elevation).toBe(0)
     expect(polyline.closed).toBe(false)
-
-    polyline.elevation = 8
     polyline.closed = true
-
-    expect(polyline.elevation).toBe(8)
     expect(polyline.closed).toBe(true)
   })
 
@@ -73,21 +68,17 @@ describe('AcDbPolyline', () => {
     expect(polyline.numberOfVertices).toBe(0)
   })
 
-  it('returns 3d points and geometric extents at current elevation', () => {
+  it('returns geometric extents at Z = 0', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 6
     polyline.addVertexAt(0, new AcGePoint2d(-1, 2))
     polyline.addVertexAt(1, new AcGePoint2d(3, -4))
 
-    expect(polyline.getPoint3dAt(0)).toEqual(new AcGePoint3d(-1, 2, 6))
-    expect(polyline.getPoint3dAt(1)).toEqual(new AcGePoint3d(3, -4, 6))
-
     const extents = polyline.geometricExtents
-    expect(extents.min).toMatchObject({ x: -1, y: -4, z: 6 })
-    expect(extents.max).toMatchObject({ x: 3, y: 2, z: 6 })
+    expect(extents.min).toMatchObject({ x: -1, y: -4, z: 0 })
+    expect(extents.max).toMatchObject({ x: 3, y: 2, z: 0 })
   })
 
-  it('updates geometricExtents when vertices and elevation change', () => {
+  it('updates geometricExtents when vertices change', () => {
     const polyline = new AcDbPolyline()
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
@@ -95,10 +86,9 @@ describe('AcDbPolyline', () => {
     expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 0, z: 0 })
 
     polyline.addVertexAt(2, new AcGePoint2d(2, 5))
-    polyline.elevation = 3
 
-    expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0, z: 3 })
-    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 5, z: 3 })
+    expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 5, z: 0 })
   })
 
   it('returns grip points and osnap points for supported modes', () => {
@@ -108,16 +98,15 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 1, db)
 
     const polyline = new AcDbPolyline()
-    polyline.elevation = 2
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
     polyline.addVertexAt(2, new AcGePoint2d(2, 3))
 
     const grips = polyline.subGetGripPoints()
     expect(grips).toEqual([
-      new AcGePoint3d(0, 0, 2),
-      new AcGePoint3d(2, 0, 2),
-      new AcGePoint3d(2, 3, 2)
+      new AcGePoint3d(0, 0, 0),
+      new AcGePoint3d(2, 0, 0),
+      new AcGePoint3d(2, 3, 0)
     ])
 
     const endpointSnaps: AcGePoint3d[] = []
@@ -137,7 +126,7 @@ describe('AcDbPolyline', () => {
       midPoints
     )
     expect(midPoints).toHaveLength(2)
-    expect(midPoints[0]).toMatchObject({ x: 1, y: 0, z: 2 })
+    expect(midPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
 
     const nearestPoints: AcGePoint3d[] = []
     polyline.subGetOsnapPoints(
@@ -147,7 +136,7 @@ describe('AcDbPolyline', () => {
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
-    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0, z: 2 })
+    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
 
     const perpendicularPoints: AcGePoint3d[] = []
     polyline.subGetOsnapPoints(
@@ -157,7 +146,7 @@ describe('AcDbPolyline', () => {
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
-    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0, z: 2 })
+    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
 
     const centerSnaps: AcGePoint3d[] = []
     polyline.subGetOsnapPoints(
@@ -178,7 +167,6 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 2, db)
 
     const polyline = new AcDbPolyline()
-    polyline.elevation = 2
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
     polyline.addVertexAt(2, new AcGePoint2d(2, 3))
@@ -186,12 +174,12 @@ describe('AcDbPolyline', () => {
     const grips = polyline.subGetGripPoints()
     expect(grips).toHaveLength(5)
     expect(grips.slice(0, 3)).toEqual([
-      new AcGePoint3d(0, 0, 2),
-      new AcGePoint3d(2, 0, 2),
-      new AcGePoint3d(2, 3, 2)
+      new AcGePoint3d(0, 0, 0),
+      new AcGePoint3d(2, 0, 0),
+      new AcGePoint3d(2, 3, 0)
     ])
-    expect(grips[3]).toMatchObject({ x: 1, y: 0, z: 2 })
-    expect(grips[4]).toMatchObject({ x: 2, y: 1.5, z: 2 })
+    expect(grips[3]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(grips[4]).toMatchObject({ x: 2, y: 1.5, z: 0 })
 
     manager.setVar(AcDbSystemVariables.GRIPS, oldGrips as number, db)
   })
@@ -203,7 +191,6 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 2, db)
 
     const polyline = new AcDbPolyline()
-    polyline.elevation = 2
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
     polyline.addVertexAt(2, new AcGePoint2d(2, 3))
@@ -219,7 +206,6 @@ describe('AcDbPolyline', () => {
 
   it('moves vertex grip points by index', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 2
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
     polyline.addVertexAt(2, new AcGePoint2d(2, 3))
@@ -227,19 +213,16 @@ describe('AcDbPolyline', () => {
     polyline.subMoveGripPointsAt([1], new AcGeVector3d(1, 2, 0))
 
     expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(3, 2))
-    expect(polyline.getPoint3dAt(1)).toMatchObject({ x: 3, y: 2, z: 2 })
   })
 
-  it('transforms points, updates elevation and flips bulges for mirrored transforms', () => {
+  it('transforms points and flips bulges for mirrored transforms', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 3
     polyline.addVertexAt(0, new AcGePoint2d(1, 2), 0.5)
     polyline.addVertexAt(1, new AcGePoint2d(4, 5), -1)
 
     expect(
       polyline.transformBy(new AcGeMatrix3d().makeTranslation(10, -2, 4))
     ).toBe(polyline)
-    expect(polyline.elevation).toBe(7)
     expect(polyline.getPoint2dAt(0)).toEqual(new AcGePoint2d(11, 0))
     expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(14, 3))
 
@@ -285,9 +268,6 @@ describe('AcDbPolyline', () => {
     const verticesProp = geometryGroup!.properties.find(
       p => p.name === 'vertices'
     )
-    const elevationProp = geometryGroup!.properties.find(
-      p => p.name === 'elevation'
-    )
     const lengthProp = geometryGroup!.properties.find(p => p.name === 'length')
     const closedProp = othersGroup!.properties.find(p => p.name === 'closed')
 
@@ -317,16 +297,13 @@ describe('AcDbPolyline', () => {
 
     expect(Number(lengthProp?.accessor.get())).toBeGreaterThan(5)
 
-    elevationProp?.accessor.set?.(9)
     closedProp?.accessor.set?.(true)
 
-    expect(elevationProp?.accessor.get()).toBe(9)
     expect(closedProp?.accessor.get()).toBe(true)
   })
 
-  it('draws with sampled points using current elevation', () => {
+  it('draws with sampled points at Z = 0', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 5
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
 
@@ -341,12 +318,11 @@ describe('AcDbPolyline', () => {
 
     const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint3d[]]
     expect(points.length).toBeGreaterThan(1)
-    expect(points.every(point => point.z === 5)).toBe(true)
+    expect(points.every(point => point.z === 0)).toBe(true)
   })
 
   it('renders constant-width polyline as filled area', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 2
     polyline.closed = true
     polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 2, 2)
     polyline.addVertexAt(1, new AcGePoint2d(10, 0), 0, 2, 2)
@@ -386,7 +362,7 @@ describe('AcDbPolyline', () => {
     expect(renderer.area).not.toHaveBeenCalled()
     expect(renderer.lines).not.toHaveBeenCalled()
     expect(outer).toHaveLength(inner.length)
-    expect(outer.every(point => point.z === 2)).toBe(true)
+    expect(outer.every(point => point.z === 0)).toBe(true)
     expect(loopBoxes[0]).toMatchObject({
       minX: -1,
       maxX: 11,
@@ -478,7 +454,6 @@ describe('AcDbPolyline', () => {
 
   it('renders variable-width polyline as filled area', () => {
     const polyline = new AcDbPolyline()
-    polyline.elevation = 0
     polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 1, 6)
     polyline.addVertexAt(1, new AcGePoint2d(20, 0), 0, 6, 2)
     polyline.addVertexAt(2, new AcGePoint2d(25, 8), 0, 2, 2)
@@ -782,29 +757,5 @@ describe('AcDbPolyline', () => {
 
     polyline.closed = false
     expect(polyline.area).toBe(0)
-  })
-
-  it('maps OCS vertices to WCS for extrusion (0,0,-1)', () => {
-    const polyline = new AcDbPolyline()
-    polyline.normal = new AcGeVector3d(0, 0, -1)
-    polyline.addVertexAt(0, new AcGePoint2d(1000, 500))
-    polyline.addVertexAt(1, new AcGePoint2d(1100, 520))
-
-    expect(polyline.getPoint2dAt(0)).toEqual(new AcGePoint2d(1000, 500))
-    expect(polyline.getPoint3dAt(0)).toMatchObject({ x: -1000, y: 500, z: 0 })
-    expect(polyline.getPoint3dAt(1)).toMatchObject({ x: -1100, y: 520, z: 0 })
-
-    const extents = polyline.geometricExtents
-    expect(extents.min.x).toBeCloseTo(-1100, 8)
-    expect(extents.max.x).toBeCloseTo(-1000, 8)
-    expect(extents.min.y).toBeCloseTo(500, 8)
-    expect(extents.max.y).toBeCloseTo(520, 8)
-
-    const renderer = { lines: jest.fn(() => ({})) }
-    polyline.subWorldDraw(renderer as never)
-    expect(renderer.lines).toHaveBeenCalledWith([
-      expect.objectContaining({ x: -1000, y: 500, z: 0 }),
-      expect.objectContaining({ x: -1100, y: 520, z: 0 })
-    ])
   })
 })
