@@ -6,7 +6,6 @@
 
 import {
   ICON_CLEAR_MEASUREMENTS,
-  ICON_MARKUP_CLOUD,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
   ICON_MEASURE,
@@ -52,7 +51,6 @@ export const clearMeasurements = acapSvgIcon(
 )
 export const importIcon = acapSvgIcon(ICON_MARKUP_IMPORT, 'IconImport')
 export const exportIcon = acapSvgIcon(ICON_MARKUP_EXPORT, 'IconExport')
-export const revCloud = acapSvgIcon(ICON_MARKUP_CLOUD, 'IconRevCloud')
 export const measurementPanel = acapSvgIcon(
   ICON_MEASUREMENT_PANEL,
   'IconMeasurementPanel'

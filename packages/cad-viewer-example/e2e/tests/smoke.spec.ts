@@ -305,3 +305,19 @@ test('has no hatch command or ribbon button', async ({ page }) => {
     'Unknown command: hatch'
   )
 })
+
+test('has no revcloud command or ribbon button', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+  )
+
+  await expect(page.locator('[data-item-id="cmd-revcloud"]')).toHaveCount(0)
+
+  const command = page.getByRole('textbox', { name: 'Type command' })
+  await command.fill('revcloud')
+  await command.press('Enter')
+  await expect(page.locator('.ml-cli-recent')).toContainText(
+    'Unknown command: revcloud'
+  )
+})

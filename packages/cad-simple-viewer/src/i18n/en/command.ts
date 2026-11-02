@@ -273,9 +273,6 @@ export default {
     regen: {
       description: 'Redraws the current drawing'
     },
-    revcloud: {
-      description: 'Creates or modifies a revision cloud'
-    },
     rotate: {
       description: 'Rotates selected entities around a base point',
       prompt: 'Select entities'

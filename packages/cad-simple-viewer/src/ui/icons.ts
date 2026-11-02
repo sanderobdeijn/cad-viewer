@@ -121,23 +121,6 @@ export const ICON_SWITCH_BG =
 export const ICON_READING_MODE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><g fill="none" stroke="#000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h4.5M5.5 10h7M5.5 13.5h9"/><path d="M13.25 6.5v4.25h-3.25"/></g></svg>'
 
-/**
- * Shared callout-corner base under each markup-tool glyph
- * (L-stroke with a speech-bubble notch).
- */
-const MARKUP_ICON_BASE =
-  '<path fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="butt" stroke-linejoin="miter" d="M2.6 6.8v8.5h5.2l2.2 2.4 2.2-2.4h5.2"/>'
-
-/** Composes a markup-tool icon: unique glyph on top of the shared callout base. */
-function markupToolIcon(glyph: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${MARKUP_ICON_BASE}${glyph}</svg>`
-}
-
-/** Revision cloud icon (filled cloud over a callout base). */
-export const ICON_REV_CLOUD = markupToolIcon(
-  '<path fill="currentColor" d="M6.4 12.2c-1.85 0-3.3-1.25-3.3-2.85 0-1.35.95-2.5 2.3-2.8.45-1.7 1.95-2.85 3.7-2.85 1.25 0 2.35.55 3.05 1.45.55-.7 1.45-1.15 2.5-1.15 1.85 0 3.25 1.3 3.25 2.95 0 .3-.05.55-.1.8 1.2.4 2.05 1.4 2.05 2.65 0 1.55-1.5 2.8-3.4 2.8H6.4Z"/>'
-)
-
 /** List panel icon (list page with a search loupe). */
 export const ICON_MARKUP_PANEL =
   `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="3" width="13" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3.5 6.5h13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6.5 9.5h7M6.5 12h7M6.5 14.5h3.2"/><g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.7" stroke-linecap="round"><circle cx="14.5" cy="14.7" r="4.2"/><path d="M17.5 17.7 19.5 19.7"/></g></svg>`
@@ -262,9 +245,6 @@ export const ICON_ZOOM_BOX = ICON_ZOOM_WINDOW
 
 /** Alias for {@link ICON_MEASURE_POINT}. */
 export const ICON_MEASURE_COORDINATE = ICON_MEASURE_POINT
-
-/** Alias for {@link ICON_REV_CLOUD}. */
-export const ICON_MARKUP_CLOUD = ICON_REV_CLOUD
 
 /** Overflow / more menu icon (horizontal ellipsis). */
 export const ICON_MORE =

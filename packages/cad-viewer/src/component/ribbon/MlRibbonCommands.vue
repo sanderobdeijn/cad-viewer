@@ -114,8 +114,7 @@ import {
   measureContinuous,
   measureDistance,
   measurementPanel,
-  measurePoint,
-  revCloud
+  measurePoint
 } from '../../svg/toolbarIcons'
 import MlCharacterMapDialog from '../dialog/MlCharacterMapDialog.vue'
 import MlRibbonFileName from './MlRibbonFileName.vue'
@@ -773,7 +772,6 @@ const buildBaseTabs = (
     polyline: t('main.ribbon.tooltip.polyline'),
     spline: t('main.ribbon.tooltip.spline'),
     sketch: t('main.ribbon.tooltip.sketch'),
-    revcloud: t('main.ribbon.tooltip.revcloud'),
     circle: t('main.ribbon.tooltip.circle'),
     arc: t('main.ribbon.tooltip.arc'),
     mline: t('main.ribbon.tooltip.mline'),
@@ -1148,13 +1146,6 @@ const buildBaseTabs = (
               label: t('main.ribbon.command.sketch'),
               tooltip: ribbonTooltips.sketch,
               props: { icon: revFreeDraw }
-            },
-            {
-              id: 'cmd-revcloud',
-              type: 'button',
-              label: t('main.ribbon.command.revcloud'),
-              tooltip: ribbonTooltips.revcloud,
-              props: { icon: revCloud }
             },
             {
               id: 'cmd-mline',
@@ -1642,7 +1633,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-polyline', 'pline')
   commandByItemId.set('cmd-spline', 'spline')
   commandByItemId.set('cmd-sketch', 'sketch')
-  commandByItemId.set('cmd-revcloud', 'revcloud')
   commandByItemId.set('cmd-circle', 'circle')
   commandByItemId.set('circle-center-radius', 'circle')
   commandByItemId.set('circle-center-diameter', 'circle\\nDiameter')

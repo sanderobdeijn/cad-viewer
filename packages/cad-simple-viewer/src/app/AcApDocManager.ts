@@ -38,7 +38,6 @@ import {
   AcApRectCmd,
   AcApRedoCmd,
   AcApRegenCmd,
-  AcApRevCloudCmd,
   AcApRotateCmd,
   AcApSelectCmd,
   AcApSketchCmd,
@@ -1487,7 +1486,6 @@ export class AcApDocManager {
     addSystemCommand('ray', 'ray', new AcApRayCmd())
     addSystemCommand('rectang', 'rectang', new AcApRectCmd())
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
-    addSystemCommand('revcloud', 'revcloud', new AcApRevCloudCmd())
     addSystemCommand('select', 'select', new AcApSelectCmd())
     addSystemCommand('sketch', 'sketch', new AcApSketchCmd())
     addSystemCommand('spline', 'spline', new AcApSplineCmd())
