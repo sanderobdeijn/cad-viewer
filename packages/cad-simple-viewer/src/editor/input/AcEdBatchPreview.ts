@@ -1,8 +1,8 @@
 import {
   AcDbObjectId,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
@@ -104,7 +104,7 @@ export class AcEdBatchedPreview {
    */
   updatePlacements(
     view: AcEdBaseView,
-    displacement: AcGePoint3dLike,
+    displacement: AcGePoint2dLike,
     fitMode: boolean
   ): void {
     if (!this.useBatchPreview) {
@@ -121,7 +121,7 @@ export class AcEdBatchedPreview {
       )
       view.updateEntityPreview(
         handleId,
-        new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, scaled.z)
+        new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
       )
     })
   }
@@ -153,18 +153,14 @@ export class AcEdBatchedPreview {
  * @param copyCount - Total number of copies in the array preview
  * @param fitMode - When `true`, scales by `factor / copyCount`; otherwise
  *   scales by `factor`
- * @returns Scaled displacement as a new {@link AcGePoint3d}
+ * @returns Scaled displacement as a new {@link AcGePoint2d}
  */
 export function scaleCopyDisplacement(
-  displacement: AcGePoint3dLike,
+  displacement: AcGePoint2dLike,
   factor: number,
   copyCount: number,
   fitMode: boolean
-): AcGePoint3d {
+): AcGePoint2d {
   const scale = fitMode && copyCount > 0 ? factor / copyCount : factor
-  return new AcGePoint3d(
-    displacement.x * scale,
-    displacement.y * scale,
-    displacement.z * scale
-  )
+  return new AcGePoint2d(displacement.x * scale, displacement.y * scale)
 }

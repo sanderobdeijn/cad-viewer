@@ -1,4 +1,4 @@
-import { AcDbDatabase, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
 
 import { AcApContext } from '../../app'
 import { AcEdPromptPointOptions, AcEdPromptStatus } from '../../editor'
@@ -17,7 +17,7 @@ import { AcApMeasurePointEntity } from './entity'
 export function placePointMeasurement(
   view: AcTrView2d,
   db: AcDbDatabase,
-  point: AcGePoint3dLike,
+  point: AcGePoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {

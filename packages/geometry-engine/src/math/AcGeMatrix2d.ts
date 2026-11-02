@@ -157,6 +157,19 @@ export class AcGeMatrix2d {
   }
 
   /**
+   * Set this matrix to the XY affine part of a 4x4 matrix, including its translation.
+   * @param m Input one 4x4 matrix
+   * @returns Return this matrix
+   */
+  setFromAffineMatrix4(m: AcGeMatrix3d) {
+    const me = m.elements
+
+    this.set(me[0], me[4], me[12], me[1], me[5], me[13], 0, 0, 1)
+
+    return this
+  }
+
+  /**
    * Post-multiplies this matrix by m.
    * @param m Input one 3x3 matrix
    * @returns Return this matrix

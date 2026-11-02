@@ -1,7 +1,7 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
@@ -27,7 +27,7 @@ describe('AcDbText', () => {
     expect(text.textString).toBe('')
     expect(text.thickness).toBe(1)
     expect(text.height).toBe(0)
-    expect(text.position).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(text.position).toMatchObject({ x: 0, y: 0 })
     expect(text.rotation).toBe(0)
     expect(text.oblique).toBe(0)
     expect(text.horizontalMode).toBe(AcDbTextHorizontalMode.LEFT)
@@ -38,7 +38,7 @@ describe('AcDbText', () => {
 
   it('supports all property getters and setters', () => {
     const text = new AcDbText()
-    const sourcePos = new AcGePoint3d(1, 2, 3)
+    const sourcePos = new AcGePoint2d(1, 2)
     text.textString = 'Hello'
     text.thickness = 2
     text.height = 3.5
@@ -55,7 +55,7 @@ describe('AcDbText', () => {
     expect(text.textString).toBe('Hello')
     expect(text.thickness).toBe(2)
     expect(text.height).toBe(3.5)
-    expect(text.position).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(text.position).toMatchObject({ x: 1, y: 2 })
     expect(text.rotation).toBeCloseTo(Math.PI / 6, 8)
     expect(text.oblique).toBeCloseTo(Math.PI / 12, 8)
     expect(text.horizontalMode).toBe(AcDbTextHorizontalMode.CENTER)
@@ -75,15 +75,15 @@ describe('AcDbText', () => {
     text.textString = 'AB'
     text.height = 2
     text.verticalMode = AcDbTextVerticalMode.BASELINE
-    text.position = new AcGePoint3d(10, 20, 0)
+    text.position = new AcGePoint2d(10, 20)
 
-    expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(text.geometricExtents.max.x).toBeCloseTo(14)
     expect(text.geometricExtents.max.y).toBeCloseTo(22)
 
-    text.position = new AcGePoint3d(0, 0, 0)
+    text.position = new AcGePoint2d(0, 0)
 
-    expect(text.geometricExtents.min).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(text.geometricExtents.min).toMatchObject({ x: 0, y: 0 })
     expect(text.geometricExtents.max.x).toBeCloseTo(4)
     expect(text.geometricExtents.max.y).toBeCloseTo(2)
   })
@@ -94,60 +94,59 @@ describe('AcDbText', () => {
     text.height = 2
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.BASELINE
-    text.position = new AcGePoint3d(10, 20, 0)
+    text.position = new AcGePoint2d(10, 20)
 
-    expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(text.geometricExtents.max.x).toBeCloseTo(14)
     expect(text.geometricExtents.max.y).toBeCloseTo(22)
   })
 
   it('treats an API-set alignment point as provided even when equal to position', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint3d(10, 20, 0)
+    text.position = new AcGePoint2d(10, 20)
     expect(text.hasAlignmentPoint).toBe(false)
 
-    text.alignmentPoint = new AcGePoint3d(10, 20, 0)
+    text.alignmentPoint = new AcGePoint2d(10, 20)
     expect(text.hasAlignmentPoint).toBe(true)
   })
 
   it('returns insertion osnap point only for insertion mode', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint3d(3, 4, 5)
-    const snapPoints: AcGePoint3d[] = []
+    text.position = new AcGePoint2d(3, 4)
+    const snapPoints: AcGePoint2d[] = []
 
     text.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(0)
 
     text.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(1)
-    expect(snapPoints[0]).toMatchObject({ x: 3, y: 4, z: 5 })
+    expect(snapPoints[0]).toMatchObject({ x: 3, y: 4 })
   })
 
   it('returns insertion point as grip point', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint3d(3, 4, 5)
+    text.position = new AcGePoint2d(3, 4)
     const grips = text.subGetGripPoints()
     expect(grips).toHaveLength(1)
     expect(grips[0]).toMatchObject({
       x: text.position.x,
-      y: text.position.y,
-      z: text.position.z
+      y: text.position.y
     })
   })
 
   it('transforms text with normal scale and rotation updates', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint3d(1, 0, 0)
+    text.position = new AcGePoint2d(1, 0)
     text.rotation = 0
     text.height = 2
     text.widthFactor = 1
@@ -162,23 +161,17 @@ describe('AcDbText', () => {
     expect(result).toBe(text)
     expect(text.position.x).toBeCloseTo(0, 8)
     expect(text.position.y).toBeCloseTo(2, 8)
-    expect(text.position.z).toBeCloseTo(0, 8)
     expect(text.rotation).toBeCloseTo(Math.PI / 2, 8)
     expect(text.height).toBeCloseTo(6, 8)
     expect(text.widthFactor).toBeCloseTo(2 / 3, 8)
-    expect(text.thickness).toBeCloseTo(20, 8)
   })
 
   it('moves alignment point together with position via transformBy', () => {
     const text = new AcDbText()
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.TOP
-    text.position = new AcGePoint3d(417.4074308462113, 141.1597540414588, 0)
-    text.alignmentPoint = new AcGePoint3d(
-      437.6794664300651,
-      156.1597540414587,
-      0
-    )
+    text.position = new AcGePoint2d(417.4074308462113, 141.1597540414588)
+    text.alignmentPoint = new AcGePoint2d(437.6794664300651, 156.1597540414587)
     const alignmentBefore = text.alignmentPoint.clone()
 
     text.transformBy(new AcGeMatrix3d().makeTranslation(10, 20, 0))
@@ -193,12 +186,8 @@ describe('AcDbText', () => {
     const text = new AcDbText()
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.TOP
-    text.position = new AcGePoint3d(417.4074308462113, 141.1597540414588, 0)
-    text.alignmentPoint = new AcGePoint3d(
-      437.6794664300651,
-      156.1597540414587,
-      0
-    )
+    text.position = new AcGePoint2d(417.4074308462113, 141.1597540414588)
+    text.alignmentPoint = new AcGePoint2d(437.6794664300651, 156.1597540414587)
     const alignmentBefore = text.alignmentPoint.clone()
 
     text.subMoveGripPointsAt([0], new AcGeVector3d(5, -3, 0))
@@ -211,7 +200,7 @@ describe('AcDbText', () => {
 
   it('keeps rotation and thickness when corresponding transformed axes collapse', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint3d(1, 2, 3)
+    text.position = new AcGePoint2d(1, 2)
     text.rotation = 0
     text.height = 5
     text.widthFactor = 0.5
@@ -252,7 +241,6 @@ describe('AcDbText', () => {
     byName.oblique.accessor.set?.(0.2)
     byName.positionX.accessor.set?.(10)
     byName.positionY.accessor.set?.(20)
-    byName.positionZ.accessor.set?.(30)
 
     expect(byName.contents.accessor.get()).toBe('A')
     expect(byName.styleName.accessor.get()).toBe('Standard')
@@ -262,8 +250,7 @@ describe('AcDbText', () => {
     expect(byName.oblique.accessor.get()).toBe(0.2)
     expect(byName.positionX.accessor.get()).toBe(10)
     expect(byName.positionY.accessor.get()).toBe(20)
-    expect(byName.positionZ.accessor.get()).toBe(30)
-    expect(text.position).toMatchObject({ x: 10, y: 20, z: 30 })
+    expect(text.position).toMatchObject({ x: 10, y: 20 })
   })
 
   it('renders by forwarding MText data and resolved text style', () => {
@@ -275,7 +262,7 @@ describe('AcDbText', () => {
     text.textString = 'render'
     text.height = 2.2
     text.widthFactor = 0.6
-    text.position = new AcGePoint3d(7, 8, 9)
+    text.position = new AcGePoint2d(7, 8)
     text.rotation = 1.2
     text.styleName = 'NotExists'
 

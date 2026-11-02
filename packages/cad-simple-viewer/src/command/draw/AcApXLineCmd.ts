@@ -1,7 +1,7 @@
 import {
   AcDbLine,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -76,7 +76,7 @@ export class AcApXLineCmd extends AcEdCommand {
         )
         secondPrompt.useBasePoint = true
         secondPrompt.useDashedLine = true
-        secondPrompt.basePoint = new AcGePoint3d(startResult.value)
+        secondPrompt.basePoint = new AcGePoint2d(startResult.value)
         const secondResult =
           await AcApDocManager.instance.editor.getPoint(secondPrompt)
         if (secondResult.status !== AcEdPromptStatus.OK || !secondResult.value)
@@ -84,8 +84,7 @@ export class AcApXLineCmd extends AcEdCommand {
 
         const direction = {
           x: secondResult.value.x - startResult.value.x,
-          y: secondResult.value.y - startResult.value.y,
-          z: secondResult.value.z - startResult.value.z
+          y: secondResult.value.y - startResult.value.y
         }
         if (!this.appendFiniteXLine(context, startResult.value, direction)) {
           this.showMessage(AcApI18n.t('jig.xline.invalidDirection'), 'warning')
@@ -108,8 +107,7 @@ export class AcApXLineCmd extends AcEdCommand {
           return
         this.appendFiniteXLine(context, throughResult.value, {
           x: 1,
-          y: 0,
-          z: 0
+          y: 0
         })
         continue
       }
@@ -126,8 +124,7 @@ export class AcApXLineCmd extends AcEdCommand {
           return
         this.appendFiniteXLine(context, throughResult.value, {
           x: 0,
-          y: 1,
-          z: 0
+          y: 1
         })
         continue
       }
@@ -154,8 +151,7 @@ export class AcApXLineCmd extends AcEdCommand {
       const angleRad = (angleResult.value * Math.PI) / 180
       this.appendFiniteXLine(context, throughResult.value, {
         x: Math.cos(angleRad),
-        y: Math.sin(angleRad),
-        z: 0
+        y: Math.sin(angleRad)
       })
     }
   }
@@ -169,21 +165,19 @@ export class AcApXLineCmd extends AcEdCommand {
    */
   private appendFiniteXLine(
     context: AcApContext,
-    throughPoint: AcGePoint3dLike,
-    direction: AcGePoint3dLike
+    throughPoint: AcGePoint2dLike,
+    direction: AcGePoint2dLike
   ) {
     const unit = this.normalizeDirection(direction)
     if (!unit) return false
 
-    const start = new AcGePoint3d(
+    const start = new AcGePoint2d(
       throughPoint.x - unit.x * ACAP_XLINE_HALF_LENGTH,
-      throughPoint.y - unit.y * ACAP_XLINE_HALF_LENGTH,
-      throughPoint.z - unit.z * ACAP_XLINE_HALF_LENGTH
+      throughPoint.y - unit.y * ACAP_XLINE_HALF_LENGTH
     )
-    const end = new AcGePoint3d(
+    const end = new AcGePoint2d(
       throughPoint.x + unit.x * ACAP_XLINE_HALF_LENGTH,
-      throughPoint.y + unit.y * ACAP_XLINE_HALF_LENGTH,
-      throughPoint.z + unit.z * ACAP_XLINE_HALF_LENGTH
+      throughPoint.y + unit.y * ACAP_XLINE_HALF_LENGTH
     )
     context.doc.database.tables.blockTable.modelSpace.appendEntity(
       new AcDbLine(start, end)
@@ -191,15 +185,13 @@ export class AcApXLineCmd extends AcEdCommand {
     return true
   }
 
-  private normalizeDirection(vector: AcGePoint3dLike) {
-    const length = Math.sqrt(
-      vector.x * vector.x + vector.y * vector.y + vector.z * vector.z
-    )
+  private normalizeDirection(vector: AcGePoint2dLike) {
+    const length = Math.hypot(vector.x, vector.y)
     if (!AcGeTol.isPositive(length)) return undefined
     return {
       x: vector.x / length,
       y: vector.y / length,
-      z: vector.z / length
+      z: 0 / length
     }
   }
 }

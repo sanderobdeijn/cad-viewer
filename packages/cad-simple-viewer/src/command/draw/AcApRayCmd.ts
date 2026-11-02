@@ -1,7 +1,7 @@
 import {
   AcDbRay,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -17,10 +17,10 @@ import {
 import { AcApI18n } from '../../i18n'
 
 function resolveUnitDirection(
-  start: AcGePoint3dLike,
-  through: AcGePoint3dLike
-): AcGePoint3d | undefined {
-  const direction = new AcGePoint3d(through).sub(start)
+  start: AcGePoint2dLike,
+  through: AcGePoint2dLike
+): AcGePoint2d | undefined {
+  const direction = new AcGePoint2d(through).sub(start)
   if (!AcGeTol.isPositive(direction.length())) return undefined
   return direction.normalize()
 }
@@ -28,26 +28,26 @@ function resolveUnitDirection(
 /**
  * Dynamic preview jig for RAY command.
  */
-class AcApRayJig extends AcEdPreviewJig<AcGePoint3dLike> {
-  private readonly _startPoint: AcGePoint3d
+class AcApRayJig extends AcEdPreviewJig<AcGePoint2dLike> {
+  private readonly _startPoint: AcGePoint2d
   private readonly _ray: AcDbRay
 
-  constructor(view: AcEdBaseView, start: AcGePoint3dLike) {
+  constructor(view: AcEdBaseView, start: AcGePoint2dLike) {
     super(view)
-    this._startPoint = new AcGePoint3d(start)
+    this._startPoint = new AcGePoint2d(start)
     this._ray = new AcDbRay()
-    this._ray.basePoint = new AcGePoint3d(start)
-    this._ray.unitDir = new AcGePoint3d(1, 0, 0)
+    this._ray.basePoint = new AcGePoint2d(start)
+    this._ray.unitDir = new AcGePoint2d(1, 0)
   }
 
   get entity() {
     return this._ray
   }
 
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     const unitDir = resolveUnitDirection(this._startPoint, point)
     if (!unitDir) return
-    this._ray.basePoint = new AcGePoint3d(this._startPoint)
+    this._ray.basePoint = new AcGePoint2d(this._startPoint)
     this._ray.unitDir = unitDir
   }
 }
@@ -70,7 +70,7 @@ export class AcApRayCmd extends AcEdCommand {
       await AcApDocManager.instance.editor.getPoint(startPointPrompt)
     if (startPointResult.status !== AcEdPromptStatus.OK) return
 
-    const startPoint = new AcGePoint3d(startPointResult.value!)
+    const startPoint = new AcGePoint2d(startPointResult.value!)
 
     while (true) {
       const throughPointPrompt = new AcEdPromptPointOptions(
@@ -78,7 +78,7 @@ export class AcApRayCmd extends AcEdCommand {
       )
       throughPointPrompt.useDashedLine = true
       throughPointPrompt.useBasePoint = true
-      throughPointPrompt.basePoint = new AcGePoint3d(startPoint)
+      throughPointPrompt.basePoint = new AcGePoint2d(startPoint)
       throughPointPrompt.jig = new AcApRayJig(context.view, startPoint)
 
       const throughPointResult =
@@ -92,7 +92,7 @@ export class AcApRayCmd extends AcEdCommand {
       if (!unitDir) continue
 
       const ray = new AcDbRay()
-      ray.basePoint = new AcGePoint3d(startPoint)
+      ray.basePoint = new AcGePoint2d(startPoint)
       ray.unitDir = unitDir
       db.tables.blockTable.modelSpace.appendEntity(ray)
     }

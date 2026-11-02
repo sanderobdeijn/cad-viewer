@@ -11,7 +11,7 @@ describe('buildLineGeometry', () => {
   it('returns null when fewer than two points are provided', () => {
     expect(buildLineGeometry([], new THREE.LineBasicMaterial())).toBeNull()
     expect(
-      buildLineGeometry([{ x: 1, y: 2, z: 0 }], new THREE.LineBasicMaterial())
+      buildLineGeometry([{ x: 1, y: 2 }], new THREE.LineBasicMaterial())
     ).toBeNull()
   })
 
@@ -19,8 +19,8 @@ describe('buildLineGeometry', () => {
     const material = new THREE.LineBasicMaterial()
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       material
     )
@@ -46,8 +46,8 @@ describe('buildLineGeometry', () => {
     const material = new LineMaterial({ color: 0xffffff, linewidth: 1 })
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 4, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 4, y: 0 }
       ],
       material
     )
@@ -65,8 +65,8 @@ describe('buildLineGeometry', () => {
   it('keeps wcsBbox in world coordinates for large drawings', () => {
     const built = buildLineGeometry(
       [
-        { x: largeX, y: 0, z: 0 },
-        { x: largeX + 100, y: 0, z: 0 }
+        { x: largeX, y: 0 },
+        { x: largeX + 100, y: 0 }
       ],
       new THREE.LineBasicMaterial()
     )

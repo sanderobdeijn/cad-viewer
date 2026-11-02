@@ -1,15 +1,14 @@
 import { AcCmErrors } from '@mlightcad/common'
 import {
+  AcGeBox3d,
   AcGeIntersectPrimitive,
   AcGeKnotParameterizationType,
   AcGeMatrix3d,
   acgeOffsetSmoothedSampledPath,
   AcGePoint2d,
   AcGePoint2dLike,
-  acgePoint2dTo3d,
-  AcGePoint3dLike,
   AcGeSpline2d,
-  AcGeVector3dLike
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -110,9 +109,9 @@ export class AcDbSpline extends AcDbCurve {
    * const spline = AcDbSpline.fromControlPoints(
    *   [
    *     { x: 0, y: 0 },
-   *     { x: 1, y: 1, z: 0 },
+   *     { x: 1, y: 1 },
    *     { x: 2, y: 0 },
-   *     { x: 3, y: 1, z: 0 }
+   *     { x: 3, y: 1 }
    *   ],
    *   [0, 0, 0, 0, 1, 1, 1, 1],
    *   undefined,
@@ -157,7 +156,7 @@ export class AcDbSpline extends AcDbCurve {
    * @example
    * ```typescript
    * const spline = AcDbSpline.fromFitPoints(
-   *   [{ x: 0, y: 0 }, { x: 10, y: 0, z: 0 }],
+   *   [{ x: 0, y: 0 }, { x: 10, y: 0 }],
    *   'Uniform',
    *   3,
    *   false,
@@ -477,7 +476,7 @@ export class AcDbSpline extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return this._geo.to3d().box
+    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
@@ -485,7 +484,7 @@ export class AcDbSpline extends AcDbCurve {
     return [
       {
         kind: 'spline',
-        spline: this._geo.to3d(),
+        spline: this._geo.clone(),
         extendable: false
       }
     ]
@@ -560,11 +559,11 @@ export class AcDbSpline extends AcDbCurve {
    * @returns Array of grip points for editing
    */
   subGetGripPoints() {
-    return this._geo.getGripPoints().map(acgePoint2dTo3d)
+    return this._geo.getGripPoints()
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     this._geo.moveGripPointsAt(indices, offset)
     return this
   }
@@ -583,26 +582,26 @@ export class AcDbSpline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
-        snapPoints.push(acgePoint2dTo3d(this._geo.startPoint))
-        snapPoints.push(acgePoint2dTo3d(this._geo.endPoint))
+        snapPoints.push(this._geo.startPoint)
+        snapPoints.push(this._geo.endPoint)
         break
       case AcDbOsnapMode.Node: {
         const seen = new Set<number>()
         for (const knot of this._geo.knots) {
           if (seen.has(knot)) continue
           seen.add(knot)
-          snapPoints.push(acgePoint2dTo3d(this._geo.evaluateAt(knot)))
+          snapPoints.push(this._geo.evaluateAt(knot))
         }
         break
       }
       case AcDbOsnapMode.Nearest:
-        snapPoints.push(acgePoint2dTo3d(this._geo.nearestPoint(pickPoint)))
+        snapPoints.push(this._geo.nearestPoint(pickPoint))
         break
       default:
         break
@@ -637,7 +636,7 @@ export class AcDbSpline extends AcDbCurve {
    */
   subWorldDraw(renderer: AcGiRenderer) {
     const points = this._geo.tessellate(acdbDrawTessellateOptions(renderer))
-    return renderer.lines(points.map(acgePoint2dTo3d))
+    return renderer.lines(points)
   }
 
   /**
@@ -657,7 +656,7 @@ export class AcDbSpline extends AcDbCurve {
    *
    * Evaluates side relative to the sampled 2D approximation of the spline.
    */
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const path = this.collectPath2d(1)
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, this.closed).getOffsetSideAtPoint(

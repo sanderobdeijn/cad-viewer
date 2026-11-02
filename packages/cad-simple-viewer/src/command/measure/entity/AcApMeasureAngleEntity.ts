@@ -1,7 +1,4 @@
-import {
-  type AcDbDatabase,
-  type AcGePoint3dLike
-} from '@mlightcad/data-model'
+import { type AcDbDatabase, type AcGePoint2dLike } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,
@@ -55,11 +52,11 @@ type Point2 = { x: number; y: number }
  */
 export class AcApMeasureAngleEntity extends AcApMeasureEntity {
   /** Angle vertex in world coordinates. */
-  private readonly vertex: AcGePoint3dLike
+  private readonly vertex: AcGePoint2dLike
   /** First arm endpoint in world coordinates. */
-  private readonly arm1: AcGePoint3dLike
+  private readonly arm1: AcGePoint2dLike
   /** Second arm endpoint in world coordinates. */
-  private readonly arm2: AcGePoint3dLike
+  private readonly arm2: AcGePoint2dLike
 
   /**
    * Creates an angle measure entity from a vertex and two arm endpoints.
@@ -70,9 +67,9 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    * @param options - Shared id, layout, and style options
    */
   constructor(
-    vertex: AcGePoint3dLike,
-    arm1: AcGePoint3dLike,
-    arm2: AcGePoint3dLike,
+    vertex: AcGePoint2dLike,
+    arm1: AcGePoint2dLike,
+    arm2: AcGePoint2dLike,
     options: AcApMeasureEntityOptions
   ) {
     super(
@@ -98,9 +95,9 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasureAngleEntity}
    */
   static create(
-    vertex: AcGePoint3dLike,
-    arm1: AcGePoint3dLike,
-    arm2: AcGePoint3dLike,
+    vertex: AcGePoint2dLike,
+    arm1: AcGePoint2dLike,
+    arm2: AcGePoint2dLike,
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasureAngleEntity {
@@ -116,8 +113,8 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    *
    * @returns Copy of {@link vertex} with `z: 0`
    */
-  override primaryPoint(): AcGePoint3dLike {
-    return { x: this.vertex.x, y: this.vertex.y, z: 0 }
+  override primaryPoint(): AcGePoint2dLike {
+    return { x: this.vertex.x, y: this.vertex.y }
   }
 
   /**
@@ -321,10 +318,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
       })
     }
 
-    const bindDot = (
-      dot: AcTrHtmlGrip,
-      key: 'vertex' | 'arm1' | 'arm2'
-    ) =>
+    const bindDot = (dot: AcTrHtmlGrip, key: 'vertex' | 'arm1' | 'arm2') =>
       acapBindOverlayPointerDrag({
         view,
         el: dot.element,
@@ -338,7 +332,11 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
       })
 
     pendingGrips.push(() => {
-      cleanups.push(bindDot(dotV, 'vertex'), bindDot(dot1, 'arm1'), bindDot(dot2, 'arm2'))
+      cleanups.push(
+        bindDot(dotV, 'vertex'),
+        bindDot(dot1, 'arm1'),
+        bindDot(dot2, 'arm2')
+      )
     })
 
     return {

@@ -48,8 +48,8 @@ describe('buildComplexLineTypeGeometry', () => {
 
     const line = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 30, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 30, y: 0 }
       ],
       traits,
       context
@@ -98,8 +98,8 @@ describe('buildComplexLineTypeGeometry', () => {
 
     const line = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 20, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 20, y: 0 }
       ],
       traits,
       context
@@ -130,8 +130,8 @@ describe('buildComplexLineTypeGeometry', () => {
       buildComplexLineTypeGeometry(
         entity,
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 10, y: 0, z: 0 }
+          { x: 0, y: 0 },
+          { x: 10, y: 0 }
         ],
         traits,
         context
@@ -161,8 +161,8 @@ describe('buildComplexLineTypeGeometry', () => {
 
     const line = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 30, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 30, y: 0 }
       ],
       traits,
       context
@@ -201,9 +201,9 @@ describe('buildComplexLineTypeGeometry', () => {
     ).toBeGreaterThan(MAX_COMPLEX_LINETYPE_CYCLES)
 
     const entity = new AcTrEntity(context)
-    expect(
-      buildComplexLineTypeGeometry(entity, points, traits, context)
-    ).toBe(false)
+    expect(buildComplexLineTypeGeometry(entity, points, traits, context)).toBe(
+      false
+    )
     expect(entity.children.length).toBe(0)
 
     const line = new AcTrLine(points, traits, context)
@@ -246,9 +246,9 @@ describe('buildComplexLineTypeGeometry', () => {
     expect(Math.ceil(cycles)).toBeGreaterThan(48)
 
     const entity = new AcTrEntity(context)
-    expect(
-      buildComplexLineTypeGeometry(entity, points, traits, context)
-    ).toBe(true)
+    expect(buildComplexLineTypeGeometry(entity, points, traits, context)).toBe(
+      true
+    )
     let glyphCount = 0
     entity.traverse(child => {
       if (child instanceof AcTrGlyphEntity) {

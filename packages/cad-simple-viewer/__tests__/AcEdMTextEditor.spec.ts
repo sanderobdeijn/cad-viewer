@@ -191,7 +191,7 @@ describe('AcEdMTextEditor', () => {
     const view = createView()
     const resultPromise = new AcEdMTextEditor().open({
       view: view as never,
-      location: { x: 0, y: 0, z: 0 },
+      location: { x: 0, y: 0 },
       width: 10,
       textHeight: 2,
       toolbarEnabled: false
@@ -213,7 +213,7 @@ describe('AcEdMTextEditor', () => {
     inputBox.emit('close')
     await expect(resultPromise).resolves.toEqual({
       contents: 'typed text',
-      location: { x: 1, y: 2, z: 3 },
+      location: { x: 1, y: 2 },
       width: 10,
       height: 2,
       lineSpacingFactor: 0.3,
@@ -227,7 +227,7 @@ describe('AcEdMTextEditor', () => {
     const view = createView()
     const resultPromise = new AcEdMTextEditor().open({
       view: view as never,
-      location: { x: 0, y: 0, z: 0 },
+      location: { x: 0, y: 0 },
       width: 10,
       textHeight: 2
     })

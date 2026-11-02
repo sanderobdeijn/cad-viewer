@@ -1,7 +1,7 @@
 import {
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGiMTextAttachmentPoint
 } from '@mlightcad/data-model'
 import {
@@ -96,7 +96,7 @@ export interface AcEdMTextEditorResult {
   /** Final MTEXT contents (including inline formatting codes). */
   contents: string
   /** Final MTEXT insertion location in world coordinates. */
-  location: AcGePoint3dLike
+  location: AcGePoint2dLike
   /** Final text box width in world units. */
   width: number
   /** Final text box height in world units. */
@@ -114,7 +114,7 @@ export interface AcEdMTextEditorOptions {
   /** Active 2D view where the editor overlay and text box are rendered. */
   view: AcTrView2d
   /** Insertion location (top-left anchor) in world coordinates. */
-  location: AcGePoint3dLike
+  location: AcGePoint2dLike
   /**
    * Initial MTEXT attachment (DXF 71). When omitted, the editor uses top-left
    * until the user changes justify in the ribbon.
@@ -398,7 +398,7 @@ export class AcEdMTextEditor {
       toolbarEnabled = AcEdMTextEditor.defaultToolbarEnabled,
       initialAttachmentPoint
     } = options
-    const origin = new THREE.Vector3(location.x, location.y, location.z ?? 0)
+    const origin = new THREE.Vector3(location.x, location.y, 0)
     const isLightBg = acgiIsLightBackground(view.backgroundColor)
     const cursorColor = isLightBg ? '#000000' : '#ffffff'
     const docManager = AcApDocManager.instance
@@ -534,8 +534,7 @@ export class AcEdMTextEditor {
           contents: mtextInputBox.getText(),
           location: {
             x: insertionPoint.x,
-            y: insertionPoint.y,
-            z: insertionPoint.z
+            y: insertionPoint.y
           },
           width,
           height: normalizedTextHeight,

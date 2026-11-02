@@ -40,7 +40,6 @@ describe('Test AcGePolyline2d', () => {
     expect(polyline.endPoint.toArray()).toEqual([0, 0])
 
     expect(polyline.getPoints(4).length).toBeGreaterThan(0)
-    expect(polyline.getPoints3d(3, 9)[0].z).toBe(9)
     expect(polyline.getPointAt(1).toArray()).toEqual([2, 0])
 
     polyline.transform(new AcGeMatrix2d().makeScale(-1, 1))

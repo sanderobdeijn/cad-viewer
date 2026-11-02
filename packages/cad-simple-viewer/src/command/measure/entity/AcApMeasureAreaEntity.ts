@@ -1,4 +1,4 @@
-import type { AcDbDatabase, AcGePoint3dLike } from '@mlightcad/data-model'
+import type { AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,
@@ -50,7 +50,7 @@ type Point2 = { x: number; y: number }
  */
 export class AcApMeasureAreaEntity extends AcApMeasureEntity {
   /** Polygon vertices in world coordinates (closed implicitly when drawn). */
-  private readonly points: AcGePoint3dLike[]
+  private readonly points: AcGePoint2dLike[]
 
   /**
    * Creates an area measure entity from a polygon vertex list.
@@ -58,7 +58,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
    * @param points - Polygon vertices in world coordinates
    * @param options - Shared id, layout, and style options
    */
-  constructor(points: AcGePoint3dLike[], options: AcApMeasureEntityOptions) {
+  constructor(points: AcGePoint2dLike[], options: AcApMeasureEntityOptions) {
     super(
       options.id ?? `area-${Date.now()}`,
       options.layoutId,
@@ -78,7 +78,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasureAreaEntity}
    */
   static create(
-    points: AcGePoint3dLike[],
+    points: AcGePoint2dLike[],
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasureAreaEntity {
@@ -94,10 +94,10 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
    *
    * @returns Centroid with `z: 0`, or `undefined` when there are no points
    */
-  override primaryPoint(): AcGePoint3dLike | undefined {
+  override primaryPoint(): AcGePoint2dLike | undefined {
     if (this.points.length === 0) return undefined
     const c = measureCentroid(this.points)
-    return { x: c.x, y: c.y, z: 0 }
+    return { x: c.x, y: c.y }
   }
 
   /**

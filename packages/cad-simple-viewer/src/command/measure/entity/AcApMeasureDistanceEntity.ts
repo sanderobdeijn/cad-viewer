@@ -1,8 +1,9 @@
+import { type AcDbDatabase, type AcGePoint2dLike } from '@mlightcad/data-model'
 import {
-  type AcDbDatabase,
-  type AcGePoint3dLike
-} from '@mlightcad/data-model'
-import { AcTrHtmlBadge, AcTrHtmlCanvasOverlay, AcTrHtmlGrip } from '@mlightcad/three-renderer'
+  AcTrHtmlBadge,
+  AcTrHtmlCanvasOverlay,
+  AcTrHtmlGrip
+} from '@mlightcad/three-renderer'
 
 import {
   acapAdaptiveMeasureBadgeFontSize,
@@ -33,7 +34,8 @@ import {
   AcApMeasureEntity,
   type AcApMeasureEntityOptions,
   type AcApMeasureWorldDrawResult,
-  newMeasureOverlayId} from './AcApMeasureEntity'
+  newMeasureOverlayId
+} from './AcApMeasureEntity'
 import { selectMeasurementGroup } from './AcApMeasureEntityGrips'
 
 /**
@@ -43,7 +45,10 @@ import { selectMeasurementGroup } from './AcApMeasureEntityGrips'
  * @param p2 - Second endpoint
  * @returns Distance `√((Δx)² + (Δy)²)`
  */
-function calcDist(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
+function calcDist(
+  p1: { x: number; y: number },
+  p2: { x: number; y: number }
+): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
   return Math.sqrt(dx * dx + dy * dy)
@@ -58,9 +63,9 @@ function calcDist(p1: { x: number; y: number }, p2: { x: number; y: number }): n
  */
 export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
   /** First endpoint of the measured segment in world coordinates. */
-  private readonly p1: AcGePoint3dLike
+  private readonly p1: AcGePoint2dLike
   /** Second endpoint of the measured segment in world coordinates. */
-  private readonly p2: AcGePoint3dLike
+  private readonly p2: AcGePoint2dLike
 
   /**
    * Creates a distance measure entity between two points.
@@ -70,8 +75,8 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    * @param options - Shared id, layout, and style options
    */
   constructor(
-    p1: AcGePoint3dLike,
-    p2: AcGePoint3dLike,
+    p1: AcGePoint2dLike,
+    p2: AcGePoint2dLike,
     options: AcApMeasureEntityOptions
   ) {
     super(
@@ -96,8 +101,8 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasureDistanceEntity}
    */
   static create(
-    p1: AcGePoint3dLike,
-    p2: AcGePoint3dLike,
+    p1: AcGePoint2dLike,
+    p2: AcGePoint2dLike,
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasureDistanceEntity {
@@ -113,11 +118,10 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    *
    * @returns World point at the average of {@link p1} and {@link p2}, `z: 0`
    */
-  override primaryPoint(): AcGePoint3dLike {
+  override primaryPoint(): AcGePoint2dLike {
     return {
       x: (this.p1.x + this.p2.x) / 2,
-      y: (this.p1.y + this.p2.y) / 2,
-      z: 0
+      y: (this.p1.y + this.p2.y) / 2
     }
   }
 
@@ -167,7 +171,10 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
     let dist = calcDist(live.start, live.end)
     const color = this.style.color
     const layoutId = this.resolveLayoutId(view)
-    const midOf = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+    const midOf = (
+      a: { x: number; y: number },
+      b: { x: number; y: number }
+    ) => ({
       x: (a.x + b.x) / 2,
       y: (a.y + b.y) / 2
     })
@@ -252,7 +259,8 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
     })
     const paintSegment = (paintStyle = this.style) => {
       const liveArrow =
-        getMeasurementSnapshot(this.entityId)?.style.arrowSizeWcs ?? arrowSizeWcs
+        getMeasurementSnapshot(this.entityId)?.style.arrowSizeWcs ??
+        arrowSizeWcs
       drawMeasureSegmentOnCanvas(
         persistOverlay.canvas,
         view,

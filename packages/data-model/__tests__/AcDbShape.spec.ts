@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -27,7 +27,7 @@ describe('AcDbShape', () => {
     createWorkingDb()
     const shape = new AcDbShape()
 
-    expect(shape.position).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(shape.position).toMatchObject({ x: 0, y: 0 })
     expect(shape.size).toBe(1)
     expect(shape.name).toBe('')
     expect(shape.rotation).toBe(0)
@@ -39,7 +39,7 @@ describe('AcDbShape', () => {
     expect(shape.styleName).toBe('')
 
     shape.name = 'ARROW'
-    shape.position = new AcGePoint3d(100, 200, 0)
+    shape.position = new AcGePoint2d(100, 200)
     shape.size = 2.5
     shape.rotation = Math.PI / 4
     shape.widthFactor = 1.5
@@ -50,7 +50,7 @@ describe('AcDbShape', () => {
     shape.styleName = 'STANDARD'
 
     expect(shape.name).toBe('ARROW')
-    expect(shape.position).toMatchObject({ x: 100, y: 200, z: 0 })
+    expect(shape.position).toMatchObject({ x: 100, y: 200 })
     expect(shape.size).toBe(2.5)
     expect(shape.rotation).toBeCloseTo(Math.PI / 4)
     expect(shape.widthFactor).toBe(1.5)
@@ -63,31 +63,31 @@ describe('AcDbShape', () => {
   it('returns geometricExtents and updates when position or size change', () => {
     createWorkingDb()
     const shape = new AcDbShape()
-    shape.position = { x: 10, y: 20, z: 0 }
+    shape.position = { x: 10, y: 20 }
     shape.size = 4
 
-    expect(shape.geometricExtents.min).toMatchObject({ x: 8, y: 18, z: 0 })
-    expect(shape.geometricExtents.max).toMatchObject({ x: 12, y: 22, z: 0 })
+    expect(shape.geometricExtents.min).toMatchObject({ x: 8, y: 18 })
+    expect(shape.geometricExtents.max).toMatchObject({ x: 12, y: 22 })
 
-    shape.position = { x: 0, y: 0, z: 0 }
+    shape.position = { x: 0, y: 0 }
     shape.size = 10
 
-    expect(shape.geometricExtents.min).toMatchObject({ x: -5, y: -5, z: 0 })
-    expect(shape.geometricExtents.max).toMatchObject({ x: 5, y: 5, z: 0 })
+    expect(shape.geometricExtents.min).toMatchObject({ x: -5, y: -5 })
+    expect(shape.geometricExtents.max).toMatchObject({ x: 5, y: 5 })
   })
 
   it('returns insertion point for grips and osnap', () => {
     createWorkingDb()
     const shape = new AcDbShape()
-    shape.position = { x: 3, y: 4, z: 5 }
+    shape.position = { x: 3, y: 4 }
 
     expect(shape.subGetGripPoints()).toEqual([shape.position])
 
-    const snapPoints: AcGePoint3d[] = []
+    const snapPoints: AcGePoint2d[] = []
     shape.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(1)
@@ -97,14 +97,14 @@ describe('AcDbShape', () => {
   it('transforms position, size, and orientation', () => {
     createWorkingDb()
     const shape = new AcDbShape()
-    shape.position = { x: 1, y: 0, z: 0 }
+    shape.position = { x: 1, y: 0 }
     shape.size = 2
     shape.widthFactor = 1
     shape.rotation = 0
 
     shape.transformBy(new AcGeMatrix3d().makeTranslation(10, 0, 0))
 
-    expect(shape.position).toMatchObject({ x: 11, y: 0, z: 0 })
+    expect(shape.position).toMatchObject({ x: 11, y: 0 })
   })
 
   it('supports detached clone', () => {
@@ -122,7 +122,7 @@ describe('AcDbShape', () => {
     shape.database = db
     shape.name = '_GV_'
     shape.size = 0.01
-    shape.position = new AcGePoint3d(100, 200, 0)
+    shape.position = new AcGePoint2d(100, 200)
 
     const renderer = {
       shape: jest.fn(() => ({ objectId: 'S1' }))
@@ -145,7 +145,7 @@ describe('AcDbShape', () => {
     shape.shapeNumber = 33
     shape.size = 2.5
     shape.widthFactor = 1.5
-    shape.position = new AcGePoint3d(100, 200, 0)
+    shape.position = new AcGePoint2d(100, 200)
     shape.rotation = Math.PI / 4
     shape.oblique = Math.PI / 18
     shape.normal = { x: 0, y: 0, z: 1 }
@@ -185,7 +185,7 @@ describe('AcDbShape', () => {
     shape.database = db
     shape.name = '9'
     shape.size = 0.01
-    shape.position = new AcGePoint3d(1, 2, 0)
+    shape.position = new AcGePoint2d(1, 2)
 
     const renderer = {
       shape: jest.fn(() => ({ objectId: 'S1' }))

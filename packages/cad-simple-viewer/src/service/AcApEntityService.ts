@@ -3,7 +3,7 @@ import {
   AcDbEntity,
   AcDbObjectId,
   AcGeMatrix3d,
-  AcGePoint3dLike
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { createRotationMatrix } from '../util/AcApGeTransform'
@@ -74,12 +74,12 @@ export class AcApEntityService {
    */
   translateEntities(
     entities: AcDbEntity[],
-    displacement: AcGePoint3dLike
+    displacement: AcGePoint2dLike
   ): number {
     const matrix = new AcGeMatrix3d().makeTranslation(
       displacement.x,
       displacement.y,
-      displacement.z
+      0
     )
     return this.transformEntities(entities, matrix)
   }
@@ -94,7 +94,7 @@ export class AcApEntityService {
    */
   rotateEntities(
     entities: AcDbEntity[],
-    basePoint: AcGePoint3dLike,
+    basePoint: AcGePoint2dLike,
     angleRad: number
   ): number {
     const matrix = createRotationMatrix(basePoint, angleRad)

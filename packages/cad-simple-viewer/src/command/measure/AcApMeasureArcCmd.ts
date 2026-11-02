@@ -3,7 +3,7 @@ import {
   AcDbDatabase,
   AcGeCircArc2d,
   AcGeMathUtil,
-  AcGePoint3dLike
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
@@ -91,7 +91,7 @@ function lockedSweep(
   }
 }
 
-function toPoint2(p: AcGePoint3dLike): Point2 {
+function toPoint2(p: AcGePoint2dLike): Point2 {
   return { x: p.x, y: p.y }
 }
 
@@ -106,13 +106,13 @@ function circleGeomFromArc(arc: AcGeCircArc2d): AcApMeasureCircleGeom {
 function snapToCircle(
   p: Point2,
   g: AcApMeasureCircleGeom
-): { x: number; y: number; z: number } {
+): { x: number; y: number } {
   const dx = p.x - g.cx
   const dy = p.y - g.cy
   const d = Math.hypot(dx, dy)
-  if (!(d > 0)) return { x: g.cx + g.r, y: g.cy, z: 0 }
+  if (!(d > 0)) return { x: g.cx + g.r, y: g.cy }
   const s = g.r / d
-  return { x: g.cx + dx * s, y: g.cy + dy * s, z: 0 }
+  return { x: g.cx + dx * s, y: g.cy + dy * s }
 }
 
 /**
@@ -125,8 +125,8 @@ function snapToCircle(
  */
 function pickCircleGeomAtPoint(
   context: AcApContext,
-  p: AcGePoint3dLike
-): { geom: AcApMeasureCircleGeom; snapped: AcGePoint3dLike } | null {
+  p: AcGePoint2dLike
+): { geom: AcApMeasureCircleGeom; snapped: AcGePoint2dLike } | null {
   const blockTable = context.doc.database.tables.blockTable
   // OSNAP may have pulled `p` onto a shared polyline vertex. Score against
   // the live cursor so the lock follows whichever arc the mouse is nearer.
@@ -141,9 +141,9 @@ function pickCircleGeomAtPoint(
     return true
   })
   const cursorScreen = context.view.worldToScreen(mouse)
-  const pick = { x: mouse.x, y: mouse.y, z: 0 }
+  const pick = { x: mouse.x, y: mouse.y }
 
-  let best: { geom: AcApMeasureCircleGeom; snapped: AcGePoint3dLike } | null =
+  let best: { geom: AcApMeasureCircleGeom; snapped: AcGePoint2dLike } | null =
     null
   let bestScreen = SNAP_SCREEN_PX
   let bestAlign = -Infinity
@@ -179,7 +179,7 @@ function pickCircleGeomAtPoint(
         const geom = circleGeomFromArc(curve)
         best = {
           geom,
-          snapped: { x: nearest.x, y: nearest.y, z: 0 }
+          snapped: { x: nearest.x, y: nearest.y }
         }
       }
     }
@@ -210,7 +210,7 @@ export function placeArcMeasurement(
  * First-point jig: square snap indicator when the cursor is on a CIRCLE/ARC
  * or a polyline bulge.
  */
-class AcApArcSnapJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApArcSnapJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private readonly _ctx: AcApContext
   private readonly _indicator: AcTrHtmlSnapIndicator
   private readonly _htManager: AcTrHtmlTransientManager
@@ -225,7 +225,7 @@ class AcApArcSnapJig extends AcEdPreviewJig<AcGePoint3dLike> {
     this._indicator = new AcTrHtmlSnapIndicator({
       id: this._indicatorId,
       color,
-      worldPosition: { x: 0, y: 0, z: 0 },
+      worldPosition: { x: 0, y: 0 },
       layer: MEASUREMENT_LIVE_LAYER,
       layoutId: (context.view as AcTrView2d).activeLayoutBtrId
     })
@@ -238,7 +238,7 @@ class AcApArcSnapJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return null
   }
 
-  update(p: AcGePoint3dLike) {
+  update(p: AcGePoint2dLike) {
     const hit = pickCircleGeomAtPoint(this._ctx, p)
     if (hit) {
       this._indicator.setPosition(hit.snapped)
@@ -262,7 +262,7 @@ class AcApArcSnapJig extends AcEdPreviewJig<AcGePoint3dLike> {
  * threshold, so dragging past 180° keeps the same side. Ctrl (the same
  * sticky toggle as the ARC command) flips to the complementary sweep.
  */
-class AcApArcLockedEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApArcLockedEndJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private readonly _ctx: AcApContext
   private readonly _view: AcTrView2d
   private _geom: AcApMeasureCircleGeom
@@ -287,7 +287,7 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
     context: AcApContext,
     db: AcDbDatabase,
     geom: AcApMeasureCircleGeom,
-    start: AcGePoint3dLike,
+    start: AcGePoint2dLike,
     color: AcCmColor
   ) {
     super(context.view)
@@ -369,7 +369,7 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
     this._lastAngle = angle
   }
 
-  update(p: AcGePoint3dLike) {
+  update(p: AcGePoint2dLike) {
     const mouse = this._view.curPos
     const hit = pickCircleGeomAtPoint(this._ctx, p)
     if (
@@ -445,13 +445,13 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
  * Rubber-band jig for picking the through point: solid HTML preview from start
  * to cursor.
  */
-class AcApMeasureArcThroughJig extends AcEdPreviewJig<AcGePoint3dLike> {
-  private readonly _start: AcGePoint3dLike
+class AcApMeasureArcThroughJig extends AcEdPreviewJig<AcGePoint2dLike> {
+  private readonly _start: AcGePoint2dLike
   private readonly _preview: AcApHtmlLivePreview
   private readonly _color: AcCmColor
-  private _cursor: AcGePoint3dLike
+  private _cursor: AcGePoint2dLike
 
-  constructor(view: AcEdBaseView, start: AcGePoint3dLike, color: AcCmColor) {
+  constructor(view: AcEdBaseView, start: AcGePoint2dLike, color: AcCmColor) {
     super(view)
     this._start = start
     this._cursor = start
@@ -469,7 +469,7 @@ class AcApMeasureArcThroughJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return null
   }
 
-  update(p: AcGePoint3dLike) {
+  update(p: AcGePoint2dLike) {
     this._cursor = p
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     this._preview.acapSetDraw((ctx, view) => {
@@ -494,7 +494,7 @@ class AcApMeasureArcThroughJig extends AcEdPreviewJig<AcGePoint3dLike> {
  * Preview jig for picking the end point: live arc stroke (or polyline fallback
  * when the three points are collinear) plus a length badge.
  */
-class AcApMeasureArcEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApMeasureArcEndJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private readonly _view: AcTrView2d
   private readonly _start: Point2
   private readonly _through: Point2
@@ -509,8 +509,8 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    start: AcGePoint3dLike,
-    through: AcGePoint3dLike,
+    start: AcGePoint2dLike,
+    through: AcGePoint2dLike,
     color: AcCmColor
   ) {
     super(view)
@@ -551,7 +551,7 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return null
   }
 
-  update(p: AcGePoint3dLike) {
+  update(p: AcGePoint2dLike) {
     this._end = toPoint2(p)
     this._color = acapGetMeasurementColor(this._db)
     this._badge.setColor(this._color)
@@ -730,7 +730,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
     db: AcDbDatabase,
     color: AcCmColor,
     geom: AcApMeasureCircleGeom,
-    start: AcGePoint3dLike
+    start: AcGePoint2dLike
   ): Promise<void> {
     context.view.editor.resetInputToggles()
     const htManager = view.htmlTransientManager
@@ -751,7 +751,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
     const jig = new AcApArcLockedEndJig(context, db, geom, start, color)
     endPrompt.jig = jig
 
-    let endRaw: AcGePoint3dLike | undefined
+    let endRaw: AcGePoint2dLike | undefined
     try {
       const endResult = await context.view.editor.getPoint(endPrompt)
       if (endResult.status !== AcEdPromptStatus.OK) return

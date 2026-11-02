@@ -1,4 +1,4 @@
-import { AcGePoint2d, AcGeVector2d } from '../src'
+import { AcGeMatrix3d, AcGePoint2d, AcGeVector2d } from '../src'
 
 describe('AcGeVector2d', () => {
   it('supports basic vector ops', () => {
@@ -37,5 +37,21 @@ describe('AcGeVector2d', () => {
     expect(cloned).toBeInstanceOf(AcGePoint2d)
     expect(cloned).not.toBe(point)
     expect(cloned.toArray()).toEqual([3, 5])
+  })
+})
+
+describe('AcGeVector2d.applyMatrix4', () => {
+  it('keeps the XY part of a 4x4 transform', () => {
+    const point = new AcGeVector2d(1, 2)
+    point.applyMatrix4(new AcGeMatrix3d().makeTranslation(3, 4, 5))
+    expect(point.x).toBeCloseTo(4, 8)
+    expect(point.y).toBeCloseTo(6, 8)
+  })
+
+  it('applies rotation about Z', () => {
+    const point = new AcGeVector2d(1, 0)
+    point.applyMatrix4(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    expect(point.x).toBeCloseTo(0, 8)
+    expect(point.y).toBeCloseTo(1, 8)
   })
 })

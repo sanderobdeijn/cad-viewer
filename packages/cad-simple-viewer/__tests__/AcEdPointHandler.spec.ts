@@ -9,8 +9,7 @@ describe('AcEdPointHandler.parseCommandLine', () => {
   it('parses absolute cartesian coordinates', () => {
     expect(pointHandler.parseCommandLine('50,30')).toEqual({
       x: 50,
-      y: 30,
-      z: 0
+      y: 30
     })
   })
 
@@ -19,7 +18,7 @@ describe('AcEdPointHandler.parseCommandLine', () => {
       pointHandler.parseCommandLine('@10,5', {
         referencePoint: { x: 100, y: 200 }
       })
-    ).toEqual({ x: 110, y: 205, z: 0 })
+    ).toEqual({ x: 110, y: 205 })
   })
 
   it('parses absolute polar coordinates', () => {
@@ -32,7 +31,7 @@ describe('AcEdPointHandler.parseCommandLine', () => {
     const point = pointHandler.parseCommandLine('@10<0', {
       referencePoint: { x: 5, y: 5 }
     })
-    expect(point).toEqual({ x: 15, y: 5, z: 0 })
+    expect(point).toEqual({ x: 15, y: 5 })
   })
 
   it('parses rubber-band distance along cursor direction', () => {

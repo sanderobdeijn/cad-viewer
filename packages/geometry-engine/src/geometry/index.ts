@@ -3,39 +3,27 @@ export type { AcGeIndexNode, AcGeLoop2dType } from './AcGeArea2d'
 export { AcGeShape2d } from './AcGeShape2d'
 export { AcGeCurve2d } from './AcGeCurve2d'
 export { AcGeCircArc2d } from './AcGeCircArc2d'
-export { AcGeCircArc3d } from './AcGeCircArc3d'
 export type {
   AcGeResolvedTessellateOptions,
   AcGeTessellateOptions
 } from './AcGeCurveTessellate'
-export type { AcGeCircumcircle2d, AcGeCircumcircle3d } from './AcGeCircArcUtil'
+export type { AcGeCircumcircle2d } from './AcGeCircArcUtil'
 export {
   acgeIsBetterDistanceAlign,
   acgePointLiesOnCircle2d,
   acgeSameCircle2d
 } from './AcGeCircArcUtil'
 export { AcGeEllipseArc2d } from './AcGeEllipseArc2d'
-export { AcGeEllipseArc3d } from './AcGeEllipseArc3d'
 export { AcGePolyline2d } from './AcGePolyline2d'
 export type { AcGePolyline2dVertex } from './AcGePolyline2d'
 export { AcGeLine2d } from './AcGeLine2d'
-export { AcGeLine3d } from './AcGeLine3d'
 export { AcGeLoop2d } from './AcGeLoop2d'
 export type { AcGeBoundaryEdgeType } from './AcGeLoop2d'
 export { AcGeSpline2d } from './AcGeSpline2d'
-export { AcGeSpline3d } from './AcGeSpline3d'
-export {
-  acgeCircArc2dTo3d,
-  acgeCircArc3dTo2d,
-  acgeEllipseArc2dTo3d,
-  acgeEllipseArc3dTo2d,
-  acgeLine2dTo3d,
-  acgePoint2dTo3d
-} from './AcGeCurve2dConvert'
 export { AcGeNurbsCurve } from './AcGeNurbsCurve'
 export type { AcGeKnotParameterizationType } from './AcGeNurbsCurve'
-export { AcGeCatmullRomCurve3d } from './AcGeCatmullRomCurve3d'
-export type { CatmullRomCurveType } from './AcGeCatmullRomCurve3d'
+export { AcGeCatmullRomCurve2d } from './AcGeCatmullRomCurve2d'
+export type { CatmullRomCurveType } from './AcGeCatmullRomCurve2d'
 export {
   acgeCloneIntersectPrimitive,
   acgeIntersectCurves,

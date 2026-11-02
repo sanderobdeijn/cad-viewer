@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbViewportTableRecord } from '../src/database/AcDbViewportTableRecord'
@@ -87,7 +87,7 @@ describe('AcDbActiveModelView', () => {
     // framed empty space ~1.9M units away from the drawing.
     const record = new AcDbViewportTableRecord()
     record.centerPoint = new AcGePoint2d(165042, 1206723)
-    record.viewTarget = new AcGePoint3d(750984, -1587549, 0)
+    record.viewTarget = new AcGePoint2d(750984, -1587549)
     record.viewHeight = 40000
     setVportAspectRatio(record, 2)
 
@@ -251,8 +251,8 @@ describe('AcDbActiveModelView', () => {
       viewHeight: 3199,
       aspectRatio: 3647 / 3199
     })
-    database.extmin = { x: 0, y: 0, z: 0 }
-    database.extmax = { x: 0, y: 0, z: 0 }
+    database.extmin = { x: 0, y: 0 }
+    database.extmax = { x: 0, y: 0 }
 
     const viewBox = database.tables.viewportTable.getActiveVportBox(0)
     expect(viewBox).toBeDefined()

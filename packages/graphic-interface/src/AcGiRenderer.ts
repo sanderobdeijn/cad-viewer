@@ -1,9 +1,9 @@
 import {
   AcGeArea2d,
-  AcGeCircArc3d,
-  AcGeEllipseArc3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGeCircArc2d,
+  AcGeEllipseArc2d,
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcGiContext } from './AcGiContext'
@@ -46,7 +46,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param style Input point style applied to point
    * @returns Return an object which can be added to scene
    */
-  point(point: AcGePoint3d, style: AcGiPointStyle): T
+  point(point: AcGePoint2d, style: AcGiPointStyle): T
 
   /**
    * Draw a circular arc or full circle.
@@ -57,7 +57,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param arc Input circular arc to draw
    * @returns Return an object which can be added to scene
    */
-  circularArc(arc: AcGeCircArc3d): T
+  circularArc(arc: AcGeCircArc2d): T
 
   /**
    * Draw an elliptical arc or full ellipse.
@@ -68,14 +68,14 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param ellipseArc Input elliptical arc to draw
    * @returns Return an object which can be added to scene
    */
-  ellipticalArc(ellipseArc: AcGeEllipseArc3d): T
+  ellipticalArc(ellipseArc: AcGeEllipseArc2d): T
 
   /**
    * Draw lines using gl.LINE_STRIP.
    * @param points Input a point array which contains all line vertices
    * @returns Return an object which can be added to scene
    */
-  lines(points: AcGePoint3dLike[]): T
+  lines(points: AcGePoint2dLike[]): T
 
   /**
    * Draw lines using gl.LINES.
@@ -112,7 +112,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param inner - Inner boundary in the same order and count as `outer`
    * @returns Return an object which can be added to scene
    */
-  offsetRing(outer: AcGePoint3dLike[], inner: AcGePoint3dLike[]): T
+  offsetRing(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]): T
 
   /**
    * Draw multiple line texts

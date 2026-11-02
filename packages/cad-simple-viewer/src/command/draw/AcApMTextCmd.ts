@@ -36,7 +36,7 @@ export class AcApMTextCmd extends AcEdCommand {
     const width = Math.max(Math.abs(box.max.x - box.min.x), 1e-4)
     const view = context.view as AcTrView2d
     const textHeight = this.pixelsToWorldY(view, 24)
-    const location = { x: box.min.x, y: box.max.y, z: 0 }
+    const location = { x: box.min.x, y: box.max.y }
     const availableFonts =
       (await AcApDocManager.instance.getAvaiableFonts()) ?? []
     const toolbarFontFamilies = Array.from(

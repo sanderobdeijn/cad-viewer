@@ -1,12 +1,12 @@
-import { AcGeCatmullRomCurve3d, AcGeMatrix3d } from '../src'
+import { AcGeCatmullRomCurve2d, AcGeMatrix3d } from '../src'
 
-describe('AcGeCatmullRomCurve3d', () => {
+describe('AcGeCatmullRomCurve2d', () => {
   it('samples points along curve', () => {
-    const catmull = new AcGeCatmullRomCurve3d([
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 1, z: 0 },
-      { x: 2, y: 0, z: 0 },
-      { x: 3, y: 1, z: 0 }
+    const catmull = new AcGeCatmullRomCurve2d([
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+      { x: 2, y: 0 },
+      { x: 3, y: 1 }
     ])
 
     const pts = catmull.getPoints(8)
@@ -15,40 +15,39 @@ describe('AcGeCatmullRomCurve3d', () => {
   })
 
   it('covers empty/single/closed and bounding-box branches', () => {
-    const empty = new AcGeCatmullRomCurve3d([])
-    expect(empty.getPoint(0.5).toArray()).toEqual([0, 0, 0])
+    const empty = new AcGeCatmullRomCurve2d([])
+    expect(empty.getPoint(0.5).toArray()).toEqual([0, 0])
     expect(empty.box.isEmpty()).toBe(true)
 
-    const single = new AcGeCatmullRomCurve3d([{ x: 2, y: 3, z: 4 }])
-    expect(single.getPoint(0.2).toArray()).toEqual([2, 3, 4])
+    const single = new AcGeCatmullRomCurve2d([{ x: 2, y: 3 }])
+    expect(single.getPoint(0.2).toArray()).toEqual([2, 3])
 
-    const closed = new AcGeCatmullRomCurve3d(
+    const closed = new AcGeCatmullRomCurve2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 }
       ],
       true,
       'catmullrom'
     )
     expect(closed.length).toBeGreaterThan(2)
     closed.setClosed(true) // no-op early return branch
-    expect(closed.getPoint(1).toArray()).toHaveLength(3)
+    expect(closed.getPoint(1).toArray()).toHaveLength(2)
 
-    const transformed = closed.transform(
+    const transformed = closed.transform3d(
       new AcGeMatrix3d().makeTranslation(1, 2, 3)
     )
-    expect(transformed.startPoint.z).toBeCloseTo(3, 8)
     expect(transformed.box.isEmpty()).toBe(false)
   })
 
   it('covers chordal repeated-point safety, t=1 edge and setters', () => {
-    const curve = new AcGeCatmullRomCurve3d(
+    const curve = new AcGeCatmullRomCurve2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 0 }
       ],
       false,
       'chordal'
@@ -56,30 +55,30 @@ describe('AcGeCatmullRomCurve3d', () => {
 
     // hits non-closed t=1 branch where intPoint/weight are adjusted
     const end = curve.getPoint(1)
-    expect(end.toArray()).toHaveLength(3)
+    expect(end.toArray()).toHaveLength(2)
 
     // hits nonuniform dt safety branches with repeated points
     expect(curve.getPoint(0.5).x).toBeGreaterThanOrEqual(0)
 
     curve.setCurveType('catmullrom')
     curve.setTension(0.25)
-    expect(curve.getPoint(0.25).toArray()).toHaveLength(3)
+    expect(curve.getPoint(0.25).toArray()).toHaveLength(2)
 
     curve.setPoints([
-      { x: -1, y: -2, z: -3 },
-      { x: 2, y: 0, z: 1 },
-      { x: 4, y: 1, z: 2 }
+      { x: -1, y: -2 },
+      { x: 2, y: 0 },
+      { x: 4, y: 1 }
     ])
     curve.setClosed(false)
     expect(curve.startPoint.x).toBe(-1)
     expect(curve.endPoint.x).toBe(4)
-    expect(curve.transform(new AcGeMatrix3d().makeTranslation(1, 0, 0))).toBe(
+    expect(curve.transform3d(new AcGeMatrix3d().makeTranslation(1, 0, 0))).toBe(
       curve
     )
   })
 
   it('covers default constructor and length short-circuit', () => {
-    const curve = new AcGeCatmullRomCurve3d()
+    const curve = new AcGeCatmullRomCurve2d()
     expect(curve.points).toHaveLength(0)
     expect(curve.closed).toBe(false)
     expect(curve.curveType).toBe('centripetal')
@@ -88,11 +87,11 @@ describe('AcGeCatmullRomCurve3d', () => {
   })
 
   it('clones curve with deep-copied points', () => {
-    const curve = new AcGeCatmullRomCurve3d(
+    const curve = new AcGeCatmullRomCurve2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 }
       ],
       true,
       'catmullrom',

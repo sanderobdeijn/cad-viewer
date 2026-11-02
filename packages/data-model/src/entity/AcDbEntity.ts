@@ -4,9 +4,7 @@ import {
   acgeIntersectCurves,
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
-  AcGePlane,
-  AcGePoint3d,
-  AcGeVector3dLike
+  AcGePoint2d
 } from '@mlightcad/geometry-engine'
 import {
   AcGiDirectBatchPrimitive,
@@ -518,7 +516,7 @@ export abstract class AcDbEntity extends AcDbObject {
    * This method should be overridden by subclasses to provide entity-specific
    * grip points.
    *
-   * @returns Array of grip points as 3D points
+   * @returns Array of grip points as 2D points
    *
    * @example
    * ```typescript
@@ -526,7 +524,7 @@ export abstract class AcDbEntity extends AcDbObject {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
+    const gripPoints = new Array<AcGePoint2d>()
     return gripPoints
   }
 
@@ -549,7 +547,7 @@ export abstract class AcDbEntity extends AcDbObject {
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     indices: number[],
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    offset: AcGeVector3dLike
+    offset: AcGeVector2dLike
   ): this {
     return this
   }
@@ -575,7 +573,7 @@ export abstract class AcDbEntity extends AcDbObject {
    *
    * @example
    * ```typescript
-   * const snapPoints: AcGePoint3d[] = [];
+   * const snapPoints: AcGePoint2d[] = [];
    * entity.subGetOsnapPoints(AcDbOsnapMode.Endpoint, 0, pickPoint, lastPoint, snapPoints);
    * ```
    */
@@ -583,11 +581,11 @@ export abstract class AcDbEntity extends AcDbObject {
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     osnapMode: AcDbOsnapMode,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    pickPoint: AcGePoint3dLike,
+    pickPoint: AcGePoint2dLike,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    lastPoint: AcGePoint3dLike,
+    lastPoint: AcGePoint2dLike,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    snapPoints: AcGePoint3dLike[],
+    snapPoints: AcGePoint2dLike[],
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     gsMark?: AcDbObjectId,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
@@ -608,14 +606,12 @@ export abstract class AcDbEntity extends AcDbObject {
    *
    * @param entity - The other entity
    * @param intType - Whether to extend this entity, the other entity, both, or neither
-   * @param projPlane - Optional projection plane for apparent intersection
    * @returns Intersection points in WCS; empty when the entities do not intersect
    */
   intersectWith(
     entity: AcDbEntity,
-    intType: AcDbIntersect = AcDbIntersect.OnBothOperands,
-    projPlane?: AcGePlane
-  ): AcGePoint3d[] {
+    intType: AcDbIntersect = AcDbIntersect.OnBothOperands
+  ): AcGePoint2d[] {
     const a = this.subGetIntersectCurves()
     const b = entity.subGetIntersectCurves()
     if (a.length === 0 || b.length === 0) return []
@@ -625,7 +621,7 @@ export abstract class AcDbEntity extends AcDbObject {
     const extendB =
       intType === AcDbIntersect.ExtendArg ||
       intType === AcDbIntersect.ExtendBoth
-    return acgeIntersectCurves(a, b, extendA, extendB, projPlane)
+    return acgeIntersectCurves(a, b, extendA, extendB)
   }
 
   /**

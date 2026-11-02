@@ -1,5 +1,5 @@
 import {
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGiPointStyle,
   AcGiSubEntityTraits
 } from '@mlightcad/data-model'
@@ -19,10 +19,10 @@ export class AcTrPoint extends AcTrEntity {
    * The flag whether to use one point using THREE.Points
    */
   isShowPoint: boolean
-  private _point: AcGePoint3dLike
+  private _point: AcGePoint2dLike
 
   constructor(
-    point: AcGePoint3dLike,
+    point: AcGePoint2dLike,
     traits: AcGiSubEntityTraits,
     style: AcGiPointStyle,
     context: AcTrRenderContext
@@ -44,7 +44,7 @@ export class AcTrPoint extends AcTrEntity {
     this.unionWorldBoundingBox(geometry, point)
     const material = this.styleManager.getPointsMaterial(traits)
     const pointObj = new THREE.Points(geometry, material)
-    pointObj.position.set(point.x, point.y, point.z ?? 0)
+    pointObj.position.set(point.x, point.y, 0)
     // Add the flag to check intersection using bounding box of the mesh
     getSceneDrawableUserData(pointObj).bboxIntersectionCheck = true
     pointObj.visible = this.isShowPoint
@@ -55,13 +55,13 @@ export class AcTrPoint extends AcTrEntity {
       this.unionWorldBoundingBox(geometry, point)
       const material = this.styleManager.getLineMaterial(traits, true)
       const lineSegmentsObj = new THREE.LineSegments(geometry, material)
-      lineSegmentsObj.position.set(point.x, point.y, point.z ?? 0)
+      lineSegmentsObj.position.set(point.x, point.y, 0)
       const lineDrawable = getSceneDrawableUserData(lineSegmentsObj)
       // Add the flag to check intersection using bounding box of the mesh
       lineDrawable.bboxIntersectionCheck = true
       // Add this flag so that batched group can handle it with different logic
       lineDrawable.isPoint = true
-      lineDrawable.position = { x: point.x, y: point.y, z: point.z }
+      lineDrawable.position = { x: point.x, y: point.y }
       this.add(lineSegmentsObj)
     }
     this.finalizeLeafDrawables()
@@ -75,16 +75,14 @@ export class AcTrPoint extends AcTrEntity {
 
   private unionWorldBoundingBox(
     geometry: THREE.BufferGeometry,
-    worldOrigin: AcGePoint3dLike
+    worldOrigin: AcGePoint2dLike
   ) {
     const boundingBox = AcTrBufferGeometryUtil.safeComputeBoundingBox(geometry)
     if (!boundingBox) {
       return
     }
     const worldBox = boundingBox.clone()
-    worldBox.translate(
-      _vector3.set(worldOrigin.x, worldOrigin.y, worldOrigin.z ?? 0)
-    )
+    worldBox.translate(_vector3.set(worldOrigin.x, worldOrigin.y, 0))
     this.wcsBbox.union(worldBox)
   }
 }

@@ -1,5 +1,5 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
@@ -34,7 +34,7 @@ describe('AcDbBlockReference', () => {
   it('supports public getters/setters and block table record lookup', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
-    block.origin = new AcGePoint3d(1, 2, 3)
+    block.origin = new AcGePoint2d(1, 2)
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
@@ -42,14 +42,14 @@ describe('AcDbBlockReference', () => {
     expect(AcDbBlockReference.typeName).toBe('BlockReference')
     expect(blockRef.dxfTypeName).toBe('INSERT')
 
-    blockRef.position = { x: 10, y: 20, z: 30 }
+    blockRef.position = { x: 10, y: 20 }
     blockRef.rotation = Math.PI / 3
-    blockRef.scaleFactors = { x: 2, y: 3, z: 4 }
+    blockRef.scaleFactors = { x: 2, y: 3 }
     blockRef.normal = { x: 0, y: 0, z: 5 }
 
-    expect(blockRef.position).toMatchObject({ x: 10, y: 20, z: 30 })
+    expect(blockRef.position).toMatchObject({ x: 10, y: 20 })
     expect(blockRef.rotation).toBeCloseTo(Math.PI / 3)
-    expect(blockRef.scaleFactors).toMatchObject({ x: 2, y: 3, z: 4 })
+    expect(blockRef.scaleFactors).toMatchObject({ x: 2, y: 3 })
     expect(blockRef.normal).toMatchObject({ x: 0, y: 0, z: 1 })
     expect(blockRef.blockName).toBe('TEST_BLOCK')
     expect(blockRef.blockTableRecord).toBe(block)
@@ -100,19 +100,19 @@ describe('AcDbBlockReference', () => {
   it('computes blockTransform with base-point compensation', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
-    block.origin = new AcGePoint3d(1, 2, 0)
+    block.origin = new AcGePoint2d(1, 2)
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(10, 20, 0)
-    blockRef.scaleFactors = new AcGePoint3d(2, 3, 1)
+    blockRef.position = new AcGePoint2d(10, 20)
+    blockRef.scaleFactors = new AcGePoint2d(2, 3)
     blockRef.rotation = Math.PI / 2
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
     const matrix = blockRef.blockTransform
-    const basePointInBlock = new AcGePoint3d(1, 2, 0).applyMatrix4(matrix)
-    const plusXFromBase = new AcGePoint3d(2, 2, 0).applyMatrix4(matrix)
+    const basePointInBlock = new AcGePoint2d(1, 2).applyMatrix4(matrix)
+    const plusXFromBase = new AcGePoint2d(2, 2).applyMatrix4(matrix)
 
-    expect(basePointInBlock).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(basePointInBlock).toMatchObject({ x: 10, y: 20 })
     expect(plusXFromBase.x).toBeCloseTo(10)
     expect(plusXFromBase.y).toBeCloseTo(22)
   })
@@ -122,79 +122,74 @@ describe('AcDbBlockReference', () => {
     createNamedBlock(db, 'ELEVATED_STAMP')
 
     const blockRef = new AcDbBlockReference('ELEVATED_STAMP')
-    blockRef.position = new AcGePoint3d(100, 200, 9010.8928)
-    blockRef.scaleFactors = new AcGePoint3d(12.8, 12.8, 12.8)
+    blockRef.position = new AcGePoint2d(100, 200)
+    blockRef.scaleFactors = new AcGePoint2d(12.8, 12.8)
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
     // Entity still stores the DWG elevation.
-    expect(blockRef.position.z).toBeCloseTo(9010.8928)
 
     // Draw/extent transform must not push geometry outside the 2D camera band.
-    const p = new AcGePoint3d(1, 1, 0).applyMatrix4(blockRef.blockTransform)
+    const p = new AcGePoint2d(1, 1).applyMatrix4(blockRef.blockTransform)
     expect(p.x).toBeCloseTo(100 + 12.8)
     expect(p.y).toBeCloseTo(200 + 12.8)
-    expect(p.z).toBeCloseTo(0)
   })
 
   it('keeps nested elevated INSERT extents in the plan-view Z band', () => {
     const db = createDb()
     const stamp = createNamedBlock(db, 'STAMP')
-    stamp.appendEntity(
-      new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 })
-    )
+    stamp.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 }))
 
     const titleBlock = createNamedBlock(db, 'TITLE_BLOCK')
     const stampRef = new AcDbBlockReference('STAMP')
-    stampRef.position = new AcGePoint3d(5, 5, 9010.8928)
+    stampRef.position = new AcGePoint2d(5, 5)
     titleBlock.appendEntity(stampRef)
 
     const titleRef = new AcDbBlockReference('TITLE_BLOCK')
-    titleRef.position = new AcGePoint3d(10, 20, 0)
+    titleRef.position = new AcGePoint2d(10, 20)
     db.tables.blockTable.modelSpace.appendEntity(titleRef)
 
     const extents = titleRef.geometricExtents
-    expect(stampRef.position.z).toBeCloseTo(9010.8928)
-    expect(extents.min).toMatchObject({ x: 15, y: 25, z: 0 })
-    expect(extents.max).toMatchObject({ x: 16, y: 25, z: 0 })
+    expect(extents.min).toMatchObject({ x: 15, y: 25 })
+    expect(extents.max).toMatchObject({ x: 16, y: 25 })
   })
 
   it('returns insertion osnap and delegates to sub-entity osnap by gsMark', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
     const point = new AcDbPoint()
-    point.position = new AcGePoint3d(2, 3, 0)
+    point.position = new AcGePoint2d(2, 3)
     block.appendEntity(point)
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(10, 20, 0)
-    blockRef.scaleFactors = new AcGePoint3d(2, 3, 1)
+    blockRef.position = new AcGePoint2d(10, 20)
+    blockRef.scaleFactors = new AcGePoint2d(2, 3)
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
-    const insertionSnaps: AcGePoint3d[] = []
+    const insertionSnaps: AcGePoint2d[] = []
     blockRef.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       insertionSnaps
     )
     expect(insertionSnaps).toEqual([blockRef.position])
 
-    const subEntitySnaps: AcGePoint3d[] = []
+    const subEntitySnaps: AcGePoint2d[] = []
     blockRef.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       subEntitySnaps,
       point.objectId
     )
     expect(subEntitySnaps).toHaveLength(1)
-    expect(subEntitySnaps[0]).toMatchObject({ x: 14, y: 29, z: 0 })
+    expect(subEntitySnaps[0]).toMatchObject({ x: 14, y: 29 })
 
-    const infiniteLoopGuardSnaps: AcGePoint3d[] = []
+    const infiniteLoopGuardSnaps: AcGePoint2d[] = []
     blockRef.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       infiniteLoopGuardSnaps,
       blockRef.objectId
     )
@@ -204,7 +199,7 @@ describe('AcDbBlockReference', () => {
   it('returns insertion point as grip point', () => {
     createDb()
     const insert = new AcDbBlockReference('*Model_Space')
-    insert.position = new AcGePoint3d(11, 12, 13)
+    insert.position = new AcGePoint2d(11, 12)
     const grips = insert.subGetGripPoints()
     expect(grips).toHaveLength(1)
     expect(grips[0]).toBe(insert.position)
@@ -213,22 +208,19 @@ describe('AcDbBlockReference', () => {
   it('transforms pick point to block space before querying sub-entity osnap', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(10, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
     block.appendEntity(line)
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(10, 0, 0)
+    blockRef.position = new AcGePoint2d(10, 0)
     blockRef.rotation = Math.PI / 2
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
-    const nearestSnaps: AcGePoint3d[] = []
+    const nearestSnaps: AcGePoint2d[] = []
     blockRef.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(11, 3, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(11, 3),
+      new AcGePoint2d(),
       nearestSnaps,
       line.objectId
     )
@@ -236,35 +228,30 @@ describe('AcDbBlockReference', () => {
     expect(nearestSnaps).toHaveLength(1)
     expect(nearestSnaps[0].x).toBeCloseTo(10)
     expect(nearestSnaps[0].y).toBeCloseTo(3)
-    expect(nearestSnaps[0].z).toBeCloseTo(0)
   })
 
   it('collects nearest osnap from block geometry without gsMark', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'TEST_BLOCK')
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(10, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
     block.appendEntity(line)
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(10, 0, 0)
+    blockRef.position = new AcGePoint2d(10, 0)
     blockRef.rotation = Math.PI / 2
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
-    const nearestSnaps: AcGePoint3d[] = []
+    const nearestSnaps: AcGePoint2d[] = []
     blockRef.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(11, 3, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(11, 3),
+      new AcGePoint2d(),
       nearestSnaps
     )
 
     expect(nearestSnaps).toHaveLength(1)
     expect(nearestSnaps[0].x).toBeCloseTo(10)
     expect(nearestSnaps[0].y).toBeCloseTo(3)
-    expect(nearestSnaps[0].z).toBeCloseTo(0)
   })
 
   it('collects endpoint osnaps from a large block without spreading into push', () => {
@@ -274,8 +261,7 @@ describe('AcDbBlockReference', () => {
     block.appendEntity(
       Array.from(
         { length: lineCount },
-        (_, i) =>
-          new AcDbLine(new AcGePoint3d(i, 0, 0), new AcGePoint3d(i, 1, 0))
+        (_, i) => new AcDbLine(new AcGePoint2d(i, 0), new AcGePoint2d(i, 1))
       )
     )
 
@@ -292,12 +278,12 @@ describe('AcDbBlockReference', () => {
     }
 
     try {
-      const snapPoints: AcGePoint3d[] = []
+      const snapPoints: AcGePoint2d[] = []
       expect(() =>
         blockRef.subGetOsnapPoints(
           AcDbOsnapMode.EndPoint,
-          new AcGePoint3d(1, 1, 0),
-          new AcGePoint3d(1, 1, 0),
+          new AcGePoint2d(1, 1),
+          new AcGePoint2d(1, 1),
           snapPoints
         )
       ).not.toThrow()
@@ -313,25 +299,25 @@ describe('AcDbBlockReference', () => {
     const parentBlock = createNamedBlock(db, 'PARENT_BLOCK')
 
     const nestedLine = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(10, 0, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(10, 0)
     )
     leafBlock.appendEntity(nestedLine)
 
     const nestedRef = new AcDbBlockReference('LEAF_BLOCK')
-    nestedRef.position = new AcGePoint3d(2, 0, 0)
+    nestedRef.position = new AcGePoint2d(2, 0)
     parentBlock.appendEntity(nestedRef)
 
     const topRef = new AcDbBlockReference('PARENT_BLOCK')
-    topRef.position = new AcGePoint3d(10, 0, 0)
+    topRef.position = new AcGePoint2d(10, 0)
     topRef.rotation = Math.PI / 2
     db.tables.blockTable.modelSpace.appendEntity(topRef)
 
-    const nestedSnaps: AcGePoint3d[] = []
+    const nestedSnaps: AcGePoint2d[] = []
     topRef.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       nestedSnaps,
       nestedLine.objectId
     )
@@ -346,27 +332,24 @@ describe('AcDbBlockReference', () => {
   it('resolves the Nth nested INSERT instance via gsMark #n occurrence (#745)', () => {
     const db = createDb()
     const cell = createNamedBlock(db, 'CELL')
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(1, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
     cell.appendEntity(line)
 
     const row = createNamedBlock(db, 'ROW')
     for (const x of [0, 100]) {
       const nested = new AcDbBlockReference('CELL')
-      nested.position = new AcGePoint3d(x, 0, 0)
+      nested.position = new AcGePoint2d(x, 0)
       row.appendEntity(nested)
     }
 
     const ref = new AcDbBlockReference('ROW')
     db.tables.blockTable.modelSpace.appendEntity(ref)
 
-    const first: AcGePoint3d[] = []
+    const first: AcGePoint2d[] = []
     ref.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(0.5, 0, 0),
-      new AcGePoint3d(0.5, 0, 0),
+      new AcGePoint2d(0.5, 0),
+      new AcGePoint2d(0.5, 0),
       first,
       line.objectId
     )
@@ -375,11 +358,11 @@ describe('AcDbBlockReference', () => {
       [1, 0]
     ])
 
-    const second: AcGePoint3d[] = []
+    const second: AcGePoint2d[] = []
     ref.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(100.9, 0, 0),
-      new AcGePoint3d(100.9, 0, 0),
+      new AcGePoint2d(100.9, 0),
+      new AcGePoint2d(100.9, 0),
       second,
       `${line.objectId}#1`
     )
@@ -395,13 +378,13 @@ describe('AcDbBlockReference', () => {
     createNamedBlock(db, 'TEST_BLOCK')
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(1, 0, 0)
+    blockRef.position = new AcGePoint2d(1, 0)
     blockRef.rotation = 0
-    blockRef.scaleFactors = new AcGePoint3d(2, 3, 4)
+    blockRef.scaleFactors = new AcGePoint2d(2, 3)
 
     const attr = new AcDbAttribute()
     attr.database = db
-    attr.position = new AcGePoint3d(2, 0, 0)
+    attr.position = new AcGePoint2d(2, 0)
     blockRef.appendAttributes(attr)
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
@@ -413,7 +396,6 @@ describe('AcDbBlockReference', () => {
     expect(blockRef.rotation).toBeCloseTo(Math.PI / 2)
     expect(blockRef.scaleFactors.x).toBeCloseTo(2)
     expect(blockRef.scaleFactors.y).toBeCloseTo(3)
-    expect(blockRef.scaleFactors.z).toBeCloseTo(4)
     expect(attr.position.x).toBeCloseTo(0)
     expect(attr.position.y).toBeCloseTo(2)
   })
@@ -465,14 +447,14 @@ describe('AcDbBlockReference', () => {
     block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 2, y: 3 }))
 
     const blockRef = new AcDbBlockReference('TEST_BLOCK')
-    blockRef.position = new AcGePoint3d(5, 6, 0)
-    blockRef.scaleFactors = new AcGePoint3d(1, 1, 1)
+    blockRef.position = new AcGePoint2d(5, 6)
+    blockRef.scaleFactors = new AcGePoint2d(1, 1)
     blockRef.rotation = 0
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
     const extents = blockRef.geometricExtents
-    expect(extents.min).toMatchObject({ x: 5, y: 6, z: 0 })
-    expect(extents.max).toMatchObject({ x: 7, y: 9, z: 0 })
+    expect(extents.min).toMatchObject({ x: 5, y: 6 })
+    expect(extents.max).toMatchObject({ x: 7, y: 9 })
   })
 
   it('updates geometricExtents when block reference position changes', () => {
@@ -481,15 +463,15 @@ describe('AcDbBlockReference', () => {
     block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 1 }))
 
     const blockRef = new AcDbBlockReference('MOVE_BLOCK')
-    blockRef.position = new AcGePoint3d(0, 0, 0)
+    blockRef.position = new AcGePoint2d(0, 0)
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
-    expect(blockRef.geometricExtents.max).toMatchObject({ x: 1, y: 1, z: 0 })
+    expect(blockRef.geometricExtents.max).toMatchObject({ x: 1, y: 1 })
 
-    blockRef.position = new AcGePoint3d(5, 10, 0)
+    blockRef.position = new AcGePoint2d(5, 10)
 
-    expect(blockRef.geometricExtents.min).toMatchObject({ x: 5, y: 10, z: 0 })
-    expect(blockRef.geometricExtents.max).toMatchObject({ x: 6, y: 11, z: 0 })
+    expect(blockRef.geometricExtents.min).toMatchObject({ x: 5, y: 10 })
+    expect(blockRef.geometricExtents.max).toMatchObject({ x: 6, y: 11 })
   })
 
   it('includes extrusion in geometricExtents for normal (0,0,-1)', () => {
@@ -498,7 +480,7 @@ describe('AcDbBlockReference', () => {
     block.appendEntity(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 }))
 
     const blockRef = new AcDbBlockReference('MIRROR_BLOCK')
-    blockRef.position = new AcGePoint3d(1000, 500, 0)
+    blockRef.position = new AcGePoint2d(1000, 500)
     blockRef.normal = { x: 0, y: 0, z: -1 }
     db.tables.blockTable.modelSpace.appendEntity(blockRef)
 
@@ -512,14 +494,8 @@ describe('AcDbBlockReference', () => {
   it('skips invisible entities inside block definitions when drawing through cache', () => {
     const db = createDb()
     const block = createNamedBlock(db, 'INV_BLK')
-    const visibleLine = new AcDbLine(
-      { x: 0, y: 0 },
-      { x: 10, y: 0 }
-    )
-    const invisibleLine = new AcDbLine(
-      { x: 0, y: 5 },
-      { x: 10, y: 5 }
-    )
+    const visibleLine = new AcDbLine({ x: 0, y: 0 }, { x: 10, y: 0 })
+    const invisibleLine = new AcDbLine({ x: 0, y: 5 }, { x: 10, y: 5 })
     invisibleLine.visibility = false
     block.appendEntity(visibleLine)
     block.appendEntity(invisibleLine)

@@ -1,4 +1,4 @@
-import { AcDbEntity, AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcDbEntity, AcGeBox2d, AcGePoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Minimal line primitive shape used for crossing-selection refinement.
@@ -9,8 +9,8 @@ import { AcDbEntity, AcGeBox2d, AcGePoint3dLike } from '@mlightcad/data-model'
 type SelectionIntersectLinePrimitive = {
   kind: 'line'
   line: {
-    startPoint: AcGePoint3dLike
-    endPoint: AcGePoint3dLike
+    startPoint: AcGePoint2dLike
+    endPoint: AcGePoint2dLike
   }
 }
 
@@ -21,8 +21,8 @@ type SelectionIntersectLinePrimitive = {
  * against the four box edges.
  */
 export function acedLineSegmentIntersectsBox2d(
-  start: AcGePoint3dLike,
-  end: AcGePoint3dLike,
+  start: AcGePoint2dLike,
+  end: AcGePoint2dLike,
   box: AcGeBox2d
 ): boolean {
   if (box.containsPoint(start) || box.containsPoint(end)) {

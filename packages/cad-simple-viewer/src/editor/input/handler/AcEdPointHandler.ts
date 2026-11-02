@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGePoint2dLike } from '@mlightcad/data-model'
 
 import { AcEdPromptPointOptions } from '../prompt/AcEdPromptPointOptions'
 import { AcEdInputHandler, AcEdPointInputContext } from './AcEdInputHandler'
@@ -32,7 +32,7 @@ function splitCartesianPointToken(
 /**
  * Handles validation and parsing of point user input.
  */
-export class AcEdPointHandler implements AcEdInputHandler<AcGePoint3dLike> {
+export class AcEdPointHandler implements AcEdInputHandler<AcGePoint2dLike> {
   protected options: AcEdPromptPointOptions
 
   constructor(options: AcEdPromptPointOptions) {
@@ -47,7 +47,7 @@ export class AcEdPointHandler implements AcEdInputHandler<AcGePoint3dLike> {
       return null
     }
 
-    return { x: nx, y: ny, z: 0 }
+    return { x: nx, y: ny }
   }
 
   /**

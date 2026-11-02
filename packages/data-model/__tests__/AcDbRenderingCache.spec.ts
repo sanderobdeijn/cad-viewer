@@ -18,7 +18,7 @@ jest.mock('../src/entity', () => ({
 import { AcCmColor } from '@mlightcad/common'
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
@@ -30,9 +30,7 @@ function createMockGroup(overrides: Record<string, unknown> = {}) {
     addChild: jest.fn(),
     isCompacted: false,
     userData: {} as { blockCacheKey?: string },
-    compactForInstancing: jest.fn(function (this: {
-      isCompacted: boolean
-    }) {
+    compactForInstancing: jest.fn(function (this: { isCompacted: boolean }) {
       this.isCompacted = true
     }),
     prepareCacheTemplate: jest.fn(),
@@ -384,8 +382,8 @@ describe('AcDbRenderingCache', () => {
     expect(attribute.applyMatrix).toHaveBeenCalledTimes(1)
 
     const inverse = attribute.applyMatrix.mock.calls[0][0] as AcGeMatrix3d
-    const localPoint = new AcGePoint3d(15, 25, 0).applyMatrix4(inverse)
-    expect(localPoint).toMatchObject({ x: 5, y: 5, z: 0 })
+    const localPoint = new AcGePoint2d(15, 25).applyMatrix4(inverse)
+    expect(localPoint).toMatchObject({ x: 5, y: 5 })
     expect(blockGroup.addChild).toHaveBeenCalledWith(attribute)
   })
 
@@ -480,9 +478,9 @@ describe('AcDbRenderingCache', () => {
     >
     expect(clone).not.toBe(template)
     expect(clone.userData.blockCacheKey).toBe('Door')
-    expect((template.userData as { blockCacheKey?: string }).blockCacheKey).toBe(
-      undefined
-    )
+    expect(
+      (template.userData as { blockCacheKey?: string }).blockCacheKey
+    ).toBe(undefined)
   })
 
   it('invokes onCleared when clear runs', () => {

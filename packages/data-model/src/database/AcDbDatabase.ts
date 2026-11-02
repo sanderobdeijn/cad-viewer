@@ -74,8 +74,8 @@ import { AcDbViewportTableRecord } from './AcDbViewportTableRecord'
 import {
   AcGeBox3d,
   AcGeCircArc2d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 import { AcDbDwgVersion } from './AcDbDwgVersion'
 import type { AcDbClass } from './AcDbClass'
@@ -158,7 +158,6 @@ export interface AcDbProgressdEventArgs {
    */
   data?: unknown
 }
-
 
 /**
  * Options for reading a drawing database.
@@ -976,7 +975,7 @@ export class AcDbDatabase extends AcDbObject {
    * @example
    * ```typescript
    * database.formatter.formatLength(12.3456);
-   * database.formatter.formatPoint3d(point);
+   * database.formatter.formatPoint2d(point);
    * database.formatter.formatAngle(angleRadians, { showUnits: true });
    * ```
    */
@@ -2069,10 +2068,10 @@ export class AcDbDatabase extends AcDbObject {
   /**
    * The current Model Space EXTMAX value
    */
-  get extmax(): AcGePoint3d {
-    return this._extents.max
+  get extmax(): AcGePoint2d {
+    return new AcGePoint2d(this._extents.max)
   }
-  set extmax(value: AcGePoint3dLike) {
+  set extmax(value: AcGePoint2dLike) {
     if (value) {
       const oldExtMax = this._extents.max.clone()
       this._extents.expandByPoint(value)
@@ -2089,10 +2088,10 @@ export class AcDbDatabase extends AcDbObject {
   /**
    * The current Model Space EXTMIN value
    */
-  get extmin(): AcGePoint3d {
-    return this._extents.min
+  get extmin(): AcGePoint2d {
+    return new AcGePoint2d(this._extents.min)
   }
-  set extmin(value: AcGePoint3dLike) {
+  set extmin(value: AcGePoint2dLike) {
     if (value) {
       const oldExtMin = this._extents.min.clone()
       this._extents.expandByPoint(value)

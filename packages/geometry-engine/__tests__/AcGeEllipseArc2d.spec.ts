@@ -1,4 +1,4 @@
-import { AcGeEllipseArc2d } from '../src'
+import { AcGeEllipseArc2d, AcGeMatrix2d, AcGeMatrix3d } from '../src'
 
 describe('AcGeEllipseArc2d', () => {
   it('evaluates points on arc', () => {
@@ -60,5 +60,77 @@ describe('AcGeEllipseArc2d', () => {
     ;(same as any)._startAngle = 0.5
     ;(same as any)._endAngle = 0.5 + Number.EPSILON / 2
     expect(same.getPoint(0.25)).toBeInstanceOf(Object)
+  })
+})
+
+describe('AcGeEllipseArc2d in place of the 3D class', () => {
+  it('computes exact extents for a rotated full ellipse', () => {
+    const ellipse = new AcGeEllipseArc2d(
+      { x: 1, y: 2 },
+      5,
+      3,
+      0,
+      Math.PI * 2,
+      false,
+      Math.PI / 2
+    )
+    expect(ellipse.box.min.x).toBeCloseTo(-2, 8)
+    expect(ellipse.box.max.x).toBeCloseTo(4, 8)
+    expect(ellipse.box.min.y).toBeCloseTo(-3, 8)
+    expect(ellipse.box.max.y).toBeCloseTo(7, 8)
+  })
+
+  it('only counts extremes that lie on the arc', () => {
+    const arc = new AcGeEllipseArc2d({ x: 0, y: 0 }, 5, 3, 0, Math.PI / 2)
+    expect(arc.box.min.x).toBeCloseTo(0, 8)
+    expect(arc.box.max.x).toBeCloseTo(5, 8)
+    expect(arc.box.min.y).toBeCloseTo(0, 8)
+    expect(arc.box.max.y).toBeCloseTo(3, 8)
+  })
+
+  it('keeps the drawn path when mirrored', () => {
+    const arc = new AcGeEllipseArc2d({ x: 0, y: 0 }, 5, 2, 0, Math.PI / 2)
+    const sample = arc.getPoints(8).map(p => ({ x: -p.x, y: p.y }))
+    arc.transform(new AcGeMatrix2d().makeScale(-1, 1))
+    expect(arc.clockwise).toBe(true)
+    arc.getPoints(8).forEach((point, index) => {
+      expect(point.x).toBeCloseTo(sample[index].x, 8)
+      expect(point.y).toBeCloseTo(sample[index].y, 8)
+    })
+  })
+
+  it('reports the swept angle and which angles it covers', () => {
+    const ccw = new AcGeEllipseArc2d({ x: 0, y: 0 }, 5, 2, 0, Math.PI / 2)
+    expect(ccw.sweepAngle).toBeCloseTo(Math.PI / 2, 8)
+    expect(ccw.containsAngle(Math.PI / 4)).toBe(true)
+    expect(ccw.containsAngle(Math.PI)).toBe(false)
+
+    const cw = new AcGeEllipseArc2d({ x: 0, y: 0 }, 5, 2, 0, Math.PI / 2, true)
+    expect(cw.sweepAngle).toBeCloseTo((-3 * Math.PI) / 2, 8)
+    expect(cw.containsAngle(Math.PI)).toBe(true)
+    expect(cw.containsAngle(Math.PI / 4)).toBe(false)
+  })
+
+  it('finds the middle of a clockwise arc', () => {
+    const cw = new AcGeEllipseArc2d({ x: 0, y: 0 }, 5, 5, Math.PI / 2, 0, true)
+    expect(cw.midPoint.x).toBeCloseTo(5 * Math.SQRT1_2, 8)
+    expect(cw.midPoint.y).toBeCloseTo(5 * Math.SQRT1_2, 8)
+  })
+
+  it('computes length, area and offset', () => {
+    const circle = new AcGeEllipseArc2d({ x: 0, y: 0 }, 2, 2)
+    expect(circle.length).toBeCloseTo(4 * Math.PI, 8)
+    expect(circle.area).toBeCloseTo(4 * Math.PI, 8)
+    expect(new AcGeEllipseArc2d({ x: 0, y: 0 }, 2, 2, 0, 1).area).toBe(0)
+    expect(circle.offset(1)?.minorAxisRadius).toBe(3)
+    expect(circle.offset(-3)).toBeNull()
+  })
+
+  it('applies a 3D matrix through its XY part', () => {
+    const ellipse = new AcGeEllipseArc2d({ x: 1, y: 0 }, 4, 2, 0, Math.PI / 2)
+    ellipse.transform3d(new AcGeMatrix3d().makeTranslation(2, 3, 9))
+    expect(ellipse.center).toMatchObject({ x: 3, y: 3 })
+    expect(ellipse.startPoint.x).toBeCloseTo(7, 8)
+    expect(ellipse.startPoint.y).toBeCloseTo(3, 8)
   })
 })

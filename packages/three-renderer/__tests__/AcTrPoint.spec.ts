@@ -51,7 +51,7 @@ function findLargeCoordinatePointSymbolDrawable(group: AcTrBatchedGroup) {
 describe('AcTrPoint wcsBbox', () => {
   it('stores the point location in wcsBbox for dot display mode', () => {
     const point = new AcTrPoint(
-      { x: 12, y: 34, z: 0 },
+      { x: 12, y: 34 },
       defaultTraits,
       dotStyle,
       new AcTrRenderContext()
@@ -62,7 +62,7 @@ describe('AcTrPoint wcsBbox', () => {
 
   it('includes symbol geometry in wcsBbox for marker display mode', () => {
     const point = new AcTrPoint(
-      { x: 100, y: 200, z: 0 },
+      { x: 100, y: 200 },
       defaultTraits,
       crossStyle,
       new AcTrRenderContext()
@@ -76,7 +76,7 @@ describe('AcTrPoint wcsBbox', () => {
   })
   it('scales marker geometry by displaySize (PDSIZE)', () => {
     const point = new AcTrPoint(
-      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0 },
       defaultTraits,
       { displayMode: 35, displaySize: 2 },
       new AcTrRenderContext()
@@ -119,7 +119,7 @@ describe('AcTrPoint large coordinates', () => {
 
   it('keeps wcsBbox in world coordinates when geometry is rebased locally', () => {
     const point = new AcTrPoint(
-      { x: largeX, y: 2_000_000, z: 0 },
+      { x: largeX, y: 2_000_000 },
       defaultTraits,
       circleCrossStyle,
       new AcTrRenderContext()

@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcEdSelectionTransformPreviewJig } from '../../editor/input/AcEdSelectionPreviewJig'
@@ -14,28 +14,27 @@ import { AcEdBaseView } from '../../editor/view/AcEdBaseView'
  * Reuses GPU-resident batched geometry when possible. The legacy transient
  * clone path publishes once and then updates transforms only.
  */
-export class AcApMovePreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoint3dLike> {
-  private _basePoint: AcGePoint3d
+export class AcApMovePreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoint2dLike> {
+  private _basePoint: AcGePoint2d
 
   constructor(
     view: AcEdBaseView,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3dLike
+    basePoint: AcGePoint2dLike
   ) {
     super(view, sourceEntities)
-    this._basePoint = new AcGePoint3d(basePoint)
+    this._basePoint = new AcGePoint2d(basePoint)
   }
 
-  protected buildTransforms(point: AcGePoint3dLike) {
-    const displacement = new AcGePoint3d(
+  protected buildTransforms(point: AcGePoint2dLike) {
+    const displacement = new AcGePoint2d(
       point.x - this._basePoint.x,
-      point.y - this._basePoint.y,
-      point.z - this._basePoint.z
+      point.y - this._basePoint.y
     )
     const matrix = new AcGeMatrix3d().makeTranslation(
       displacement.x,
       displacement.y,
-      displacement.z
+      0
     )
     const targets =
       this.previewEntries.length > 0

@@ -1,5 +1,5 @@
 import {
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   acgiForegroundColorForBackground,
   AcGiSubEntityTraits
 } from '@mlightcad/data-model'
@@ -203,7 +203,7 @@ export interface AcTrDirectAppendOptions {
   /** Initial slot visibility; defaults to `true`. */
   visible?: boolean
   /** Point entities: world position for bbox intersection. */
-  position?: AcGePoint3dLike
+  position?: AcGePoint2dLike
 }
 
 export interface AcTrGeometrySize {
@@ -534,11 +534,7 @@ export class AcTrBatchedGroup extends THREE.Group {
    */
   rerenderPoints(displayMode: number, displaySize: number = 0) {
     const creator = AcTrPointSymbolCreator.instance
-    const pointSymbol = creator.create(
-      displayMode,
-      { x: 0, y: 0, z: 0 },
-      displaySize
-    )
+    const pointSymbol = creator.create(displayMode, { x: 0, y: 0 }, displaySize)
 
     if (pointSymbol.line) {
       this._pointSymbolBatches.forEach(batches => {
@@ -571,9 +567,7 @@ export class AcTrBatchedGroup extends THREE.Group {
   ): Map<string, THREE.Box3> {
     const scratch = new THREE.Box3()
 
-    const absorbBatch = (
-      batch: AcTrBatchedLine | AcTrBatchedPoint
-    ) => {
+    const absorbBatch = (batch: AcTrBatchedLine | AcTrBatchedPoint) => {
       batch.updateMatrixWorld(true)
       for (let i = 0; i < batch.geometryCount; i++) {
         let info: { objectId?: string; vertexCount: number }
@@ -737,10 +731,7 @@ export class AcTrBatchedGroup extends THREE.Group {
       if (!('material' in object)) return
       const drawableUserData = getSceneDrawableUserData(object)
       if (drawableUserData.styleMaterialId === oldId) {
-        const drawable = object as
-          | THREE.Mesh
-          | THREE.Line
-          | THREE.LineSegments
+        const drawable = object as THREE.Mesh | THREE.Line | THREE.LineSegments
         drawable.material = material
         drawableUserData.styleMaterialId = material.id
         // Same arming as the batched path above: a cache-push rebind may swap
@@ -2656,7 +2647,11 @@ export class AcTrBatchedGroup extends THREE.Group {
       kind,
       translation
     )
-    const batchId = batch.addInstance(matrixWorld, objectId, bboxIntersectionCheck)
+    const batchId = batch.addInstance(
+      matrixWorld,
+      objectId,
+      bboxIntersectionCheck
+    )
     return { batchedObjectId: batch.id, batchId }
   }
 

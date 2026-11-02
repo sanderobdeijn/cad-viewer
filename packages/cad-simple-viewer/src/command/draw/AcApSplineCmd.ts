@@ -2,7 +2,6 @@ import {
   AcDbSpline,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
   DEFAULT_TOL
 } from '@mlightcad/data-model'
 
@@ -123,7 +122,7 @@ export class AcApSplineJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   private rebuildSpline(points: AcGePoint2d[]) {
     if (points.length < 2) {
-      const defaultPoints = [new AcGePoint3d(0, 0, 0), new AcGePoint3d(1, 1, 0)]
+      const defaultPoints = [new AcGePoint2d(0, 0), new AcGePoint2d(1, 1)]
       const defaultDegree = 1
       const defaultKnots = createKnots(defaultPoints.length, defaultDegree)
       this._spline.rebuild(
@@ -135,7 +134,7 @@ export class AcApSplineJig extends AcEdPreviewJig<AcGePoint2dLike> {
       return
     }
 
-    const points3d = points.map(p => new AcGePoint3d(p.x, p.y, 0))
+    const points3d = points.map(p => new AcGePoint2d(p.x, p.y))
     const degree = resolveSplineDegree(points3d.length, this._settings)
     const isClosed = this._closed && points3d.length >= 3
 
@@ -294,7 +293,7 @@ export class AcApSplineCmd extends AcEdCommand {
       prompt.useBasePoint = true
       const basePoint = getCurrentPoint()
       if (basePoint) {
-        prompt.basePoint = new AcGePoint3d(basePoint)
+        prompt.basePoint = new AcGePoint2d(basePoint)
       }
       prompt.jig = createPreviewJig()
       // AutoCAD SPLINE: Enter at "next point" ends the command without adding a fit/CV point.
@@ -567,7 +566,7 @@ function buildSplineEntity(
   closed: boolean
 ) {
   if (points.length < 2) {
-    const fallbackPoints = [new AcGePoint3d(0, 0, 0), new AcGePoint3d(1, 1, 0)]
+    const fallbackPoints = [new AcGePoint2d(0, 0), new AcGePoint2d(1, 1)]
     const fallbackDegree = 1
     const fallbackKnots = createKnots(fallbackPoints.length, fallbackDegree)
     return new AcDbSpline(
@@ -578,13 +577,13 @@ function buildSplineEntity(
     )
   }
 
-  const points3dRaw = points.map(p => new AcGePoint3d(p.x, p.y, 0))
+  const points3dRaw = points.map(p => new AcGePoint2d(p.x, p.y))
   const points3d =
     settings.method === 'fit'
       ? dedupeConsecutivePoints(points3dRaw)
       : points3dRaw
   if (points3d.length < 2) {
-    const fallbackPoints = [new AcGePoint3d(0, 0, 0), new AcGePoint3d(1, 1, 0)]
+    const fallbackPoints = [new AcGePoint2d(0, 0), new AcGePoint2d(1, 1)]
     const fallbackDegree = 1
     const fallbackKnots = createKnots(fallbackPoints.length, fallbackDegree)
     return new AcDbSpline(
@@ -622,14 +621,14 @@ function resolveSplineDegree(numPoints: number, settings: AcApSplineSettings) {
   return Math.min(Math.max(1, settings.degree), maxDegree)
 }
 
-function dedupeConsecutivePoints(points: AcGePoint3d[]) {
+function dedupeConsecutivePoints(points: AcGePoint2d[]) {
   if (points.length <= 1) return points
-  const deduped: AcGePoint3d[] = [new AcGePoint3d(points[0])]
+  const deduped: AcGePoint2d[] = [new AcGePoint2d(points[0])]
   for (let i = 1; i < points.length; i++) {
     const last = deduped[deduped.length - 1]
     const current = points[i]
     if (!isNearlySamePoint3d(last, current)) {
-      deduped.push(new AcGePoint3d(current))
+      deduped.push(new AcGePoint2d(current))
     }
   }
   return deduped
@@ -639,8 +638,8 @@ function isNearlySamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike) {
   return DEFAULT_TOL.equalPoint2d(a, b)
 }
 
-function isNearlySamePoint3d(a: AcGePoint3d, b: AcGePoint3d) {
-  return DEFAULT_TOL.equalPoint3d(a, b)
+function isNearlySamePoint3d(a: AcGePoint2d, b: AcGePoint2d) {
+  return DEFAULT_TOL.equalPoint2d(a, b)
 }
 
 function mapKnotsTypeToParameterization(

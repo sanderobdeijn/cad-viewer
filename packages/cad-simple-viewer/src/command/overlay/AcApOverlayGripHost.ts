@@ -101,10 +101,10 @@ function acapPointerEventToOverlayWorldMaybeOsnap(
   }
   const resolver = osnapView.osnapResolver
   if (typeof resolver?.resolve !== 'function') return raw
-  const cursorWcs = { x: raw.x, y: raw.y, z: 0 }
+  const cursorWcs = { x: raw.x, y: raw.y }
   const snapPoint = resolver.resolve({
     cursorWcs,
-    lastPoint: { x: lastPoint.x, y: lastPoint.y, z: 0 }
+    lastPoint: { x: lastPoint.x, y: lastPoint.y }
   })
   return snapPoint ? { x: snapPoint.x, y: snapPoint.y } : raw
 }

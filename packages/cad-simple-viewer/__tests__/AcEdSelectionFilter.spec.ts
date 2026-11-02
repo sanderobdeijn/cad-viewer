@@ -1,13 +1,10 @@
-import { AcDbDxfCode, AcDbLine, AcGePoint3d } from '@mlightcad/data-model'
+import { AcDbDxfCode, AcDbLine, AcGePoint2d } from '@mlightcad/data-model'
 
 import { AcEdSelectionFilter } from '../src/editor/input/AcEdSelectionFilter'
 
 describe('AcEdSelectionFilter', () => {
   const createLine = (objectId: string, layer = '0') => {
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(1, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
     line.objectId = objectId
     line.layer = layer
     return line

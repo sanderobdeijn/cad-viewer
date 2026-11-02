@@ -130,7 +130,11 @@ export function collectCountListInstances(
     for (const child of record.newIterator()) {
       if (!isBlockReference(child) || child.type === 'Table') continue
       const local = child.position
-      const worldPosition = applyMatrix(parentMatrix, local)
+      const worldPosition = applyMatrix(parentMatrix, {
+        x: local.x,
+        y: local.y,
+        z: 0
+      })
       pushInstance(child, parentId, worldPosition, true)
 
       const childMatrix = getInsertionTransform(child)
@@ -149,7 +153,7 @@ export function collectCountListInstances(
     const position = {
       x: entity.position.x,
       y: entity.position.y,
-      z: entity.position.z
+      z: 0
     }
     // Parent may be outside the count area while a nested insert is inside.
     if (isInArea(area, position)) {

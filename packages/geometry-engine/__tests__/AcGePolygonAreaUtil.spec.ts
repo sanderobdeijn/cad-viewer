@@ -1,8 +1,6 @@
 import {
   acgeClosedPolygonArea2d,
-  acgeClosedPolygonArea3d,
-  acgePolygonArea2d,
-  acgePolygonArea3d
+  acgePolygonArea2d
 } from '../src/util/AcGePolygonAreaUtil'
 
 describe('AcGePolygonAreaUtil', () => {
@@ -25,15 +23,5 @@ describe('AcGePolygonAreaUtil', () => {
         { x: 1, y: 0 }
       ])
     ).toBe(0)
-  })
-
-  it('computes 3D planar polygon area', () => {
-    const triangle = [
-      { x: 0, y: 0, z: 0 },
-      { x: 4, y: 0, z: 0 },
-      { x: 0, y: 3, z: 0 }
-    ]
-    expect(acgePolygonArea3d(triangle)).toBeCloseTo(6, 8)
-    expect(acgeClosedPolygonArea3d(triangle)).toBeCloseTo(6, 8)
   })
 })

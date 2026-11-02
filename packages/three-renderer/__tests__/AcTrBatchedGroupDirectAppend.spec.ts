@@ -18,8 +18,8 @@ describe('AcTrBatchedGroup direct line append', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xff0000 })
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       material
     )
@@ -51,8 +51,8 @@ describe('AcTrBatchedGroup direct line append', () => {
     const material = new THREE.LineBasicMaterial()
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 0 }
       ],
       material
     )
@@ -82,8 +82,8 @@ describe('AcTrBatchedGroup direct line append', () => {
 
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 5, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 5, y: 0 }
       ],
       material
     )
@@ -100,8 +100,8 @@ describe('AcTrBatchedGroup direct line append', () => {
 
     const line = new AcTrLine(
       [
-        { x: 10, y: 0, z: 0 },
-        { x: 15, y: 0, z: 0 }
+        { x: 10, y: 0 },
+        { x: 15, y: 0 }
       ],
       defaultTraits,
       context,
@@ -128,8 +128,8 @@ describe('AcTrBatchedGroup direct line append', () => {
     const material = new LineMaterial({ color: 0xffffff, linewidth: 2 })
     const built = buildLineGeometry(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 8, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 8, y: 0 }
       ],
       material
     )
@@ -153,19 +153,14 @@ describe('AcTrBatchedGroup direct line append', () => {
 
   it('appends point geometry into point batches', () => {
     const material = new THREE.PointsMaterial({ color: 0xff0000 })
-    const built = buildPointGeometry({ x: 5, y: 6, z: 0 }, material)
+    const built = buildPointGeometry({ x: 5, y: 6 }, material)
     const group = new AcTrBatchedGroup()
 
     expect(
-      group.appendPointGeometry(
-        built.geometry,
-        material,
-        built.worldOffset,
-        {
-          objectId: 'pt-1',
-          position: built.position
-        }
-      )
+      group.appendPointGeometry(built.geometry, material, built.worldOffset, {
+        objectId: 'pt-1',
+        position: built.position
+      })
     ).toBe(true)
     built.geometry.dispose()
 
@@ -179,18 +174,20 @@ describe('AcTrBatchedGroup direct line append', () => {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute(
       'position',
-      new THREE.Float32BufferAttribute(
-        [-1, -1, 0, 1, -1, 0, 0, 1, 0],
-        3
-      )
+      new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 0, 1, 0], 3)
     )
     geometry.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1))
 
     const group = new AcTrBatchedGroup()
     expect(
-      group.appendMeshGeometry(geometry, material, new THREE.Vector3(50, 50, 0), {
-        objectId: 'mesh-1'
-      })
+      group.appendMeshGeometry(
+        geometry,
+        material,
+        new THREE.Vector3(50, 50, 0),
+        {
+          objectId: 'mesh-1'
+        }
+      )
     ).toBe(true)
     geometry.dispose()
 

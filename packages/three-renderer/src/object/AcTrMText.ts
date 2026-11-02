@@ -92,7 +92,6 @@ export class AcTrMText extends AcTrGlyphEntity {
       textPos &&
       textPos.x === 0 &&
       textPos.y === 0 &&
-      textPos.z === 0 &&
       (this.position.x !== 0 || this.position.y !== 0 || this.position.z !== 0)
     ) {
       return {
@@ -144,9 +143,8 @@ export class AcTrMText extends AcTrGlyphEntity {
    */
   protected override attachRendered(rendered: MTextObject) {
     super.attachRendered(rendered)
-    const annotationScale = (
-      this.userData as { annotationScale?: unknown }
-    ).annotationScale
+    const annotationScale = (this.userData as { annotationScale?: unknown })
+      .annotationScale
     if (!annotationScale) return
     const root = resolveMTextRenderRoot(rendered)
     ;(root.userData as { annotationScale?: unknown }).annotationScale =

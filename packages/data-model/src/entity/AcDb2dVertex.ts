@@ -1,9 +1,9 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
-  AcGeVector3dLike
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -45,7 +45,7 @@ export class AcDb2dVertex extends AcDbEntity {
     return 'VERTEX'
   }
 
-  private _position: AcGePoint3d
+  private _position: AcGePoint2d
   /**
    * The bulge factor used to indicate how much of an arc segment is present at this vertex.
    * The bulge factor is the tangent of one fourth the included angle for an arc segment, made
@@ -65,7 +65,7 @@ export class AcDb2dVertex extends AcDbEntity {
    */
   constructor() {
     super()
-    this._position = new AcGePoint3d()
+    this._position = new AcGePoint2d()
     this._bulge = 0
     this._startWidth = 0
     this._endWidth = 0
@@ -79,7 +79,7 @@ export class AcDb2dVertex extends AcDbEntity {
    *
    * @returns The position value of the vertex
    */
-  get position(): AcGePoint3d {
+  get position(): AcGePoint2d {
     return this._position
   }
 
@@ -90,7 +90,7 @@ export class AcDb2dVertex extends AcDbEntity {
    *
    * @param value - The position value of the vertex
    */
-  set position(value: AcGePoint3dLike) {
+  set position(value: AcGePoint2dLike) {
     this._position.copy(value)
   }
 
@@ -183,13 +183,13 @@ export class AcDb2dVertex extends AcDbEntity {
    * @returns Array of grip points (center, start point, end point)
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
+    const gripPoints = new Array<AcGePoint2d>()
     gripPoints.push(this._position)
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._position)
     return this
   }
@@ -208,9 +208,9 @@ export class AcDb2dVertex extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (
       osnapMode === AcDbOsnapMode.EndPoint ||

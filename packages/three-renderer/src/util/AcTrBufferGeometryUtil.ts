@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGePoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 const _vector1 = /*@__PURE__*/ new THREE.Vector3()
@@ -84,7 +84,7 @@ export class AcTrBufferGeometryUtil {
     })
   }
 
-  static createBufferGeometryByPoints(points: AcGePoint3dLike[]) {
+  static createBufferGeometryByPoints(points: AcGePoint2dLike[]) {
     const geometry = new THREE.BufferGeometry()
     const position = new Float32Array(points.length * 3)
     const indices = new Uint16Array((points.length - 1) * 2)
@@ -92,7 +92,7 @@ export class AcTrBufferGeometryUtil {
       let startIndex = index * 3
       position[startIndex] = point.x
       position[startIndex + 1] = point.y
-      position[startIndex + 2] = point.z
+      position[startIndex + 2] = 0
       if (index > 0) {
         startIndex = (index - 1) * 2
         indices[startIndex] = index - 1
@@ -158,8 +158,7 @@ export class AcTrBufferGeometryUtil {
     const existing = geometry.getAttribute('lineDistance') as
       | THREE.BufferAttribute
       | undefined
-    const preserveStarts =
-      !!existing && existing.count >= vertexCount
+    const preserveStarts = !!existing && existing.count >= vertexCount
 
     const lineDistances = new Float32Array(vertexCount)
     for (let i = 0; i < vertexCount; i += 2) {
@@ -291,7 +290,8 @@ export class AcTrBufferGeometryUtil {
         }
       }
     } else {
-      const vertexCount = positionAttribute.count - (positionAttribute.count % 2)
+      const vertexCount =
+        positionAttribute.count - (positionAttribute.count % 2)
       for (let i = 0; i < vertexCount; i += 2) {
         lineDistances[i] = accumulated
         _vector1.fromBufferAttribute(positionAttribute, i)
@@ -480,13 +480,8 @@ export class AcTrBufferGeometryUtil {
   /**
    * Returns true when all coordinates of a 3D point are finite.
    */
-  static isFinitePoint(point: AcGePoint3dLike | null | undefined): boolean {
-    return (
-      !!point &&
-      Number.isFinite(point.x) &&
-      Number.isFinite(point.y) &&
-      Number.isFinite(point.z ?? 0)
-    )
+  static isFinitePoint(point: AcGePoint2dLike | null | undefined): boolean {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y)
   }
 
   /**

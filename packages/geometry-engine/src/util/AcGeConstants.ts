@@ -1,4 +1,4 @@
-import { AcGePoint2dLike, AcGePoint3dLike } from '../math'
+import { AcGePoint2dLike } from '../math'
 
 /**
  * Floating point comparison tolerance.
@@ -17,13 +17,4 @@ export const TAU = 2 * Math.PI
 export const ORIGIN_POINT_2D: AcGePoint2dLike = {
   x: 0,
   y: 0
-}
-
-/**
- * 3d origin point
- */
-export const ORIGIN_POINT_3D: AcGePoint3dLike = {
-  x: 0,
-  y: 0,
-  z: 0
 }

@@ -2,14 +2,10 @@ import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
   AcGeLine2d,
-  acgeLine2dTo3d,
   AcGeMatrix3d,
   AcGePoint2d,
   AcGePoint2dLike,
-  acgePoint2dTo3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
-  AcGeVector3dLike
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -100,7 +96,7 @@ export class AcDbLine extends AcDbCurve {
    * @example
    * ```typescript
    * const startPoint = line.startPoint;
-   * console.log(`Line starts at: ${startPoint.x}, ${startPoint.y}, ${startPoint.z}`);
+   * console.log(`Line starts at: ${startPoint.x}, ${startPoint.y}`);
    * ```
    */
   get startPoint(): AcGePoint2d {
@@ -129,7 +125,7 @@ export class AcDbLine extends AcDbCurve {
    * @example
    * ```typescript
    * const endPoint = line.endPoint;
-   * console.log(`Line ends at: ${endPoint.x}, ${endPoint.y}, ${endPoint.z}`);
+   * console.log(`Line ends at: ${endPoint.x}, ${endPoint.y}`);
    * ```
    */
   get endPoint(): AcGePoint2d {
@@ -160,7 +156,7 @@ export class AcDbLine extends AcDbCurve {
    * @example
    * ```typescript
    * const midPoint = line.midPoint;
-   * console.log(`Line midpoint: ${midPoint.x}, ${midPoint.y}, ${midPoint.z}`);
+   * console.log(`Line midpoint: ${midPoint.x}, ${midPoint.y}`);
    * ```
    */
   get midPoint(): AcGePoint2d {
@@ -179,7 +175,7 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   get geometricExtents(): AcGeBox3d {
-    return acgeLine2dTo3d(this._geo).box
+    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
@@ -187,7 +183,7 @@ export class AcDbLine extends AcDbCurve {
     return [
       {
         kind: 'line',
-        line: acgeLine2dTo3d(this._geo),
+        line: this._geo,
         extent: 'bounded'
       }
     ]
@@ -300,10 +296,10 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(acgePoint2dTo3d(this.midPoint))
-    gripPoints.push(acgePoint2dTo3d(this.startPoint))
-    gripPoints.push(acgePoint2dTo3d(this.endPoint))
+    const gripPoints = new Array<AcGePoint2d>()
+    gripPoints.push(this.midPoint)
+    gripPoints.push(this.startPoint)
+    gripPoints.push(this.endPoint)
     return gripPoints
   }
 
@@ -313,11 +309,11 @@ export class AcDbLine extends AcDbCurve {
    * Index 0 moves the midpoint and translates the whole line. Indices 1 and 2
    * move the start and end points respectively.
    */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       switch (index) {
         case 0:
-          this.transformBy(AcGeMatrix3d.makeTranslation(offset))
+          this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
           break
         case 1:
           this.startPoint.add(offset)
@@ -346,11 +342,11 @@ export class AcDbLine extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
-    const geo = acgeLine2dTo3d(this._geo)
+    const geo = this._geo
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
         snapPoints.push(geo.startPoint)
@@ -398,7 +394,7 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    const geo = acgeLine2dTo3d(this._geo).transform(matrix)
+    const geo = this._geo.transform3d(matrix)
     this._geo = new AcGeLine2d(geo.startPoint, geo.endPoint)
     return this
   }
@@ -422,10 +418,7 @@ export class AcDbLine extends AcDbCurve {
    * @returns The rendered line entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.lines([
-      acgePoint2dTo3d(this.startPoint),
-      acgePoint2dTo3d(this.endPoint)
-    ])
+    return renderer.lines([this.startPoint, this.endPoint])
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {
@@ -433,7 +426,7 @@ export class AcDbLine extends AcDbCurve {
     return [new AcDbLine(geo.startPoint, geo.endPoint)]
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const s = this.startPoint
     const e = this.endPoint
     return (e.x - s.x) * (point.y - s.y) - (e.y - s.y) * (point.x - s.x) >= 0

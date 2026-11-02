@@ -1,4 +1,4 @@
-import { AcGePoint2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d, AcGeVector3d } from '@mlightcad/geometry-engine'
 
 export enum AcGiRenderMode {
   OPTIMIZED_2D = 0, // classic 2D
@@ -27,8 +27,8 @@ export enum AcGiDefaultLightingType {
 
 export interface AcGiView {
   center: AcGePoint2d
-  viewDirectionFromTarget: AcGePoint3d
-  viewTarget: AcGePoint3d
+  viewDirectionFromTarget: AcGeVector3d
+  viewTarget: AcGePoint2d
   lensLength: number
   frontClippingPlane: number
   backClippingPlane: number
@@ -39,9 +39,9 @@ export interface AcGiView {
   renderMode: AcGiRenderMode
   viewMode: number
   ucsIconSetting: number
-  ucsOrigin: AcGePoint3d
-  ucsXAxis: AcGePoint3d
-  ucsYAxis: AcGePoint3d
+  ucsOrigin: AcGePoint2d
+  ucsXAxis: AcGePoint2d
+  ucsYAxis: AcGePoint2d
   orthographicType: AcGiOrthographicType
   shadePlotSetting: number
   shadePlotObjectId?: string

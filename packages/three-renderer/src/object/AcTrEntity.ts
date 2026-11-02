@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d, AcGiEntity } from '@mlightcad/data-model'
+import { AcGeMatrix3d, AcGePoint2d, AcGiEntity } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrBatchDrawPolicy } from '../draw/AcTrBatchDrawPolicy'
@@ -23,7 +23,7 @@ import { AcTrObject } from './AcTrObject'
 export class AcTrEntity extends AcTrObject implements AcGiEntity {
   declare userData: AcTrEntityUserData
   protected _wcsBbox: THREE.Box3
-  protected _basePoint?: AcGePoint3d
+  protected _basePoint?: AcGePoint2d
 
   constructor(context: AcTrRenderContext) {
     super(context)
@@ -73,13 +73,13 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
   get basePoint() {
     return this._basePoint
   }
-  set basePoint(value: AcGePoint3d | undefined) {
+  set basePoint(value: AcGePoint2d | undefined) {
     if (value == null) {
       this._basePoint = value
     } else {
       this._basePoint = this._basePoint
         ? this._basePoint.copy(value)
-        : new AcGePoint3d(value)
+        : new AcGePoint2d(value)
     }
   }
 

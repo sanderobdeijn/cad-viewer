@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 import { AcCmColor } from '@mlightcad/common'
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -103,14 +103,14 @@ describe('AcDbAttribute', () => {
     attribute.textString = 'A'
     attribute.height = 2
     attribute.verticalMode = AcDbTextVerticalMode.BASELINE
-    attribute.position = new AcGePoint3d(1, 2, 3)
+    attribute.position = new AcGePoint2d(1, 2)
 
-    expect(attribute.geometricExtents.min).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(attribute.geometricExtents.min).toMatchObject({ x: 1, y: 2 })
     expect(attribute.geometricExtents.max.x).toBeCloseTo(3)
 
-    attribute.position = new AcGePoint3d(8, 9, 10)
+    attribute.position = new AcGePoint2d(8, 9)
 
-    expect(attribute.geometricExtents.min).toMatchObject({ x: 8, y: 9, z: 10 })
+    expect(attribute.geometricExtents.min).toMatchObject({ x: 8, y: 9 })
     expect(attribute.geometricExtents.max.x).toBeCloseTo(10)
   })
 

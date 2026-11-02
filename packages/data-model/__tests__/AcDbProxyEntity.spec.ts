@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbProxyEntity } from '../src/entity/AcDbProxyEntity'
 import {
@@ -80,18 +80,18 @@ describe('AcDbProxyGraphic', () => {
     expect(result).toBe(groupResult)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
     const points = (renderer.lines as jest.Mock).mock
-      .calls[0][0] as AcGePoint3d[]
+      .calls[0][0] as AcGePoint2d[]
     expect(points).toHaveLength(2)
-    expect(points[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(points[1]).toMatchObject({ x: 10, y: 0, z: 0 })
+    expect(points[0]).toMatchObject({ x: 0, y: 0 })
+    expect(points[1]).toMatchObject({ x: 10, y: 0 })
   })
 
   it('scans extents without rendering', () => {
     const graphic = buildExtentsProxyGraphic([1, 2, 3], [4, 5, 6])
     const parser = new AcDbProxyGraphic(graphic)
     const extents = parser.scanExtents()
-    expect(extents?.[0]).toMatchObject({ x: 1, y: 2, z: 3 })
-    expect(extents?.[1]).toMatchObject({ x: 4, y: 5, z: 6 })
+    expect(extents?.[0]).toMatchObject({ x: 1, y: 2 })
+    expect(extents?.[1]).toMatchObject({ x: 4, y: 5 })
   })
 
   it('loads proxy graphic bytes from DXF hex chunks', () => {
@@ -139,14 +139,14 @@ describe('AcDbProxyEntity', () => {
     const entity = new AcDbProxyEntity()
     entity.setProxyGraphic(buildExtentsProxyGraphic([0, 0, 0], [10, 20, 0]))
     const extents = entity.geometricExtents
-    expect(extents.min).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(extents.max).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(extents.min).toMatchObject({ x: 0, y: 0 })
+    expect(extents.max).toMatchObject({ x: 10, y: 20 })
   })
 
   it('returns entity origins or extents corners as grip points', () => {
     setupWorkingDatabase()
     const entity = new AcDbProxyEntity()
-    entity.setEntityOrigins([new AcGePoint3d(1, 2, 3)])
+    entity.setEntityOrigins([new AcGePoint2d(1, 2)])
 
     expect(entity.subGetGripPoints()).toEqual([entity.entityOrigins[0]])
 
@@ -157,8 +157,8 @@ describe('AcDbProxyEntity', () => {
     const grips = extentsEntity.subGetGripPoints()
 
     expect(grips).toHaveLength(2)
-    expect(grips[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(grips[1]).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(grips[0]).toMatchObject({ x: 0, y: 0 })
+    expect(grips[1]).toMatchObject({ x: 10, y: 20 })
   })
 
   it('transformBy applies a world transform when entity origins are absent', () => {
@@ -198,9 +198,9 @@ describe('AcDbProxyEntity', () => {
 
     entity.subWorldDraw(renderer as never)
     const points = (renderer.lines as jest.Mock).mock
-      .calls[0][0] as AcGePoint3d[]
-    expect(points[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(points[1]).toMatchObject({ x: 10, y: 0, z: 0 })
+      .calls[0][0] as AcGePoint2d[]
+    expect(points[0]).toMatchObject({ x: 0, y: 0 })
+    expect(points[1]).toMatchObject({ x: 10, y: 0 })
     expect(renderer.group).toHaveBeenCalled()
     const group = (renderer.group as jest.Mock).mock.results[0].value
     expect(group.applyMatrix).toHaveBeenCalledTimes(1)
@@ -214,7 +214,7 @@ describe('AcDbProxyEntity', () => {
     entity.transformBy(new AcGeMatrix3d().makeTranslation(5, 0, 0))
 
     const extents = entity.geometricExtents
-    expect(extents.min).toMatchObject({ x: 5, y: 0, z: 0 })
-    expect(extents.max).toMatchObject({ x: 15, y: 20, z: 0 })
+    expect(extents.min).toMatchObject({ x: 5, y: 0 })
+    expect(extents.max).toMatchObject({ x: 15, y: 20 })
   })
 })

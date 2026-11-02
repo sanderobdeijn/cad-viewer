@@ -34,8 +34,8 @@ function createBatchedLineEntity(objectId: string) {
   const context = new AcTrRenderContext()
   const line = new AcTrLine(
     [
-      { x: 0, y: 0, z: 0 },
-      { x: 100, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 100, y: 0 }
     ],
     defaultTraits,
     context,
@@ -66,8 +66,8 @@ function appendIndexedLine(
 ) {
   const built = buildLineGeometry(
     [
-      { x, y: 0, z: 0 },
-      { x: x + 1, y: 0, z: 0 }
+      { x, y: 0 },
+      { x: x + 1, y: 0 }
     ],
     material
   )
@@ -299,7 +299,8 @@ describe('AcTrBatchedGroup slot-mask highlight', () => {
     group.setCompareDisplay({ enabled: true, baseColor: 0x000000 })
     const batchedLine = findBatchedLine(group)!
     const material = batchedLine.material as THREE.Material
-    const uniforms = getMaterialRuntimeUserData(material).batchHighlightUniforms!
+    const uniforms =
+      getMaterialRuntimeUserData(material).batchHighlightUniforms!
     expect(uniforms.u_compareEnabled.value).toBe(1)
 
     group.setCompareDisplay({ enabled: false, overrides: [] })
@@ -397,8 +398,8 @@ describe('AcTrBatchedGroup slot-mask highlight', () => {
     for (let i = 0; i < ids.length; i++) {
       const built = buildLineGeometry(
         [
-          { x: i, y: 0, z: 0 },
-          { x: i + 1, y: 0, z: 0 }
+          { x: i, y: 0 },
+          { x: i + 1, y: 0 }
         ],
         material
       )

@@ -1,8 +1,8 @@
 import {
   AcGePoint2dLike,
-  AcGePoint3dLike,
   AcGeVector2d,
-  AcGeVector3d
+  AcGeVector3d,
+  AcGeVector3dLike
 } from '../math'
 import { FLOAT_TOL } from './AcGeConstants'
 
@@ -75,7 +75,7 @@ export class AcGeTol {
    * @param p2 Input the second 2d point
    * @returns Return true if two poitns are equal with the specified tolerance.
    */
-  equalPoint3d(p1: AcGePoint3dLike, p2: AcGePoint3dLike) {
+  equalPoint3d(p1: AcGeVector3dLike, p2: AcGeVector3dLike) {
     return new AcGeVector3d(p1).sub(p2).length() < this.equalPointTol
   }
 

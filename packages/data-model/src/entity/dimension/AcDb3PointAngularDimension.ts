@@ -1,6 +1,6 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGePointLike
 } from '@mlightcad/geometry-engine'
 
@@ -21,10 +21,10 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = '3PointAngularDimension'
 
-  private _arcPoint: AcGePoint3d
-  private _centerPoint: AcGePoint3d
-  private _xLine1Point: AcGePoint3d
-  private _xLine2Point: AcGePoint3d
+  private _arcPoint: AcGePoint2d
+  private _centerPoint: AcGePoint2d
+  private _xLine1Point: AcGePoint2d
+  private _xLine2Point: AcGePoint2d
 
   /**
    * Creates a new three-point angular dimension.
@@ -51,10 +51,10 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
     dimStyle: string | null = null
   ) {
     super()
-    this._centerPoint = new AcGePoint3d().copy(centerPoint)
-    this._xLine1Point = new AcGePoint3d().copy(xLine1Point)
-    this._xLine2Point = new AcGePoint3d().copy(xLine2Point)
-    this._arcPoint = new AcGePoint3d().copy(arcPoint)
+    this._centerPoint = new AcGePoint2d().copy(centerPoint)
+    this._xLine1Point = new AcGePoint2d().copy(xLine1Point)
+    this._xLine2Point = new AcGePoint2d().copy(xLine2Point)
+    this._arcPoint = new AcGePoint2d().copy(arcPoint)
 
     this.dimensionText = dimText
     // TODO: Set it to the current default dimStyle within the AutoCAD editor if dimStyle is null
@@ -73,7 +73,7 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
   get arcPoint() {
     return this._arcPoint
   }
-  set arcPoint(value: AcGePoint3d) {
+  set arcPoint(value: AcGePoint2d) {
     this._arcPoint.copy(value)
   }
 
@@ -88,7 +88,7 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
   get centerPoint() {
     return this._centerPoint
   }
-  set centerPoint(value: AcGePoint3d) {
+  set centerPoint(value: AcGePoint2d) {
     this._centerPoint.copy(value)
   }
 
@@ -104,7 +104,7 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
   get xLine1Point() {
     return this._xLine1Point
   }
-  set xLine1Point(value: AcGePoint3d) {
+  set xLine1Point(value: AcGePoint2d) {
     this._xLine1Point.copy(value)
   }
 
@@ -120,7 +120,7 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
   get xLine2Point() {
     return this._xLine2Point
   }
-  set xLine2Point(value: AcGePoint3d) {
+  set xLine2Point(value: AcGePoint2d) {
     this._xLine2Point.copy(value)
   }
 
@@ -133,19 +133,19 @@ export class AcDb3PointAngularDimension extends AcDbDimension {
         {
           groupName: 'geometry',
           properties: [
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'centerPoint',
               () => this.centerPoint
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'xLine1Point',
               () => this.xLine1Point
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'xLine2Point',
               () => this.xLine2Point
             ),
-            ...this.createPoint3dProperties('arcPoint', () => this.arcPoint)
+            ...this.createPoint2dProperties('arcPoint', () => this.arcPoint)
           ]
         }
       ]

@@ -268,16 +268,12 @@ export class AcTrBatchedLine extends AcTrBatchedLineBase {
     const creator = AcTrPointSymbolCreator.instance
     userData.forEach(item => {
       if (item.position) {
-        const geometry = creator.create(
-          displayMode,
-          item.position,
-          displaySize
-        )
+        const geometry = creator.create(displayMode, item.position, displaySize)
         if (geometry.line) {
           const worldOffset = new THREE.Vector3(
             item.position.x,
             item.position.y,
-            item.position.z ?? 0
+            0
           )
           const geometryId = this.addGeometry(
             geometry.line,
@@ -558,7 +554,10 @@ export class AcTrBatchedLine extends AcTrBatchedLineBase {
             packedIndex.array[info.indexStart + k] - info.vertexStart
         }
         slotGeometry.setIndex(
-          new THREE.BufferAttribute(indexScratch.subarray(0, info.indexCount), 1)
+          new THREE.BufferAttribute(
+            indexScratch.subarray(0, info.indexCount),
+            1
+          )
         )
       }
       AcTrBufferGeometryUtil.computeSegmentLineDistances(slotGeometry)
@@ -760,10 +759,7 @@ export class AcTrBatchedLine extends AcTrBatchedLineBase {
    * @param target - Reusable {@link THREE.Box3} that receives the result.
    * @returns `target` when the id is valid, otherwise `null`.
    */
-  override computeBoundingBoxAt(
-    geometryId: number,
-    target: THREE.Box3
-  ) {
+  override computeBoundingBoxAt(geometryId: number, target: THREE.Box3) {
     if (geometryId >= this._geometryCount) {
       return null
     }

@@ -1,7 +1,7 @@
 import {
   AcDbEntity,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeVector3d
 } from '@mlightcad/data-model'
 
@@ -12,18 +12,18 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
  * Preview jig that applies {@link AcDbEntity.subMoveGripPointsAt} on a clone
  * while the user drags a grip handle.
  */
-export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint3dLike> {
+export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private readonly _view: AcEdBaseView
   private readonly _sourceClone: AcDbEntity
   private readonly _gripIndex: number
-  private readonly _gripBaseWcs: AcGePoint3d
+  private readonly _gripBaseWcs: AcGePoint2d
   private _previewEntity: AcDbEntity | null = null
 
   constructor(
     view: AcEdBaseView,
     entity: AcDbEntity,
     gripIndex: number,
-    gripBaseWcs: AcGePoint3dLike
+    gripBaseWcs: AcGePoint2dLike
   ) {
     super(view)
     this._view = view
@@ -33,14 +33,14 @@ export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint3dLike> {
     }
     this._sourceClone = sourceClone
     this._gripIndex = gripIndex
-    this._gripBaseWcs = new AcGePoint3d(gripBaseWcs)
+    this._gripBaseWcs = new AcGePoint2d(gripBaseWcs)
   }
 
   get entity(): AcDbEntity | null {
     return this._previewEntity
   }
 
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     if (this._previewEntity) {
       this._view.removeTransientEntity(this._previewEntity.objectId)
       this._previewEntity = null
@@ -53,11 +53,11 @@ export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint3dLike> {
     this._previewEntity = preview
   }
 
-  computeOffset(point: AcGePoint3dLike): AcGeVector3d {
+  computeOffset(point: AcGePoint2dLike): AcGeVector3d {
     return new AcGeVector3d(
       point.x - this._gripBaseWcs.x,
       point.y - this._gripBaseWcs.y,
-      (point.z ?? 0) - (this._gripBaseWcs.z ?? 0)
+      0
     )
   }
 

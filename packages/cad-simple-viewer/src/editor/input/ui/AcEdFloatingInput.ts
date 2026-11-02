@@ -335,7 +335,11 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
     )
     this.parent.removeEventListener('pointermove', this.boundOnPointerMove)
     this.parent.removeEventListener('touchstart', this.boundOnTouchStart, true)
-    this.parent.removeEventListener('contextmenu', this.boundOnContextMenu, true)
+    this.parent.removeEventListener(
+      'contextmenu',
+      this.boundOnContextMenu,
+      true
+    )
     window.removeEventListener('pointerup', this.boundOnPointerUp)
     window.removeEventListener('pointercancel', this.boundOnPointerCancel)
     window.removeEventListener('touchmove', this.boundOnTouchMove)
@@ -777,7 +781,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
       this.lastOsnapPoint = this.view.osnapResolver.resolve({
         cursorWcs: wcsPos,
         lastPoint: this.lastPoint
-          ? { x: this.lastPoint.x, y: this.lastPoint.y, z: 0 }
+          ? { x: this.lastPoint.x, y: this.lastPoint.y }
           : undefined
       })
       this.osnapMarkerManager.setHintMarkers(

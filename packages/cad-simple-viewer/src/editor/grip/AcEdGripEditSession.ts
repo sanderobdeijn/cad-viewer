@@ -1,7 +1,7 @@
 import {
   AcDbEntity,
   AcDbObjectId,
-  AcGePoint3dLike
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { acapRunDatabaseEdit } from '../../util/AcApDatabaseEdit'
@@ -13,7 +13,7 @@ import { AcEdGripPreviewJig } from './AcEdGripPreviewJig'
 export interface AcEdGripEditTarget {
   entityId: AcDbObjectId
   gripIndex: number
-  gripBaseWcs: AcGePoint3dLike
+  gripBaseWcs: AcGePoint2dLike
 }
 
 /**
@@ -93,13 +93,13 @@ export class AcEdGripEditSession {
     this._onEnd()
   }
 
-  private resolveWcs(e: MouseEvent): AcGePoint3dLike {
+  private resolveWcs(e: MouseEvent): AcGePoint2dLike {
     const canvasPos = this._view.viewportToCanvas({
       x: e.clientX,
       y: e.clientY
     })
     const wcs = this._view.screenToWorld(canvasPos)
-    const cursorWcs = { x: wcs.x, y: wcs.y, z: 0 }
+    const cursorWcs = { x: wcs.x, y: wcs.y }
 
     const snapPoint = this._view.osnapResolver.resolve({
       cursorWcs,
@@ -117,7 +117,7 @@ export class AcEdGripEditSession {
         snapPoint,
         AcEdOsnapResolver.osnapModeToMarkerType(snapPoint.type)
       )
-      return { x: snapPoint.x, y: snapPoint.y, z: snapPoint.z ?? 0 }
+      return { x: snapPoint.x, y: snapPoint.y }
     }
 
     this._osnapMarkerManager.hideMarker()

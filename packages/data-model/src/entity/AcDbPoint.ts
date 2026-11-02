@@ -3,9 +3,7 @@ import {
   AcGeMatrix3d,
   AcGePoint2d,
   AcGePoint2dLike,
-  acgePoint2dTo3d,
-  AcGePoint3dLike,
-  AcGeVector3dLike
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -76,7 +74,7 @@ export class AcDbPoint extends AcDbEntity {
    * @example
    * ```typescript
    * const position = point.position;
-   * console.log(`Point at: ${position.x}, ${position.y}, ${position.z}`);
+   * console.log(`Point at: ${position.x}, ${position.y}`);
    * ```
    */
   get position(): AcGePoint2d {
@@ -122,7 +120,7 @@ export class AcDbPoint extends AcDbEntity {
    * ```
    */
   get geometricExtents(): AcGeBox3d {
-    return new AcGeBox3d().expandByPoint(acgePoint2dTo3d(this._geo))
+    return new AcGeBox3d().expandByPoint(this._geo)
   }
 
   /**
@@ -143,23 +141,23 @@ export class AcDbPoint extends AcDbEntity {
    * @returns Array containing the point position.
    */
   subGetGripPoints() {
-    return [acgePoint2dTo3d(this._geo)]
+    return [this._geo]
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._geo)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Node) {
-      snapPoints.push(acgePoint2dTo3d(this._geo))
+      snapPoints.push(this._geo)
     }
   }
 
@@ -226,7 +224,7 @@ export class AcDbPoint extends AcDbEntity {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo.copy(acgePoint2dTo3d(this._geo).applyMatrix4(matrix))
+    this._geo.copy(this._geo.applyMatrix4(matrix))
     return this
   }
 
@@ -251,7 +249,7 @@ export class AcDbPoint extends AcDbEntity {
    * @returns The rendered point entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.point(acgePoint2dTo3d(this._geo), {
+    return renderer.point(this._geo, {
       displayMode: this.database.pdmode,
       displaySize: this.database.pdsize
     })

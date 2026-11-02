@@ -1,10 +1,5 @@
-import type {
-  AcDbDatabase,
-  AcGePoint3dLike
-} from '@mlightcad/data-model'
-import {
-  type AcTrHtmlElement,
-  AcTrHtmlGroup} from '@mlightcad/three-renderer'
+import type { AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
+import { type AcTrHtmlElement, AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
   acapCloneMeasurementStyle,
@@ -153,10 +148,7 @@ export abstract class AcApMeasureEntity
    * @param view - Optional view used to convert screen style to WCS
    * @returns Sidecar-ready measurement record
    */
-  abstract toRecord(
-    layoutId?: string,
-    view?: AcTrView2d
-  ): AcApMeasurementRecord
+  abstract toRecord(layoutId?: string, view?: AcTrView2d): AcApMeasurementRecord
 
   /**
    * Hit-tests this measurement's geometry against a canvas point.
@@ -310,4 +302,4 @@ export abstract class AcApMeasureEntity
   }
 }
 
-export type { AcGePoint3dLike }
+export type { AcGePoint2dLike }

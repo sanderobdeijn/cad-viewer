@@ -15,7 +15,7 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
  *
  * ## Why Generic?
  * AutoCAD’s jig can sample different types of values:
- *  - a 3D point   → during acquirePoint()
+ *  - a 2D point   → during acquirePoint()
  *  - a distance   → during acquireDistance()
  *  - an angle     → during acquireAngle()
  *
@@ -38,13 +38,13 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
  * When present, the jig will call it whenever the input changes.
  *
  * ## Example Use Cases
- * - Point acquisition (`T = AcGePoint3d`)
+ * - Point acquisition (`T = AcGePoint2d`)
  * - Distance jig (`T = number`)
  * - Angle jig (`T = number`)
  *
  * Example:
  * ```ts
- * const jig = new AcEdPreviewJig<AcGePoint3d>(view)
+ * const jig = new AcEdPreviewJig<AcGePoint2d>(view)
  * jig.setEntity(circleEntity)
  * await editor.getPoint("Specify center:", { jig })
  * ```

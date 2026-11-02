@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/data-model'
+import { AcGePoint2d } from '@mlightcad/data-model'
 
 import { AcEdPromptOptions } from './AcEdPromptOptions'
 
@@ -9,7 +9,7 @@ import { AcEdPromptOptions } from './AcEdPromptOptions'
  * Supports a base point, default angle, keywords, and various validation flags.
  */
 export class AcEdPromptAngleOptions extends AcEdPromptOptions<number> {
-  private _basePoint?: AcGePoint3d
+  private _basePoint?: AcGePoint2d
   private _baseAngle?: number
   private _useBasePoint: boolean = true
   private _useDashedLine: boolean = true
@@ -32,17 +32,17 @@ export class AcEdPromptAngleOptions extends AcEdPromptOptions<number> {
    * Gets or sets the base point for the angle prompt.
    * Corresponds to `PromptAngleOptions.BasePoint`.
    */
-  get basePoint(): AcGePoint3d | undefined {
+  get basePoint(): AcGePoint2d | undefined {
     return this._basePoint
   }
-  set basePoint(point: AcGePoint3d | undefined) {
+  set basePoint(point: AcGePoint2d | undefined) {
     if (!this.isReadOnly) {
       if (point == null) {
         this._basePoint = point
       } else {
         this._basePoint = this._basePoint
           ? this._basePoint.copy(point)
-          : new AcGePoint3d(point)
+          : new AcGePoint2d(point)
       }
     }
   }

@@ -35,12 +35,12 @@ describe('block line coalesce', () => {
     const renderer = createRenderer()
     renderer.beginBlockLineCoalesce()
     const first = renderer.lines([
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }
     ])
     const second = renderer.lines([
-      { x: 0, y: 5, z: 0 },
-      { x: 10, y: 5, z: 0 }
+      { x: 0, y: 5 },
+      { x: 10, y: 5 }
     ])
     expect(first).toBeInstanceOf(AcTrCoalescedLineRef)
     expect(second).toBeInstanceOf(AcTrCoalescedLineRef)
@@ -65,17 +65,17 @@ describe('block line coalesce', () => {
     applyDashedTraits(renderer)
     renderer.beginBlockLineCoalesce()
     const first = renderer.lines([
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }
     ])
     const second = renderer.lines([
-      { x: 0, y: 5, z: 0 },
-      { x: 20, y: 5, z: 0 }
+      { x: 0, y: 5 },
+      { x: 20, y: 5 }
     ])
     const polyline = renderer.lines([
-      { x: 0, y: 10, z: 0 },
-      { x: 10, y: 10, z: 0 },
-      { x: 10, y: 15, z: 0 }
+      { x: 0, y: 10 },
+      { x: 10, y: 10 },
+      { x: 10, y: 15 }
     ])
     const group = renderer.group([first, second, polyline])
     renderer.endBlockLineCoalesce()
@@ -99,17 +99,17 @@ describe('block line coalesce', () => {
     const renderer = createRenderer()
     renderer.beginBlockLineCoalesce()
     const outerA = renderer.lines([
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }
     ])
     renderer.beginBlockLineCoalesce()
     const innerA = renderer.lines([
-      { x: 100, y: 0, z: 0 },
-      { x: 101, y: 0, z: 0 }
+      { x: 100, y: 0 },
+      { x: 101, y: 0 }
     ])
     const innerB = renderer.lines([
-      { x: 100, y: 1, z: 0 },
-      { x: 101, y: 1, z: 0 }
+      { x: 100, y: 1 },
+      { x: 101, y: 1 }
     ])
     innerA.objectId = 'inner-a'
     innerB.objectId = 'inner-b'
@@ -123,8 +123,8 @@ describe('block line coalesce', () => {
     expect(innerBox.max.x).toBeCloseTo(101)
 
     const outerB = renderer.lines([
-      { x: 0, y: 5, z: 0 },
-      { x: 10, y: 5, z: 0 }
+      { x: 0, y: 5 },
+      { x: 10, y: 5 }
     ])
     outerA.objectId = 'outer-a'
     outerB.objectId = 'outer-b'

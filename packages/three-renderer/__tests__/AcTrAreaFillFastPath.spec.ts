@@ -5,7 +5,6 @@ import {
   AcGeIndexNode,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3dLike,
   AcGePolyline2d
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
@@ -200,7 +199,8 @@ function expectFastPathMatchesGeneral(area: AcGeArea2d) {
   const fast = build(area, context)
   expect(getAreaBuildStats()).toEqual({
     smallLoopFastPath: 1,
-    generalPath: 0, offsetRingFastPath: 0
+    generalPath: 0,
+    offsetRingFastPath: 0
   })
 
   resetAreaBuildStats()
@@ -213,7 +213,8 @@ function expectFastPathMatchesGeneral(area: AcGeArea2d) {
   }
   expect(getAreaBuildStats()).toEqual({
     smallLoopFastPath: 0,
-    generalPath: 1, offsetRingFastPath: 0
+    generalPath: 1,
+    offsetRingFastPath: 0
   })
 
   expectSameFill(fast, general)
@@ -330,7 +331,8 @@ describe('buildAreaGeometry single-loop fast path', () => {
     expect(built.geometry.getAttribute('position').count).toBeGreaterThan(4)
     expect(getAreaBuildStats()).toEqual({
       smallLoopFastPath: 0,
-      generalPath: 1, offsetRingFastPath: 0
+      generalPath: 1,
+      offsetRingFastPath: 0
     })
     built.geometry.dispose()
   })
@@ -353,7 +355,8 @@ describe('buildAreaGeometry single-loop fast path', () => {
     )
     expect(getAreaBuildStats()).toEqual({
       smallLoopFastPath: 0,
-      generalPath: 1, offsetRingFastPath: 0
+      generalPath: 1,
+      offsetRingFastPath: 0
     })
     // Pin whatever earcut produces today so a future earcut change is visible.
     expect(built).not.toBeNull()
@@ -389,7 +392,8 @@ describe('buildAreaGeometry single-loop fast path', () => {
     const built = build(area, new AcTrRenderContext())
     expect(getAreaBuildStats()).toEqual({
       smallLoopFastPath: 0,
-      generalPath: 1, offsetRingFastPath: 0
+      generalPath: 1,
+      offsetRingFastPath: 0
     })
     // Outer 100 minus the 4-unit hole.
     expect(totalArea(built)).toBeCloseTo(96, 3)
@@ -408,7 +412,7 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
         x: corner.x,
         y: corner.y,
         z: 0
-      } as unknown as AcGePoint3dLike)
+      } as unknown as AcGePoint2dLike)
     }
     return solid
   }
@@ -423,7 +427,8 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
       )
       expect(getAreaBuildStats()).toEqual({
         smallLoopFastPath: 1,
-        generalPath: 0, offsetRingFastPath: 0
+        generalPath: 0,
+        offsetRingFastPath: 0
       })
       // 3 corners → one triangle; 4 corners → two.
       expect(built.geometry.getIndex()!.count).toBe(cornerCount === 3 ? 3 : 6)
@@ -439,7 +444,7 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
         x: corners[i].x,
         y: corners[i].y,
         z: 0
-      } as unknown as AcGePoint3dLike)
+      } as unknown as AcGePoint2dLike)
     }
 
     expectFastPathMatchesGeneral(areaFromVertices(trace.subGetGripPoints()))
@@ -448,25 +453,25 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
 
 describe('buildOffsetRingCenterline', () => {
   it('returns a closed midpoint loop for aligned outer/inner rings', () => {
-    const outer: AcGePoint3dLike[] = [
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 },
-      { x: 10, y: 10, z: 0 },
-      { x: 0, y: 10, z: 0 }
+    const outer: AcGePoint2dLike[] = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+      { x: 0, y: 10 }
     ]
-    const inner: AcGePoint3dLike[] = [
-      { x: 1, y: 1, z: 0 },
-      { x: 9, y: 1, z: 0 },
-      { x: 9, y: 9, z: 0 },
-      { x: 1, y: 9, z: 0 }
+    const inner: AcGePoint2dLike[] = [
+      { x: 1, y: 1 },
+      { x: 9, y: 1 },
+      { x: 9, y: 9 },
+      { x: 1, y: 9 }
     ]
     const centerline = buildOffsetRingCenterline(outer, inner)
     expect(centerline).not.toBeNull()
     if (!centerline) return
     // 4 corners + closing vertex
     expect(centerline).toHaveLength(5)
-    expect(centerline[0]).toEqual({ x: 0.5, y: 0.5, z: 0 })
-    expect(centerline[1]).toEqual({ x: 9.5, y: 0.5, z: 0 })
+    expect(centerline[0]).toEqual({ x: 0.5, y: 0.5 })
+    expect(centerline[1]).toEqual({ x: 9.5, y: 0.5 })
     expect(centerline[4]).toEqual(centerline[0])
   })
 
@@ -474,13 +479,13 @@ describe('buildOffsetRingCenterline', () => {
     expect(
       buildOffsetRingCenterline(
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 0, z: 0 },
-          { x: 1, y: 1, z: 0 }
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 1, y: 1 }
         ],
         [
-          { x: 0.1, y: 0.1, z: 0 },
-          { x: 0.9, y: 0.1, z: 0 }
+          { x: 0.1, y: 0.1 },
+          { x: 0.9, y: 0.1 }
         ]
       )
     ).toBeNull()
@@ -489,19 +494,18 @@ describe('buildOffsetRingCenterline', () => {
 
 describe('buildOffsetRingDirectGeometry', () => {
   function ringPoints(radius: number, count: number) {
-    const points: AcGePoint3dLike[] = []
+    const points: AcGePoint2dLike[] = []
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2
       points.push({
         x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-        z: 0
+        y: Math.sin(angle) * radius
       })
     }
     return points
   }
 
-  function ringArea(outer: AcGePoint3dLike[], inner: AcGePoint3dLike[]) {
+  function ringArea(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
     const area = new AcGeArea2d()
     area.add(
       new AcGePolyline2d(
@@ -551,7 +555,7 @@ describe('buildOffsetRingDirectGeometry', () => {
     const cx = LARGE
     const cy = LARGE
     const count = 32
-    const shift = (points: AcGePoint3dLike[]) =>
+    const shift = (points: AcGePoint2dLike[]) =>
       points.map(p => ({ x: p.x + cx, y: p.y + cy, z: 0 }))
     const outer = shift(ringPoints(10, count))
     const inner = shift(ringPoints(9.95, count))
@@ -592,17 +596,17 @@ describe('buildOffsetRingDirectGeometry', () => {
     const cx = 38_500_000
     const cy = 12_000_000
     const halfWidth = 1.05
-    const outer: AcGePoint3dLike[] = [
-      { x: cx - 10 - halfWidth, y: cy - 4 - halfWidth, z: 0 },
-      { x: cx + 10 + halfWidth, y: cy - 4 - halfWidth, z: 0 },
-      { x: cx + 10 + halfWidth, y: cy + 4 + halfWidth, z: 0 },
-      { x: cx - 10 - halfWidth, y: cy + 4 + halfWidth, z: 0 }
+    const outer: AcGePoint2dLike[] = [
+      { x: cx - 10 - halfWidth, y: cy - 4 - halfWidth },
+      { x: cx + 10 + halfWidth, y: cy - 4 - halfWidth },
+      { x: cx + 10 + halfWidth, y: cy + 4 + halfWidth },
+      { x: cx - 10 - halfWidth, y: cy + 4 + halfWidth }
     ]
-    const inner: AcGePoint3dLike[] = [
-      { x: cx - 10 + halfWidth, y: cy - 4 + halfWidth, z: 0 },
-      { x: cx + 10 - halfWidth, y: cy - 4 + halfWidth, z: 0 },
-      { x: cx + 10 - halfWidth, y: cy + 4 - halfWidth, z: 0 },
-      { x: cx - 10 + halfWidth, y: cy + 4 - halfWidth, z: 0 }
+    const inner: AcGePoint2dLike[] = [
+      { x: cx - 10 + halfWidth, y: cy - 4 + halfWidth },
+      { x: cx + 10 - halfWidth, y: cy - 4 + halfWidth },
+      { x: cx + 10 - halfWidth, y: cy + 4 - halfWidth },
+      { x: cx - 10 + halfWidth, y: cy + 4 - halfWidth }
     ]
 
     const built = buildOffsetRingDirectGeometry(

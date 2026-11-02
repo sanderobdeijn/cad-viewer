@@ -1,17 +1,16 @@
-import { AcGePoint3d, AcGePoint3dLike } from '../math'
+import { AcGePoint2dLike } from '../math'
 
 /**
- * Squared distance from a geometry point to a numeric `[x, y, z]` tuple.
+ * Squared XY distance from a geometry point to a numeric `[x, y, z]` tuple.
  *
  * @param a - Query point
  * @param b - Target coordinates as `[x, y, z]`
  * @returns Squared Euclidean distance
  */
-function distSq3d(a: AcGePoint3dLike, b: number[]): number {
+function distSq2d(a: AcGePoint2dLike, b: number[]): number {
   const dx = a.x - b[0]!
   const dy = a.y - b[1]!
-  const dz = (a.z ?? 0) - (b[2] ?? 0)
-  return dx * dx + dy * dy + dz * dz
+  return dx * dx + dy * dy
 }
 import { AcGePoint2d } from '../math/AcGePoint2d'
 import {
@@ -20,7 +19,7 @@ import {
   acgeInterpolateNurbsCurve,
   acgeSignedPlanarCurvature
 } from '../util'
-import { AcGeCatmullRomCurve3d } from './AcGeCatmullRomCurve3d'
+import { AcGeCatmullRomCurve2d } from './AcGeCatmullRomCurve2d'
 
 /**
  * Type for NURBS knot parameterization
@@ -33,7 +32,7 @@ export type AcGeKnotParameterizationType = 'Uniform' | 'Chord' | 'SqrtChord'
 export class AcGeNurbsCurve {
   private _degree: number
   private _knots: number[]
-  private _controlPoints: AcGePoint3dLike[]
+  private _controlPoints: AcGePoint2dLike[]
   private _weights: number[]
 
   /**
@@ -50,12 +49,12 @@ export class AcGeNurbsCurve {
   constructor(
     degree: number,
     knots: number[],
-    controlPoints: AcGePoint3dLike[],
+    controlPoints: AcGePoint2dLike[],
     weights?: number[]
   ) {
     this._degree = degree
     this._knots = [...knots]
-    this._controlPoints = controlPoints.map(p => ({ x: p.x, y: p.y, z: p.z }))
+    this._controlPoints = controlPoints.map(p => ({ x: p.x, y: p.y }))
     this._weights = weights
       ? [...weights]
       : new Array(controlPoints.length).fill(1.0)
@@ -78,8 +77,8 @@ export class AcGeNurbsCurve {
   /**
    * Get the control points
    */
-  controlPoints(): AcGePoint3dLike[] {
-    return this._controlPoints.map(p => ({ x: p.x, y: p.y, z: p.z }))
+  controlPoints(): AcGePoint2dLike[] {
+    return this._controlPoints.map(p => ({ x: p.x, y: p.y }))
   }
 
   /**
@@ -123,7 +122,7 @@ export class AcGeNurbsCurve {
    * @returns Position `point`, first derivative `deriv1`, and second derivative `deriv2`
    */
   evaluate(u: number) {
-    const controlPointsArray = this._controlPoints.map(p => [p.x, p.y, p.z])
+    const controlPointsArray = this._controlPoints.map(p => [p.x, p.y, 0])
     return acgeEvaluateNurbsDerivatives(
       u,
       this._degree,
@@ -222,8 +221,8 @@ export class AcGeNurbsCurve {
    * Calculate curve length using numerical integration
    */
   length(): number {
-    // Convert AcGePoint3dLike[] to number[][] for utility functions
-    const controlPointsArray = this._controlPoints.map(p => [p.x, p.y, p.z])
+    // Convert AcGePoint2dLike[] to number[][] for utility functions
+    const controlPointsArray = this._controlPoints.map(p => [p.x, p.y, 0])
     return acgeCalculateCurveLength(
       this._degree,
       this._knots,
@@ -238,7 +237,7 @@ export class AcGeNurbsCurve {
   static byKnotsControlPointsWeights(
     degree: number,
     knots: number[],
-    controlPoints: AcGePoint3dLike[],
+    controlPoints: AcGePoint2dLike[],
     weights?: number[]
   ): AcGeNurbsCurve {
     return new AcGeNurbsCurve(degree, knots, controlPoints, weights)
@@ -321,14 +320,14 @@ export class AcGeNurbsCurve {
    * Create fit points for a closed NURBS curve using Catmull-Rom interpolation
    */
   static createFitPointsForClosedCurve(
-    points: AcGePoint3dLike[]
-  ): AcGePoint3d[] {
+    points: AcGePoint2dLike[]
+  ): AcGePoint2d[] {
     if (points.length < 4) {
       throw new Error('At least 4 points are required for a closed NURBS curve')
     }
 
     // Create a closed Catmull-Rom curve
-    const catmullRomCurve = new AcGeCatmullRomCurve3d(
+    const catmullRomCurve = new AcGeCatmullRomCurve2d(
       points,
       true,
       'centripetal'
@@ -348,34 +347,34 @@ export class AcGeNurbsCurve {
    * @param point - Query point.
    * @param samples - Number of interior samples (default 64).
    */
-  nearestPoint(point: AcGePoint3dLike, samples = 64): AcGePoint3dLike {
+  nearestPoint(point: AcGePoint2dLike, samples = 64): AcGePoint2dLike {
     const { start, end } = this.getParameterRange()
     let best = this.point(start)
-    let bestDistSq = distSq3d(point, best)
+    let bestDistSq = distSq2d(point, best)
     for (let i = 0; i <= samples; i++) {
       const t = start + ((end - start) * i) / samples
       const candidate = this.point(t)
-      const d = distSq3d(point, candidate)
+      const d = distSq2d(point, candidate)
       if (d < bestDistSq) {
         bestDistSq = d
         best = candidate
       }
     }
-    return { x: best[0]!, y: best[1]!, z: best[2] ?? 0 }
+    return { x: best[0]!, y: best[1]! }
   }
 
   /**
    * Create a closed NURBS curve using Catmull-Rom interpolation for smooth closure
    */
   static createClosedCurve(
-    points: AcGePoint3dLike[],
+    points: AcGePoint2dLike[],
     degree: number,
     parameterization: AcGeKnotParameterizationType = 'Chord'
   ): AcGeNurbsCurve {
     const curvePoints = this.createFitPointsForClosedCurve(points)
 
-    // Convert AcGePoint3d[] back to number[][]
-    const nurbsPoints = curvePoints.map(point => [point.x, point.y, point.z])
+    // Convert AcGePoint2d[] back to number[][]
+    const nurbsPoints = curvePoints.map(point => [point.x, point.y, 0])
 
     // Create NURBS curve from the interpolated points
     return AcGeNurbsCurve.byPoints(nurbsPoints, degree, parameterization)

@@ -1,6 +1,6 @@
 import {
   AcGeBox3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiMTextAttachmentPoint } from '@mlightcad/graphic-interface'
@@ -135,21 +135,21 @@ describe('AcDbTextExtentsHelpers', () => {
       const box = new AcGeBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint3d(3, 4, 5),
+        new AcGePoint2d(3, 4),
         0,
         0,
         AcGiMTextAttachmentPoint.TopLeft
       )
 
-      expect(box.min).toMatchObject({ x: 3, y: 4, z: 5 })
-      expect(box.max).toMatchObject({ x: 3, y: 4, z: 5 })
+      expect(box.min).toMatchObject({ x: 3, y: 4 })
+      expect(box.max).toMatchObject({ x: 3, y: 4 })
     })
 
     it('rotates local bounds around the anchor', () => {
       const box = new AcGeBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint3d(0, 0, 0),
+        new AcGePoint2d(0, 0),
         4,
         2,
         AcGiMTextAttachmentPoint.BaselineLeft,
@@ -166,7 +166,7 @@ describe('AcDbTextExtentsHelpers', () => {
       const box = new AcGeBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint3d(0, 0, 0),
+        new AcGePoint2d(0, 0),
         4,
         2,
         AcGiMTextAttachmentPoint.BaselineLeft,
@@ -191,15 +191,12 @@ describe('AcDbTextExtentsHelpers', () => {
         attachmentPoint: AcGiMTextAttachmentPoint.TopLeft,
         rotation: Math.PI / 2,
         direction: new AcGeVector3d(0, 1, 0),
-        location: new AcGePoint3d(10, 10, 0)
+        location: new AcGePoint2d(10, 10)
       })
 
     it('maps world points into MTEXT-local coordinates using rotation/direction', () => {
       const layout = createRotatedLayout()
-      const local = acdbWorldPointToMTextLocal(
-        new AcGePoint3d(12, 20, 0),
-        layout
-      )
+      const local = acdbWorldPointToMTextLocal(new AcGePoint2d(12, 20), layout)
 
       expect(local.x).toBeCloseTo(10)
       expect(local.y).toBeCloseTo(-2)
@@ -211,7 +208,7 @@ describe('AcDbTextExtentsHelpers', () => {
 
       expect(
         acdbScorePointAgainstMTextLayout(
-          new AcGePoint3d(12, 20, 0),
+          new AcGePoint2d(12, 20),
           layout,
           padding
         )
@@ -219,7 +216,7 @@ describe('AcDbTextExtentsHelpers', () => {
 
       expect(
         acdbScorePointAgainstMTextLayout(
-          new AcGePoint3d(16, 40, 0),
+          new AcGePoint2d(16, 40),
           layout,
           padding
         )

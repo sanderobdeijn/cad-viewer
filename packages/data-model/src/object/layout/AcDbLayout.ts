@@ -1,7 +1,7 @@
 import {
   AcGeBox2d,
   AcGeBox3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -49,9 +49,9 @@ export class AcDbLayout extends AcDbPlotSettings {
    */
   private _orthographicUcsId?: string
   /** Layout insertion base point (DXF group 12). */
-  private _insertionPoint = new AcGePoint3d()
+  private _insertionPoint = new AcGePoint2d()
   /** UCS origin for this layout (DXF group 13). */
-  private _ucsOrigin = new AcGePoint3d()
+  private _ucsOrigin = new AcGePoint2d()
   /** UCS X axis (DXF group 16). */
   private _ucsXAxis = new AcGeVector3d(1, 0, 0)
   /** UCS Y axis (DXF group 17). */
@@ -313,7 +313,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get insertionPoint() {
     return this._insertionPoint
   }
-  set insertionPoint(value: AcGePoint3d) {
+  set insertionPoint(value: AcGePoint2d) {
     this._insertionPoint.copy(value)
   }
 
@@ -321,7 +321,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get ucsOrigin() {
     return this._ucsOrigin
   }
-  set ucsOrigin(value: AcGePoint3d) {
+  set ucsOrigin(value: AcGePoint2d) {
     this._ucsOrigin.copy(value)
   }
 
@@ -357,4 +357,3 @@ export class AcDbLayout extends AcDbPlotSettings {
     this._orthographicType = value
   }
 }
-

@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGePoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 /**
@@ -468,7 +468,7 @@ export class AcTrPointSymbolCreator {
 
   create(
     displayMode: number | null = null,
-    _point: AcGePoint3dLike = { x: 0, y: 0, z: 0 },
+    _point: AcGePoint2dLike = { x: 0, y: 0 },
     displaySize: number = 0
   ): AcTrPointSymbolGeometry {
     const result: AcTrPointSymbolGeometry = {}

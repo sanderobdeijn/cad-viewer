@@ -1,8 +1,4 @@
-import {
-  AcDbDatabase,
-  AcDbLine,
-  AcGePoint3d
-} from '@mlightcad/data-model'
+import { AcDbDatabase, AcDbLine, AcGePoint2d } from '@mlightcad/data-model'
 
 import { AcApEntityService } from '../src/service/AcApEntityService'
 
@@ -53,7 +49,7 @@ describe('AcApEntityService', () => {
 
   test('eraseEntities records an undoable database change', () => {
     const db = new AcDbDatabase()
-    const line = new AcDbLine(new AcGePoint3d(0, 0, 0), new AcGePoint3d(10, 0, 0))
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
     db.tables.blockTable.modelSpace.appendEntity(line)
     const objectId = line.objectId
     const service = new AcApEntityService(db)

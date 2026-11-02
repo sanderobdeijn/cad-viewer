@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
-  AcGeVector3d
+  AcGeBox2d,
+  AcGeMatrix2d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2d
 } from '../math'
-import { AcGeCurve3d } from './AcGeCurve3d'
+import { AcGeCurve2d } from './AcGeCurve2d'
 
 /**
  * Centripetal CatmullRom Curve - which is useful for avoiding
@@ -99,12 +99,12 @@ class CubicPoly {
  *
  * ```js
  * //Create a closed wavey loop
- * const curve = new AcGeCatmullRomCurve3d( [
- *   new AcGePoint3d( -10, 0, 10 ),
- *   new AcGePoint3d( -5, 5, 5 ),
- *   new AcGePoint3d( 0, 0, 0 ),
- *   new AcGePoint3d( 5, -5, 5 ),
- *   new AcGePoint3d( 10, 0, 10 )
+ * const curve = new AcGeCatmullRomCurve2d( [
+ *   new AcGePoint2d( -10, 0 ),
+ *   new AcGePoint2d( -5, 5 ),
+ *   new AcGePoint2d( 0, 0 ),
+ *   new AcGePoint2d( 5, -5 ),
+ *   new AcGePoint2d( 10, 0 )
  * ], true ); // true for closed curve
  *
  * const points = curve.getPoints( 50 );
@@ -113,21 +113,21 @@ class CubicPoly {
  * const nurbsCurve = curve.toNurbsCurve();
  * ```
  */
-export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
+export class AcGeCatmullRomCurve2d extends AcGeCurve2d {
   /**
    * This flag can be used for type testing.
    */
-  readonly isCatmullRomCurve3d = true
+  readonly isCatmullRomCurve2d = true
 
   /**
    * The curve type identifier
    */
-  readonly type = 'CatmullRomCurve3d'
+  readonly type = 'CatmullRomCurve2d'
 
   /**
    * An array of 3D points defining the curve.
    */
-  private _points: AcGePoint3d[]
+  private _points: AcGePoint2d[]
 
   /**
    * Whether the curve is closed or not.
@@ -145,10 +145,9 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
   private _tension: number
 
   // Internal computation objects
-  private readonly _tmp = new AcGeVector3d()
+  private readonly _tmp = new AcGeVector2d()
   private readonly _px = new CubicPoly()
   private readonly _py = new CubicPoly()
-  private readonly _pz = new CubicPoly()
 
   /**
    * Constructs a new Catmull-Rom curve.
@@ -159,13 +158,13 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * @param tension - Tension of the curve.
    */
   constructor(
-    points: AcGePoint3dLike[] = [],
+    points: AcGePoint2dLike[] = [],
     closed = false,
     curveType: CatmullRomCurveType = 'centripetal',
     tension = 0.5
   ) {
     super()
-    this._points = points.map(p => new AcGePoint3d(p))
+    this._points = points.map(p => new AcGePoint2d(p))
     this._closed = closed
     this._curveType = curveType
     this._tension = tension
@@ -174,7 +173,7 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
   /**
    * An array of 3D points defining the curve.
    */
-  get points(): AcGePoint3d[] {
+  get points(): AcGePoint2d[] {
     return this._points
   }
 
@@ -202,17 +201,17 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
   /**
    * Start point of this curve.
    */
-  get startPoint(): AcGePoint3d {
-    return this._points.length > 0 ? this._points[0] : new AcGePoint3d()
+  get startPoint(): AcGePoint2d {
+    return this._points.length > 0 ? this._points[0] : new AcGePoint2d()
   }
 
   /**
    * End point of this curve.
    */
-  get endPoint(): AcGePoint3d {
+  get endPoint(): AcGePoint2d {
     return this._points.length > 0
       ? this._points[this._points.length - 1]
-      : new AcGePoint3d()
+      : new AcGePoint2d()
   }
 
   /**
@@ -242,14 +241,14 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * @param optionalTarget - The optional target vector the result is written to.
    * @return The position on the curve.
    */
-  getPoint(t: number, optionalTarget = new AcGePoint3d()): AcGePoint3d {
+  getPoint(t: number, optionalTarget = new AcGePoint2d()): AcGePoint2d {
     const point = optionalTarget
 
     const points = this._points
     const l = points.length
 
     if (l === 0) {
-      return point.set(0, 0, 0)
+      return point.set(0, 0)
     }
 
     if (l === 1) {
@@ -268,14 +267,14 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
       weight = 1
     }
 
-    let p0: AcGePoint3d, p3: AcGePoint3d // 4 points (p1 & p2 defined below)
+    let p0: AcGePoint2d, p3: AcGePoint2d // 4 points (p1 & p2 defined below)
 
     if (this._closed || intPoint > 0) {
       p0 = points[(intPoint - 1) % l]
     } else {
       // extrapolate first point
       this._tmp.subVectors(points[0], points[1]).add(points[0])
-      p0 = new AcGePoint3d(this._tmp.x, this._tmp.y, this._tmp.z)
+      p0 = new AcGePoint2d(this._tmp.x, this._tmp.y)
     }
 
     const p1 = points[intPoint % l]
@@ -286,7 +285,7 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
     } else {
       // extrapolate last point
       this._tmp.subVectors(points[l - 1], points[l - 2]).add(points[l - 1])
-      p3 = new AcGePoint3d(this._tmp.x, this._tmp.y, this._tmp.z)
+      p3 = new AcGePoint2d(this._tmp.x, this._tmp.y)
     }
 
     if (this._curveType === 'centripetal' || this._curveType === 'chordal') {
@@ -303,18 +302,12 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
 
       this._px.initNonuniformCatmullRom(p0.x, p1.x, p2.x, p3.x, dt0, dt1, dt2)
       this._py.initNonuniformCatmullRom(p0.y, p1.y, p2.y, p3.y, dt0, dt1, dt2)
-      this._pz.initNonuniformCatmullRom(p0.z, p1.z, p2.z, p3.z, dt0, dt1, dt2)
     } else if (this._curveType === 'catmullrom') {
       this._px.initCatmullRom(p0.x, p1.x, p2.x, p3.x, this._tension)
       this._py.initCatmullRom(p0.y, p1.y, p2.y, p3.y, this._tension)
-      this._pz.initCatmullRom(p0.z, p1.z, p2.z, p3.z, this._tension)
     }
 
-    point.set(
-      this._px.calc(weight),
-      this._py.calc(weight),
-      this._pz.calc(weight)
-    )
+    point.set(this._px.calc(weight), this._py.calc(weight))
 
     return point
   }
@@ -324,8 +317,8 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * @param divisions - Number of divisions to create
    * @returns Array of points along the curve
    */
-  getPoints(divisions: number): AcGePoint3d[] {
-    const points: AcGePoint3d[] = []
+  getPoints(divisions: number): AcGePoint2d[] {
+    const points: AcGePoint2d[] = []
 
     for (let d = 0; d <= divisions; d++) {
       points.push(this.getPoint(d / divisions))
@@ -338,8 +331,8 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * Set the points defining the curve
    * @param points - Array of points
    */
-  setPoints(points: AcGePoint3dLike[]): void {
-    this._points = points.map(p => new AcGePoint3d(p))
+  setPoints(points: AcGePoint2dLike[]): void {
+    this._points = points.map(p => new AcGePoint2d(p))
     this._boundingBoxNeedsUpdate = true
   }
 
@@ -376,7 +369,7 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * Return a deep-cloned copy of this curve.
    */
   clone() {
-    return new AcGeCatmullRomCurve3d(
+    return new AcGeCatmullRomCurve2d(
       this._points.map(point => point.clone()),
       this._closed,
       this._curveType,
@@ -389,11 +382,11 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * @param matrix Input transformation matrix
    * @return Return this curve
    */
-  transform(matrix: AcGeMatrix3d): this {
+  transform(matrix: AcGeMatrix2d): this {
     this._points = this._points.map(point => {
-      const transformedPoint = new AcGePoint3d()
+      const transformedPoint = new AcGePoint2d()
       transformedPoint.copy(point)
-      transformedPoint.applyMatrix4(matrix)
+      transformedPoint.applyMatrix2d(matrix)
       return transformedPoint
     })
     this._boundingBoxNeedsUpdate = true
@@ -404,12 +397,12 @@ export class AcGeCatmullRomCurve3d extends AcGeCurve3d {
    * Calculate the bounding box of this curve.
    * @return The bounding box
    */
-  protected calculateBoundingBox(): AcGeBox3d {
+  protected calculateBoundingBox(): AcGeBox2d {
     if (this._points.length === 0) {
-      return new AcGeBox3d()
+      return new AcGeBox2d()
     }
 
-    const box = new AcGeBox3d()
+    const box = new AcGeBox2d()
     this._points.forEach(point => {
       box.expandByPoint(point)
     })

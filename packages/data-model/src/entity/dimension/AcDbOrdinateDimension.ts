@@ -1,7 +1,7 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -24,8 +24,8 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = 'OrdinateDimension'
 
-  private _definingPoint: AcGePoint3d
-  private _leaderEndPoint: AcGePoint3d
+  private _definingPoint: AcGePoint2d
+  private _leaderEndPoint: AcGePoint2d
 
   /**
    * Creates a new ordinate dimension.
@@ -41,14 +41,14 @@ export class AcDbOrdinateDimension extends AcDbDimension {
    *                   formatting. If null, the current default style will be used
    */
   constructor(
-    definingPoint: AcGePoint3dLike,
-    leaderEndPoint: AcGePoint3dLike,
+    definingPoint: AcGePoint2dLike,
+    leaderEndPoint: AcGePoint2dLike,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._definingPoint = new AcGePoint3d().copy(definingPoint)
-    this._leaderEndPoint = new AcGePoint3d().copy(leaderEndPoint)
+    this._definingPoint = new AcGePoint2d().copy(definingPoint)
+    this._leaderEndPoint = new AcGePoint2d().copy(leaderEndPoint)
 
     this.dimensionText = dimText
     // TODO: Set it to the current default dimStyle within the AutoCAD editor if dimStyle is null
@@ -67,7 +67,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   get definingPoint() {
     return this._definingPoint
   }
-  set definingPoint(value: AcGePoint3d) {
+  set definingPoint(value: AcGePoint2d) {
     this._definingPoint.copy(value)
   }
 
@@ -83,7 +83,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   get leaderEndPoint() {
     return this._leaderEndPoint
   }
-  set leaderEndPoint(value: AcGePoint3d) {
+  set leaderEndPoint(value: AcGePoint2d) {
     this._leaderEndPoint.copy(value)
   }
 
@@ -96,11 +96,11 @@ export class AcDbOrdinateDimension extends AcDbDimension {
         {
           groupName: 'geometry',
           properties: [
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'definingPoint',
               () => this.definingPoint
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'leaderEndPoint',
               () => this.leaderEndPoint
             )

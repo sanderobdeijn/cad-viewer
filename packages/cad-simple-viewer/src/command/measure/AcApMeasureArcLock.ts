@@ -3,7 +3,7 @@ import {
   AcDbCircle,
   AcDbPolyline,
   AcGeCircArc2d,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   TAU
 } from '@mlightcad/data-model'
 
@@ -199,14 +199,14 @@ export function lockCurvesFromEntity(entity: unknown): AcGeCircArc2d[] {
  */
 export function pickLockOnEntities(
   entities: unknown[],
-  p: AcGePoint3dLike,
+  p: AcGePoint2dLike,
   worldThreshold: number
 ): { geom: AcApMeasureCircleGeom; nearest: Point2 } | undefined {
   if (!(worldThreshold > 0) || entities.length === 0) return undefined
   const threshSq = worldThreshold * worldThreshold
   let bestDistSq = threshSq
   let best: { geom: AcApMeasureCircleGeom; nearest: Point2 } | undefined
-  const pick = { x: p.x, y: p.y, z: 0 }
+  const pick = { x: p.x, y: p.y }
 
   let bestAlign = -Infinity
   for (const entity of entities) {

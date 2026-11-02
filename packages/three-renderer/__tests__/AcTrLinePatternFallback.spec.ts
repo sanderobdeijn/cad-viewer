@@ -99,7 +99,9 @@ describe('dashed fallback material (broken linetype shader)', () => {
       { elementLength: 10, elementTypeFlag: 0 },
       { elementLength: -5, elementTypeFlag: 0 }
     ]
-    const textMaterial = styleManager.getLineMaterial(textTraits) as LineMaterial
+    const textMaterial = styleManager.getLineMaterial(
+      textTraits
+    ) as LineMaterial
     expect(textMaterial.dashSize).toBe(10)
     expect(textMaterial.gapSize).toBe(5)
 
@@ -154,8 +156,8 @@ describe('unbatched dashed fat lines', () => {
   it('computes instance distances on AcTrLine', () => {
     const entity = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 6, y: 8, z: 0 }
+        { x: 0, y: 0 },
+        { x: 6, y: 8 }
       ],
       makePatternTraits([[12], [-6]]),
       makeBrokenContext()
@@ -177,8 +179,8 @@ describe('unbatched dashed fat lines', () => {
     traits.lineWeight = 30
     const entity = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       traits,
       context
@@ -276,9 +278,9 @@ describe('AcTrBatchedLine2 dash distances', () => {
 
     AcTrGroupCompactor.compact(group)
 
-    const line = group.children.find(child => child instanceof LineSegments2) as
-      | LineSegments2
-      | undefined
+    const line = group.children.find(
+      child => child instanceof LineSegments2
+    ) as LineSegments2 | undefined
     expect(line).toBeDefined()
     const { values } = getDistances(line!.geometry as THREE.BufferGeometry, 2)
     expect(values).toEqual([

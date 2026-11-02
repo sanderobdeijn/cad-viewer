@@ -1,7 +1,7 @@
 import {
   AcDbEllipse,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol,
   AcGeVector3dLike,
   TAU
@@ -21,11 +21,10 @@ import {
 import { AcApI18n } from '../../i18n'
 import { AcApLineJig } from './AcApLineCmd'
 
-
 type EllipseKeywordKey = 'arc' | 'center' | 'rotation'
 
 interface EllipseDefinition {
-  center: AcGePoint3dLike
+  center: AcGePoint2dLike
   majorAxis: AcGeVector3dLike
   majorRadius: number
   minorRadius: number
@@ -33,15 +32,14 @@ interface EllipseDefinition {
   endAngle: number
 }
 
-function distance2d(p1: AcGePoint3dLike, p2: AcGePoint3dLike) {
+function distance2d(p1: AcGePoint2dLike, p2: AcGePoint2dLike) {
   return Math.hypot(p2.x - p1.x, p2.y - p1.y)
 }
 
-function midpoint2d(p1: AcGePoint3dLike, p2: AcGePoint3dLike): AcGePoint3dLike {
+function midpoint2d(p1: AcGePoint2dLike, p2: AcGePoint2dLike): AcGePoint2dLike {
   return {
     x: (p1.x + p2.x) / 2,
-    y: (p1.y + p2.y) / 2,
-    z: 0
+    y: (p1.y + p2.y) / 2
   }
 }
 
@@ -70,7 +68,7 @@ function axisAngleDeg(axis: AcGeVector3dLike) {
 
 /**
  * Converts a geometric direction angle (from center, relative to major axis)
- * to ellipse parameter angle used by AcGeEllipseArc3d.
+ * to ellipse parameter angle used by AcGeEllipseArc2d.
  *
  * Ellipse parameterization:
  *   x = a * cos(t), y = b * sin(t)
@@ -92,14 +90,14 @@ function geometricAngleDegToEllipseParamRad(
 }
 
 function axisUnitFromCenterToPoint(
-  center: AcGePoint3dLike,
-  point: AcGePoint3dLike
+  center: AcGePoint2dLike,
+  point: AcGePoint2dLike
 ) {
   return normalizeVector2d(point.x - center.x, point.y - center.y)
 }
 
 function buildEllipseDefinition(
-  center: AcGePoint3dLike,
+  center: AcGePoint2dLike,
   firstAxisUnit: AcGeVector3dLike,
   firstAxisRadius: number,
   secondAxisRadius: number,
@@ -119,7 +117,7 @@ function buildEllipseDefinition(
 
   if (firstAxisRadius >= secondAxisRadius) {
     return {
-      center: { x: center.x, y: center.y, z: 0 },
+      center: { x: center.x, y: center.y },
       majorAxis: firstAxisUnit,
       majorRadius: firstAxisRadius,
       minorRadius: secondAxisRadius,
@@ -129,7 +127,7 @@ function buildEllipseDefinition(
   }
 
   return {
-    center: { x: center.x, y: center.y, z: 0 },
+    center: { x: center.x, y: center.y },
     majorAxis: perpendicular2d(firstAxisUnit),
     majorRadius: secondAxisRadius,
     minorRadius: firstAxisRadius,
@@ -146,15 +144,8 @@ function normalizeFullEllipseAngles(startAngle: number, endAngle: number) {
   return { startAngle, endAngle }
 }
 
-function createFallbackEllipse(point: AcGePoint3dLike) {
-  return new AcDbEllipse(
-    point,
-    { x: 1, y: 0 },
-    1e-6,
-    1e-6,
-    0,
-    TAU
-  )
+function createFallbackEllipse(point: AcGePoint2dLike) {
+  return new AcDbEllipse(point, { x: 1, y: 0 }, 1e-6, 1e-6, 0, TAU)
 }
 
 function applyEllipseDefinition(
@@ -173,7 +164,7 @@ function applyEllipseDefinition(
 /**
  * Dynamic point-driven ellipse preview jig.
  */
-class AcApEllipsePointJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApEllipsePointJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Transient ellipse entity reused during preview updates.
    */
@@ -181,7 +172,7 @@ class AcApEllipsePointJig extends AcEdPreviewJig<AcGePoint3dLike> {
   /**
    * Callback that maps cursor point to ellipse definition.
    */
-  private _builder: (point: AcGePoint3dLike) => EllipseDefinition | undefined
+  private _builder: (point: AcGePoint2dLike) => EllipseDefinition | undefined
 
   /**
    * Creates point-driven ellipse preview jig.
@@ -192,8 +183,8 @@ class AcApEllipsePointJig extends AcEdPreviewJig<AcGePoint3dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    builder: (point: AcGePoint3dLike) => EllipseDefinition | undefined,
-    fallbackPoint: AcGePoint3dLike
+    builder: (point: AcGePoint2dLike) => EllipseDefinition | undefined,
+    fallbackPoint: AcGePoint2dLike
   ) {
     super(view)
     this._builder = builder
@@ -212,7 +203,7 @@ class AcApEllipsePointJig extends AcEdPreviewJig<AcGePoint3dLike> {
    *
    * @param point - Current cursor/input point.
    */
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     const definition = this._builder(point)
     if (!definition) return
     applyEllipseDefinition(this._ellipse, definition)
@@ -242,7 +233,7 @@ class AcApEllipseDistanceJig extends AcEdPreviewJig<number> {
   constructor(
     view: AcEdBaseView,
     builder: (value: number) => EllipseDefinition | undefined,
-    fallbackPoint: AcGePoint3dLike
+    fallbackPoint: AcGePoint2dLike
   ) {
     super(view)
     this._builder = builder
@@ -396,7 +387,7 @@ export class AcApEllipseCmd extends AcEdCommand {
     )
     axisEndPrompt.useDashedLine = true
     axisEndPrompt.useBasePoint = true
-    axisEndPrompt.basePoint = new AcGePoint3d(center)
+    axisEndPrompt.basePoint = new AcGePoint2d(center)
     axisEndPrompt.jig = new AcApLineJig(context.view, center)
     const axisEndResult =
       await AcApDocManager.instance.editor.getPoint(axisEndPrompt)
@@ -429,7 +420,7 @@ export class AcApEllipseCmd extends AcEdCommand {
    */
   private async runAxisEndFlow(
     context: AcApContext,
-    firstAxisEndpoint: AcGePoint3dLike,
+    firstAxisEndpoint: AcGePoint2dLike,
     arcMode: boolean
   ) {
     const secondAxisPrompt = new AcEdPromptPointOptions(
@@ -437,7 +428,7 @@ export class AcApEllipseCmd extends AcEdCommand {
     )
     secondAxisPrompt.useDashedLine = true
     secondAxisPrompt.useBasePoint = true
-    secondAxisPrompt.basePoint = new AcGePoint3d(firstAxisEndpoint)
+    secondAxisPrompt.basePoint = new AcGePoint2d(firstAxisEndpoint)
     secondAxisPrompt.jig = new AcApLineJig(context.view, firstAxisEndpoint)
     const secondAxisResult =
       await AcApDocManager.instance.editor.getPoint(secondAxisPrompt)
@@ -479,7 +470,7 @@ export class AcApEllipseCmd extends AcEdCommand {
    */
   private async promptOtherAxis(
     context: AcApContext,
-    center: AcGePoint3dLike,
+    center: AcGePoint2dLike,
     firstAxisUnit: AcGeVector3dLike,
     firstAxisRadius: number,
     arcMode: boolean
@@ -491,7 +482,7 @@ export class AcApEllipseCmd extends AcEdCommand {
       this.addKeyword(otherAxisPrompt, 'rotation')
       otherAxisPrompt.useDashedLine = true
       otherAxisPrompt.useBasePoint = true
-      otherAxisPrompt.basePoint = new AcGePoint3d(center)
+      otherAxisPrompt.basePoint = new AcGePoint2d(center)
       otherAxisPrompt.jig = new AcApEllipsePointJig(
         context.view,
         point => {
@@ -588,7 +579,7 @@ export class AcApEllipseCmd extends AcEdCommand {
     startPrompt.allowNegative = true
     startPrompt.useBasePoint = true
     startPrompt.useDashedLine = true
-    startPrompt.basePoint = new AcGePoint3d(baseEllipse.center)
+    startPrompt.basePoint = new AcGePoint2d(baseEllipse.center)
     startPrompt.baseAngle = majorAxisBaseAngle
     startPrompt.jig = new AcApEllipseDistanceJig(
       context.view,
@@ -618,7 +609,7 @@ export class AcApEllipseCmd extends AcEdCommand {
     endPrompt.allowNegative = true
     endPrompt.useBasePoint = true
     endPrompt.useDashedLine = true
-    endPrompt.basePoint = new AcGePoint3d(baseEllipse.center)
+    endPrompt.basePoint = new AcGePoint2d(baseEllipse.center)
     endPrompt.baseAngle = majorAxisBaseAngle
     endPrompt.jig = new AcApEllipseDistanceJig(
       context.view,

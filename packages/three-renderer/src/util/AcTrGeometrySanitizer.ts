@@ -1,15 +1,12 @@
 import {
   AcDbEntity,
-  AcGeCircArc3d,
-  AcGeEllipseArc3d,
-  acgeGetOcsReferenceVector,
-  AcGePoint3dLike,
-  AcGeVector3d
+  AcGeCircArc2d,
+  AcGeEllipseArc2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcTrBufferGeometryUtil } from './AcTrBufferGeometryUtil'
 
-const FINITE_VECTOR_EPS = 1e-12
 const reportedIssues = new Set<string>()
 
 export interface AcTrGeometrySanitizerContext {
@@ -24,15 +21,15 @@ export interface AcTrGeometrySanitizerContext {
  * manually while investigating a DWG, or from tests.
  */
 export class AcTrGeometrySanitizer {
-  static isFinitePoint(point: AcGePoint3dLike | null | undefined): boolean {
+  static isFinitePoint(point: AcGePoint2dLike | null | undefined): boolean {
     return AcTrBufferGeometryUtil.isFinitePoint(point)
   }
 
   static filterFinitePoints(
-    points: AcGePoint3dLike[],
+    points: AcGePoint2dLike[],
     context?: AcTrGeometrySanitizerContext,
     source = 'lines'
-  ): AcGePoint3dLike[] {
+  ): AcGePoint2dLike[] {
     const filtered = points.filter(point =>
       AcTrGeometrySanitizer.isFinitePoint(point)
     )
@@ -96,13 +93,12 @@ export class AcTrGeometrySanitizer {
   }
 
   /**
-   * Repairs circular arcs whose plane basis became degenerate during OCS/WCS
-   * conversion or proxy-graphic decoding.
+   * Rejects circular arcs with a non-finite center or an invalid radius.
    */
-  static repairCircArc3d(
-    arc: AcGeCircArc3d,
+  static repairCircArc(
+    arc: AcGeCircArc2d,
     context?: AcTrGeometrySanitizerContext
-  ): AcGeCircArc3d | null {
+  ): AcGeCircArc2d | null {
     if (!AcTrGeometrySanitizer.isFinitePoint(arc.center)) {
       AcTrGeometrySanitizer.reportIssue(
         context,
@@ -120,59 +116,16 @@ export class AcTrGeometrySanitizer {
       return null
     }
 
-    const normal = arc.normal
-    const refVec = arc.refVec
-    const normalLength = vectorLength(normal)
-    const refLength = vectorLength(refVec)
-    const needsNormalRepair =
-      !Number.isFinite(normalLength) || normalLength < FINITE_VECTOR_EPS
-    const needsRefRepair =
-      !Number.isFinite(refLength) || refLength < FINITE_VECTOR_EPS
-
-    if (!needsNormalRepair && !needsRefRepair) {
-      return arc
-    }
-
-    const repaired = arc.clone()
-    if (needsNormalRepair) {
-      repaired.normal = new AcGeVector3d(AcGeVector3d.Z_AXIS)
-      AcTrGeometrySanitizer.reportIssue(
-        context,
-        'circularArc',
-        'replaced degenerate arc normal with Z_AXIS'
-      )
-    }
-    if (needsRefRepair || needsNormalRepair) {
-      repaired.refVec = acgeGetOcsReferenceVector(repaired.normal)
-      if (needsRefRepair && !needsNormalRepair) {
-        AcTrGeometrySanitizer.reportIssue(
-          context,
-          'circularArc',
-          'rebuilt degenerate arc reference vector'
-        )
-      }
-    }
-
-    const sample = repaired.getPoints(4)
-    if (!sample.every(point => AcTrGeometrySanitizer.isFinitePoint(point))) {
-      AcTrGeometrySanitizer.reportIssue(
-        context,
-        'circularArc',
-        'skipped arc that still produces non-finite tessellation after repair'
-      )
-      return null
-    }
-
-    return repaired
+    return arc
   }
 
   /**
-   * Repairs elliptical arcs with the same class of degenerate basis vectors.
+   * Rejects elliptical arcs with a non-finite center or invalid axis radii.
    */
-  static repairEllipseArc3d(
-    arc: AcGeEllipseArc3d,
+  static repairEllipseArc(
+    arc: AcGeEllipseArc2d,
     context?: AcTrGeometrySanitizerContext
-  ): AcGeEllipseArc3d | null {
+  ): AcGeEllipseArc2d | null {
     if (!AcTrGeometrySanitizer.isFinitePoint(arc.center)) {
       AcTrGeometrySanitizer.reportIssue(
         context,
@@ -195,48 +148,7 @@ export class AcTrGeometrySanitizer {
       return null
     }
 
-    const majorAxis = arc.majorAxis
-    const normal = arc.normal
-    const majorLength = vectorLength(majorAxis)
-    const normalLength = vectorLength(normal)
-    const needsNormalRepair =
-      !Number.isFinite(normalLength) || normalLength < FINITE_VECTOR_EPS
-    const needsMajorRepair =
-      !Number.isFinite(majorLength) || majorLength < FINITE_VECTOR_EPS
-
-    if (!needsNormalRepair && !needsMajorRepair) {
-      return arc
-    }
-
-    const repaired = arc.clone()
-    if (needsNormalRepair) {
-      repaired.normal = new AcGeVector3d(AcGeVector3d.Z_AXIS)
-      AcTrGeometrySanitizer.reportIssue(
-        context,
-        'ellipticalArc',
-        'replaced degenerate ellipse normal with Z_AXIS'
-      )
-    }
-    if (needsMajorRepair) {
-      repaired.majorAxis = acgeGetOcsReferenceVector(repaired.normal)
-      AcTrGeometrySanitizer.reportIssue(
-        context,
-        'ellipticalArc',
-        'rebuilt degenerate ellipse major axis'
-      )
-    }
-
-    const sample = repaired.getPoints(4)
-    if (!sample.every(point => AcTrGeometrySanitizer.isFinitePoint(point))) {
-      AcTrGeometrySanitizer.reportIssue(
-        context,
-        'ellipticalArc',
-        'skipped ellipse arc that still produces non-finite tessellation after repair'
-      )
-      return null
-    }
-
-    return repaired
+    return arc
   }
 
   static reportIssue(
@@ -271,9 +183,4 @@ export class AcTrGeometrySanitizer {
 function entityTypeName(entity: AcDbEntity): string {
   const ctor = entity.constructor as { typeName?: string; name?: string }
   return ctor.typeName ?? ctor.name ?? 'Entity'
-}
-
-function vectorLength(vector: { x: number; y: number; z?: number }) {
-  const z = vector.z ?? 0
-  return Math.hypot(vector.x, vector.y, z)
 }

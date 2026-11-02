@@ -3,7 +3,6 @@ import {
   AcGeArea2d,
   AcGeIndexNode,
   AcGePoint2dLike,
-  AcGePoint3dLike,
   AcGiSubEntityTraits
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
@@ -41,7 +40,7 @@ export interface AcTrBuiltDirectGeometry {
   wcsBbox: THREE.Box3
   material: THREE.Material
   /** Point entities only — world position for bbox intersection. */
-  position?: AcGePoint3dLike
+  position?: AcGePoint2dLike
 }
 
 /** Generalized direct-batch entity metadata (line, point, mesh). */
@@ -412,7 +411,7 @@ export function isDirectBatchRejectedMaterial(
  *   are provided.
  */
 export function buildLineGeometry(
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   material: THREE.Material
 ): AcTrBuiltLineGeometry | null {
   if (points.length < 2) {
@@ -431,10 +430,10 @@ export function buildLineGeometry(
       const p2 = points[i + 1]
       segmentPositions[pos++] = p1.x - worldOffset.x
       segmentPositions[pos++] = p1.y - worldOffset.y
-      segmentPositions[pos++] = (p1.z ?? 0) - worldOffset.z
+      segmentPositions[pos++] = -worldOffset.z
       segmentPositions[pos++] = p2.x - worldOffset.x
       segmentPositions[pos++] = p2.y - worldOffset.y
-      segmentPositions[pos++] = (p2.z ?? 0) - worldOffset.z
+      segmentPositions[pos++] = -worldOffset.z
     }
 
     const geometry = new LineSegmentsGeometry()
@@ -469,7 +468,7 @@ export function buildLineGeometry(
     const point = points[i]
     vertices[pos++] = point.x - worldOffset.x
     vertices[pos++] = point.y - worldOffset.y
-    vertices[pos++] = (point.z ?? 0) - worldOffset.z
+    vertices[pos++] = -worldOffset.z
   }
   for (let i = 0, pos = 0; i < maxVertexCount - 1; i++) {
     indices[pos++] = i
@@ -500,17 +499,17 @@ export function buildLineGeometry(
  * @returns Built point geometry with a tiny WCS bbox around `point`.
  */
 export function buildPointGeometry(
-  point: AcGePoint3dLike,
+  point: AcGePoint2dLike,
   material: THREE.Material
 ): AcTrBuiltDirectGeometry {
-  const worldOffset = new THREE.Vector3(point.x, point.y, point.z ?? 0)
+  const worldOffset = new THREE.Vector3(point.x, point.y, 0)
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute(
     'position',
     new THREE.Float32BufferAttribute([0, 0, 0], 3)
   )
   const epsilon = 1e-6
-  const z = point.z ?? 0
+  const z = 0
   const wcsBbox = new THREE.Box3(
     new THREE.Vector3(point.x - epsilon, point.y - epsilon, z - epsilon),
     new THREE.Vector3(point.x + epsilon, point.y + epsilon, z + epsilon)
@@ -533,8 +532,8 @@ export function buildPointGeometry(
  * is the two loops combined; this pass does not add samples.
  */
 function buildOffsetRingMesh(
-  outer: AcGePoint3dLike[],
-  inner: AcGePoint3dLike[],
+  outer: AcGePoint2dLike[],
+  inner: AcGePoint2dLike[],
   worldOffset: THREE.Vector3
 ): THREE.BufferGeometry | null {
   const outerCount = openLoopCount(outer)
@@ -571,11 +570,11 @@ function buildOffsetRingMesh(
     // to the same float32 value at large coordinates.
     positions[i * 3] = outerPoint.x - worldOffset.x
     positions[i * 3 + 1] = outerPoint.y - worldOffset.y
-    positions[i * 3 + 2] = (outerPoint.z ?? 0) - worldOffset.z
+    positions[i * 3 + 2] = -worldOffset.z
     const innerOffset = (outerCount + i) * 3
     positions[innerOffset] = innerPoint.x - worldOffset.x
     positions[innerOffset + 1] = innerPoint.y - worldOffset.y
-    positions[innerOffset + 2] = (innerPoint.z ?? 0) - worldOffset.z
+    positions[innerOffset + 2] = -worldOffset.z
   }
 
   const indices = new Uint32Array(outerCount * 6)
@@ -615,8 +614,8 @@ function buildOffsetRingMesh(
  * `AcDbPolyline` has already decided these loops are one closed wide polyline.
  */
 export function buildOffsetRingDirectGeometry(
-  outer: AcGePoint3dLike[],
-  inner: AcGePoint3dLike[],
+  outer: AcGePoint2dLike[],
+  inner: AcGePoint2dLike[],
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): AcTrBuiltDirectGeometry | null {
@@ -656,27 +655,26 @@ export function buildOffsetRingDirectGeometry(
  *   aligned.
  */
 export function buildOffsetRingCenterline(
-  outer: AcGePoint3dLike[],
-  inner: AcGePoint3dLike[]
-): AcGePoint3dLike[] | null {
+  outer: AcGePoint2dLike[],
+  inner: AcGePoint2dLike[]
+): AcGePoint2dLike[] | null {
   const outerCount = openLoopCount(outer)
   const innerCount = openLoopCount(inner)
   if (outerCount !== innerCount || outerCount < 2) {
     return null
   }
 
-  const centerline: AcGePoint3dLike[] = new Array(outerCount + 1)
+  const centerline: AcGePoint2dLike[] = new Array(outerCount + 1)
   for (let i = 0; i < outerCount; i++) {
     const outerPoint = outer[i]
     const innerPoint = inner[i]
     centerline[i] = {
       x: (outerPoint.x + innerPoint.x) * 0.5,
-      y: (outerPoint.y + innerPoint.y) * 0.5,
-      z: ((outerPoint.z ?? 0) + (innerPoint.z ?? 0)) * 0.5
+      y: (outerPoint.y + innerPoint.y) * 0.5
     }
   }
   const first = centerline[0]
-  centerline[outerCount] = { x: first.x, y: first.y, z: first.z }
+  centerline[outerCount] = { x: first.x, y: first.y }
   return centerline
 }
 
@@ -859,7 +857,8 @@ export function buildAreaGeometry(
     }
   }
 
-  const material = resolvedMaterial ?? context.styleManager.getFillMaterial(traits)
+  const material =
+    resolvedMaterial ?? context.styleManager.getFillMaterial(traits)
 
   return {
     kind: 'mesh',
@@ -1017,11 +1016,11 @@ function rebaseGeometryPositions(
  * @param points - World-space points to enclose.
  * @returns Center of the axis-aligned bounding box of `points`.
  */
-function computeLocalOrigin(points: AcGePoint3dLike[]) {
+function computeLocalOrigin(points: AcGePoint2dLike[]) {
   const box = new THREE.Box3()
   for (let i = 0; i < points.length; i++) {
     const p = points[i]
-    box.expandByPoint(_point.set(p.x, p.y, p.z ?? 0))
+    box.expandByPoint(_point.set(p.x, p.y, 0))
   }
   return box.getCenter(new THREE.Vector3())
 }
@@ -1033,11 +1032,11 @@ function computeLocalOrigin(points: AcGePoint3dLike[]) {
  * @param points - World-space points to enclose.
  * @returns A new {@link THREE.Box3} expanded by every point in `points`.
  */
-function computeWcsBboxFromPoints(points: AcGePoint3dLike[]) {
+function computeWcsBboxFromPoints(points: AcGePoint2dLike[]) {
   const box = new THREE.Box3()
   for (let i = 0; i < points.length; i++) {
     const p = points[i]
-    box.expandByPoint(_point.set(p.x, p.y, p.z ?? 0))
+    box.expandByPoint(_point.set(p.x, p.y, 0))
   }
   return box
 }

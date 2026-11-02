@@ -34,20 +34,20 @@ export function createMeasureEntityFromRecord(
   switch (geom.type) {
     case 'distance':
       return new AcApMeasureDistanceEntity(
-        { x: geom.start.x, y: geom.start.y, z: 0 },
-        { x: geom.end.x, y: geom.end.y, z: 0 },
+        { x: geom.start.x, y: geom.start.y },
+        { x: geom.end.x, y: geom.end.y },
         options
       )
     case 'angle':
       return new AcApMeasureAngleEntity(
-        { x: geom.vertex.x, y: geom.vertex.y, z: 0 },
-        { x: geom.arm1.x, y: geom.arm1.y, z: 0 },
-        { x: geom.arm2.x, y: geom.arm2.y, z: 0 },
+        { x: geom.vertex.x, y: geom.vertex.y },
+        { x: geom.arm1.x, y: geom.arm1.y },
+        { x: geom.arm2.x, y: geom.arm2.y },
         options
       )
     case 'area':
       return new AcApMeasureAreaEntity(
-        geom.points.map(p => ({ x: p.x, y: p.y, z: 0 })),
+        geom.points.map(p => ({ x: p.x, y: p.y })),
         options
       )
     case 'arc':
@@ -60,7 +60,7 @@ export function createMeasureEntityFromRecord(
       )
     case 'point':
       return new AcApMeasurePointEntity(
-        { x: geom.position.x, y: geom.position.y, z: 0 },
+        { x: geom.position.x, y: geom.position.y },
         options
       )
   }

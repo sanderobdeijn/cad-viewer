@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 import { AcDb2dPolyline, AcDbPoly2dType, AcDbPolyline } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
@@ -12,8 +12,8 @@ describe('AcDb2dPolyline', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 2, y: 3, z: 0 }
+        { x: 0, y: 0 },
+        { x: 2, y: 3 }
       ],
       5,
       true,
@@ -42,8 +42,8 @@ describe('AcDb2dPolyline', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 3, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 3, y: 0 }
       ],
       0,
       false,
@@ -57,7 +57,7 @@ describe('AcDb2dPolyline', () => {
     expect(polyline.getBulgeAt(9)).toBe(0)
 
     const noBulgePolyline = new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, [
-      { x: 0, y: 0, z: 0 }
+      { x: 0, y: 0 }
     ])
     expect(noBulgePolyline.getBulgeAt(0)).toBe(0)
   })
@@ -66,91 +66,73 @@ describe('AcDb2dPolyline', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
       [
-        { x: -1, y: 2, z: 0 },
-        { x: 3, y: -4, z: 0 }
+        { x: -1, y: 2 },
+        { x: 3, y: -4 }
       ],
       7
     )
 
     const ext = polyline.geometricExtents
-    expect(ext.min).toMatchObject({ x: -1, y: -4, z: 7 })
-    expect(ext.max).toMatchObject({ x: 3, y: 2, z: 7 })
-  })
-
-  it('updates geometricExtents when elevation changes', () => {
-    const polyline = new AcDb2dPolyline(
-      AcDbPoly2dType.SimplePoly,
-      [
-        { x: 0, y: 0, z: 0 },
-        { x: 4, y: 3, z: 0 }
-      ],
-      1
-    )
-
-    expect(polyline.geometricExtents.min.z).toBe(1)
-
-    polyline.elevation = 9
-
-    expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0, z: 9 })
-    expect(polyline.geometricExtents.max).toMatchObject({ x: 4, y: 3, z: 9 })
+    expect(ext.min).toMatchObject({ x: -1, y: -4 })
+    expect(ext.max).toMatchObject({ x: 3, y: 2 })
   })
 
   it('returns grip points and osnap points for supported modes', () => {
     const polyline = new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, [
-      { x: 0, y: 0, z: 0 },
-      { x: 2, y: 0, z: 0 },
-      { x: 2, y: 2, z: 0 }
+      { x: 0, y: 0 },
+      { x: 2, y: 0 },
+      { x: 2, y: 2 }
     ])
 
     const gripPoints = polyline.subGetGripPoints()
     expect(gripPoints).toHaveLength(3)
-    expect(gripPoints[0]).toEqual(new AcGePoint3d(0, 0, 0))
+    expect(gripPoints[0]).toEqual(new AcGePoint2d(0, 0))
 
-    const endpointSnaps: AcGePoint3d[] = []
+    const endpointSnaps: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       endpointSnaps
     )
     expect(endpointSnaps).toHaveLength(3)
 
-    const midPoints: AcGePoint3d[] = []
+    const midPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(2)
-    expect(midPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
-    expect(midPoints[1]).toMatchObject({ x: 2, y: 1, z: 0 })
+    expect(midPoints[0]).toMatchObject({ x: 1, y: 0 })
+    expect(midPoints[1]).toMatchObject({ x: 2, y: 1 })
 
-    const nearestPoints: AcGePoint3d[] = []
+    const nearestPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
-    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const perpendicularPoints: AcGePoint3d[] = []
+    const perpendicularPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
-    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const unsupportedPoints: AcGePoint3d[] = []
+    const unsupportedPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
@@ -160,23 +142,23 @@ describe('AcDb2dPolyline', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 2, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 2, y: 0 }
       ],
       5
     )
     const grips = polyline.subGetGripPoints()
     expect(grips).toHaveLength(2)
-    expect(grips[0]).toMatchObject({ x: 0, y: 0, z: 5 })
-    expect(grips[1]).toMatchObject({ x: 2, y: 0, z: 5 })
+    expect(grips[0]).toMatchObject({ x: 0, y: 0 })
+    expect(grips[1]).toMatchObject({ x: 2, y: 0 })
   })
 
   it('transforms geometry and flips bulges for mirrored transform', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
       [
-        { x: 1, y: 2, z: 0 },
-        { x: 3, y: 4, z: 0 }
+        { x: 1, y: 2 },
+        { x: 3, y: 4 }
       ],
       3,
       false,
@@ -192,13 +174,12 @@ describe('AcDb2dPolyline', () => {
     expect(polyline.getBulgeAt(1)).toBe(0.5)
 
     polyline.transformBy(new AcGeMatrix3d().makeTranslation(0, 0, 5))
-    expect(polyline.elevation).toBe(8)
   })
 
   it('exposes properties groups and property accessors', () => {
     const polyline = new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, [
-      { x: 0, y: 0, z: 0 },
-      { x: 3, y: 4, z: 0 }
+      { x: 0, y: 0 },
+      { x: 3, y: 4 }
     ])
 
     const props = polyline.properties
@@ -230,8 +211,8 @@ describe('AcDb2dPolyline', () => {
 
   it('draws through subWorldDraw using sampled points at current elevation', () => {
     const polyline = new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, [
-      { x: 0, y: 0, z: 0 },
-      { x: 2, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 2, y: 0 }
     ])
     polyline.elevation = 6
 
@@ -242,15 +223,14 @@ describe('AcDb2dPolyline', () => {
     const result = polyline.subWorldDraw(renderer as never)
     expect(result).toBe('rendered')
     expect(renderer.lines).toHaveBeenCalledTimes(1)
-    const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint3d[]]
+    const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint2d[]]
     expect(points.length).toBeGreaterThan(1)
-    expect(points.every(p => p.z === 6)).toBe(true)
   })
 
   it('offsets a simple 2d polyline path', () => {
     const poly = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
-      [new AcGePoint3d(0, 0, 0), new AcGePoint3d(10, 0, 0)],
+      [new AcGePoint2d(0, 0), new AcGePoint2d(10, 0)],
       0,
       false
     )
@@ -261,7 +241,7 @@ describe('AcDb2dPolyline', () => {
   it('offsets a 2d polyline path that contains bulge arcs', () => {
     const poly = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
-      [new AcGePoint3d(0, 0, 0), new AcGePoint3d(10, 0, 0)],
+      [new AcGePoint2d(0, 0), new AcGePoint2d(10, 0)],
       0,
       false,
       0,
@@ -279,34 +259,34 @@ describe('AcDb2dPolyline', () => {
   it('maps OCS grips and draw points to WCS for extrusion (0,0,-1)', () => {
     const polyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
-      [new AcGePoint3d(1000, 500, 0), new AcGePoint3d(1100, 520, 0)],
+      [new AcGePoint2d(1000, 500), new AcGePoint2d(1100, 520)],
       0,
       false
     )
     polyline.normal = { x: 0, y: 0, z: -1 }
 
     const grips = polyline.subGetGripPoints()
-    expect(grips[0]).toMatchObject({ x: -1000, y: 500, z: 0 })
-    expect(grips[1]).toMatchObject({ x: -1100, y: 520, z: 0 })
+    expect(grips[0]).toMatchObject({ x: -1000, y: 500 })
+    expect(grips[1]).toMatchObject({ x: -1100, y: 520 })
 
     const extents = polyline.geometricExtents
     expect(extents.min.x).toBeCloseTo(-1100, 8)
     expect(extents.max.x).toBeCloseTo(-1000, 8)
 
-    const snapPoints: AcGePoint3d[] = []
+    const snapPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       snapPoints
     )
-    expect(snapPoints[0]).toMatchObject({ x: -1000, y: 500, z: 0 })
+    expect(snapPoints[0]).toMatchObject({ x: -1000, y: 500 })
 
     const renderer = { lines: jest.fn(() => ({})) }
     polyline.subWorldDraw(renderer as never)
     expect(renderer.lines).toHaveBeenCalledWith([
-      expect.objectContaining({ x: -1000, y: 500, z: 0 }),
-      expect.objectContaining({ x: -1100, y: 520, z: 0 })
+      expect.objectContaining({ x: -1000, y: 500 }),
+      expect.objectContaining({ x: -1100, y: 520 })
     ])
   })
 })

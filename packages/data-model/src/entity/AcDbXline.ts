@@ -1,13 +1,15 @@
 import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
-  AcGeLine3d,
+  AcGeLine2d,
   AcGeMatrix3d,
   acgeOffsetPointByDirectionInXY,
-  AcGePoint3d,
-  AcGePoint3dLike,
-  AcGeVector3d,
-  AcGeVector3dLike} from '@mlightcad/geometry-engine'
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2d,
+  AcGeVector2dLike,
+  AcGeVector3d
+} from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
@@ -26,8 +28,8 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * // Create an xline from origin in the positive X direction
  * const xline = new AcDbXline();
- * xline.basePoint = new AcGePoint3d(0, 0, 0);
- * xline.unitDir = new AcGeVector3d(1, 0, 0);
+ * xline.basePoint = new AcGePoint2d(0, 0);
+ * xline.unitDir = new AcGeVector2d(1, 0);
  *
  * // Access xline properties
  * console.log(`Base point: ${xline.basePoint}`);
@@ -43,9 +45,9 @@ export class AcDbXline extends AcDbCurve {
   }
 
   /** The base point of the xline */
-  private _basePoint: AcGePoint3d
+  private _basePoint: AcGePoint2d
   /** The unit direction vector of the xline */
-  private _unitDir: AcGeVector3d
+  private _unitDir: AcGeVector2d
 
   /**
    * Creates a new xline entity.
@@ -56,14 +58,14 @@ export class AcDbXline extends AcDbCurve {
    * @example
    * ```typescript
    * const xline = new AcDbXline();
-   * xline.basePoint = new AcGePoint3d(5, 10, 0);
-   * xline.unitDir = new AcGeVector3d(0, 1, 0); // Positive Y direction
+   * xline.basePoint = new AcGePoint2d(5, 10);
+   * xline.unitDir = new AcGeVector2d(0, 1); // Positive Y direction
    * ```
    */
   constructor() {
     super()
-    this._basePoint = new AcGePoint3d()
-    this._unitDir = new AcGeVector3d()
+    this._basePoint = new AcGePoint2d()
+    this._unitDir = new AcGeVector2d()
   }
 
   /**
@@ -72,12 +74,12 @@ export class AcDbXline extends AcDbCurve {
    * The base point is the center point from which the xline extends infinitely
    * in both directions.
    *
-   * @returns The base point as a 3D point
+   * @returns The base point as a 2D point
    *
    * @example
    * ```typescript
    * const basePoint = xline.basePoint;
-   * console.log(`Xline base point: ${basePoint.x}, ${basePoint.y}, ${basePoint.z}`);
+   * console.log(`Xline base point: ${basePoint.x}, ${basePoint.y}`);
    * ```
    */
   get basePoint() {
@@ -91,10 +93,10 @@ export class AcDbXline extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * xline.basePoint = new AcGePoint3d(10, 20, 0);
+   * xline.basePoint = new AcGePoint2d(10, 20);
    * ```
    */
-  set basePoint(value: AcGePoint3d) {
+  set basePoint(value: AcGePoint2d) {
     this._basePoint.copy(value)
   }
 
@@ -109,7 +111,7 @@ export class AcDbXline extends AcDbCurve {
    * @example
    * ```typescript
    * const unitDir = xline.unitDir;
-   * console.log(`Xline direction: ${unitDir.x}, ${unitDir.y}, ${unitDir.z}`);
+   * console.log(`Xline direction: ${unitDir.x}, ${unitDir.y}`);
    * ```
    */
   get unitDir() {
@@ -123,10 +125,10 @@ export class AcDbXline extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * xline.unitDir = new AcGeVector3d(0, 0, 1); // Positive Z direction
+   * xline.unitDir = new AcGeVector2d(0, 0); // Positive Z direction
    * ```
    */
-  set unitDir(value: AcGePoint3d) {
+  set unitDir(value: AcGePoint2d) {
     this._unitDir.copy(value)
   }
 
@@ -177,7 +179,7 @@ export class AcDbXline extends AcDbCurve {
     return [
       {
         kind: 'line',
-        line: new AcGeLine3d(this._basePoint, end),
+        line: new AcGeLine2d(this._basePoint, end),
         extent: 'unbounded'
       }
     ]
@@ -224,17 +226,6 @@ export class AcDbXline extends AcDbCurve {
               }
             },
             {
-              name: 'basePointZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.basePoint.z,
-                set: (v: number) => {
-                  this.basePoint.z = v
-                }
-              }
-            },
-            {
               name: 'unitDirX',
               type: 'float',
               editable: true,
@@ -253,17 +244,6 @@ export class AcDbXline extends AcDbCurve {
                 get: () => this.unitDir.y,
                 set: (v: number) => {
                   this.unitDir.y = v
-                }
-              }
-            },
-            {
-              name: 'unitDirZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.unitDir.z,
-                set: (v: number) => {
-                  this.unitDir.z = v
                 }
               }
             }
@@ -288,13 +268,13 @@ export class AcDbXline extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
+    const gripPoints = new Array<AcGePoint2d>()
     gripPoints.push(this.basePoint)
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this.basePoint)
     return this
   }
@@ -304,9 +284,9 @@ export class AcDbXline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     const origin = this.basePoint
 
@@ -319,11 +299,11 @@ export class AcDbXline extends AcDbCurve {
     if (direction.lengthSq() === 0) return
 
     direction.normalize()
-    const line = new AcGeLine3d(origin, origin.clone().add(direction))
+    const line = new AcGeLine2d(origin, origin.clone().add(direction))
 
     switch (osnapMode) {
       case AcDbOsnapMode.Nearest:
-        snapPoints.push(line.project(pickPoint))
+        snapPoints.push(line.perpPoint(pickPoint))
         break
       case AcDbOsnapMode.Perpendicular:
         snapPoints.push(line.perpPoint(pickPoint))
@@ -338,7 +318,12 @@ export class AcDbXline extends AcDbCurve {
    */
   transformBy(matrix: AcGeMatrix3d) {
     this._basePoint.applyMatrix4(matrix)
-    this._unitDir.transformDirection(matrix)
+    const direction = new AcGeVector3d(
+      this._unitDir.x,
+      this._unitDir.y,
+      0
+    ).transformDirection(matrix)
+    this._unitDir.set(direction.x, direction.y).normalize()
     return this
   }
 
@@ -362,12 +347,12 @@ export class AcDbXline extends AcDbCurve {
    * @returns The rendered xline entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const points: AcGePoint3d[] = []
+    const points: AcGePoint2d[] = []
     points.push(
-      this._unitDir.clone().multiplyScalar(-1000000).add(this._basePoint)
+      new AcGePoint2d(this._basePoint).addScaledVector(this._unitDir, -1000000)
     )
     points.push(
-      this._unitDir.clone().multiplyScalar(1000000).add(this._basePoint)
+      new AcGePoint2d(this._basePoint).addScaledVector(this._unitDir, 1000000)
     )
     return renderer.lines(points)
   }
@@ -389,7 +374,7 @@ export class AcDbXline extends AcDbCurve {
    *
    * Same planar left/right test as {@link AcDbRay.getOffsetSideAtPoint}.
    */
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const bp = this.basePoint
     const dir = this.unitDir
     const len = Math.hypot(dir.x, dir.y)
@@ -416,4 +401,3 @@ export class AcDbXline extends AcDbCurve {
     return xline
   }
 }
-

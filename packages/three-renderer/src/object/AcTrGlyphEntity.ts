@@ -1,5 +1,5 @@
 import {
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGiSubEntityTraits,
   AcGiTextStyle,
   log
@@ -150,7 +150,7 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    *
    * @returns World-space insertion point for this glyph entity.
    */
-  protected abstract getDrawPosition(): AcGePoint3dLike
+  protected abstract getDrawPosition(): AcGePoint2dLike
 
   /**
    * Renders this entity synchronously through the shared mtext-renderer.

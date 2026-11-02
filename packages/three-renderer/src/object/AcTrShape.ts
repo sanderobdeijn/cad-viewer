@@ -85,11 +85,11 @@ export class AcTrShape extends AcTrGlyphEntity {
    */
   hoistBakedPlacement(): void {
     const position = this._shape.position
-    this.position.set(position?.x ?? 0, position?.y ?? 0, position?.z ?? 0)
+    this.position.set(position?.x ?? 0, position?.y ?? 0, 0)
     this.rotation.z = this._shape.rotation ?? 0
     this._shape = {
       ...this._shape,
-      position: { x: 0, y: 0, z: 0 },
+      position: { x: 0, y: 0 },
       rotation: 0
     }
   }
@@ -103,7 +103,6 @@ export class AcTrShape extends AcTrGlyphEntity {
       position &&
       position.x === 0 &&
       position.y === 0 &&
-      position.z === 0 &&
       (this.position.x !== 0 || this.position.y !== 0 || this.position.z !== 0)
     ) {
       return {

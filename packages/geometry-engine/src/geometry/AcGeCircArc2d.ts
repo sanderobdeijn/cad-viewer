@@ -579,6 +579,31 @@ export class AcGeCircArc2d extends AcGeCurve2d {
   }
 
   /**
+   * The area enclosed by this curve. Open arcs return `0`.
+   */
+  get area(): number {
+    return this.closed ? Math.PI * this.radius * this.radius : 0
+  }
+
+  /**
+   * Returns a concentric copy with radius adjusted by `offsetDist`.
+   *
+   * @param offsetDist - Signed offset distance in drawing units
+   * @returns Offset arc, or `null` when the resulting radius is not positive
+   */
+  offset(offsetDist: number): AcGeCircArc2d | null {
+    const radius = this.radius + offsetDist
+    if (radius <= 0) return null
+    return new AcGeCircArc2d(
+      this.center.clone(),
+      radius,
+      this._startAngle,
+      this._endAngle,
+      this.clockwise
+    )
+  }
+
+  /**
    * Return true if its start point is identical to its end point. Otherwise, return false.
    */
   get closed() {
@@ -621,6 +646,7 @@ export class AcGeCircArc2d extends AcGeCurve2d {
    * Get length of circular arc
    */
   get length() {
+    if (this.closed) return TAU * this.radius
     return Math.abs(this.deltaAngle * this.radius)
   }
 

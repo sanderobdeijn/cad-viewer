@@ -17,7 +17,7 @@ A typical command consists of:
 ### Example Structure
 
 ```typescript
-import { AcDbEntity, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcDbEntity, AcGePoint2dLike } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
 import {
@@ -30,7 +30,7 @@ import {
 import { AcApI18n } from '../i18n'
 
 // Jig class for real-time preview (optional)
-export class AcAp[CommandName]Jig extends AcEdPreviewJig<AcGePoint3dLike> {
+export class AcAp[CommandName]Jig extends AcEdPreviewJig<AcGePoint2dLike> {
   private _entity: AcDbEntity
 
   constructor(view: AcEdBaseView, /* initial parameters */) {

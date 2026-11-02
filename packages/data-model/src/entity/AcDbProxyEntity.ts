@@ -1,12 +1,15 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGeVector3dLike
+  AcGePoint2d,
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
-import { acdbLoadProxyGraphicFromDxf, AcDbProxyGraphic } from '../misc/proxyGraphic'
+import {
+  acdbLoadProxyGraphicFromDxf,
+  AcDbProxyGraphic
+} from '../misc/proxyGraphic'
 import { AcDbEntity } from './AcDbEntity'
 import {
   acdbForEachGripIndex,
@@ -119,7 +122,7 @@ export class AcDbProxyEntity extends AcDbEntity {
    * Used at draw time for grips; not written with group code **92** (that code
    * is reserved for graphics-data size in classic DXF).
    */
-  private _entityOrigins: AcGePoint3d[] = []
+  private _entityOrigins: AcGePoint2d[] = []
   /**
    * Cumulative world-space transform applied at draw time.
    *
@@ -313,13 +316,13 @@ export class AcDbProxyEntity extends AcDbEntity {
   /**
    * Replaces the entity-origin anchor points stored on this proxy entity.
    *
-   * Each input point is cloned into an {@link AcGePoint3d} instance.
+   * Each input point is cloned into an {@link AcGePoint2d} instance.
    *
    * @param origins - New origin points (DXF group codes **92** / **10**).
    */
-  setEntityOrigins(origins: AcGePoint3d[]) {
+  setEntityOrigins(origins: AcGePoint2d[]) {
     this._entityOrigins = origins.map(
-      origin => new AcGePoint3d(origin.x, origin.y, origin.z)
+      origin => new AcGePoint2d(origin.x, origin.y)
     )
   }
 
@@ -358,7 +361,7 @@ export class AcDbProxyEntity extends AcDbEntity {
    * When entity origins are stored on the proxy, they are returned as grips.
    * Otherwise the axis-aligned extents corners are used when available.
    *
-   * @returns Array of grip points as 3D points
+   * @returns Array of grip points as 2D points
    */
   subGetGripPoints() {
     if (this._entityOrigins.length > 0) {
@@ -368,8 +371,8 @@ export class AcDbProxyEntity extends AcDbEntity {
     const extents = this.geometricExtents
     if (!extents.isEmpty()) {
       return [
-        new AcGePoint3d(extents.min.x, extents.min.y, extents.min.z),
-        new AcGePoint3d(extents.max.x, extents.max.y, extents.max.z)
+        new AcGePoint2d(extents.min.x, extents.min.y),
+        new AcGePoint2d(extents.max.x, extents.max.y)
       ]
     }
 
@@ -377,7 +380,7 @@ export class AcDbProxyEntity extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     if (this._entityOrigins.length > 0) {
       acdbMovePointArrayGripAt(indices, offset, this._entityOrigins)
       return this
@@ -390,7 +393,7 @@ export class AcDbProxyEntity extends AcDbEntity {
 
     acdbForEachGripIndex(indices, index => {
       if (index === 0) {
-        this.transformBy(AcGeMatrix3d.makeTranslation(offset))
+        this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
       }
     })
     return this
@@ -451,11 +454,13 @@ export class AcDbProxyEntity extends AcDbEntity {
    * @param chunks - One or more hexadecimal strings or binary chunks from
    *   group code **310**.
    */
-  loadProxyGraphicFromDxf(length?: number, chunks?: Array<string | Uint8Array>) {
+  loadProxyGraphicFromDxf(
+    length?: number,
+    chunks?: Array<string | Uint8Array>
+  ) {
     const data = acdbLoadProxyGraphicFromDxf(length, chunks)
     if (data) {
       this.setProxyGraphic(data)
     }
   }
 }
-

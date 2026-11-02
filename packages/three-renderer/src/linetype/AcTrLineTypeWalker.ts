@@ -1,5 +1,5 @@
 import type {
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGiLineTypePatternElement
 } from '@mlightcad/data-model'
 
@@ -55,9 +55,7 @@ export const COMPLEX_LTYPE_SHAPE = 4
 
 /** Valid DXF group-74 bit mask (abs | text | shape). */
 const COMPLEX_LTYPE_FLAG_MASK =
-  COMPLEX_LTYPE_ABSOLUTE_ROTATION |
-  COMPLEX_LTYPE_TEXT |
-  COMPLEX_LTYPE_SHAPE
+  COMPLEX_LTYPE_ABSOLUTE_ROTATION | COMPLEX_LTYPE_TEXT | COMPLEX_LTYPE_SHAPE
 
 /**
  * LibreDWG-web historically mapped `complex_shapecode` (DXF 75) to
@@ -272,7 +270,7 @@ function placementAngle(
  */
 export function uprightLinetypeAngle(angle: number): number {
   const twoPi = Math.PI * 2
-  let a = ((angle + Math.PI) % twoPi + twoPi) % twoPi - Math.PI
+  let a = ((((angle + Math.PI) % twoPi) + twoPi) % twoPi) - Math.PI
   if (a > Math.PI / 2 || a < -Math.PI / 2) {
     a += Math.PI
     if (a > Math.PI) {
@@ -320,7 +318,7 @@ function penUpSlotLength(
  * renderer can inject glyphs.
  */
 export function walkLineType(
-  points: AcGePoint3dLike[] | AcTrLineWalkPoint[],
+  points: AcGePoint2dLike[] | AcTrLineWalkPoint[],
   pattern: AcGiLineTypePatternElement[],
   scale: number
 ): AcTrLineWalkResult {

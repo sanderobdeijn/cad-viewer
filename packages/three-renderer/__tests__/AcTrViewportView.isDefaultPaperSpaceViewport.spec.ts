@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d, AcGePoint3d, AcGiViewport } from '@mlightcad/data-model'
+import { AcGeBox2d, AcGePoint2d, AcGiViewport } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../src/renderer'
@@ -21,11 +21,11 @@ function createMockRenderer(
 
 function createViewport(twist: number): AcGiViewport {
   const gi = new AcGiViewport()
-  gi.centerPoint = new AcGePoint3d(5, 5, 0)
+  gi.centerPoint = new AcGePoint2d(5, 5)
   gi.width = 10
   gi.height = 10
-  gi.viewCenter = new AcGePoint3d(0, 0, 0)
-  gi.viewTarget = new AcGePoint3d(150, 300, 0)
+  gi.viewCenter = new AcGePoint2d(0, 0)
+  gi.viewTarget = new AcGePoint2d(150, 300)
   gi.viewHeight = 200
   gi.viewTwistAngle = twist
   return gi

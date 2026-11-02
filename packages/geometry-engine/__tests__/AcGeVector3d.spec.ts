@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d, AcGeQuaternion, AcGeVector3d } from '../src'
+import { AcGeMatrix3d, AcGePoint2d, AcGeQuaternion, AcGeVector3d } from '../src'
 
 describe('AcGeVector3d', () => {
   it('supports matrix and quaternion operations', () => {
@@ -13,14 +13,14 @@ describe('AcGeVector3d', () => {
     expect(vec.y).toBeCloseTo(1, 8)
 
     const matrix = new AcGeMatrix3d().makeTranslation(2, 3, 4)
-    const p = new AcGePoint3d(1, 1, 1).applyMatrix4(matrix)
-    expect(p.toArray()).toEqual([3, 4, 5])
+    const p = new AcGePoint2d(1, 1).applyMatrix4(matrix)
+    expect(p.toArray()).toEqual([3, 4])
 
-    const flattened = AcGePoint3d.pointArrayToNumberArray([
-      new AcGePoint3d(1, 2, 3),
-      new AcGePoint3d(4, 5, 6)
+    const flattened = AcGePoint2d.pointArrayToNumberArray([
+      new AcGePoint2d(1, 2),
+      new AcGePoint2d(4, 5)
     ])
-    expect(flattened).toEqual([1, 2, 3, 4, 5, 6])
+    expect(flattened).toEqual([1, 2, 4, 5])
   })
 
   it('covers constructor/index guards, angle edge cases and iterator', () => {
@@ -43,12 +43,12 @@ describe('AcGeVector3d', () => {
     expect([...new AcGeVector3d(4, 5, 6)]).toEqual([4, 5, 6])
   })
 
-  it('AcGePoint3d clone keeps point type and value', () => {
-    const point = new AcGePoint3d(7, 8, 9)
+  it('AcGePoint2d clone keeps point type and value', () => {
+    const point = new AcGePoint2d(7, 8)
     const cloned = point.clone()
 
-    expect(cloned).toBeInstanceOf(AcGePoint3d)
+    expect(cloned).toBeInstanceOf(AcGePoint2d)
     expect(cloned).not.toBe(point)
-    expect(cloned.toArray()).toEqual([7, 8, 9])
+    expect(cloned.toArray()).toEqual([7, 8])
   })
 })

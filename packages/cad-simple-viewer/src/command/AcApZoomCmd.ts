@@ -1,8 +1,8 @@
 import {
   acdbHostApplicationServices,
   AcGeBox2d,
+  AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
   FLOAT_TOL
 } from '@mlightcad/data-model'
 
@@ -174,7 +174,7 @@ export class AcApZoomCmd extends AcEdCommand {
       AcApI18n.t('jig.zoom.secondCorner')
     )
     secondPrompt.useBasePoint = true
-    secondPrompt.basePoint = new AcGePoint3d(firstCorner)
+    secondPrompt.basePoint = new AcGePoint2d(firstCorner)
     secondPrompt.useDashedLine = true
 
     const secondResult =

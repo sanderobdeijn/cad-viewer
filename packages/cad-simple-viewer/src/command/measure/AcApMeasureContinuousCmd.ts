@@ -1,8 +1,8 @@
 import {
   AcCmColor,
   AcDbDatabase,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
@@ -43,20 +43,20 @@ import { MEASUREMENT_LIVE_LAYER } from './AcApMeasurementStore'
 import { newMeasureOverlayId } from './entity/AcApMeasureEntity'
 
 /** Returns the 2D Euclidean distance between two world points. */
-function calcDist(p1: AcGePoint3dLike, p2: AcGePoint3dLike): number {
+function calcDist(p1: AcGePoint2dLike, p2: AcGePoint2dLike): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
   return Math.sqrt(dx * dx + dy * dy)
 }
 
 /** Midpoint of a segment. */
-function midOf(a: AcGePoint3dLike, b: AcGePoint3dLike): AcGePoint3dLike {
-  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: 0 }
+function midOf(a: AcGePoint2dLike, b: AcGePoint2dLike): AcGePoint2dLike {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
 }
 
 /** Snapshot a pick so later getPoint mutations cannot collapse earlier vertices. */
-function clonePoint(p: AcGePoint3dLike): AcGePoint3dLike {
-  return { x: p.x, y: p.y, z: p.z ?? 0 }
+function clonePoint(p: AcGePoint2dLike): AcGePoint2dLike {
+  return { x: p.x, y: p.y }
 }
 
 /**
@@ -66,9 +66,9 @@ function clonePoint(p: AcGePoint3dLike): AcGePoint3dLike {
  * (no AcDb preview). Confirmed vertices stay in `points`; `update` adds the
  * rubber-band to the cursor.
  */
-export class AcApMeasureContinuousJig extends AcEdPreviewJig<AcGePoint3dLike> {
+export class AcApMeasureContinuousJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private readonly _view: AcTrView2d
-  private readonly _points: AcGePoint3dLike[]
+  private readonly _points: AcGePoint2dLike[]
   private readonly _db: AcDbDatabase
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badges: AcTrHtmlBadge[] = []
@@ -78,7 +78,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<AcGePoint3dLike> {
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    points: AcGePoint3dLike[],
+    points: AcGePoint2dLike[],
     color: AcCmColor
   ) {
     super(view)
@@ -100,7 +100,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return null
   }
 
-  update(cursor: AcGePoint3dLike) {
+  update(cursor: AcGePoint2dLike) {
     this._color = acapGetMeasurementColor(this._db)
     const style = acapGetCurrentMeasurementStyle(this._db)
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
@@ -159,7 +159,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<AcGePoint3dLike> {
   }
 
   /** Creates, updates, or hides per-segment live badges. */
-  private syncBadges(vertices: AcGePoint3dLike[], fontSize: number) {
+  private syncBadges(vertices: AcGePoint2dLike[], fontSize: number) {
     const style = acapGetCurrentMeasurementStyle(this._db)
     const needed = Math.max(0, vertices.length - 1)
     while (this._badges.length < needed) {
@@ -218,7 +218,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
     const editor = context.view.editor
     const db = context.doc.database
     const color = acapGetMeasurementColor(db)
-    const points: AcGePoint3dLike[] = []
+    const points: AcGePoint2dLike[] = []
 
     await this.withMeasureInput(context, async () => {
       const p1Prompt = new AcEdPromptPointOptions(
@@ -235,7 +235,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
             AcApI18n.t('jig.measureContinuous.nextPoint')
           )
           prompt.useBasePoint = true
-          prompt.basePoint = new AcGePoint3d(points[points.length - 1])
+          prompt.basePoint = new AcGePoint2d(points[points.length - 1])
           prompt.allowNone = true
           prompt.jig = jig
           const result = await editor.getPoint(prompt)

@@ -4,12 +4,10 @@ import { AcTrBufferGeometryUtil } from '../src/util/AcTrBufferGeometryUtil'
 
 describe('AcTrBufferGeometryUtil finite coordinate helpers', () => {
   it('detects non-finite points', () => {
-    expect(AcTrBufferGeometryUtil.isFinitePoint({ x: 0, y: 0, z: 0 })).toBe(
-      true
+    expect(AcTrBufferGeometryUtil.isFinitePoint({ x: 0, y: 0 })).toBe(true)
+    expect(AcTrBufferGeometryUtil.isFinitePoint({ x: Number.NaN, y: 1 })).toBe(
+      false
     )
-    expect(
-      AcTrBufferGeometryUtil.isFinitePoint({ x: Number.NaN, y: 1, z: 0 })
-    ).toBe(false)
     expect(AcTrBufferGeometryUtil.isFinitePoint(null)).toBe(false)
     expect(AcTrBufferGeometryUtil.isFinitePoint(undefined)).toBe(false)
   })

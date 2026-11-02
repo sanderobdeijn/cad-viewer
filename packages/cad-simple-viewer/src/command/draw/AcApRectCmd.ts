@@ -2,7 +2,6 @@ import {
   AcDbPolyline,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -514,7 +513,7 @@ export class AcApRectCmd extends AcEdCommand {
         addKeyword(prompt, 'rotation')
         prompt.useDashedLine = false
         prompt.useBasePoint = true
-        prompt.basePoint = new AcGePoint3d(firstPoint)
+        prompt.basePoint = new AcGePoint2d(firstPoint)
         prompt.jig = new AcApRectJig(context.view, firstPoint, () => settings)
         return prompt
       }
@@ -672,7 +671,7 @@ export class AcApRectCmd extends AcEdCommand {
     )
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint3d(firstPoint)
+    prompt.basePoint = new AcGePoint2d(firstPoint)
     prompt.allowNegative = true
     prompt.allowZero = true
     prompt.jig = new AcApRectStaticJig<number>(

@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { scaleCopyDisplacement } from '../../editor/input/AcEdBatchPreview'
@@ -16,27 +16,26 @@ import { AcEdBaseView } from '../../editor/view/AcEdBaseView'
  * overlay per copy placement, each with its own translation matrix. The legacy
  * transient clone path publishes once and then updates transforms only.
  */
-export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoint3dLike> {
-  private _basePoint: AcGePoint3d
+export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoint2dLike> {
+  private _basePoint: AcGePoint2d
   private _fitMode: boolean
 
   constructor(
     view: AcEdBaseView,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3dLike,
+    basePoint: AcGePoint2dLike,
     copyCount = 1,
     fitMode = false
   ) {
     super(view, sourceEntities, Math.max(0, copyCount))
-    this._basePoint = new AcGePoint3d(basePoint)
+    this._basePoint = new AcGePoint2d(basePoint)
     this._fitMode = fitMode
   }
 
-  override update(point: AcGePoint3dLike) {
-    const displacement = new AcGePoint3d(
+  override update(point: AcGePoint2dLike) {
+    const displacement = new AcGePoint2d(
       point.x - this._basePoint.x,
-      point.y - this._basePoint.y,
-      point.z - this._basePoint.z
+      point.y - this._basePoint.y
     )
 
     if (this.batchPreview.useBatchPreview && this.copyCount > 1) {
@@ -51,11 +50,10 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoi
     super.update(point)
   }
 
-  protected buildTransforms(point: AcGePoint3dLike) {
-    const displacement = new AcGePoint3d(
+  protected buildTransforms(point: AcGePoint2dLike) {
+    const displacement = new AcGePoint2d(
       point.x - this._basePoint.x,
-      point.y - this._basePoint.y,
-      point.z - this._basePoint.z
+      point.y - this._basePoint.y
     )
     const targets =
       this.previewEntries.length > 0
@@ -70,7 +68,7 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoi
       )
       return {
         objectId: entry.entity.objectId,
-        matrix: new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, scaled.z)
+        matrix: new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
       }
     })
   }

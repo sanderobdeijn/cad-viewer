@@ -1,15 +1,15 @@
-import { AcGeBox2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 /**
  * This class ised used to pass back information to the user about the viewing characteristics of the
  * current viewport.
  */
 export class AcGiViewport {
-  private _centerPoint: AcGePoint3d
+  private _centerPoint: AcGePoint2d
   private _height: number
   private _width: number
-  private _viewCenter: AcGePoint3d
-  private _viewTarget: AcGePoint3d
+  private _viewCenter: AcGePoint2d
+  private _viewTarget: AcGePoint2d
   private _viewTwistAngle: number
   private _viewHeight: number
   private _number: number
@@ -29,11 +29,11 @@ export class AcGiViewport {
     this._number = -1
     this._id = ''
     this._groupId = ''
-    this._centerPoint = new AcGePoint3d()
+    this._centerPoint = new AcGePoint2d()
     this._height = 0
     this._width = 0
-    this._viewCenter = new AcGePoint3d()
-    this._viewTarget = new AcGePoint3d()
+    this._viewCenter = new AcGePoint2d()
+    this._viewTarget = new AcGePoint2d()
     this._viewTwistAngle = 0
     this._viewHeight = 0
     this._frozenLayerIds = []
@@ -123,7 +123,7 @@ export class AcGiViewport {
   get centerPoint() {
     return this._centerPoint
   }
-  set centerPoint(value: AcGePoint3d) {
+  set centerPoint(value: AcGePoint2d) {
     this._centerPoint.copy(value)
   }
 
@@ -166,7 +166,7 @@ export class AcGiViewport {
   get viewCenter() {
     return this._viewCenter
   }
-  set viewCenter(value: AcGePoint3d) {
+  set viewCenter(value: AcGePoint2d) {
     this._viewCenter.copy(value)
   }
 
@@ -179,7 +179,7 @@ export class AcGiViewport {
   get viewTarget() {
     return this._viewTarget
   }
-  set viewTarget(value: AcGePoint3d) {
+  set viewTarget(value: AcGePoint2d) {
     this._viewTarget.copy(value)
   }
 
@@ -238,10 +238,10 @@ export class AcGiViewport {
    * Maps a DCS view center to WCS using the viewport target and twist.
    */
   static dcsCenterToWcs(
-    center: AcGePoint3d,
-    target: AcGePoint3d,
+    center: AcGePoint2d,
+    target: AcGePoint2d,
     twistAngle: number
-  ): AcGePoint3d {
+  ): AcGePoint2d {
     let wcsCenterX = center.x
     let wcsCenterY = center.y
     if (Number.isFinite(twistAngle) && twistAngle !== 0) {
@@ -250,15 +250,11 @@ export class AcGiViewport {
       wcsCenterX = center.x * cos - center.y * sin
       wcsCenterY = center.x * sin + center.y * cos
     }
-    if (
-      target &&
-      Number.isFinite(target.x) &&
-      Number.isFinite(target.y)
-    ) {
+    if (target && Number.isFinite(target.x) && Number.isFinite(target.y)) {
       wcsCenterX += target.x
       wcsCenterY += target.y
     }
-    return new AcGePoint3d(wcsCenterX, wcsCenterY, 0)
+    return new AcGePoint2d(wcsCenterX, wcsCenterY)
   }
 
   /**

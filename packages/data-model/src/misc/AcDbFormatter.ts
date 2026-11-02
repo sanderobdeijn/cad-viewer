@@ -1,8 +1,4 @@
-import {
-  AcGeMathUtil,
-  AcGePoint2d,
-  AcGePoint3d
-} from '@mlightcad/geometry-engine'
+import { AcGeMathUtil, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../database/AcDbDatabase'
 import { AcDbAngleUnits } from './AcDbAngleUnits'
@@ -10,7 +6,8 @@ import { AcDbLinearUnits } from './AcDbLinearUnits'
 import {
   acdbIsImperialUnits,
   acdbIsMetricUnits,
-  AcDbUnitsValue} from './AcDbUnitsValue'
+  AcDbUnitsValue
+} from './AcDbUnitsValue'
 
 /**
  * Per-call options for {@link AcDbFormatter} methods.
@@ -172,26 +169,6 @@ export class AcDbFormatter {
   formatPoint2d(point: AcGePoint2d, options?: AcDbFormatterOptions): string {
     const ctx = this.createContext(options)
     return `${formatLengthWithContext(point.x, ctx)}, ${formatLengthWithContext(point.y, ctx)}`
-  }
-
-  /**
-   * Formats a 3D point as `"x, y, z"`, formatting each component with {@link formatLength}.
-   *
-   * Behavior is the same as {@link formatPoint2d} for **x** and **y**, with **z** appended using
-   * the same linear formatting and options.
-   *
-   * @param point - Point in drawing units (WCS **x** / **y** / **z**).
-   * @param options - Optional display flags applied to each coordinate.
-   * @returns Formatted coordinate triple, for example `"1.2, 4.6, 7.9"`.
-   *
-   * @example
-   * ```typescript
-   * formatter.formatPoint3d(new AcGePoint3d(1, 2, 3)); // "1, 2, 3" (with default decimal LUNITS)
-   * ```
-   */
-  formatPoint3d(point: AcGePoint3d, options?: AcDbFormatterOptions): string {
-    const ctx = this.createContext(options)
-    return `${formatLengthWithContext(point.x, ctx)}, ${formatLengthWithContext(point.y, ctx)}, ${formatLengthWithContext(point.z, ctx)}`
   }
 
   /**

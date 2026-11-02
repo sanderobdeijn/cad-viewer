@@ -2,8 +2,8 @@ import { AcCmColor } from '@mlightcad/common'
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -57,7 +57,7 @@ export enum AcDbArcTextPosition {
 /** One character of an {@link AcDbArcAlignedText}, placed on the arc. */
 export interface AcDbArcAlignedTextGlyph {
   text: string
-  position: AcGePoint3d
+  position: AcGePoint2d
   rotation: number
 }
 
@@ -92,7 +92,7 @@ export class AcDbArcAlignedText extends AcDbEntity {
   private _offsetFromArc = 0
   private _rightOffset = 0
   private _leftOffset = 0
-  private _center = new AcGePoint3d()
+  private _center = new AcGePoint2d()
   private _radius = 0
   private _startAngle = 0
   private _endAngle = 0
@@ -187,10 +187,10 @@ export class AcDbArcAlignedText extends AcDbEntity {
   }
 
   /** Arc center in OCS (DXF group 10). */
-  get center(): AcGePoint3d {
+  get center(): AcGePoint2d {
     return this._center
   }
-  set center(value: AcGePoint3dLike) {
+  set center(value: AcGePoint2dLike) {
     this._center.copy(value)
   }
 
@@ -413,10 +413,9 @@ export class AcDbArcAlignedText extends AcDbEntity {
       if (char === '\n') continue
       const mid = distance + width / 2
       const angle = this._startAngle + mid / radius
-      const local = new AcGePoint3d(
+      const local = new AcGePoint2d(
         this._center.x + radius * Math.cos(angle),
-        this._center.y + radius * Math.sin(angle),
-        this._center.z
+        this._center.y + radius * Math.sin(angle)
       )
       // Group 71 = 1 points glyph tops away from the center. Group 71 = 2
       // points them toward the center, which keeps text upright along the
@@ -451,18 +450,10 @@ export class AcDbArcAlignedText extends AcDbEntity {
       )
       const half = Math.max(width, height) / 2
       box.expandByPoint(
-        new AcGePoint3d(
-          glyph.position.x - half,
-          glyph.position.y - half,
-          glyph.position.z
-        )
+        new AcGePoint2d(glyph.position.x - half, glyph.position.y - half)
       )
       box.expandByPoint(
-        new AcGePoint3d(
-          glyph.position.x + half,
-          glyph.position.y + half,
-          glyph.position.z
-        )
+        new AcGePoint2d(glyph.position.x + half, glyph.position.y + half)
       )
     }
     return box

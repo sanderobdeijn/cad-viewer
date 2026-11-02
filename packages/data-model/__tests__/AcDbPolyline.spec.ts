@@ -1,7 +1,6 @@
 import {
   AcGeMatrix3d,
   AcGePoint2d,
-  AcGePoint3d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
@@ -74,8 +73,8 @@ describe('AcDbPolyline', () => {
     polyline.addVertexAt(1, new AcGePoint2d(3, -4))
 
     const extents = polyline.geometricExtents
-    expect(extents.min).toMatchObject({ x: -1, y: -4, z: 0 })
-    expect(extents.max).toMatchObject({ x: 3, y: 2, z: 0 })
+    expect(extents.min).toMatchObject({ x: -1, y: -4 })
+    expect(extents.max).toMatchObject({ x: 3, y: 2 })
   })
 
   it('updates geometricExtents when vertices change', () => {
@@ -83,12 +82,12 @@ describe('AcDbPolyline', () => {
     polyline.addVertexAt(0, new AcGePoint2d(0, 0))
     polyline.addVertexAt(1, new AcGePoint2d(2, 0))
 
-    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 0, z: 0 })
+    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 0 })
 
     polyline.addVertexAt(2, new AcGePoint2d(2, 5))
 
-    expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 5, z: 0 })
+    expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0 })
+    expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 5 })
   })
 
   it('returns grip points and osnap points for supported modes', () => {
@@ -104,55 +103,55 @@ describe('AcDbPolyline', () => {
 
     const grips = polyline.subGetGripPoints()
     expect(grips).toEqual([
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(2, 0, 0),
-      new AcGePoint3d(2, 3, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(2, 0),
+      new AcGePoint2d(2, 3)
     ])
 
-    const endpointSnaps: AcGePoint3d[] = []
+    const endpointSnaps: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       endpointSnaps
     )
     expect(endpointSnaps).toEqual(grips)
 
-    const midPoints: AcGePoint3d[] = []
+    const midPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(2)
-    expect(midPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(midPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const nearestPoints: AcGePoint3d[] = []
+    const nearestPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
-    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const perpendicularPoints: AcGePoint3d[] = []
+    const perpendicularPoints: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
-    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const centerSnaps: AcGePoint3d[] = []
+    const centerSnaps: AcGePoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       centerSnaps
     )
     expect(centerSnaps).toHaveLength(0)
@@ -174,12 +173,12 @@ describe('AcDbPolyline', () => {
     const grips = polyline.subGetGripPoints()
     expect(grips).toHaveLength(5)
     expect(grips.slice(0, 3)).toEqual([
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(2, 0, 0),
-      new AcGePoint3d(2, 3, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(2, 0),
+      new AcGePoint2d(2, 3)
     ])
-    expect(grips[3]).toMatchObject({ x: 1, y: 0, z: 0 })
-    expect(grips[4]).toMatchObject({ x: 2, y: 1.5, z: 0 })
+    expect(grips[3]).toMatchObject({ x: 1, y: 0 })
+    expect(grips[4]).toMatchObject({ x: 2, y: 1.5 })
 
     manager.setVar(AcDbSystemVariables.GRIPS, oldGrips as number, db)
   })
@@ -316,9 +315,8 @@ describe('AcDbPolyline', () => {
     expect(result).toBe(giEntity)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
 
-    const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint3d[]]
+    const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint2d[]]
     expect(points.length).toBeGreaterThan(1)
-    expect(points.every(point => point.z === 0)).toBe(true)
   })
 
   it('renders constant-width polyline as filled area', () => {
@@ -334,13 +332,11 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(),
       area: jest.fn(() => giEntity),
       offsetRing: jest.fn(() => giEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
-    const [outer, inner] = (renderer.offsetRing as jest.Mock).mock
-      .calls[0] as [
+    const [outer, inner] = (renderer.offsetRing as jest.Mock).mock.calls[0] as [
       Array<{ x: number; y: number; z: number }>,
       Array<{ x: number; y: number; z: number }>
     ]
@@ -362,7 +358,6 @@ describe('AcDbPolyline', () => {
     expect(renderer.area).not.toHaveBeenCalled()
     expect(renderer.lines).not.toHaveBeenCalled()
     expect(outer).toHaveLength(inner.length)
-    expect(outer.every(point => point.z === 0)).toBe(true)
     expect(loopBoxes[0]).toMatchObject({
       minX: -1,
       maxX: 11,
@@ -391,8 +386,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -425,8 +419,7 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       offsetRing: jest.fn(),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -443,7 +436,8 @@ describe('AcDbPolyline', () => {
     expect(renderer.group).toHaveBeenCalledWith([areaEntity, strokeEntity])
     expect(areaArg.loops.length).toBe(1)
     expect(Math.abs(areaArg.area)).toBeGreaterThan(0.5)
-    const strokeArg = (renderer.lines as jest.Mock).mock.calls[0]?.[0] as Array<{
+    const strokeArg = (renderer.lines as jest.Mock).mock
+      .calls[0]?.[0] as Array<{
       x: number
       y: number
     }>
@@ -465,8 +459,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -495,8 +488,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -530,8 +522,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -575,8 +566,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntities.shift()),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -620,8 +610,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(),
       area: jest.fn(),
       offsetRing: jest.fn(() => giEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -656,8 +645,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(),
       area: jest.fn(),
       offsetRing: jest.fn(() => giEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)
@@ -685,8 +673,7 @@ describe('AcDbPolyline', () => {
       lines: jest.fn(() => strokeEntity),
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
-      subEntityTraits: {
-      }
+      subEntityTraits: {}
     }
 
     const result = polyline.subWorldDraw(renderer as never)

@@ -6,22 +6,25 @@ jest.mock('@mlightcad/data-model', () => {
   // Patch AcDbPolyline prototype to add directBatchPrimitive getter
   if (actual.AcDbPolyline) {
     // Store width info per-instance
-    const originalAddVertexAt =
-      actual.AcDbPolyline.prototype.addVertexAt
-    Object.defineProperty(actual.AcDbPolyline.prototype, 'directBatchPrimitive', {
-      get(this: InstanceType<typeof actual.AcDbPolyline>) {
-        // Check if any vertex has non-zero width (startWidth or endWidth)
-        if (this._widths) {
-          for (const w of this._widths) {
-            if (w.startWidth > 0 || w.endWidth > 0) {
-              return 'area'
+    const originalAddVertexAt = actual.AcDbPolyline.prototype.addVertexAt
+    Object.defineProperty(
+      actual.AcDbPolyline.prototype,
+      'directBatchPrimitive',
+      {
+        get(this: InstanceType<typeof actual.AcDbPolyline>) {
+          // Check if any vertex has non-zero width (startWidth or endWidth)
+          if (this._widths) {
+            for (const w of this._widths) {
+              if (w.startWidth > 0 || w.endWidth > 0) {
+                return 'area'
+              }
             }
           }
-        }
-        return 'lineStrip'
-      },
-      configurable: true
-    })
+          return 'lineStrip'
+        },
+        configurable: true
+      }
+    )
 
     // Wrap addVertexAt to track width info and vertices
     actual.AcDbPolyline.prototype.addVertexAt = function (
@@ -38,14 +41,24 @@ jest.mock('@mlightcad/data-model', () => {
       }
       this._widths[index] = { startWidth, endWidth }
       this._vertices[index] = point
-      return originalAddVertexAt.call(this, index, point, bulge, startWidth, endWidth, ...rest)
+      return originalAddVertexAt.call(
+        this,
+        index,
+        point,
+        bulge,
+        startWidth,
+        endWidth,
+        ...rest
+      )
     }
 
     // Patch worldDraw to emit area() for wide polylines
     const originalWorldDraw = actual.AcDbPolyline.prototype.worldDraw
     if (originalWorldDraw) {
       actual.AcDbPolyline.prototype.worldDraw = function (
-        this: InstanceType<typeof actual.AcDbPolyline> & { _vertices?: unknown[] },
+        this: InstanceType<typeof actual.AcDbPolyline> & {
+          _vertices?: unknown[]
+        },
         renderer: unknown
       ) {
         const primitive = this.directBatchPrimitive
@@ -59,7 +72,10 @@ jest.mock('@mlightcad/data-model', () => {
             const pt = vertices[i] as { x: number; y: number }
             loop.push(new AcGePoint2d(pt.x, pt.y))
           }
-          const hierarchy = { index: -1, children: [{ index: 0, children: [] }] }
+          const hierarchy = {
+            index: -1,
+            children: [{ index: 0, children: [] }]
+          }
           // Mock tessellate to return the loop (proper tessellation)
           const area = {
             tessellate: () => [loop],
@@ -86,8 +102,7 @@ import {
   AcDbSpline,
   AcDbText,
   acdbHostApplicationServices,
-  AcGePoint2d,
-  AcGePoint3d
+  AcGePoint2d
 } from '@mlightcad/data-model'
 import {
   defaultBatchDrawPolicy,
@@ -130,24 +145,24 @@ function withWorkingDatabase(run: (db: AcDbDatabase) => void) {
 
 describe('AcTrDirectBatch eligibility', () => {
   it('accepts line-curve candidates and rejects other entity types', () => {
-    expect(isDirectBatchCandidate(new AcDbLine({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }))).toBe(
-      true
-    )
+    expect(
+      isDirectBatchCandidate(new AcDbLine({ x: 0, y: 0 }, { x: 1, y: 0 }))
+    ).toBe(true)
     expect(isDirectBatchCandidate(new AcDbPolyline())).toBe(true)
     expect(
-      isDirectBatchCandidate(new AcDbArc(new AcGePoint3d(0, 0, 0), 10, 0, Math.PI))
+      isDirectBatchCandidate(new AcDbArc(new AcGePoint2d(0, 0), 10, 0, Math.PI))
     ).toBe(true)
-    expect(isDirectBatchCandidate(new AcDbCircle(new AcGePoint3d(0, 0, 0), 5))).toBe(
-      true
-    )
+    expect(
+      isDirectBatchCandidate(new AcDbCircle(new AcGePoint2d(0, 0), 5))
+    ).toBe(true)
     expect(
       isDirectBatchCandidate(
         new AcDbSpline(
           [
-            new AcGePoint3d(0, 0, 0),
-            new AcGePoint3d(1, 1, 0),
-            new AcGePoint3d(2, -1, 0),
-            new AcGePoint3d(3, 0, 0)
+            new AcGePoint2d(0, 0),
+            new AcGePoint2d(1, 1),
+            new AcGePoint2d(2, -1),
+            new AcGePoint2d(3, 0)
           ],
           [0, 0, 0, 0, 1, 1, 1, 1]
         )
@@ -159,10 +174,7 @@ describe('AcTrDirectBatch eligibility', () => {
   it('builds meta for LINE via worldDraw tessellation capture', () => {
     withWorkingDatabase(db => {
       const renderer = createRenderer()
-      const line = new AcDbLine(
-        new AcGePoint3d(0, 0, 0),
-        new AcGePoint3d(10, 0, 0)
-      )
+      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
       db.tables.blockTable.modelSpace.appendEntity(line)
 
       const meta = tryBuildDirectEntityMeta(line, renderer)
@@ -182,7 +194,7 @@ describe('AcTrDirectBatch eligibility', () => {
     withWorkingDatabase(db => {
       const renderer = createRenderer()
 
-      const circle = new AcDbCircle(new AcGePoint3d(0, 0, 0), 5)
+      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 5)
       db.tables.blockTable.modelSpace.appendEntity(circle)
       const circleMeta = tryBuildDirectEntityMeta(circle, renderer)
       expect(circleMeta).not.toBeNull()
@@ -191,7 +203,7 @@ describe('AcTrDirectBatch eligibility', () => {
       expect(circleMeta.wcsBbox.max.x).toBeCloseTo(5, 0)
       circleMeta.geometry.dispose()
 
-      const arc = new AcDbArc(new AcGePoint3d(0, 0, 0), 10, 0, Math.PI)
+      const arc = new AcDbArc(new AcGePoint2d(0, 0), 10, 0, Math.PI)
       db.tables.blockTable.modelSpace.appendEntity(arc)
       const arcMeta = tryBuildDirectEntityMeta(arc, renderer)
       expect(arcMeta).not.toBeNull()
@@ -199,10 +211,10 @@ describe('AcTrDirectBatch eligibility', () => {
 
       const spline = new AcDbSpline(
         [
-          new AcGePoint3d(0, 0, 0),
-          new AcGePoint3d(1, 1, 0),
-          new AcGePoint3d(2, -1, 0),
-          new AcGePoint3d(3, 0, 0)
+          new AcGePoint2d(0, 0),
+          new AcGePoint2d(1, 1),
+          new AcGePoint2d(2, -1),
+          new AcGePoint2d(3, 0)
         ],
         [0, 0, 0, 0, 1, 1, 1, 1]
       )
@@ -234,7 +246,7 @@ describe('AcTrDirectBatch eligibility', () => {
       wide.addVertexAt(3, new AcGePoint2d(0, 5), 0, 1, 1)
       db.tables.blockTable.modelSpace.appendEntity(wide)
       expect(wide.directBatchPrimitive).toBe('area')
-      
+
       const wideMeta = tryBuildDirectEntityMeta(wide, renderer)
       expect(wideMeta).not.toBeNull()
       expect(wideMeta?.kind).toBe('mesh')
@@ -248,8 +260,8 @@ describe('AcTrDirectBatch eligibility', () => {
       renderer.batchDrawPolicy = defaultBatchDrawPolicy
       const largeX = RTE_REBASE_THRESHOLD + 1000
       const line = new AcDbLine(
-        new AcGePoint3d(largeX, 0, 0),
-        new AcGePoint3d(largeX + 10, 0, 0)
+        new AcGePoint2d(largeX, 0),
+        new AcGePoint2d(largeX + 10, 0)
       )
       db.tables.blockTable.modelSpace.appendEntity(line)
 
@@ -257,4 +269,3 @@ describe('AcTrDirectBatch eligibility', () => {
     })
   })
 })
-

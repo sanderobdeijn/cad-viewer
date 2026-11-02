@@ -1,10 +1,11 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   acgeTransformOcsPointToWcs,
   acgeTransformWcsPointToOcs,
+  AcGeVector2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -70,7 +71,7 @@ export enum AcDbTextVerticalMode {
  * // Create a text entity
  * const text = new AcDbText();
  * text.textString = "Hello, World!";
- * text.position = new AcGePoint3d(0, 0, 0);
+ * text.position = new AcGePoint2d(0, 0);
  * text.height = 2.5;
  * text.horizontalMode = AcDbTextHorizontalMode.CENTER;
  * text.verticalMode = AcDbTextVerticalMode.BASELINE;
@@ -96,14 +97,14 @@ export class AcDbText extends AcDbEntity {
   /** The height of the text */
   private _height: number
   /** The insertion point of the text (DXF group 10). */
-  private _position: AcGePoint3d
+  private _position: AcGePoint2d
   /**
    * The alignment point of the text (DXF group 11).
    *
    * Used when {@link horizontalMode} is not LEFT or {@link verticalMode} is
    * not BASELINE. Mirrors `AcDbText::alignmentPoint` in ObjectARX.
    */
-  private _alignmentPoint: AcGePoint3d
+  private _alignmentPoint: AcGePoint2d
   /**
    * Whether the alignment point was explicitly provided by the source file
    * (DXF group 11 / DWG) or set through the API.
@@ -145,7 +146,7 @@ export class AcDbText extends AcDbEntity {
    * ```typescript
    * const text = new AcDbText();
    * text.textString = "Sample Text";
-   * text.position = new AcGePoint3d(10, 20, 0);
+   * text.position = new AcGePoint2d(10, 20);
    * text.height = 3.0;
    * ```
    */
@@ -154,8 +155,8 @@ export class AcDbText extends AcDbEntity {
     this._textString = ''
     this._height = 0
     this._thickness = 1
-    this._position = new AcGePoint3d()
-    this._alignmentPoint = new AcGePoint3d()
+    this._position = new AcGePoint2d()
+    this._alignmentPoint = new AcGePoint2d()
     this._rotation = 0
     this._oblique = 0
     this._horizontalMode = AcDbTextHorizontalMode.LEFT
@@ -260,12 +261,12 @@ export class AcDbText extends AcDbEntity {
   /**
    * Gets the insertion point of the text in WCS coordinates.
    *
-   * @returns The insertion point as a 3D point
+   * @returns The insertion point as a 2D point
    *
    * @example
    * ```typescript
    * const position = text.position;
-   * console.log(`Text position: ${position.x}, ${position.y}, ${position.z}`);
+   * console.log(`Text position: ${position.x}, ${position.y}`);
    * ```
    */
   get position() {
@@ -279,10 +280,10 @@ export class AcDbText extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * text.position = new AcGePoint3d(15, 25, 0);
+   * text.position = new AcGePoint2d(15, 25);
    * ```
    */
-  set position(value: AcGePoint3d) {
+  set position(value: AcGePoint2d) {
     this._position.copy(value)
   }
 
@@ -299,7 +300,7 @@ export class AcDbText extends AcDbEntity {
    * When the horizontal/vertical modes are at their defaults, the alignment
    * point is unused and typically equals {@link position}.
    *
-   * @returns The alignment point as a 3D point
+   * @returns The alignment point as a 2D point
    */
   get alignmentPoint() {
     return this._alignmentPoint
@@ -313,7 +314,7 @@ export class AcDbText extends AcDbEntity {
    *
    * @param value - The new alignment point
    */
-  set alignmentPoint(value: AcGePoint3d) {
+  set alignmentPoint(value: AcGePoint2d) {
     this._alignmentPoint.copy(value)
     this._hasAlignmentPoint = true
   }
@@ -600,7 +601,7 @@ export class AcDbText extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     // Grips are exposed in WCS; storage is OCS — convert the drag delta.
     const ocsOffset = acgeTransformWcsPointToOcs(offset, this._normal)
     acdbMovePrimaryGripPointAt(indices, ocsOffset, this._position)
@@ -624,9 +625,9 @@ export class AcDbText extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (AcDbOsnapMode.Insertion === osnapMode) {
       snapPoints.push(this.pointToWcs(this._position))
@@ -648,19 +649,23 @@ export class AcDbText extends AcDbEntity {
       .add(
         new AcGeVector3d(-Math.sin(this._rotation), Math.cos(this._rotation), 0)
       )
-    const zAxisPoint = this._position.clone().add(new AcGeVector3d(0, 0, 1))
 
     origin.applyMatrix4(matrix)
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
-    zAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(xAxisPoint).sub(origin)
-    const yAxis = new AcGeVector3d(yAxisPoint).sub(origin)
-    const zAxis = new AcGeVector3d(zAxisPoint).sub(origin)
+    const xAxis = new AcGeVector3d(
+      xAxisPoint.x - origin.x,
+      xAxisPoint.y - origin.y,
+      0
+    )
+    const yAxis = new AcGeVector3d(
+      yAxisPoint.x - origin.x,
+      yAxisPoint.y - origin.y,
+      0
+    )
     const yScale = yAxis.length()
     const xScale = xAxis.length()
-    const zScale = zAxis.length()
 
     this._position.copy(origin)
     if (xScale > 0) {
@@ -671,9 +676,6 @@ export class AcDbText extends AcDbEntity {
       if (xScale > 0) {
         this._widthFactor *= xScale / yScale
       }
-    }
-    if (zScale > 0) {
-      this._thickness *= zScale
     }
     const alignmentPoint = this._alignmentPoint.clone()
     alignmentPoint.applyMatrix4(matrix)
@@ -791,17 +793,6 @@ export class AcDbText extends AcDbEntity {
                   this.position.y = v
                 }
               }
-            },
-            {
-              name: 'positionZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.position.z,
-                set: (v: number) => {
-                  this.position.z = v
-                }
-              }
             }
           ]
         }
@@ -873,7 +864,7 @@ export class AcDbText extends AcDbEntity {
   /**
    * Maps an OCS text point into WCS using {@link normal}.
    */
-  private pointToWcs(point: AcGePoint3dLike): AcGePoint3d {
+  private pointToWcs(point: AcGePoint2dLike): AcGePoint2d {
     return acgeTransformOcsPointToWcs(point, this._normal)
   }
 
@@ -888,18 +879,10 @@ export class AcDbText extends AcDbEntity {
     rotation: number
     widthFactor: number
   } {
-    if (
-      this._normal.x === 0 &&
-      this._normal.y === 0 &&
-      this._normal.z === 1
-    ) {
+    if (this._normal.x === 0 && this._normal.y === 0 && this._normal.z === 1) {
       return { rotation: this._rotation, widthFactor: this._widthFactor }
     }
-    if (
-      this._normal.x === 0 &&
-      this._normal.y === 0 &&
-      this._normal.z < 0
-    ) {
+    if (this._normal.x === 0 && this._normal.y === 0 && this._normal.z < 0) {
       return {
         rotation: -this._rotation,
         widthFactor: -this._widthFactor
@@ -927,7 +910,7 @@ export class AcDbText extends AcDbEntity {
    * When group 11 is missing, falls back to LEFT/BASELINE at `position`.
    */
   private resolveTextAnchor(): {
-    anchor: AcGePoint3d
+    anchor: AcGePoint2d
     attachmentPoint: AcGiMTextAttachmentPoint
   } {
     const attachmentPoint = this.resolveAttachmentPoint()
@@ -942,9 +925,7 @@ export class AcDbText extends AcDbEntity {
     // group 11 equal to group 10 when the insertion point coincides with the
     // alignment point. The all-zero check stays as a guard for files that
     // carry a degenerate zero group 11.
-    const apIsUnset =
-      !this._hasAlignmentPoint ||
-      (ap.x === 0 && ap.y === 0 && ap.z === 0)
+    const apIsUnset = !this._hasAlignmentPoint || (ap.x === 0 && ap.y === 0)
     if (apIsUnset) {
       return {
         anchor: this.pointToWcs(this._position),

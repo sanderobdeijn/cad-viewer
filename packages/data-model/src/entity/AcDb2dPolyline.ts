@@ -3,12 +3,12 @@ import {
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
   AcGePoint2d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGePolyline2d,
   AcGePolyline2dVertex,
   acgeTransformOcsPointToWcs,
   acgeTransformWcsPointToOcs,
+  AcGeVector2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -88,7 +88,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    */
   constructor(
     type: AcDbPoly2dType,
-    vertices: AcGePoint3dLike[],
+    vertices: AcGePoint2dLike[],
     elevation = 0,
     closed = false,
     _startWidth = 0,
@@ -257,11 +257,8 @@ export class AcDb2dPolyline extends AcDbCurve {
   /**
    * Maps an OCS polyline point (plus elevation) into WCS using {@link normal}.
    */
-  private ocsPointToWcs(x: number, y: number): AcGePoint3d {
-    return acgeTransformOcsPointToWcs(
-      { x, y, z: this._elevation },
-      this._normal
-    )
+  private ocsPointToWcs(x: number, y: number): AcGePoint2d {
+    return acgeTransformOcsPointToWcs({ x, y }, this._normal)
   }
 
   /** @inheritdoc */
@@ -269,7 +266,6 @@ export class AcDb2dPolyline extends AcDbCurve {
     return acdbIntersectPrimitivesFromPolyline2d(
       this._geo.vertices,
       this.closed,
-      this._elevation,
       this._normal
     )
   }
@@ -283,7 +279,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * @returns Array of grip points (all vertices)
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
+    const gripPoints = new Array<AcGePoint2d>()
     for (let i = 0; i < this._geo.numberOfVertices; ++i) {
       const temp = this._geo.getPointAt(i)
       gripPoints.push(this.ocsPointToWcs(temp.x, temp.y))
@@ -292,7 +288,7 @@ export class AcDb2dPolyline extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     // Grips are exposed in WCS; 2D vertices are stored in OCS.
     const ocsOffset = acgeTransformWcsPointToOcs(offset, this._normal)
     acdbForEachGripIndex(indices, index => {
@@ -315,12 +311,11 @@ export class AcDb2dPolyline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     const geo = this._geo
-    const elevation = this._elevation
     const vertexCount = geo.numberOfVertices
     if (vertexCount === 0) return
 
@@ -336,14 +331,13 @@ export class AcDb2dPolyline extends AcDbCurve {
       case AcDbOsnapMode.Perpendicular:
       case AcDbOsnapMode.Tangent: {
         const segmentCount = this.closed ? vertexCount : vertexCount - 1
-        const candidates: AcGePoint3d[] = []
+        const candidates: AcGePoint2d[] = []
         for (let index = 0; index < segmentCount; index++) {
-          const segmentSnaps: AcGePoint3d[] = []
+          const segmentSnaps: AcGePoint2d[] = []
           acdbCollectPolyline2dSegmentOsnapPoints(
             geo.getPointAt(index),
             geo.getPointAt((index + 1) % vertexCount),
             geo.vertices[index]?.bulge,
-            elevation,
             osnapMode,
             pickPoint,
             segmentSnaps
@@ -370,23 +364,17 @@ export class AcDb2dPolyline extends AcDbCurve {
    */
   transformBy(matrix: AcGeMatrix3d) {
     const flipBulge = matrix.determinant() < 0
-    let elevation = this._elevation
-
     this._geo.vertices.forEach(vertex => {
-      const transformedPoint = new AcGePoint3d(
-        vertex.x,
-        vertex.y,
-        this._elevation
-      ).applyMatrix4(matrix)
+      const transformedPoint = new AcGePoint2d(vertex.x, vertex.y).applyMatrix4(
+        matrix
+      )
       vertex.x = transformedPoint.x
       vertex.y = transformedPoint.y
-      elevation = transformedPoint.z
       if (flipBulge && vertex.bulge != null) {
         vertex.bulge = -vertex.bulge
       }
     })
 
-    this._elevation = elevation
     this._normal.transformDirection(matrix)
     if (this._normal.lengthSq() > 0) {
       this._normal.normalize()
@@ -495,7 +483,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * @returns The rendered polyline entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const points: AcGePoint3d[] = []
+    const points: AcGePoint2d[] = []
     const tmp = this._geo.tessellate(acdbDrawTessellateOptions(renderer))
     tmp.forEach(point => points.push(this.ocsPointToWcs(point.x, point.y)))
     return renderer.lines(points)
@@ -518,7 +506,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * Projects the entity to a sampled 2D path and delegates the side test to a
    * temporary {@link AcDbPolyline}.
    */
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const path = this.collectPath2d()
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, this.closed).getOffsetSideAtPoint(

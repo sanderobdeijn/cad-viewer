@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbLine } from '../src/entity/AcDbLine'
 import { AcDbMText } from '../src/entity/AcDbMText'
@@ -35,7 +35,7 @@ describe('AcDbMemoryEstimator', () => {
     for (let i = 0; i < 50; i++) {
       appendEntityToModelSpace(
         db,
-        new AcDbLine(new AcGePoint3d(i, 0, 0), new AcGePoint3d(i, 1, 0))
+        new AcDbLine(new AcGePoint2d(i, 0), new AcGePoint2d(i, 1))
       )
     }
 

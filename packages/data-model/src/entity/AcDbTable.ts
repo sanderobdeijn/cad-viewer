@@ -2,7 +2,7 @@ import { AcCmColor } from '@mlightcad/common'
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeQuaternion,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
@@ -450,13 +450,17 @@ export class AcDbTable extends AcDbBlockReference {
 
     const quaternion = new AcGeQuaternion()
     quaternion.setFromAxisAngle(AcGeVector3d.Z_AXIS, this.rotation)
-    _tmpMatrix.compose(this.position, quaternion, this.scaleFactors)
+    _tmpMatrix.compose(
+      new AcGeVector3d(this.position.x, this.position.y, 0),
+      quaternion,
+      new AcGeVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
+    )
 
     const localCorners = [
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(totalWidth, 0, 0),
-      new AcGePoint3d(totalWidth, -totalHeight, 0),
-      new AcGePoint3d(0, -totalHeight, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(totalWidth, 0),
+      new AcGePoint2d(totalWidth, -totalHeight),
+      new AcGePoint2d(0, -totalHeight)
     ]
 
     for (const corner of localCorners) {
@@ -547,17 +551,6 @@ export class AcDbTable extends AcDbBlockReference {
                 get: () => this.position.y,
                 set: (v: number) => {
                   this.position.y = v
-                }
-              }
-            },
-            {
-              name: 'positionZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.position.z,
-                set: (v: number) => {
-                  this.position.z = v
                 }
               }
             }
@@ -688,7 +681,11 @@ export class AcDbTable extends AcDbBlockReference {
     const group = renderer.group(results)
     const quaternion = new AcGeQuaternion()
     quaternion.setFromAxisAngle(AcGeVector3d.Z_AXIS, this.rotation)
-    _tmpMatrix.compose(this.position, quaternion, this.scaleFactors)
+    _tmpMatrix.compose(
+      new AcGeVector3d(this.position.x, this.position.y, 0),
+      quaternion,
+      new AcGeVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
+    )
     group.applyMatrix(_tmpMatrix)
     return group
   }

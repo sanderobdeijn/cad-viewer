@@ -1,4 +1,4 @@
-import { AcGePoint2dLike, AcGePoint3d } from '@mlightcad/data-model'
+import { AcGePoint2d, AcGePoint2dLike } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../../app'
 import { AcEdBaseView } from '../../view'
@@ -47,7 +47,7 @@ export interface AcEdRubberBandOptions {
  */
 export class AcEdRubberBand {
   private view: AcEdBaseView
-  private basePoint?: AcGePoint3d
+  private basePoint?: AcGePoint2d
 
   private container: HTMLDivElement | null = null
 
@@ -109,7 +109,7 @@ export class AcEdRubberBand {
    * @param basePoint The starting point in world coordinates.
    */
   start(basePoint: AcGePoint2dLike, options?: AcEdRubberBandOptions) {
-    this.basePoint = new AcGePoint3d(basePoint)
+    this.basePoint = new AcGePoint2d(basePoint)
     this.options = options || {}
 
     const color = this.options.color || 'var(--ml-ui-canvas-line, #0f0)'

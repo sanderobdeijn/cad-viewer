@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGeMatrix3d, AcGePoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Builds a world-space rotation matrix around a given base point.
@@ -8,17 +8,13 @@ import { AcGeMatrix3d, AcGePoint3dLike } from '@mlightcad/data-model'
  * @returns Composite transform that rotates around `basePoint`.
  */
 export function createRotationMatrix(
-  basePoint: AcGePoint3dLike,
+  basePoint: AcGePoint2dLike,
   angleRad: number
 ) {
   return new AcGeMatrix3d()
-    .makeTranslation(basePoint.x, basePoint.y, basePoint.z)
+    .makeTranslation(basePoint.x, basePoint.y, 0)
     .multiply(new AcGeMatrix3d().makeRotationZ(angleRad))
     .multiply(
-      new AcGeMatrix3d().makeTranslation(
-        -basePoint.x,
-        -basePoint.y,
-        -basePoint.z
-      )
+      new AcGeMatrix3d().makeTranslation(-basePoint.x, -basePoint.y, -0)
     )
 }

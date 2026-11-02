@@ -20,8 +20,8 @@ function createLine(
 ) {
   const line = new AcTrLine(
     [
-      { x: start.x, y: start.y, z: 0 },
-      { x: end.x, y: end.y, z: 0 }
+      { x: start.x, y: start.y },
+      { x: end.x, y: end.y }
     ],
     defaultTraits,
     context,
@@ -350,9 +350,9 @@ describe('AcTrGroup wcsBbox', () => {
     insertA.layerName = 'Wall'
 
     expect(insertA.isOnTheSameLayer).toBe(false)
-    expect(
-      insertA.children.map(child => child.userData.layerName)
-    ).toEqual(['DIM'])
+    expect(insertA.children.map(child => child.userData.layerName)).toEqual([
+      'DIM'
+    ])
     expect(
       insertA.children.map(child => child.userData.authoredLayerName)
     ).toEqual(['0'])
@@ -536,9 +536,9 @@ describe('AcTrGroup dispose', () => {
     expect(group.isCompacted).toBe(true)
     expect((first.children[0] as THREE.Mesh).geometry).toBe(sourceGeometry)
     expect((second.children[0] as THREE.Mesh).geometry).toBe(sourceGeometry)
-    expect(getSceneDrawableUserData(first.children[0]).sharesTemplateGeometry).toBe(
-      true
-    )
+    expect(
+      getSceneDrawableUserData(first.children[0]).sharesTemplateGeometry
+    ).toBe(true)
     expect(first.peekLazyChildBoxes()?.boxes).toBe(sourceBoxes)
     expect(second.peekLazyChildBoxes()?.boxes).toBe(sourceBoxes)
     expect(first.childBoxCount).toBe(sourceBoxes.length)
@@ -616,17 +616,21 @@ describe('AcTrGroup dispose', () => {
     cloned.addChild(attribute)
     cloned.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 0, 0))
 
-    expect(cloned.wcsChildBoxes.find(box => box.id === 'line-a')).toMatchObject({
-      minX: 100,
-      minY: 0,
-      maxX: 110,
-      maxY: 0
-    })
-    expect(cloned.wcsChildBoxes.find(box => box.id === 'attr-1')).toMatchObject({
-      minX: 101,
-      minY: 1,
-      maxX: 105,
-      maxY: 1
-    })
+    expect(cloned.wcsChildBoxes.find(box => box.id === 'line-a')).toMatchObject(
+      {
+        minX: 100,
+        minY: 0,
+        maxX: 110,
+        maxY: 0
+      }
+    )
+    expect(cloned.wcsChildBoxes.find(box => box.id === 'attr-1')).toMatchObject(
+      {
+        minX: 101,
+        minY: 1,
+        maxX: 105,
+        maxY: 1
+      }
+    )
   })
 })

@@ -1,16 +1,12 @@
 import {
   AcGeArea2d,
   AcGeCircArc2d,
-  AcGeCircArc3d,
   AcGeEllipseArc2d,
-  AcGeEllipseArc3d,
   AcGeLine2d,
   AcGeLoop2d,
   AcGePolyline2d,
-  AcGeSpline3d,
-  AcGeVector3d,
+  AcGeSpline2d,
   ORIGIN_POINT_2D,
-  ORIGIN_POINT_3D,
   TAU
 } from '../src'
 
@@ -71,37 +67,17 @@ describe('AcGeCurveTessellate', () => {
     })
 
     it('samples a short 2d arc with far fewer than 101 points', () => {
-      const arc = new AcGeCircArc2d(
-        ORIGIN_POINT_2D,
-        1,
-        0,
-        Math.PI / 18,
-        false
-      )
+      const arc = new AcGeCircArc2d(ORIGIN_POINT_2D, 1, 0, Math.PI / 18, false)
       const points = arc.tessellate()
       expect(points.length).toBeGreaterThan(1)
       expect(points.length).toBeLessThan(20)
     })
 
-    it('samples a 3d quarter arc with fewer points than a full circle', () => {
-      const arc = new AcGeCircArc3d(
-        ORIGIN_POINT_3D,
-        2,
-        0,
-        Math.PI / 2,
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS
-      )
-      const circle = new AcGeCircArc3d(
-        ORIGIN_POINT_3D,
-        2,
-        0,
-        TAU,
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS
-      )
+    it('samples a quarter arc given as a full circle sweep with fewer points than a full circle', () => {
+      const arc = new AcGeCircArc2d(ORIGIN_POINT_2D, 2, 0, Math.PI / 2, false)
+      const circle = new AcGeCircArc2d(ORIGIN_POINT_2D, 2, 0, TAU, false)
       expect(arc.tessellate().length).toBeLessThan(circle.tessellate().length)
-      expect(AcGeCircArc3d.segmentCount(2, Math.PI / 2)).toBe(
+      expect(AcGeCircArc2d.segmentCount(2, Math.PI / 2)).toBe(
         AcGeCircArc2d.segmentCount(2, Math.PI / 2)
       )
     })
@@ -109,28 +85,12 @@ describe('AcGeCurveTessellate', () => {
 
   describe('ellipse tessellate', () => {
     it('uses the circular closed-form path when the radii are equal', () => {
-      const ellipse = new AcGeEllipseArc3d(
-        ORIGIN_POINT_3D,
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS,
-        3,
-        3,
-        0,
-        TAU
-      )
+      const ellipse = new AcGeEllipseArc2d(ORIGIN_POINT_2D, 3, 3, 0, TAU)
       expect(ellipse.tessellate()).toHaveLength(101)
     })
 
     it('keeps an eccentric ellipse within the evaluation budget', () => {
-      const ellipse = new AcGeEllipseArc3d(
-        ORIGIN_POINT_3D,
-        AcGeVector3d.Z_AXIS,
-        AcGeVector3d.X_AXIS,
-        10,
-        1,
-        0,
-        TAU
-      )
+      const ellipse = new AcGeEllipseArc2d(ORIGIN_POINT_2D, 10, 1, 0, TAU)
       const points = ellipse.tessellate({ maxSegments: 40 })
       expect(points.length).toBeGreaterThan(2)
       expect(points.length).toBeLessThanOrEqual(40)
@@ -139,12 +99,12 @@ describe('AcGeCurveTessellate', () => {
 
   describe('spline tessellate', () => {
     it('uses fewer than 100 points for a nearly linear spline', () => {
-      const spline = new AcGeSpline3d(
+      const spline = new AcGeSpline2d(
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 0, z: 0 },
-          { x: 2, y: 0, z: 0 },
-          { x: 3, y: 0, z: 0 }
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 2, y: 0 },
+          { x: 3, y: 0 }
         ],
         [0, 0, 0, 0, 1, 1, 1, 1]
       )
@@ -155,12 +115,12 @@ describe('AcGeCurveTessellate', () => {
     })
 
     it('caps output at maxSegments', () => {
-      const spline = new AcGeSpline3d(
+      const spline = new AcGeSpline2d(
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 4, z: 0 },
-          { x: 2, y: -4, z: 0 },
-          { x: 3, y: 0, z: 0 }
+          { x: 0, y: 0 },
+          { x: 1, y: 4 },
+          { x: 2, y: -4 },
+          { x: 3, y: 0 }
         ],
         [0, 0, 0, 0, 1, 1, 1, 1]
       )

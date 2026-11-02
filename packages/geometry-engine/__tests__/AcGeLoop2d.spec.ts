@@ -4,7 +4,7 @@ import {
   AcGeLine2d,
   AcGeLoop2d,
   AcGeMatrix2d,
-  AcGeSpline3d
+  AcGeSpline2d
 } from '../src'
 
 describe('AcGeLoop2d', () => {
@@ -50,11 +50,11 @@ describe('AcGeLoop2d', () => {
       false,
       0
     )
-    const splineReverse = new AcGeSpline3d(
+    const splineReverse = new AcGeSpline2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0.5, z: 0 },
-        { x: 0, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 0, y: 0.5 },
+        { x: 0, y: 1 }
       ],
       [0, 0, 0, 1, 1, 1],
       [],
@@ -71,11 +71,11 @@ describe('AcGeLoop2d', () => {
 
     const loopWithSpline = new AcGeLoop2d([
       lineA,
-      new AcGeSpline3d(
+      new AcGeSpline2d(
         [
-          { x: 1, y: 0, z: 0 },
-          { x: 1, y: 0.5, z: 0 },
-          { x: 0, y: 1, z: 0 }
+          { x: 1, y: 0 },
+          { x: 1, y: 0.5 },
+          { x: 0, y: 1 }
         ],
         [0, 0, 0, 1, 1, 1],
         [],
@@ -150,26 +150,26 @@ describe('AcGeLoop2d', () => {
     const reversedEllipse = reverseEdge(ellipse) as AcGeEllipseArc2d
     expect(reversedEllipse.startAngle).toBeCloseTo(ellipse.endAngle, 8)
 
-    const splineWithWeights = new AcGeSpline3d(
+    const splineWithWeights = new AcGeSpline2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 2, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 2, y: 0 }
       ],
       [0, 0, 0, 1, 1, 1],
       [1, 2, 3],
       2,
       false
     )
-    const reversedWeighted = reverseEdge(splineWithWeights) as AcGeSpline3d
+    const reversedWeighted = reverseEdge(splineWithWeights) as AcGeSpline2d
     expect(reversedWeighted.controlPoints[0].x).toBeCloseTo(2, 8)
     expect(reversedWeighted.weights[0]).toBe(3)
 
-    const splineNoWeights = new AcGeSpline3d(
+    const splineNoWeights = new AcGeSpline2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 },
-        { x: 0, y: 2, z: 0 }
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: 2 }
       ],
       [0, 0, 0, 1, 1, 1],
       [],
@@ -179,7 +179,7 @@ describe('AcGeLoop2d', () => {
     Object.defineProperty(splineNoWeights, 'weights', {
       get: () => []
     })
-    const reversedNoWeights = reverseEdge(splineNoWeights) as AcGeSpline3d
+    const reversedNoWeights = reverseEdge(splineNoWeights) as AcGeSpline2d
     expect(reversedNoWeights.weights.length).toBeGreaterThan(0)
   })
 
@@ -195,7 +195,13 @@ describe('AcGeLoop2d', () => {
     const center = { x: 348.92244, y: 368.76477 }
     const radius = 22.28497
     // Physical start below center, end above — matches the reflected Y values in #432.
-    const arc = new AcGeCircArc2d(center, radius, -Math.PI / 2, Math.PI / 2, false)
+    const arc = new AcGeCircArc2d(
+      center,
+      radius,
+      -Math.PI / 2,
+      Math.PI / 2,
+      false
+    )
     expect(arc.startPoint.y).toBeCloseTo(center.y - radius, 5)
     expect(arc.endPoint.y).toBeCloseTo(center.y + radius, 5)
 
@@ -205,9 +211,9 @@ describe('AcGeLoop2d', () => {
     expect(reversed.endPoint.x).toBeCloseTo(arc.startPoint.x, 6)
     expect(reversed.endPoint.y).toBeCloseTo(arc.startPoint.y, 6)
     // Must not produce the complementary arc reflected across the center.
-    expect(Math.abs(reversed.startPoint.y - (2 * center.y - arc.endPoint.y))).toBeGreaterThan(
-      1
-    )
+    expect(
+      Math.abs(reversed.startPoint.y - (2 * center.y - arc.endPoint.y))
+    ).toBeGreaterThan(1)
 
     // buildFromEdges must reverse the arc to connect without reflecting it.
     const line = new AcGeLine2d(

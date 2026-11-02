@@ -103,7 +103,7 @@ describe('AcApMTextCmd', () => {
 
     expect(mockOpenMTextEditor).toHaveBeenCalledWith(
       expect.objectContaining({
-        location: { x: 10, y: 80, z: 0 },
+        location: { x: 10, y: 80 },
         width: 100,
         textHeight: 12
       })
@@ -114,7 +114,6 @@ describe('AcApMTextCmd', () => {
     expect(entity.contents).toBe('Hello')
     expect(entity.location.x).toBe(10)
     expect(entity.location.y).toBe(70)
-    expect(entity.location.z).toBe(0)
     expect(entity.width).toBe(100)
     expect(entity.height).toBe(24)
   })

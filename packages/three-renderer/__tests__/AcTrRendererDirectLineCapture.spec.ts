@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/data-model'
+import { AcGePoint2d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../src/renderer/AcTrRenderer'
@@ -15,8 +15,8 @@ describe('AcTrRenderer direct capture', () => {
     const renderer = createRenderer()
     renderer.beginDirectCapture()
     const placeholder = renderer.lines([
-      { x: 0, y: 0, z: 0 },
-      { x: 5, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 5, y: 0 }
     ])
     expect(placeholder.children).toHaveLength(0)
 
@@ -24,8 +24,8 @@ describe('AcTrRenderer direct capture', () => {
     expect(payload).toEqual({
       kind: 'lineStrip',
       points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 5, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 5, y: 0 }
       ]
     })
   })
@@ -33,8 +33,11 @@ describe('AcTrRenderer direct capture', () => {
   it('captures point() payload without creating AcTrPoint children', () => {
     const renderer = createRenderer()
     renderer.beginDirectCapture()
-    const point = new AcGePoint3d(10, 20, 0)
-    const placeholder = renderer.point(point, { displayMode: 0, displaySize: 0 })
+    const point = new AcGePoint2d(10, 20)
+    const placeholder = renderer.point(point, {
+      displayMode: 0,
+      displaySize: 0
+    })
     expect(placeholder.children).toHaveLength(0)
 
     const payload = renderer.takeDirectCapture()
@@ -48,7 +51,13 @@ describe('AcTrRenderer direct capture', () => {
 
   it('captures area() payload without building AcTrPolygon geometry', () => {
     const renderer = createRenderer()
-    const loops = [[{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 5 }]]
+    const loops = [
+      [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 5 }
+      ]
+    ]
     const area = {
       getPoints: () => loops,
       tessellate: () => loops,
@@ -84,12 +93,12 @@ describe('AcTrRenderer direct capture', () => {
     const renderer = createRenderer()
     renderer.beginDirectCapture()
     renderer.lines([
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 1, y: 0 }
     ])
     renderer.lines([
-      { x: 2, y: 0, z: 0 },
-      { x: 3, y: 0, z: 0 }
+      { x: 2, y: 0 },
+      { x: 3, y: 0 }
     ])
     expect(renderer.takeDirectCapture()).toBeNull()
   })

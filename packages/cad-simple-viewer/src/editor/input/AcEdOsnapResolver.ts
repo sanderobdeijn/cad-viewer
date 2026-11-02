@@ -10,11 +10,9 @@ import {
   AcDbObjectId,
   AcDbOsnapMode,
   AcGeBox3d,
-  AcGeGeometryUtil,
   AcGeMatrix3d,
-  AcGePoint2dLike,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
@@ -34,7 +32,7 @@ import { AcEdMarkerType } from './marker/AcEdMarker'
 
 export type { AcEdOsnapCenterMark } from './AcEdOsnapCenterMarks'
 
-export type AcEdOsnapPoint = AcGePoint3dLike & {
+export type AcEdOsnapPoint = AcGePoint2dLike & {
   type: AcDbOsnapMode
 }
 
@@ -42,7 +40,7 @@ export interface AcEdOsnapResolveOptions {
   /** WCS point used as the osnap pick and proximity reference. */
   cursorWcs: AcGePoint2dLike
   /** Previous point passed to entity osnap queries. */
-  lastPoint?: AcGePoint3dLike
+  lastPoint?: AcGePoint2dLike
   /** Screen-space pick aperture radius in pixels. */
   hitRadiusPx?: number
 }
@@ -124,8 +122,8 @@ function transformedEntityCopy(
 
   if (entity instanceof AcDbLine) {
     return new AcDbLine(
-      new AcGePoint3d(entity.startPoint).applyMatrix4(matrix),
-      new AcGePoint3d(entity.endPoint).applyMatrix4(matrix)
+      new AcGePoint2d(entity.startPoint).applyMatrix4(matrix),
+      new AcGePoint2d(entity.endPoint).applyMatrix4(matrix)
     )
   }
 
@@ -133,7 +131,7 @@ function transformedEntityCopy(
     const scale = matrix.getMaxScaleOnAxis()
     if (!(scale > 0) || !Number.isFinite(scale)) return undefined
     return new AcDbCircle(
-      new AcGePoint3d(entity.center).applyMatrix4(matrix),
+      new AcGePoint2d(entity.center).applyMatrix4(matrix),
       entity.radius * scale
     )
   }
@@ -142,7 +140,7 @@ function transformedEntityCopy(
     const scale = matrix.getMaxScaleOnAxis()
     if (!(scale > 0) || !Number.isFinite(scale)) return undefined
     return new AcDbArc(
-      new AcGePoint3d(entity.center).applyMatrix4(matrix),
+      new AcGePoint2d(entity.center).applyMatrix4(matrix),
       entity.radius * scale,
       entity.startAngle,
       entity.endAngle,
@@ -162,12 +160,12 @@ function isLightIntersectionEntity(entity: AcDbEntity): boolean {
  * Maps local intersect points through `frame` into WCS.
  */
 function mapIntersectPointsToWcs(
-  local: AcGePoint3d[],
+  local: AcGePoint2d[],
   frame: AcGeMatrix3d
-): AcGePoint3d[] {
+): AcGePoint2d[] {
   if (isIdentityTransform(frame)) return local
   return local.map(point =>
-    new AcGePoint3d(point.x, point.y, point.z).applyMatrix4(frame)
+    new AcGePoint2d(point.x, point.y).applyMatrix4(frame)
   )
 }
 
@@ -181,9 +179,12 @@ function mapIntersectPointsToWcs(
 function intersectSources(
   a: IntersectionSource,
   b: IntersectionSource
-): AcGePoint3d[] {
+): AcGePoint2d[] {
   if (a.transform.equals(b.transform)) {
-    return mapIntersectPointsToWcs(a.entity.intersectWith(b.entity), a.transform)
+    return mapIntersectPointsToWcs(
+      a.entity.intersectWith(b.entity),
+      a.transform
+    )
   }
 
   const bToA = new AcGeMatrix3d().multiplyMatrices(
@@ -264,7 +265,6 @@ export class AcEdOsnapResolver {
       snapPoints.push({
         x: mark.x,
         y: mark.y,
-        z: mark.z,
         type: AcDbOsnapMode.Center
       })
     }
@@ -338,8 +338,8 @@ export class AcEdOsnapResolver {
     entity: AcDbEntity,
     osnapMode: AcDbOsnapMode,
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint3dLike,
-    lastPoint: AcGePoint3dLike,
+    pickPoint: AcGePoint2dLike,
+    lastPoint: AcGePoint2dLike,
     gsMark?: AcDbObjectId
   ) {
     const start = osnapPoints.length
@@ -359,8 +359,8 @@ export class AcEdOsnapResolver {
   private collectOsnapPointsInAvailableModes(
     entity: AcDbEntity,
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint3dLike,
-    lastPoint: AcGePoint3dLike,
+    pickPoint: AcGePoint2dLike,
+    lastPoint: AcGePoint2dLike,
     gsMark?: AcDbObjectId
   ) {
     const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
@@ -385,18 +385,18 @@ export class AcEdOsnapResolver {
   private collectOsnapPointsFromResolvedSubEntity(
     found: { entity: AcDbEntity; transform: AcGeMatrix3d },
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint3dLike,
-    lastPoint: AcGePoint3dLike
+    pickPoint: AcGePoint2dLike,
+    lastPoint: AcGePoint2dLike
   ) {
     const inverse = found.transform.clone().invert()
-    const localPick = new AcGePoint3d(pickPoint).applyMatrix4(inverse)
-    const localLast = new AcGePoint3d(lastPoint).applyMatrix4(inverse)
+    const localPick = new AcGePoint2d(pickPoint).applyMatrix4(inverse)
+    const localLast = new AcGePoint2d(lastPoint).applyMatrix4(inverse)
     const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
     const isNestedInsert = found.entity instanceof AcDbBlockReference
 
     for (const mode of modes) {
       if (mode === AcDbOsnapMode.Intersection) continue
-      const localSnapPoints: AcGePoint3dLike[] = []
+      const localSnapPoints: AcGePoint2dLike[] = []
       if (isNestedInsert) {
         // Preserve INSERT self-marker semantics used by subEntityGetOsnapPoints.
         found.entity.subGetOsnapPoints(
@@ -411,7 +411,6 @@ export class AcEdOsnapResolver {
           osnapPoints.push({
             x: point.x,
             y: point.y,
-            z: point.z ?? 0,
             type: mode
           })
         }
@@ -423,11 +422,10 @@ export class AcEdOsnapResolver {
           localSnapPoints
         )
         for (const point of localSnapPoints) {
-          const world = new AcGePoint3d(point).applyMatrix4(found.transform)
+          const world = new AcGePoint2d(point).applyMatrix4(found.transform)
           osnapPoints.push({
             x: world.x,
             y: world.y,
-            z: world.z,
             type: mode
           })
         }
@@ -440,7 +438,7 @@ export class AcEdOsnapResolver {
     minY?: number
     maxX?: number
     maxY?: number
-  }): AcGePoint3dLike | undefined {
+  }): AcGePoint2dLike | undefined {
     if (
       child.minX == null ||
       child.minY == null ||
@@ -451,8 +449,7 @@ export class AcEdOsnapResolver {
     }
     return {
       x: (child.minX + child.maxX) / 2,
-      y: (child.minY + child.maxY) / 2,
-      z: 0
+      y: (child.minY + child.maxY) / 2
     }
   }
 
@@ -573,7 +570,6 @@ export class AcEdOsnapResolver {
           osnapPoints.push({
             x: paperPoint.x,
             y: paperPoint.y,
-            z: point.z,
             type: AcDbOsnapMode.Intersection
           })
         }
@@ -605,8 +601,8 @@ export class AcEdOsnapResolver {
     const results = this._view.pick(cursorWcs, hitRadiusPx)
     const db = acdbHostApplicationServices().workingDatabase
     const osnapPoints: AcEdOsnapPoint[] = []
-    const pickPoint = AcGeGeometryUtil.point2dToPoint3d(cursorWcs)
-    const last = AcGeGeometryUtil.point2dToPoint3d(lastPoint)
+    const pickPoint = cursorWcs
+    const last = lastPoint
 
     results.forEach(item => {
       const entity = AcEdOsnapResolver.getEntityById(db, item.id)
@@ -624,12 +620,8 @@ export class AcEdOsnapResolver {
       // space — that reintroduces the wrong-space snap from #746.
       if (item.viewportId != null && !mapper) return
 
-      const queryPickPoint = mapper
-        ? AcGeGeometryUtil.point2dToPoint3d(mapper.paperToModel(cursorWcs))
-        : pickPoint
-      const queryLastPoint = mapper
-        ? AcGeGeometryUtil.point2dToPoint3d(mapper.paperToModel(lastPoint))
-        : last
+      const queryPickPoint = mapper ? mapper.paperToModel(cursorWcs) : pickPoint
+      const queryLastPoint = mapper ? mapper.paperToModel(lastPoint) : last
 
       const localPoints: AcEdOsnapPoint[] = []
       if (item.children && item.children.length > 0) {
@@ -680,7 +672,6 @@ export class AcEdOsnapResolver {
         osnapPoints.push({
           x: paperPoint.x,
           y: paperPoint.y,
-          z: point.z,
           type: point.type
         })
       }
@@ -709,7 +700,7 @@ export class AcEdOsnapResolver {
   private updateAcquiredCenters(
     results: AcEdSpatialQueryResultItemEx[],
     db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
-    pickPoint: AcGePoint3dLike
+    pickPoint: AcGePoint2dLike
   ) {
     if (
       !acdbHasOsnapMode(
@@ -732,9 +723,7 @@ export class AcEdOsnapResolver {
           : undefined
       if (item.viewportId != null && !mapper) return
 
-      const queryPickPoint = mapper
-        ? AcGeGeometryUtil.point2dToPoint3d(mapper.paperToModel(pickPoint))
-        : pickPoint
+      const queryPickPoint = mapper ? mapper.paperToModel(pickPoint) : pickPoint
 
       const localMarks: AcEdOsnapCenterMark[] = []
       if (item.children && item.children.length > 0) {

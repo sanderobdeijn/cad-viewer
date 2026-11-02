@@ -1,9 +1,4 @@
-import {
-  AcDbEntity,
-  AcGeCircArc3d,
-  AcGePoint3d,
-  AcGeVector3d
-} from '@mlightcad/data-model'
+import { AcDbEntity, AcGeCircArc2d, AcGePoint2d } from '@mlightcad/data-model'
 
 import { AcTrGeometrySanitizer } from '../src/util/AcTrGeometrySanitizer'
 
@@ -12,23 +7,23 @@ describe('AcTrGeometrySanitizer', () => {
     AcTrGeometrySanitizer.resetDiagnosticsForTests()
   })
 
-  it('repairs circular arcs with a degenerate reference vector', () => {
-    const arc = new AcGeCircArc3d(
-      new AcGePoint3d(10, 20, 0),
+  it('rejects circular arcs that cannot be drawn', () => {
+    const arc = new AcGeCircArc2d(
+      new AcGePoint2d(10, 20),
       5,
       0,
       Math.PI / 2,
-      new AcGeVector3d(0, 0, 1),
-      new AcGeVector3d(0, 0, 0)
+      false
     )
+    expect(AcTrGeometrySanitizer.repairCircArc(arc)).toBe(arc)
 
-    const repaired = AcTrGeometrySanitizer.repairCircArc3d(arc)
-    expect(repaired).not.toBeNull()
-    expect(
-      repaired!
-        .getPoints(8)
-        .every(point => AcTrGeometrySanitizer.isFinitePoint(point))
-    ).toBe(true)
+    const noRadius = new AcGeCircArc2d(new AcGePoint2d(0, 0), 5, 0, 1, false)
+    noRadius.radius = 0
+    expect(AcTrGeometrySanitizer.repairCircArc(noRadius)).toBeNull()
+
+    const noCenter = new AcGeCircArc2d(new AcGePoint2d(0, 0), 5, 0, 1, false)
+    noCenter.center = { x: Number.NaN, y: 0 }
+    expect(AcTrGeometrySanitizer.repairCircArc(noCenter)).toBeNull()
   })
 
   it('logs entity context when non-finite points are dropped', () => {
@@ -41,8 +36,8 @@ describe('AcTrGeometrySanitizer', () => {
 
     AcTrGeometrySanitizer.filterFinitePoints(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: Number.NaN, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: Number.NaN, y: 1 }
       ],
       { currentDrawingEntity: entity }
     )

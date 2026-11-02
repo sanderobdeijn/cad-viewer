@@ -1,11 +1,12 @@
-import { AcGePoint3dLike } from '../math'
+import { AcGePoint2dLike } from '../math'
 
-export function acgeIsNonZeroDirection(vector?: AcGePoint3dLike | null): boolean {
+export function acgeIsNonZeroDirection(
+  vector?: AcGePoint2dLike | null
+): boolean {
   if (!vector) return false
   const x = vector.x ?? 0
   const y = vector.y ?? 0
-  const z = vector.z ?? 0
-  return x * x + y * y + z * z > 1e-20
+  return x * x + y * y > 1e-20
 }
 
 export function acgeResolveControlPointSplineDegree(

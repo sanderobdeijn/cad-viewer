@@ -1,5 +1,5 @@
 import { defaults } from '@mlightcad/common'
-import { AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbObjectId } from '../base/AcDbObject'
 import { AcDbEntity } from '../entity/AcDbEntity'
@@ -24,7 +24,7 @@ import {
  * ```typescript
  * const blockRecord = new AcDbBlockTableRecord();
  * blockRecord.name = 'MyBlock';
- * blockRecord.origin = new AcGePoint3d(0, 0, 0);
+ * blockRecord.origin = new AcGePoint2d(0, 0);
  * blockRecord.appendEntity(new AcDbLine());
  * ```
  */
@@ -62,7 +62,7 @@ export enum AcDbBlockTableRecordFlag {
  */
 export interface AcDbBlockTableRecordAttrs extends AcDbSymbolTableRecordAttrs {
   /** The base point of the block in WCS coordinates */
-  origin: AcGePoint3d
+  origin: AcGePoint2d
   /** The object id of the associated AcDbLayout object in the Layouts dictionary */
   layoutId: AcDbObjectId
   /** Block insertion units (DXF group code 70 on BLOCK_RECORD) */
@@ -154,10 +154,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
   static sanitizeImportedFlags(flags: number) {
     return (
       flags &
-      ~(
-        AcDbBlockTableRecordFlag.Resolved |
-        AcDbBlockTableRecordFlag.Referenced
-      )
+      ~(AcDbBlockTableRecordFlag.Resolved | AcDbBlockTableRecordFlag.Referenced)
     )
   }
 
@@ -178,7 +175,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
   ) {
     attrs = attrs || {}
     defaults(attrs, {
-      origin: new AcGePoint3d(),
+      origin: new AcGePoint2d(),
       layoutId: '',
       flags: AcDbBlockTableRecordFlag.None,
       pathName: '',
@@ -238,13 +235,13 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
    * @example
    * ```typescript
    * const origin = blockRecord.origin;
-   * blockRecord.origin = new AcGePoint3d(10, 20, 0);
+   * blockRecord.origin = new AcGePoint2d(10, 20);
    * ```
    */
   get origin() {
     return this.getAttr('origin')
   }
-  set origin(value: AcGePoint3d) {
+  set origin(value: AcGePoint2d) {
     this.getAttr('origin').copy(value)
   }
 
@@ -563,4 +560,3 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
     return this.getIdAt(id) !== undefined
   }
 }
-

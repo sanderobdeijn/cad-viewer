@@ -1,8 +1,8 @@
 import {
   AcDbMLine,
   AcDbMLineJustification,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol,
   AcGeVector3dLike,
   DEFAULT_TOL
@@ -29,9 +29,9 @@ import { AcApI18n } from '../../i18n'
 /**
  * Preview jig that renders an MLINE from confirmed points and the current cursor point.
  */
-export class AcApMLineJig extends AcEdPreviewJig<AcGePoint3dLike> {
+export class AcApMLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private _mline: AcDbMLine
-  private _points: AcGePoint3d[]
+  private _points: AcGePoint2d[]
   private _resolveState: () => {
     justification: AcDbMLineJustification
     scale: number
@@ -41,7 +41,7 @@ export class AcApMLineJig extends AcEdPreviewJig<AcGePoint3dLike> {
 
   constructor(
     view: AcEdBaseView,
-    points: AcGePoint3d[],
+    points: AcGePoint2d[],
     resolveState: () => {
       justification: AcDbMLineJustification
       scale: number
@@ -71,9 +71,9 @@ export class AcApMLineJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return this._mline
   }
 
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     if (this._points.length <= 0) return
-    const previewPoints = [...this._points, new AcGePoint3d(point)]
+    const previewPoints = [...this._points, new AcGePoint2d(point)]
     const state = this._resolveState()
     applyMLineGeometry(
       this._mline,
@@ -106,7 +106,7 @@ export class AcApMLineCmd extends AcEdCommand {
     let scale = db.cmlscale ?? 1
     let styleName = db.cmlstyle || 'STANDARD'
 
-    const points: AcGePoint3d[] = []
+    const points: AcGePoint2d[] = []
     let shouldClose = false
     const resolveStyleElementOffsets = () => {
       const style = db.objects.mlineStyle.getAt(styleName)
@@ -116,8 +116,8 @@ export class AcApMLineCmd extends AcEdCommand {
         scale
       )
     }
-    const appendPoint = (point: AcGePoint3dLike) =>
-      points.push(new AcGePoint3d(point))
+    const appendPoint = (point: AcGePoint2dLike) =>
+      points.push(new AcGePoint2d(point))
     const undoLastPoint = () => {
       if (points.length > 1) {
         points.pop()
@@ -127,7 +127,7 @@ export class AcApMLineCmd extends AcEdCommand {
       if (points.length <= 1) return
       const first = points[0]
       const current = points[points.length - 1]
-      if (!isSamePoint3d(first, current)) {
+      if (!isSamePoint2d(first, current)) {
         appendPoint(first)
       }
       shouldClose = true
@@ -299,7 +299,7 @@ export class AcApMLineCmd extends AcEdCommand {
         }
         prompt.useDashedLine = true
         prompt.useBasePoint = true
-        prompt.basePoint = new AcGePoint3d(points[points.length - 1])
+        prompt.basePoint = new AcGePoint2d(points[points.length - 1])
         prompt.jig = new AcApMLineJig(context.view, points, () => ({
           justification,
           scale,
@@ -363,7 +363,7 @@ export class AcApMLineCmd extends AcEdCommand {
 
 function applyMLineGeometry(
   mline: AcDbMLine,
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   styleName: string,
   justification: AcDbMLineJustification,
   scale: number,
@@ -393,7 +393,7 @@ function applyMLineGeometry(
 }
 
 function createMLineSegments(
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   elementOffsets: number[]
 ) {
   const edgeDirections = createEdgeDirections(points)
@@ -415,7 +415,7 @@ function createMLineSegments(
   })
 }
 
-function createEdgeDirections(points: AcGePoint3dLike[]): AcGeVector3dLike[] {
+function createEdgeDirections(points: AcGePoint2dLike[]): AcGeVector3dLike[] {
   const directions: AcGeVector3dLike[] = []
   for (let i = 0; i < points.length - 1; i++) {
     const from = points[i]
@@ -423,7 +423,7 @@ function createEdgeDirections(points: AcGePoint3dLike[]): AcGeVector3dLike[] {
     const direction = normalizeVector({
       x: to.x - from.x,
       y: to.y - from.y,
-      z: to.z - from.z
+      z: 0
     })
     directions.push(direction ?? { x: 1, y: 0, z: 0 })
   }
@@ -520,6 +520,6 @@ function dotVector(a: AcGeVector3dLike, b: AcGeVector3dLike): number {
   return a.x * b.x + a.y * b.y + a.z * b.z
 }
 
-function isSamePoint3d(a: AcGePoint3dLike, b: AcGePoint3dLike): boolean {
-  return DEFAULT_TOL.equalPoint3d(a, b)
+function isSamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike): boolean {
+  return DEFAULT_TOL.equalPoint2d(a, b)
 }

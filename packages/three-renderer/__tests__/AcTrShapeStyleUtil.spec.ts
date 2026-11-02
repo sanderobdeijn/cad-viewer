@@ -77,7 +77,7 @@ describe('resolveShapeTextStyle', () => {
 
     const context = new AcTrRenderContext()
     const resolved = resolveShapeTextStyle(
-      { name: 'ARROW', size: 1, position: { x: 0, y: 0, z: 0 } },
+      { name: 'ARROW', size: 1, position: { x: 0, y: 0 } },
       style,
       context
     )
@@ -118,7 +118,7 @@ describe('resolveShapeTextStyle', () => {
       {
         name: '_GV_',
         size: 0.01,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       },
       makeStyle('pipe', 'romans'),
       context
@@ -157,7 +157,7 @@ describe('resolveShapeTextStyle', () => {
       {
         name: 'ARROW',
         size: 2,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       },
       undefined,
       context
@@ -194,7 +194,7 @@ describe('resolveShapeTextStyle', () => {
       {
         shapeNumber: 65,
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       },
       style,
       context
@@ -229,7 +229,7 @@ describe('resolveShapeTextStyle', () => {
         name: 'MISSING',
         shapeNumber: 65,
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       },
       style,
       context
@@ -258,7 +258,7 @@ describe('resolveShapeTextStyle', () => {
       {
         name: 'MISSING',
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       },
       null,
       context
@@ -275,7 +275,7 @@ describe('resolveShapeGlyphKey', () => {
         name: 'ARROW',
         shapeNumber: 65,
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       })
     ).toEqual({ byName: 'ARROW' })
   })
@@ -285,7 +285,7 @@ describe('resolveShapeGlyphKey', () => {
       resolveShapeGlyphKey({
         shapeNumber: 65,
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       })
     ).toEqual({ byCode: 65 })
   })
@@ -296,7 +296,7 @@ describe('resolveShapeGlyphKey', () => {
         name: '9',
         shapeNumber: 9,
         size: 1,
-        position: { x: 0, y: 0, z: 0 }
+        position: { x: 0, y: 0 }
       })
     ).toEqual({ byCode: 9 })
   })

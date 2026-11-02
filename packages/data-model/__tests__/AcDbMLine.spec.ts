@@ -87,45 +87,45 @@ describe('AcDbMLine', () => {
     const endPoints: Array<{ x: number; y: number; z: number }> = []
     mline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      { x: 0, y: 0, z: 0 },
-      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
       endPoints
     )
     expect(endPoints).toHaveLength(3)
-    expect(endPoints[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(endPoints[1]).toMatchObject({ x: 10, y: 0, z: 0 })
-    expect(endPoints[2]).toMatchObject({ x: 20, y: 0, z: 0 })
+    expect(endPoints[0]).toMatchObject({ x: 0, y: 0 })
+    expect(endPoints[1]).toMatchObject({ x: 10, y: 0 })
+    expect(endPoints[2]).toMatchObject({ x: 20, y: 0 })
 
     const midPoints: Array<{ x: number; y: number; z: number }> = []
     mline.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      { x: 0, y: 0, z: 0 },
-      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
       midPoints
     )
     expect(midPoints).toHaveLength(2)
-    expect(midPoints[0]).toMatchObject({ x: 5, y: 0, z: 0 })
-    expect(midPoints[1]).toMatchObject({ x: 15, y: 0, z: 0 })
+    expect(midPoints[0]).toMatchObject({ x: 5, y: 0 })
+    expect(midPoints[1]).toMatchObject({ x: 15, y: 0 })
 
     const nearestPoints: Array<{ x: number; y: number; z: number }> = []
     mline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      { x: 5, y: 2, z: 0 },
-      { x: 0, y: 0, z: 0 },
+      { x: 5, y: 2 },
+      { x: 0, y: 0 },
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
-    expect(nearestPoints[0]).toMatchObject({ x: 5, y: 0, z: 0 })
+    expect(nearestPoints[0]).toMatchObject({ x: 5, y: 0 })
 
     const perpendicularPoints: Array<{ x: number; y: number; z: number }> = []
     mline.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      { x: 5, y: 2, z: 0 },
-      { x: 0, y: 0, z: 0 },
+      { x: 5, y: 2 },
+      { x: 0, y: 0 },
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
-    expect(perpendicularPoints[0]).toMatchObject({ x: 5, y: 0, z: 0 })
+    expect(perpendicularPoints[0]).toMatchObject({ x: 5, y: 0 })
   })
 
   it('ensures database default mline style exists when appending a new MLINE', () => {
@@ -362,33 +362,32 @@ describe('AcDbMLine', () => {
     const normalize = (path: Array<{ x: number; y: number; z: number }>) =>
       path.map(point => ({
         x: Number(point.x.toFixed(6)),
-        y: Number(point.y.toFixed(6)),
-        z: Number(point.z.toFixed(6))
+        y: Number(point.y.toFixed(6))
       }))
 
     expect(renderer.circularArc).not.toHaveBeenCalled()
     expect(captured).toHaveLength(5)
     expect(normalize(captured[0])).toEqual([
-      { x: 0.5, y: 0.5, z: 0 },
-      { x: 10, y: 0.5, z: 0 },
-      { x: 20.5, y: 0.5, z: 0 }
+      { x: 0.5, y: 0.5 },
+      { x: 10, y: 0.5 },
+      { x: 20.5, y: 0.5 }
     ])
     expect(normalize(captured[1])).toEqual([
-      { x: -0.5, y: -0.5, z: 0 },
-      { x: 10, y: -0.5, z: 0 },
-      { x: 19.5, y: -0.5, z: 0 }
+      { x: -0.5, y: -0.5 },
+      { x: 10, y: -0.5 },
+      { x: 19.5, y: -0.5 }
     ])
     expect(normalize(captured[2])).toEqual([
-      { x: 10, y: 0.5, z: 0 },
-      { x: 10, y: -0.5, z: 0 }
+      { x: 10, y: 0.5 },
+      { x: 10, y: -0.5 }
     ])
     expect(normalize(captured[3])).toEqual([
-      { x: 0.5, y: 0.5, z: 0 },
-      { x: -0.5, y: -0.5, z: 0 }
+      { x: 0.5, y: 0.5 },
+      { x: -0.5, y: -0.5 }
     ])
     expect(normalize(captured[4])).toEqual([
-      { x: 20.5, y: 0.5, z: 0 },
-      { x: 19.5, y: -0.5, z: 0 }
+      { x: 20.5, y: 0.5 },
+      { x: 19.5, y: -0.5 }
     ])
   })
 
@@ -548,12 +547,12 @@ describe('AcDbMLine', () => {
 
     expect(capturedPaths).toHaveLength(2)
     expect(capturedPaths[0]).toEqual([
-      { x: 0, y: 10, z: 0 },
-      { x: 10, y: 10, z: 0 }
+      { x: 0, y: 10 },
+      { x: 10, y: 10 }
     ])
     expect(capturedPaths[1]).toEqual([
-      { x: 0, y: -10, z: 0 },
-      { x: 10, y: -10, z: 0 }
+      { x: 0, y: -10 },
+      { x: 10, y: -10 }
     ])
   })
 
@@ -603,12 +602,12 @@ describe('AcDbMLine', () => {
 
     expect(capturedPaths).toHaveLength(2)
     expect(capturedPaths[0]).toEqual([
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 }
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }
     ])
     expect(capturedPaths[1]).toEqual([
-      { x: 0, y: -20, z: 0 },
-      { x: 10, y: -20, z: 0 }
+      { x: 0, y: -20 },
+      { x: 10, y: -20 }
     ])
   })
 
@@ -693,9 +692,9 @@ describe('AcDbMLine', () => {
     const grips = mline.subGetGripPoints()
 
     expect(grips).toHaveLength(3)
-    expect(grips[0]).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(grips[1]).toMatchObject({ x: 10, y: 0, z: 0 })
-    expect(grips[2]).toMatchObject({ x: 20, y: 0, z: 0 })
+    expect(grips[0]).toMatchObject({ x: 0, y: 0 })
+    expect(grips[1]).toMatchObject({ x: 10, y: 0 })
+    expect(grips[2]).toMatchObject({ x: 20, y: 0 })
   })
 
   it('moves only the selected reference-path grip via subMoveGripPointsAt', () => {

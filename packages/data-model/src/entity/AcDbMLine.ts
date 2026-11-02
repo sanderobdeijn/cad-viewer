@@ -1,18 +1,14 @@
 import {
   AcGeArea2d,
   AcGeBox3d,
-  AcGeCircArc3d,
+  AcGeCircArc2d,
   AcGeIntersectPrimitive,
   AcGeMatrix3d,
   AcGePoint2d,
   AcGePoint2dLike,
-  acgePoint2dTo3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
   AcGePolyline2d,
   AcGeVector2d,
-  AcGeVector2dLike,
-  AcGeVector3dLike
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -471,7 +467,7 @@ export class AcDbMLine extends AcDbEntity {
   get geometricExtents() {
     const points = this.collectGeometryPoints()
     const box = new AcGeBox3d()
-    return box.setFromPoints(points.map(acgePoint2dTo3d))
+    return box.setFromPoints(points)
   }
 
   /** @inheritdoc */
@@ -481,14 +477,14 @@ export class AcDbMLine extends AcDbEntity {
     const elementCount = this.getRenderableElementCount(mlineStyle)
     if (elementCount <= 0) {
       return acdbIntersectPrimitivesFromPointPath(
-        this.getReferencePath().map(acgePoint2dTo3d),
+        this.getReferencePath(),
         this.closed
       )
     }
     for (let i = 0; i < elementCount; i++) {
       primitives.push(
         ...acdbIntersectPrimitivesFromPointPath(
-          this.getElementPath(i, mlineStyle).map(acgePoint2dTo3d),
+          this.getElementPath(i, mlineStyle),
           this.closed
         )
       )
@@ -591,19 +587,17 @@ export class AcDbMLine extends AcDbEntity {
    * Grip points are placed at the start point and each segment vertex,
    * matching AutoCAD MLINE grip behavior on the reference path.
    *
-   * @returns Array of grip points as 3D points at Z = 0
+   * @returns Array of grip points as 2D points at Z = 0
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(acgePoint2dTo3d(this._startPosition))
-    this._segments.forEach(segment =>
-      gripPoints.push(acgePoint2dTo3d(segment.position))
-    )
+    const gripPoints = new Array<AcGePoint2d>()
+    gripPoints.push(this._startPosition)
+    this._segments.forEach(segment => gripPoints.push(segment.position))
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     const gripPoints = [
       this._startPosition,
       ...this._segments.map(segment => segment.position)
@@ -620,9 +614,9 @@ export class AcDbMLine extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     const path = [
       this._startPosition,
@@ -632,17 +626,17 @@ export class AcDbMLine extends AcDbEntity {
 
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
-        snapPoints.push(...path.map(acgePoint2dTo3d))
+        snapPoints.push(...path)
         break
       case AcDbOsnapMode.MidPoint:
       case AcDbOsnapMode.Nearest:
       case AcDbOsnapMode.Perpendicular: {
-        const candidates: AcGePoint3d[] = []
+        const candidates: AcGePoint2d[] = []
         for (let index = 0; index < path.length - 1; index++) {
-          const segmentSnaps: AcGePoint3d[] = []
+          const segmentSnaps: AcGePoint2d[] = []
           acdbCollectLineSegmentOsnapPoints(
-            acgePoint2dTo3d(path[index]),
-            acgePoint2dTo3d(path[index + 1]),
+            path[index],
+            path[index + 1],
             osnapMode,
             pickPoint,
             segmentSnaps
@@ -691,8 +685,7 @@ export class AcDbMLine extends AcDbEntity {
 
     if (elementCount <= 0) {
       const reference = this.getReferencePath()
-      if (reference.length >= 2)
-        entities.push(renderer.lines(reference.map(acgePoint2dTo3d)))
+      if (reference.length >= 2) entities.push(renderer.lines(reference))
     } else {
       for (let elementIndex = 0; elementIndex < elementCount; elementIndex++) {
         traits.color = originalColor
@@ -700,7 +693,7 @@ export class AcDbMLine extends AcDbEntity {
         this.applyStyleElementTraits(mlineStyle, elementIndex, traits)
         const points = this.getElementPath(elementIndex, mlineStyle)
         if (points.length >= 2) {
-          entities.push(renderer.lines(points.map(acgePoint2dTo3d)))
+          entities.push(renderer.lines(points))
         }
       }
       this.appendStyleDrivenJointAndCapEntities(
@@ -1416,12 +1409,7 @@ export class AcDbMLine extends AcDbEntity {
           mlineStyle,
           points[i].elementIndex
         )
-        entities.push(
-          renderer.lines([
-            acgePoint2dTo3d(points[i].point),
-            acgePoint2dTo3d(points[i + 1].point)
-          ])
-        )
+        entities.push(renderer.lines([points[i].point, points[i + 1].point]))
       }
     }
 
@@ -1521,12 +1509,7 @@ export class AcDbMLine extends AcDbEntity {
           mlineStyle,
           points[i].elementIndex
         )
-        entities.push(
-          renderer.lines([
-            acgePoint2dTo3d(points[i].point),
-            acgePoint2dTo3d(points[i + 1].point)
-          ])
-        )
+        entities.push(renderer.lines([points[i].point, points[i + 1].point]))
       }
     }
 
@@ -1649,10 +1632,10 @@ export class AcDbMLine extends AcDbEntity {
         .normalize()
         .multiplyScalar(chord / 2)
     )
-    const arc = AcGeCircArc3d.createByThreePoints(
-      acgePoint2dTo3d(arcStartPoint),
-      acgePoint2dTo3d(arcEndPoint),
-      acgePoint2dTo3d(pointOnArc)
+    const arc = AcGeCircArc2d.tryCreateByThreePoints(
+      arcStartPoint,
+      pointOnArc,
+      arcEndPoint
     )
     if (!arc) return undefined
 
@@ -1695,14 +1678,14 @@ export class AcDbMLine extends AcDbEntity {
    * @param matrix Transformation matrix.
    */
   private transformVector(vector: AcGeVector2d, matrix: AcGeMatrix3d) {
-    const origin = new AcGePoint3d().applyMatrix4(matrix)
-    const endpoint = new AcGePoint3d(vector.x, vector.y, 0).applyMatrix4(matrix)
+    const origin = new AcGePoint2d().applyMatrix4(matrix)
+    const endpoint = new AcGePoint2d(vector.x, vector.y).applyMatrix4(matrix)
     vector.set(endpoint.x - origin.x, endpoint.y - origin.y)
   }
 
   /** Transforms a point in place, keeping the XY part of the result. */
   private transformPoint(point: AcGePoint2d, matrix: AcGeMatrix3d) {
-    point.copy(acgePoint2dTo3d(point).applyMatrix4(matrix))
+    point.copy(point.applyMatrix4(matrix))
   }
 
   /**

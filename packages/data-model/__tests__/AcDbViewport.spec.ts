@@ -1,7 +1,7 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
@@ -35,27 +35,27 @@ describe('AcDbViewport', () => {
     expect(viewport.height).toBe(0)
     expect(viewport.width).toBe(0)
     expect(viewport.viewHeight).toBe(0)
-    expect(viewport.centerPoint).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(viewport.viewCenter).toMatchObject({ x: 0, y: 0, z: 0 })
-    expect(viewport.viewTarget).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(viewport.centerPoint).toMatchObject({ x: 0, y: 0 })
+    expect(viewport.viewCenter).toMatchObject({ x: 0, y: 0 })
+    expect(viewport.viewTarget).toMatchObject({ x: 0, y: 0 })
     expect(viewport.viewTwistAngle).toBe(0)
 
     viewport.number = 2
     viewport.height = 8
     viewport.width = 12
     viewport.viewHeight = 24
-    viewport.centerPoint = new AcGePoint3d(10, 20, 0)
-    viewport.viewCenter = new AcGePoint3d(5, 6, 0)
-    viewport.viewTarget = new AcGePoint3d(100, 200, 0)
+    viewport.centerPoint = new AcGePoint2d(10, 20)
+    viewport.viewCenter = new AcGePoint2d(5, 6)
+    viewport.viewTarget = new AcGePoint2d(100, 200)
     viewport.viewTwistAngle = Math.PI / 4
 
     expect(viewport.number).toBe(2)
     expect(viewport.height).toBe(8)
     expect(viewport.width).toBe(12)
     expect(viewport.viewHeight).toBe(24)
-    expect(viewport.centerPoint).toMatchObject({ x: 10, y: 20, z: 0 })
-    expect(viewport.viewCenter).toMatchObject({ x: 5, y: 6, z: 0 })
-    expect(viewport.viewTarget).toMatchObject({ x: 100, y: 200, z: 0 })
+    expect(viewport.centerPoint).toMatchObject({ x: 10, y: 20 })
+    expect(viewport.viewCenter).toMatchObject({ x: 5, y: 6 })
+    expect(viewport.viewTarget).toMatchObject({ x: 100, y: 200 })
     expect(viewport.viewTwistAngle).toBeCloseTo(Math.PI / 4)
   })
 
@@ -66,8 +66,8 @@ describe('AcDbViewport', () => {
     viewport.width = 10
     viewport.height = 6
     viewport.viewHeight = 20
-    viewport.centerPoint = new AcGePoint3d(2, 4, 0)
-    viewport.viewCenter = new AcGePoint3d(1, 1, 0)
+    viewport.centerPoint = new AcGePoint2d(2, 4)
+    viewport.viewCenter = new AcGePoint2d(1, 1)
     db.tables.blockTable.modelSpace.appendEntity(viewport)
 
     expect(viewport.geometricExtents).toBeInstanceOf(AcGeBox3d)
@@ -79,9 +79,9 @@ describe('AcDbViewport', () => {
     expect(giViewport.width).toBe(10)
     expect(giViewport.height).toBe(6)
     expect(giViewport.viewHeight).toBe(20)
-    expect(giViewport.centerPoint).toMatchObject({ x: 2, y: 4, z: 0 })
-    expect(giViewport.viewCenter).toMatchObject({ x: 1, y: 1, z: 0 })
-    expect(giViewport.viewTarget).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(giViewport.centerPoint).toMatchObject({ x: 2, y: 4 })
+    expect(giViewport.viewCenter).toMatchObject({ x: 1, y: 1 })
+    expect(giViewport.viewTarget).toMatchObject({ x: 0, y: 0 })
     expect(giViewport.viewTwistAngle).toBe(0)
     expect(giViewport.frozenLayerIds).toEqual([])
     expect(giViewport.frozenLayers).toEqual([])
@@ -97,7 +97,10 @@ describe('AcDbViewport', () => {
     db.tables.blockTable.modelSpace.appendEntity(viewport)
 
     const giViewport = viewport.toGiViewport()
-    expect(giViewport.frozenLayerIds).toEqual([layer.objectId, 'missing-handle'])
+    expect(giViewport.frozenLayerIds).toEqual([
+      layer.objectId,
+      'missing-handle'
+    ])
     expect(giViewport.frozenLayers).toEqual(['DetailA'])
 
     const cloned = giViewport.clone()
@@ -111,16 +114,11 @@ describe('AcDbViewport', () => {
     viewport.width = 420
     viewport.height = 296.6468489892975
     viewport.viewHeight = 8899.405469678924
-    viewport.viewCenter = new AcGePoint3d(
+    viewport.viewCenter = new AcGePoint2d(
       -1108628.2173647524,
-      -354100.8830431862,
-      0
+      -354100.8830431862
     )
-    viewport.viewTarget = new AcGePoint3d(
-      1111867.66380098,
-      300645.9460363481,
-      -24329.16594455871
-    )
+    viewport.viewTarget = new AcGePoint2d(1111867.66380098, 300645.9460363481)
     db.tables.blockTable.modelSpace.appendEntity(viewport)
 
     const giViewport = viewport.toGiViewport()
@@ -138,20 +136,20 @@ describe('AcDbViewport', () => {
     const viewport = new AcDbViewport()
     viewport.width = 10
     viewport.height = 6
-    viewport.centerPoint = new AcGePoint3d(10, 20, 0)
+    viewport.centerPoint = new AcGePoint2d(10, 20)
 
-    expect(viewport.geometricExtents.min).toMatchObject({ x: 5, y: 17, z: 0 })
-    expect(viewport.geometricExtents.max).toMatchObject({ x: 15, y: 23, z: 0 })
+    expect(viewport.geometricExtents.min).toMatchObject({ x: 5, y: 17 })
+    expect(viewport.geometricExtents.max).toMatchObject({ x: 15, y: 23 })
 
-    viewport.centerPoint = new AcGePoint3d(0, 0, 0)
+    viewport.centerPoint = new AcGePoint2d(0, 0)
 
-    expect(viewport.geometricExtents.min).toMatchObject({ x: -5, y: -3, z: 0 })
-    expect(viewport.geometricExtents.max).toMatchObject({ x: 5, y: 3, z: 0 })
+    expect(viewport.geometricExtents.min).toMatchObject({ x: -5, y: -3 })
+    expect(viewport.geometricExtents.max).toMatchObject({ x: 5, y: 3 })
   })
 
   it('transforms center/size/viewHeight and returns self', () => {
     const viewport = new AcDbViewport()
-    viewport.centerPoint = new AcGePoint3d(1, 2, 0)
+    viewport.centerPoint = new AcGePoint2d(1, 2)
     viewport.width = 2
     viewport.height = 4
     viewport.viewHeight = 12
@@ -159,7 +157,7 @@ describe('AcDbViewport', () => {
     expect(viewport.transformBy(new AcGeMatrix3d().makeScale(3, 2, 1))).toBe(
       viewport
     )
-    expect(viewport.centerPoint).toMatchObject({ x: 3, y: 4, z: 0 })
+    expect(viewport.centerPoint).toMatchObject({ x: 3, y: 4 })
     expect(viewport.width).toBeCloseTo(6)
     expect(viewport.height).toBeCloseTo(8)
     expect(viewport.viewHeight).toBeCloseTo(24)
@@ -167,7 +165,7 @@ describe('AcDbViewport', () => {
 
   it('keeps viewHeight unchanged when height is zero during transform', () => {
     const viewport = new AcDbViewport()
-    viewport.centerPoint = new AcGePoint3d(1, 1, 0)
+    viewport.centerPoint = new AcGePoint2d(1, 1)
     viewport.width = 5
     viewport.height = 0
     viewport.viewHeight = 7
@@ -181,7 +179,7 @@ describe('AcDbViewport', () => {
 
   describe('subWorldDraw', () => {
     const createRenderer = () => ({
-      lines: jest.fn((points: AcGePoint3d[]) => ({ points })),
+      lines: jest.fn((points: AcGePoint2d[]) => ({ points })),
       group: jest.fn((children: unknown[]) => ({ children }))
     })
 
@@ -190,7 +188,7 @@ describe('AcDbViewport', () => {
       attrs?: Partial<{
         number: number
         layer: string
-        centerPoint: AcGePoint3d
+        centerPoint: AcGePoint2d
         width: number
         height: number
       }>
@@ -202,7 +200,7 @@ describe('AcDbViewport', () => {
       const viewport = new AcDbViewport()
       viewport.number = attrs?.number ?? 2
       viewport.layer = attrs?.layer ?? '0'
-      viewport.centerPoint = attrs?.centerPoint ?? new AcGePoint3d(10, 20, 0)
+      viewport.centerPoint = attrs?.centerPoint ?? new AcGePoint2d(10, 20)
       viewport.width = attrs?.width ?? 8
       viewport.height = attrs?.height ?? 6
       paperSpace.appendEntity(viewport)
@@ -217,7 +215,7 @@ describe('AcDbViewport', () => {
 
       const viewport = new AcDbViewport()
       viewport.number = 2
-      viewport.centerPoint = new AcGePoint3d(10, 20, 0)
+      viewport.centerPoint = new AcGePoint2d(10, 20)
       viewport.width = 8
       viewport.height = 6
       paperSpace.appendEntity(viewport)
@@ -229,9 +227,9 @@ describe('AcDbViewport', () => {
       expect(renderer.group).toHaveBeenCalledTimes(1)
       expect(drawn).toBeDefined()
 
-      const firstEdge = renderer.lines.mock.calls[0][0] as AcGePoint3d[]
-      expect(firstEdge[0]).toMatchObject({ x: 6, y: 17, z: 0 })
-      expect(firstEdge[1]).toMatchObject({ x: 14, y: 17, z: 0 })
+      const firstEdge = renderer.lines.mock.calls[0][0] as AcGePoint2d[]
+      expect(firstEdge[0]).toMatchObject({ x: 6, y: 17 })
+      expect(firstEdge[1]).toMatchObject({ x: 14, y: 17 })
 
       const inactive = new AcDbViewport()
       inactive.number = 1
@@ -277,7 +275,7 @@ describe('AcDbViewport', () => {
       const viewport = new AcDbViewport()
       viewport.number = 2
       viewport.layer = 'NPLT'
-      viewport.centerPoint = new AcGePoint3d(10, 20, 0)
+      viewport.centerPoint = new AcGePoint2d(10, 20)
       viewport.width = 8
       viewport.height = 6
       paperSpace.appendEntity(viewport)
@@ -285,7 +283,7 @@ describe('AcDbViewport', () => {
       const subWorldDraw = jest.spyOn(viewport, 'subWorldDraw')
       const renderer = {
         subEntityTraits: {},
-        lines: jest.fn((points: AcGePoint3d[]) => ({ points })),
+        lines: jest.fn((points: AcGePoint2d[]) => ({ points })),
         group: jest.fn((children: unknown[]) => ({ children }))
       }
 
@@ -298,30 +296,30 @@ describe('AcDbViewport', () => {
     const viewport = new AcDbViewport()
     viewport.width = 10
     viewport.height = 6
-    viewport.centerPoint = new AcGePoint3d(2, 4, 0)
+    viewport.centerPoint = new AcGePoint2d(2, 4)
 
     const grips = viewport.subGetGripPoints()
 
     expect(grips).toHaveLength(5)
     expect(grips[0]).toBe(viewport.centerPoint)
-    expect(grips[1]).toMatchObject({ x: -3, y: 1, z: 0 })
-    expect(grips[2]).toMatchObject({ x: 7, y: 1, z: 0 })
-    expect(grips[3]).toMatchObject({ x: 7, y: 7, z: 0 })
-    expect(grips[4]).toMatchObject({ x: -3, y: 7, z: 0 })
+    expect(grips[1]).toMatchObject({ x: -3, y: 1 })
+    expect(grips[2]).toMatchObject({ x: 7, y: 1 })
+    expect(grips[3]).toMatchObject({ x: 7, y: 7 })
+    expect(grips[4]).toMatchObject({ x: -3, y: 7 })
   })
 
   it('moves center and resizes from opposite corner grips', () => {
     const viewport = new AcDbViewport()
     viewport.width = 10
     viewport.height = 6
-    viewport.centerPoint = new AcGePoint3d(2, 4, 0)
+    viewport.centerPoint = new AcGePoint2d(2, 4)
 
     viewport.subMoveGripPointsAt([0], new AcGeVector3d(1, 1, 0))
-    expect(viewport.centerPoint).toMatchObject({ x: 3, y: 5, z: 0 })
+    expect(viewport.centerPoint).toMatchObject({ x: 3, y: 5 })
 
     viewport.subMoveGripPointsAt([2], new AcGeVector3d(2, 0, 0))
     expect(viewport.width).toBeCloseTo(12)
     expect(viewport.height).toBe(6)
-    expect(viewport.centerPoint).toMatchObject({ x: 4, y: 5, z: 0 })
+    expect(viewport.centerPoint).toMatchObject({ x: 4, y: 5 })
   })
 })

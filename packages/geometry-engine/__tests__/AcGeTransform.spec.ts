@@ -1,20 +1,15 @@
 import {
   AcGeArea2d,
-  AcGeCatmullRomCurve3d,
+  AcGeCatmullRomCurve2d,
   AcGeCircArc2d,
-  AcGeCircArc3d,
   AcGeEllipseArc2d,
-  AcGeEllipseArc3d,
   AcGeLine2d,
-  AcGeLine3d,
   AcGeLoop2d,
   AcGeMatrix2d,
   AcGeMatrix3d,
   AcGePoint2d,
-  AcGePoint3d,
   AcGePolyline2d,
-  AcGeSpline3d,
-  AcGeVector3d
+  AcGeSpline2d
 } from '../src'
 
 const expectPoint2dClose = (
@@ -26,12 +21,11 @@ const expectPoint2dClose = (
 }
 
 const expectPoint3dClose = (
-  actual: { x: number; y: number; z: number },
-  expected: { x: number; y: number; z: number }
+  actual: { x: number; y: number },
+  expected: { x: number; y: number }
 ) => {
   expect(actual.x).toBeCloseTo(expected.x, 8)
   expect(actual.y).toBeCloseTo(expected.y, 8)
-  expect(actual.z).toBeCloseTo(expected.z, 8)
 }
 
 const transformPoint2d = (
@@ -40,9 +34,9 @@ const transformPoint2d = (
 ) => new AcGePoint2d(point).applyMatrix2d(matrix)
 
 const transformPoint3d = (
-  point: { x: number; y: number; z: number },
+  point: { x: number; y: number },
   matrix: AcGeMatrix3d
-) => new AcGePoint3d(point).applyMatrix4(matrix)
+) => new AcGePoint2d(point).applyMatrix4(matrix)
 
 describe('Geometry transform regression', () => {
   it('keeps line geometry aligned across common matrix families', () => {
@@ -95,11 +89,11 @@ describe('Geometry transform regression', () => {
     })
 
     line3dCases.forEach(({ matrix }) => {
-      const start = { x: 1, y: 2, z: 3 }
-      const end = { x: 4, y: -1, z: 2 }
-      const line = new AcGeLine3d(start, end)
+      const start = { x: 1, y: 2 }
+      const end = { x: 4, y: -1 }
+      const line = new AcGeLine2d(start, end)
 
-      line.transform(matrix)
+      line.transform3d(matrix)
 
       expectPoint3dClose(line.startPoint, transformPoint3d(start, matrix))
       expectPoint3dClose(line.endPoint, transformPoint3d(end, matrix))
@@ -108,18 +102,15 @@ describe('Geometry transform regression', () => {
 
   it('transforms 2d and 3d lines directly', () => {
     const line2d = new AcGeLine2d({ x: 0, y: 0 }, { x: 2, y: 1 })
-    const line3d = new AcGeLine3d(
-      new AcGePoint3d(1, 2, 3),
-      new AcGePoint3d(4, 5, 6)
-    )
+    const line3d = new AcGeLine2d(new AcGePoint2d(1, 2), new AcGePoint2d(4, 5))
 
     line2d.transform(new AcGeMatrix2d().makeTranslation(3, -4))
-    line3d.transform(new AcGeMatrix3d().makeTranslation(-1, 2, -3))
+    line3d.transform3d(new AcGeMatrix3d().makeTranslation(-1, 2, -3))
 
     expectPoint2dClose(line2d.startPoint, { x: 3, y: -4 })
     expectPoint2dClose(line2d.endPoint, { x: 5, y: -3 })
-    expectPoint3dClose(line3d.startPoint, { x: 0, y: 4, z: 0 })
-    expectPoint3dClose(line3d.endPoint, { x: 3, y: 7, z: 3 })
+    expectPoint3dClose(line3d.startPoint, { x: 0, y: 4 })
+    expectPoint3dClose(line3d.endPoint, { x: 3, y: 7 })
   })
 
   it('transforms 2d circular arcs and flips orientation on mirror', () => {
@@ -222,44 +213,42 @@ describe('Geometry transform regression', () => {
     expect(area.area).toBeCloseTo(4, 8)
   })
 
-  it('transforms 3d circular arcs using transformed points instead of origin-relative vectors', () => {
-    const arc = new AcGeCircArc3d(
-      new AcGePoint3d(5, 5, 0),
+  it('transforms circular arcs using transformed points instead of origin-relative vectors', () => {
+    const arc = new AcGeCircArc2d(
+      new AcGePoint2d(5, 5),
       2,
       0,
       Math.PI / 2,
-      AcGeVector3d.Z_AXIS
+      false
     )
 
-    arc.transform(new AcGeMatrix3d().makeTranslation(3, -1, 2))
+    arc.transform3d(new AcGeMatrix3d().makeTranslation(3, -1, 2))
 
-    expectPoint3dClose(arc.center, { x: 8, y: 4, z: 2 })
-    expectPoint3dClose(arc.startPoint, { x: 10, y: 4, z: 2 })
-    expectPoint3dClose(arc.endPoint, { x: 8, y: 6, z: 2 })
+    expectPoint3dClose(arc.center, { x: 8, y: 4 })
+    expectPoint3dClose(arc.startPoint, { x: 10, y: 4 })
+    expectPoint3dClose(arc.endPoint, { x: 8, y: 6 })
   })
 
-  it('transforms mirrored 3d circular arcs and updates the plane normal', () => {
-    const arc = new AcGeCircArc3d(
-      new AcGePoint3d(0, 0, 0),
+  it('transforms mirrored circular arcs and flips their direction', () => {
+    const arc = new AcGeCircArc2d(
+      new AcGePoint2d(0, 0),
       2,
       0,
       Math.PI / 2,
-      AcGeVector3d.Z_AXIS
+      false
     )
 
-    arc.transform(new AcGeMatrix3d().makeScale(-1, 1, 1))
+    arc.transform3d(new AcGeMatrix3d().makeScale(-1, 1, 1))
 
-    expectPoint3dClose(arc.center, { x: 0, y: 0, z: 0 })
-    expectPoint3dClose(arc.startPoint, { x: -2, y: 0, z: 0 })
-    expectPoint3dClose(arc.endPoint, { x: 0, y: 2, z: 0 })
-    expect(Math.abs(arc.normal.z)).toBeCloseTo(1, 8)
+    expectPoint3dClose(arc.center, { x: 0, y: 0 })
+    expectPoint3dClose(arc.startPoint, { x: -2, y: 0 })
+    expectPoint3dClose(arc.endPoint, { x: 0, y: 2 })
+    expect(arc.clockwise).toBe(true)
   })
 
-  it('transforms 3d ellipse arcs and preserves endpoints', () => {
-    const ellipse = new AcGeEllipseArc3d(
-      new AcGePoint3d(1, 0, 0),
-      AcGeVector3d.Z_AXIS,
-      AcGeVector3d.X_AXIS,
+  it('transforms ellipse arcs and preserves endpoints', () => {
+    const ellipse = new AcGeEllipseArc2d(
+      new AcGePoint2d(1, 0),
       4,
       2,
       0,
@@ -267,74 +256,72 @@ describe('Geometry transform regression', () => {
     )
     const matrix = new AcGeMatrix3d().makeTranslation(2, 3, 4)
 
-    ellipse.transform(matrix)
+    ellipse.transform3d(matrix)
 
-    expectPoint3dClose(ellipse.center, { x: 3, y: 3, z: 4 })
-    expectPoint3dClose(ellipse.startPoint, { x: 7, y: 3, z: 4 })
-    expectPoint3dClose(ellipse.endPoint, { x: 3, y: 5, z: 4 })
+    expectPoint3dClose(ellipse.center, { x: 3, y: 3 })
+    expectPoint3dClose(ellipse.startPoint, { x: 7, y: 3 })
+    expectPoint3dClose(ellipse.endPoint, { x: 3, y: 5 })
   })
 
-  it('transforms 3d ellipse arcs under non-uniform scaling', () => {
-    const ellipse = new AcGeEllipseArc3d(
-      new AcGePoint3d(0, 0, 0),
-      AcGeVector3d.Z_AXIS,
-      AcGeVector3d.X_AXIS,
+  it('transforms ellipse arcs under non-uniform scaling', () => {
+    const ellipse = new AcGeEllipseArc2d(
+      new AcGePoint2d(0, 0),
       2,
       1,
       0,
       Math.PI / 2
     )
 
-    ellipse.transform(new AcGeMatrix3d().makeScale(3, 4, 1))
+    ellipse.transform3d(new AcGeMatrix3d().makeScale(3, 4, 1))
 
     expect(ellipse.majorAxisRadius).toBeCloseTo(6, 8)
     expect(ellipse.minorAxisRadius).toBeCloseTo(4, 8)
-    expectPoint3dClose(ellipse.startPoint, { x: 6, y: 0, z: 0 })
-    expectPoint3dClose(ellipse.endPoint, { x: 0, y: 4, z: 0 })
+    expectPoint3dClose(ellipse.startPoint, { x: 6, y: 0 })
+    expectPoint3dClose(ellipse.endPoint, { x: 0, y: 4 })
   })
 
   it('transforms splines built from control points and fit points', () => {
-    const controlSpline = new AcGeSpline3d(
+    const controlSpline = new AcGeSpline2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ],
       [0, 0, 0, 0, 1, 1, 1, 1]
     )
-    const fitSpline = new AcGeSpline3d(
+    const fitSpline = new AcGeSpline2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 },
+        { x: 3, y: 1 }
       ],
       'Uniform'
     )
     const matrix = new AcGeMatrix3d().makeTranslation(10, -2, 5)
 
-    controlSpline.transform(matrix)
-    fitSpline.transform(matrix)
+    controlSpline.transform3d(matrix)
+    fitSpline.transform3d(matrix)
 
-    expectPoint3dClose(controlSpline.startPoint, { x: 10, y: -2, z: 5 })
-    expectPoint3dClose(controlSpline.endPoint, { x: 13, y: -1, z: 5 })
-    expectPoint3dClose(fitSpline.startPoint, { x: 10, y: -2, z: 5 })
-    expectPoint3dClose(fitSpline.endPoint, { x: 13, y: -1, z: 5 })
+    expectPoint3dClose(controlSpline.startPoint, { x: 10, y: -2 })
+    expectPoint3dClose(controlSpline.endPoint, { x: 13, y: -1 })
+    expectPoint3dClose(fitSpline.startPoint, { x: 10, y: -2 })
+    expectPoint3dClose(fitSpline.endPoint, { x: 13, y: -1 })
   })
 
   it('transforms catmull-rom curves by moving their control points', () => {
-    const curve = new AcGeCatmullRomCurve3d([
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 2, z: 0 },
-      { x: 3, y: 2, z: 1 },
-      { x: 4, y: 0, z: 1 }
+    const curve = new AcGeCatmullRomCurve2d([
+      { x: 0, y: 0 },
+      { x: 1, y: 2 },
+      { x: 3, y: 2 },
+      { x: 4, y: 0 }
     ])
 
-    curve.transform(new AcGeMatrix3d().makeTranslation(2, -3, 4))
+    curve.transform3d(new AcGeMatrix3d().makeTranslation(2, -3, 4))
 
-    expectPoint3dClose(curve.startPoint, { x: 2, y: -3, z: 4 })
-    expectPoint3dClose(curve.endPoint, { x: 6, y: -3, z: 5 })
-    expectPoint3dClose(curve.points[1], { x: 3, y: -1, z: 4 })
+    expectPoint3dClose(curve.startPoint, { x: 2, y: -3 })
+    expectPoint3dClose(curve.endPoint, { x: 6, y: -3 })
+    expectPoint3dClose(curve.points[1], { x: 3, y: -1 })
   })
 })

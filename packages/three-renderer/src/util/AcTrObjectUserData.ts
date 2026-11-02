@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGePoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrMTextEntityTraits } from './AcTrMTextColorUtil'
@@ -46,7 +46,7 @@ export type AcTrNoBatchUserData = {
 export interface AcTrPickableObjectUserData {
   bboxIntersectionCheck?: boolean
   isPoint?: boolean
-  position?: AcGePoint3dLike
+  position?: AcGePoint2dLike
 }
 
 /**

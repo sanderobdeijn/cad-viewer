@@ -1,8 +1,7 @@
 import {
   AcDbPolyline,
   AcGePoint2d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -25,7 +24,7 @@ type PolygonMode = 'Inscribed' | 'Circumscribed'
 type PolygonKeywordKey = 'edge' | 'inscribed' | 'circumscribed'
 type PolygonInvalidKey = 'sides' | 'radius' | 'edge'
 
-function distance2d(p1: AcGePoint3dLike, p2: AcGePoint3dLike) {
+function distance2d(p1: AcGePoint2dLike, p2: AcGePoint2dLike) {
   return Math.hypot(p2.x - p1.x, p2.y - p1.y)
 }
 
@@ -39,9 +38,9 @@ function updatePolylineVertices(
 }
 
 function buildPolygonFromCenter(
-  center: AcGePoint3dLike,
+  center: AcGePoint2dLike,
   sides: number,
-  point: AcGePoint3dLike,
+  point: AcGePoint2dLike,
   mode: PolygonMode
 ) {
   const inputRadius = distance2d(center, point)
@@ -72,8 +71,8 @@ function buildPolygonFromCenter(
 }
 
 function buildPolygonFromEdge(
-  firstPoint: AcGePoint3dLike,
-  secondPoint: AcGePoint3dLike,
+  firstPoint: AcGePoint2dLike,
+  secondPoint: AcGePoint2dLike,
   sides: number
 ) {
   const dx = secondPoint.x - firstPoint.x
@@ -108,7 +107,7 @@ function buildPolygonFromEdge(
 /**
  * Dynamic preview jig for center-based polygon creation.
  */
-class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Transient polygon polyline shown during preview.
    */
@@ -116,7 +115,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint3dLike> {
   /**
    * Fixed polygon center point.
    */
-  private _center: AcGePoint3dLike
+  private _center: AcGePoint2dLike
   /**
    * Number of polygon sides.
    */
@@ -136,7 +135,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint3dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    center: AcGePoint3dLike,
+    center: AcGePoint2dLike,
     sides: number,
     modeProvider: () => PolygonMode
   ) {
@@ -159,7 +158,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint3dLike> {
    *
    * @param point - Current cursor point.
    */
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     const vertices = buildPolygonFromCenter(
       this._center,
       this._sides,
@@ -174,7 +173,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint3dLike> {
 /**
  * Dynamic preview jig for edge-based polygon creation.
  */
-class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint3dLike> {
+class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Transient polygon polyline shown during edge preview.
    */
@@ -182,7 +181,7 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint3dLike> {
   /**
    * Fixed first endpoint of the polygon edge.
    */
-  private _firstPoint: AcGePoint3dLike
+  private _firstPoint: AcGePoint2dLike
   /**
    * Number of polygon sides.
    */
@@ -195,7 +194,7 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint3dLike> {
    * @param firstPoint - First endpoint of the seed edge.
    * @param sides - Number of polygon sides.
    */
-  constructor(view: AcEdBaseView, firstPoint: AcGePoint3dLike, sides: number) {
+  constructor(view: AcEdBaseView, firstPoint: AcGePoint2dLike, sides: number) {
     super(view)
     this._polyline = new AcDbPolyline()
     this._firstPoint = firstPoint
@@ -214,7 +213,7 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint3dLike> {
    *
    * @param secondPoint - Current cursor point for edge endpoint.
    */
-  update(secondPoint: AcGePoint3dLike) {
+  update(secondPoint: AcGePoint2dLike) {
     const vertices = buildPolygonFromEdge(
       this._firstPoint,
       secondPoint,
@@ -330,8 +329,7 @@ export class AcApPolygonCmd extends AcEdCommand {
       if (sidesResult.status !== AcEdPromptStatus.OK) return undefined
 
       const rawInput = (sidesResult.stringResult ?? '').trim()
-      const rawValue =
-        rawInput === '' ? defaultSides : Number(rawInput)
+      const rawValue = rawInput === '' ? defaultSides : Number(rawInput)
       if (
         Number.isInteger(rawValue) &&
         rawValue >= MIN_SIDES &&
@@ -355,7 +353,7 @@ export class AcApPolygonCmd extends AcEdCommand {
   private async runCenterFlow(
     context: AcApContext,
     sides: number,
-    center: AcGePoint3dLike
+    center: AcGePoint2dLike
   ) {
     let mode: PolygonMode = 'Inscribed'
 
@@ -367,7 +365,7 @@ export class AcApPolygonCmd extends AcEdCommand {
       this.addKeyword(radiusPrompt, 'circumscribed')
       radiusPrompt.useDashedLine = true
       radiusPrompt.useBasePoint = true
-      radiusPrompt.basePoint = new AcGePoint3d(center)
+      radiusPrompt.basePoint = new AcGePoint2d(center)
       radiusPrompt.jig = new AcApPolygonCenterJig(
         context.view,
         center,
@@ -427,7 +425,7 @@ export class AcApPolygonCmd extends AcEdCommand {
     )
     secondEdgePrompt.useDashedLine = true
     secondEdgePrompt.useBasePoint = true
-    secondEdgePrompt.basePoint = new AcGePoint3d(firstPoint)
+    secondEdgePrompt.basePoint = new AcGePoint2d(firstPoint)
     secondEdgePrompt.jig = new AcApPolygonEdgeJig(
       context.view,
       firstPoint,

@@ -1,4 +1,4 @@
-import { AcGePoint3d, AcGeVector3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d, AcGeVector3d } from '@mlightcad/geometry-engine'
 
 import { AcDbObject, type AcDbObjectId } from '../base/AcDbObject'
 
@@ -15,7 +15,7 @@ export class AcDbMTextObjectContextData extends AcDbObject {
   private _scaleId: AcDbObjectId = ''
   private _attachmentPoint = 1
   private _direction = new AcGeVector3d(1, 0, 0)
-  private _insertionPoint = new AcGePoint3d()
+  private _insertionPoint = new AcGePoint2d()
   private _definedWidth = 0
   private _definedHeight = 0
   private _extentsWidth = 0
@@ -62,7 +62,7 @@ export class AcDbMTextObjectContextData extends AcDbObject {
   get insertionPoint() {
     return this._insertionPoint
   }
-  set insertionPoint(value: AcGePoint3d) {
+  set insertionPoint(value: AcGePoint2d) {
     this._insertionPoint.copy(value)
   }
 

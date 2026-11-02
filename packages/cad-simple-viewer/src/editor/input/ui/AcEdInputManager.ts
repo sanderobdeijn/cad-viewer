@@ -4,8 +4,7 @@ import {
   AcDbSystemVariables,
   AcDbSysVarManager,
   AcGeBox2d,
-  AcGePoint2dLike,
-  AcGePoint3dLike
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApDocManager, AcApSettingManager } from '../../../app'
@@ -1776,7 +1775,7 @@ export class AcEdInputManager {
   async getEntity(
     options: AcEdPromptEntityOptions
   ): Promise<AcEdPromptEntityResult> {
-    let pickedPoint: AcGePoint3dLike | undefined
+    let pickedPoint: AcGePoint2dLike | undefined
     return this.executePrompt(
       () =>
         new Promise<string | null>((resolve, reject) => {
@@ -1882,7 +1881,7 @@ export class AcEdInputManager {
               return
             }
 
-            pickedPoint = { x: pos.x, y: pos.y, z: 0 }
+            pickedPoint = { x: pos.x, y: pos.y }
             cleanup()
             resolve(picked[0].id)
           }
@@ -2283,7 +2282,7 @@ export class AcEdInputManager {
 
     const getDynamicValue = (pos: AcGePoint2dLike) => {
       return {
-        value: { x: pos.x, y: pos.y, z: 0 },
+        value: { x: pos.x, y: pos.y },
         raw: {
           x: this.formatNumber(pos.x, 'point'),
           y: this.formatNumber(pos.y, 'point')
@@ -2292,7 +2291,7 @@ export class AcEdInputManager {
     }
 
     const handler = new AcEdPointHandler(options)
-    const value = await this.makeFloatingInputPromise<AcGePoint3dLike>({
+    const value = await this.makeFloatingInputPromise<AcGePoint2dLike>({
       inputCount: 2,
       promptOptions: options,
       disableOSnap: options.disableOSnap,
@@ -2325,7 +2324,7 @@ export class AcEdInputManager {
    */
   private recordConfirmedPointMarkIfNeeded(
     options: AcEdPromptPointOptions,
-    point: AcGePoint3dLike
+    point: AcGePoint2dLike
   ): void {
     if (!this.shouldShowConfirmedPointMark(options)) return
     this._confirmedPointPositions.push({ x: point.x, y: point.y })
@@ -2370,7 +2369,7 @@ export class AcEdInputManager {
    */
   private tryGetScriptedPoint(
     options: AcEdPromptPointOptions
-  ): AcGePoint3dLike | undefined {
+  ): AcGePoint2dLike | undefined {
     const token = this.dequeueScriptInput()
     if (token === undefined) return undefined
 
@@ -2884,7 +2883,7 @@ export class AcEdInputManager {
         switch (result.kind) {
           case 'value':
             if (options.handler instanceof AcEdPointHandler) {
-              const point = result.value as unknown as AcGePoint3dLike
+              const point = result.value as unknown as AcGePoint2dLike
               if (
                 point &&
                 Number.isFinite(point.x) &&

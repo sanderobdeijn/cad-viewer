@@ -1,5 +1,5 @@
 import {
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGiMTextAttachmentPoint,
   AcGiMTextData,
   AcGiShapeData,
@@ -68,7 +68,9 @@ export function resolveLineTypeScale(
   context: AcTrRenderContext
 ): number {
   const options = context.styleManager.options
-  return (options.ltscale || 1) * (options.celtscale || 1) * traits.lineTypeScale
+  return (
+    (options.ltscale || 1) * (options.celtscale || 1) * traits.lineTypeScale
+  )
 }
 
 /**
@@ -88,7 +90,7 @@ export const MAX_COMPLEX_LINETYPE_CYCLES = 4096
  * given polyline and scaled pattern.
  */
 export function estimateComplexLineTypeCycles(
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   pattern: NonNullable<AcGiSubEntityTraits['lineType']['pattern']>,
   scale: number
 ): number {
@@ -160,10 +162,7 @@ function createPlacementGlyph(
   lineTypeScale: number
 ): AcTrGlyphEntity | null {
   const flag = placement.element.elementTypeFlag
-  const size = Math.max(
-    (placement.element.scale ?? 0.1) * lineTypeScale,
-    1e-6
-  )
+  const size = Math.max((placement.element.scale ?? 0.1) * lineTypeScale, 1e-6)
   const style = resolveTextStyleForElement(placement, context)
 
   if (isComplexTextElement(flag)) {
@@ -179,7 +178,7 @@ function createPlacementGlyph(
         text,
         height: size,
         width: 0,
-        position: { x: 0, y: 0, z: 0 },
+        position: { x: 0, y: 0 },
         rotation: 0,
         attachmentPoint: AcGiMTextAttachmentPoint.MiddleCenter,
         widthFactor: style.widthFactor || 1
@@ -198,7 +197,7 @@ function createPlacementGlyph(
       name: placement.element.shapeName,
       shapeNumber: placement.element.shapeNumber,
       size,
-      position: { x: placement.x, y: placement.y, z: placement.z },
+      position: { x: placement.x, y: placement.y },
       rotation: placement.angle,
       widthFactor: style.widthFactor || 1
     }
@@ -206,15 +205,12 @@ function createPlacementGlyph(
   }
 
   // Non-text/shape flag residue with an explicit shape identity.
-  if (
-    placement.element.shapeNumber != null ||
-    placement.element.shapeName
-  ) {
+  if (placement.element.shapeNumber != null || placement.element.shapeName) {
     const shape: AcGiShapeData = {
       name: placement.element.shapeName,
       shapeNumber: placement.element.shapeNumber,
       size,
-      position: { x: placement.x, y: placement.y, z: placement.z },
+      position: { x: placement.x, y: placement.y },
       rotation: placement.angle,
       widthFactor: style.widthFactor || 1
     }
@@ -306,7 +302,7 @@ function appendComplexStrokes(
  */
 export function buildComplexLineTypeGeometry(
   entity: AcTrEntity,
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): boolean {

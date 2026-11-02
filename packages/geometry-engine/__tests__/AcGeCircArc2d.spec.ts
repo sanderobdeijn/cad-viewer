@@ -1,5 +1,6 @@
 import {
   AcGeCircArc2d,
+  AcGeMatrix3d,
   AcGeTol,
   DEFAULT_TOL,
   ORIGIN_POINT_2D,
@@ -369,25 +370,17 @@ describe('Test AcGeCircArc2d', () => {
     ).toBe(false)
     // Default eps is max(1e-6, r * 1e-5) = 1e-4 for r = 10.
     expect(
-      AcGeCircArc2d.pointLiesOnCircle(
-        { x: 10.00005, y: 0 },
-        { x: 0, y: 0 },
-        10
-      )
+      AcGeCircArc2d.pointLiesOnCircle({ x: 10.00005, y: 0 }, { x: 0, y: 0 }, 10)
     ).toBe(true)
     expect(
-      AcGeCircArc2d.pointLiesOnCircle(
-        { x: 10.001, y: 0 },
-        { x: 0, y: 0 },
-        10
-      )
+      AcGeCircArc2d.pointLiesOnCircle({ x: 10.001, y: 0 }, { x: 0, y: 0 }, 10)
     ).toBe(false)
   })
 
   it('sameCircle compares center and radius', () => {
-    expect(
-      AcGeCircArc2d.sameCircle({ x: 1, y: 2 }, 3, { x: 1, y: 2 }, 3)
-    ).toBe(true)
+    expect(AcGeCircArc2d.sameCircle({ x: 1, y: 2 }, 3, { x: 1, y: 2 }, 3)).toBe(
+      true
+    )
     expect(
       AcGeCircArc2d.sameCircle({ x: 1, y: 2 }, 3, { x: 1.1, y: 2 }, 3)
     ).toBe(false)
@@ -401,13 +394,7 @@ describe('Test AcGeCircArc2d', () => {
   })
 
   it('inwardAlignment picks the arc interior at a shared vertex', () => {
-    const first = new AcGeCircArc2d(
-      ORIGIN_POINT_2D,
-      1,
-      0,
-      Math.PI / 2,
-      false
-    )
+    const first = new AcGeCircArc2d(ORIGIN_POINT_2D, 1, 0, Math.PI / 2, false)
     const second = new AcGeCircArc2d(
       ORIGIN_POINT_2D,
       1,
@@ -423,5 +410,41 @@ describe('Test AcGeCircArc2d', () => {
     expect(second.inwardAlignment(vertex, towardSecond)).toBeGreaterThan(0)
     expect(first.inwardAlignment(vertex, towardSecond)).toBeLessThan(0)
     expect(first.inwardAlignment(vertex, vertex)).toBe(0)
+  })
+})
+
+describe('AcGeCircArc2d in place of the 3D class', () => {
+  it('computes area for full circles only', () => {
+    expect(
+      AcGeCircArc2d.fromMathAngles({ x: 0, y: 0 }, 2, 0, 0, false).area
+    ).toBeCloseTo(4 * Math.PI, 8)
+    expect(
+      AcGeCircArc2d.fromMathAngles({ x: 0, y: 0 }, 2, 0, 1, false).area
+    ).toBe(0)
+  })
+
+  it('offsets to a concentric arc and keeps its direction', () => {
+    const arc = AcGeCircArc2d.fromMathAngles({ x: 1, y: 1 }, 2, 0, 1, true)
+    const offset = arc.offset(1)
+    expect(offset?.radius).toBe(3)
+    expect(offset?.clockwise).toBe(true)
+    expect(offset?.center).toMatchObject({ x: 1, y: 1 })
+    expect(offset?.startPoint.y).toBeCloseTo(1, 8)
+    expect(arc.offset(-2)).toBeNull()
+  })
+
+  it('applies a mirror matrix given as 3D', () => {
+    const arc = AcGeCircArc2d.fromMathAngles(
+      { x: 0, y: 0 },
+      2,
+      0,
+      Math.PI / 2,
+      false
+    )
+    arc.transform3d(new AcGeMatrix3d().makeScale(-1, 1, 1))
+    expect(arc.clockwise).toBe(true)
+    expect(arc.startPoint.x).toBeCloseTo(-2, 8)
+    expect(arc.endPoint.y).toBeCloseTo(2, 8)
+    expect(arc.midPoint.x).toBeCloseTo(-2 * Math.SQRT1_2, 8)
   })
 })

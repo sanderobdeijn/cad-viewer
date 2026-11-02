@@ -1,7 +1,7 @@
 import { AcCmErrors } from '@mlightcad/common'
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 import type { AcGeKnotParameterizationType } from '@mlightcad/geometry-engine'
@@ -109,19 +109,19 @@ describe('AcDbSpline', () => {
 
   it('returns endpoint osnap points and ignores unsupported osnap mode', () => {
     const spline = new AcDbSpline(controlPoints, knots)
-    const endpointSnaps: AcGePoint3d[] = []
-    const unsupportedSnaps: AcGePoint3d[] = []
+    const endpointSnaps: AcGePoint2d[] = []
+    const unsupportedSnaps: AcGePoint2d[] = []
 
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       endpointSnaps
     )
     spline.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       unsupportedSnaps
     )
 
@@ -133,12 +133,12 @@ describe('AcDbSpline', () => {
 
   it('returns nearest osnap point on the spline curve', () => {
     const spline = new AcDbSpline(controlPoints, knots)
-    const nearestPoints: AcGePoint3d[] = []
+    const nearestPoints: AcGePoint2d[] = []
 
     spline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(1.5, 2, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1.5, 2),
+      new AcGePoint2d(),
       nearestPoints
     )
 
@@ -168,21 +168,21 @@ describe('AcDbSpline', () => {
   it('moves control vertices via subMoveGripPointsAt and updates the curve', () => {
     const spline = new AcDbSpline(controlPoints, knots)
 
-    const endBefore: AcGePoint3d[] = []
+    const endBefore: AcGePoint2d[] = []
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       endBefore
     )
 
     spline.subMoveGripPointsAt([3], new AcGeVector3d(0, 2, 0))
 
-    const endAfter: AcGePoint3d[] = []
+    const endAfter: AcGePoint2d[] = []
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       endAfter
     )
 
@@ -192,10 +192,10 @@ describe('AcDbSpline', () => {
 
   it('returns fit points as grip points for fit-point splines', () => {
     const fitPoints = [
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(3, 4, 0),
-      new AcGePoint3d(7, 4, 0),
-      new AcGePoint3d(10, 0, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(3, 4),
+      new AcGePoint2d(7, 4),
+      new AcGePoint2d(10, 0)
     ]
     const spline = new AcDbSpline(
       fitPoints,
@@ -207,18 +207,17 @@ describe('AcDbSpline', () => {
     grips.forEach((grip, index) => {
       expect(grip).toMatchObject({
         x: fitPoints[index].x,
-        y: fitPoints[index].y,
-        z: 0
+        y: fitPoints[index].y
       })
     })
   })
 
   it('moves fit points via subMoveGripPointsAt and updates the curve', () => {
     const fitPoints = [
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(3, 4, 0),
-      new AcGePoint3d(7, 4, 0),
-      new AcGePoint3d(10, 0, 0)
+      new AcGePoint2d(0, 0),
+      new AcGePoint2d(3, 4),
+      new AcGePoint2d(7, 4),
+      new AcGePoint2d(10, 0)
     ]
     const spline = new AcDbSpline(
       fitPoints,
@@ -233,13 +232,13 @@ describe('AcDbSpline', () => {
 
   it('transforms by matrix and returns itself', () => {
     const spline = new AcDbSpline(controlPoints, knots)
-    const before: AcGePoint3d[] = []
-    const after: AcGePoint3d[] = []
+    const before: AcGePoint2d[] = []
+    const after: AcGePoint2d[] = []
 
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       before
     )
 
@@ -249,21 +248,19 @@ describe('AcDbSpline', () => {
 
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       after
     )
 
     expect(result).toBe(spline)
     expect(after[0]).toMatchObject({
       x: before[0].x + 2,
-      y: before[0].y - 1,
-      z: 0
+      y: before[0].y - 1
     })
     expect(after[1]).toMatchObject({
       x: before[1].x + 2,
-      y: before[1].y - 1,
-      z: 0
+      y: before[1].y - 1
     })
   })
 
@@ -280,9 +277,8 @@ describe('AcDbSpline', () => {
     expect(
       (renderer as unknown as { lines: jest.Mock }).lines
     ).toHaveBeenCalledTimes(1)
-    const sampled = (
-      renderer as unknown as { lines: jest.Mock }
-    ).lines.mock.calls[0][0] as unknown[]
+    const sampled = (renderer as unknown as { lines: jest.Mock }).lines.mock
+      .calls[0][0] as unknown[]
     expect(sampled.length).toBeGreaterThan(1)
     expect(sampled.length).toBeLessThanOrEqual(100)
   })
@@ -304,10 +300,10 @@ describe('AcDbSpline', () => {
   it('offsets a control-point spline as a sampled polyline', () => {
     const spline = new AcDbSpline(
       [
-        new AcGePoint3d(0, 0, 0),
-        new AcGePoint3d(1, 1, 0),
-        new AcGePoint3d(2, -1, 0),
-        new AcGePoint3d(3, 0, 0)
+        new AcGePoint2d(0, 0),
+        new AcGePoint2d(1, 1),
+        new AcGePoint2d(2, -1),
+        new AcGePoint2d(3, 0)
       ],
       [0, 0, 0, 0, 1, 1, 1, 1]
     )
@@ -317,11 +313,11 @@ describe('AcDbSpline', () => {
   it('offsets a tight spline without self-intersecting loops', () => {
     const spline = new AcDbSpline(
       [
-        new AcGePoint3d(0, 0, 0),
-        new AcGePoint3d(10, 8, 0),
-        new AcGePoint3d(20, -8, 0),
-        new AcGePoint3d(30, 8, 0),
-        new AcGePoint3d(40, 0, 0)
+        new AcGePoint2d(0, 0),
+        new AcGePoint2d(10, 8),
+        new AcGePoint2d(20, -8),
+        new AcGePoint2d(30, 8),
+        new AcGePoint2d(40, 0)
       ],
       [0, 0, 0, 0, 0.5, 1, 1, 1, 1]
     )

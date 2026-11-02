@@ -1,7 +1,7 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
+  AcGePoint2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 import {
@@ -46,7 +46,7 @@ describe('AcDbMText', () => {
     mtext.backgroundFillTransparency = 250
     mtext.backgroundScaleFactor = 1.8
     mtext.styleName = 'CustomStyle'
-    mtext.location = { x: 1, y: 2, z: 3 }
+    mtext.location = { x: 1, y: 2 }
     mtext.attachmentPoint = AcGiMTextAttachmentPoint.BottomRight
     mtext.direction = { x: 2, y: 3, z: 4 }
     mtext.drawingDirection = AcGiMTextFlowDirection.TOP_TO_BOTTOM
@@ -62,9 +62,9 @@ describe('AcDbMText', () => {
     expect(mtext.backgroundFillTransparency).toBe(250)
     expect(mtext.backgroundScaleFactor).toBeCloseTo(1.8)
     expect(mtext.styleName).toBe('CustomStyle')
-    expect(mtext.location).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(mtext.location).toMatchObject({ x: 1, y: 2 })
     expect(mtext.attachmentPoint).toBe(AcGiMTextAttachmentPoint.BottomRight)
-    expect(mtext.direction).toMatchObject({ x: 2, y: 3, z: 4 })
+    expect(mtext.direction).toMatchObject({ x: 2, y: 3 })
     expect(mtext.drawingDirection).toBe(AcGiMTextFlowDirection.TOP_TO_BOTTOM)
     expect(mtext.geometricExtents).toBeInstanceOf(AcGeBox3d)
   })
@@ -74,12 +74,12 @@ describe('AcDbMText', () => {
     const mtext = new AcDbMText()
     mtext.contents = 'X'
     mtext.height = 2
-    mtext.location = { x: 0, y: 0, z: 0 }
+    mtext.location = { x: 0, y: 0 }
 
     expect(mtext.geometricExtents.min.y).toBeCloseTo(-2)
     expect(mtext.geometricExtents.max.x).toBeCloseTo(2)
 
-    mtext.location = { x: 10, y: 10, z: 0 }
+    mtext.location = { x: 10, y: 10 }
 
     expect(mtext.geometricExtents.min.x).toBeCloseTo(10)
     expect(mtext.geometricExtents.min.y).toBeCloseTo(8)
@@ -93,7 +93,7 @@ describe('AcDbMText', () => {
     mtext.contents = 'A\nB'
     mtext.height = 2
     mtext.lineSpacingFactor = 1
-    mtext.location = { x: 0, y: 0, z: 0 }
+    mtext.location = { x: 0, y: 0 }
 
     expect(mtext.geometricExtents.min.y).toBeCloseTo(-(2 + (5 / 3) * 2))
     expect(mtext.geometricExtents.max.y).toBeCloseTo(0)
@@ -106,7 +106,7 @@ describe('AcDbMText', () => {
     mtext.height = 2
     mtext.lineSpacingFactor = 0.25
     mtext.lineSpacingStyle = 1
-    mtext.location = { x: 0, y: 0, z: 0 }
+    mtext.location = { x: 0, y: 0 }
 
     expect(mtext.geometricExtents.min.y).toBeCloseTo(-4)
 
@@ -121,7 +121,7 @@ describe('AcDbMText', () => {
     mtext.height = 2
     mtext.width = 5
     mtext.extentsWidth = 20
-    mtext.location = { x: 0, y: 0, z: 0 }
+    mtext.location = { x: 0, y: 0 }
 
     expect(mtext.geometricExtents.max.x).toBeCloseTo(20)
   })
@@ -140,22 +140,22 @@ describe('AcDbMText', () => {
   it('returns insertion osnap point only for insertion mode', () => {
     createWorkingDb()
     const mtext = new AcDbMText()
-    mtext.location = { x: 9, y: 8, z: 7 }
+    mtext.location = { x: 9, y: 8 }
 
-    const insertionPoints: AcGePoint3d[] = []
+    const insertionPoints: AcGePoint2d[] = []
     mtext.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       insertionPoints
     )
     expect(insertionPoints).toEqual([mtext.location])
 
-    const unsupportedPoints: AcGePoint3d[] = []
+    const unsupportedPoints: AcGePoint2d[] = []
     mtext.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
@@ -164,7 +164,7 @@ describe('AcDbMText', () => {
   it('returns location as grip point', () => {
     createWorkingDb()
     const mtext = new AcDbMText()
-    mtext.location = new AcGePoint3d(6, 7, 8)
+    mtext.location = new AcGePoint2d(6, 7)
     const grips = mtext.subGetGripPoints()
     expect(grips).toHaveLength(1)
     expect(grips[0]).toBe(mtext.location)
@@ -173,7 +173,7 @@ describe('AcDbMText', () => {
   it('transforms location, direction, width and height with non-zero direction', () => {
     createWorkingDb()
     const mtext = new AcDbMText()
-    mtext.location = { x: 1, y: 2, z: 3 }
+    mtext.location = { x: 1, y: 2 }
     mtext.direction = { x: 1, y: 0, z: 0 }
     mtext.width = 5
     mtext.height = 7
@@ -181,8 +181,8 @@ describe('AcDbMText', () => {
     const matrix = new AcGeMatrix3d().makeScale(2, 3, 1)
 
     expect(mtext.transformBy(matrix)).toBe(mtext)
-    expect(mtext.location).toMatchObject({ x: 2, y: 6, z: 3 })
-    expect(mtext.direction).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(mtext.location).toMatchObject({ x: 2, y: 6 })
+    expect(mtext.direction).toMatchObject({ x: 1, y: 0 })
     expect(mtext.rotation).toBeCloseTo(0)
     expect(mtext.width).toBeCloseTo(10)
     expect(mtext.height).toBeCloseTo(21)
@@ -274,8 +274,8 @@ describe('AcDbMText', () => {
     expect(mtext.rotation).toBeCloseTo(Math.PI / 4)
     expect(mtext.lineSpacingFactor).toBeCloseTo(1.1)
     expect(mtext.width).toBeCloseTo(16)
-    expect(mtext.direction).toMatchObject({ x: 4, y: 5, z: 6 })
-    expect(mtext.location).toMatchObject({ x: 7, y: 8, z: 9 })
+    expect(mtext.direction).toMatchObject({ x: 4, y: 5 })
+    expect(mtext.location).toMatchObject({ x: 7, y: 8 })
   })
 
   it('draws mtext and resolves text style via styleName/db.textstyle/default fallback', () => {

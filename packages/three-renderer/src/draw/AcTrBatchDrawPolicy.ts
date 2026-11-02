@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcGePoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrDrawMode } from './AcTrDrawMode'
@@ -32,7 +32,7 @@ export interface AcTrBatchDrawContext {
    * Used when the entity has one canonical location (for example MTEXT/SHAPE
    * insertion, or a POINT entity coordinate).
    */
-  position?: AcGePoint3dLike
+  position?: AcGePoint2dLike
 
   /**
    * Representative world-space point for geometry that spans multiple vertices.
@@ -41,7 +41,7 @@ export interface AcTrBatchDrawContext {
    * computed by {@link resolveAnchorFromBox}. Used by line-like entities and
    * hatches that do not have a single insertion point.
    */
-  anchor?: AcGePoint3dLike
+  anchor?: AcGePoint2dLike
 }
 
 /**
@@ -82,18 +82,14 @@ export interface AcTrBatchDrawPolicy {
  * @returns `true` when the point exceeds the large-coordinate threshold.
  */
 export function isLargeWorldCoordinatePoint(
-  position?: AcGePoint3dLike
+  position?: AcGePoint2dLike
 ): boolean {
   if (position == null) {
     return false
   }
 
   return (
-    Math.max(
-      Math.abs(position.x),
-      Math.abs(position.y),
-      Math.abs(position.z ?? 0)
-    ) >= RTE_REBASE_THRESHOLD
+    Math.max(Math.abs(position.x), Math.abs(position.y)) >= RTE_REBASE_THRESHOLD
   )
 }
 
@@ -153,32 +149,27 @@ export function canMergeIntoBatchOrigin(
  * @returns Bounding-box center, or `undefined` when `points` is empty.
  */
 export function resolveAnchorFromPoints(
-  points: AcGePoint3dLike[]
-): AcGePoint3dLike | undefined {
+  points: AcGePoint2dLike[]
+): AcGePoint2dLike | undefined {
   if (points.length === 0) {
     return undefined
   }
 
   let minX = Infinity
   let minY = Infinity
-  let minZ = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  let maxZ = -Infinity
 
   for (const point of points) {
     minX = Math.min(minX, point.x)
     minY = Math.min(minY, point.y)
-    minZ = Math.min(minZ, point.z ?? 0)
     maxX = Math.max(maxX, point.x)
     maxY = Math.max(maxY, point.y)
-    maxZ = Math.max(maxZ, point.z ?? 0)
   }
 
   return {
     x: (minX + maxX) / 2,
-    y: (minY + maxY) / 2,
-    z: (minZ + maxZ) / 2
+    y: (minY + maxY) / 2
   }
 }
 
@@ -193,7 +184,7 @@ export function resolveAnchorFromPoints(
  */
 export function resolveAnchorFromBox(
   box: THREE.Box3
-): AcGePoint3dLike | undefined {
+): AcGePoint2dLike | undefined {
   if (box.isEmpty()) {
     return undefined
   }
@@ -201,8 +192,7 @@ export function resolveAnchorFromBox(
   const center = box.getCenter(_resolveAnchorCenter)
   return {
     x: center.x,
-    y: center.y,
-    z: center.z
+    y: center.y
   }
 }
 

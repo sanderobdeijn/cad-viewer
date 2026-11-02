@@ -1,5 +1,9 @@
 import { defaults } from '@mlightcad/common'
-import { AcGePoint2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import {
+  AcGePoint2d,
+  AcGeVector3d,
+  AcGeVector3dLike
+} from '@mlightcad/geometry-engine'
 import {
   AcGiDefaultLightingType,
   AcGiOrthographicType,
@@ -14,8 +18,8 @@ import {
 
 const createDefaultView = (): AcGiView => ({
   center: new AcGePoint2d(),
-  viewDirectionFromTarget: new AcGePoint3d(0, 0, 1),
-  viewTarget: new AcGePoint3d(0, 0, 0),
+  viewDirectionFromTarget: new AcGeVector3d(0, 0, 1),
+  viewTarget: new AcGePoint2d(0, 0),
   lensLength: 500,
   frontClippingPlane: 0,
   backClippingPlane: 0,
@@ -26,9 +30,9 @@ const createDefaultView = (): AcGiView => ({
   renderMode: AcGiRenderMode.OPTIMIZED_2D,
   viewMode: 0,
   ucsIconSetting: 0,
-  ucsOrigin: new AcGePoint3d(0, 0, 0),
-  ucsXAxis: new AcGePoint3d(1, 0, 0),
-  ucsYAxis: new AcGePoint3d(0, 1, 0),
+  ucsOrigin: new AcGePoint2d(0, 0),
+  ucsXAxis: new AcGePoint2d(1, 0),
+  ucsYAxis: new AcGePoint2d(0, 1),
   orthographicType: AcGiOrthographicType.TOP,
   shadePlotSetting: 0,
   shadePlotObjectId: undefined,
@@ -44,8 +48,7 @@ const createDefaultView = (): AcGiView => ({
 /**
  * Interface defining the attributes for view-related symbol table records.
  */
-export interface AcDbAbstractViewTableRecordAttrs
-  extends AcDbSymbolTableRecordAttrs {
+export interface AcDbAbstractViewTableRecordAttrs extends AcDbSymbolTableRecordAttrs {
   /** Graphics system view configuration */
   gsView: AcGiView
 }
@@ -58,8 +61,8 @@ export interface AcDbAbstractViewTableRecordAttrs
  * abstract class centralizes those common fields.
  */
 export abstract class AcDbAbstractViewTableRecord<
-  ATTRS extends
-    AcDbAbstractViewTableRecordAttrs = AcDbAbstractViewTableRecordAttrs
+  ATTRS extends AcDbAbstractViewTableRecordAttrs =
+    AcDbAbstractViewTableRecordAttrs
 > extends AcDbSymbolTableRecord<ATTRS> {
   /**
    * Creates a new AcDbAbstractViewTableRecord instance.
@@ -98,7 +101,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get viewDirectionFromTarget() {
     return this.gsView.viewDirectionFromTarget
   }
-  set viewDirectionFromTarget(value: AcGePoint3d) {
+  set viewDirectionFromTarget(value: AcGeVector3dLike) {
     this.gsView.viewDirectionFromTarget.copy(value)
   }
 
@@ -108,7 +111,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get viewTarget() {
     return this.gsView.viewTarget
   }
-  set viewTarget(value: AcGePoint3d) {
+  set viewTarget(value: AcGePoint2d) {
     this.gsView.viewTarget.copy(value)
   }
 
@@ -198,7 +201,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsOrigin() {
     return this.gsView.ucsOrigin
   }
-  set ucsOrigin(value: AcGePoint3d) {
+  set ucsOrigin(value: AcGePoint2d) {
     this.gsView.ucsOrigin.copy(value)
   }
 
@@ -208,7 +211,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsXAxis() {
     return this.gsView.ucsXAxis
   }
-  set ucsXAxis(value: AcGePoint3d) {
+  set ucsXAxis(value: AcGePoint2d) {
     this.gsView.ucsXAxis.copy(value)
   }
 
@@ -218,7 +221,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsYAxis() {
     return this.gsView.ucsYAxis
   }
-  set ucsYAxis(value: AcGePoint3d) {
+  set ucsYAxis(value: AcGePoint2d) {
     this.gsView.ucsYAxis.copy(value)
   }
 

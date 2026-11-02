@@ -1,7 +1,7 @@
 import {
   AcDbEntity,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -26,7 +26,7 @@ export class AcApRotateStaticJig<T> extends AcEdSelectionStaticPreviewJig<T> {}
  * clone path publishes once and then updates transforms only.
  */
 export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<number> {
-  private _basePoint: AcGePoint3d
+  private _basePoint: AcGePoint2d
   private _lastAngleRad = 0
   private _referenceAngleDeg: number
 
@@ -41,11 +41,11 @@ export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<numbe
   constructor(
     view: AcEdBaseView,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3dLike,
+    basePoint: AcGePoint2dLike,
     referenceAngleDeg = 0
   ) {
     super(view, sourceEntities)
-    this._basePoint = new AcGePoint3d(basePoint)
+    this._basePoint = new AcGePoint2d(basePoint)
     this._referenceAngleDeg = referenceAngleDeg
   }
 

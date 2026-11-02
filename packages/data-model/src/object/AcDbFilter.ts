@@ -1,4 +1,4 @@
-import { AcGePoint2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbObject } from '../base/AcDbObject'
 
@@ -39,9 +39,9 @@ export abstract class AcDbFilter extends AcDbObject {
    */
   private _boundaryVertices: AcGePoint2d[] = []
   /** Normal to the plane containing the clip boundary (DXF group 210). */
-  private _clipBoundaryNormal?: AcGePoint3d
+  private _clipBoundaryNormal?: AcGePoint2d
   /** Origin of the clip boundary's local coordinate system (DXF group 11). */
-  private _clipBoundaryOrigin?: AcGePoint3d
+  private _clipBoundaryOrigin?: AcGePoint2d
   /** Whether the clip boundary is displayed (DXF group 71). */
   private _clipBoundaryDisplayEnabled = false
   /** Whether front clipping is enabled (DXF group 72). */
@@ -86,7 +86,7 @@ export abstract class AcDbFilter extends AcDbObject {
    * Sets the normal to the plane containing the clip boundary
    * (DXF group 210).
    */
-  set clipBoundaryNormal(value: AcGePoint3d | undefined) {
+  set clipBoundaryNormal(value: AcGePoint2d | undefined) {
     this._clipBoundaryNormal = value?.clone()
   }
 
@@ -102,7 +102,7 @@ export abstract class AcDbFilter extends AcDbObject {
    * Sets the origin of the clip boundary's local coordinate system
    * (DXF group 11).
    */
-  set clipBoundaryOrigin(value: AcGePoint3d | undefined) {
+  set clipBoundaryOrigin(value: AcGePoint2d | undefined) {
     this._clipBoundaryOrigin = value?.clone()
   }
 

@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGeMatrix2d, AcGePoint2d, AcGePoint3d } from '../math'
+import { AcGeBox2d, AcGeMatrix2d, AcGePoint2d } from '../math'
 import { FLOAT_TOL } from '../util'
 import { acgeClosedPolygonArea2d } from '../util/AcGePolygonAreaUtil'
 import { AcGeCircArc2d } from './AcGeCircArc2d'
@@ -242,21 +242,6 @@ export class AcGePolyline2d<
       this._vertices.map(vertex => ({ ...vertex })),
       this._closed
     )
-  }
-
-  /**
-   * Return an array of points to draw this polyline.
-   * @param numPoints Input the nubmer of points returned for arc segmentation
-   * @param elevation Input z value of points returned
-   * @returns Return an array of point
-   */
-  getPoints3d(numPoints: number, elevation: number) {
-    const points: AcGePoint3d[] = []
-    const tmp = this.getPoints(numPoints)
-    tmp.forEach(point =>
-      points.push(new AcGePoint3d().set(point.x, point.y, elevation))
-    )
-    return points
   }
 
   /**

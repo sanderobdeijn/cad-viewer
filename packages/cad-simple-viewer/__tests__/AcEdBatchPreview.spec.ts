@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/data-model'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/data-model'
 
 import {
   AcEdBatchedPreview,
@@ -85,7 +85,7 @@ describe('AcEdBatchedPreview', () => {
     const { view } = createMockView({})
     const preview = new AcEdBatchedPreview(view, ['id-1'], 1)
 
-    preview.updatePlacements(view, new AcGePoint3d(3, 4, 0), false)
+    preview.updatePlacements(view, new AcGePoint2d(3, 4), false)
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(2)
   })
 
@@ -99,7 +99,7 @@ describe('AcEdBatchedPreview', () => {
     expect(previews.useBatchPreview).toBe(true)
     expect(createdIds).toHaveLength(3)
 
-    previews.updatePlacements(view, new AcGePoint3d(9, 0, 0), false)
+    previews.updatePlacements(view, new AcGePoint2d(9, 0), false)
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(6)
 
     previews.dispose(view)
@@ -126,14 +126,14 @@ describe('AcEdBatchedPreview', () => {
 
 describe('scaleCopyDisplacement', () => {
   it('scales linearly for normal array mode', () => {
-    expect(
-      scaleCopyDisplacement(new AcGePoint3d(6, 0, 0), 2, 3, false)
-    ).toEqual(new AcGePoint3d(12, 0, 0))
+    expect(scaleCopyDisplacement(new AcGePoint2d(6, 0), 2, 3, false)).toEqual(
+      new AcGePoint2d(12, 0)
+    )
   })
 
   it('distributes evenly for fit array mode', () => {
-    expect(scaleCopyDisplacement(new AcGePoint3d(9, 0, 0), 2, 3, true)).toEqual(
-      new AcGePoint3d(6, 0, 0)
+    expect(scaleCopyDisplacement(new AcGePoint2d(9, 0), 2, 3, true)).toEqual(
+      new AcGePoint2d(6, 0)
     )
   })
 })

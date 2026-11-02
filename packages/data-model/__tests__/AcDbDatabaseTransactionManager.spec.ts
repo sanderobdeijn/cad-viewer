@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 import { AcDbDxfCode, AcDbOpenMode, AcDbResultBuffer } from '../src/base'
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbLayerTableRecord } from '../src/database/AcDbLayerTableRecord'
@@ -8,8 +8,8 @@ import { AcDbDictionary } from '../src/object/AcDbDictionary'
 import { AcDbLayout } from '../src/object/layout/AcDbLayout'
 
 const createLine = (
-  start = new AcGePoint3d(0, 0, 0),
-  end = new AcGePoint3d(10, 0, 0)
+  start = new AcGePoint2d(0, 0),
+  end = new AcGePoint2d(10, 0)
 ) => new AcDbLine(start, end)
 
 describe('AcDbDatabaseTransactionManager', () => {
@@ -21,7 +21,7 @@ describe('AcDbDatabaseTransactionManager', () => {
     const manager = db.transactionManager
     const tr = manager.startTransaction()
     const opened = tr.getObject<AcDbLine>(line.objectId, AcDbOpenMode.kForWrite)
-    opened!.endPoint = new AcGePoint3d(20, 0, 0)
+    opened!.endPoint = new AcGePoint2d(20, 0)
 
     manager.abortTransaction()
 
@@ -80,7 +80,7 @@ describe('AcDbDatabaseTransactionManager', () => {
 
   it('supports undo and redo for entity append and remove', () => {
     const db = new AcDbDatabase()
-    const line = createLine(new AcGePoint3d(1, 2, 3), new AcGePoint3d(4, 5, 6))
+    const line = createLine(new AcGePoint2d(1, 2), new AcGePoint2d(4, 5))
 
     db.transactionManager.runUndoable('Add Line', () => {
       db.tables.blockTable.modelSpace.appendEntity(line)
@@ -107,7 +107,7 @@ describe('AcDbDatabaseTransactionManager', () => {
         line.objectId,
         AcDbOpenMode.kForWrite
       )
-      opened!.endPoint = new AcGePoint3d(30, 0, 0)
+      opened!.endPoint = new AcGePoint2d(30, 0)
     })
 
     expect(line.endPoint.x).toBe(30)
@@ -133,7 +133,7 @@ describe('AcDbDatabaseTransactionManager', () => {
         line.objectId,
         AcDbOpenMode.kForWrite
       )
-      opened!.endPoint = new AcGePoint3d(30, 0, 0)
+      opened!.endPoint = new AcGePoint2d(30, 0)
     })
 
     expect(modifiedCount).toBe(1)
@@ -155,7 +155,7 @@ describe('AcDbDatabaseTransactionManager', () => {
         line.objectId,
         AcDbOpenMode.kForWrite
       )
-      opened!.endPoint = new AcGePoint3d(30, 0, 0)
+      opened!.endPoint = new AcGePoint2d(30, 0)
     })
     expect(modifiedCount).toBe(1)
 
@@ -176,7 +176,7 @@ describe('AcDbDatabaseTransactionManager', () => {
       modifiedCount++
     })
 
-    line.endPoint = new AcGePoint3d(25, 0, 0)
+    line.endPoint = new AcGePoint2d(25, 0)
 
     expect(modifiedCount).toBe(0)
   })
@@ -193,7 +193,7 @@ describe('AcDbDatabaseTransactionManager', () => {
       line.objectId,
       AcDbOpenMode.kForWrite
     )
-    opened!.endPoint = new AcGePoint3d(40, 0, 0)
+    opened!.endPoint = new AcGePoint2d(40, 0)
     db.transactionManager.commitTransaction()
     db.transactionManager.commitTransaction()
     db.transactionManager.endUndoMark()
@@ -214,7 +214,7 @@ describe('AcDbDatabaseTransactionManager', () => {
       line.objectId,
       AcDbOpenMode.kForWrite
     )
-    opened!.endPoint = new AcGePoint3d(40, 0, 0)
+    opened!.endPoint = new AcGePoint2d(40, 0)
     db.transactionManager.commitTransaction()
     db.transactionManager.abortTransaction()
 
@@ -282,8 +282,8 @@ describe('AcDbDatabaseTransactionManager', () => {
     db.transactionManager.startUndoMark()
     const tr = db.transactionManager.startTransaction()
     const opened = tr.getObject<AcDbLine>(line.objectId, AcDbOpenMode.kForWrite)
-    opened!.endPoint = new AcGePoint3d(20, 0, 0)
-    opened!.endPoint = new AcGePoint3d(30, 0, 0)
+    opened!.endPoint = new AcGePoint2d(20, 0)
+    opened!.endPoint = new AcGePoint2d(30, 0)
     db.transactionManager.commitTransaction()
     db.transactionManager.endUndoMark()
 
@@ -426,9 +426,9 @@ describe('AcDbObject restoreFrom', () => {
     db.tables.blockTable.modelSpace.appendEntity(line)
 
     const snapshot = line.clonePreservingIdentity()
-    snapshot.endPoint = new AcGePoint3d(99, 0, 0)
+    snapshot.endPoint = new AcGePoint2d(99, 0)
 
-    line.endPoint = new AcGePoint3d(50, 0, 0)
+    line.endPoint = new AcGePoint2d(50, 0)
     line.restoreFrom(snapshot)
 
     expect(line.endPoint.x).toBe(99)

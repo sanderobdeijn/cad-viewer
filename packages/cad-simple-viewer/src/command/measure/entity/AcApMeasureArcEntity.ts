@@ -21,7 +21,11 @@ import {
 } from '../../overlay'
 import { runMeasurementEdit } from '../AcApMeasurementHistory'
 import { republishMeasurement } from '../AcApMeasurementRepublish'
-import { getMeasurementSnapshot, getMeasurementStyle, MEASUREMENT_LAYER } from '../AcApMeasurementStore'
+import {
+  getMeasurementSnapshot,
+  getMeasurementStyle,
+  MEASUREMENT_LAYER
+} from '../AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../AcApMeasurementTypes'
 import {
   type AcApMeasureCircleGeom,
@@ -39,10 +43,7 @@ type Point2 = { x: number; y: number }
 /**
  * Project a free point onto a circle (for legacy short-arc records).
  */
-function projectOntoCircle(
-  geom: AcApMeasureCircleGeom,
-  point: Point2
-): Point2 {
+function projectOntoCircle(geom: AcApMeasureCircleGeom, point: Point2): Point2 {
   const dx = point.x - geom.cx
   const dy = point.y - geom.cy
   const len = Math.hypot(dx, dy)
@@ -159,9 +160,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
       this.end,
       this.through
     )?.midPoint
-    return mid
-      ? { x: mid.x, y: mid.y, z: 0 }
-      : { x: this.start.x, y: this.start.y, z: 0 }
+    return mid ? { x: mid.x, y: mid.y } : { x: this.start.x, y: this.start.y }
   }
 
   /**
@@ -231,9 +230,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
     let arcLen = resolveArc()?.length ?? 0
     const midPoint = (): Point2 => {
       const mid = resolveArc()?.midPoint
-      return mid
-        ? { x: mid.x, y: mid.y }
-        : { x: live.start.x, y: live.start.y }
+      return mid ? { x: mid.x, y: mid.y } : { x: live.start.x, y: live.start.y }
     }
 
     const color = this.style.color
@@ -331,12 +328,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
     view.events.viewChanged.addEventListener(redrawPersist)
 
     const group = this.createGroup(view)
-      .add(
-        dot1,
-        ...(dotThrough ? [dotThrough] : []),
-        dot2,
-        badge
-      )
+      .add(dot1, ...(dotThrough ? [dotThrough] : []), dot2, badge)
       .addCanvas(persistOverlay)
 
     const cleanups: Array<() => void> = [

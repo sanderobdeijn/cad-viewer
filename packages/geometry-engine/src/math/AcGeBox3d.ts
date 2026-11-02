@@ -1,6 +1,10 @@
 import { AcGeMatrix3d } from './AcGeMatrix3d'
 import { AcGePlane } from './AcGePlane'
+import { AcGeVector2dLike } from './AcGeVector2d'
 import { AcGeVector3d, AcGeVector3dLike } from './AcGeVector3d'
+
+/** A point in the XY plane, or a 3d vector when Z is known. */
+type AcGeBoxPointLike = AcGeVector2dLike & { z?: number }
 
 /**
  * The class representing an axis-aligned bounding box (AABB) in 3d space.
@@ -23,17 +27,17 @@ export class AcGeBox3d {
    * Set it to ( - Infinity, - Infinity, - Infinity ) if undefined or null provided.
    */
   constructor(
-    min: AcGeVector3dLike | undefined = undefined,
-    max: AcGeVector3dLike | undefined = undefined
+    min: AcGeBoxPointLike | undefined = undefined,
+    max: AcGeBoxPointLike | undefined = undefined
   ) {
     this.min =
       min == null
         ? new AcGeVector3d(+Infinity, +Infinity, +Infinity)
-        : new AcGeVector3d(min.x, min.y, min.z)
+        : new AcGeVector3d(min.x, min.y, min.z ?? 0)
     this.max =
       max == null
         ? new AcGeVector3d(-Infinity, -Infinity, -Infinity)
-        : new AcGeVector3d(max.x, max.y, max.z)
+        : new AcGeVector3d(max.x, max.y, max.z ?? 0)
   }
 
   /**
@@ -68,7 +72,7 @@ export class AcGeBox3d {
    * @param points Input an array of 3d point or 3d vector that the resulting box will contain.
    * @returns Return this box
    */
-  setFromPoints(points: AcGeVector3dLike[]) {
+  setFromPoints(points: AcGeBoxPointLike[]) {
     this.makeEmpty()
 
     for (let i = 0, il = points.length; i < il; i++) {
@@ -181,17 +185,18 @@ export class AcGeBox3d {
    * @param point
    * @returns
    */
-  expandByPoint(point: AcGeVector3dLike) {
+  expandByPoint(point: AcGeBoxPointLike) {
     // Non-finite coords poison min/max via Math.min/Math.max (NaN spreads to parents).
     if (
       !Number.isFinite(point.x) ||
       !Number.isFinite(point.y) ||
-      !Number.isFinite(point.z)
+      !Number.isFinite(point.z ?? 0)
     ) {
       return this
     }
-    this.min.min(point)
-    this.max.max(point)
+    const position = { x: point.x, y: point.y, z: point.z ?? 0 }
+    this.min.min(position)
+    this.max.max(position)
     return this
   }
 
@@ -227,13 +232,13 @@ export class AcGeBox3d {
    * @param point Input point to check for inclusion.
    * @returns Return true if the specified point lies within or on the boundaries of this box.
    */
-  containsPoint(point: AcGeVector3dLike) {
+  containsPoint(point: AcGeBoxPointLike) {
     return point.x < this.min.x ||
       point.x > this.max.x ||
       point.y < this.min.y ||
       point.y > this.max.y ||
-      point.z < this.min.z ||
-      point.z > this.max.z
+      (point.z ?? 0) < this.min.z ||
+      (point.z ?? 0) > this.max.z
       ? false
       : true
   }

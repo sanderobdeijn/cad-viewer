@@ -1,4 +1,5 @@
 import { AcGePoint2d } from '../math/AcGePoint2d'
+import { acgeClamp, FLOAT_TOL } from '../util'
 import { AcGeShape2d } from './AcGeShape2d'
 
 /**
@@ -226,4 +227,127 @@ export abstract class AcGeCurve2d extends AcGeShape2d {
    * Return a deep-cloned copy of this curve.
    */
   abstract clone(): AcGeCurve2d
+
+  /**
+   * Sample a parametric 2d curve by coarse uniform samples plus chord-height
+   * refinement, with a hard evaluation budget of `maxSegments`.
+   *
+   * Midpoints that already meet the deviation still consume the budget so a
+   * highly curved curve cannot exceed the historical `getPoints(100)` cost.
+   */
+  protected static tessellateParametricCurve(
+    startParam: number,
+    endParam: number,
+    evaluate: (t: number) => AcGePoint2d,
+    options: {
+      deviation: number
+      minSegments: number
+      maxSegments: number
+    }
+  ): AcGePoint2d[] {
+    const maxEvals = Math.max(2, Math.round(options.maxSegments))
+    const minSegments = Math.max(1, Math.round(options.minSegments))
+    const deviationSq =
+      Math.max(0, options.deviation) * Math.max(0, options.deviation)
+
+    if (!Number.isFinite(startParam) || !Number.isFinite(endParam)) {
+      return [evaluate(0)]
+    }
+    if (Math.abs(endParam - startParam) <= FLOAT_TOL) {
+      return [evaluate(startParam)]
+    }
+
+    const minPoints = Math.min(maxEvals, Math.max(2, minSegments + 1))
+    const coarseCount = Math.min(maxEvals, Math.max(minPoints, 8))
+    let params = uniformParameters(startParam, endParam, coarseCount)
+    const points: AcGePoint2d[] = []
+    for (let i = 0; i < params.length; i++) {
+      points.push(evaluate(params[i]))
+    }
+    let evalCount = points.length
+
+    for (let pass = 0; pass < 8 && evalCount < maxEvals; pass++) {
+      const insertions: { index: number; t: number; point: AcGePoint2d }[] = []
+      for (let i = 0; i < params.length - 1; i++) {
+        if (evalCount >= maxEvals) {
+          break
+        }
+        const midT = (params[i] + params[i + 1]) / 2
+        const mid = evaluate(midT)
+        evalCount++
+        if (
+          distSqPointToSegment2d(mid, points[i], points[i + 1]) > deviationSq
+        ) {
+          insertions.push({ index: i, t: midT, point: mid })
+        }
+      }
+      if (insertions.length === 0) {
+        break
+      }
+      const merged = mergeParametricInsertions(params, points, insertions)
+      params = merged.params
+      points.length = 0
+      for (let i = 0; i < merged.points.length; i++) {
+        points.push(merged.points[i])
+      }
+    }
+
+    return points
+  }
+}
+
+function distSqPointToSegment2d(
+  point: AcGePoint2d,
+  a: AcGePoint2d,
+  b: AcGePoint2d
+): number {
+  const abx = b.x - a.x
+  const aby = b.y - a.y
+  const apx = point.x - a.x
+  const apy = point.y - a.y
+  const abLenSq = abx * abx + aby * aby
+  if (abLenSq <= FLOAT_TOL * FLOAT_TOL) {
+    return apx * apx + apy * apy
+  }
+  const t = acgeClamp((apx * abx + apy * aby) / abLenSq, 0, 1)
+  const dx = apx - abx * t
+  const dy = apy - aby * t
+  return dx * dx + dy * dy
+}
+
+function uniformParameters(
+  start: number,
+  end: number,
+  count: number
+): number[] {
+  if (count <= 1) {
+    return [start]
+  }
+  const params: number[] = []
+  for (let i = 0; i < count; i++) {
+    params.push(
+      i === count - 1 ? end : start + ((end - start) * i) / (count - 1)
+    )
+  }
+  return params
+}
+
+function mergeParametricInsertions(
+  params: number[],
+  points: AcGePoint2d[],
+  insertions: { index: number; t: number; point: AcGePoint2d }[]
+): { params: number[]; points: AcGePoint2d[] } {
+  const nextParams: number[] = []
+  const nextPoints: AcGePoint2d[] = []
+  let ins = 0
+  for (let i = 0; i < params.length; i++) {
+    nextParams.push(params[i])
+    nextPoints.push(points[i])
+    while (ins < insertions.length && insertions[ins].index === i) {
+      nextParams.push(insertions[ins].t)
+      nextPoints.push(insertions[ins].point)
+      ins++
+    }
+  }
+  return { params: nextParams, points: nextPoints }
 }

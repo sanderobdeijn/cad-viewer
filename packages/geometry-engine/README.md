@@ -34,7 +34,7 @@ npm install @mlightcad/geometry-engine
 ### Math Classes (2D and 3D)
 
 #### Points and Vectors
-- **AcGePoint2d, AcGePoint3d**: Represent 2D and 3D points in space
+- **AcGePoint2d**: Represents a 2D point
 - **AcGeVector2d, AcGeVector3d**: Represent 2D and 3D vectors with magnitude and direction
 
 #### Transformations
@@ -49,15 +49,15 @@ npm install @mlightcad/geometry-engine
 ### Geometry Classes
 
 #### Basic Geometric Entities
-- **AcGeLine2d, AcGeLine3d**: Lines in 2D and 3D space
-- **AcGeCurve2d, AcGeCurve3d**: Abstract base classes for curves
-- **AcGeCircArc2d, AcGeCircArc3d**: Circular arcs in 2D and 3D
-- **AcGeEllipseArc2d, AcGeEllipseArc3d**: Elliptical arcs
+- **AcGeLine2d**: Lines in the XY plane
+- **AcGeCurve2d**: Abstract base class for curves
+- **AcGeCircArc2d**: Circular arcs
+- **AcGeEllipseArc2d**: Elliptical arcs
 
 #### Complex Geometric Entities
 - **AcGePolyline2d**: 2D polyline with multiple segments
-- **AcGeSpline3d**: 3D spline curves
-- **AcGeShape2d, AcGeShape3d**: Complex geometric shapes
+- **AcGeSpline2d**: Spline curves
+- **AcGeShape2d**: Complex geometric shapes
 - **AcGeArea2d**: 2D area calculations
 - **AcGeLoop2d**: 2D loop representations
 
@@ -70,11 +70,11 @@ npm install @mlightcad/geometry-engine
 
 ### Basic Point and Vector Operations
 ```typescript
-import { AcGePoint3d, AcGeVector3d, AcGeMatrix3d } from '@mlightcad/geometry-engine';
+import { AcGePoint2d, AcGeVector3d, AcGeMatrix3d } from '@mlightcad/geometry-engine';
 
 // Create points and vectors
-const point1 = new AcGePoint3d(0, 0, 0);
-const point2 = new AcGePoint3d(10, 10, 10);
+const point1 = new AcGePoint2d(0, 0);
+const point2 = new AcGePoint2d(10, 10);
 const vector = new AcGeVector3d(1, 0, 0);
 
 // Calculate distance between points
@@ -87,19 +87,19 @@ const transformedPoint = point1.transformBy(matrix);
 
 ### Line and Curve Operations
 ```typescript
-import { AcGeLine3d, AcGeCircArc3d, AcGePoint3d } from '@mlightcad/geometry-engine';
+import { AcGeLine2d, AcGeCircArc2d, AcGePoint2d } from '@mlightcad/geometry-engine';
 
 // Create a line
-const startPoint = new AcGePoint3d(0, 0, 0);
-const endPoint = new AcGePoint3d(10, 0, 0);
-const line = new AcGeLine3d(startPoint, endPoint);
+const startPoint = new AcGePoint2d(0, 0);
+const endPoint = new AcGePoint2d(10, 0);
+const line = new AcGeLine2d(startPoint, endPoint);
 
 // Create a circular arc
-const center = new AcGePoint3d(0, 0, 0);
+const center = new AcGePoint2d(0, 0);
 const radius = 5;
 const startAngle = 0;
 const endAngle = Math.PI / 2;
-const arc = new AcGeCircArc3d(center, radius, startAngle, endAngle);
+const arc = new AcGeCircArc2d(center, radius, startAngle, endAngle);
 
 // Get points along the curve
 const param = 0.5;
@@ -109,7 +109,7 @@ const pointOnArc = arc.evalPoint(param);
 
 ### Matrix Transformations
 ```typescript
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine';
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine';
 
 // Create transformation matrices
 const translation = AcGeMatrix3d.translation(10, 20, 30);
@@ -120,7 +120,7 @@ const scale = AcGeMatrix3d.scaling(2, 2, 2);
 const combined = translation.multiply(rotation).multiply(scale);
 
 // Apply transformation to a point
-const point = new AcGePoint3d(1, 1, 1);
+const point = new AcGePoint2d(1, 1);
 const transformed = point.transformBy(combined);
 ```
 
@@ -146,19 +146,19 @@ const isClosed = polyline.isClosed();
 
 ### Geometric Utilities
 ```typescript
-import { AcGeGeometryUtil, AcGePoint3d, AcGeVector3d } from '@mlightcad/geometry-engine';
+import { AcGeGeometryUtil, AcGePoint2d, AcGeVector3d } from '@mlightcad/geometry-engine';
 
 // Calculate intersection between lines
-const line1 = new AcGeLine3d(new AcGePoint3d(0, 0, 0), new AcGeVector3d(1, 0, 0));
-const line2 = new AcGeLine3d(new AcGePoint3d(0, 0, 0), new AcGeVector3d(0, 1, 0));
+const line1 = new AcGeLine2d(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0));
+const line2 = new AcGeLine2d(new AcGePoint2d(0, 0), new AcGePoint2d(0, 1));
 
 const intersection = AcGeGeometryUtil.intersect(line1, line2);
 
 // Check if points are collinear
 const points = [
-  new AcGePoint3d(0, 0, 0),
-  new AcGePoint3d(1, 1, 1),
-  new AcGePoint3d(2, 2, 2)
+  new AcGePoint2d(0, 0),
+  new AcGePoint2d(1, 1),
+  new AcGePoint2d(2, 2)
 ];
 
 const areCollinear = AcGeGeometryUtil.areCollinear(points);

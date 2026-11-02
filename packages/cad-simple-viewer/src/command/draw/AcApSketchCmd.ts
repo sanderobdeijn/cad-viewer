@@ -5,7 +5,6 @@ import {
   AcDbSpline,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -72,8 +71,8 @@ function toPoint2d(point: AcGePoint2dLike): AcGePoint2d {
   return new AcGePoint2d(point.x, point.y)
 }
 
-function toPoint3d(point: AcGePoint2dLike): AcGePoint3d {
-  return new AcGePoint3d(point.x, point.y, 0)
+function toPoint3d(point: AcGePoint2dLike): AcGePoint2d {
+  return new AcGePoint2d(point.x, point.y)
 }
 
 /**

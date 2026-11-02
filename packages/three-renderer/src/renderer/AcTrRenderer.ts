@@ -2,11 +2,10 @@ import {
   AcCmEventManager,
   acdbDrawTessellateOptions,
   AcGeArea2d,
-  AcGeCircArc3d,
-  AcGeEllipseArc3d,
+  AcGeCircArc2d,
+  AcGeEllipseArc2d,
   AcGePoint2d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGePolyline2d,
   AcGiFontMapping,
   AcGiMTextData,
@@ -126,13 +125,13 @@ export type AcTrDirectCapturePayload =
       /** Connected polyline captured from a line-strip draw. */
       kind: 'lineStrip'
       /** World-space vertices along the strip (at least two when captured). */
-      points: AcGePoint3dLike[]
+      points: AcGePoint2dLike[]
     }
   | {
       /** Single point primitive captured from {@link AcTrRenderer.point}. */
       kind: 'point'
       /** World-space point location. */
-      point: AcGePoint3d
+      point: AcGePoint2d
       /** Point display style (size, shape, etc.). */
       style: AcGiPointStyle
     }
@@ -150,8 +149,8 @@ export type AcTrDirectCapturePayload =
        * accepts it. `outer[i]` / `inner[i]` are the two offsets of one sample.
        */
       kind: 'offsetRing'
-      outer: AcGePoint3dLike[]
-      inner: AcGePoint3dLike[]
+      outer: AcGePoint2dLike[]
+      inner: AcGePoint2dLike[]
     }
   | {
       /** Indexed line segments captured from {@link AcTrRenderer.lineSegments}. */
@@ -269,8 +268,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
     width?: number
     height?: number
   }): AcTrRenderer {
-    const width =
-      options?.width ?? AcTrRenderer.DEFAULT_EXPORT_VIEWPORT.width
+    const width = options?.width ?? AcTrRenderer.DEFAULT_EXPORT_VIEWPORT.width
     const height =
       options?.height ?? AcTrRenderer.DEFAULT_EXPORT_VIEWPORT.height
     return new AcTrRenderer(createExportWebGlStub(width, height), {
@@ -717,7 +715,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  point(point: AcGePoint3d, style: AcGiPointStyle) {
+  point(point: AcGePoint2d, style: AcGiPointStyle) {
     if (this._directCapture !== 'off') {
       if (this.tryCaptureDirectPayload({ kind: 'point', point, style })) {
         return this.createDirectCapturePlaceholder() as AcTrPoint
@@ -730,14 +728,14 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  circularArc(arc: AcGeCircArc3d) {
+  circularArc(arc: AcGeCircArc2d) {
     return this.linePoints(arc.tessellate(acdbDrawTessellateOptions(this)))
   }
 
   /**
    * @inheritdoc
    */
-  ellipticalArc(ellipseArc: AcGeEllipseArc3d) {
+  ellipticalArc(ellipseArc: AcGeEllipseArc2d) {
     return this.linePoints(
       ellipseArc.tessellate(acdbDrawTessellateOptions(this))
     )
@@ -746,7 +744,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  lines(points: AcGePoint3dLike[]) {
+  lines(points: AcGePoint2dLike[]) {
     return this.linePoints(points)
   }
 
@@ -801,7 +799,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
    * frames (small `constantWidth` × large INSERT scale) do not vanish at
    * fit-zoom.
    */
-  offsetRing(outer: AcGePoint3dLike[], inner: AcGePoint3dLike[]) {
+  offsetRing(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
     if (this._directCapture !== 'off') {
       // Fill + centerline cannot share one direct payload; fall back so the
       // hairline visibility stroke is not dropped.
@@ -837,9 +835,9 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
     return entity
   }
 
-  private offsetRingArea(outer: AcGePoint3dLike[], inner: AcGePoint3dLike[]) {
+  private offsetRingArea(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
     const area = new AcGeArea2d()
-    const toLoop = (points: AcGePoint3dLike[]) =>
+    const toLoop = (points: AcGePoint2dLike[]) =>
       new AcGePolyline2d(
         points.map(point => new AcGePoint2d(point.x, point.y)),
         true
@@ -919,7 +917,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
     this.clearMissedFonts()
   }
 
-  private linePoints(points: AcGePoint3dLike[]) {
+  private linePoints(points: AcGePoint2dLike[]) {
     if (this._directCapture !== 'off') {
       if (points.length < 2) {
         this.missDirectCapture()

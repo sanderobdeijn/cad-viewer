@@ -3,8 +3,7 @@ import {
   acgeOffsetPolyline2d,
   acgePreparePolylineForOffset
 } from '../geometry/AcGePolyline2dOffset'
-import { AcGePoint3d, AcGePoint3dLike, AcGeVector3dLike } from '../math'
-import { AcGePoint2d } from '../math/AcGePoint2d'
+import { AcGePoint2d, AcGePoint2dLike, AcGeVector2dLike } from '../math'
 import { AcGeTol } from './AcGeTol'
 
 /**
@@ -16,15 +15,15 @@ import { AcGeTol } from './AcGeTol'
  * @returns Translated point, or `null` when the XY direction is degenerate
  */
 export function acgeOffsetPointByDirectionInXY(
-  point: AcGePoint3dLike,
-  direction: AcGeVector3dLike,
+  point: AcGePoint2dLike,
+  direction: AcGeVector2dLike,
   offsetDist: number
-): AcGePoint3d | null {
+): AcGePoint2d | null {
   const len = Math.hypot(direction.x, direction.y)
   if (AcGeTol.isNonPositive(len)) return null
   const nx = (-direction.y / len) * offsetDist
   const ny = (direction.x / len) * offsetDist
-  return new AcGePoint3d(point.x + nx, point.y + ny, point.z)
+  return new AcGePoint2d(point.x + nx, point.y + ny)
 }
 
 /**

@@ -1,4 +1,4 @@
-import { AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDxfCode } from '../src/base/AcDbDxfCode'
@@ -48,10 +48,7 @@ describe('AcDbDynBlockReference', () => {
     const anon = new AcDbBlockTableRecord()
     anon.name = '*U60'
     anon.objectId = 'A4240'
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(2, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(2, 0))
     anon.appendEntity(line)
     db.tables.blockTable.add(anon)
 
@@ -88,9 +85,9 @@ describe('AcDbDynBlockReference', () => {
 
     const dynBtr = new AcDbDynBlockTableRecord(def)
     expect(dynBtr.isDynamicBlock()).toBe(true)
-    expect(
-      dynBtr.getAnonymousBlockIds().map(id => id.toUpperCase())
-    ).toContain('A4240')
+    expect(dynBtr.getAnonymousBlockIds().map(id => id.toUpperCase())).toContain(
+      'A4240'
+    )
   })
 
   it('resolves dynamic definition from AcDbBlockRepBTag on anonymous BTR', () => {

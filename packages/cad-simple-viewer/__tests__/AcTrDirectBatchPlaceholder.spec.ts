@@ -6,22 +6,25 @@ jest.mock('@mlightcad/data-model', () => {
   // Patch AcDbPolyline prototype to add directBatchPrimitive getter
   if (actual.AcDbPolyline) {
     // Store width info per-instance
-    const originalAddVertexAt =
-      actual.AcDbPolyline.prototype.addVertexAt
-    Object.defineProperty(actual.AcDbPolyline.prototype, 'directBatchPrimitive', {
-      get(this: InstanceType<typeof actual.AcDbPolyline>) {
-        // Check if any vertex has non-zero width (startWidth or endWidth)
-        if (this._widths) {
-          for (const w of this._widths) {
-            if (w.startWidth > 0 || w.endWidth > 0) {
-              return 'area'
+    const originalAddVertexAt = actual.AcDbPolyline.prototype.addVertexAt
+    Object.defineProperty(
+      actual.AcDbPolyline.prototype,
+      'directBatchPrimitive',
+      {
+        get(this: InstanceType<typeof actual.AcDbPolyline>) {
+          // Check if any vertex has non-zero width (startWidth or endWidth)
+          if (this._widths) {
+            for (const w of this._widths) {
+              if (w.startWidth > 0 || w.endWidth > 0) {
+                return 'area'
+              }
             }
           }
-        }
-        return 'lineStrip'
-      },
-      configurable: true
-    })
+          return 'lineStrip'
+        },
+        configurable: true
+      }
+    )
 
     // Wrap addVertexAt to track width info and vertices
     actual.AcDbPolyline.prototype.addVertexAt = function (
@@ -38,14 +41,24 @@ jest.mock('@mlightcad/data-model', () => {
       }
       this._widths[index] = { startWidth, endWidth }
       this._vertices[index] = point
-      return originalAddVertexAt.call(this, index, point, bulge, startWidth, endWidth, ...rest)
+      return originalAddVertexAt.call(
+        this,
+        index,
+        point,
+        bulge,
+        startWidth,
+        endWidth,
+        ...rest
+      )
     }
 
     // Patch worldDraw to emit area() for wide polylines
     const originalWorldDraw = actual.AcDbPolyline.prototype.worldDraw
     if (originalWorldDraw) {
       actual.AcDbPolyline.prototype.worldDraw = function (
-        this: InstanceType<typeof actual.AcDbPolyline> & { _vertices?: unknown[] },
+        this: InstanceType<typeof actual.AcDbPolyline> & {
+          _vertices?: unknown[]
+        },
         renderer: unknown
       ) {
         const primitive = this.directBatchPrimitive
@@ -59,7 +72,10 @@ jest.mock('@mlightcad/data-model', () => {
             const pt = vertices[i] as { x: number; y: number }
             loop.push(new AcGePoint2d(pt.x, pt.y))
           }
-          const hierarchy = { index: -1, children: [{ index: 0, children: [] }] }
+          const hierarchy = {
+            index: -1,
+            children: [{ index: 0, children: [] }]
+          }
           // Mock tessellate to return the loop (proper tessellation)
           const area = {
             tessellate: () => [loop],
@@ -82,8 +98,7 @@ import {
   acdbHostApplicationServices,
   AcDbLine,
   AcDbPolyline,
-  AcGePoint2d,
-  AcGePoint3d
+  AcGePoint2d
 } from '@mlightcad/data-model'
 import { AcTrEntity, AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
@@ -155,9 +170,9 @@ describe('direct-batch capture placeholder', () => {
 
       const owned: Array<ReturnType<typeof tryBuildDirectEntityMeta>> = []
       const entities = [
-        new AcDbLine(new AcGePoint3d(0, 0, 0), new AcGePoint3d(10, 0, 0)),
-        new AcDbLine(new AcGePoint3d(0, 5, 0), new AcGePoint3d(10, 5, 0)),
-        new AcDbLine(new AcGePoint3d(0, 9, 0), new AcGePoint3d(10, 9, 0))
+        new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0)),
+        new AcDbLine(new AcGePoint2d(0, 5), new AcGePoint2d(10, 5)),
+        new AcDbLine(new AcGePoint2d(0, 9), new AcGePoint2d(10, 9))
       ]
       for (const entity of entities) {
         db.tables.blockTable.modelSpace.appendEntity(entity)
@@ -200,10 +215,7 @@ describe('direct-batch capture placeholder', () => {
       const renderer = createRenderer()
       const placeholder = renderer.createDirectCapturePlaceholder()
 
-      const line = new AcDbLine(
-        new AcGePoint3d(0, 0, 0),
-        new AcGePoint3d(10, 5, 0)
-      )
+      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 5))
       db.tables.blockTable.modelSpace.appendEntity(line)
 
       for (let round = 0; round < 4; round++) {

@@ -2,8 +2,7 @@ import {
   AcDbAlignedDimension,
   AcDbDatabase,
   AcDbDataGenerator,
-  AcGePoint2dLike,
-  AcGePoint3dLike
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -17,7 +16,7 @@ import {
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
 
-export class AcApDimJig extends AcEdPreviewJig<AcGePoint3dLike> {
+export class AcApDimJig extends AcEdPreviewJig<AcGePoint2dLike> {
   private _db: AcDbDatabase
   private _dim: AcDbAlignedDimension
   private _dimBlockName = '*UDIM'
@@ -30,8 +29,8 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint3dLike> {
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    xline1Point: AcGePoint3dLike,
-    xline2Point: AcGePoint3dLike
+    xline1Point: AcGePoint2dLike,
+    xline2Point: AcGePoint2dLike
   ) {
     super(view)
     this._db = db
@@ -46,7 +45,7 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint3dLike> {
     return this._dim
   }
 
-  update(point: AcGePoint3dLike) {
+  update(point: AcGePoint2dLike) {
     this._dim.dimLinePoint = point
     this._dim.rotation = this.calculateAngle(
       this._dim.xLine1Point,

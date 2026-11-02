@@ -1,16 +1,12 @@
 import {
+  AcGeBox3d,
   AcGeCircArc2d,
-  acgeCircArc2dTo3d,
-  acgeCircArc3dTo2d,
   AcGeIntersectPrimitive,
   AcGeMathUtil,
   AcGeMatrix3d,
   AcGePoint2d,
   AcGePoint2dLike,
-  acgePoint2dTo3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
-  AcGeVector3dLike
+  AcGeVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -148,7 +144,7 @@ export class AcDbArc extends AcDbCurve {
    * @example
    * ```typescript
    * const centerPoint = arc.center;
-   * console.log(`Arc center: ${centerPoint.x}, ${centerPoint.y}, ${centerPoint.z}`);
+   * console.log(`Arc center: ${centerPoint.x}, ${centerPoint.y}`);
    * ```
    */
   get center(): AcGePoint2d {
@@ -266,7 +262,7 @@ export class AcDbArc extends AcDbCurve {
    * @example
    * ```typescript
    * const startPoint = arc.startPoint;
-   * console.log(`Arc start point: ${startPoint.x}, ${startPoint.y}, ${startPoint.z}`);
+   * console.log(`Arc start point: ${startPoint.x}, ${startPoint.y}`);
    * ```
    */
   get clockwise(): boolean {
@@ -296,7 +292,7 @@ export class AcDbArc extends AcDbCurve {
    * @example
    * ```typescript
    * const endPoint = arc.endPoint;
-   * console.log(`Arc end point: ${endPoint.x}, ${endPoint.y}, ${endPoint.z}`);
+   * console.log(`Arc end point: ${endPoint.x}, ${endPoint.y}`);
    * ```
    */
   get endPoint(): AcGePoint2d {
@@ -322,7 +318,7 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return acgeCircArc2dTo3d(this._geo).box
+    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
@@ -330,7 +326,7 @@ export class AcDbArc extends AcDbCurve {
     return [
       {
         kind: 'circArc',
-        arc: acgeCircArc2dTo3d(this._geo),
+        arc: this._geo,
         extendable: !this.closed
       }
     ]
@@ -350,7 +346,7 @@ export class AcDbArc extends AcDbCurve {
 
   /** @inheritdoc */
   get area(): number {
-    return acgeCircArc2dTo3d(this._geo).area
+    return this._geo.area
   }
 
   /**
@@ -431,7 +427,7 @@ export class AcDbArc extends AcDbCurve {
               type: 'float',
               editable: false,
               accessor: {
-                get: () => acgeCircArc2dTo3d(this._geo).length
+                get: () => this._geo.length
               }
             },
             {
@@ -439,10 +435,7 @@ export class AcDbArc extends AcDbCurve {
               type: 'float',
               editable: false,
               accessor: {
-                get: () =>
-                  AcGeMathUtil.radToDeg(
-                    Math.abs(acgeCircArc2dTo3d(this._geo).deltaAngle)
-                  )
+                get: () => AcGeMathUtil.radToDeg(Math.abs(this._geo.deltaAngle))
               }
             },
             {
@@ -474,15 +467,15 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
-    gripPoints.push(acgePoint2dTo3d(this.center))
-    gripPoints.push(acgePoint2dTo3d(this.startPoint))
-    gripPoints.push(acgePoint2dTo3d(this.endPoint))
+    const gripPoints = new Array<AcGePoint2d>()
+    gripPoints.push(this.center)
+    gripPoints.push(this.startPoint)
+    gripPoints.push(this.endPoint)
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       this.moveGripAt(index, offset)
     })
@@ -503,11 +496,11 @@ export class AcDbArc extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
-    const geo = acgeCircArc2dTo3d(this._geo)
+    const geo = this._geo
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
         snapPoints.push(geo.startPoint)
@@ -522,26 +515,24 @@ export class AcDbArc extends AcDbCurve {
         break
       case AcDbOsnapMode.Quadrant: {
         for (const point of this._geo.getQuadrantPoints()) {
-          snapPoints.push(acgePoint2dTo3d(point))
+          snapPoints.push(point)
         }
         break
       }
       case AcDbOsnapMode.Nearest:
         {
-          const projectedPoint = acgePoint2dTo3d(this._geo.nearestPoint(pickPoint))
+          const projectedPoint = this._geo.nearestPoint(pickPoint)
           snapPoints.push(projectedPoint)
         }
         break
       case AcDbOsnapMode.Perpendicular: {
-        const candidates = this._geo
-          .perpendicularPoints(pickPoint)
-          .map(acgePoint2dTo3d)
+        const candidates = this._geo.perpendicularPoints(pickPoint)
         const nearest = acdbPickNearestOsnapPoint(pickPoint, candidates)
         if (nearest) snapPoints.push(nearest)
         break
       }
       case AcDbOsnapMode.Tangent: {
-        const points = this._geo.tangentPoints(pickPoint).map(acgePoint2dTo3d)
+        const points = this._geo.tangentPoints(pickPoint)
         snapPoints.push(...points)
         break
       }
@@ -567,9 +558,7 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   transformBy(matrix: AcGeMatrix3d) {
-    this._geo = acgeCircArc3dTo2d(
-      acgeCircArc2dTo3d(this._geo).transform(matrix)
-    )
+    this._geo = this._geo.transform3d(matrix)
     return this
   }
 
@@ -597,7 +586,7 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    return renderer.circularArc(acgeCircArc2dTo3d(this._geo))
+    return renderer.circularArc(this._geo)
   }
 
   override getOffsetCurves(offsetDist: number): AcDbCurve[] {
@@ -605,7 +594,7 @@ export class AcDbArc extends AcDbCurve {
     return curve ? [curve] : []
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const c = this.center
     const r = this.radius
     return Math.sqrt((point.x - c.x) ** 2 + (point.y - c.y) ** 2) >= r ? 1 : -1
@@ -628,10 +617,10 @@ export class AcDbArc extends AcDbCurve {
     )
   }
 
-  private moveGripAt(gripIndex: number, offset: AcGeVector3dLike) {
+  private moveGripAt(gripIndex: number, offset: AcGeVector2dLike) {
     switch (gripIndex) {
       case 0:
-        this.transformBy(AcGeMatrix3d.makeTranslation(offset))
+        this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
         break
       case 1: {
         const point = this._geo.startPoint

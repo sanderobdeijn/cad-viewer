@@ -11,15 +11,8 @@ export {
   acdbSetHostApplicationServicesProvider,
   acdbSetLayoutManagerFactory
 } from './base/'
-export type {
-  AcDbObjectAttrs,
-  AcDbObjectId,
-  AcDbTypedValue
-} from './base/'
-export {
-  AcDbBatchProcessing,
-  AcDbRegenerator
-} from './converter'
+export type { AcDbObjectAttrs, AcDbObjectId, AcDbTypedValue } from './base/'
+export { AcDbBatchProcessing, AcDbRegenerator } from './converter'
 export {
   AC_DB_SYSTEM_VARIABLE_NAMES,
   AcDbAbstractViewTableRecord,
@@ -427,15 +420,12 @@ export {
   AcGeArea2d,
   AcGeBox2d,
   AcGeBox3d,
-  AcGeCatmullRomCurve3d,
+  AcGeCatmullRomCurve2d,
   AcGeCircArc2d,
-  AcGeCircArc3d,
   AcGeCurve2d,
   AcGeEllipseArc2d,
-  AcGeEllipseArc3d,
   AcGeGeometryUtil,
   AcGeLine2d,
-  AcGeLine3d,
   AcGeLoop2d,
   AcGeMathUtil,
   AcGeMatrix2d,
@@ -443,18 +433,10 @@ export {
   AcGeNurbsCurve,
   AcGePlane,
   AcGePoint2d,
-  AcGePoint3d,
   AcGePolyline2d,
   AcGeQuaternion,
   AcGeShape2d,
   AcGeSpline2d,
-  AcGeSpline3d,
-  acgeCircArc2dTo3d,
-  acgeCircArc3dTo2d,
-  acgeEllipseArc2dTo3d,
-  acgeEllipseArc3dTo2d,
-  acgeLine2dTo3d,
-  acgePoint2dTo3d,
   AcGeTol,
   AcGeVector2d,
   AcGeVector3d,
@@ -462,7 +444,6 @@ export {
   DEG2RAD,
   FLOAT_TOL,
   ORIGIN_POINT_2D,
-  ORIGIN_POINT_3D,
   RAD2DEG,
   TAU,
   acgeBasisFunction,
@@ -511,13 +492,11 @@ export {
 export type {
   AcGeBoundaryEdgeType,
   AcGeCircumcircle2d,
-  AcGeCircumcircle3d,
   AcGeIndexNode,
   AcGeKnotParameterizationType,
   AcGeLoop2dType,
   AcGePoint,
   AcGePoint2dLike,
-  AcGePoint3dLike,
   AcGePointLike,
   AcGePolyline2dVertex,
   AcGeResolvedTessellateOptions,

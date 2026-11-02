@@ -1,9 +1,4 @@
-export {
-  FLOAT_TOL,
-  ORIGIN_POINT_2D,
-  ORIGIN_POINT_3D,
-  TAU
-} from './AcGeConstants'
+export { FLOAT_TOL, ORIGIN_POINT_2D, TAU } from './AcGeConstants'
 export { AcGeGeometryUtil } from './AcGeGeometryUtil'
 export {
   AcGeMathUtil,
@@ -65,8 +60,6 @@ export {
 export { acgeOffsetSmoothedSampledPath } from './AcGeSampledCurveOffsetUtil'
 export {
   acgeClosedPolygonArea2d,
-  acgeClosedPolygonArea3d,
   acgePolygonArea2d,
-  acgePolygonArea3d,
   acgeSignedPolygonArea2d
 } from './AcGePolygonAreaUtil'

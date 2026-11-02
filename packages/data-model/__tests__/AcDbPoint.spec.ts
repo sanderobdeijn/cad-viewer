@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -28,11 +28,10 @@ describe('AcDbPoint', () => {
 
     expect(point.position).toMatchObject({ x: 0, y: 0 })
 
-    const source = new AcGePoint3d(1, 2, 3)
+    const source = new AcGePoint2d(1, 2)
     point.position = source
     source.x = 100
     source.y = 200
-    source.z = 300
 
     expect(point.position).toMatchObject({ x: 1, y: 2 })
 
@@ -46,8 +45,8 @@ describe('AcDbPoint', () => {
     point.position = { x: 7.5, y: -2 }
 
     const extents = point.geometricExtents
-    expect(extents.min).toMatchObject({ x: 7.5, y: -2, z: 0 })
-    expect(extents.max).toMatchObject({ x: 7.5, y: -2, z: 0 })
+    expect(extents.min).toMatchObject({ x: 7.5, y: -2 })
+    expect(extents.max).toMatchObject({ x: 7.5, y: -2 })
   })
 
   it('updates geometricExtents when position changes', () => {
@@ -55,12 +54,12 @@ describe('AcDbPoint', () => {
     const point = new AcDbPoint()
     point.position = { x: 1, y: 2 }
 
-    expect(point.geometricExtents.min).toMatchObject({ x: 1, y: 2, z: 0 })
+    expect(point.geometricExtents.min).toMatchObject({ x: 1, y: 2 })
 
     point.position = { x: 10, y: -5 }
 
-    expect(point.geometricExtents.min).toMatchObject({ x: 10, y: -5, z: 0 })
-    expect(point.geometricExtents.max).toMatchObject({ x: 10, y: -5, z: 0 })
+    expect(point.geometricExtents.min).toMatchObject({ x: 10, y: -5 })
+    expect(point.geometricExtents.max).toMatchObject({ x: 10, y: -5 })
   })
 
   it('adds osnap point only in Node mode', () => {
@@ -68,25 +67,24 @@ describe('AcDbPoint', () => {
     const point = new AcDbPoint()
     point.position = { x: 3, y: 4 }
 
-    const nodePoints: AcGePoint3d[] = []
+    const nodePoints: AcGePoint2d[] = []
     point.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       nodePoints
     )
     expect(nodePoints).toHaveLength(1)
     expect(nodePoints[0]).toMatchObject({
       x: point.position.x,
-      y: point.position.y,
-      z: 0
+      y: point.position.y
     })
 
-    const unsupportedModePoints: AcGePoint3d[] = []
+    const unsupportedModePoints: AcGePoint2d[] = []
     point.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       unsupportedModePoints
     )
     expect(unsupportedModePoints).toHaveLength(0)
@@ -100,8 +98,7 @@ describe('AcDbPoint', () => {
     expect(grips).toHaveLength(1)
     expect(grips[0]).toMatchObject({
       x: point.position.x,
-      y: point.position.y,
-      z: 0
+      y: point.position.y
     })
   })
 
@@ -161,7 +158,7 @@ describe('AcDbPoint', () => {
     expect(result).toBe(rendered)
     expect(renderer.point).toHaveBeenCalledTimes(1)
     expect(renderer.point).toHaveBeenCalledWith(
-      new AcGePoint3d(point.position.x, point.position.y, 0),
+      new AcGePoint2d(point.position.x, point.position.y),
       {
         displayMode: 34,
         displaySize: 2.5

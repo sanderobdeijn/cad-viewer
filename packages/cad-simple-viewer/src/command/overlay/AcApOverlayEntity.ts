@@ -1,7 +1,7 @@
 import type {
   AcDbObjectId,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeVector3dLike
 } from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
@@ -62,16 +62,14 @@ export abstract class AcApOverlayEntity {
    * @param view - Active 2D view that hosts HTML / CAD transients.
    * @returns Built group, entity ids, and cleanup hooks.
    */
-  protected abstract subWorldDraw(
-    view: AcTrView2d
-  ): AcApOverlayWorldDrawResult
+  protected abstract subWorldDraw(view: AcTrView2d): AcApOverlayWorldDrawResult
 
   /**
    * Grip points in WCS.
    *
    * @returns Grip locations; empty array means no move grips.
    */
-  subGetGripPoints(): AcGePoint3d[] {
+  subGetGripPoints(): AcGePoint2d[] {
     return []
   }
 
@@ -82,10 +80,7 @@ export abstract class AcApOverlayEntity {
    * @param _offset - World-space translation applied to each selected grip.
    * @returns This entity for chaining.
    */
-  subMoveGripPointsAt(
-    _indices: number[],
-    _offset: AcGeVector3dLike
-  ): this {
+  subMoveGripPointsAt(_indices: number[], _offset: AcGeVector3dLike): this {
     return this
   }
 
@@ -99,7 +94,10 @@ export abstract class AcApOverlayEntity {
    */
   hitTest(
     _canvas: { x: number; y: number },
-    _worldToScreen: (point: { x: number; y: number }) => { x: number; y: number },
+    _worldToScreen: (point: { x: number; y: number }) => {
+      x: number
+      y: number
+    },
     _threshold: number
   ): boolean {
     return false
@@ -110,7 +108,7 @@ export abstract class AcApOverlayEntity {
    *
    * @returns Anchor point, or `undefined` when the overlay has no focus point.
    */
-  primaryPoint(): AcGePoint3dLike | undefined {
+  primaryPoint(): AcGePoint2dLike | undefined {
     return undefined
   }
 }

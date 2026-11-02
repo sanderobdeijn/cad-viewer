@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import {
   AcDbArc,
@@ -68,24 +68,21 @@ describe('2D draw entities', () => {
     const names = make()
       .properties.groups.flatMap(group => group.properties)
       .map(property => property.name)
-    expect(names.filter(name => /(Z|normal[XYZ]|elevation)$/.test(name))).toEqual(
-      []
-    )
+    expect(
+      names.filter(name => /(Z|normal[XYZ]|elevation)$/.test(name))
+    ).toEqual([])
   })
 
-  it.each(entities)('%s stays at Z = 0 when moved in Z', (_n, make) => {
+  it.each(entities)('%s extents stay at Z = 0 when moved in Z', (_n, make) => {
     const entity = make()
     entity.transformBy(new AcGeMatrix3d().makeTranslation(1, 1, 50))
     const extents = entity.geometricExtents
     expect(extents.min.z).toBe(0)
     expect(extents.max.z).toBe(0)
-    for (const grip of entity.subGetGripPoints()) {
-      expect(grip.z).toBe(0)
-    }
   })
 
   it('exposes 2D points on each entity', () => {
-    const line = new AcDbLine(new AcGePoint3d(1, 2, 3), new AcGePoint3d(4, 5, 6))
+    const line = new AcDbLine(new AcGePoint2d(1, 2), new AcGePoint2d(4, 5))
     expect(line.startPoint).not.toHaveProperty('z')
     expect(line.endPoint).not.toHaveProperty('z')
     expect(line.midPoint).not.toHaveProperty('z')
@@ -107,7 +104,7 @@ describe('2D draw entities', () => {
     expect(ray().basePoint).not.toHaveProperty('z')
     expect(ray().unitDir).not.toHaveProperty('z')
     const mline = new AcDbMLine()
-    mline.startPosition = new AcGePoint3d(1, 2, 3)
+    mline.startPosition = new AcGePoint2d(1, 2)
     expect(mline.startPosition).not.toHaveProperty('z')
   })
 })
@@ -149,7 +146,7 @@ describe('AcDbArc direction', () => {
 
   it('moves its end point with a grip, for either direction', () => {
     const arc = new AcDbArc({ x: 0, y: 0 }, 5, Math.PI, Math.PI / 2, true)
-    arc.subMoveGripPointsAt([2], { x: 5, y: -5, z: 0 })
+    arc.subMoveGripPointsAt([2], { x: 5, y: -5 })
     expect(arc.endAngle).toBeCloseTo(0, 8)
     expect(arc.clockwise).toBe(true)
     expect(arc.startPoint.x).toBeCloseTo(-5, 8)
@@ -165,11 +162,11 @@ describe('AcDbArc direction', () => {
 
   it('snaps to the nearest point on the arc', () => {
     const arc = new AcDbArc({ x: 0, y: 0 }, 5, 0, Math.PI)
-    const snaps: AcGePoint3d[] = []
+    const snaps: AcGePoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(9, 9, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(9, 9),
+      new AcGePoint2d(),
       snaps
     )
     expect(snaps[0].x).toBeCloseTo(5 * Math.SQRT1_2, 8)

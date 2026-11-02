@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGeBox3d, AcGePoint2d, AcGePoint3d } from '@mlightcad/data-model'
+import { AcGeBox2d, AcGeBox3d, AcGePoint2d } from '@mlightcad/data-model'
 
 import {
   box3dToBox2d,
@@ -12,8 +12,8 @@ describe('resolveDrawingExtents', () => {
       new AcGePoint2d(667, 506)
     )
     const header = new AcGeBox3d(
-      new AcGePoint3d(-2669, -7979, 0),
-      new AcGePoint3d(24573, 3859, 0)
+      new AcGePoint2d(-2669, -7979),
+      new AcGePoint2d(24573, 3859)
     )
 
     const resolved = resolveDrawingExtents(
@@ -26,8 +26,8 @@ describe('resolveDrawingExtents', () => {
 
   it('falls back to header extents when the scene has no geometry', () => {
     const header = new AcGeBox3d(
-      new AcGePoint3d(10, 20, 0),
-      new AcGePoint3d(30, 40, 0)
+      new AcGePoint2d(10, 20),
+      new AcGePoint2d(30, 40)
     )
 
     const resolved = resolveDrawingExtents(

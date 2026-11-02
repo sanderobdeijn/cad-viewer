@@ -1197,13 +1197,11 @@ export abstract class AcEdBaseView {
     cursor: { x: number; y: number },
     lastPoint?: { x: number; y: number }
   ): { x: number; y: number } {
-    const cursorWcs = { x: cursor.x, y: cursor.y, z: 0 }
+    const cursorWcs = { x: cursor.x, y: cursor.y }
     this._overlayGripOsnapMarkers ??= new AcEdMarkerManager(this)
     const snapPoint = this._osnapResolver.resolve({
       cursorWcs,
-      lastPoint: lastPoint
-        ? { x: lastPoint.x, y: lastPoint.y, z: 0 }
-        : cursorWcs
+      lastPoint: lastPoint ? { x: lastPoint.x, y: lastPoint.y } : cursorWcs
     })
     this._lastOverlayGripOsnap = snapPoint ?? null
     this._overlayGripOsnapMarkers.setHintMarkers(

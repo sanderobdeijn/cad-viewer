@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -23,7 +23,7 @@ type CopyMode = 'Single' | 'Multiple'
 
 interface CopyArrayPlacement {
   copyCount: number
-  endPoint: AcGePoint3d
+  endPoint: AcGePoint2d
   fitMode: boolean
 }
 
@@ -72,10 +72,10 @@ export class AcApCopyCmd extends AcEdCommand {
    * @returns Translation vector that moves a clone from base to target.
    */
   private computeDisplacement(
-    basePoint: AcGePoint3dLike,
-    targetPoint: AcGePoint3dLike
+    basePoint: AcGePoint2dLike,
+    targetPoint: AcGePoint2dLike
   ) {
-    return new AcGePoint3d(targetPoint).sub(basePoint)
+    return new AcGePoint2d(targetPoint).sub(basePoint)
   }
 
   /**
@@ -88,7 +88,7 @@ export class AcApCopyCmd extends AcEdCommand {
    * @returns Displacement assigned to the requested copy index.
    */
   private scaleDisplacement(
-    displacement: AcGePoint3dLike,
+    displacement: AcGePoint2dLike,
     factor: number,
     copyCount: number,
     fitMode: boolean
@@ -126,7 +126,7 @@ export class AcApCopyCmd extends AcEdCommand {
    */
   private buildCopies(
     sourceEntities: AcDbEntity[],
-    displacement: AcGePoint3dLike,
+    displacement: AcGePoint2dLike,
     copyCount: number = 1,
     fitMode: boolean = false
   ) {
@@ -145,7 +145,7 @@ export class AcApCopyCmd extends AcEdCommand {
       const matrix = new AcGeMatrix3d().makeTranslation(
         stepDisplacement.x,
         stepDisplacement.y,
-        stepDisplacement.z
+        0
       )
       batch.forEach(entity => entity.transformBy(matrix))
       copies.push(...batch)
@@ -202,7 +202,7 @@ export class AcApCopyCmd extends AcEdCommand {
   private async promptArrayPlacement(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3d
+    basePoint: AcGePoint2d
   ): Promise<CopyArrayPlacement | undefined> {
     const itemCountPrompt = new AcEdPromptIntegerOptions(
       AcApI18n.t('jig.copy.arrayItemCount'),
@@ -241,7 +241,7 @@ export class AcApCopyCmd extends AcEdCommand {
       if (pointResult.status === AcEdPromptStatus.OK) {
         return {
           copyCount,
-          endPoint: new AcGePoint3d(pointResult.value!),
+          endPoint: new AcGePoint2d(pointResult.value!),
           fitMode: false
         }
       }
@@ -269,7 +269,7 @@ export class AcApCopyCmd extends AcEdCommand {
         if (fitResult.status === AcEdPromptStatus.OK) {
           return {
             copyCount,
-            endPoint: new AcGePoint3d(fitResult.value!),
+            endPoint: new AcGePoint2d(fitResult.value!),
             fitMode: true
           }
         }
@@ -291,7 +291,7 @@ export class AcApCopyCmd extends AcEdCommand {
   private async executeCopyLoop(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3d,
+    basePoint: AcGePoint2d,
     copyMode: CopyMode,
     useDisplacementPrompt: boolean = false
   ) {
@@ -378,7 +378,7 @@ export class AcApCopyCmd extends AcEdCommand {
     }
 
     let copyMode = AcApCopyCmd._defaultMode
-    let basePoint: AcGePoint3d | undefined
+    let basePoint: AcGePoint2d | undefined
     let useDisplacementPrompt = false
 
     while (!basePoint) {
@@ -395,12 +395,12 @@ export class AcApCopyCmd extends AcEdCommand {
       const pointResult =
         await AcApDocManager.instance.editor.getPoint(pointPrompt)
       if (pointResult.status === AcEdPromptStatus.OK) {
-        basePoint = new AcGePoint3d(pointResult.value!)
+        basePoint = new AcGePoint2d(pointResult.value!)
         break
       }
 
       if (pointResult.status === AcEdPromptStatus.None) {
-        basePoint = new AcGePoint3d(0, 0, 0)
+        basePoint = new AcGePoint2d(0, 0)
         useDisplacementPrompt = true
         break
       }
@@ -412,7 +412,7 @@ export class AcApCopyCmd extends AcEdCommand {
 
       const keyword = pointResult.stringResult ?? ''
       if (keyword === 'Displacement') {
-        basePoint = new AcGePoint3d(0, 0, 0)
+        basePoint = new AcGePoint2d(0, 0)
         useDisplacementPrompt = true
         break
       }

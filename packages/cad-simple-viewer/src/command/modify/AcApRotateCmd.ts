@@ -1,7 +1,7 @@
 import {
   AcDbEntity,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGeTol
 } from '@mlightcad/data-model'
 
@@ -82,8 +82,8 @@ export class AcApRotateCmd extends AcEdCommand {
    * @returns Direction angle in degrees, or `undefined` when points are coincident.
    */
   private computeAngleDeg(
-    start: AcGePoint3dLike,
-    end: AcGePoint3dLike
+    start: AcGePoint2dLike,
+    end: AcGePoint2dLike
   ): number | undefined {
     const dx = end.x - start.x
     const dy = end.y - start.y
@@ -105,7 +105,7 @@ export class AcApRotateCmd extends AcEdCommand {
   private async promptReferenceAngle(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3d
+    basePoint: AcGePoint2d
   ): Promise<number | undefined> {
     while (true) {
       const prompt = new AcEdPromptAngleOptions(
@@ -132,7 +132,7 @@ export class AcApRotateCmd extends AcEdCommand {
         const firstPrompt = new AcEdPromptPointOptions(
           AcApI18n.t('jig.rotate.firstReferencePoint')
         )
-        firstPrompt.jig = new AcApRotateStaticJig<AcGePoint3d>(
+        firstPrompt.jig = new AcApRotateStaticJig<AcGePoint2d>(
           context.view,
           sourceEntities
         )
@@ -145,8 +145,8 @@ export class AcApRotateCmd extends AcEdCommand {
         )
         secondPrompt.useBasePoint = true
         secondPrompt.useDashedLine = true
-        secondPrompt.basePoint = new AcGePoint3d(firstResult.value!)
-        secondPrompt.jig = new AcApRotateStaticJig<AcGePoint3d>(
+        secondPrompt.basePoint = new AcGePoint2d(firstResult.value!)
+        secondPrompt.jig = new AcApRotateStaticJig<AcGePoint2d>(
           context.view,
           sourceEntities
         )
@@ -182,7 +182,7 @@ export class AcApRotateCmd extends AcEdCommand {
   private async promptRotationAngle(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint3d
+    basePoint: AcGePoint2d
   ) {
     let copyMode = false
 
@@ -278,7 +278,7 @@ export class AcApRotateCmd extends AcEdCommand {
     const basePointPrompt = new AcEdPromptPointOptions(
       AcApI18n.t('jig.rotate.basePoint')
     )
-    basePointPrompt.jig = new AcApRotateStaticJig<AcGePoint3d>(
+    basePointPrompt.jig = new AcApRotateStaticJig<AcGePoint2d>(
       context.view,
       sourceEntities
     )
@@ -291,7 +291,7 @@ export class AcApRotateCmd extends AcEdCommand {
       return
     }
 
-    const basePoint = new AcGePoint3d(basePointResult.value!)
+    const basePoint = new AcGePoint2d(basePointResult.value!)
     const rotation = await this.promptRotationAngle(
       context,
       sourceEntities,

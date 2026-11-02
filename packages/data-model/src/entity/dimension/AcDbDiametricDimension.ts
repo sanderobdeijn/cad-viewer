@@ -1,7 +1,7 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -27,8 +27,8 @@ export class AcDbDiametricDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = 'DiametricDimension'
 
-  private _chordPoint: AcGePoint3d
-  private _farChordPoint: AcGePoint3d
+  private _chordPoint: AcGePoint2d
+  private _farChordPoint: AcGePoint2d
   private _extArcStartAngle: number
   private _extArcEndAngle: number
   private _leaderLength: number
@@ -51,15 +51,15 @@ export class AcDbDiametricDimension extends AcDbDimension {
    *                   formatting. If null, the current default style will be used
    */
   constructor(
-    chordPoint: AcGePoint3dLike,
-    farChordPoint: AcGePoint3dLike,
+    chordPoint: AcGePoint2dLike,
+    farChordPoint: AcGePoint2dLike,
     leaderLength: number = 0,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._chordPoint = new AcGePoint3d().copy(chordPoint)
-    this._farChordPoint = new AcGePoint3d().copy(farChordPoint)
+    this._chordPoint = new AcGePoint2d().copy(chordPoint)
+    this._farChordPoint = new AcGePoint2d().copy(farChordPoint)
     this._extArcStartAngle = 0
     this._extArcEndAngle = 0
     this._leaderLength = leaderLength
@@ -81,7 +81,7 @@ export class AcDbDiametricDimension extends AcDbDimension {
   get chordPoint() {
     return this._chordPoint
   }
-  set chordPoint(value: AcGePoint3d) {
+  set chordPoint(value: AcGePoint2d) {
     this._chordPoint.copy(value)
   }
 
@@ -97,7 +97,7 @@ export class AcDbDiametricDimension extends AcDbDimension {
   get farChordPoint() {
     return this._farChordPoint
   }
-  set farChordPoint(value: AcGePoint3d) {
+  set farChordPoint(value: AcGePoint2d) {
     this._farChordPoint.copy(value)
   }
 
@@ -158,11 +158,11 @@ export class AcDbDiametricDimension extends AcDbDimension {
         {
           groupName: 'geometry',
           properties: [
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'chordPoint',
               () => this.chordPoint
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'farChordPoint',
               () => this.farChordPoint
             ),

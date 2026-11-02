@@ -1,7 +1,7 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -22,10 +22,10 @@ export class AcDbArcDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = 'ArcDimension'
 
-  private _arcPoint: AcGePoint3d
-  private _centerPoint: AcGePoint3d
-  private _xLine1Point: AcGePoint3d
-  private _xLine2Point: AcGePoint3d
+  private _arcPoint: AcGePoint2d
+  private _centerPoint: AcGePoint2d
+  private _xLine1Point: AcGePoint2d
+  private _xLine2Point: AcGePoint2d
 
   /**
    * Creates a new arc length dimension.
@@ -45,18 +45,18 @@ export class AcDbArcDimension extends AcDbDimension {
    *                   formatting. If null, the current default style will be used
    */
   constructor(
-    centerPoint: AcGePoint3dLike,
-    xLine1Point: AcGePoint3dLike,
-    xLine2Point: AcGePoint3dLike,
-    arcPoint: AcGePoint3dLike,
+    centerPoint: AcGePoint2dLike,
+    xLine1Point: AcGePoint2dLike,
+    xLine2Point: AcGePoint2dLike,
+    arcPoint: AcGePoint2dLike,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._arcPoint = new AcGePoint3d().copy(arcPoint)
-    this._xLine1Point = new AcGePoint3d().copy(xLine1Point)
-    this._xLine2Point = new AcGePoint3d().copy(xLine2Point)
-    this._centerPoint = new AcGePoint3d().copy(centerPoint)
+    this._arcPoint = new AcGePoint2d().copy(arcPoint)
+    this._xLine1Point = new AcGePoint2d().copy(xLine1Point)
+    this._xLine2Point = new AcGePoint2d().copy(xLine2Point)
+    this._centerPoint = new AcGePoint2d().copy(centerPoint)
 
     this.dimensionText = dimText
     // TODO: Set it to the current default dimStyle within the AutoCAD editor if dimStyle is null
@@ -75,7 +75,7 @@ export class AcDbArcDimension extends AcDbDimension {
   get arcPoint() {
     return this._arcPoint
   }
-  set arcPoint(value: AcGePoint3d) {
+  set arcPoint(value: AcGePoint2d) {
     this._arcPoint.copy(value)
   }
 
@@ -90,7 +90,7 @@ export class AcDbArcDimension extends AcDbDimension {
   get centerPoint() {
     return this._centerPoint
   }
-  set centerPoint(value: AcGePoint3d) {
+  set centerPoint(value: AcGePoint2d) {
     this._centerPoint.copy(value)
   }
 
@@ -106,7 +106,7 @@ export class AcDbArcDimension extends AcDbDimension {
   get xLine1Point() {
     return this._xLine1Point
   }
-  set xLine1Point(value: AcGePoint3d) {
+  set xLine1Point(value: AcGePoint2d) {
     this._xLine1Point.copy(value)
   }
 
@@ -122,7 +122,7 @@ export class AcDbArcDimension extends AcDbDimension {
   get xLine2Point() {
     return this._xLine2Point
   }
-  set xLine2Point(value: AcGePoint3d) {
+  set xLine2Point(value: AcGePoint2d) {
     this._xLine2Point.copy(value)
   }
 
@@ -135,19 +135,19 @@ export class AcDbArcDimension extends AcDbDimension {
         {
           groupName: 'geometry',
           properties: [
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'centerPoint',
               () => this.centerPoint
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'xLine1Point',
               () => this.xLine1Point
             ),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties(
               'xLine2Point',
               () => this.xLine2Point
             ),
-            ...this.createPoint3dProperties('arcPoint', () => this.arcPoint)
+            ...this.createPoint2dProperties('arcPoint', () => this.arcPoint)
           ]
         }
       ]

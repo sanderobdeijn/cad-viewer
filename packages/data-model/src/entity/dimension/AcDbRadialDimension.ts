@@ -1,7 +1,7 @@
 import {
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike
+  AcGePoint2d,
+  AcGePoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -21,8 +21,8 @@ import { AcDbDimension } from './AcDbDimension'
  * ```typescript
  * // Create a radial dimension
  * const radialDim = new AcDbRadialDimension(
- *   new AcGePoint3d(0, 0, 0),    // Center point
- *   new AcGePoint3d(5, 0, 0),    // Point on curve
+ *   new AcGePoint2d(0, 0),    // Center point
+ *   new AcGePoint2d(5, 0),    // Point on curve
  *   2.0,                         // Leader length
  *   "5.0",                       // Dimension text
  *   "Standard"                   // Dimension style
@@ -39,9 +39,9 @@ export class AcDbRadialDimension extends AcDbDimension {
   static override typeName: string = 'RadialDimension'
 
   /** The center point of the curve being dimensioned */
-  private _center: AcGePoint3d
+  private _center: AcGePoint2d
   /** The point where the dimension line intersects the curve being dimensioned */
-  private _chordPoint: AcGePoint3d
+  private _chordPoint: AcGePoint2d
   /** The extension arc start angle in radians */
   private _extArcStartAngle: number
   /** The extension arc end angle in radians */
@@ -72,15 +72,15 @@ export class AcDbRadialDimension extends AcDbDimension {
    * ```typescript
    * // Create a radial dimension with default text and style
    * const radialDim = new AcDbRadialDimension(
-   *   new AcGePoint3d(0, 0, 0),
-   *   new AcGePoint3d(5, 0, 0),
+   *   new AcGePoint2d(0, 0),
+   *   new AcGePoint2d(5, 0),
    *   2.0
    * );
    *
    * // Create a radial dimension with custom text and style
    * const radialDim2 = new AcDbRadialDimension(
-   *   new AcGePoint3d(10, 10, 0),
-   *   new AcGePoint3d(15, 10, 0),
+   *   new AcGePoint2d(10, 10),
+   *   new AcGePoint2d(15, 10),
    *   3.0,
    *   "5.0",
    *   "Architectural"
@@ -88,15 +88,15 @@ export class AcDbRadialDimension extends AcDbDimension {
    * ```
    */
   constructor(
-    center: AcGePoint3dLike,
-    chordPoint: AcGePoint3dLike,
+    center: AcGePoint2dLike,
+    chordPoint: AcGePoint2dLike,
     leaderLength: number,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._center = new AcGePoint3d().copy(center)
-    this._chordPoint = new AcGePoint3d().copy(chordPoint)
+    this._center = new AcGePoint2d().copy(center)
+    this._chordPoint = new AcGePoint2d().copy(chordPoint)
     this._leaderLength = leaderLength
     this._extArcStartAngle = 0
     this._extArcEndAngle = 0
@@ -116,7 +116,7 @@ export class AcDbRadialDimension extends AcDbDimension {
    * @example
    * ```typescript
    * const center = radialDim.center;
-   * console.log(`Center point: ${center.x}, ${center.y}, ${center.z}`);
+   * console.log(`Center point: ${center.x}, ${center.y}`);
    * ```
    */
   get center() {
@@ -130,10 +130,10 @@ export class AcDbRadialDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * radialDim.center = new AcGePoint3d(0, 0, 0);
+   * radialDim.center = new AcGePoint2d(0, 0);
    * ```
    */
-  set center(value: AcGePoint3d) {
+  set center(value: AcGePoint2d) {
     this._center.copy(value)
   }
 
@@ -145,7 +145,7 @@ export class AcDbRadialDimension extends AcDbDimension {
    * @example
    * ```typescript
    * const chordPoint = radialDim.chordPoint;
-   * console.log(`Chord point: ${chordPoint.x}, ${chordPoint.y}, ${chordPoint.z}`);
+   * console.log(`Chord point: ${chordPoint.x}, ${chordPoint.y}`);
    * ```
    */
   get chordPoint() {
@@ -159,10 +159,10 @@ export class AcDbRadialDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * radialDim.chordPoint = new AcGePoint3d(5, 0, 0);
+   * radialDim.chordPoint = new AcGePoint2d(5, 0);
    * ```
    */
-  set chordPoint(value: AcGePoint3d) {
+  set chordPoint(value: AcGePoint2d) {
     this._chordPoint.copy(value)
   }
 
@@ -270,8 +270,8 @@ export class AcDbRadialDimension extends AcDbDimension {
         {
           groupName: 'geometry',
           properties: [
-            ...this.createPoint3dProperties('center', () => this.center),
-            ...this.createPoint3dProperties(
+            ...this.createPoint2dProperties('center', () => this.center),
+            ...this.createPoint2dProperties(
               'chordPoint',
               () => this.chordPoint
             ),

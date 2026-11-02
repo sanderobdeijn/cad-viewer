@@ -1,22 +1,16 @@
-import {
-  AcGeBox2d,
-  AcGeMatrix2d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint3d
-} from '../math'
+import { AcGeBox2d, AcGeMatrix2d, AcGePoint2d } from '../math'
 import { AcGeMathUtil, FLOAT_TOL, TAU } from '../util'
 import { AcGeCircArc2d } from './AcGeCircArc2d'
 import { AcGeCurve2d } from './AcGeCurve2d'
 import type { AcGeTessellateOptions } from './AcGeCurveTessellate'
 import { AcGeEllipseArc2d } from './AcGeEllipseArc2d'
 import { AcGeLine2d } from './AcGeLine2d'
-import { AcGeSpline3d } from './AcGeSpline3d'
+import { AcGeSpline2d } from './AcGeSpline2d'
 
 export type AcGeBoundaryEdgeType =
   | AcGeLine2d
   | AcGeCircArc2d
-  | AcGeSpline3d
+  | AcGeSpline2d
   | AcGeEllipseArc2d
 
 /**
@@ -165,32 +159,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
    * @inheritdoc
    */
   transform(matrix: AcGeMatrix2d) {
-    const matrix3d = new AcGeMatrix3d().set(
-      matrix.elements[0],
-      matrix.elements[3],
-      0,
-      matrix.elements[6],
-      matrix.elements[1],
-      matrix.elements[4],
-      0,
-      matrix.elements[7],
-      0,
-      0,
-      1,
-      0,
-      0,
-      0,
-      0,
-      1
-    )
-
-    this._curves.forEach(curve => {
-      if (curve instanceof AcGeSpline3d) {
-        curve.transform(matrix3d)
-      } else {
-        curve.transform(matrix)
-      }
-    })
+    this._curves.forEach(curve => curve.transform(matrix))
 
     this._boundingBoxNeedsUpdate = true
     return this
@@ -218,7 +187,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
   getPoints(numPoints: number): AcGePoint2d[] {
     const points: AcGePoint2d[] = []
     this.curves.forEach(curve => {
-      curve.getPoints(numPoints).forEach((point: AcGePoint2d | AcGePoint3d) => {
+      curve.getPoints(numPoints).forEach((point: AcGePoint2d) => {
         points.push(new AcGePoint2d(point.x, point.y))
       })
     })
@@ -229,7 +198,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
    * Sample this loop for display using per-edge chord-height tessellation.
    *
    * Straight edges emit endpoints only. Circular arcs and splines use
-   * {@link AcGeCircArc2d.tessellate} / {@link AcGeSpline3d.tessellate}.
+   * {@link AcGeCircArc2d.tessellate} / {@link AcGeSpline2d.tessellate}.
    * Elliptical edges choose a segment count from the same chord-height formula.
    *
    * @param options - Chord-height tessellation options
@@ -339,7 +308,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
         edge.rotation
       )
     }
-    if (edge instanceof AcGeSpline3d) {
+    if (edge instanceof AcGeSpline2d) {
       // Reverse spline by reversing control points and knot vector.
       return AcGeLoop2d.reverseSplineEdge(edge)
     }
@@ -387,7 +356,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
    * @param edge Input spline edge
    * @returns Reversed spline edge
    */
-  private static reverseSplineEdge(edge: AcGeSpline3d) {
+  private static reverseSplineEdge(edge: AcGeSpline2d) {
     // Mirror knot values around the midpoint and reverse the order.
     const controlPoints = [...edge.controlPoints].reverse()
     const knots = edge.knots
@@ -399,7 +368,7 @@ export class AcGeLoop2d extends AcGeCurve2d {
     const weights = edge.weights
     const reversedWeights =
       weights.length > 0 ? [...weights].reverse() : undefined
-    return new AcGeSpline3d(
+    return new AcGeSpline2d(
       controlPoints,
       reversedKnots,
       reversedWeights,
@@ -419,7 +388,7 @@ function tessellateLoopEdge(
   if (curve instanceof AcGeCircArc2d) {
     return curve.tessellate(options)
   }
-  if (curve instanceof AcGeSpline3d) {
+  if (curve instanceof AcGeSpline2d) {
     return curve.tessellate(options)
   }
   const sweep = curve.closed ? TAU : curve.deltaAngle

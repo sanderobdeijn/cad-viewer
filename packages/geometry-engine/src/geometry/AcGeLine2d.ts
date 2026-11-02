@@ -1,4 +1,10 @@
-import { AcGeBox2d, AcGeMatrix2d, AcGePoint2d, AcGePoint2dLike } from '../math'
+import {
+  AcGeBox2d,
+  AcGeMatrix2d,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2d
+} from '../math'
 import { AcGeCurve2d } from './AcGeCurve2d'
 
 /**
@@ -71,6 +77,66 @@ export class AcGeLine2d extends AcGeCurve2d {
    */
   getPoints(): AcGePoint2d[] {
     return [this.startPoint, this.endPoint]
+  }
+
+  /**
+   * Normalized direction vector of this line
+   */
+  get direction() {
+    return new AcGeVector2d(this._end).sub(this._start).normalize()
+  }
+
+  /**
+   * Finds the point on the infinite line that is perpendicular to the given point.
+   * @param point Input one point
+   * @returns Return the point on the line that is the closest to the given point.
+   */
+  perpPoint(point: AcGePoint2dLike) {
+    const direction = this.direction
+    const length =
+      (point.x - this._start.x) * direction.x +
+      (point.y - this._start.y) * direction.y
+    return new AcGePoint2d(this._start).addScaledVector(direction, length)
+  }
+
+  /**
+   * Check whether the specified point is on this line.
+   * @param point Input point to check
+   * @returns Return true if the specified point is on this line. Otherwise, return false.
+   */
+  isPointOnLine(point: AcGePoint2dLike): boolean {
+    return this.project(point).distanceTo(point) < 1e-6
+  }
+
+  /**
+   * Return a point at a certain position along the line.
+   * - If `flag` is false, the length is measured from the end point
+   * - If `flag` is true, the length is measured from the start point
+   * @param length Use this length value to return a position along the line.
+   * @returns Return a point at a certain position along the line.
+   */
+  atLength(length: number, flag: boolean = false) {
+    const origin = flag ? this._start : this._end
+    return new AcGePoint2d(origin).addScaledVector(this.direction, length)
+  }
+
+  /**
+   * Extend this line with the specified length
+   * @param length Input the length of extension
+   * @param inversed Input true to extend past the start point, or false to extend past the end point
+   */
+  extend(length: number, inversed: boolean = false) {
+    const direction = this.direction
+    if (inversed) {
+      this._start = new AcGePoint2d(this._start).addScaledVector(
+        direction,
+        -length
+      )
+    } else {
+      this._end = new AcGePoint2d(this._end).addScaledVector(direction, length)
+    }
+    this._boundingBoxNeedsUpdate = true
+    return this
   }
 
   /**

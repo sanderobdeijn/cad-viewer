@@ -1,8 +1,9 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -49,7 +50,7 @@ import {
  * mtext.contents = "This is a\nmultiline text\nwith formatting";
  * mtext.height = 2.5;
  * mtext.width = 20;
- * mtext.location = new AcGePoint3d(0, 0, 0);
+ * mtext.location = new AcGePoint2d(0, 0);
  * mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft;
  *
  * // Access mtext properties
@@ -91,7 +92,7 @@ export class AcDbMText extends AcDbEntity {
   /** The text style name */
   private _styleName: string
   /** The location point of the text */
-  private _location: AcGePoint3d
+  private _location: AcGePoint2d
   /** The attachment point for the text */
   private _attachmentPoint: AcGiMTextAttachmentPoint
   /** The direction vector of the text */
@@ -143,7 +144,7 @@ export class AcDbMText extends AcDbEntity {
     this._backgroundScaleFactor = 1
     this._rotation = 0
     this._styleName = ''
-    this._location = new AcGePoint3d()
+    this._location = new AcGePoint2d()
     this._attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
     this._direction = new AcGeVector3d(1, 0, 0)
     this._drawingDirection = AcGiMTextFlowDirection.LEFT_TO_RIGHT
@@ -360,7 +361,7 @@ export class AcDbMText extends AcDbEntity {
   get location() {
     return this._location
   }
-  set location(value: AcGePoint3dLike) {
+  set location(value: AcGePoint2dLike) {
     this._location.copy(value)
   }
 
@@ -467,15 +468,14 @@ export class AcDbMText extends AcDbEntity {
     height: number
     width: number
     extentsWidth: number
-    position: AcGePoint3d
+    position: AcGePoint2d
     direction: AcGeVector3d
     attachmentPoint: AcGiMTextAttachmentPoint
     preferred?: AcDbAnnotationScaleContext
     annotationScale?: AcDbAnnotationScaleDrawInfo
   } {
     const contexts = acdbGetAnnotationScaleContexts(this)
-    const isAnnotative =
-      contexts.length > 0 || acdbIsAnnotativeObject(this)
+    const isAnnotative = contexts.length > 0 || acdbIsAnnotativeObject(this)
 
     let height = this.height
     let position = this._location
@@ -489,10 +489,7 @@ export class AcDbMText extends AcDbEntity {
     if (isAnnotative && contexts.length > 0) {
       const paperHeight = acdbAnnotativePaperHeight(this.height, contexts)
       preferred =
-        acdbMatchAnnotationScaleContext(
-          contexts,
-          this.database?.cannoscale
-        ) ??
+        acdbMatchAnnotationScaleContext(contexts, this.database?.cannoscale) ??
         contexts.find(c => c.isDefault) ??
         contexts[0]
       height = acdbAnnotativeModelHeight(
@@ -563,7 +560,7 @@ export class AcDbMText extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     const { preferred } = this.resolveAnnotativePresentation()
     const ctx = preferred?.contextData
     if (ctx) {
@@ -592,9 +589,9 @@ export class AcDbMText extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (AcDbOsnapMode.Insertion === osnapMode) {
       snapPoints.push(this.resolveAnnotativePresentation().position)
@@ -627,8 +624,16 @@ export class AcDbMText extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(xAxisPoint).sub(origin)
-    const yAxis = new AcGeVector3d(yAxisPoint).sub(origin)
+    const xAxis = new AcGeVector3d(
+      xAxisPoint.x - origin.x,
+      xAxisPoint.y - origin.y,
+      0
+    )
+    const yAxis = new AcGeVector3d(
+      yAxisPoint.x - origin.x,
+      yAxisPoint.y - origin.y,
+      0
+    )
     const xScale = xAxis.length()
     const yScale = yAxis.length()
 
@@ -828,17 +833,6 @@ export class AcDbMText extends AcDbEntity {
                 get: () => this.location.y,
                 set: (v: number) => {
                   this.location.y = v
-                }
-              }
-            },
-            {
-              name: 'locationZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.location.z,
-                set: (v: number) => {
-                  this.location.z = v
                 }
               }
             }

@@ -6,13 +6,12 @@ import {
   AcGeMatrix3d,
   acgeOffsetVertexPath,
   AcGePoint2d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2dLike,
   AcGePolyline2d,
   AcGePolyline2dVertex,
   type AcGeTessellateOptions,
-  AcGeVector3d,
-  AcGeVector3dLike
+  AcGeVector2dLike,
+  AcGeVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -245,9 +244,9 @@ export class AcDbPolyline extends AcDbCurve {
   }
 
   /** Gets a vertex as a 3D point at Z = 0, for the shared grip and snap APIs. */
-  private getPoint3dAt(index: number): AcGePoint3d {
+  private getPoint3dAt(index: number): AcGePoint2d {
     const vertex = this.getPoint2dAt(index)
-    return new AcGePoint3d(vertex.x, vertex.y, 0)
+    return new AcGePoint2d(vertex.x, vertex.y)
   }
 
   /**
@@ -267,10 +266,10 @@ export class AcDbPolyline extends AcDbCurve {
       return new AcGeBox3d()
     }
     return new AcGeBox3d().setFromPoints([
-      new AcGePoint3d(box.min.x, box.min.y, 0),
-      new AcGePoint3d(box.max.x, box.min.y, 0),
-      new AcGePoint3d(box.max.x, box.max.y, 0),
-      new AcGePoint3d(box.min.x, box.max.y, 0)
+      new AcGePoint2d(box.min.x, box.min.y),
+      new AcGePoint2d(box.max.x, box.min.y),
+      new AcGePoint2d(box.max.x, box.max.y),
+      new AcGePoint2d(box.min.x, box.max.y)
     ])
   }
 
@@ -279,7 +278,6 @@ export class AcDbPolyline extends AcDbCurve {
     return acdbIntersectPrimitivesFromPolyline2d(
       this._geo.vertices,
       this.closed,
-      0,
       AcGeVector3d.Z_AXIS
     )
   }
@@ -300,7 +298,7 @@ export class AcDbPolyline extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint3d>()
+    const gripPoints = new Array<AcGePoint2d>()
     for (let index = 0; index < this.numberOfVertices; ++index) {
       gripPoints.push(this.getPoint3dAt(index))
     }
@@ -311,7 +309,7 @@ export class AcDbPolyline extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     const vertexCount = this.numberOfVertices
     const includeMidpoints = this.shouldIncludeSegmentMidpointGrips()
     const segmentCount = includeMidpoints ? this.getSegmentCount() : 0
@@ -373,24 +371,23 @@ export class AcDbPolyline extends AcDbCurve {
   /**
    * Appends one midpoint grip for each polyline segment.
    */
-  private appendSegmentMidpointGrips(gripPoints: AcGePoint3d[]) {
+  private appendSegmentMidpointGrips(gripPoints: AcGePoint2d[]) {
     const geo = this._geo
     const segmentCount = this.getSegmentCount()
     const vertexCount = geo.numberOfVertices
 
     for (let index = 0; index < segmentCount; index++) {
-      const segmentSnaps: AcGePoint3d[] = []
+      const segmentSnaps: AcGePoint2d[] = []
       acdbCollectPolyline2dSegmentOsnapPoints(
         geo.getPointAt(index),
         geo.getPointAt((index + 1) % vertexCount),
         geo.vertices[index]?.bulge,
-        0,
         AcDbOsnapMode.MidPoint,
-        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0 },
         segmentSnaps
       )
       for (const snap of segmentSnaps) {
-        gripPoints.push(new AcGePoint3d(snap.x, snap.y, 0))
+        gripPoints.push(new AcGePoint2d(snap.x, snap.y))
       }
     }
   }
@@ -409,9 +406,9 @@ export class AcDbPolyline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     const geo = this._geo
     const vertexCount = geo.numberOfVertices
@@ -428,20 +425,19 @@ export class AcDbPolyline extends AcDbCurve {
       case AcDbOsnapMode.Perpendicular:
       case AcDbOsnapMode.Tangent: {
         const segmentCount = this.closed ? vertexCount : vertexCount - 1
-        const candidates: AcGePoint3d[] = []
+        const candidates: AcGePoint2d[] = []
         for (let index = 0; index < segmentCount; index++) {
-          const segmentSnaps: AcGePoint3d[] = []
+          const segmentSnaps: AcGePoint2d[] = []
           acdbCollectPolyline2dSegmentOsnapPoints(
             geo.getPointAt(index),
             geo.getPointAt((index + 1) % vertexCount),
             geo.vertices[index]?.bulge,
-            0,
             osnapMode,
             pickPoint,
             segmentSnaps
           )
           for (const snap of segmentSnaps) {
-            candidates.push(new AcGePoint3d(snap.x, snap.y, 0))
+            candidates.push(new AcGePoint2d(snap.x, snap.y))
           }
         }
         if (osnapMode === AcDbOsnapMode.MidPoint) {
@@ -467,11 +463,9 @@ export class AcDbPolyline extends AcDbCurve {
     const flipBulge = matrix.determinant() < 0
 
     this._geo.vertices.forEach(vertex => {
-      const transformedPoint = new AcGePoint3d(
-        vertex.x,
-        vertex.y,
-        0
-      ).applyMatrix4(matrix)
+      const transformedPoint = new AcGePoint2d(vertex.x, vertex.y).applyMatrix4(
+        matrix
+      )
       vertex.x = transformedPoint.x
       vertex.y = transformedPoint.y
       if (flipBulge && vertex.bulge != null) {
@@ -595,8 +589,8 @@ export class AcDbPolyline extends AcDbCurve {
         const ring = createClosedWidePolylineOffsetRing(widthProfile)
         if (ring != null) {
           return renderer.offsetRing(
-            ring.outer.map(point => new AcGePoint3d(point.x, point.y, 0)),
-            ring.inner.map(point => new AcGePoint3d(point.x, point.y, 0))
+            ring.outer.map(point => new AcGePoint2d(point.x, point.y)),
+            ring.inner.map(point => new AcGePoint2d(point.x, point.y))
           )
         }
       }
@@ -610,7 +604,7 @@ export class AcDbPolyline extends AcDbCurve {
         // world-space width projects to ≪ 1 device pixel (title blocks).
         // Closed rings already get a centerline from renderer.offsetRing.
         const strokePoints = widthProfile.map(
-          sample => new AcGePoint3d(sample.x, sample.y, 0)
+          sample => new AcGePoint2d(sample.x, sample.y)
         )
         // createWidthProfile omits the seam for closed paths; close the stroke.
         if (this.closed && strokePoints.length >= 2) {
@@ -623,10 +617,8 @@ export class AcDbPolyline extends AcDbCurve {
       }
     }
 
-    const points: AcGePoint3d[] = []
-    centerline.forEach(point =>
-      points.push(new AcGePoint3d(point.x, point.y, 0))
-    )
+    const points: AcGePoint2d[] = []
+    centerline.forEach(point => points.push(new AcGePoint2d(point.x, point.y)))
     return renderer.lines(points)
   }
 
@@ -783,7 +775,7 @@ export class AcDbPolyline extends AcDbCurve {
     return curve ? [curve] : []
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint3dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
     const n = this.numberOfVertices
     let bestDist = Infinity
     let bestSide: 1 | -1 = 1

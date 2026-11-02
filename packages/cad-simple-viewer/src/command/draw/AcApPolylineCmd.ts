@@ -2,7 +2,6 @@ import {
   AcDbPolyline,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
   AcGeTol,
   TAU
 } from '@mlightcad/data-model'
@@ -594,7 +593,7 @@ export class AcApPolylineCmd extends AcEdCommand {
         prompt.useBasePoint = true
         const basePoint = getCurrentPoint()
         if (basePoint) {
-          prompt.basePoint = new AcGePoint3d(basePoint)
+          prompt.basePoint = new AcGePoint2d(basePoint)
         }
         prompt.jig = createPreviewJig(undefined)
         // AutoCAD PLINE: Enter at "next point" ends the command without adding a vertex.
@@ -673,7 +672,7 @@ export class AcApPolylineCmd extends AcEdCommand {
         prompt.useBasePoint = true
         const basePoint = getCurrentPoint()
         if (basePoint) {
-          prompt.basePoint = new AcGePoint3d(basePoint)
+          prompt.basePoint = new AcGePoint2d(basePoint)
         }
         prompt.jig = createPreviewJig(undefined, end =>
           applyArcDirection(computeDefaultArcBulge(end))
@@ -725,7 +724,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint3d(startPoint)
+          endPrompt.basePoint = new AcGePoint2d(startPoint)
           const angleRad = (angleResult.value ?? 0) * (Math.PI / 180)
           const tangent = getIncomingTangent()
           endPrompt.jig = createPreviewJig(undefined, end =>
@@ -758,7 +757,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           const centerPrompt = new AcEdPromptPointOptions(
             AcApI18n.t('jig.polyline.arcCenter')
           )
-          centerPrompt.jig = createStaticJig<AcGePoint3d>()
+          centerPrompt.jig = createStaticJig<AcGePoint2d>()
           const centerResult =
             await AcApDocManager.instance.editor.getPoint(centerPrompt)
           if (shouldFinish(centerResult.status)) return 'finish'
@@ -768,7 +767,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint3d(startPoint)
+          endPrompt.basePoint = new AcGePoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromCenter(startPoint, end, centerResult.value!)
@@ -793,10 +792,10 @@ export class AcApPolylineCmd extends AcEdCommand {
           const secondPrompt = new AcEdPromptPointOptions(
             AcApI18n.t('jig.polyline.arcSecondPoint')
           )
-          secondPrompt.jig = createStaticJig<AcGePoint3d>()
+          secondPrompt.jig = createStaticJig<AcGePoint2d>()
           secondPrompt.useDashedLine = true
           secondPrompt.useBasePoint = true
-          secondPrompt.basePoint = new AcGePoint3d(startPoint)
+          secondPrompt.basePoint = new AcGePoint2d(startPoint)
           const secondResult =
             await AcApDocManager.instance.editor.getPoint(secondPrompt)
           if (shouldFinish(secondResult.status)) return 'finish'
@@ -806,7 +805,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint3d(startPoint)
+          endPrompt.basePoint = new AcGePoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromThreePoints(startPoint, secondResult.value!, end)
@@ -841,7 +840,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint3d(startPoint)
+          endPrompt.basePoint = new AcGePoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromRadius(startPoint, end, radiusResult.value ?? 0)

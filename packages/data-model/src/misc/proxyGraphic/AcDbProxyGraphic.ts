@@ -1,19 +1,20 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
 import {
   AcGeArea2d,
-  AcGeCircArc3d,
-  AcGeEllipseArc3d,
-  acgeGetOcsAngle,
+  AcGeCircArc2d,
+  AcGeEllipseArc2d,
   acgeGetOcsReferenceVector,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
   AcGePolyline2d,
   acgeTransformOcsPointToWcs,
   acgeTransformWcsPointToOcs,
+  AcGeVector2d,
   AcGeVector3d,
   AcGeVector3dLike,
-  TAU} from '@mlightcad/geometry-engine'
+  TAU
+} from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
   AcGiLineWeight,
@@ -36,7 +37,8 @@ import {
 import {
   acdbCombineDxfBinaryChunks,
   AcDbProxyGraphicBitStream,
-  AcDbProxyGraphicByteStream} from './AcDbProxyGraphicBinaryStream'
+  AcDbProxyGraphicByteStream
+} from './AcDbProxyGraphicBinaryStream'
 
 /**
  * Maximum number of bytes written to each DXF group code **310** chunk when
@@ -183,23 +185,23 @@ function vectorFromLike(v: AcGeVector3dLike) {
 }
 
 /**
- * Converts a {@link AcGePoint3dLike} object to an {@link AcGePoint3d}.
+ * Converts a {@link AcGePoint2dLike} object to an {@link AcGePoint2d}.
  *
  * @param p - Input point-like value.
- * @returns A concrete 3D point with `z` defaulting to `0` when omitted.
+ * @returns A concrete 2D point.
  */
-function pointFromLike(p: AcGePoint3dLike) {
-  return new AcGePoint3d(p.x, p.y, p.z ?? 0)
+function pointFromLike(p: AcGePoint2dLike) {
+  return new AcGePoint2d(p.x, p.y)
 }
 
 /**
- * Converts a numeric vertex tuple to a {@link AcGePoint3dLike} object.
+ * Converts a numeric vertex tuple to a {@link AcGePoint2dLike} object.
  *
  * @param v - Vertex as `[x, y, z]`.
  * @returns A point-like object suitable for geometry helpers.
  */
-function vertexTuple(v: [number, number, number]): AcGePoint3dLike {
-  return { x: v[0], y: v[1], z: v[2] }
+function vertexTuple(v: [number, number, number]): AcGePoint2dLike {
+  return { x: v[0], y: v[1] }
 }
 
 /**
@@ -267,7 +269,7 @@ export class AcDbProxyGraphic {
   private readonly _matrices: AcGeMatrix3d[] = []
 
   /** Most recently parsed extents corners, when an EXTENTS chunk was seen. */
-  private _extents?: AcGePoint3d[]
+  private _extents?: AcGePoint2d[]
 
   /**
    * Creates a proxy-graphic parser over the given byte stream.
@@ -316,7 +318,7 @@ export class AcDbProxyGraphic {
    * @returns The minimum and maximum corners when an EXTENTS chunk is found,
    *   otherwise `undefined`.
    */
-  scanExtents(): [AcGePoint3d, AcGePoint3d] | undefined {
+  scanExtents(): [AcGePoint2d, AcGePoint2d] | undefined {
     const buffer = this._buffer
     let index = this._index
     while (index < buffer.length) {
@@ -550,9 +552,9 @@ export class AcDbProxyGraphic {
    * Applies the active matrix stack to a point.
    *
    * @param point - Source point in proxy-graphic coordinates.
-   * @returns The transformed {@link AcGePoint3d}.
+   * @returns The transformed {@link AcGePoint2d}.
    */
-  private transformPoint(point: AcGePoint3dLike | [number, number, number]) {
+  private transformPoint(point: AcGePoint2dLike | [number, number, number]) {
     const like = Array.isArray(point) ? vertexTuple(point) : point
     const transformed = pointFromLike(like)
     if (this._matrices.length > 0) {
@@ -568,7 +570,9 @@ export class AcDbProxyGraphic {
    * @returns The transformed unit vector.
    */
   private transformVector(vector: AcGeVector3dLike | [number, number, number]) {
-    const like = Array.isArray(vector) ? vertexTuple(vector) : vector
+    const like = Array.isArray(vector)
+      ? { x: vector[0], y: vector[1], z: vector[2] }
+      : vector
     const transformed = vectorFromLike(like)
     if (this._matrices.length > 0) {
       transformed.transformDirection(this._matrices[this._matrices.length - 1])
@@ -604,8 +608,8 @@ export class AcDbProxyGraphic {
     const min = bs.readVertex()
     const max = bs.readVertex()
     this._extents = [
-      new AcGePoint3d(min[0], min[1], min[2]),
-      new AcGePoint3d(max[0], max[1], max[2])
+      new AcGePoint2d(min[0], min[1]),
+      new AcGePoint2d(max[0], max[1])
     ]
   }
 
@@ -754,15 +758,16 @@ export class AcDbProxyGraphic {
     if (loadNormal) {
       count += 1
     }
-    const vertices: AcGePoint3d[] = []
-    while (count > 0) {
-      const [x, y, z] = bs.readVertex()
-      vertices.push(this.transformPoint({ x, y, z }))
-      count -= 1
-    }
+    const vertices: AcGePoint2d[] = []
     let normal = Z_AXIS
-    if (loadNormal && vertices.length > 0) {
-      normal = vectorFromLike(vertices.pop()!)
+    while (count > 0) {
+      const vertex = bs.readVertex()
+      if (loadNormal && count === 1) {
+        normal = this.transformVector(vertex)
+      } else {
+        vertices.push(this.transformPoint(vertex))
+      }
+      count -= 1
     }
     return { vertices, normal }
   }
@@ -783,23 +788,17 @@ export class AcDbProxyGraphic {
     const center = bs.readVertex()
     const radius = bs.readFloat()
     const normalVec = this.transformVector(bs.readVertex())
-    let centerPoint = pointFromLike({
-      x: center[0],
-      y: center[1],
-      z: center[2]
-    })
+    let centerPoint = pointFromLike({ x: center[0], y: center[1] })
     if (!normalVec.equals(Z_AXIS)) {
       centerPoint = acgeTransformWcsPointToOcs(centerPoint, normalVec)
     }
     centerPoint = this.transformPoint(centerPoint)
-    const refVec = acgeGetOcsReferenceVector(normalVec)
-    const arc = new AcGeCircArc3d(
+    const arc = new AcGeCircArc2d(
       acgeTransformOcsPointToWcs(centerPoint, normalVec),
       radius,
       0,
       TAU,
-      normalVec,
-      refVec
+      false
     )
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
@@ -821,10 +820,9 @@ export class AcDbProxyGraphic {
     const p1 = this.transformPoint(bs.readVertex())
     const p2 = this.transformPoint(bs.readVertex())
     const p3 = this.transformPoint(bs.readVertex())
-    const center = AcGeCircArc3d.computeCenterPoint(p1, p2, p3)
-    if (!center) return
-    const radius = center.distanceTo(p1)
-    const arc = new AcGeCircArc3d(center, radius, 0, TAU, Z_AXIS)
+    const circle = AcGeCircArc2d.computeCircumcircle(p1, p2, p3)
+    if (!circle) return
+    const arc = new AcGeCircArc2d(circle.center, circle.radius, 0, TAU, false)
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
   }
@@ -848,11 +846,7 @@ export class AcDbProxyGraphic {
     const startVec = bs.readVertex()
     const sweepAngle = bs.readFloat()
     const normalVec = this.transformVector(normal)
-    const centerWcs = pointFromLike({
-      x: center[0],
-      y: center[1],
-      z: center[2]
-    })
+    const centerWcs = pointFromLike({ x: center[0], y: center[1] })
     const rawStart = vectorFromLike({
       x: startVec[0],
       y: startVec[1],
@@ -865,15 +859,14 @@ export class AcDbProxyGraphic {
       Number.isFinite(rawStart.lengthSq()) && rawStart.lengthSq() >= 1e-24
         ? rawStart.normalize()
         : acgeGetOcsReferenceVector(normalVec)
-    const startAngle = 0
-    const endAngle = sweepAngle
-    const arc = new AcGeCircArc3d(
+    const clockwise = normalVec.z < 0
+    const startAngle = Math.atan2(refVec.y, refVec.x)
+    const arc = AcGeCircArc2d.fromMathAngles(
       this.transformPoint(centerWcs),
       radius,
       startAngle,
-      endAngle,
-      normalVec,
-      refVec
+      clockwise ? startAngle - sweepAngle : startAngle + sweepAngle,
+      clockwise
     )
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
@@ -895,12 +888,8 @@ export class AcDbProxyGraphic {
     const p1 = this.transformPoint(bs.readVertex())
     const p2 = this.transformPoint(bs.readVertex())
     const p3 = this.transformPoint(bs.readVertex())
-    const center = AcGeCircArc3d.computeCenterPoint(p1, p3, p2)
-    if (!center) return
-    const radius = center.distanceTo(p1)
-    const startAngle = acgeGetOcsAngle(center, p1, Z_AXIS)
-    const endAngle = acgeGetOcsAngle(center, p3, Z_AXIS)
-    const arc = new AcGeCircArc3d(center, radius, startAngle, endAngle, Z_AXIS)
+    const arc = AcGeCircArc2d.tryCreateByThreePoints(p1, p2, p3)
+    if (!arc) return
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
   }
@@ -928,19 +917,19 @@ export class AcDbProxyGraphic {
     const majorAxis = acgeTransformOcsPointToWcs(
       {
         x: Math.cos(majorAxisAngle) * majorAxisLength,
-        y: Math.sin(majorAxisAngle) * majorAxisLength,
-        z: 0
+        y: Math.sin(majorAxisAngle) * majorAxisLength
       },
       extrusion
     )
-    const ellipse = new AcGeEllipseArc3d(
+    const clockwise = extrusion.z < 0
+    const ellipse = new AcGeEllipseArc2d(
       center,
-      extrusion,
-      majorAxis,
       majorAxisLength,
       minorAxisLength,
-      startParam,
-      endParam
+      clockwise ? TAU - startParam : startParam,
+      clockwise ? TAU - endParam : endParam,
+      clockwise,
+      Math.atan2(majorAxis.y, majorAxis.x)
     )
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.ellipticalArc(ellipse))
@@ -1039,12 +1028,11 @@ export class AcDbProxyGraphic {
       this._dxfversion,
       this._encoding
     )
-    let elevation = 0
     let isClosed = false
     bs.readUnsignedLong()
     const flag = bs.readBitShort() as number
     if (flag & 8) {
-      elevation = bs.readBitDouble() as number
+      bs.readBitDouble()
     }
     if (flag & 512) {
       isClosed = true
@@ -1063,11 +1051,10 @@ export class AcDbProxyGraphic {
     }
 
     const rawVertices = bs.readRawDouble(2) as [number, number]
-    const vertices: AcGePoint3d[] = [
+    const vertices: AcGePoint2d[] = [
       this.transformPoint({
         x: rawVertices[0],
-        y: rawVertices[1],
-        z: elevation
+        y: rawVertices[1]
       })
     ]
     let prev = rawVertices
@@ -1075,7 +1062,7 @@ export class AcDbProxyGraphic {
       const x = bs.readBitDoubleDefault(1, prev[0]) as number
       const y = bs.readBitDoubleDefault(1, prev[1]) as number
       prev = [x, y]
-      vertices.push(this.transformPoint({ x, y, z: elevation }))
+      vertices.push(this.transformPoint({ x, y }))
     }
     for (let i = 0; i < numBulges; i++) {
       bs.readBitDouble()
@@ -1102,13 +1089,12 @@ export class AcDbProxyGraphic {
   ) {
     const bs = new AcDbProxyGraphicByteStream(data)
     const totalVertexCount = bs.readLong()
-    const vertices: AcGePoint3d[] = []
+    const vertices: AcGePoint2d[] = []
     for (let i = 0; i < totalVertexCount; i++) {
-      const [x, y, z] = bs.readVertex()
-      vertices.push(this.transformPoint({ x, y, z }))
+      vertices.push(this.transformPoint(bs.readVertex()))
     }
     const faceEntryCount = bs.readLong()
-    const lines: AcGePoint3d[] = []
+    const lines: AcGePoint2d[] = []
     let readCount = 0
     while (readCount < faceEntryCount) {
       const edgeCount = Math.abs(bs.readSignedLong())
@@ -1219,7 +1205,7 @@ export class AcDbProxyGraphic {
     entities: AcGiEntity[],
     options: {
       /** Text insertion point in WCS coordinates. */
-      insert: AcGePoint3d
+      insert: AcGePoint2d
       /** Text plane normal in WCS coordinates. */
       normal: AcGeVector3d
       /** Text baseline direction in WCS coordinates. */
@@ -1282,7 +1268,7 @@ export class AcDbProxyGraphic {
     const bs = new AcDbProxyGraphicByteStream(data)
     const start = this.transformPoint(bs.readVertex())
     const other = this.transformPoint(bs.readVertex())
-    const direction = new AcGeVector3d().subVectors(other, start)
+    const direction = new AcGeVector2d().subVectors(other, start)
     if (direction.lengthSq() === 0) return
     const far = 1e6
     const end = isRay

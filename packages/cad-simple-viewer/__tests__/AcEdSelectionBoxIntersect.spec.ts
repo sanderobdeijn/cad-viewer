@@ -10,17 +10,13 @@ describe('acedLineSegmentIntersectsBox2d', () => {
 
   it('hits when an endpoint lies inside the box', () => {
     expect(
-      acedLineSegmentIntersectsBox2d({ x: 5, y: 5, z: 0 }, { x: 20, y: 20, z: 0 }, box)
+      acedLineSegmentIntersectsBox2d({ x: 5, y: 5 }, { x: 20, y: 20 }, box)
     ).toBe(true)
   })
 
   it('hits when the segment crosses a box edge', () => {
     expect(
-      acedLineSegmentIntersectsBox2d(
-        { x: -5, y: 5, z: 0 },
-        { x: 15, y: 5, z: 0 },
-        box
-      )
+      acedLineSegmentIntersectsBox2d({ x: -5, y: 5 }, { x: 15, y: 5 }, box)
     ).toBe(true)
   })
 

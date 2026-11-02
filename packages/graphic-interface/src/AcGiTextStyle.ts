@@ -1,4 +1,4 @@
-import { AcGePoint3dLike, AcGeVector3dLike } from '@mlightcad/geometry-engine'
+import { AcGePoint2dLike, AcGeVector3dLike } from '@mlightcad/geometry-engine'
 
 export enum AcGiMTextFlowDirection {
   LEFT_TO_RIGHT = 1,
@@ -41,7 +41,7 @@ export interface AcGiMTextData {
   text: string
   height: number
   width: number
-  position: AcGePoint3dLike
+  position: AcGePoint2dLike
   rotation?: number
   directionVector?: AcGeVector3dLike
   attachmentPoint?: AcGiMTextAttachmentPoint

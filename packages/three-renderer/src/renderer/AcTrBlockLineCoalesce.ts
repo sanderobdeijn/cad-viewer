@@ -1,4 +1,4 @@
-import { AcDbRenderingCache, AcGePoint3dLike } from '@mlightcad/data-model'
+import { AcDbRenderingCache, AcGePoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 
@@ -16,7 +16,7 @@ export class AcTrLineVertexBuilder {
   private data = new Float32Array(4096)
   length = 0
 
-  append(points: AcGePoint3dLike[]): { offset: number; floatCount: number } {
+  append(points: AcGePoint2dLike[]): { offset: number; floatCount: number } {
     const floatCount = points.length * 3
     this.ensure(this.length + floatCount)
     const offset = this.length
@@ -26,7 +26,7 @@ export class AcTrLineVertexBuilder {
       const point = points[i]
       data[p++] = point.x
       data[p++] = point.y
-      data[p++] = point.z ?? 0
+      data[p++] = 0
     }
     this.length = p
     return { offset, floatCount }
@@ -140,7 +140,7 @@ export function installBlockLineCoalescePatch(): void {
 }
 
 export function captureCoalescedLine(
-  points: AcGePoint3dLike[],
+  points: AcGePoint2dLike[],
   material: THREE.Material,
   layerName: string,
   builder: AcTrLineVertexBuilder

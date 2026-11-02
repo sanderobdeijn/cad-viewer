@@ -1,8 +1,9 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -32,7 +33,7 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * const shape = new AcDbShape();
  * shape.name = 'ARROW';
- * shape.position = new AcGePoint3d(10, 20, 0);
+ * shape.position = new AcGePoint2d(10, 20);
  * shape.size = 2.5;
  * shape.rotation = Math.PI / 4;
  * ```
@@ -46,7 +47,7 @@ export class AcDbShape extends AcDbEntity {
   }
 
   /** The insertion point of the shape in WCS coordinates. */
-  private _position: AcGePoint3d
+  private _position: AcGePoint2d
   /** The height of the shape. */
   private _size: number
   /** The name of the shape within the associated SHX font. */
@@ -71,7 +72,7 @@ export class AcDbShape extends AcDbEntity {
    */
   constructor() {
     super()
-    this._position = new AcGePoint3d()
+    this._position = new AcGePoint2d()
     this._size = 1
     this._name = ''
     this._rotation = 0
@@ -88,12 +89,12 @@ export class AcDbShape extends AcDbEntity {
    *
    * Mirrors `AcDbShape::position()` in ObjectARX.
    */
-  get position(): AcGePoint3d {
+  get position(): AcGePoint2d {
     return this._position
   }
 
   /** Sets the insertion point of this shape in WCS coordinates. */
-  set position(value: AcGePoint3dLike) {
+  set position(value: AcGePoint2dLike) {
     this._position.copy(value)
   }
 
@@ -266,18 +267,10 @@ export class AcDbShape extends AcDbEntity {
     extents.expandByPoint(this._position)
     if (half > 0) {
       extents.expandByPoint(
-        new AcGePoint3d(
-          this._position.x - half,
-          this._position.y - half,
-          this._position.z
-        )
+        new AcGePoint2d(this._position.x - half, this._position.y - half)
       )
       extents.expandByPoint(
-        new AcGePoint3d(
-          this._position.x + half,
-          this._position.y + half,
-          this._position.z
-        )
+        new AcGePoint2d(this._position.x + half, this._position.y + half)
       )
     }
     return extents
@@ -288,16 +281,16 @@ export class AcDbShape extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._position)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Insertion) {
       snapPoints.push(this._position)
@@ -310,24 +303,27 @@ export class AcDbShape extends AcDbEntity {
     const localToWcs = new AcGeMatrix3d().multiplyMatrices(extrusion, rotation)
 
     const origin = this._position.clone()
-    const xAxisPoint = new AcGePoint3d(this._widthFactor, 0, 0)
+    const xAxisPoint = new AcGePoint2d(this._widthFactor, 0)
       .applyMatrix4(localToWcs)
       .add(origin)
-    const yAxisPoint = new AcGePoint3d(0, 1, 0)
-      .applyMatrix4(localToWcs)
-      .add(origin)
-    const zAxisPoint = new AcGePoint3d(0, 0, 1)
+    const yAxisPoint = new AcGePoint2d(0, 1)
       .applyMatrix4(localToWcs)
       .add(origin)
 
     origin.applyMatrix4(matrix)
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
-    zAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(xAxisPoint).sub(origin)
-    const yAxis = new AcGeVector3d(yAxisPoint).sub(origin)
-    const zAxis = new AcGeVector3d(zAxisPoint).sub(origin)
+    const xAxis = new AcGeVector3d(
+      xAxisPoint.x - origin.x,
+      xAxisPoint.y - origin.y,
+      0
+    )
+    const yAxis = new AcGeVector3d(
+      yAxisPoint.x - origin.x,
+      yAxisPoint.y - origin.y,
+      0
+    )
 
     let normal = new AcGeVector3d().crossVectors(xAxis, yAxis)
     if (normal.lengthSq() === 0) {
@@ -352,10 +348,6 @@ export class AcDbShape extends AcDbEntity {
       if (xScale > 0) {
         this._widthFactor *= xScale / yScale
       }
-    }
-    const zScale = zAxis.length()
-    if (zScale > 0) {
-      this._thickness *= zScale
     }
     return this
   }
@@ -460,17 +452,6 @@ export class AcDbShape extends AcDbEntity {
                   this.position.y = v
                 }
               }
-            },
-            {
-              name: 'positionZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.position.z,
-                set: (v: number) => {
-                  this.position.z = v
-                }
-              }
             }
           ]
         }
@@ -544,4 +525,3 @@ export class AcDbShape extends AcDbEntity {
     return style?.textStyle
   }
 }
-

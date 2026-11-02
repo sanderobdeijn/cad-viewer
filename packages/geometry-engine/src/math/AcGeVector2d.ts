@@ -2,6 +2,7 @@ import { AcCmErrors } from '@mlightcad/common'
 
 import { AcGeMathUtil } from '../util/AcGeMathUtil'
 import { AcGeMatrix2d } from './AcGeMatrix2d'
+import type { AcGeMatrix3d } from './AcGeMatrix3d'
 import { AcGePoint2dLike } from './AcGePoint2d'
 
 /**
@@ -228,7 +229,7 @@ export class AcGeVector2d {
    * @param b Input one 2d vector
    * @returns Return this vector
    */
-  addVectors(a: AcGeVector2d, b: AcGeVector2d) {
+  addVectors(a: AcGeVector2dLike, b: AcGeVector2dLike) {
     this.x = a.x + b.x
     this.y = a.y + b.y
 
@@ -241,7 +242,7 @@ export class AcGeVector2d {
    * @param s Input one scalar value
    * @returns Return this vector
    */
-  addScaledVector(v: AcGeVector2d, s: number) {
+  addScaledVector(v: AcGeVector2dLike, s: number) {
     this.x += v.x * s
     this.y += v.y * s
 
@@ -339,6 +340,23 @@ export class AcGeVector2d {
 
     this.x = e[0] * x + e[3] * y + e[6]
     this.y = e[1] * x + e[4] * y + e[7]
+
+    return this
+  }
+
+  /**
+   * Multiply this vector (with an implicit z = 0 and w = 1) by m and keep the XY part of the result.
+   * @param m Input one 4x4 matrix
+   * @returns Return this vector
+   */
+  applyMatrix4(m: AcGeMatrix3d) {
+    const x = this.x,
+      y = this.y
+    const e = m.elements
+    const w = 1 / (e[3] * x + e[7] * y + e[15])
+
+    this.x = (e[0] * x + e[4] * y + e[12]) * w
+    this.y = (e[1] * x + e[5] * y + e[13]) * w
 
     return this
   }
@@ -477,7 +495,7 @@ export class AcGeVector2d {
    * @param v Input one 2d vector
    * @returns Return the dot product of this vector and v.
    */
-  dot(v: AcGeVector2d) {
+  dot(v: AcGeVector2dLike) {
     return this.x * v.x + this.y * v.y
   }
 
@@ -487,7 +505,7 @@ export class AcGeVector2d {
    * @param v Input one 2d vector
    * @returns Return the cross product of this vector and v.
    */
-  cross(v: AcGeVector2d) {
+  cross(v: AcGeVector2dLike) {
     return this.x * v.y - this.y * v.x
   }
 
@@ -579,7 +597,7 @@ export class AcGeVector2d {
    * @param v Input one 2d vector
    * @returns Return the Manhattan distance from this vector to v.
    */
-  manhattanDistanceTo(v: AcGeVector2d) {
+  manhattanDistanceTo(v: AcGeVector2dLike) {
     return Math.abs(this.x - v.x) + Math.abs(this.y - v.y)
   }
 
@@ -599,7 +617,7 @@ export class AcGeVector2d {
    * @param alpha Input interpolation factor, typically in the closed interval [0, 1].
    * @returns Return this vector
    */
-  lerp(v: AcGeVector2d, alpha: number) {
+  lerp(v: AcGeVector2dLike, alpha: number) {
     this.x += (v.x - this.x) * alpha
     this.y += (v.y - this.y) * alpha
 
@@ -615,7 +633,7 @@ export class AcGeVector2d {
    * @param alpha Input interpolation factor, typically in the closed interval [0, 1].
    * @returns
    */
-  lerpVectors(v1: AcGeVector2d, v2: AcGeVector2d, alpha: number) {
+  lerpVectors(v1: AcGeVector2dLike, v2: AcGeVector2dLike, alpha: number) {
     this.x = v1.x + (v2.x - v1.x) * alpha
     this.y = v1.y + (v2.y - v1.y) * alpha
 
@@ -627,7 +645,7 @@ export class AcGeVector2d {
    * @param v Input one 2d vector to compare
    * @returns Return true if the components of this vector and v are strictly equal; false otherwise.
    */
-  equals(v: AcGeVector2d) {
+  equals(v: AcGeVector2dLike) {
     return v.x === this.x && v.y === this.y
   }
 

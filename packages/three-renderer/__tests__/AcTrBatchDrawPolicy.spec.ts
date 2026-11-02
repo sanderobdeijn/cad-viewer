@@ -15,12 +15,11 @@ import {
 
 describe('AcTrBatchDrawPolicy', () => {
   it('detects large-world insertion points', () => {
-    expect(isLargeWorldCoordinatePoint({ x: 10, y: 20, z: 0 })).toBe(false)
+    expect(isLargeWorldCoordinatePoint({ x: 10, y: 20 })).toBe(false)
     expect(
       isLargeWorldCoordinatePoint({
         x: RTE_REBASE_THRESHOLD + 1,
-        y: 0,
-        z: 0
+        y: 0
       })
     ).toBe(true)
   })
@@ -28,12 +27,12 @@ describe('AcTrBatchDrawPolicy', () => {
   it('defaults to batch at small coordinates', () => {
     expect(
       defaultBatchDrawPolicy.resolveDrawMode({
-        position: { x: 10, y: 20, z: 0 }
+        position: { x: 10, y: 20 }
       })
     ).toBe('batch')
     expect(
       defaultBatchDrawPolicy.resolveDrawMode({
-        anchor: { x: 0, y: 0, z: 0 }
+        anchor: { x: 0, y: 0 }
       })
     ).toBe('batch')
   })
@@ -41,12 +40,12 @@ describe('AcTrBatchDrawPolicy', () => {
   it('always batches regardless of coordinates', () => {
     expect(
       alwaysBatchDrawPolicy.resolveDrawMode({
-        position: { x: RTE_REBASE_THRESHOLD + 500, y: 0, z: 0 }
+        position: { x: RTE_REBASE_THRESHOLD + 500, y: 0 }
       })
     ).toBe('batch')
     expect(
       alwaysBatchDrawPolicy.resolveDrawMode({
-        anchor: { x: 0, y: 0, z: 0 }
+        anchor: { x: 0, y: 0 }
       })
     ).toBe('batch')
   })
@@ -54,12 +53,12 @@ describe('AcTrBatchDrawPolicy', () => {
   it('always unbatches regardless of coordinates', () => {
     expect(
       alwaysUnbatchDrawPolicy.resolveDrawMode({
-        position: { x: 10, y: 20, z: 0 }
+        position: { x: 10, y: 20 }
       })
     ).toBe('unbatch')
     expect(
       alwaysUnbatchDrawPolicy.resolveDrawMode({
-        anchor: { x: 0, y: 0, z: 0 }
+        anchor: { x: 0, y: 0 }
       })
     ).toBe('unbatch')
   })
@@ -67,12 +66,12 @@ describe('AcTrBatchDrawPolicy', () => {
   it('defaults to unbatch at large coordinates', () => {
     expect(
       defaultBatchDrawPolicy.resolveDrawMode({
-        position: { x: RTE_REBASE_THRESHOLD + 500, y: 0, z: 0 }
+        position: { x: RTE_REBASE_THRESHOLD + 500, y: 0 }
       })
     ).toBe('unbatch')
     expect(
       defaultBatchDrawPolicy.resolveDrawMode({
-        anchor: { x: RTE_REBASE_THRESHOLD + 1, y: 0, z: 0 }
+        anchor: { x: RTE_REBASE_THRESHOLD + 1, y: 0 }
       })
     ).toBe('unbatch')
   })
@@ -80,8 +79,8 @@ describe('AcTrBatchDrawPolicy', () => {
   it('prefers anchor over position when both are provided', () => {
     expect(
       defaultBatchDrawPolicy.resolveDrawMode({
-        position: { x: 0, y: 0, z: 0 },
-        anchor: { x: RTE_REBASE_THRESHOLD + 1, y: 0, z: 0 }
+        position: { x: 0, y: 0 },
+        anchor: { x: RTE_REBASE_THRESHOLD + 1, y: 0 }
       })
     ).toBe('unbatch')
   })
@@ -92,7 +91,7 @@ describe('AcTrBatchDrawPolicy', () => {
       new THREE.Vector3(30, 40, 50)
     )
 
-    expect(resolveAnchorFromBox(box)).toEqual({ x: 20, y: 30, z: 40 })
+    expect(resolveAnchorFromBox(box)).toEqual({ x: 20, y: 30 })
     expect(resolveAnchorFromBox(new THREE.Box3())).toBeUndefined()
   })
 

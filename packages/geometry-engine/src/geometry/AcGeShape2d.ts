@@ -1,4 +1,9 @@
-import { AcGeBox2d, AcGeMatrix2d, AcGeVector2dLike } from '../math'
+import {
+  AcGeBox2d,
+  AcGeMatrix2d,
+  AcGeMatrix3d,
+  AcGeVector2dLike
+} from '../math'
 import { AcGeShape } from './AcGeShape'
 
 /**
@@ -22,6 +27,14 @@ export abstract class AcGeShape2d extends AcGeShape {
    * @param matrix Input transformation matrix
    */
   abstract transform(matrix: AcGeMatrix2d): this
+
+  /**
+   * Transforms this shape by the XY affine part of a 4x4 matrix.
+   * @param matrix Input transformation matrix
+   */
+  transform3d(matrix: AcGeMatrix3d): this {
+    return this.transform(new AcGeMatrix2d().setFromAffineMatrix4(matrix))
+  }
 
   /**
    * Return a deep-cloned copy of this 2d shape.

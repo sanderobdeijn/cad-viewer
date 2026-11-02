@@ -3,7 +3,7 @@ import {
   AcDbBlockTableRecord,
   AcDbDatabase,
   AcDbLine,
-  AcGePoint3d
+  AcGePoint2d
 } from '@mlightcad/data-model'
 
 import {
@@ -37,10 +37,7 @@ describe('resolveBlockSubEntity', () => {
     const cell = new AcDbBlockTableRecord()
     cell.name = 'CELL_745'
     db.tables.blockTable.add(cell)
-    const line = new AcDbLine(
-      new AcGePoint3d(0, 0, 0),
-      new AcGePoint3d(1, 0, 0)
-    )
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
     cell.appendEntity(line)
 
     const row = new AcDbBlockTableRecord()
@@ -48,7 +45,7 @@ describe('resolveBlockSubEntity', () => {
     db.tables.blockTable.add(row)
     for (const x of [0, 100]) {
       const nested = new AcDbBlockReference('CELL_745')
-      nested.position = new AcGePoint3d(x, 0, 0)
+      nested.position = new AcGePoint2d(x, 0)
       row.appendEntity(nested)
     }
 
@@ -57,25 +54,22 @@ describe('resolveBlockSubEntity', () => {
 
     const first = resolveBlockSubEntity(ref, line.objectId)
     expect(first).toBeDefined()
-    const firstOrigin = new AcGePoint3d(0, 0, 0).applyMatrix4(first!.transform)
+    const firstOrigin = new AcGePoint2d(0, 0).applyMatrix4(first!.transform)
     expect(firstOrigin.x).toBeCloseTo(0)
     expect(firstOrigin.y).toBeCloseTo(0)
 
     const second = resolveBlockSubEntity(ref, `${line.objectId}#1`)
     expect(second).toBeDefined()
-    const secondOrigin = new AcGePoint3d(0, 0, 0).applyMatrix4(
-      second!.transform
-    )
+    const secondOrigin = new AcGePoint2d(0, 0).applyMatrix4(second!.transform)
     expect(secondOrigin.x).toBeCloseTo(100)
     expect(secondOrigin.y).toBeCloseTo(0)
 
     const byHint = resolveBlockSubEntity(ref, line.objectId, undefined, {
       x: 100.5,
-      y: 0,
-      z: 0
+      y: 0
     })
     expect(byHint).toBeDefined()
-    const hintOrigin = new AcGePoint3d(0, 0, 0).applyMatrix4(byHint!.transform)
+    const hintOrigin = new AcGePoint2d(0, 0).applyMatrix4(byHint!.transform)
     expect(hintOrigin.x).toBeCloseTo(100)
   })
 
@@ -86,7 +80,7 @@ describe('resolveBlockSubEntity', () => {
     const cell = new AcDbBlockTableRecord()
     cell.name = 'CELL_745_Z'
     db.tables.blockTable.add(cell)
-    const line = new AcDbLine(new AcGePoint3d(0, 0, 0), new AcGePoint3d(1, 0, 0))
+    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
     cell.appendEntity(line)
 
     const row = new AcDbBlockTableRecord()
@@ -94,7 +88,7 @@ describe('resolveBlockSubEntity', () => {
     db.tables.blockTable.add(row)
     for (const x of [0, 100]) {
       const nested = new AcDbBlockReference('CELL_745_Z')
-      nested.position = new AcGePoint3d(x, 0, 0)
+      nested.position = new AcGePoint2d(x, 0)
       row.appendEntity(nested)
     }
 
@@ -103,11 +97,10 @@ describe('resolveBlockSubEntity', () => {
 
     const byHint = resolveBlockSubEntity(ref, line.objectId, undefined, {
       x: 100.5,
-      y: 0,
-      z: 0
+      y: 0
     })
     expect(byHint).toBeDefined()
-    const hintOrigin = new AcGePoint3d(0, 0, 0).applyMatrix4(byHint!.transform)
+    const hintOrigin = new AcGePoint2d(0, 0).applyMatrix4(byHint!.transform)
     expect(hintOrigin.x).toBeCloseTo(100)
     expect(byHint!.entity.objectId).toBe(line.objectId)
   })

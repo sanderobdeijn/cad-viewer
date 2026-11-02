@@ -2,21 +2,17 @@ import {
   AcGeArea2d,
   AcGeBox2d,
   AcGeBox3d,
-  AcGeCatmullRomCurve3d,
+  AcGeCatmullRomCurve2d,
   AcGeCircArc2d,
-  AcGeCircArc3d,
   AcGeEllipseArc2d,
-  AcGeEllipseArc3d,
   AcGeGeometryUtil,
   AcGeLine2d,
-  AcGeLine3d,
   AcGeLoop2d,
   AcGeMatrix2d,
   AcGeMatrix3d,
   AcGeNurbsCurve,
   AcGePlane,
   AcGePoint2d,
-  AcGePoint3d,
   AcGePolyline2d,
   AcGeQuaternion,
   AcGeVector2d,
@@ -62,10 +58,10 @@ describe('geometry-engine public API coverage boost', () => {
       ])
     ).toEqual([1, 2, 3, 4])
 
-    const flat2d = AcGePoint3d.pointArrayToNumberArray(
-      [new AcGePoint3d(1, 2, 3), new AcGePoint3d(4, 5, 6)],
-      false
-    )
+    const flat2d = AcGePoint2d.pointArrayToNumberArray([
+      new AcGePoint2d(1, 2),
+      new AcGePoint2d(4, 5)
+    ])
     expect(flat2d.slice(0, 4)).toEqual([1, 2, 4, 5])
   })
 
@@ -536,38 +532,17 @@ describe('geometry-engine public API coverage boost', () => {
     ).toBeInstanceOf(AcGeLine2d)
     expect(line2.clone()).toBeInstanceOf(AcGeLine2d)
 
-    const line3 = new AcGeLine3d({ x: 0, y: 0, z: 0 }, { x: 2, y: 0, z: 0 })
+    const line3 = new AcGeLine2d({ x: 0, y: 0 }, { x: 2, y: 0 })
     expect(line3.direction.length()).toBeCloseTo(1, 6)
-    expect(line3.midPoint.x).toBeCloseTo(1, 6)
-    expect(line3.nearestPoint({ x: 1, y: 1, z: 0 }).x).toBeCloseTo(1, 6)
-    expect(line3.isPointOnLine({ x: 1, y: 0, z: 0 })).toBe(true)
-    expect(line3.at(0.5, new AcGePoint3d()).x).toBeCloseTo(1, 6)
-    expect(line3.atLength(1).x).toBeDefined()
-    expect(line3.extend(1)).toBeInstanceOf(AcGeLine3d)
+    expect(line3.isPointOnLine({ x: 1, y: 0 })).toBe(true)
+    expect(line3.atLength(1).x).toBeCloseTo(3, 6)
+    expect(line3.atLength(1, true).x).toBeCloseTo(1, 6)
+    expect(line3.perpPoint({ x: 1, y: 1 })).toBeInstanceOf(AcGePoint2d)
+    expect(line3.extend(1).endPoint.x).toBeCloseTo(3, 6)
+    expect(line3.extend(1, true).startPoint.x).toBeCloseTo(-1, 6)
     expect(
-      line3.closestPointToPointParameter(new AcGePoint3d(2, 1, 0), true)
-    ).toBeDefined()
-    expect(
-      line3.closestPointToPoint(
-        new AcGePoint3d(2, 1, 0),
-        true,
-        new AcGePoint3d()
-      )
-    ).toBeInstanceOf(AcGePoint3d)
-    expect(line3.delta(new AcGeVector3d())).toBeInstanceOf(AcGeVector3d)
-    expect(line3.distanceSq()).toBeGreaterThanOrEqual(0)
-    expect(line3.distance()).toBeGreaterThanOrEqual(0)
-    expect(line3.project({ x: 1, y: 1, z: 0 })).toBeInstanceOf(AcGePoint3d)
-    expect(line3.perpPoint({ x: 1, y: 1, z: 0 })).toBeInstanceOf(AcGePoint3d)
-    expect(line3.calculateBoundingBox()).toBeInstanceOf(AcGeBox3d)
-    expect(
-      line3.transform(new AcGeMatrix3d().makeTranslation(1, 1, 1))
-    ).toBeInstanceOf(AcGeLine3d)
-    expect(line3.closed).toBe(false)
-    expect(
-      line3.copy(new AcGeLine3d({ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }))
-    ).toBeInstanceOf(AcGeLine3d)
-    expect(line3.clone()).toBeInstanceOf(AcGeLine3d)
+      line3.transform3d(new AcGeMatrix3d().makeTranslation(1, 1, 1)).startPoint
+    ).toMatchObject({ x: 0, y: 1 })
 
     const poly = new AcGePolyline2d([
       { x: 0, y: 0 },
@@ -590,7 +565,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(poly.transform(new AcGeMatrix2d().makeScale(-1, 1))).toBeInstanceOf(
       AcGePolyline2d
     )
-    expect(poly.getPoints3d(6, 10)[0].z).toBe(10)
     expect(poly.getPoints(6).length).toBeGreaterThan(0)
     poly.translate({ x: 1, y: 2 })
 
@@ -644,64 +618,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(area.buildHierarchy().index).toBe(-1)
     expect(area.area).toBeGreaterThan(0)
 
-    const circ3 = new AcGeCircArc3d({ x: 0, y: 0, z: 0 }, 5, 0, Math.PI, {
-      x: 0,
-      y: 0,
-      z: 1
-    })
-    expect(circ3.center).toBeInstanceOf(AcGePoint3d)
-    circ3.center = { x: 1, y: 1, z: 0 }
-    circ3.radius = 3
-    circ3.startAngle = 0
-    circ3.endAngle = Math.PI / 2
-    circ3.normal = { x: 0, y: 0, z: 1 }
-    circ3.refVec = { x: 1, y: 0, z: 0 }
-    expect(circ3.deltaAngle).toBeGreaterThan(0)
-    expect(typeof circ3.isLargeArc).toBe('number')
-    expect(circ3.clockwise).toBeDefined()
-    expect(circ3.startPoint).toBeInstanceOf(AcGePoint3d)
-    expect(circ3.endPoint).toBeInstanceOf(AcGePoint3d)
-    expect(circ3.midPoint).toBeInstanceOf(AcGePoint3d)
-    expect(circ3.length).toBeGreaterThan(0)
-    expect(circ3.area).toBe(0)
-    const nearest = circ3.nearestPoint({ x: 10, y: 0, z: 0 })
-    expect(nearest).toMatchObject({
-      x: expect.any(Number),
-      y: expect.any(Number),
-      z: expect.any(Number)
-    })
-    expect(circ3.tangentPoints({ x: 10, y: 10, z: 0 })).toBeInstanceOf(Array)
-    expect(circ3.nearestTangentPoint({ x: 10, y: 10, z: 0 })).toBeInstanceOf(
-      AcGePoint3d
-    )
-    expect(circ3.calculateBoundingBox()).toBeInstanceOf(AcGeBox3d)
-    expect(circ3.closed).toBe(false)
-    expect(circ3.getPoints(8).length).toBe(9)
-    expect(
-      circ3.transform(new AcGeMatrix3d().makeTranslation(1, 2, 3))
-    ).toBeInstanceOf(AcGeCircArc3d)
-    expect(circ3.copy(circ3.clone())).toBeInstanceOf(AcGeCircArc3d)
-    expect(circ3.getAngle(circ3.startPoint.clone())).toBeDefined()
-    expect(circ3.getPointAtAngle(0)).toBeInstanceOf(AcGePoint3d)
-    expect(circ3.plane).toBeInstanceOf(AcGePlane)
-    const computedCenter = AcGeCircArc3d.computeCenterPoint(
-      { x: 1, y: 0, z: 0 },
-      { x: -1, y: 0, z: 0 },
-      { x: 0, y: 1, z: 0 }
-    )
-    expect(computedCenter).toMatchObject({
-      x: expect.any(Number),
-      y: expect.any(Number),
-      z: expect.any(Number)
-    })
-    expect(
-      AcGeCircArc3d.createByThreePoints(
-        { x: 1, y: 0, z: 0 },
-        { x: -1, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 }
-      )
-    ).toBeInstanceOf(AcGeCircArc3d)
-
     const ellipse2 = new AcGeEllipseArc2d(
       { x: 0, y: 0 },
       4,
@@ -718,46 +634,26 @@ describe('geometry-engine public API coverage boost', () => {
     ).toBeInstanceOf(AcGeEllipseArc2d)
     expect(ellipse2.copy(ellipse2.clone())).toBeInstanceOf(AcGeEllipseArc2d)
 
-    const ellipse3 = new AcGeEllipseArc3d(
-      { x: 0, y: 0, z: 0 },
-      { x: 0, y: 0, z: 1 },
-      { x: 1, y: 0, z: 0 },
-      4,
-      2,
-      0,
-      Math.PI
-    )
-    expect(ellipse3.majorAxisRadius).toBe(4)
-    ellipse3.majorAxisRadius = 5
-    ellipse3.minorAxisRadius = 2
-    ellipse3.startAngle = 0
-    ellipse3.endAngle = Math.PI
-    ellipse3.normal = { x: 0, y: 0, z: 1 }
-    ellipse3.majorAxis = { x: 1, y: 0, z: 0 }
-    expect(ellipse3.minorAxis).toBeInstanceOf(AcGeVector3d)
-    expect(ellipse3.startPoint).toBeInstanceOf(AcGePoint3d)
-    expect(ellipse3.endPoint).toBeInstanceOf(AcGePoint3d)
-    expect(ellipse3.midPoint).toBeInstanceOf(AcGePoint3d)
+    const ellipse3 = new AcGeEllipseArc2d({ x: 0, y: 0 }, 4, 2, 0, Math.PI)
+    expect(ellipse3.minorAxis).toBeInstanceOf(AcGeVector2d)
+    expect(ellipse3.midPoint.y).toBeCloseTo(2, 6)
     expect(ellipse3.isCircular).toBe(false)
     expect(ellipse3.length).toBeGreaterThan(0)
     expect(ellipse3.area).toBe(0)
-    expect(ellipse3.calculateBoundingBox()).toBeInstanceOf(AcGeBox3d)
     expect(ellipse3.closed).toBe(false)
     expect(ellipse3.getPoints(8).length).toBe(9)
-    expect(ellipse3.getPointAtAngle(0)).toBeInstanceOf(AcGePoint3d)
-    expect(ellipse3.contains(new AcGePoint3d(1, 0, 0))).toBe(true)
+    expect(ellipse3.offset(1)?.majorAxisRadius).toBe(5)
+    expect(ellipse3.offset(-3)).toBeNull()
     expect(
-      ellipse3.transform(new AcGeMatrix3d().makeScale(1.5, 0.5, 1))
-    ).toBeInstanceOf(AcGeEllipseArc3d)
-    expect(ellipse3.copy(ellipse3.clone())).toBeInstanceOf(AcGeEllipseArc3d)
-    expect(ellipse3.plane).toBeInstanceOf(AcGePlane)
+      ellipse3.transform3d(new AcGeMatrix3d().makeScale(1.5, 0.5, 1))
+    ).toBeInstanceOf(AcGeEllipseArc2d)
 
-    const catmull = new AcGeCatmullRomCurve3d(
+    const catmull = new AcGeCatmullRomCurve2d(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 2, z: 0 },
-        { x: 2, y: 0, z: 0 },
-        { x: 3, y: 2, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 2 },
+        { x: 2, y: 0 },
+        { x: 3, y: 2 }
       ],
       false,
       'catmullrom'
@@ -766,31 +662,31 @@ describe('geometry-engine public API coverage boost', () => {
     expect(catmull.closed).toBe(false)
     expect(catmull.curveType).toBe('catmullrom')
     expect(catmull.tension).toBeCloseTo(0.5, 6)
-    expect(catmull.startPoint).toBeInstanceOf(AcGePoint3d)
-    expect(catmull.endPoint).toBeInstanceOf(AcGePoint3d)
+    expect(catmull.startPoint).toBeInstanceOf(AcGePoint2d)
+    expect(catmull.endPoint).toBeInstanceOf(AcGePoint2d)
     expect(catmull.length).toBeGreaterThan(0)
-    expect(catmull.getPoint(0.3)).toBeInstanceOf(AcGePoint3d)
+    expect(catmull.getPoint(0.3)).toBeInstanceOf(AcGePoint2d)
     expect(catmull.getPoints(10)).toHaveLength(11)
     catmull.setPoints([
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 1, z: 0 },
-      { x: 2, y: 0, z: 0 },
-      { x: 3, y: 1, z: 0 }
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+      { x: 2, y: 0 },
+      { x: 3, y: 1 }
     ])
     catmull.setClosed(true)
     catmull.setCurveType('centripetal')
     catmull.setTension(0.3)
     expect(
-      catmull.transform(new AcGeMatrix3d().makeTranslation(1, 0, 0))
-    ).toBeInstanceOf(AcGeCatmullRomCurve3d)
+      catmull.transform3d(new AcGeMatrix3d().makeTranslation(1, 0, 0))
+    ).toBeInstanceOf(AcGeCatmullRomCurve2d)
 
     const nurbs = new AcGeNurbsCurve(
       2,
       [0, 0, 0, 1, 1, 1],
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 2, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 0 }
       ]
     )
     expect(nurbs.degree()).toBe(2)
@@ -804,9 +700,9 @@ describe('geometry-engine public API coverage boost', () => {
         2,
         [0, 0, 0, 1, 1, 1],
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 0, z: 0 },
-          { x: 2, y: 0, z: 0 }
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 2, y: 0 }
         ]
       )
     ).toBeInstanceOf(AcGeNurbsCurve)
@@ -827,19 +723,19 @@ describe('geometry-engine public API coverage boost', () => {
     expect(nurbs.isClosed()).toBe(false)
     expect(
       AcGeNurbsCurve.createFitPointsForClosedCurve([
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 1, y: 1, z: 0 },
-        { x: 0, y: 1, z: 0 }
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 0, y: 1 }
       ])
     ).toBeInstanceOf(Array)
     expect(
       AcGeNurbsCurve.createClosedCurve(
         [
-          { x: 0, y: 0, z: 0 },
-          { x: 1, y: 0, z: 0 },
-          { x: 1, y: 1, z: 0 },
-          { x: 0, y: 1, z: 0 }
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 1, y: 1 },
+          { x: 0, y: 1 }
         ],
         3
       )

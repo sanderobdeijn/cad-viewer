@@ -67,8 +67,8 @@ describe('AcTrLine', () => {
     const context = new AcTrRenderContext(new AcTrStyleManager(), unbatchPolicy)
     const line = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       defaultTraits,
       context,
@@ -85,8 +85,8 @@ describe('AcTrLine', () => {
     const context = new AcTrRenderContext(new AcTrStyleManager(), batchPolicy)
     const line = new AcTrLine(
       [
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 0 }
       ],
       defaultTraits,
       context,
@@ -102,8 +102,8 @@ describe('AcTrLine', () => {
     const context = new AcTrRenderContext()
     const lineEntity = new AcTrLine(
       [
-        { x: largeX, y: 2_000_000, z: 0 },
-        { x: largeX + 100, y: 2_000_050, z: 0 }
+        { x: largeX, y: 2_000_000 },
+        { x: largeX + 100, y: 2_000_050 }
       ],
       defaultTraits,
       context
@@ -140,8 +140,8 @@ describe('AcTrLine wcsBbox', () => {
   it('stores endpoint bounds in world coordinates', () => {
     const line = new AcTrLine(
       [
-        { x: 3, y: 4, z: 0 },
-        { x: 13, y: 14, z: 0 }
+        { x: 3, y: 4 },
+        { x: 13, y: 14 }
       ],
       defaultTraits,
       new AcTrRenderContext(),
@@ -154,8 +154,8 @@ describe('AcTrLine wcsBbox', () => {
   it('keeps wcsBbox in world coordinates when geometry is rebased locally', () => {
     const line = new AcTrLine(
       [
-        { x: largeX, y: 2_000_000, z: 0 },
-        { x: largeX + 100, y: 2_000_050, z: 0 }
+        { x: largeX, y: 2_000_000 },
+        { x: largeX + 100, y: 2_000_050 }
       ],
       defaultTraits,
       new AcTrRenderContext()

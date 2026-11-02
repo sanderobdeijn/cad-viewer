@@ -1,7 +1,6 @@
 import {
   AcGeMatrix3d,
   AcGePoint2d,
-  AcGePoint3d,
   AcGeVector3d,
   TAU
 } from '@mlightcad/geometry-engine'
@@ -24,7 +23,7 @@ describe('AcDbEllipse', () => {
     expectDetachedClone(
       () =>
         new AcDbEllipse(
-          new AcGePoint3d(),
+          new AcGePoint2d(),
           AcGeVector3d.X_AXIS,
           2,
           1,
@@ -37,7 +36,7 @@ describe('AcDbEllipse', () => {
   it('supports public geometric getters and setters', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 3),
+      new AcGePoint2d(1, 2),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -45,7 +44,7 @@ describe('AcDbEllipse', () => {
       Math.PI
     )
     const openEllipse = new AcDbEllipse(
-      new AcGePoint3d(),
+      new AcGePoint2d(),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -53,7 +52,7 @@ describe('AcDbEllipse', () => {
       Math.PI / 2
     )
     const closedEllipse = new AcDbEllipse(
-      new AcGePoint3d(),
+      new AcGePoint2d(),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -73,7 +72,7 @@ describe('AcDbEllipse', () => {
     expect(openEllipse.closed).toBe(false)
     expect(closedEllipse.closed).toBe(true)
 
-    ellipse.center = new AcGePoint3d(7, 8, 9)
+    ellipse.center = new AcGePoint2d(7, 8)
     ellipse.majorAxisRadius = 8
     ellipse.minorAxisRadius = 3
     ellipse.startAngle = Math.PI / 4
@@ -90,7 +89,7 @@ describe('AcDbEllipse', () => {
   it('returns geometricExtents and updates when center or radii change', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -102,11 +101,11 @@ describe('AcDbEllipse', () => {
     expect(ellipse.geometricExtents.max.x).toBeCloseTo(5, 5)
     expect(ellipse.geometricExtents.max.y).toBeCloseTo(2, 5)
 
-    ellipse.center = new AcGePoint3d(10, 20, 0)
+    ellipse.center = new AcGePoint2d(10, 20)
     ellipse.majorAxisRadius = 4
     ellipse.minorAxisRadius = 1
 
-    expect(ellipse.geometricExtents.min).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(ellipse.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(ellipse.geometricExtents.max.x).toBeCloseTo(14, 5)
     expect(ellipse.geometricExtents.max.y).toBeCloseTo(21, 5)
   })
@@ -114,7 +113,7 @@ describe('AcDbEllipse', () => {
   it('computes osnap points for supported modes', () => {
     createWorkingDb()
     const openEllipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       AcGeVector3d.X_AXIS,
       6,
       3,
@@ -122,7 +121,7 @@ describe('AcDbEllipse', () => {
       Math.PI
     )
     const closedEllipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       AcGeVector3d.X_AXIS,
       6,
       3,
@@ -130,87 +129,87 @@ describe('AcDbEllipse', () => {
       0
     )
 
-    const endPoints: AcGePoint3d[] = []
+    const endPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       endPoints
     )
     expect(endPoints).toHaveLength(2)
 
-    const midPoints: AcGePoint3d[] = []
+    const midPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(1)
 
-    const centerPoints: AcGePoint3d[] = []
+    const centerPoints: AcGePoint2d[] = []
     closedEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       centerPoints
     )
     expect(centerPoints).toHaveLength(1)
-    expect(centerPoints[0]).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(centerPoints[0]).toMatchObject({ x: 0, y: 0 })
 
-    const quadrantPoints: AcGePoint3d[] = []
+    const quadrantPoints: AcGePoint2d[] = []
     closedEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Quadrant,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       quadrantPoints
     )
     expect(quadrantPoints).toHaveLength(4)
 
-    const nearestPoints: AcGePoint3d[] = []
+    const nearestPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint3d(10, 0, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(10, 0),
+      new AcGePoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0].x).toBeCloseTo(6, 5)
 
-    const tangentPoints: AcGePoint3d[] = []
+    const tangentPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Tangent,
-      new AcGePoint3d(10, 10, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(10, 10),
+      new AcGePoint2d(),
       tangentPoints
     )
     expect(tangentPoints.length).toBeGreaterThan(0)
 
-    const perpendicularPoints: AcGePoint3d[] = []
+    const perpendicularPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint3d(10, 0, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(10, 0),
+      new AcGePoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
     expect(perpendicularPoints[0].x).toBeCloseTo(6, 5)
     expect(perpendicularPoints[0].y).toBeCloseTo(0, 5)
 
-    const unsupportedPoints: AcGePoint3d[] = []
+    const unsupportedPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
 
-    const openQuadrantPoints: AcGePoint3d[] = []
+    const openQuadrantPoints: AcGePoint2d[] = []
     openEllipse.subGetOsnapPoints(
       AcDbOsnapMode.Quadrant,
-      new AcGePoint3d(1, 1, 0),
-      new AcGePoint3d(),
+      new AcGePoint2d(1, 1),
+      new AcGePoint2d(),
       openQuadrantPoints
     )
     expect(openQuadrantPoints).toHaveLength(0)
@@ -219,7 +218,7 @@ describe('AcDbEllipse', () => {
   it('returns grip points for center, start, and end on open ellipse arcs', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 3),
+      new AcGePoint2d(1, 2),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -230,19 +229,17 @@ describe('AcDbEllipse', () => {
     expect(grips).toHaveLength(3)
     expect(grips[0]).toMatchObject({
       x: ellipse.center.x,
-      y: ellipse.center.y,
-      z: 0
+      y: ellipse.center.y
     })
-    expect(grips[1]).toMatchObject({ x: 6, y: 2, z: 0 })
+    expect(grips[1]).toMatchObject({ x: 6, y: 2 })
     expect(grips[2].x).toBeCloseTo(1, 10)
     expect(grips[2].y).toBeCloseTo(4, 10)
-    expect(grips[2].z).toBeCloseTo(0, 10)
   })
 
   it('returns grip points with center and quadrant points on closed ellipses', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 0),
+      new AcGePoint2d(1, 2),
       AcGeVector3d.X_AXIS,
       3,
       2,
@@ -254,10 +251,9 @@ describe('AcDbEllipse', () => {
     expect(grips).toHaveLength(5)
     expect(grips[0]).toMatchObject({
       x: ellipse.center.x,
-      y: ellipse.center.y,
-      z: 0
+      y: ellipse.center.y
     })
-    expect(grips[0]).toMatchObject({ x: 1, y: 2, z: 0 })
+    expect(grips[0]).toMatchObject({ x: 1, y: 2 })
     expect(grips[1].x).toBeCloseTo(4, 8)
     expect(grips[1].y).toBeCloseTo(2, 8)
     expect(grips[2].x).toBeCloseTo(1, 8)
@@ -271,7 +267,7 @@ describe('AcDbEllipse', () => {
   it('treats a full ellipse stored with a 0 to 2π span as closed', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 0),
+      new AcGePoint2d(1, 2),
       AcGeVector3d.X_AXIS,
       3,
       2,
@@ -286,7 +282,7 @@ describe('AcDbEllipse', () => {
   it('scales the closed ellipse when moving a quadrant grip', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -304,7 +300,7 @@ describe('AcDbEllipse', () => {
   it('exposes runtime properties and accessors', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       AcGeVector3d.X_AXIS,
       10,
       5,
@@ -374,7 +370,7 @@ describe('AcDbEllipse', () => {
   it('transforms itself and draws with renderer', () => {
     createWorkingDb()
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(1, 2, 3),
+      new AcGePoint2d(1, 2),
       AcGeVector3d.X_AXIS,
       5,
       2,
@@ -398,7 +394,7 @@ describe('AcDbEllipse', () => {
 
   it('increases both radii when offsetting outward', () => {
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(0, 0, 0),
+      new AcGePoint2d(0, 0),
       new AcGeVector3d(1, 0, 0),
       10,
       5,
@@ -412,7 +408,7 @@ describe('AcDbEllipse', () => {
 
   it('computes area for full ellipse and returns 0 for open arc', () => {
     const ellipse = new AcDbEllipse(
-      new AcGePoint3d(),
+      new AcGePoint2d(),
       new AcGeVector3d(3, 0, 0),
       3,
       2,

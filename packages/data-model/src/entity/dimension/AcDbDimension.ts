@@ -1,13 +1,15 @@
 import {
   AcGeBox3d,
   AcGeIntersectPrimitive,
-  AcGeLine3d,
+  AcGeLine2d,
   AcGeMatrix3d,
+  AcGePoint2d,
   AcGePoint2dLike,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGeVector2d,
+  AcGeVector2dLike,
   AcGeVector3d,
-  AcGeVector3dLike
+  AcGeVector3dLike,
+  ORIGIN_POINT_2D
 } from '@mlightcad/geometry-engine'
 import {
   AcGiArrowStyle,
@@ -70,7 +72,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /** The block table record ID containing the dimension entities */
   private _dimBlockId: string | null
   /** The relative position point of the block referenced by the dimension (in WCS coordinates). */
-  private _dimBlockPosition: AcGePoint3d
+  private _dimBlockPosition: AcGePoint2d
   /**
    * DXF group code 10 definition point captured during {@link dxfInFields}.
    *
@@ -78,7 +80,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * as the dim-line / center / far-chord point when their typed point codes are
    * absent (matching AutoCAD DXF and dxf-json-converter).
    */
-  protected _dxfDefinitionPoint: AcGePoint3d
+  protected _dxfDefinitionPoint: AcGePoint2d
   /** The dimension style name used by this dimension */
   private _dimensionStyleName: string | null
   /** The user-supplied dimension annotation text */
@@ -90,7 +92,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /** The line spacing style for dimension text */
   private _textLineSpacingStyle: AcDbLineSpacingStyle
   /** The position of the dimension text */
-  private _textPosition: AcGePoint3d
+  private _textPosition: AcGePoint2d
   /** The rotation angle of the dimension text */
   private _textRotation: number
   /**
@@ -129,19 +131,19 @@ export abstract class AcDbDimension extends AcDbEntity {
    * ```typescript
    * const dimension = new MyDimension();
    * dimension.dimensionText = "10.0";
-   * dimension.textPosition = new AcGePoint3d(5, 5, 0);
+   * dimension.textPosition = new AcGePoint2d(5, 5);
    * ```
    */
   constructor() {
     super()
     this._dimBlockId = null
-    this._dimBlockPosition = new AcGePoint3d()
-    this._dxfDefinitionPoint = new AcGePoint3d()
+    this._dimBlockPosition = new AcGePoint2d()
+    this._dxfDefinitionPoint = new AcGePoint2d()
     this._dimensionStyleName = null
     this._dimensionText = null
     this._textLineSpacingFactor = 1.0
     this._textLineSpacingStyle = AcDbLineSpacingStyle.AtLeast
-    this._textPosition = new AcGePoint3d()
+    this._textPosition = new AcGePoint2d()
     this._textRotation = 0
     this._horizontalRotation = 0
     this._dimensionType = 0
@@ -201,7 +203,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns The relative position point of the block referenced by the dimension.
    *
    */
-  get dimBlockPosition(): AcGePoint3d {
+  get dimBlockPosition(): AcGePoint2d {
     return this._dimBlockPosition
   }
 
@@ -226,7 +228,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @param value - The relative position point of the block referenced by the dimension.
 
    */
-  set dimBlockPosition(value: AcGePoint3dLike) {
+  set dimBlockPosition(value: AcGePoint2dLike) {
     this._dimBlockPosition.copy(value)
   }
 
@@ -349,7 +351,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   get textPosition() {
     return this._textPosition
   }
-  set textPosition(value: AcGePoint3d) {
+  set textPosition(value: AcGePoint2d) {
     this._textPosition.copy(value)
   }
 
@@ -473,7 +475,7 @@ export abstract class AcDbDimension extends AcDbEntity {
 
     origin.applyMatrix4(matrix)
     rotationPoint.applyMatrix4(matrix)
-    const rotationVector = new AcGeVector3d(rotationPoint).sub(origin)
+    const rotationVector = new AcGeVector2d(rotationPoint).sub(origin)
     if (rotationVector.lengthSq() > 0) {
       this._textRotation = Math.atan2(rotationVector.y, rotationVector.x)
     }
@@ -491,19 +493,19 @@ export abstract class AcDbDimension extends AcDbEntity {
    */
   override subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint3dLike,
-    lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[],
+    pickPoint: AcGePoint2dLike,
+    lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[],
     gsMark?: AcDbObjectId
   ) {
     const blockTableRecord = this.getDimBlockTableRecord()
     if (!blockTableRecord) return
 
     const blockTransform = this.getFullDimBlockTransform()
-    const localPickPoint = new AcGePoint3d(pickPoint).applyMatrix4(
+    const localPickPoint = new AcGePoint2d(pickPoint).applyMatrix4(
       blockTransform.clone().invert()
     )
-    const localLastPoint = new AcGePoint3d(lastPoint).applyMatrix4(
+    const localLastPoint = new AcGePoint2d(lastPoint).applyMatrix4(
       blockTransform.clone().invert()
     )
 
@@ -511,7 +513,7 @@ export abstract class AcDbDimension extends AcDbEntity {
       entity: AcDbEntity,
       subEntityId?: AcDbObjectId
     ) => {
-      const localSnapPoints: AcGePoint3d[] = []
+      const localSnapPoints: AcGePoint2d[] = []
       entity.subGetOsnapPoints(
         osnapMode,
         localPickPoint,
@@ -525,7 +527,7 @@ export abstract class AcDbDimension extends AcDbEntity {
         localSnapPoints.forEach(point => snapPoints.push(point.clone()))
       } else {
         localSnapPoints.forEach(point =>
-          snapPoints.push(new AcGePoint3d(point).applyMatrix4(blockTransform))
+          snapPoints.push(new AcGePoint2d(point).applyMatrix4(blockTransform))
         )
       }
     }
@@ -603,7 +605,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * the supplied WCS definition points and user-placed text position.
    */
   protected getGeometricExtentsFromDimBlockOrPoints(
-    points: AcGePoint3dLike[]
+    points: AcGePoint2dLike[]
   ): AcGeBox3d {
     const blockExtents = this.getDimBlockGeometricExtents()
     if (!blockExtents.isEmpty()) {
@@ -624,8 +626,8 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Returns true when dimension text has been placed away from the default origin.
    */
   private hasExplicitTextPosition(): boolean {
-    const { x, y, z } = this.textPosition
-    return x !== 0 || y !== 0 || z !== 0
+    const { x, y } = this.textPosition
+    return x !== 0 || y !== 0
   }
 
   /**
@@ -634,7 +636,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Subclasses override this to expose their editable definition points,
    * matching AutoCAD `AcDbDimension::getGripPoints` behavior.
    */
-  protected collectDimensionDefinitionGripPoints(): AcGePoint3d[] {
+  protected collectDimensionDefinitionGripPoints(): AcGePoint2d[] {
     return []
   }
 
@@ -643,7 +645,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    *
    * Returns definition points together with the dimension text position.
    *
-   * @returns Array of grip points as 3D points
+   * @returns Array of grip points as 2D points
    */
   subGetGripPoints() {
     return this.collectDimensionDefinitionGripPoints().concat([
@@ -654,7 +656,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /**
    * Moves dimension definition and text grip points by the given offset.
    */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     const definitionPoints = this.collectDimensionDefinitionGripPoints()
     acdbForEachGripIndex(indices, index => {
       if (index >= 0 && index < definitionPoints.length) {
@@ -703,11 +705,11 @@ export abstract class AcDbDimension extends AcDbEntity {
           'string',
           () => this.dimBlockId ?? ''
         ),
-        ...this.createPoint3dProperties(
+        ...this.createPoint2dProperties(
           'dimBlockPosition',
           () => this.dimBlockPosition
         ),
-        ...this.createPoint3dProperties(
+        ...this.createPoint2dProperties(
           'textPosition',
           () => this.textPosition
         ),
@@ -744,8 +746,7 @@ export abstract class AcDbDimension extends AcDbEntity {
               value: AcDbLineSpacingStyle.Exactly
             }
           ]
-        ),
-        ...this.createPoint3dProperties('normal', () => this.normal)
+        )
       ]
     }
   }
@@ -766,9 +767,9 @@ export abstract class AcDbDimension extends AcDbEntity {
     }
   }
 
-  protected createPoint3dProperties(
+  protected createPoint2dProperties(
     prefix: string,
-    getPoint: () => AcGePoint3d
+    getPoint: () => AcGePoint2d
   ): AcDbEntityRuntimeProperty<number>[] {
     return [
       this.createProperty(
@@ -785,14 +786,6 @@ export abstract class AcDbDimension extends AcDbEntity {
         () => getPoint().y,
         (value: number) => {
           getPoint().y = value
-        }
-      ),
-      this.createProperty(
-        `${prefix}Z`,
-        'float',
-        () => getPoint().z,
-        (value: number) => {
-          getPoint().z = value
         }
       )
     ]
@@ -904,15 +897,15 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns Return the point `p3`.
    */
   protected findPointOnLine1(
-    p1: AcGePoint3d,
-    p2: AcGePoint3d,
+    p1: AcGePoint2d,
+    p2: AcGePoint2d,
     length: number
-  ): AcGePoint3d {
+  ): AcGePoint2d {
     // Calculate the direction vector from p1 to p2
-    const direction = new AcGePoint3d().subVectors(p2, p1).normalize()
+    const direction = new AcGePoint2d().subVectors(p2, p1).normalize()
 
     // Calculate p3 by moving in the direction from p2 by the specified length
-    const p3 = new AcGePoint3d(p2).addScaledVector(direction, length)
+    const p3 = new AcGePoint2d(p2).addScaledVector(direction, length)
 
     return p3
   }
@@ -941,7 +934,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Adjust start point and end point of extension line according current dimension style
    * @param extensionLine Input extension line to adjust its start point and end point
    */
-  protected adjustExtensionLine(extensionLine: AcGeLine3d) {
+  protected adjustExtensionLine(extensionLine: AcGeLine2d) {
     const dimStyle = this.dimensionStyle
     extensionLine.extend(dimStyle.dimexe)
     extensionLine.extend(-dimStyle.dimexo, true)
@@ -1017,7 +1010,7 @@ export abstract class AcDbDimension extends AcDbEntity {
       : undefined
 
     // The base point of the anonymous dimension block definition
-    const basePoint = blockTableRecord?.origin ?? AcGePoint3d.ORIGIN
+    const basePoint = blockTableRecord?.origin ?? ORIGIN_POINT_2D
 
     // ------------------------------------------------------------
     // Step 1: Base point compensation
@@ -1028,7 +1021,7 @@ export abstract class AcDbDimension extends AcDbEntity {
     const mBase = new AcGeMatrix3d().makeTranslation(
       -basePoint.x,
       -basePoint.y,
-      -basePoint.z
+      0
     )
 
     // ------------------------------------------------------------
@@ -1040,7 +1033,7 @@ export abstract class AcDbDimension extends AcDbEntity {
     const mInsert = new AcGeMatrix3d().makeTranslation(
       this._dimBlockPosition.x,
       this._dimBlockPosition.y,
-      this._dimBlockPosition.z
+      0
     )
 
     const mRot = new AcGeMatrix3d().makeRotationZ(this._dimBlockRotation)

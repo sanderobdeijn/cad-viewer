@@ -28,8 +28,8 @@ function createLine(
   }
   const line = new AcTrLine(
     [
-      { x: start.x, y: start.y, z: 0 },
-      { x: end.x, y: end.y, z: 0 }
+      { x: start.x, y: start.y },
+      { x: end.x, y: end.y }
     ],
     traits,
     context,

@@ -1,4 +1,4 @@
-import { AcGePoint3dLike } from '@mlightcad/geometry-engine'
+import { AcGePoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcDbEntity } from './AcDbEntity'
 
@@ -67,7 +67,7 @@ export abstract class AcDbCurve extends AcDbEntity {
    * @param point - Test point in WCS
    * @returns `1` for the positive offset side, `-1` for the negative side
    */
-  getOffsetSideAtPoint(_point: AcGePoint3dLike): 1 | -1 {
+  getOffsetSideAtPoint(_point: AcGePoint2dLike): 1 | -1 {
     return 1
   }
 }

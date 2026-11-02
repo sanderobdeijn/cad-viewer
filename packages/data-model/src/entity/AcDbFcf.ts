@@ -1,8 +1,9 @@
 import {
   AcGeBox3d,
   AcGeMatrix3d,
-  AcGePoint3d,
-  AcGePoint3dLike,
+  AcGePoint2d,
+  AcGePoint2dLike,
+  AcGeVector2dLike,
   AcGeVector3d,
   AcGeVector3dLike
 } from '@mlightcad/geometry-engine'
@@ -50,7 +51,7 @@ const TOLERANCE_SLOT_COUNT = 6
  * @example
  * ```typescript
  * const fcf = new AcDbFcf();
- * fcf.location = new AcGePoint3d(10, 20, 0);
+ * fcf.location = new AcGePoint2d(10, 20);
  * fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|';
  * fcf.dimensionStyle = 'Standard';
  * ```
@@ -71,7 +72,7 @@ export class AcDbFcf extends AcDbEntity {
    * left (e.g. leader on the right), this insertion point coincides with the
    * right-edge center in WCS.
    */
-  private _location: AcGePoint3d
+  private _location: AcGePoint2d
   /** The encoded tolerance text string (symbol and format codes). */
   private _text: string
   /** The dimension style name applied to this feature control frame. */
@@ -86,7 +87,7 @@ export class AcDbFcf extends AcDbEntity {
    */
   constructor() {
     super()
-    this._location = new AcGePoint3d()
+    this._location = new AcGePoint2d()
     this._text = ''
     this._dimensionStyle = ''
     this._normal = new AcGeVector3d(0, 0, 1)
@@ -98,7 +99,7 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::location()` in ObjectARX.
    */
-  get location(): AcGePoint3d {
+  get location(): AcGePoint2d {
     return this._location
   }
 
@@ -107,8 +108,8 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::setLocation()` in ObjectARX.
    */
-  set location(value: AcGePoint3dLike) {
-    this._location.set(value.x, value.y, value.z ?? 0)
+  set location(value: AcGePoint2dLike) {
+    this._location.set(value.x, value.y)
   }
 
   /**
@@ -197,7 +198,7 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::getBoundingPoints()` in ObjectARX.
    */
-  getBoundingPoints(): AcGePoint3d[] {
+  getBoundingPoints(): AcGePoint2d[] {
     return this.getBoundingPolyline().slice(0, 4)
   }
 
@@ -206,16 +207,16 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::getBoundingPolyline()` in ObjectARX.
    */
-  getBoundingPolyline(): AcGePoint3d[] {
+  getBoundingPolyline(): AcGePoint2d[] {
     const { width, rowHeight, rowCount } = this.resolveFrameLayout()
     const frameTop = rowHeight / 2
     const frameBottom = frameTop - rowHeight * rowCount
     const corners = [
-      new AcGePoint3d(0, frameTop, 0),
-      new AcGePoint3d(width, frameTop, 0),
-      new AcGePoint3d(width, frameBottom, 0),
-      new AcGePoint3d(0, frameBottom, 0),
-      new AcGePoint3d(0, frameTop, 0)
+      new AcGePoint2d(0, frameTop),
+      new AcGePoint2d(width, frameTop),
+      new AcGePoint2d(width, frameBottom),
+      new AcGePoint2d(0, frameBottom),
+      new AcGePoint2d(0, frameTop)
     ]
 
     return corners.map(corner => this.toFrameWcs(corner.x, corner.y))
@@ -237,16 +238,16 @@ export class AcDbFcf extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector3dLike) {
+  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._location)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint3dLike,
-    _lastPoint: AcGePoint3dLike,
-    snapPoints: AcGePoint3dLike[]
+    _pickPoint: AcGePoint2dLike,
+    _lastPoint: AcGePoint2dLike,
+    snapPoints: AcGePoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Insertion) {
       snapPoints.push(this._location)
@@ -263,8 +264,16 @@ export class AcDbFcf extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(xAxisPoint).sub(origin)
-    const yAxis = new AcGeVector3d(yAxisPoint).sub(origin)
+    const xAxis = new AcGeVector3d(
+      xAxisPoint.x - origin.x,
+      xAxisPoint.y - origin.y,
+      0
+    )
+    const yAxis = new AcGeVector3d(
+      yAxisPoint.x - origin.x,
+      yAxisPoint.y - origin.y,
+      0
+    )
 
     let normal = new AcGeVector3d().crossVectors(xAxis, yAxis)
     if (normal.lengthSq() === 0) {
@@ -350,17 +359,6 @@ export class AcDbFcf extends AcDbEntity {
                   this.location.y = v
                 }
               }
-            },
-            {
-              name: 'locationZ',
-              type: 'float',
-              editable: true,
-              accessor: {
-                get: () => this.location.z,
-                set: (v: number) => {
-                  this.location.z = v
-                }
-              }
             }
           ]
         }
@@ -397,8 +395,7 @@ export class AcDbFcf extends AcDbEntity {
     const dimtxt =
       dimStyle?.dimtxt ?? AcDbDimStyleTableRecord.DEFAULT_DIM_VALUES.dimtxt
     const dimscale =
-      dimStyle?.dimscale ??
-      AcDbDimStyleTableRecord.DEFAULT_DIM_VALUES.dimscale
+      dimStyle?.dimscale ?? AcDbDimStyleTableRecord.DEFAULT_DIM_VALUES.dimscale
     return dimtxt * dimscale
   }
 
@@ -453,7 +450,7 @@ export class AcDbFcf extends AcDbEntity {
     return renderer.group(entities)
   }
 
-  private collectFrameLineSegments(): [AcGePoint3d, AcGePoint3d][] {
+  private collectFrameLineSegments(): [AcGePoint2d, AcGePoint2d][] {
     const rows = this.parseToleranceFrame(this._text)
     const layout = this.resolveFrameLayout(rows)
     const { width, rowHeight, rowCount, columnDivisions } = layout
@@ -463,15 +460,12 @@ export class AcDbFcf extends AcDbEntity {
 
     const frameTop = rowHeight / 2
     const frameBottom = frameTop - rowHeight * rowCount
-    const segments: [AcGePoint3d, AcGePoint3d][] = []
-    const pushSegment = (start: AcGePoint3d, end: AcGePoint3d) => {
+    const segments: [AcGePoint2d, AcGePoint2d][] = []
+    const pushSegment = (start: AcGePoint2d, end: AcGePoint2d) => {
       segments.push([start, end])
     }
 
-    pushSegment(
-      this.toFrameWcs(0, frameTop),
-      this.toFrameWcs(width, frameTop)
-    )
+    pushSegment(this.toFrameWcs(0, frameTop), this.toFrameWcs(width, frameTop))
     pushSegment(
       this.toFrameWcs(width, frameTop),
       this.toFrameWcs(width, frameBottom)
@@ -480,10 +474,7 @@ export class AcDbFcf extends AcDbEntity {
       this.toFrameWcs(width, frameBottom),
       this.toFrameWcs(0, frameBottom)
     )
-    pushSegment(
-      this.toFrameWcs(0, frameBottom),
-      this.toFrameWcs(0, frameTop)
-    )
+    pushSegment(this.toFrameWcs(0, frameBottom), this.toFrameWcs(0, frameTop))
 
     for (const division of columnDivisions) {
       pushSegment(
@@ -500,12 +491,12 @@ export class AcDbFcf extends AcDbEntity {
     return segments
   }
 
-  private toFrameWcs(localX: number, localY: number): AcGePoint3d {
+  private toFrameWcs(localX: number, localY: number): AcGePoint2d {
     const basis = this.resolveLocalBasis()
-    return this._location
-      .clone()
-      .addScaledVector(basis.xAxis, localX)
-      .addScaledVector(basis.yAxis, localY)
+    return new AcGePoint2d(
+      this._location.x + basis.xAxis.x * localX + basis.yAxis.x * localY,
+      this._location.y + basis.xAxis.y * localX + basis.yAxis.y * localY
+    )
   }
 
   private resolveFrameLayout(rows?: ToleranceFrameRow[]): ToleranceFrameLayout {
@@ -546,7 +537,11 @@ export class AcDbFcf extends AcDbEntity {
 
     const columnDivisions: number[] = [0]
     let cursorX = cellPadding
-    for (let columnIndex = 0; columnIndex < columnWidths.length; columnIndex++) {
+    for (
+      let columnIndex = 0;
+      columnIndex < columnWidths.length;
+      columnIndex++
+    ) {
       cursorX += columnWidths[columnIndex]
       cursorX += columnGap
       columnDivisions.push(cursorX - cellPadding)
@@ -713,4 +708,3 @@ export class AcDbFcf extends AcDbEntity {
     return style.textStyle
   }
 }
-

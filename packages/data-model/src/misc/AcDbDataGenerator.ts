@@ -97,11 +97,7 @@ export class AcDbDataGenerator {
     this.db.dimstyle = NEW_DRAWING_DIM_STYLE
     this.db.cmlscale = 20
 
-    this.addNewDrawingLayout(
-      'Model',
-      0,
-      this.db.tables.blockTable.modelSpace
-    )
+    this.addNewDrawingLayout('Model', 0, this.db.tables.blockTable.modelSpace)
     ;['Layout1', 'Layout2'].forEach((name, index) => {
       const paperSpace = new AcDbBlockTableRecord()
       paperSpace.name =
@@ -213,10 +209,10 @@ export class AcDbDataGenerator {
     if (!this.db.tables.blockTable.getAt(blockName)) {
       // Create arrow
       const arrow = new AcDbTrace()
-      arrow.setPointAt(0, { x: 0, y: 0, z: 0 })
-      arrow.setPointAt(1, { x: 0, y: 0, z: 0 })
-      arrow.setPointAt(2, { x: -1, y: -0.125, z: 0 })
-      arrow.setPointAt(3, { x: -1, y: 0.125, z: 0 })
+      arrow.setPointAt(0, { x: 0, y: 0 })
+      arrow.setPointAt(1, { x: 0, y: 0 })
+      arrow.setPointAt(2, { x: -1, y: -0.125 })
+      arrow.setPointAt(3, { x: -1, y: 0.125 })
 
       // Create block and add the arrow in this block
       const block = new AcDbBlockTableRecord()

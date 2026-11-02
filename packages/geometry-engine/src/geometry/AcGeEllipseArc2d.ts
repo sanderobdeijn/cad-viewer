@@ -5,10 +5,13 @@ import {
   AcGeMatrix2d,
   AcGePoint2d,
   AcGePoint2dLike,
-  AcGePointLike
+  AcGePointLike,
+  AcGeVector2d
 } from '../math'
-import { AcGeMathUtil, TAU } from '../util'
+import { AcGeMathUtil, AcGeTol, FLOAT_TOL, TAU } from '../util'
+import { AcGeCircArc2d } from './AcGeCircArc2d'
 import { AcGeCurve2d } from './AcGeCurve2d'
+import type { AcGeTessellateOptions } from './AcGeCurveTessellate'
 
 /**
  * Class representing a 2d ellipse arc defined by center, normal, majorAxis, majorAxisRadius,
@@ -175,22 +178,22 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
    * @returns Return bounding box containing the min and max coordinates
    */
   calculateBoundingBox() {
-    const numPoints = 100
-    let minX = Infinity,
-      minY = Infinity
-    let maxX = -Infinity,
-      maxY = -Infinity
-
-    for (let i = 0; i <= numPoints; i++) {
-      const point = this.getPoint(i / numPoints)
-      minX = Math.min(minX, point.x)
-      minY = Math.min(minY, point.y)
-      maxX = Math.max(maxX, point.x)
-      maxY = Math.max(maxY, point.y)
+    const a = this.majorAxisRadius
+    const b = this.minorAxisRadius
+    const cos = Math.cos(this.rotation)
+    const sin = Math.sin(this.rotation)
+    const xExtreme = Math.atan2(-b * sin, a * cos)
+    const yExtreme = Math.atan2(b * cos, a * sin)
+    const points = [this.startPoint, this.endPoint]
+    for (const angle of [
+      xExtreme,
+      xExtreme + Math.PI,
+      yExtreme,
+      yExtreme + Math.PI
+    ]) {
+      if (this.containsAngle(angle)) points.push(this.getPointAtAngle(angle))
     }
-
-    // Return the bounding box defined by min and max coordinates
-    return new AcGeBox2d({ x: minX, y: minY }, { x: maxX, y: maxY })
+    return new AcGeBox2d().setFromPoints(points)
   }
 
   /**
@@ -198,6 +201,157 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
    */
   get closed() {
     return this.deltaAngle == 0
+  }
+
+  /**
+   * Signed angle swept from the start angle to the end angle. It is negative
+   * when the arc runs clockwise.
+   */
+  get sweepAngle() {
+    if (this.closed) return this.clockwise ? -TAU : TAU
+    return this.clockwise ? this.deltaAngle - TAU : this.deltaAngle
+  }
+
+  /**
+   * Return true if the given ellipse angle lies on this arc.
+   * @param angle Input the angle in radians
+   * @param tolerance Input the angular tolerance in radians
+   */
+  containsAngle(angle: number, tolerance: number = 1e-8) {
+    if (this.closed) return true
+    const t = this.clockwise
+      ? AcGeMathUtil.normalizeAngle(this.startAngle - angle)
+      : AcGeMathUtil.normalizeAngle(angle - this.startAngle)
+    return t <= Math.abs(this.sweepAngle) + tolerance || t >= TAU - tolerance
+  }
+
+  /**
+   * Middle point of this arc, half way along its angle sweep.
+   */
+  get midPoint() {
+    const start = this.closed ? 0 : this.startAngle
+    return this.getPointAtAngle(start + this.sweepAngle / 2)
+  }
+
+  /**
+   * Unit vector along the major axis.
+   */
+  get majorAxis() {
+    return new AcGeVector2d(Math.cos(this.rotation), Math.sin(this.rotation))
+  }
+
+  /**
+   * Unit vector along the minor axis, 90 degrees counterclockwise from the major axis.
+   */
+  get minorAxis() {
+    return new AcGeVector2d(-Math.sin(this.rotation), Math.cos(this.rotation))
+  }
+
+  /**
+   * Check if this ellipse arc is actually a circular arc (major and minor radii are equal)
+   * @returns True if the ellipse arc is circular
+   */
+  get isCircular(): boolean {
+    return AcGeTol.equal(this.majorAxisRadius, this.minorAxisRadius)
+  }
+
+  /**
+   * @inheritdoc
+   */
+  override get length(): number {
+    const sweep = Math.abs(this.sweepAngle)
+    if (this.isCircular) return this.majorAxisRadius * sweep
+
+    const steps = 1000
+    const start = this.closed ? 0 : this.startAngle
+    let length = 0
+    let previous = this.getPointAtAngle(start)
+    for (let i = 1; i <= steps; i++) {
+      const point = this.getPointAtAngle(start + (this.sweepAngle * i) / steps)
+      length += previous.distanceTo(point)
+      previous = point
+    }
+    return length
+  }
+
+  /**
+   * The area enclosed by this curve. Open ellipse arcs return `0`.
+   */
+  get area(): number {
+    if (!this.closed) return 0
+    return Math.PI * this.majorAxisRadius * this.minorAxisRadius
+  }
+
+  /**
+   * Returns a copy with major and minor radii adjusted by `offsetDist`.
+   *
+   * @param offsetDist - Signed offset distance in drawing units
+   * @returns Offset ellipse arc, or `null` when either radius is not positive
+   */
+  offset(offsetDist: number): AcGeEllipseArc2d | null {
+    const majorAxisRadius = this.majorAxisRadius + offsetDist
+    const minorAxisRadius = this.minorAxisRadius + offsetDist
+    if (majorAxisRadius <= 0 || minorAxisRadius <= 0) return null
+    return new AcGeEllipseArc2d(
+      this.center,
+      majorAxisRadius,
+      minorAxisRadius,
+      this.startAngle,
+      this.endAngle,
+      this.clockwise,
+      this.rotation
+    )
+  }
+
+  /**
+   * @inheritdoc
+   */
+  override getPoints(numPoints: number = 100): AcGePoint2d[] {
+    const start = this.closed ? 0 : this.startAngle
+    const points: AcGePoint2d[] = []
+    for (let i = 0; i <= numPoints; i++) {
+      points.push(
+        this.getPointAtAngle(start + (this.sweepAngle * i) / numPoints)
+      )
+    }
+    return points
+  }
+
+  /**
+   * Sample this ellipse to a polyline whose chord height is bounded by `options`.
+   *
+   * Circular ellipses use the closed-form circular segment count. Non-circular
+   * ellipses use coarse sampling plus local refinement with an evaluation budget.
+   *
+   * @param options - Chord-height tessellation options
+   */
+  tessellate(options?: AcGeTessellateOptions): AcGePoint2d[] {
+    const resolved = AcGeCircArc2d.resolveTessellateOptions(options)
+    const sweep = this.sweepAngle
+    const radius = Math.max(this.majorAxisRadius, this.minorAxisRadius)
+    const isFull = Math.abs(sweep) >= TAU - 1e-8
+    const minSegments = resolved.minSegments ?? (isFull ? 8 : 3)
+    if (this.isCircular) {
+      const numPoints = AcGeCircArc2d.segmentCount(radius, Math.abs(sweep), {
+        ...options,
+        minSegments
+      })
+      return this.getPoints(numPoints)
+    }
+    const deviation =
+      resolved.deviation ??
+      AcGeCircArc2d.chordDeviationFromRadius(radius, resolved.circleSides)
+    const startAngle = this.closed ? 0 : this.startAngle
+    return AcGeCurve2d.tessellateParametricCurve(
+      startAngle,
+      startAngle + sweep,
+      angle => this.getPointAtAngle(angle),
+      {
+        deviation: Math.max(FLOAT_TOL, deviation),
+        minSegments,
+        maxSegments: resolved.maxSegments
+      }
+    )
   }
 
   /**
@@ -275,7 +429,7 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
     const minorAxisRadius = minorVector.length()
     const rotation = Math.atan2(majorVector.y, majorVector.x)
     const majorDirection = majorVector.clone().normalize()
-    const minorDirection = minorVector.clone().normalize()
+    const minorDirection = new AcGePoint2d(-majorDirection.y, majorDirection.x)
 
     const getAngle = (point: AcGePoint2d) => {
       const relative = new AcGePoint2d(point).sub(transformedCenter2d)
@@ -322,10 +476,13 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
 
   /** Returns the point at the given ellipse angle. */
   getPointAtAngle(angle: number) {
-    return this.getPoint(
-      this.closed
-        ? angle / TAU
-        : AcGeMathUtil.normalizeAngle(angle - this.startAngle) / this.deltaAngle
+    const major = this.majorAxisRadius * Math.cos(angle)
+    const minor = this.minorAxisRadius * Math.sin(angle)
+    const cos = Math.cos(this.rotation)
+    const sin = Math.sin(this.rotation)
+    return new AcGePoint2d(
+      this.center.x + major * cos - minor * sin,
+      this.center.y + major * sin + minor * cos
     )
   }
 
@@ -463,8 +620,8 @@ export class AcGeEllipseArc2d extends AcGeCurve2d {
   ): number[] {
     const a = this.majorAxisRadius
     const b = this.minorAxisRadius
-    const start = this.startAngle
-    const delta = this.deltaAngle
+    const start = this.closed ? 0 : this.startAngle
+    const delta = this.sweepAngle
     const angles: number[] = []
 
     const evalError = (theta: number) => {

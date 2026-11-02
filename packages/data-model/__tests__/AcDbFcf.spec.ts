@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint3d } from '@mlightcad/geometry-engine'
+import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -26,35 +26,35 @@ describe('AcDbFcf', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
 
-    expect(fcf.location).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(fcf.location).toMatchObject({ x: 0, y: 0 })
     expect(fcf.text).toBe('')
     expect(fcf.dimensionStyle).toBe('')
     expect(fcf.normal).toMatchObject({ x: 0, y: 0, z: 1 })
-    expect(fcf.direction).toMatchObject({ x: 1, y: 0, z: 0 })
+    expect(fcf.direction).toMatchObject({ x: 1, y: 0 })
 
-    fcf.location = new AcGePoint3d(10, 20, 0)
+    fcf.location = new AcGePoint2d(10, 20)
     fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|'
     fcf.dimensionStyle = 'Standard'
     fcf.normal = { x: 0, y: 0, z: 1 }
     fcf.direction = { x: 0, y: 1, z: 0 }
 
-    expect(fcf.location).toMatchObject({ x: 10, y: 20, z: 0 })
+    expect(fcf.location).toMatchObject({ x: 10, y: 20 })
     expect(fcf.text).toContain('gdt')
     expect(fcf.dimensionStyle).toBe('Standard')
-    expect(fcf.direction).toMatchObject({ x: 0, y: 1, z: 0 })
+    expect(fcf.direction).toMatchObject({ x: 0, y: 1 })
   })
 
   it('computes bounding points from tolerance cells', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(0, 0, 0)
+    fcf.location = new AcGePoint2d(0, 0)
     fcf.text = 'A|B|C'
     fcf.dimensionStyle = 'Standard'
 
     const points = fcf.getBoundingPoints()
     const textHeight = fcf.textHeight
     expect(points).toHaveLength(4)
-    expect(points[0]).toMatchObject({ x: 0, y: textHeight, z: 0 })
+    expect(points[0]).toMatchObject({ x: 0, y: textHeight })
     expect(points[1].x).toBeGreaterThan(points[0].x)
     expect(points[2].y).toBeLessThan(points[0].y)
   })
@@ -72,15 +72,13 @@ describe('AcDbFcf', () => {
 
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     const runout = fcf.getBoundingPoints()
-    expect(runout[1].x - runout[0].x).toBeGreaterThan(
-      runout[1].y - runout[3].y
-    )
+    expect(runout[1].x - runout[0].x).toBeGreaterThan(runout[1].y - runout[3].y)
   })
 
   it('keeps pipe-delimited tolerance text compatible', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(0, 0, 0)
+    fcf.location = new AcGePoint2d(0, 0)
     fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|'
     fcf.dimensionStyle = 'Standard'
 
@@ -91,34 +89,34 @@ describe('AcDbFcf', () => {
   it('returns geometricExtents and grip/osnap points', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(5, 5, 0)
+    fcf.location = new AcGePoint2d(5, 5)
     fcf.text = 'Position|0.1'
     fcf.dimensionStyle = 'Standard'
 
     expect(fcf.geometricExtents.isEmpty()).toBe(false)
     expect(fcf.subGetGripPoints()).toEqual([fcf.location])
 
-    const snapPoints: AcGePoint3d[] = []
+    const snapPoints: AcGePoint2d[] = []
     fcf.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint3d(),
-      new AcGePoint3d(),
+      new AcGePoint2d(),
+      new AcGePoint2d(),
       snapPoints
     )
-    expect(snapPoints[0]).toMatchObject({ x: 5, y: 5, z: 0 })
+    expect(snapPoints[0]).toMatchObject({ x: 5, y: 5 })
   })
 
   it('supports setOrientation and transformBy', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(1, 2, 0)
+    fcf.location = new AcGePoint2d(1, 2)
     fcf.setOrientation({ x: 0, y: 0, z: 1 }, { x: 0, y: 1, z: 0 })
 
     expect(fcf.normal).toMatchObject({ x: 0, y: 0, z: 1 })
-    expect(fcf.direction).toMatchObject({ x: 0, y: 1, z: 0 })
+    expect(fcf.direction).toMatchObject({ x: 0, y: 1 })
 
     fcf.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 0))
-    expect(fcf.location).toMatchObject({ x: 4, y: 6, z: 0 })
+    expect(fcf.location).toMatchObject({ x: 4, y: 6 })
   })
 
   it('deep-clones as a detached object', () => {
@@ -128,7 +126,7 @@ describe('AcDbFcf', () => {
   it('anchors the frame at the left-edge center insertion point', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(100, 200, 0)
+    fcf.location = new AcGePoint2d(100, 200)
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
 
@@ -136,7 +134,7 @@ describe('AcDbFcf', () => {
     const leftCenterY = (points[0].y + points[3].y) / 2
     const rightCenterY = (points[1].y + points[2].y) / 2
 
-    expect(points[0]).toMatchObject({ x: 100, z: 0 })
+    expect(points[0]).toMatchObject({ x: 100 })
     expect(points[1].x).toBeGreaterThan(100)
     expect(leftCenterY).toBeCloseTo(200, 6)
     expect(rightCenterY).toBeCloseTo(200, 6)
@@ -145,7 +143,7 @@ describe('AcDbFcf', () => {
   it('places the insertion point on the right edge when direction points left', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(344, 270, 0)
+    fcf.location = new AcGePoint2d(344, 270)
     fcf.direction = { x: -1, y: 0, z: 0 }
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
@@ -153,8 +151,8 @@ describe('AcDbFcf', () => {
     const points = fcf.getBoundingPoints()
     const rightCenterY = (points[0].y + points[3].y) / 2
 
-    expect(points[0]).toMatchObject({ x: 344, z: 0 })
-    expect(points[3]).toMatchObject({ x: 344, z: 0 })
+    expect(points[0]).toMatchObject({ x: 344 })
+    expect(points[3]).toMatchObject({ x: 344 })
     expect(points[1].x).toBeLessThan(344)
     expect(rightCenterY).toBeCloseTo(270, 6)
   })
@@ -168,7 +166,7 @@ describe('AcDbFcf', () => {
     }
 
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint3d(312.1120452047875, 270.2900270575117, 0)
+    fcf.location = new AcGePoint2d(312.1120452047875, 270.2900270575117)
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
 
@@ -196,7 +194,7 @@ describe('AcDbFcf', () => {
     fcf.subWorldDraw(renderer as never)
 
     expect(renderer.lines).toHaveBeenCalled()
-    for (const [points] of renderer.lines.mock.calls as [AcGePoint3d[]][]) {
+    for (const [points] of renderer.lines.mock.calls as [AcGePoint2d[]][]) {
       expect(points).toHaveLength(2)
       const [start, end] = points
       const dx = Math.abs(end.x - start.x)
