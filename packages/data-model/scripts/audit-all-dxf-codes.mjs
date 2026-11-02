@@ -76,7 +76,6 @@ const pairs = [
   ['SPLINE', ['src/entity/AcDbSpline.ts', entity], `${DXF_JSON}/entities/spline/parser.ts`],
   ['LEADER', ['src/entity/AcDbLeader.ts', entity], `${DXF_JSON}/entities/leader/parser.ts`],
   ['SOLID', ['src/entity/AcDbTrace.ts', entity], `${DXF_JSON}/entities/solid/parser.ts`],
-  ['3DFACE', ['src/entity/AcDbFace.ts', entity], `${DXF_JSON}/entities/face/parser.ts`],
   ['RAY', ['src/entity/AcDbRay.ts', entity], `${DXF_JSON}/entities/ray/parser.ts`],
   ['XLINE', ['src/entity/AcDbXline.ts', entity], `${DXF_JSON}/entities/xline/parser.ts`],
   ['IMAGE', ['src/entity/AcDbRasterImage.ts', entity], `${DXF_JSON}/entities/image/parser.ts`],
@@ -98,9 +97,6 @@ const pairs = [
   ['LIGHT', null, `${DXF_JSON}/entities/light/parser.ts`],
   ['SECTION', null, `${DXF_JSON}/entities/section/parser.ts`],
   ['SUN', null, `${DXF_JSON}/entities/sun/parser.ts`],
-  ['BODY', ['src/entity/AcDb3dSolid.ts', entity], `${DXF_JSON}/entities/body/parser.ts`],
-  ['3DSOLID', ['src/entity/AcDb3dSolid.ts', entity], `${DXF_JSON}/entities/solid3d/parser.ts`],
-  ['REGION', ['src/entity/AcDb3dSolid.ts', entity], `${DXF_JSON}/entities/region/parser.ts`],
   ['ACAD_TABLE', ['src/entity/AcDbTable.ts', blockRef, entity], `${DXF_JSON}/entities/table/parser.ts`],
   // tables
   ['LAYER', ['src/database/AcDbLayerTableRecord.ts', object], `${DXF_JSON}/tables/layer/parser.ts`],

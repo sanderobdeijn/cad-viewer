@@ -40,7 +40,6 @@ npm install @mlightcad/geometry-engine
 #### Transformations
 - **AcGeMatrix2d, AcGeMatrix3d**: 2D and 3D transformation matrices
 - **AcGeQuaternion**: Quaternion-based 3D rotations
-- **AcGeEuler**: Euler angle representations for 3D rotations
 
 #### Mathematical Utilities
 - **AcGeBox2d, AcGeBox3d**: Bounding boxes in 2D and 3D space

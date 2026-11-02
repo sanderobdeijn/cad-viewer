@@ -19,17 +19,12 @@ import { AcDbAttributeDefinition } from '../src/entity/AcDbAttributeDefinition'
 import { AcDb3PointAngularDimension } from '../src/entity/dimension/AcDb3PointAngularDimension'
 import { AcDbAlignedDimension } from '../src/entity/dimension/AcDbAlignedDimension'
 import { AcDbArcDimension } from '../src/entity/dimension/AcDbArcDimension'
-import { AcDb3dPolyline, AcDbPoly3dType } from '../src/entity/AcDb3dPolyline'
-import { AcDb3dVertex } from '../src/entity/AcDb3dVertex'
 import { AcDbBlockReference } from '../src/entity/AcDbBlockReference'
 import { AcDbCircle } from '../src/entity/AcDbCircle'
 import { AcDbEntity } from '../src/entity/AcDbEntity'
-import { AcDbFace } from '../src/entity/AcDbFace'
 import { AcDbLine } from '../src/entity/AcDbLine'
 import { AcDbMText } from '../src/entity/AcDbMText'
 import { AcDbOrdinateDimension } from '../src/entity/dimension/AcDbOrdinateDimension'
-import { AcDbPolyFaceMesh } from '../src/entity/AcDbPolyFaceMesh'
-import { AcDbPolygonMesh } from '../src/entity/AcDbPolygonMesh'
 import { AcDbPoint } from '../src/entity/AcDbPoint'
 import { AcDbPolyline } from '../src/entity/AcDbPolyline'
 import { AcDbRadialDimension } from '../src/entity/dimension/AcDbRadialDimension'
@@ -86,12 +81,7 @@ describe('AcDbEntity.dxfTypeName', () => {
     expect(new AcDb2dPolyline(AcDbPoly2dType.SimplePoly, []).dxfTypeName).toBe(
       'POLYLINE'
     )
-    expect(new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, []).dxfTypeName).toBe(
-      'POLYLINE'
-    )
     expect(new AcDb2dVertex().dxfTypeName).toBe('VERTEX')
-    expect(new AcDb3dVertex().dxfTypeName).toBe('VERTEX')
-    expect(new AcDbFace().dxfTypeName).toBe('3DFACE')
     expect(new AcDbTable('TEST', 1, 1).dxfTypeName).toBe('ACAD_TABLE')
     expect(
       new AcDb3PointAngularDimension(
@@ -256,14 +246,9 @@ describe('AcDbEntity.transformBy', () => {
       vertex2d.position = source.clone()
       vertex2d.transformBy(matrix)
 
-      const vertex3d = new AcDb3dVertex()
-      vertex3d.position = source.clone()
-      vertex3d.transformBy(matrix)
-
       const expected = source.clone().applyMatrix4(matrix)
       expectPoint3dClose(point.position, expected)
       expectPoint3dClose(vertex2d.position, expected)
-      expectPoint3dClose(vertex3d.position, expected)
       expect(name).toBeTruthy()
     })
   })
@@ -328,11 +313,6 @@ describe('AcDbEntity.transformBy', () => {
     vertex2d.position = new AcGePoint3d(1, 1, 0)
     vertex2d.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 5))
     expectPoint3dClose(vertex2d.position, { x: 4, y: 5, z: 5 })
-
-    const vertex3d = new AcDb3dVertex()
-    vertex3d.position = new AcGePoint3d(1, 1, 1)
-    vertex3d.transformBy(new AcGeMatrix3d().makeTranslation(-1, 2, -3))
-    expectPoint3dClose(vertex3d.position, { x: 0, y: 3, z: -2 })
   })
 
   it('keeps line-like entities aligned across translation rotation and mirror', () => {
@@ -406,27 +386,10 @@ describe('AcDbEntity.transformBy', () => {
       )
       legacyPolyline.transformBy(matrix)
       expect(legacyPolyline.getBulgeAt(0)).toBe(expectedBulge)
-
-      const polyline3d = new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 2, z: 3 }
-      ])
-      polyline3d.transformBy(matrix)
-      expectPoint3dClose(
-        polyline3d.getPointAt(1),
-        new AcGePoint3d(1, 2, 3).applyMatrix4(matrix)
-      )
     })
   })
 
-  it('transforms 3d polylines, splines, ellipses, leaders and infinite lines', () => {
-    const polyline3d = new AcDb3dPolyline(AcDbPoly3dType.SimplePoly, [
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 1, z: 1 }
-    ])
-    polyline3d.transformBy(new AcGeMatrix3d().makeTranslation(4, -2, 3))
-    expect(polyline3d.getPointAt(1)).toMatchObject({ x: 5, y: -1, z: 4 })
-
+  it('transforms splines, ellipses, leaders and infinite lines', () => {
     const spline = new AcDbSpline(
       [
         { x: 0, y: 0 },
@@ -546,28 +509,6 @@ describe('AcDbEntity.transformBy', () => {
     expect(viewport.width).toBeCloseTo(4, 8)
     expect(viewport.height).toBeCloseTo(12, 8)
     expect(viewport.viewHeight).toBeCloseTo(30, 8)
-
-    const polyFace = new AcDbPolyFaceMesh(
-      [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 }
-      ],
-      [[1, 2, 3]]
-    )
-    polyFace.transformBy(new AcGeMatrix3d().makeTranslation(1, 2, 3))
-    expect(polyFace.getVertexAt(0).position).toMatchObject({ x: 1, y: 2, z: 3 })
-
-    const polygonMesh = new AcDbPolygonMesh(1, 2, [
-      { x: 0, y: 0, z: 0 },
-      { x: 1, y: 1, z: 1 }
-    ])
-    polygonMesh.transformBy(new AcGeMatrix3d().makeTranslation(-1, -2, -3))
-    expect(polygonMesh.getVertexAt(1).position).toMatchObject({
-      x: 0,
-      y: -1,
-      z: -2
-    })
   })
 
   it('updates text, mtext and viewport under combined transforms', () => {
@@ -613,15 +554,7 @@ describe('AcDbEntity.transformBy', () => {
     expect(viewport.viewHeight).toBeCloseTo(20, 8)
   })
 
-  it('transforms face and trace entities', () => {
-    const face = new AcDbFace()
-    face.setVertexAt(0, new AcGePoint3d(0, 0, 0))
-    face.setVertexAt(1, new AcGePoint3d(1, 0, 0))
-    face.setVertexAt(2, new AcGePoint3d(0, 1, 0))
-    face.transformBy(new AcGeMatrix3d().makeTranslation(2, 3, 4))
-    expectPoint3dClose(face.getVertexAt(0), { x: 2, y: 3, z: 4 })
-    expectPoint3dClose(face.getVertexAt(2), { x: 2, y: 4, z: 4 })
-
+  it('transforms trace entities', () => {
     const trace = new AcDbTrace()
     trace.setPointAt(0, new AcGePoint3d(0, 0, 0))
     trace.setPointAt(1, new AcGePoint3d(1, 0, 0))

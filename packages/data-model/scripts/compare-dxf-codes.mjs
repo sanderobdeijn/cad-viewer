@@ -40,7 +40,6 @@ const pairs = [
   ['SPLINE', 'src/entity/AcDbSpline.ts', 'd:/code/dxf-json/src/parser/entities/spline/parser.ts'],
   ['LEADER', 'src/entity/AcDbLeader.ts', 'd:/code/dxf-json/src/parser/entities/leader/parser.ts'],
   ['SOLID', 'src/entity/AcDbTrace.ts', 'd:/code/dxf-json/src/parser/entities/solid/parser.ts'],
-  ['3DFACE', 'src/entity/AcDbFace.ts', 'd:/code/dxf-json/src/parser/entities/face/parser.ts'],
   ['RAY', 'src/entity/AcDbRay.ts', 'd:/code/dxf-json/src/parser/entities/ray/parser.ts'],
   ['XLINE', 'src/entity/AcDbXline.ts', 'd:/code/dxf-json/src/parser/entities/xline/parser.ts'],
   ['IMAGE', 'src/entity/AcDbRasterImage.ts', 'd:/code/dxf-json/src/parser/entities/image/parser.ts'],

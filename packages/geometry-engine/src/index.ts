@@ -44,7 +44,6 @@ export type {
 export {
   AcGeBox2d,
   AcGeBox3d,
-  AcGeEuler,
   AcGeMatrix2d,
   AcGeMatrix3d,
   AcGePlane,

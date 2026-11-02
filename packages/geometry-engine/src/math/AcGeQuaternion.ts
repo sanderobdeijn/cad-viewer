@@ -1,5 +1,4 @@
 import { acgeClamp } from '../util/AcGeMathUtil'
-import { AcGeEuler } from './AcGeEuler'
 import { AcGeMatrix3d } from './AcGeMatrix3d'
 import { AcGeVector3d, AcGeVector3dLike } from './AcGeVector3d'
 
@@ -226,88 +225,6 @@ export class AcGeQuaternion {
     this._w = quaternion.w
 
     this._onChangeCallback()
-    return this
-  }
-
-  /**
-   * Sets this quaternion from the rotation specified by euler angle.
-   * @param euler Input one euler angle
-   * @param update Input one flag whether to trigger change callback function
-   * @returns Return this quaternion
-   */
-  setFromEuler(euler: AcGeEuler, update = true) {
-    const x = euler.x,
-      y = euler.y,
-      z = euler.z,
-      order = euler.order
-
-    // http://www.mathworks.com/matlabcentral/fileexchange/
-    // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-    //	content/SpinCalc.m
-
-    const cos = Math.cos
-    const sin = Math.sin
-
-    const c1 = cos(x / 2)
-    const c2 = cos(y / 2)
-    const c3 = cos(z / 2)
-
-    const s1 = sin(x / 2)
-    const s2 = sin(y / 2)
-    const s3 = sin(z / 2)
-
-    switch (order) {
-      case 'XYZ':
-        this._x = s1 * c2 * c3 + c1 * s2 * s3
-        this._y = c1 * s2 * c3 - s1 * c2 * s3
-        this._z = c1 * c2 * s3 + s1 * s2 * c3
-        this._w = c1 * c2 * c3 - s1 * s2 * s3
-        break
-
-      case 'YXZ':
-        this._x = s1 * c2 * c3 + c1 * s2 * s3
-        this._y = c1 * s2 * c3 - s1 * c2 * s3
-        this._z = c1 * c2 * s3 - s1 * s2 * c3
-        this._w = c1 * c2 * c3 + s1 * s2 * s3
-        break
-
-      case 'ZXY':
-        this._x = s1 * c2 * c3 - c1 * s2 * s3
-        this._y = c1 * s2 * c3 + s1 * c2 * s3
-        this._z = c1 * c2 * s3 + s1 * s2 * c3
-        this._w = c1 * c2 * c3 - s1 * s2 * s3
-        break
-
-      case 'ZYX':
-        this._x = s1 * c2 * c3 - c1 * s2 * s3
-        this._y = c1 * s2 * c3 + s1 * c2 * s3
-        this._z = c1 * c2 * s3 - s1 * s2 * c3
-        this._w = c1 * c2 * c3 + s1 * s2 * s3
-        break
-
-      case 'YZX':
-        this._x = s1 * c2 * c3 + c1 * s2 * s3
-        this._y = c1 * s2 * c3 + s1 * c2 * s3
-        this._z = c1 * c2 * s3 - s1 * s2 * c3
-        this._w = c1 * c2 * c3 - s1 * s2 * s3
-        break
-
-      case 'XZY':
-        this._x = s1 * c2 * c3 - c1 * s2 * s3
-        this._y = c1 * s2 * c3 - s1 * c2 * s3
-        this._z = c1 * c2 * s3 + s1 * s2 * c3
-        this._w = c1 * c2 * c3 + s1 * s2 * s3
-        break
-
-      default:
-        console.warn(
-          'THREE.Quaternion: .setFromEuler() encountered an unknown order: ' +
-            order
-        )
-    }
-
-    if (update === true) this._onChangeCallback()
-
     return this
   }
 

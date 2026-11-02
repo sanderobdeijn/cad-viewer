@@ -1,7 +1,6 @@
 export default {
   entityName: {
     '2dPolyline': '2D Polyline',
-    '3dPolyline': '3D Polyline',
     '3PointAngularDimension': 'Three Point Angular Dimension',
     AlignedDimension: 'Aligned Dimension',
     Arc: 'Arc',
@@ -11,7 +10,6 @@ export default {
     Dimension: 'Dimension',
     DiametricDimension: 'Diametric Dimension',
     Ellipse: 'Ellipse',
-    Face: 'Face',
     Leader: 'Leader',
     Line: 'Line',
     MText: 'MText',

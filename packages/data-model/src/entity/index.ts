@@ -1,8 +1,5 @@
 export { AcDb2dPolyline, AcDbPoly2dType } from './AcDb2dPolyline'
 export { AcDb2dVertex, AcDb2dVertexType } from './AcDb2dVertex'
-export { AcDb3dPolyline, AcDbPoly3dType } from './AcDb3dPolyline'
-export { AcDb3dSolid, type AcDb3dSolidOptions } from './AcDb3dSolid'
-export { AcDb3dVertex, AcDb3dVertexType } from './AcDb3dVertex'
 export { AcDbArc } from './AcDbArc'
 export {
   AcDbArcAlignedText,
@@ -33,7 +30,6 @@ export type {
   AcDbEntityRuntimeProperty,
   AcDbPropertyAccessor
 } from './AcDbEntityProperties'
-export { AcDbFace } from './AcDbFace'
 export { AcDbFcf } from './AcDbFcf'
 export { AcDbLeader, AcDbLeaderAnnotationType } from './AcDbLeader'
 export { AcDbLine } from './AcDbLine'
@@ -87,12 +83,6 @@ export { AcDbRay } from './AcDbRay'
 export { AcDbShape } from './AcDbShape'
 export { AcDbViewport } from './AcDbViewport'
 export { AcDbXline } from './AcDbXline'
-export { AcDbPolygonMesh, AcDbPolygonMeshVertex } from './AcDbPolygonMesh'
-export {
-  AcDbPolyFaceMesh,
-  AcDbPolyFaceMeshFace,
-  AcDbPolyFaceMeshVertex
-} from './AcDbPolyFaceMesh'
 export {
   AcDb3PointAngularDimension,
   AcDbAlignedDimension,

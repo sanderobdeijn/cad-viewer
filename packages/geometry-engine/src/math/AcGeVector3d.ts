@@ -1,6 +1,5 @@
 import { AcCmErrors } from '@mlightcad/common'
 
-import { AcGeEuler } from './AcGeEuler'
 import { AcGeMatrix2d } from './AcGeMatrix2d'
 import { AcGeMatrix3d } from './AcGeMatrix3d'
 import { AcGeQuaternion } from './AcGeQuaternion'
@@ -373,15 +372,6 @@ export class AcGeVector3d {
     this.z = a.z * b.z
 
     return this
-  }
-
-  /**
-   * Apply euler transform to this vector by converting the Euler object to a Quaternion and applying.
-   * @param euler Input an euler object
-   * @returns Return this vector
-   */
-  applyEuler(euler: AcGeEuler) {
-    return this.applyQuaternion(_quaternion.setFromEuler(euler))
   }
 
   /**

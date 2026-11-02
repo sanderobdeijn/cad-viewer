@@ -7,7 +7,6 @@ import {
   AcGeCircArc3d,
   AcGeEllipseArc2d,
   AcGeEllipseArc3d,
-  AcGeEuler,
   AcGeGeometryUtil,
   AcGeLine2d,
   AcGeLine3d,
@@ -208,7 +207,6 @@ describe('geometry-engine public API coverage boost', () => {
       .multiply({ x: 2, y: 3, z: 4 })
       .multiplyScalar(0.5)
       .multiplyVectors({ x: 2, y: 2, z: 2 }, { x: 3, y: 3, z: 3 })
-      .applyEuler(new AcGeEuler(0.1, 0.2, 0.3, 'XYZ'))
       .applyAxisAngle(AcGeVector3d.Z_AXIS, Math.PI / 2)
       .applyMatrix3(new AcGeMatrix2d().identity())
       .applyNormalMatrix(new AcGeMatrix2d().identity())
@@ -371,9 +369,6 @@ describe('geometry-engine public API coverage boost', () => {
     const qa = new AcGeQuaternion().setFromAxisAngle(AcGeVector3d.X_AXIS, 0.2)
     const qb = new AcGeQuaternion().setFromAxisAngle(AcGeVector3d.Y_AXIS, 0.3)
     expect(q.set(0, 0, 0, 1).clone().copy(qa)).toBeInstanceOf(AcGeQuaternion)
-    expect(q.setFromEuler(new AcGeEuler(0.1, 0.2, 0.3, 'XYZ'))).toBeInstanceOf(
-      AcGeQuaternion
-    )
     expect(
       q.setFromRotationMatrix(new AcGeMatrix3d().makeRotationZ(0.1))
     ).toBeInstanceOf(AcGeQuaternion)
@@ -396,34 +391,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(q.equals(q.clone())).toBe(true)
     expect(q.fromArray([1, 2, 3, 4], 0).toArray()).toEqual([1, 2, 3, 4])
     expect(q.toJSON()).toHaveLength(4)
-
-    const e = new AcGeEuler(0.1, 0.2, 0.3, 'XYZ')
-    let eChanged = 0
-    e._onChange(() => {
-      eChanged++
-    })
-    e.x = 0.2
-    e.y = 0.3
-    e.z = 0.4
-    e.order = 'ZYX'
-    expect(eChanged).toBeGreaterThan(0)
-
-    expect(e.set(0.1, 0.2, 0.3, 'YZX')).toBeInstanceOf(AcGeEuler)
-    expect(e.clone().copy(new AcGeEuler(0.3, 0.2, 0.1, 'XYZ'))).toBeInstanceOf(
-      AcGeEuler
-    )
-    expect(
-      e.setFromRotationMatrix(new AcGeMatrix3d().makeRotationX(0.2), 'XYZ')
-    ).toBeInstanceOf(AcGeEuler)
-    expect(e.setFromQuaternion(new AcGeQuaternion(), 'XYZ')).toBeInstanceOf(
-      AcGeEuler
-    )
-    expect(
-      e.setFromVector3(new AcGeVector3d(0.1, 0.2, 0.3), 'XYZ')
-    ).toBeInstanceOf(AcGeEuler)
-    expect(e.reorder('ZXY')).toBeInstanceOf(AcGeEuler)
-    expect(e.equals(e.clone())).toBe(true)
-    expect(e.fromArray([0.1, 0.2, 0.3, 'XYZ']).toArray()).toHaveLength(4)
   })
 
   it('covers box and plane methods', () => {

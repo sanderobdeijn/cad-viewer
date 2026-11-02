@@ -1,4 +1,4 @@
-import { AcGeEuler, AcGeMatrix3d, AcGeQuaternion, AcGeVector3d } from '../src'
+import { AcGeMatrix3d, AcGeQuaternion, AcGeVector3d } from '../src'
 
 describe('AcGeQuaternion', () => {
   it('slerp result remains normalized', () => {
@@ -20,13 +20,6 @@ describe('AcGeQuaternion', () => {
     // tiny-angle path that falls back to lerp and normalization
     AcGeQuaternion.slerpFlat(out, 0, [0, 0, 0, 1], 0, [1e-12, 0, 0, 1], 0, 0.5)
     expect(out[3]).toBeGreaterThan(0)
-
-    const warnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementation(() => undefined)
-    new AcGeQuaternion().setFromEuler(new AcGeEuler(0.1, 0.2, 0.3, 'BAD'))
-    expect(warnSpy).toHaveBeenCalled()
-    warnSpy.mockRestore()
 
     // setFromRotationMatrix branches
     expect(
