@@ -116,10 +116,6 @@ describe('AcDbSysVarManager', () => {
     expect(manager.getVar(AcDbSystemVariables.CMLEADERSTYLE, db)).toBe(
       'ANNOTATION'
     )
-    manager.setVar(AcDbSystemVariables.HPCOLOR, 'RGB:10,20,30', db)
-    expect(manager.getVar(AcDbSystemVariables.HPCOLOR, db)?.toString()).toBe(
-      'RGB:10,20,30'
-    )
     expect(
       manager.getDescriptor(AcDbSystemVariables.CETRANSPARENCY)?.type
     ).toBe('transparency')
@@ -145,14 +141,6 @@ describe('AcDbSysVarManager', () => {
     db.cetransparency = directTransparency
     directTransparency.percentage = 45
     expect(db.cetransparency.percentage).toBe(40)
-
-    manager.setVar(AcDbSystemVariables.HPTRANSPARENCY, '35', db)
-    const hpTransparency = manager.getVar(
-      AcDbSystemVariables.HPTRANSPARENCY,
-      db
-    )
-    expect(hpTransparency).toBeInstanceOf(AcCmTransparency)
-    expect((hpTransparency as AcCmTransparency).percentage).toBe(35)
 
     manager.setVar(AcDbSystemVariables.CELTYPE, 'BYLAYER', db)
     expect(manager.getVar(AcDbSystemVariables.CELTYPE, db)).toBe('ByLayer')
@@ -213,33 +201,11 @@ describe('AcDbSysVarManager', () => {
     expect(manager.getDefaultValue(AcDbSystemVariables.CMLEADERSTYLE)).toBe(
       'Standard'
     )
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPASSOC)).toBe(1)
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPANG)).toBe(0)
-    expect(
-      manager.getDefaultValue(AcDbSystemVariables.HPBACKGROUNDCOLOR)?.toString()
-    ).toBe('None')
-    expect(
-      manager.getDefaultValue(AcDbSystemVariables.HPCOLOR)?.toString()
-    ).toBe('ByLayer')
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPDOUBLE)).toBe(0)
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPISLANDDETECTION)).toBe(
-      1
-    )
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPLAYER)).toBe('.')
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPNAME)).toBe('ANGLE')
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPSCALE)).toBe(1)
-    expect(manager.getDefaultValue(AcDbSystemVariables.HPSEPARATE)).toBe(0)
     expect(
       manager.getDefaultValue(AcDbSystemVariables.CETRANSPARENCY)
     ).toBeInstanceOf(AcCmTransparency)
     expect(
       manager.getDefaultValue(AcDbSystemVariables.CETRANSPARENCY)?.toString()
-    ).toBe('ByLayer')
-    expect(
-      manager.getDefaultValue(AcDbSystemVariables.HPTRANSPARENCY)
-    ).toBeInstanceOf(AcCmTransparency)
-    expect(
-      manager.getDefaultValue(AcDbSystemVariables.HPTRANSPARENCY)?.toString()
     ).toBe('ByLayer')
     expect(manager.getDefaultValue(AcDbSystemVariables.CELTYPE)).toBe('ByLayer')
     expect(manager.getDefaultValue(AcDbSystemVariables.POLARADDANG)).toBe('')
@@ -250,7 +216,6 @@ describe('AcDbSysVarManager', () => {
     expect(manager.getDefaultValue(AcDbSystemVariables.GRIPOBJLIMIT)).toBe(100)
     expect(manager.getDefaultValue(AcDbSystemVariables.GRIPS)).toBe(2)
     expect(manager.getDefaultValue(AcDbSystemVariables.GRIPSIZE)).toBe(5)
-    expect(manager.getDefaultValue(AcDbSystemVariables.COMPAREHATCH)).toBe(0)
     expect(manager.getDefaultValue(AcDbSystemVariables.COMPAREPROPS)).toBe(0)
     expect(manager.getDefaultValue(AcDbSystemVariables.COMPARERCMARGIN)).toBe(5)
     expect(manager.getDefaultValue(AcDbSystemVariables.COMPARETEXT)).toBe(1)
@@ -313,19 +278,13 @@ describe('AcDbSysVarManager', () => {
       AcDbSystemVariables.COMPAREPROPS,
       db
     ) as number
-
-    expect(db.comparehatch).toBe(0)
     expect(db.comparercmargin).toBe(5)
     expect(db.comparetext).toBe(1)
     expect(db.comparetolerance).toBe(6)
-    expect(manager.getVar(AcDbSystemVariables.COMPAREHATCH, db)).toBe(0)
     expect(manager.getVar(AcDbSystemVariables.COMPAREPROPS, db)).toBe(0)
     expect(manager.getVar(AcDbSystemVariables.COMPARERCMARGIN, db)).toBe(5)
     expect(manager.getVar(AcDbSystemVariables.COMPARETEXT, db)).toBe(1)
     expect(manager.getVar(AcDbSystemVariables.COMPARETOLERANCE, db)).toBe(6)
-    expect(
-      manager.getDescriptor(AcDbSystemVariables.COMPAREHATCH)?.isDbVar
-    ).toBe(true)
     expect(
       manager.getDescriptor(AcDbSystemVariables.COMPAREPROPS)?.isDbVar
     ).toBe(false)
@@ -338,9 +297,6 @@ describe('AcDbSysVarManager', () => {
     expect(
       manager.getDescriptor(AcDbSystemVariables.COMPARETOLERANCE)?.isDbVar
     ).toBe(true)
-
-    manager.setVar(AcDbSystemVariables.COMPAREHATCH, '1', db)
-    expect(db.comparehatch).toBe(1)
     manager.setVar(AcDbSystemVariables.COMPAREPROPS, 1 + 2 + 16, db)
     expect(manager.getVar(AcDbSystemVariables.COMPAREPROPS, db)).toBe(19)
     manager.setVar(AcDbSystemVariables.COMPARERCMARGIN, 25, db)
@@ -349,10 +305,6 @@ describe('AcDbSysVarManager', () => {
     expect(db.comparetext).toBe(0)
     manager.setVar(AcDbSystemVariables.COMPARETOLERANCE, '0', db)
     expect(db.comparetolerance).toBe(0)
-
-    expect(() =>
-      manager.setVar(AcDbSystemVariables.COMPAREHATCH, 2, db)
-    ).toThrow('Invalid COMPAREHATCH value! Valid range is 0 to 1.')
     expect(() =>
       manager.setVar(AcDbSystemVariables.COMPAREPROPS, 128, db)
     ).toThrow('Invalid COMPAREPROPS value! Valid range is 0 to 127.')
@@ -365,10 +317,6 @@ describe('AcDbSysVarManager', () => {
     expect(() =>
       manager.setVar(AcDbSystemVariables.COMPARETOLERANCE, 15, db)
     ).toThrow('Invalid COMPARETOLERANCE value! Valid range is 0 to 14.')
-
-    expect(() => {
-      db.comparehatch = 2
-    }).toThrow('Invalid COMPAREHATCH value! Valid range is 0 to 1.')
     expect(() => {
       db.comparercmargin = 0
     }).toThrow('Invalid COMPARERCMARGIN value! Valid range is 1 to 25.')
@@ -378,8 +326,6 @@ describe('AcDbSysVarManager', () => {
     expect(() => {
       db.comparetolerance = 15
     }).toThrow('Invalid COMPARETOLERANCE value! Valid range is 0 to 14.')
-
-    manager.setVar(AcDbSystemVariables.COMPAREHATCH, 0, db)
     manager.setVar(AcDbSystemVariables.COMPAREPROPS, oldCompareProps, db)
     manager.setVar(AcDbSystemVariables.COMPARERCMARGIN, 5, db)
     manager.setVar(AcDbSystemVariables.COMPARETEXT, 1, db)

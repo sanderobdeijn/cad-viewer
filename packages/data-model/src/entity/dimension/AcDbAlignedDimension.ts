@@ -352,7 +352,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
   }
 
   createDimBlock(blockName: string) {
-    // Create block and add the hatch entity in this block
+    // Create block and add the dimension geometry in this block
     const block = new AcDbBlockTableRecord()
     block.name = blockName
     const lines = this.createLines()

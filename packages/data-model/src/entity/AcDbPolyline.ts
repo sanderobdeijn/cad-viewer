@@ -701,12 +701,6 @@ export class AcDbPolyline extends AcDbCurve {
       if (preferOffsetRing) {
         const ring = createClosedWidePolylineOffsetRing(widthProfile)
         if (ring != null) {
-          const traits = renderer.subEntityTraits
-          traits.fillType = {
-            solidFill: true,
-            patternAngle: 0,
-            definitionLines: []
-          }
           return renderer.offsetRing(
             ring.outer.map(point => this.ocsPointToWcs(point.x, point.y)),
             ring.inner.map(point => this.ocsPointToWcs(point.x, point.y))
@@ -715,19 +709,11 @@ export class AcDbPolyline extends AcDbCurve {
       }
       const areas = createWidePolylineArea(widthProfile, this.closed)
       if (areas != null) {
-        const traits = renderer.subEntityTraits
-        const previousFillType = traits.fillType
-        traits.fillType = {
-          solidFill: true,
-          patternAngle: 0,
-          definitionLines: []
-        }
         const entities = areas.map(area => {
           this.mapAreaLoopsToWcs(area)
           return renderer.area(area)
         })
         // Restore before the hairline stroke — lines must not inherit solid fill.
-        traits.fillType = previousFillType
         // Hairline centerline so open wide bands stay visible when their
         // world-space width projects to ≪ 1 device pixel (title blocks).
         // Closed rings already get a centerline from renderer.offsetRing.

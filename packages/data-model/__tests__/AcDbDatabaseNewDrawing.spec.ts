@@ -1,4 +1,4 @@
-import { AcDbDatabase, AcDbLine } from '../src'
+import { AcDbDatabase, AcDbDataGenerator, AcDbLine, AcDbTrace } from '../src'
 
 const names = (table: { newIterator: () => Iterable<{ name: string }> }) =>
   [...table.newIterator()].map(record => record.name)
@@ -85,5 +85,20 @@ describe('AcDbDatabase.createNewDrawing', () => {
 
     expect(layouts).toEqual(expect.arrayContaining(['Model', 'Layout1', 'Layout2']))
     expect(layers).toEqual(['0'])
+  })
+})
+
+describe('AcDbDataGenerator.createArrowBlock', () => {
+  it('builds the dimension arrowhead as a solid triangle', () => {
+    const db = new AcDbDatabase()
+    db.createNewDrawing()
+    new AcDbDataGenerator(db).createArrowBlock()
+
+    const block = db.tables.blockTable.getAt('_CAXARROW')
+    const entities = [...block!.newIterator()]
+    expect(entities).toHaveLength(1)
+    const arrow = entities[0] as AcDbTrace
+    expect(arrow).toBeInstanceOf(AcDbTrace)
+    expect(Math.abs(arrow.area)).toBeCloseTo(0.125, 8)
   })
 })

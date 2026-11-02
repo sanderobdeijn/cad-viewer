@@ -39,7 +39,6 @@ import type {
   RibbonTabModel,
 } from './ribbon'
 import MlDemoColorDropdown from './components/MlDemoColorDropdown.vue'
-import MlDemoHatchButton from './components/MlDemoHatchButton.vue'
 import MlDemoLineTypeDropdown from './components/MlDemoLineTypeDropdown.vue'
 import MlDemoLineWeightDropdown from './components/MlDemoLineWeightDropdown.vue'
 import type { MlDemoCadDropdownOption } from './components/demoCadDropdown'
@@ -81,7 +80,6 @@ const gridSnap = ref(true)
 const entityColor = ref('bylayer')
 const entityLineType = ref('continuous')
 const entityLineWeight = ref('0.25')
-const hatchPattern = ref('ansi31')
 const arrayCount = ref(4)
 const arraySpacing = ref(24)
 const arrayAngle = ref(45)
@@ -235,14 +233,6 @@ const baseTabs: RibbonTabModel[] = [
                 hideLabel: true,
                 size: 'small',
                 props: { icon: Aim },
-              },
-              {
-                id: 'draw-hatch',
-                type: 'button',
-                tooltip: 'Hatch',
-                hideLabel: true,
-                size: 'small',
-                props: { icon: MagicStick },
               },
             ],
           },
@@ -573,29 +563,6 @@ const baseTabs: RibbonTabModel[] = [
                 size: 'small',
                 props: {
                   component: MlDemoLineWeightDropdown,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'pattern',
-        title: 'Pattern',
-        orientation: 'row',
-        priority: 25,
-        collections: [
-          {
-            id: 'pattern-main',
-            layout: 'row',
-            items: [
-              {
-                id: 'hatch-pattern',
-                type: 'custom',
-                label: 'Hatch Pattern',
-                size: 'large',
-                props: {
-                  component: MlDemoHatchButton,
                 },
               },
             ],
@@ -1097,7 +1064,6 @@ const zhCNMap: Record<string, string> = {
   '2 items, inline limit 4': '2 项，内联上限 4',
   'Option A': '选项 A',
   'Option B': '选项 B',
-  'Hatch Pattern': '填充图案',
   'Array Count': '阵列数量',
   'Array Spacing': '阵列间距',
   'Array Angle': '阵列角度',
@@ -1117,10 +1083,6 @@ const zhCNMap: Record<string, string> = {
   Dashed: '虚线',
   Hidden: '隐藏线',
   Center: '中心线',
-  Solid: '实体',
-  Grid: '网格',
-  Cross: '交叉',
-  Brick: '砖块',
   Line: '直线',
   Polyline: '多段线',
   Circle: '圆',
@@ -1134,7 +1096,6 @@ const zhCNMap: Record<string, string> = {
   '2-Point Rectangle': '两点矩形',
   Polygon: '多边形',
   Ellipse: '椭圆',
-  Hatch: '填充',
   Paste: '粘贴',
   Cut: '剪切',
   Copy: '复制',
@@ -1393,45 +1354,6 @@ const cadLineWeightOptions = computed<MlDemoCadDropdownOption[]>(() => [
   },
 ])
 
-const cadHatchOptions = computed(() => [
-  {
-    value: 'solid',
-    label: translate('Solid') ?? 'Solid',
-    pattern: 'solid',
-    command: 'hatch-pattern-solid',
-  },
-  {
-    value: 'ansi31',
-    label: 'ANSI31',
-    pattern: 'ansi31',
-    command: 'hatch-pattern-ansi31',
-  },
-  {
-    value: 'ansi37',
-    label: 'ANSI37',
-    pattern: 'ansi37',
-    command: 'hatch-pattern-ansi37',
-  },
-  {
-    value: 'grid',
-    label: translate('Grid') ?? 'Grid',
-    pattern: 'grid',
-    command: 'hatch-pattern-grid',
-  },
-  {
-    value: 'cross',
-    label: translate('Cross') ?? 'Cross',
-    pattern: 'cross',
-    command: 'hatch-pattern-cross',
-  },
-  {
-    value: 'brick',
-    label: translate('Brick') ?? 'Brick',
-    pattern: 'brick',
-    command: 'hatch-pattern-brick',
-  },
-])
-
 function resolveCustomComponentProps(
   itemId: string,
 ): Record<string, unknown> | undefined {
@@ -1453,12 +1375,6 @@ function resolveCustomComponentProps(
         title: translate('Line Weight') ?? 'Line Weight',
         modelValue: entityLineWeight.value,
         options: cadLineWeightOptions.value,
-      }
-    case 'hatch-pattern':
-      return {
-        title: translate('Hatch Pattern') ?? 'Hatch Pattern',
-        modelValue: hatchPattern.value,
-        options: cadHatchOptions.value,
       }
     default:
       return undefined
@@ -1789,24 +1705,6 @@ function onRibbonItemClick(payload: {
       break
     case 'entity-line-weight-0.70':
       entityLineWeight.value = '0.70'
-      break
-    case 'hatch-pattern-solid':
-      hatchPattern.value = 'solid'
-      break
-    case 'hatch-pattern-ansi31':
-      hatchPattern.value = 'ansi31'
-      break
-    case 'hatch-pattern-ansi37':
-      hatchPattern.value = 'ansi37'
-      break
-    case 'hatch-pattern-grid':
-      hatchPattern.value = 'grid'
-      break
-    case 'hatch-pattern-cross':
-      hatchPattern.value = 'cross'
-      break
-    case 'hatch-pattern-brick':
-      hatchPattern.value = 'brick'
       break
   }
 

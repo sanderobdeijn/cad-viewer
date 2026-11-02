@@ -45,7 +45,6 @@ const createRenderer = () => {
       },
       lineTypeScale: 1,
       lineWeight: undefined,
-      fillType: undefined,
       transparency: undefined,
       thickness: 0,
       layer: '0',

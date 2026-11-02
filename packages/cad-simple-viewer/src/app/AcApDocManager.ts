@@ -21,7 +21,6 @@ import {
   acapDisposeSessionUndo,
   AcApEllipseCmd,
   AcApEraseCmd,
-  AcApHatchCmd,
   AcApHideObjectsCmd,
   AcApLineCmd,
   AcApLogCmd,
@@ -119,7 +118,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   MEASUREDISTANCE: ['DI', 'DIST'],
   MEASUREAREA: ['AA', 'AREA'],
   MEASUREANGLE: ['ANG'],
-  '-HATCH': ['-H'],
   LINE: ['L'],
   MLINE: ['ML'],
   MTEXT: ['T'],
@@ -1473,7 +1471,6 @@ export class AcApDocManager {
       view: this._mainView,
       commandManager: this._commandManager
     })
-    addSystemCommand('-hatch', '-hatch', new AcApHatchCmd())
     addSystemCommand('line', 'line', new AcApLineCmd())
     addSystemCommand('mline', 'mline', new AcApMLineCmd())
     addSystemCommand('mtext', 'mtext', new AcApMTextCmd())

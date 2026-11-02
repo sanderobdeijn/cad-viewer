@@ -14,7 +14,7 @@ This package provides the graphics interface layer that bridges the gap between 
 - **Entity Rendering**: Convert AutoCAD entities to drawable objects
 - **Style Customization**: Control colors, line styles, text styles, and point styles
 - **View Management**: Handle different views and viewports
-- **Arrow and Hatch Support**: Custom arrow types and hatch pattern rendering
+- **Arrow Support**: Custom arrow types
 - **Flexible Rendering**: Extensible rendering system for different output formats
 
 ## Installation
@@ -33,7 +33,6 @@ npm install @mlightcad/graphic-interface
 
 ### Style Classes
 - **AcGiArrowType**: Defines different arrow types for dimensions and leaders
-- **AcGiHatchStyle**: Controls hatch pattern rendering and appearance
 - **AcGiLineStyle**: Defines line styles including dash patterns and widths
 - **AcGiPointStyle**: Controls point entity display appearance
 - **AcGiTextStyle**: Manages text rendering properties and formatting
@@ -112,22 +111,6 @@ viewport.setZoom(1.0);
 // Set viewport properties
 viewport.setClippingEnabled(true);
 viewport.setClippingBounds(0, 0, 100, 100);
-```
-
-### Hatch Pattern Rendering
-```typescript
-import { AcGiHatchStyle } from '@mlightcad/graphic-interface';
-
-// Configure hatch style
-const hatchStyle = new AcGiHatchStyle();
-hatchStyle.setPattern('ANSI31'); // Standard AutoCAD pattern
-hatchStyle.setScale(1.0);
-hatchStyle.setAngle(0);
-hatchStyle.setColor(4); // Cyan
-hatchStyle.setTransparency(0.5);
-
-// Apply hatch to an entity
-const hatchedEntity = renderer.renderEntityWithHatch(entity, hatchStyle);
 ```
 
 ### Image Rendering

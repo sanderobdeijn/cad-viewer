@@ -1,7 +1,6 @@
 /* eslint-disable simple-import-sort/imports */
 import {
   AcCmColor,
-  AcCmColorMethod,
   AcCmEventManager,
   AcCmTransparency
 } from '@mlightcad/common'
@@ -16,9 +15,6 @@ import { AcDbRegenerator } from '../converter/AcDbRegenerator'
 import { AcDbEntity } from '../entity/AcDbEntity'
 import {
   ACAD_APPID,
-  ACDB_COMPAREHATCH_DEFAULT,
-  ACDB_COMPAREHATCH_MAX,
-  ACDB_COMPAREHATCH_MIN,
   ACDB_COMPARERCMARGIN_DEFAULT,
   ACDB_COMPARERCMARGIN_MAX,
   ACDB_COMPARERCMARGIN_MIN,
@@ -319,14 +315,6 @@ export class AcDbDatabase extends AcDbObject {
   private _cmlscale: number
   /** Current multileader style for newly created MLEADER entities */
   private _cmleaderstyle: string
-  /** Default background color for newly created hatch patterns */
-  private _hpbackgroundcolor: AcCmColor
-  /** Default color for newly created hatches */
-  private _hpcolor: AcCmColor
-  /** Default layer for newly created hatches and fills */
-  private _hplayer: string
-  /** Default transparency for newly created hatches and fills */
-  private _hptransparency: AcCmTransparency
   /** Current text style name for the database */
   private _textstyle: string
   /** Current dimension style name for the database ($DIMSTYLE) */
@@ -355,8 +343,6 @@ export class AcDbDatabase extends AcDbObject {
   private _osmode: number
   /** Orthogonal mode flag (ORTHOMODE): 0 = off, 1 = on */
   private _orthomode: number
-  /** COMPAREHATCH: whether hatch objects are included in drawing comparison */
-  private _comparehatch: number
   /** COMPARERCMARGIN: revision-cloud offset around comparison change sets */
   private _comparercmargin: number
   /** COMPARETEXT: whether text objects are included in drawing comparison */
@@ -486,10 +472,6 @@ export class AcDbDatabase extends AcDbObject {
     this._cmlstyle = DEFAULT_MLINE_STYLE
     this._cmlscale = 1
     this._cmleaderstyle = DEFAULT_MLEADER_STYLE
-    this._hpbackgroundcolor = new AcCmColor(AcCmColorMethod.None)
-    this._hpcolor = this._cecolor.clone()
-    this._hplayer = '.'
-    this._hptransparency = new AcCmTransparency()
     this._textstyle = DEFAULT_TEXT_STYLE
     this._dimstyle = DEFAULT_TEXT_STYLE
     this._extents = new AcGeBox3d()
@@ -508,7 +490,6 @@ export class AcDbDatabase extends AcDbObject {
     this._pdsize = 0
     this._osmode = 0
     this._orthomode = 0
-    this._comparehatch = ACDB_COMPAREHATCH_DEFAULT
     this._comparercmargin = ACDB_COMPARERCMARGIN_DEFAULT
     this._comparetext = ACDB_COMPARETEXT_DEFAULT
     this._comparetolerance = ACDB_COMPARETOLERANCE_DEFAULT
@@ -2016,74 +1997,6 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * The default hatch background color string.
-   */
-  get hpbackgroundcolor(): AcCmColor {
-    return this._hpbackgroundcolor
-  }
-  set hpbackgroundcolor(value: AcCmColor) {
-    this.updateSysVar(
-      AcDbSystemVariables.HPBACKGROUNDCOLOR,
-      this._hpbackgroundcolor,
-      value ?? new AcCmColor(AcCmColorMethod.None),
-      nextValue => {
-        this._hpbackgroundcolor = nextValue.clone()
-      }
-    )
-  }
-
-  /**
-   * The default color string used for newly created hatches.
-   */
-  get hpcolor(): AcCmColor {
-    return this._hpcolor
-  }
-  set hpcolor(value: AcCmColor) {
-    this.updateSysVar(
-      AcDbSystemVariables.HPCOLOR,
-      this._hpcolor,
-      value ?? this._cecolor,
-      nextValue => {
-        this._hpcolor = nextValue.clone()
-      }
-    )
-  }
-
-  /**
-   * The default layer used for newly created hatches and fills.
-   */
-  get hplayer(): string {
-    return this._hplayer
-  }
-  set hplayer(value: string) {
-    this.updateSysVar(
-      AcDbSystemVariables.HPLAYER,
-      this._hplayer,
-      value ?? '.',
-      nextValue => {
-        this._hplayer = nextValue
-      }
-    )
-  }
-
-  /**
-   * The default transparency string used for newly created hatches and fills.
-   */
-  get hptransparency(): AcCmTransparency {
-    return this._hptransparency
-  }
-  set hptransparency(value: AcCmTransparency) {
-    this.updateSysVar(
-      AcDbSystemVariables.HPTRANSPARENCY,
-      this._hptransparency,
-      value ?? new AcCmTransparency(),
-      nextValue => {
-        this._hptransparency = nextValue.clone()
-      }
-    )
-  }
-
-  /**
    * The text style name for new text objects.
    */
   get textstyle(): string {
@@ -2268,34 +2181,6 @@ export class AcDbDatabase extends AcDbObject {
       value ?? 0,
       nextValue => {
         this._orthomode = nextValue
-      }
-    )
-  }
-
-  /**
-   * Whether hatch objects are included in drawing comparison (**COMPAREHATCH**).
-   *
-   * - `0`: Hatch objects are excluded (AutoCAD default)
-   * - `1`: Hatch objects are included
-   *
-   * @see https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-BBB5E4A0-B607-4898-9A6B-A65C51551EE5
-   */
-  get comparehatch(): number {
-    return this._comparehatch
-  }
-  set comparehatch(value: number) {
-    const nextValue = acdbCoerceIntegerSysVar(
-      'COMPAREHATCH',
-      value ?? ACDB_COMPAREHATCH_DEFAULT,
-      ACDB_COMPAREHATCH_MIN,
-      ACDB_COMPAREHATCH_MAX
-    )
-    this.updateSysVar(
-      AcDbSystemVariables.COMPAREHATCH,
-      this._comparehatch,
-      nextValue,
-      coerced => {
-        this._comparehatch = coerced
       }
     )
   }
@@ -2487,13 +2372,6 @@ export class AcDbDatabase extends AcDbObject {
     if (entity.dxfTypeName === 'MULTILEADER') {
       this.ensureMLeaderStyle(this._cmleaderstyle || DEFAULT_MLEADER_STYLE)
       return
-    }
-
-    if (entity.dxfTypeName === 'HATCH') {
-      const hatch = entity as AcDbEntity & {
-        applyPatternDefaultsFromSysVars?: (db: AcDbDatabase) => void
-      }
-      hatch.applyPatternDefaultsFromSysVars?.(this)
     }
   }
 

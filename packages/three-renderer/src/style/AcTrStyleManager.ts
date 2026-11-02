@@ -30,7 +30,7 @@ export interface AcTrStyleManagerStats {
  * - Point materials
  * - Line materials
  * - Mesh materials
- * - Hatch materials
+ * - Fill materials
  *
  * This ensures consistent material reuse, improved rendering performance,
  * and clean separation of material logic.
@@ -41,7 +41,6 @@ export class AcTrStyleManager {
     ltscale: 1.0,
     celtscale: 1.0,
     viewportScaleUniform: 1.0,
-    maxFragmentUniforms: 1024,
     resolution: new THREE.Vector2(1, 1),
     showLineWeight: false,
     linePatternShaderBroken: false,
@@ -162,52 +161,33 @@ export class AcTrStyleManager {
   }
 
   /**
-   * Returns the shader hatch material or a mesh fallback.
+   * Returns the solid fill material.
    *
    * @param traits - Current entity traits.
-   * @param rebaseOffset - Offset used to transform pattern origins.
    */
-  getFillMaterial(
-    traits: AcGiSubEntityTraits,
-    rebaseOffset: THREE.Vector2 = _rebaseOffset,
-    gradientBounds?: {
-      minX: number
-      minY: number
-      maxX: number
-      maxY: number
-    }
-  ): THREE.Material {
-    return this.fillMgr.getMaterial(traits, {
-      rebaseOffset,
-      gradientBounds
-    })
+  getFillMaterial(traits: AcGiSubEntityTraits): THREE.Material {
+    return this.fillMgr.getMaterial(traits, {})
   }
 
   /**
    * Returns a fill material for MText glyph geometry.
    *
    * MText glyphs are rendered as mesh fills, so they share the fill
-   * manager with hatches and wide polylines. Their distinction now
+   * manager with other solid fills and wide polylines. Their distinction now
    * lives on `traits.drawOrder`: normal linework-tier fills stay at
-   * `0`, while hatches set `-1` upstream.
+   * `0`, while under-linework fills set `-1` upstream.
    *
    * @param traits - Current entity traits (built via
    *                 `AcTrSubEntityTraitsUtil.createTraitsForMText`).
-   * @param rebaseOffset - Offset used to transform pattern origins
-   *                       (unused for solid glyph fills, kept for
-   *                       API symmetry with `getFillMaterial`).
    */
   getMTextFillMaterial(
     traits: AcGiSubEntityTraits,
-    rebaseOffset: THREE.Vector2 = _rebaseOffset,
     layerColor?: AcCmColor,
     layerColorRgb?: number
   ): THREE.Material {
     return this.fillMgr.getMaterial(
       traits,
-      {
-        rebaseOffset
-      },
+      {},
       layerColorRgb,
       layerColor
     )
@@ -314,4 +294,3 @@ export class AcTrStyleManager {
   }
 }
 
-const _rebaseOffset = /*@__PURE__*/ new THREE.Vector2(0, 0)

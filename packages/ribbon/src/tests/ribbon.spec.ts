@@ -7,7 +7,6 @@ import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import MlDemoColorDropdown from '../components/MlDemoColorDropdown.vue'
-import MlDemoHatchButton from '../components/MlDemoHatchButton.vue'
 import MlDemoLineTypeDropdown from '../components/MlDemoLineTypeDropdown.vue'
 import MlDemoLineWeightDropdown from '../components/MlDemoLineWeightDropdown.vue'
 import type { RibbonTabModel } from '../ribbon'
@@ -581,91 +580,6 @@ describe('MlRibbonButton', () => {
 
       await wrapper.find('.ml-ribbon-button').trigger('click')
       expect(wrapper.emitted('click')).toHaveLength(1)
-    } finally {
-      wrapper.unmount()
-    }
-  })
-
-  it('lets custom buttons reuse the ribbon icon slot without rendering an arrow', () => {
-    const wrapper = mount(MlDemoHatchButton, {
-      props: {
-        item: { id: 'hatch-pattern', type: 'custom' },
-        groupId: 'pattern',
-        disabled: false,
-        emitItemClick: vi.fn(),
-        title: 'Hatch Pattern',
-        modelValue: 'ansi31'
-      },
-      global: {
-        stubs: {
-          ElPopover: {
-            props: ['visible'],
-            emits: ['update:visible'],
-            template: '<div><slot name="reference" /><slot /></div>'
-          }
-        }
-      }
-    })
-
-    try {
-      expect(
-        wrapper.find('.ml-demo-hatch-button__trigger.ml-ribbon-button').exists()
-      ).toBe(true)
-      expect(wrapper.find('.ml-demo-hatch-button__icon-pattern').exists()).toBe(
-        true
-      )
-      expect(wrapper.find('.ml-ribbon-item-host__label').text()).toBe(
-        'Hatch Pattern'
-      )
-      expect(wrapper.find('.ml-demo-hatch-button__arrow').exists()).toBe(false)
-    } finally {
-      wrapper.unmount()
-    }
-  })
-
-  it('emits a hatch pattern command and updates the selected preview', async () => {
-    const emitItemClick = vi.fn()
-    const wrapper = mount(MlDemoHatchButton, {
-      props: {
-        item: { id: 'hatch-pattern', type: 'custom' },
-        groupId: 'pattern',
-        disabled: false,
-        emitItemClick,
-        modelValue: 'ansi31',
-        options: [
-          {
-            value: 'ansi31',
-            label: 'ANSI31',
-            pattern: 'ansi31',
-            command: 'hatch-pattern-ansi31'
-          },
-          {
-            value: 'grid',
-            label: 'Grid',
-            pattern: 'grid',
-            command: 'hatch-pattern-grid'
-          }
-        ]
-      },
-      global: {
-        stubs: {
-          ElPopover: {
-            props: ['visible'],
-            emits: ['update:visible'],
-            template: '<div><slot name="reference" /><slot /></div>'
-          }
-        }
-      }
-    })
-
-    try {
-      const options = wrapper.findAll('.ml-demo-hatch-button__option')
-      expect(options).toHaveLength(2)
-
-      await options[1]!.trigger('click')
-      await wrapper.vm.$nextTick()
-      expect(emitItemClick).toHaveBeenCalledWith('hatch-pattern-grid')
-      expect(options[1]!.classes()).toContain('is-selected')
     } finally {
       wrapper.unmount()
     }
@@ -1596,20 +1510,6 @@ describe('App demo', () => {
     expect(appSource).toMatch(
       /id:\s*'find-replace'[\s\S]*?value:\s*'replace'[\s\S]*?tooltip:\s*'Replace'/
     )
-  })
-
-  it('configures custom tab hatch pattern group with a large custom button', () => {
-    const appSource = readFileSync(
-      resolve(process.cwd(), 'src/App.vue'),
-      'utf-8'
-    )
-
-    expect(appSource).toContain('id: \'pattern\'')
-    expect(appSource).toContain('title: \'Pattern\'')
-    expect(appSource).toContain('id: \'hatch-pattern\'')
-    expect(appSource).toContain('component: MlDemoHatchButton')
-    expect(appSource).toMatch(/id:\s*'hatch-pattern'[\s\S]*?size:\s*'large'/)
-    expect(appSource).toContain('case \'hatch-pattern-grid\':')
   })
 
   it('configures the custom tab with an inputNumber array count example', () => {

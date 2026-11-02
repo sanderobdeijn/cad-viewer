@@ -44,7 +44,6 @@ import {
   AcDbAngleUnits,
   AcDbDatabase,
   AcDbEntity,
-  AcDbHatch,
   AcDbLinearUnits,
   AcDbObjectId,
   AcDbSysVarManager,
@@ -88,7 +87,6 @@ import {
   ellipseArc,
   ellipseCenter,
   find,
-  hatch,
   line,
   mline,
   move,
@@ -127,7 +125,6 @@ import MlRibbonPropertyLineTypeSelect from './MlRibbonPropertyLineTypeSelect.vue
 import MlRibbonPropertyLineWeightSelect from './MlRibbonPropertyLineWeightSelect.vue'
 import MlRibbonTextHeightButton from './MlRibbonTextHeightButton.vue'
 import { classifyOverlaySelection } from './overlaySelectionKind'
-import { useHatchContextualRibbon } from './useHatchContextualRibbon'
 import { useMTextContextualRibbon } from './useMTextContextualRibbon'
 
 /** Shared control width for color / text-height in overlay Style panels. */
@@ -174,16 +171,6 @@ const ribbonLineType = ref<string | undefined>('ByLayer')
 const ribbonLineWeight = ref<AcGiLineWeight | undefined>(AcGiLineWeight.ByLayer)
 const activeRibbonTabId = ref('home')
 const {
-  handleCommandWillStart: handleHatchCommandWillStart,
-  handleCommandEnded: handleHatchCommandEnded,
-  handleSelectionContextChanged: handleHatchSelectionContextChanged,
-  handleItem: handleHatchItem,
-  buildContextualTab: buildHatchContextualTab
-} = useHatchContextualRibbon({
-  activeTabId: activeRibbonTabId,
-  clearSelection: () => getCurrentSelectionSet()?.clear()
-})
-const {
   handleCommandWillStart: handleMTextCommandWillStart,
   handleCommandEnded: handleMTextCommandEnded,
   handleItem: handleMTextItem,
@@ -226,19 +213,6 @@ function getSelectedEntities(db: AcDbDatabase) {
   return selectedEntityIds.value
     .map(id => db.tables.blockTable.getEntityById(id))
     .filter((entity): entity is AcDbEntity => entity != null)
-}
-
-function syncHatchSelectionContext(db = getCurrentDatabase()) {
-  if (!db || selectedEntityIds.value.length === 0) {
-    handleHatchSelectionContextChanged(false)
-    return
-  }
-
-  const selectedEntities = getSelectedEntities(db)
-  const isOnlyHatchSelection =
-    selectedEntities.length === selectedEntityIds.value.length &&
-    selectedEntities.every(entity => entity instanceof AcDbHatch)
-  handleHatchSelectionContextChanged(isOnlyHatchSelection)
 }
 
 function getCommonValue<T>(
@@ -315,7 +289,6 @@ const syncMeasurementVisibility = () => {
 const handleSelectionChanged = () => {
   syncSelectedEntityIds()
   syncRibbonProperties(observedDatabase)
-  syncHatchSelectionContext(observedDatabase)
 }
 
 const handleObservedEntityChange = (args: {
@@ -330,7 +303,6 @@ const handleObservedEntityChange = (args: {
 
   if (!hasSelectedEntityChanged) return
   syncRibbonProperties(observedDatabase)
-  syncHatchSelectionContext(observedDatabase)
 }
 
 /**
@@ -421,7 +393,6 @@ const handleDocumentActivated = () => {
   syncMeasurementStyleControls()
   syncMeasurementUnitControls()
   syncRibbonProperties(AcApDocManager.instance?.curDocument?.database)
-  syncHatchSelectionContext(AcApDocManager.instance?.curDocument?.database)
 }
 
 /**
@@ -523,16 +494,10 @@ onMounted(() => {
     handleSysVarChange
   )
   AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
-    handleHatchCommandWillStart
-  )
-  AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
     handleMTextCommandWillStart
   )
   AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
     activateRibbonTabForDrawCommand
-  )
-  AcApDocManager.instance.editor.events.commandEnded.addEventListener(
-    handleHatchCommandEnded
   )
   AcApDocManager.instance.editor.events.commandEnded.addEventListener(
     handleMTextCommandEnded
@@ -561,16 +526,10 @@ onUnmounted(() => {
     handleSysVarChange
   )
   AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
-    handleHatchCommandWillStart
-  )
-  AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
     handleMTextCommandWillStart
   )
   AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
     activateRibbonTabForDrawCommand
-  )
-  AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
-    handleHatchCommandEnded
   )
   AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
     handleMTextCommandEnded
@@ -823,7 +782,6 @@ const buildBaseTabs = (
     ellipse: t('main.ribbon.tooltip.ellipse'),
     rect: t('main.ribbon.tooltip.rect'),
     point: t('main.ribbon.tooltip.point'),
-    hatch: t('main.ribbon.tooltip.hatch'),
     text: t('main.ribbon.tooltip.text'),
     move: t('main.ribbon.tooltip.move'),
     rotate: t('main.ribbon.tooltip.rotate'),
@@ -1432,15 +1390,6 @@ const buildBaseTabs = (
                       }
                     ]
                   }
-                },
-                {
-                  id: 'cmd-hatch',
-                  type: 'button',
-                  label: t('main.ribbon.command.hatch'),
-                  tooltip: ribbonTooltips.hatch,
-                  hideLabel: true,
-                  size: 'small',
-                  props: { icon: hatch }
                 }
               ]
             }
@@ -1662,7 +1611,6 @@ const buildBaseTabs = (
         }
       ]
     },
-    buildHatchContextualTab(t),
     buildMTextContextualTab(t)
   ]
 
@@ -1727,7 +1675,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('polygon', 'polygon')
   commandByItemId.set('cmd-point', 'point')
   commandByItemId.set('cmd-ray', 'ray')
-  commandByItemId.set('cmd-hatch', 'hatch')
   commandByItemId.set('cmd-mtext', 'mtext')
   commandByItemId.set('cmd-mline', 'mline')
   commandByItemId.set('cmd-xline', 'xline')
@@ -1807,7 +1754,6 @@ const handleRibbonItemClick = (payload: {
   itemId: string
 }) => {
   if (isRibbonDisabled.value) return
-  if (handleHatchItem(payload.itemId)) return
   if (handleMTextItem(payload.itemId)) return
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return

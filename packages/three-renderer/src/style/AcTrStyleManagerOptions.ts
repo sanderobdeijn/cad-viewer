@@ -16,12 +16,6 @@ export interface AcTrStyleManagerOptions {
   /** Uniform that accounts for viewport scale in line-pattern rendering. */
   viewportScaleUniform: number
 
-  /**
-   * Legacy fragment-uniform budget. Hatch patterns no longer consume this
-   * (pattern lines are sampled from a DataTexture; see #743). Retained so
-   * existing callers that set the option keep compiling.
-   */
-  maxFragmentUniforms: number
 
   /**
    * Viewport size used by fat-line materials.

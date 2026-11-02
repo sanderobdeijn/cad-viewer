@@ -1009,11 +1009,6 @@ export class AcDbProxyGraphic {
       const area = new AcGeArea2d()
       area.add(polyline)
       const traits = renderer.subEntityTraits
-      traits.fillType = {
-        solidFill: true,
-        patternAngle: 0,
-        definitionLines: []
-      }
       traits.drawOrder = -1
       this.applyTraits(renderer)
       this.pushEntity(entities, renderer.area(area))

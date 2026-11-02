@@ -37,7 +37,6 @@ class AcTrMTextStyleManager implements StyleManager {
     // they are rasterized as meshes.
     return this._styleManager.getMTextFillMaterial(
       entityTraits,
-      undefined,
       layerColor,
       layerColorRgb
     )

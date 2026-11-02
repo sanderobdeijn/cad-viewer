@@ -8,7 +8,7 @@ This package implements the **high-performance** THREE.js-based rendering engine
 ## Key Features
 - **High-performance** rendering of CAD entities as THREE.js objects with 60+ FPS
 - Advanced batch rendering for optimal GPU utilization
-- Custom GPU-accelerated shaders for complex line types and hatch patterns
+- Custom GPU-accelerated shaders for complex line types
 - Efficient geometry batching and material caching
 - Optimized 2D and 3D views, layers, and styles
 - Memory-efficient rendering for large CAD files
@@ -17,7 +17,7 @@ This package implements the **high-performance** THREE.js-based rendering engine
 
 The THREE.js renderer employs cutting-edge rendering technologies for exceptional performance:
 
-- **Custom Shader Materials**: GPU-accelerated shaders for complex line types and hatch fill patterns
+- **Custom Shader Materials**: GPU-accelerated shaders for complex line types
 - **Geometry Batching**: Merges points, lines, and areas with the same material to dramatically reduce draw calls
 - **Instanced Rendering**: Optimizes rendering of repeated geometries through instancing techniques
 - **Buffer Geometry Optimization**: Efficient memory management and geometry merging for reduced GPU overhead

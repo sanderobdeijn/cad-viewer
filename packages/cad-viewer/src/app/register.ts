@@ -16,8 +16,7 @@ import {
   AcApPointStyleCmd,
   AcApPropertiesCmd,
   AcApQSelectCmd,
-  AcApTextStyleCmd,
-  hatchRibbonCommand
+  AcApTextStyleCmd
 } from '../command'
 import {
   createMlColorIndexPickerToolbarFactory,
@@ -32,12 +31,6 @@ let isCommandRegistered = false
 export const registerCmds = () => {
   if (!isCommandRegistered) {
     const register = AcApDocManager.instance.commandManager
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'hatch',
-      'hatch',
-      hatchRibbonCommand
-    )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'md',

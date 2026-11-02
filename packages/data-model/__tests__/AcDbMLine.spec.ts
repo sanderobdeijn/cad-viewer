@@ -180,26 +180,19 @@ describe('AcDbMLine', () => {
     baseColor.colorIndex = 2
     const traits = {
       color: baseColor,
-      fillType: {
-        solidFill: false,
-        patternAngle: 0,
-        definitionLines: []
-      },
       drawOrder: 0
     }
 
     const fillTraitSnapshots: Array<{
       colorIndex: number | undefined
       drawOrder: number
-      fillTypeSolid: boolean
     }> = []
     const renderer = {
       subEntityTraits: traits,
       area: jest.fn(() => {
         fillTraitSnapshots.push({
           colorIndex: traits.color.colorIndex,
-          drawOrder: traits.drawOrder,
-          fillTypeSolid: traits.fillType.solidFill
+          drawOrder: traits.drawOrder
         })
         return { kind: 'area' }
       }),
@@ -221,15 +214,10 @@ describe('AcDbMLine', () => {
     expect(fillTraitSnapshots).toEqual([
       {
         colorIndex: 1,
-        drawOrder: -1,
-        fillTypeSolid: true
+        drawOrder: -1
       }
     ])
     expect(traits.color).toBe(baseColor)
-    expect(traits.fillType).toMatchObject({
-      solidFill: false,
-      patternAngle: 0
-    })
     expect(traits.drawOrder).toBe(0)
   })
 
@@ -252,11 +240,6 @@ describe('AcDbMLine', () => {
     const renderer = {
       subEntityTraits: {
         color: new AcCmColor(),
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -313,11 +296,6 @@ describe('AcDbMLine', () => {
       subEntityTraits: {
         color: new AcCmColor(),
         lineType: originalLineType,
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -367,11 +345,6 @@ describe('AcDbMLine', () => {
           standardFlag: 0,
           description: '',
           totalPatternLength: 0
-        },
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
         },
         drawOrder: 0
       },
@@ -460,11 +433,6 @@ describe('AcDbMLine', () => {
           description: '',
           totalPatternLength: 0
         },
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -518,11 +486,6 @@ describe('AcDbMLine', () => {
           description: '',
           totalPatternLength: 0
         },
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -571,11 +534,6 @@ describe('AcDbMLine', () => {
     const renderer = {
       subEntityTraits: {
         color: new AcCmColor(),
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -631,11 +589,6 @@ describe('AcDbMLine', () => {
     const renderer = {
       subEntityTraits: {
         color: new AcCmColor(),
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),
@@ -690,11 +643,6 @@ describe('AcDbMLine', () => {
     const renderer = {
       subEntityTraits: {
         color: new AcCmColor(),
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        },
         drawOrder: 0
       },
       area: jest.fn(() => ({ kind: 'area' })),

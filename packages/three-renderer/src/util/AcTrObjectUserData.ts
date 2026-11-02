@@ -34,7 +34,7 @@ export interface AcTrMaterialRuntimeUserData {
 }
 
 /**
- * Entity must stay unbatched (pattern hatch, image, …).
+ * Entity must stay unbatched (image, …).
  */
 export type AcTrNoBatchUserData = {
   noBatch?: true

@@ -289,3 +289,19 @@ test('stays in English without a language selector', async ({ browser }) => {
   await expect(page.locator('.ml-ribbon-language-switch')).toHaveCount(0)
   await context.close()
 })
+
+test('has no hatch command or ribbon button', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+  )
+
+  await expect(page.locator('[data-item-id="cmd-hatch"]')).toHaveCount(0)
+
+  const command = page.getByRole('textbox', { name: 'Type command' })
+  await command.fill('hatch')
+  await command.press('Enter')
+  await expect(page.locator('.ml-cli-recent')).toContainText(
+    'Unknown command: hatch'
+  )
+})

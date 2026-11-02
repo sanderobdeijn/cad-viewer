@@ -83,18 +83,8 @@
 
             <!-- ===== Editable ===== -->
             <template v-else>
-              <ml-hatch-pattern-dropdown
-                v-if="isHatchPatternField(row)"
-                :model-value="String(row.accessor.get() ?? '')"
-                @update:modelValue="
-                  (v: string) => {
-                    onPropertyChange(row, v)
-                  }
-                "
-              />
-
               <el-select
-                v-else-if="row.type === 'enum'"
+                v-if="row.type === 'enum'"
                 :model-value="row.accessor.get()"
                 @change="(v: string | number) => onPropertyChange(row, v)"
               >
@@ -189,7 +179,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { entityPropEnum, entityPropName } from '../../locale'
-import { MlColorDropdown, MlHatchPatternDropdown } from '../common'
+import { MlColorDropdown } from '../common'
 
 const { t } = useI18n()
 
@@ -338,13 +328,6 @@ const tableRows = computed<MlDisplayRow[]>(() => {
   if (!entity) return []
   return expandEntity(entity)
 })
-
-function isHatchPatternField(row: MlDisplayPropertyRow) {
-  if (row.__isArrayIndex) return false
-  if (activeEntityProperties.value?.type.toLowerCase() !== 'hatch') return false
-  const propertyName = row.name.toLowerCase()
-  return propertyName === 'patternname' || propertyName === 'pattern'
-}
 
 function expandEntity(entity: AcDbEntityProperties): MlDisplayRow[] {
   return entity.groups.map((group, gi) => {

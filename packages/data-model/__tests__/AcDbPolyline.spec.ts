@@ -359,18 +359,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => giEntity),
       offsetRing: jest.fn(() => giEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 30,
-          definitionLines: [
-            {
-              angle: 0,
-              base: { x: 0, y: 0 },
-              offset: { x: 1, y: 0 },
-              dashLengths: []
-            }
-          ]
-        }
       }
     }
 
@@ -411,14 +399,6 @@ describe('AcDbPolyline', () => {
       minY: 1,
       maxY: 4
     })
-    expect(renderer.subEntityTraits.fillType).toMatchObject({
-      solidFill: true,
-      patternAngle: 0
-    })
-    expect(
-      (renderer.subEntityTraits.fillType as { isHatchFill?: boolean })
-        .isHatchFill
-    ).toBeUndefined()
   })
 
   it('renders open taper 0→width (valve triangle) as filled area', () => {
@@ -436,11 +416,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -475,11 +450,6 @@ describe('AcDbPolyline', () => {
       group: jest.fn(() => groupEntity),
       offsetRing: jest.fn(),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -497,9 +467,6 @@ describe('AcDbPolyline', () => {
     expect(renderer.group).toHaveBeenCalledWith([areaEntity, strokeEntity])
     expect(areaArg.loops.length).toBe(1)
     expect(Math.abs(areaArg.area)).toBeGreaterThan(0.5)
-    // Closed fallthrough must close the hairline seam and not leave solid fill
-    // on traits when stroking the centerline.
-    expect(renderer.subEntityTraits.fillType.solidFill).toBe(false)
     const strokeArg = (renderer.lines as jest.Mock).mock.calls[0]?.[0] as Array<{
       x: number
       y: number
@@ -524,11 +491,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -537,10 +499,6 @@ describe('AcDbPolyline', () => {
     expect(renderer.area).toHaveBeenCalledTimes(1)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
     expect(renderer.group).toHaveBeenCalledWith([areaEntity, strokeEntity])
-    expect(
-      (renderer.subEntityTraits.fillType as { isHatchFill?: boolean })
-        .isHatchFill
-    ).toBeUndefined()
   })
 
   it('renders open constant-width polyline as a band without filling interior', () => {
@@ -563,11 +521,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -603,11 +556,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -653,11 +601,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntities.shift()),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -703,11 +646,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(),
       offsetRing: jest.fn(() => giEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -744,11 +682,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(),
       offsetRing: jest.fn(() => giEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 
@@ -778,11 +711,6 @@ describe('AcDbPolyline', () => {
       area: jest.fn(() => areaEntity),
       group: jest.fn(() => groupEntity),
       subEntityTraits: {
-        fillType: {
-          solidFill: false,
-          patternAngle: 0,
-          definitionLines: []
-        }
       }
     }
 

@@ -46,13 +46,6 @@ export const AcDbSystemVariables = {
   /** UI color theme selector used by the application shell or viewer integration. */
   COLORTHEME: 'COLORTHEME',
   /**
-   * Controls whether hatch objects are included in drawing comparison.
-   * `0` excludes hatches (AutoCAD default); `1` includes them. Saved in the drawing.
-   *
-   * @see https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-BBB5E4A0-B607-4898-9A6B-A65C51551EE5
-   */
-  COMPAREHATCH: 'COMPAREHATCH',
-  /**
    * Bitcode controlling which non-geometric property changes count as a
    * difference between drawings. `0` ignores property-only changes (AutoCAD
    * default). Saved in the registry (not in the drawing).
@@ -136,28 +129,6 @@ export const AcDbSystemVariables = {
    * @see https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-5F355F5F-0DDE-49B4-B253-C6BA717BAF8B
    */
   GRIPSIZE: 'GRIPSIZE',
-  /** Default angle, in radians, for newly created hatch patterns. */
-  HPANG: 'HPANG',
-  /** Controls whether newly created hatches are associative. */
-  HPASSOC: 'HPASSOC',
-  /** Default background color for newly created hatch patterns. */
-  HPBACKGROUNDCOLOR: 'HPBACKGROUNDCOLOR',
-  /** Default color for newly created hatches. */
-  HPCOLOR: 'HPCOLOR',
-  /** Controls whether user-defined hatch patterns are doubled. */
-  HPDOUBLE: 'HPDOUBLE',
-  /** Controls how islands within newly created hatch boundaries are treated. */
-  HPISLANDDETECTION: 'HPISLANDDETECTION',
-  /** Default layer for newly created hatches and fills. */
-  HPLAYER: 'HPLAYER',
-  /** Default pattern name for newly created hatches in this session. */
-  HPNAME: 'HPNAME',
-  /** Default scale factor for newly created hatch patterns. */
-  HPSCALE: 'HPSCALE',
-  /** Controls whether one or separate hatch objects are created for multiple boundaries. */
-  HPSEPARATE: 'HPSEPARATE',
-  /** Default transparency for newly created hatches and fills. */
-  HPTRANSPARENCY: 'HPTRANSPARENCY',
   /** Insertion units used for automatic scaling of inserted content. */
   INSUNITS: 'INSUNITS',
   /**

@@ -9,9 +9,6 @@ import { AcGiLineWeight } from '@mlightcad/graphic-interface'
 
 import { AcDbAngleUnits } from '../misc/AcDbAngleUnits'
 import {
-  ACDB_COMPAREHATCH_DEFAULT,
-  ACDB_COMPAREHATCH_MAX,
-  ACDB_COMPAREHATCH_MIN,
   ACDB_COMPAREPROPS_DEFAULT,
   ACDB_COMPAREPROPS_MAX,
   ACDB_COMPAREPROPS_MIN,
@@ -35,7 +32,6 @@ import {
   ACDB_GRIPSIZE_MIN,
   acdbCoerceIntegerSysVar,
   ByLayer,
-  DEFAULT_HATCH_PATTERN_METRIC,
   DEFAULT_MLEADER_STYLE,
   DEFAULT_MLINE_STYLE,
   DEFAULT_TEXT_STYLE
@@ -278,21 +274,6 @@ export class AcDbSysVarManager {
       defaultValue: 0
     })
     /**
-     * Controls whether hatch objects are included in drawing comparison.
-     * - 0: Hatch objects are excluded (AutoCAD default)
-     * - 1: Hatch objects are included
-     *
-     * Saved in the drawing.
-     *
-     * @see https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-BBB5E4A0-B607-4898-9A6B-A65C51551EE5
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.COMPAREHATCH,
-      type: 'number',
-      isDbVar: true,
-      defaultValue: ACDB_COMPAREHATCH_DEFAULT
-    })
-    /**
      * Controls whether a change in an object's non-geometric property is
      * identified as a change between two drawing revisions (bitcode sum):
      * - 0: Property changes are not included (AutoCAD default)
@@ -451,121 +432,6 @@ export class AcDbSysVarManager {
       type: 'number',
       isDbVar: false,
       defaultValue: ACDB_GRIPSIZE_DEFAULT
-    })
-    /**
-     * Sets the default angle, in radians, for new hatch patterns in this session.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPANG,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 0
-    })
-    /**
-     * Controls whether newly created hatches and fills are associative.
-     * - 0: Not associative
-     * - 1: Associative
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPASSOC,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 1
-    })
-    /**
-     * Sets the default background color for new hatch patterns in the current drawing.
-     * Use 'None' or '.' for no background color.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPBACKGROUNDCOLOR,
-      type: 'color',
-      isDbVar: true,
-      defaultValue: new AcCmColor(AcCmColorMethod.None)
-    })
-    /**
-     * Sets the default color for new hatches in the current drawing.
-     * Use '.' to use the current entity color.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPCOLOR,
-      type: 'color',
-      isDbVar: true,
-      defaultValue: new AcCmColor(AcCmColorMethod.ByLayer)
-    })
-    /**
-     * Controls whether hatch patterns are doubled for user-defined patterns.
-     * - 0: Off
-     * - 1: On
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPDOUBLE,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 0
-    })
-    /**
-     * Controls how islands within new hatch boundaries are treated.
-     * - 0: Normal
-     * - 1: Outer
-     * - 2: Ignore
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPISLANDDETECTION,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 1
-    })
-    /**
-     * Specifies a default layer for new hatches and fills in the current drawing.
-     * Use '.' to use the current layer.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPLAYER,
-      type: 'string',
-      isDbVar: true,
-      defaultValue: '.'
-    })
-    /**
-     * Sets the default hatch pattern name in this session. AutoCAD uses ANSI31
-     * for imperial drawings and ANGLE for metric drawings; this database defaults
-     * to metric units.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPNAME,
-      type: 'string',
-      isDbVar: false,
-      defaultValue: DEFAULT_HATCH_PATTERN_METRIC
-    })
-    /**
-     * Sets the default scale factor for new hatch patterns in this session.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPSCALE,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 1
-    })
-    /**
-     * Controls whether one hatch object or separate hatch objects are created
-     * when operating on several closed boundaries.
-     * - 0: Single hatch object
-     * - 1: Separate hatch objects
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPSEPARATE,
-      type: 'number',
-      isDbVar: false,
-      defaultValue: 0
-    })
-    /**
-     * Sets the default transparency for new hatches and fills in the current drawing.
-     * Use '.' to use the current transparency.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.HPTRANSPARENCY,
-      type: 'transparency',
-      isDbVar: true,
-      defaultValue: new AcCmTransparency()
     })
     /**
      * Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs
@@ -958,7 +824,7 @@ export class AcDbSysVarManager {
         } else if (descriptor.type === 'boolean') {
           value = this.parseBoolean(value as string)
         } else if (descriptor.type === 'color') {
-          const tmp = this.parseColorSysVar(name, value as string, db)
+          const tmp = AcCmColor.fromString(value as string)
           if (tmp == null) {
             throw new Error('Invalid color value!')
           }
@@ -1019,14 +885,6 @@ export class AcDbSysVarManager {
           )
         }
         value = intVal
-      }
-      if (name === AcDbSystemVariables.COMPAREHATCH.toLowerCase()) {
-        value = acdbCoerceIntegerSysVar(
-          'COMPAREHATCH',
-          value,
-          ACDB_COMPAREHATCH_MIN,
-          ACDB_COMPAREHATCH_MAX
-        )
       }
       if (name === AcDbSystemVariables.COMPAREPROPS.toLowerCase()) {
         value = acdbCoerceIntegerSysVar(
@@ -1113,24 +971,6 @@ export class AcDbSysVarManager {
     return false
   }
 
-  private parseColorSysVar(name: string, value: string, db: AcDbDatabase) {
-    const normalized = value.trim().toLowerCase()
-    if (
-      name === AcDbSystemVariables.HPCOLOR.toLowerCase() &&
-      (normalized === '.' || normalized === 'use current')
-    ) {
-      return db.cecolor.clone()
-    }
-
-    if (
-      name === AcDbSystemVariables.HPBACKGROUNDCOLOR.toLowerCase() &&
-      (normalized === '' || normalized === '.' || normalized === 'none')
-    ) {
-      return new AcCmColor(AcCmColorMethod.None)
-    }
-
-    return AcCmColor.fromString(value)
-  }
 
   private parseTransparency(value: AcDbSysVarType) {
     if (value instanceof AcCmTransparency) {

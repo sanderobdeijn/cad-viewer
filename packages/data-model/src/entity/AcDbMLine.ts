@@ -692,21 +692,14 @@ export class AcDbMLine extends AcDbEntity {
     const traits = renderer.subEntityTraits
     const originalColor = traits.color
     const originalLineType = traits.lineType
-    const originalFillType = traits.fillType
     const originalDrawOrder = traits.drawOrder
 
     const fillArea = this.createFillArea(mlineStyle, elementCount)
     if (fillArea) {
       traits.color = originalColor
       this.applyFillTraits(mlineStyle, traits)
-      traits.fillType = {
-        solidFill: true,
-        patternAngle: 0,
-        definitionLines: []
-      }
       traits.drawOrder = -1
       entities.push(renderer.area(fillArea))
-      traits.fillType = originalFillType
       traits.drawOrder = originalDrawOrder
     }
 
@@ -734,7 +727,6 @@ export class AcDbMLine extends AcDbEntity {
     }
     traits.color = originalColor
     traits.lineType = originalLineType
-    traits.fillType = originalFillType
     traits.drawOrder = originalDrawOrder
 
     if (entities.length === 0) return undefined

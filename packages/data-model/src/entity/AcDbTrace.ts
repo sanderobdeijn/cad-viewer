@@ -347,12 +347,6 @@ export class AcDbTrace extends AcDbCurve {
     const area = new AcGeArea2d()
     area.add(polyline)
 
-    const traits = renderer.subEntityTraits
-    traits.fillType = {
-      solidFill: true,
-      patternAngle: 0,
-      definitionLines: []
-    }
     return renderer.area(area)
   }
 

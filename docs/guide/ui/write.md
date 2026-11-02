@@ -19,7 +19,7 @@ The Ribbon fully displays all AutoCAD-style tabs:
 | Tab | Commands |
 |---|---|
 | File | Open |
-| Draw | Line, Circle, Arc, Rect, Polyline, Hatch, Text, MText, etc. |
+| Draw | Line, Circle, Arc, Rect, Polyline, Text, MText, etc. |
 | Modify | Move, Copy, Offset, Trim, Extend, Rotate, Scale, Mirror, Array, etc. |
 | Properties | Color, linetype, lineweight |
 | Measure | All measurement commands |

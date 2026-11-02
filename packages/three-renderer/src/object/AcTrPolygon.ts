@@ -17,7 +17,7 @@ import type { AcTrDrawMode } from '../draw/AcTrDrawMode'
 import { AcTrRenderContext } from '../renderer/AcTrRenderContext'
 import { AcTrBufferGeometryUtil } from '../util/AcTrBufferGeometryUtil'
 import { AcTrEntity } from './AcTrEntity'
-import { resolveSelfIntersectingHatchLoop } from './AcTrHatchLoopRepair'
+import { resolveSelfIntersectingFillLoop } from './AcTrFillLoopRepair'
 
 function toVector2(points: AcGePoint2dLike[]): THREE.Vector2[] {
   return points
@@ -52,9 +52,9 @@ function hasFillVertices(geometry: THREE.BufferGeometry | undefined): boolean {
 }
 
 /**
- * Bounding-box center of tessellated hatch loops in float64 WCS.
- * Used as the origin-shift for patterned hatches so GPU float32 pattern math
- * (`fract` / `floor` on `v_pos`) stays precise at large survey coordinates.
+ * Bounding-box center of tessellated fill loops in float64 WCS.
+ * Used as the origin-shift so float32 positions stay precise at large survey
+ * coordinates.
  */
 function computeLocalOriginFromLoops(
   loops: AcGePoint2dLike[][]
@@ -76,7 +76,7 @@ function computeLocalOriginFromLoops(
   return box.getCenter(new THREE.Vector3())
 }
 
-/** Returns hatch loops translated so `origin` becomes the local (0,0). */
+/** Returns fill loops translated so `origin` becomes the local (0,0). */
 function offsetLoops(
   loops: AcGePoint2d[][],
   origin: THREE.Vector3
@@ -91,15 +91,12 @@ function offsetLoops(
 const _tmpPoint = /*@__PURE__*/ new THREE.Vector3()
 
 export class AcTrPolygon extends AcTrEntity {
-  private _traits: AcGiSubEntityTraits
-
   constructor(
     area: AcGeArea2d,
     traits: AcGiSubEntityTraits,
     context: AcTrRenderContext
   ) {
     super(context)
-    this._traits = traits
 
     const tessellateOptions = acdbDrawTessellateOptions({ context })
     const pointBoundaries = area.tessellate(tessellateOptions)
@@ -116,16 +113,14 @@ export class AcTrPolygon extends AcTrEntity {
     // Offset tessellated loops in float64 *before* THREE.ShapeGeometry writes
     // Float32Array positions. At |x| ≈ 3.85e7 the float32 ULP is ~4 drawing
     // units, so a wide-polyline half-width of 1.05 collapses if WCS is stored
-    // first and rebased afterwards (cad-viewer#724). Patterned hatches also
-    // sample object-space `position` in the fragment shader, so the same
-    // origin-shift keeps `fract`/`floor` precise.
+    // first and rebased afterwards (cad-viewer#724).
     const localOrigin = computeLocalOriginFromLoops(pointBoundaries)
     const boundariesForGeometry = localOrigin
       ? offsetLoops(pointBoundaries, localOrigin)
       : pointBoundaries
 
     const geometries: THREE.BufferGeometry[] = []
-    this.buildHatchGeometry(boundariesForGeometry, hierarchy, geometries)
+    this.buildFillGeometry(boundariesForGeometry, hierarchy, geometries)
 
     let geometry: THREE.BufferGeometry | undefined
     if (geometries.length === 1) {
@@ -138,7 +133,7 @@ export class AcTrPolygon extends AcTrEntity {
       const boundingBox =
         AcTrBufferGeometryUtil.safeComputeBoundingBox(geometry)
       if (!boundingBox) {
-        log.warn('Skipped hatch fill with invalid geometry coordinates')
+        log.warn('Skipped fill with invalid geometry coordinates')
         geometry.dispose()
         return
       }
@@ -146,22 +141,7 @@ export class AcTrPolygon extends AcTrEntity {
         ? boundingBox.clone().translate(localOrigin)
         : boundingBox
 
-      this.addGradientPositionAttribute(geometry, traits)
-
-      const gradientBounds = {
-        minX: this.wcsBbox.min.x,
-        minY: this.wcsBbox.min.y,
-        maxX: this.wcsBbox.max.x,
-        maxY: this.wcsBbox.max.y
-      }
-      const rebaseOffset = localOrigin
-        ? new THREE.Vector2(localOrigin.x, localOrigin.y)
-        : undefined
-      const material = this.styleManager.getFillMaterial(
-        traits,
-        rebaseOffset,
-        gradientBounds
-      )
+      const material = this.styleManager.getFillMaterial(traits)
       const mesh = new THREE.Mesh(geometry, material)
       if (localOrigin) {
         mesh.position.set(localOrigin.x, localOrigin.y, localOrigin.z)
@@ -169,56 +149,17 @@ export class AcTrPolygon extends AcTrEntity {
       this.add(mesh)
       this.finalizeLeafDrawables()
     } else if (hasRenderableBoundaries) {
-      log.warn('Failed to convert hatch boundaries!')
+      log.warn('Failed to convert fill boundaries!')
     }
   }
 
   override resolveDrawMode(): AcTrDrawMode {
-    if (this.isPatternedHatch(this._traits)) {
-      return 'unbatch'
-    }
     return this.batchDrawPolicy.resolveDrawMode({
       anchor: resolveAnchorFromBox(this.wcsBbox)
     })
   }
 
-  private isPatternedHatch(traits: AcGiSubEntityTraits) {
-    const style = traits.fillType
-    return !style.gradient && !!style.definitionLines?.length
-  }
-
-  private addGradientPositionAttribute(
-    geometry: THREE.BufferGeometry,
-    traits: AcGiSubEntityTraits
-  ) {
-    if (!traits.fillType.gradient || !geometry.boundingBox) {
-      return
-    }
-
-    const position = geometry.getAttribute('position')
-    if (!position) {
-      return
-    }
-
-    const box = geometry.boundingBox
-    const centerX = (box.min.x + box.max.x) * 0.5
-    const centerY = (box.min.y + box.max.y) * 0.5
-    const halfWidth = Math.max((box.max.x - box.min.x) * 0.5, 1e-9)
-    const halfHeight = Math.max((box.max.y - box.min.y) * 0.5, 1e-9)
-    const values = new Float32Array(position.count * 2)
-
-    for (let index = 0; index < position.count; index++) {
-      values[index * 2] = (position.getX(index) - centerX) / halfWidth
-      values[index * 2 + 1] = (position.getY(index) - centerY) / halfHeight
-    }
-
-    geometry.setAttribute(
-      'gradientPosition',
-      new THREE.BufferAttribute(values, 2)
-    )
-  }
-
-  private buildHatchGeometry(
+  private buildFillGeometry(
     pointBoundaries: AcGePoint2d[][],
     node: AcGeIndexNode,
     geometries: THREE.BufferGeometry[]
@@ -268,9 +209,9 @@ export class AcTrPolygon extends AcTrEntity {
       if (points.length < 3) {
         return
       }
-      // DWG hatch edge paths may self-intersect (T-junctions without a shared
+      // Fill loops may self-intersect (T-junctions without a shared
       // vertex). Earcut then fills the concave exterior — repair first.
-      for (const region of resolveSelfIntersectingHatchLoop(points)) {
+      for (const region of resolveSelfIntersectingFillLoop(points)) {
         if (region.length < 3) {
           continue
         }
@@ -289,7 +230,7 @@ export class AcTrPolygon extends AcTrEntity {
       // Same self-intersection repair as the no-hole path. If the outer splits
       // into several simple regions, only attach holes that lie inside each
       // region — foreign holes corrupt earcut triangulation.
-      const outerRegions = resolveSelfIntersectingHatchLoop(outerPoints)
+      const outerRegions = resolveSelfIntersectingFillLoop(outerPoints)
       for (const outerRegion of outerRegions) {
         if (outerRegion.length < 3) {
           continue
@@ -310,7 +251,7 @@ export class AcTrPolygon extends AcTrEntity {
 
     node.children.forEach(child => {
       child.children.forEach(grandchild => {
-        this.buildHatchGeometry(pointBoundaries, grandchild, geometries)
+        this.buildFillGeometry(pointBoundaries, grandchild, geometries)
       })
     })
   }

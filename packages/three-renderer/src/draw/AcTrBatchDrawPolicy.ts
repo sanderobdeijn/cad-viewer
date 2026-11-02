@@ -52,7 +52,7 @@ export interface AcTrBatchDrawContext {
  * when entities that delegate to the policy should merge in
  * {@link AcTrBatchedGroup} versus stay on the unbatched path.
  *
- * Entity types that must never batch (images, pattern hatches, …) should not rely
+ * Entity types that must never batch (images, …) should not rely
  * on this interface; they should return `'unbatch'` directly from
  * {@link AcTrEntity.resolveDrawMode}.
  *
@@ -211,7 +211,7 @@ export function resolveAnchorFromBox(
  *
  * Use when every policy-delegating entity should merge in
  * {@link AcTrBatchedGroup}, regardless of world coordinates. Entity types
- * that must never batch (images, pattern hatches, …) still return `'unbatch'`
+ * that must never batch (images, …) still return `'unbatch'`
  * from their own {@link AcTrEntity.resolveDrawMode}.
  */
 export const alwaysBatchDrawPolicy: AcTrBatchDrawPolicy = {

@@ -1,9 +1,9 @@
 import { AcGePoint2d } from '@mlightcad/data-model'
 
 import {
-  hatchLoopHasSelfIntersection,
-  resolveSelfIntersectingHatchLoop
-} from '../src/object/AcTrHatchLoopRepair'
+  fillLoopHasSelfIntersection,
+  resolveSelfIntersectingFillLoop
+} from '../src/object/AcTrFillLoopRepair'
 
 /**
  * Self-intersecting hatch foot from DWG handle 14AE (simplified, no arc):
@@ -22,9 +22,9 @@ function hatch14AeFootLoop() {
   ]
 }
 
-describe('AcTrHatchLoopRepair', () => {
+describe('AcTrFillLoopRepair', () => {
   it('detects the T-junction self-intersection in hatch 14AE-style foot', () => {
-    expect(hatchLoopHasSelfIntersection(hatch14AeFootLoop())).toBe(true)
+    expect(fillLoopHasSelfIntersection(hatch14AeFootLoop())).toBe(true)
   })
 
   it('leaves a simple rectangle unchanged', () => {
@@ -34,17 +34,17 @@ describe('AcTrHatchLoopRepair', () => {
       new AcGePoint2d(10, 5),
       new AcGePoint2d(0, 5)
     ]
-    expect(hatchLoopHasSelfIntersection(rect)).toBe(false)
-    const regions = resolveSelfIntersectingHatchLoop(rect)
+    expect(fillLoopHasSelfIntersection(rect)).toBe(false)
+    const regions = resolveSelfIntersectingFillLoop(rect)
     expect(regions).toHaveLength(1)
     expect(regions[0]).toHaveLength(4)
   })
 
   it('decomposes the self-intersecting foot into simple even-odd regions', () => {
-    const regions = resolveSelfIntersectingHatchLoop(hatch14AeFootLoop())
+    const regions = resolveSelfIntersectingFillLoop(hatch14AeFootLoop())
     expect(regions.length).toBeGreaterThan(1)
     for (const region of regions) {
-      expect(hatchLoopHasSelfIntersection(region)).toBe(false)
+      expect(fillLoopHasSelfIntersection(region)).toBe(false)
       expect(region.length).toBeGreaterThanOrEqual(3)
     }
 

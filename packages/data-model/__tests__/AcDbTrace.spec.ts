@@ -137,7 +137,7 @@ describe('AcDbTrace', () => {
 
     let capturedArea: AcGeArea2d | undefined
     const renderer = {
-      subEntityTraits: { fillType: undefined as unknown },
+      subEntityTraits: { },
       area: jest.fn((area: AcGeArea2d) => {
         capturedArea = area
         return { id: 'trace-area' }
@@ -171,16 +171,14 @@ describe('AcDbTrace', () => {
     expect(trace.getPointAt(0)).toMatchObject({ x: 5, y: -2, z: 4 })
     expect(trace.elevation).toBe(4)
 
-    const traits = { fillType: undefined as unknown }
     const rendered = { id: 'trace-area' }
     const renderer = {
-      subEntityTraits: traits,
+      subEntityTraits: {},
       area: jest.fn(() => rendered)
     }
 
     expect(trace.subWorldDraw(renderer as never)).toBe(rendered)
     expect(renderer.area).toHaveBeenCalledTimes(1)
-    expect(traits.fillType).toMatchObject({ solidFill: true, patternAngle: 0 })
   })
 
   it('computes quadrilateral area', () => {

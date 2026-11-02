@@ -27,16 +27,6 @@ export { AcTrStyleManager, type AcTrStyleManagerStats } from './style/AcTrStyleM
 export {
   type AcTrMaterialCacheStats
 } from './style/AcTrMaterialManager'
-export {
-  createGradientHatchShaderMaterial,
-  createGradientHatchShaderMaterialFromUniforms,
-  type AcTrGradientHatchStyle
-} from './style/AcTrGradientHatchShaders'
-export {
-  createHatchPatternShaderMaterial,
-  type AcTrPatternLine
-} from './style/AcTrHatchPatternShaders'
-export { wrapPatternBaseToLocalFrame } from './style/AcTrFillMaterialManager'
 export * from './util/AcTrMTextColorUtil'
 export { AcTrMatrixUtil } from './util/AcTrMatrixUtil'
 export {

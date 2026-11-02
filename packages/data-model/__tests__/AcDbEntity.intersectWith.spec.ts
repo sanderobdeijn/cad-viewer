@@ -1,7 +1,6 @@
 import {
   AcGePoint2d,
   AcGePoint3d,
-  AcGePolyline2d,
   acgeTransformOcsPointToWcs,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
@@ -13,7 +12,6 @@ import {
   AcDbAlignedDimension,
   AcDbBlockReference,
   AcDbCircle,
-  AcDbHatch,
   AcDbLine,
   AcDbPoly2dType,
   AcDbPolyline,
@@ -145,30 +143,6 @@ describe('AcDbEntity.intersectWith', () => {
     expectPoint(points, { x: -5, y: 0, z: 0 })
   })
 
-  it('intersects a hatch boundary', () => {
-    const hatch = new AcDbHatch()
-    hatch.add(
-      new AcGePolyline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 10, y: 0 },
-          { x: 10, y: 10 },
-          { x: 0, y: 10 }
-        ],
-        true
-      )
-    )
-    const line = new AcDbLine(
-      new AcGePoint3d(-1, 5, 0),
-      new AcGePoint3d(11, 5, 0)
-    )
-
-    const points = hatch.intersectWith(line)
-    expect(points).toHaveLength(2)
-    expectPoint(points, { x: 0, y: 5, z: 0 })
-    expectPoint(points, { x: 10, y: 5, z: 0 })
-  })
-
   it('intersects a line inside a block reference after insertion transform', () => {
     const db = createDb()
     const block = new AcDbBlockTableRecord()
@@ -259,37 +233,6 @@ describe('AcDbEntity.intersectWith', () => {
     )
 
     const points = polyline.intersectWith(cutter)
-    expect(points).toHaveLength(1)
-    expectPoint(points, mid)
-  })
-
-  it('intersects a hatch using its extrusion normal', () => {
-    const hatch = new AcDbHatch()
-    hatch.normal = { x: 0, y: 1, z: 0 }
-    hatch.add(
-      new AcGePolyline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 10, y: 0 },
-          { x: 10, y: 10 },
-          { x: 0, y: 10 }
-        ],
-        true
-      )
-    )
-    const a = acgeTransformOcsPointToWcs({ x: 0, y: 0, z: 0 }, hatch.normal)
-    const b = acgeTransformOcsPointToWcs({ x: 10, y: 0, z: 0 }, hatch.normal)
-    const mid = new AcGePoint3d().addVectors(a, b).multiplyScalar(0.5)
-    const dir = new AcGeVector3d().subVectors(b, a)
-    const perp = new AcGeVector3d(-dir.y, dir.x, dir.z)
-    if (perp.lengthSq() < 1e-20) perp.set(0, 0, 1)
-    perp.normalize()
-    const cutter = new AcDbLine(
-      mid.clone().add(perp),
-      mid.clone().addScaledVector(perp, -1)
-    )
-
-    const points = hatch.intersectWith(cutter)
     expect(points).toHaveLength(1)
     expectPoint(points, mid)
   })

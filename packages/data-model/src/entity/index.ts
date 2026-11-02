@@ -35,14 +35,6 @@ export type {
 } from './AcDbEntityProperties'
 export { AcDbFace } from './AcDbFace'
 export { AcDbFcf } from './AcDbFcf'
-export {
-  AcDbGradientPatternType,
-  AcDbHatch,
-  AcDbHatchObjectType,
-  AcDbHatchPatternType,
-  AcDbHatchStyle
-} from './AcDbHatch'
-export type { AcDbGradientName } from './AcDbHatch'
 export { AcDbLeader, AcDbLeaderAnnotationType } from './AcDbLeader'
 export { AcDbLine } from './AcDbLine'
 export { AcDbMLine, AcDbMLineFlags, AcDbMLineJustification } from './AcDbMLine'

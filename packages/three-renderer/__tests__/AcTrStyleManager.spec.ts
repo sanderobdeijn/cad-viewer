@@ -273,33 +273,33 @@ describe('AcTrStyleManager', () => {
     expect(getMaterialMetadata(inherited).isForeground).toBe(false)
   })
 
-  it('solid foreground hatches invert with the theme like linework', () => {
+  it('solid foreground filles invert with the theme like linework', () => {
     const styleManager = new AcTrStyleManager()
     styleManager.currentBackgroundColor = 0xffffff
 
-    const hatchTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    hatchTraits.layer = 'A-WALL'
-    hatchTraits.color = new AcCmColor().setForeground()
-    hatchTraits.drawOrder = -1
+    const fillTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()
+    fillTraits.layer = 'A-WALL'
+    fillTraits.color = new AcCmColor().setForeground()
+    fillTraits.drawOrder = -1
 
     const lineworkFillTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()
     lineworkFillTraits.layer = 'A-WALL'
     lineworkFillTraits.color = new AcCmColor().setForeground()
     lineworkFillTraits.drawOrder = 0
 
-    const hatchMaterial = styleManager.getFillMaterial(
-      hatchTraits
+    const fillMaterial = styleManager.getFillMaterial(
+      fillTraits
     ) as THREE.MeshBasicMaterial
     const lineworkFillMaterial = styleManager.getFillMaterial(
       lineworkFillTraits
     ) as THREE.MeshBasicMaterial
 
-    expect(hatchMaterial).not.toBe(lineworkFillMaterial)
+    expect(fillMaterial).not.toBe(lineworkFillMaterial)
 
-    const hatchMetadata = getMaterialMetadata(hatchMaterial)
-    expect(hatchMetadata.drawOrder).toBe(-1)
-    expect(hatchMetadata.isForeground).toBe(true)
-    expect(hatchMaterial.color.getHex()).toBe(0x000000)
+    const fillMetadata = getMaterialMetadata(fillMaterial)
+    expect(fillMetadata.drawOrder).toBe(-1)
+    expect(fillMetadata.isForeground).toBe(true)
+    expect(fillMaterial.color.getHex()).toBe(0x000000)
 
     const lineworkFillMetadata = getMaterialMetadata(lineworkFillMaterial)
     expect(lineworkFillMetadata.drawOrder).toBe(0)
@@ -307,107 +307,13 @@ describe('AcTrStyleManager', () => {
     expect(lineworkFillMaterial.color.getHex()).toBe(0x000000)
 
     styleManager.currentBackgroundColor = 0x000000
-    expect(hatchMaterial.color.getHex()).toBe(0xffffff)
+    expect(fillMaterial.color.getHex()).toBe(0xffffff)
     expect(lineworkFillMaterial.color.getHex()).toBe(0xffffff)
   })
 
-  it('keeps patterned foreground hatches as visible shader linework', () => {
-    // Patterned hatches differ from solid foreground fills: their visible
-    // component is the pattern lines themselves, which behave like linework
-    // and must stay legible against both canvases. So they invert with the
-    // theme (foreground tracking) instead of fusing with the bg.
-    const styleManager = new AcTrStyleManager()
-    styleManager.currentBackgroundColor = 0xffffff
-
-    const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    traits.layer = 'A-HATCH'
-    traits.color = new AcCmColor().setForeground()
-    traits.drawOrder = -1
-    traits.fillType = {
-      solidFill: false,
-      patternAngle: 0,
-      definitionLines: [
-        {
-          angle: Math.PI / 4,
-          base: { x: 0, y: 0 },
-          offset: { x: 0, y: 3.175 },
-          dashLengths: []
-        }
-      ]
-    }
-
-    const material = styleManager.getFillMaterial(
-      traits
-    ) as THREE.ShaderMaterial
-
-    expect(material).toBeInstanceOf(THREE.ShaderMaterial)
-    expect(material.uniforms.u_color.value.getHex()).toBe(0x000000)
-
-    const metadata = getMaterialMetadata(material)
-    expect(metadata.drawOrder).toBe(-1)
-    expect(metadata.isForeground).toBe(true)
-  })
-
-  it('passes a dash length of 0 (dot) straight through instead of substituting a dash (#728)', () => {
-    const styleManager = new AcTrStyleManager()
-    const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    traits.fillType = {
-      solidFill: false,
-      patternAngle: 0,
-      definitionLines: [
-        {
-          angle: 0,
-          base: { x: 0, y: 0 },
-          offset: { x: 0, y: 0.25 },
-          // AutoCAD "DOT" convention: a 0-length dot, then a 0.25 gap.
-          dashLengths: [0, -0.25]
-        }
-      ]
-    }
-
-    const material = styleManager.getFillMaterial(
-      traits
-    ) as THREE.ShaderMaterial
-    const patternLine = material.uniforms.u_patternLines.value[0] as {
-      dashLengths: number[]
-      patternLength: number
-    }
-
-    expect(patternLine.dashLengths[0]).toBe(0)
-    expect(patternLine.dashLengths[1]).toBe(-0.25)
-    // Total period is just the real (non-dot) length -- a dot consumes no
-    // along-line distance, so it must not inflate patternLength either.
-    expect(patternLine.patternLength).toBeCloseTo(0.25)
-  })
-
-  it('keeps all line families for large hatch patterns instead of truncating at 1024 uniforms (#743)', () => {
-    const styleManager = new AcTrStyleManager()
-    const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    traits.fillType = {
-      solidFill: false,
-      patternAngle: 0,
-      definitionLines: Array.from({ length: 150 }, (_, i) => ({
-        angle: (i * Math.PI) / 150,
-        base: { x: 0, y: 0 },
-        offset: { x: 0, y: 10 },
-        dashLengths: [5, -2, 0, -2]
-      }))
-    }
-
-    const material = styleManager.getFillMaterial(
-      traits,
-      new THREE.Vector2(0, 0)
-    ) as THREE.ShaderMaterial
-
-    expect(material.uniforms.u_patternLines.value).toHaveLength(150)
-    expect(material.uniforms.u_patternData.value).toBeInstanceOf(
-      THREE.DataTexture
-    )
-  })
-
-  it('solid hatch with explicit truecolor stays at literal RGB across themes', () => {
+  it('solid fill with explicit truecolor stays at literal RGB across themes', () => {
     // A DWG author who picked an explicit RGB via the truecolor picker
-    // (e.g. 255,255,255 from the colour palette) gets a literal hatch.
+    // (e.g. 255,255,255 from the colour palette) gets a literal fill.
     // `traits.color.isForeground` is only true for the ACI 7 / foreground
     // pseudo-colour, so an explicit truecolor is not repainted by theme flips.
     const styleManager = new AcTrStyleManager()
@@ -436,7 +342,7 @@ describe('AcTrStyleManager', () => {
    * Regression for #464: ByLayer entities on ACI-7 layers bake white at
    * material-create time. A later layer sync (the background-change bridge)
    * must mark them foreground-tracked and invert with the theme — without
-   * that, light canvases leave white-on-white text/hatches.
+   * that, light canvases leave white-on-white text/filles.
    */
   it('tracks ByLayer-on-ACI-7 line materials as foreground across theme flips (#464)', () => {
     const styleManager = new AcTrStyleManager()
@@ -468,7 +374,7 @@ describe('AcTrStyleManager', () => {
     expect(material.color.getHex()).toBe(0xffffff)
   })
 
-  it('tracks ByLayer-on-ACI-7 hatch fills as foreground across theme flips (#464)', () => {
+  it('tracks ByLayer-on-ACI-7 fill fills as foreground across theme flips (#464)', () => {
     const styleManager = new AcTrStyleManager()
     styleManager.currentBackgroundColor = 0x000000
 
@@ -550,77 +456,6 @@ describe('AcTrStyleManager', () => {
 
     styleManager.currentBackgroundColor = 0xffffff
     expect(material.color.getHex()).toBe(0xffff00)
-  })
-
-  it('creates a new patterned hatch material when pattern offset changes', () => {
-    const styleManager = new AcTrStyleManager()
-    const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    traits.layer = 'A-HATCH'
-    traits.color.setRGB(0, 255, 0)
-    traits.drawOrder = -1
-    traits.fillType = {
-      solidFill: false,
-      patternAngle: 0,
-      definitionLines: [
-        {
-          angle: Math.PI / 4,
-          base: { x: 0, y: 0 },
-          offset: { x: 0, y: 3.175 },
-          dashLengths: []
-        }
-      ]
-    }
-
-    const material = styleManager.getFillMaterial(traits)
-    traits.fillType.definitionLines[0].offset.y = 6.35
-    const scaledMaterial = styleManager.getFillMaterial(traits)
-
-    expect(scaledMaterial).toBeInstanceOf(THREE.ShaderMaterial)
-    expect(scaledMaterial).not.toBe(material)
-  })
-
-  it('creates gradient hatch shader materials with per-boundary uniforms', () => {
-    const styleManager = new AcTrStyleManager()
-    const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()
-    traits.layer = 'A-GRAD'
-    traits.color.setRGB(255, 0, 0)
-    traits.drawOrder = -1
-    traits.fillType = {
-      solidFill: false,
-      patternAngle: 0,
-      definitionLines: [],
-      gradient: {
-        name: 'LINEAR',
-        angle: Math.PI / 4,
-        shift: 0.25,
-        oneColorMode: false,
-        shadeTintValue: 0,
-        endColor: 0x0000ff
-      }
-    }
-
-    const material = styleManager.getFillMaterial(traits, new THREE.Vector2(), {
-      minX: 1,
-      minY: 2,
-      maxX: 5,
-      maxY: 8
-    }) as THREE.ShaderMaterial
-    const otherBoundsMaterial = styleManager.getFillMaterial(
-      traits,
-      new THREE.Vector2(),
-      { minX: 0, minY: 0, maxX: 5, maxY: 8 }
-    )
-
-    expect(material).toBeInstanceOf(THREE.ShaderMaterial)
-    expect(material).not.toBe(otherBoundsMaterial)
-    expect(material.vertexShader).toContain('attribute vec2 gradientPosition')
-    expect(material.uniforms.u_startColor.value.getHex()).toBe(0xff0000)
-    expect(material.uniforms.u_endColor.value.getHex()).toBe(0x0000ff)
-    expect(material.uniforms.u_angle.value).toBeCloseTo(Math.PI / 4)
-    expect(material.uniforms.u_shift.value).toBeCloseTo(0.25)
-
-    const metadata = getMaterialMetadata(material)
-    expect(metadata.drawOrder).toBe(-1)
   })
 
   it('uses fat line materials when forceShowLineWeight is on even if LWDISPLAY is off', () => {

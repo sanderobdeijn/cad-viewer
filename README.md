@@ -118,7 +118,7 @@ All widgets are framework-agnostic (plain DOM). The full Vue [`cad-viewer`](pack
 
 CAD-Viewer is engineered for **exceptional performance** and can handle very large drawings while maintaining high frame rates. It employs multiple advanced rendering technologies to optimize performance:
 
-- **Custom Shader Materials**: Uses GPU-accelerated shader materials to render complex line types and hatch fill patterns efficiently
+- **Custom Shader Materials**: Uses GPU-accelerated shader materials to render complex line types efficiently
 - **Geometry Batching**: Merges points, lines, and areas with the same material to dramatically reduce draw calls
 - **Instanced Rendering**: Optimizes rendering of repeated geometries through instancing techniques
 - **Buffer Geometry Optimization**: Efficient memory management and geometry merging for reduced GPU overhead
@@ -239,7 +239,6 @@ Legend:
 
 #### Advanced Entities
 
-* [x] Hatch
 * [ ] Text (single-line / multi-line)
 * [ ] Dimensions (linear, aligned, angular)
 * [ ] Blocks creation & insertion

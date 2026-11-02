@@ -30,46 +30,6 @@ export const DEFAULT_MLINE_STYLE = 'Standard'
 export const DEFAULT_MLEADER_STYLE = 'Standard'
 
 /**
- * Default hatch pattern name used by AutoCAD for imperial drawings.
- */
-export const DEFAULT_HATCH_PATTERN_IMPERIAL = 'ANSI31'
-
-/**
- * Default hatch pattern name used by AutoCAD for metric drawings.
- */
-export const DEFAULT_HATCH_PATTERN_METRIC = 'ANGLE'
-
-/**
- * Reserved hatch pattern name used for solid fills.
- */
-export const HATCH_PATTERN_SOLID = 'SOLID'
-
-/**
- * Returns true when a hatch pattern name denotes a solid fill.
- *
- * LibreDWG (and some older writers) emit `_SOLID` instead of `SOLID`. Treat
- * both — and any leading-underscore / case variant — as solid so fill is not
- * dropped when `definitionLines` are empty.
- */
-export function acdbIsSolidHatchPatternName(
-  patternName: string | null | undefined
-): boolean {
-  if (patternName == null) return false
-  const normalized = patternName.trim().toUpperCase().replace(/^_+/, '')
-  return normalized === HATCH_PATTERN_SOLID
-}
-
-/**
- * Default hatch pattern name used for user-defined hatch patterns in DXF output.
- */
-export const HATCH_PATTERN_USER = 'USER'
-
-/**
- * Default gradient hatch name used when a gradient hatch has no explicit name.
- */
-export const DEFAULT_GRADIENT_HATCH_NAME = 'LINEAR'
-
-/**
  * Special line type value that indicates the entity should use
  * the line type of its layer.
  *
@@ -176,13 +136,6 @@ export const ACDB_COMPAREPROPS_MAX =
   ACDB_COMPAREPROPS_LINEWEIGHT |
   ACDB_COMPAREPROPS_TRANSPARENCY |
   ACDB_COMPAREPROPS_THICKNESS
-
-/** AutoCAD default for COMPAREHATCH: hatch objects are excluded from comparison. */
-export const ACDB_COMPAREHATCH_DEFAULT = 0
-
-/** AutoCAD valid range for the COMPAREHATCH system variable. */
-export const ACDB_COMPAREHATCH_MIN = 0
-export const ACDB_COMPAREHATCH_MAX = 1
 
 /** AutoCAD default for COMPARERCMARGIN: revision-cloud offset of 5. */
 export const ACDB_COMPARERCMARGIN_DEFAULT = 5

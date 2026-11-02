@@ -46,7 +46,7 @@
                 <span class="wml-ico wml-ico--xl" v-html="I.arc" aria-hidden="true"></span>
                 <span class="wml-ribbon__bigBtnLabel">Arc<span class="wml-chev">⌄</span></span>
               </button>
-              <!-- Right mini column: Rect▼ / Ellipse▼ / Hatch -->
+              <!-- Right mini column: Rect▼ / Ellipse▼ -->
               <div class="wml-ribbon__miniCol">
                 <button class="wml-ribbon__btnSm wml-ddbtn" title="Rectangle">
                   <span class="wml-ico" v-html="I.rect" aria-hidden="true"></span>
@@ -55,9 +55,6 @@
                 <button class="wml-ribbon__btnSm wml-ddbtn" title="Ellipse">
                   <span class="wml-ico" v-html="I.ellipse" aria-hidden="true"></span>
                   <span class="wml-dd">⌄</span>
-                </button>
-                <button class="wml-ribbon__btnSm" title="Hatch">
-                  <span class="wml-ico" v-html="I.hatch" aria-hidden="true"></span>
                 </button>
               </div>
             </div>
@@ -171,7 +168,6 @@ const I = {
   arc: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3 13A8 8 0 0 1 16 6"/></svg>',
   rect: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="5" width="13" height="10" rx=".8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
   ellipse: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
-  hatch: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1" d="M5 15 15 5M4 10 10 4M10 16 16 10"/></svg>',
   move: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M10 2 7 5h2v4H5V7L2 10l3 3v-2h4v4H7l3 3 3-3h-2v-4h4v2l3-3-3-3v2h-4V5h2L10 2Z"/></svg>',
   erase: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M6.5 3h7v1.5H18V6H2V4.5h4.5V3Zm-3 4.5 1.25 11a2 2 0 0 0 2 1.75h7.5a2 2 0 0 0 2-1.75L17.5 7.5H3.5Zm5.6 3.5 2 2-1.06 1.06L8 12.06 5.94 14.12 4.88 13.06l2.06-2.06L4.88 9L6 7.94l2 2 2-2 1.1 1.06Z"/></svg>',
   rotate: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 10a7 7 0 0 1 12.12-4.5M17 10a7 7 0 0 0-12.12 4.5"/><path fill="currentColor" d="M14.5 3.5 17 2v3.5H13.5V2l3.5 1.5ZM2 18l3.5-1.5v3.5H2V16.5Z"/></svg>',

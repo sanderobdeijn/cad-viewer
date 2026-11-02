@@ -1,11 +1,6 @@
 export { AcGiArrowType } from './AcGiArrowType'
 export type { AcGiEntity } from './AcGiEntity'
 export type {
-  AcGiHatchGradientStyle,
-  AcGiHatchPatternLine,
-  AcGiHatchStyle
-} from './AcGiHatchStyle'
-export type {
   AcGiArrowStyle,
   AcGiBaseLineStyle,
   AcGiLineStyle,

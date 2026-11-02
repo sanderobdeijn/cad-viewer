@@ -194,7 +194,6 @@ jest.mock('../src/command', () => {
     'AcApEllipseCmd',
     'AcApEraseCmd',
     'AcApHideObjectsCmd',
-    'AcApHatchCmd',
     'AcApLayoffCmd',
     'AcApLineCmd',
     'AcApLogCmd',

@@ -1,6 +1,5 @@
 import { AcCmColor, AcCmTransparency } from '@mlightcad/common'
 
-import { AcGiHatchStyle } from './AcGiHatchStyle'
 import { AcGiLineStyle } from './AcGiLineStyle'
 import { AcGiLineWeight } from './AcGiLineWeight'
 
@@ -37,13 +36,6 @@ export interface AcGiSubEntityTraits {
   lineWeight: AcGiLineWeight
 
   /**
-   * Fill type / hatch style for the entity (if applicable).
-   * Corresponds to AutoCAD's `AcGiHatchStyle`. For example, controlling whether
-   * the sub‑entity is filled or only outlined.
-   */
-  fillType: AcGiHatchStyle
-
-  /**
    * Transparency of the entity.
    * A numeric value controlling how transparent (or opaque) the entity is when rendered.
    */
@@ -67,7 +59,7 @@ export interface AcGiSubEntityTraits {
    * share the same Z plane.
    *
    * Lower values render earlier. The default `0` matches normal
-   * linework / text. Solid hatches use `-1` so they stay below
+   * linework / text. Under-linework fills use `-1` so they stay below
    * outlines and text, while wide polylines keep `0` because they
    * are visually linework even though they are rasterized as meshes.
    */

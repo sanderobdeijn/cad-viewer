@@ -61,12 +61,11 @@ function openRing(points: AcGePoint2dLike[]): AcGePoint2dLike[] {
 /**
  * Returns whether the closed loop crosses itself.
  *
- * Hatch edge paths from DWG often meet at T-junctions without inserting a
+ * Fill loops often meet at T-junctions without inserting a
  * shared vertex, so one long edge properly intersects another. Earcut then
- * invents triangles that cover the concave exterior (pattern lines "leak"
- * past the boundary).
+ * invents triangles that cover the concave exterior.
  */
-export function hatchLoopHasSelfIntersection(
+export function fillLoopHasSelfIntersection(
   points: AcGePoint2dLike[]
 ): boolean {
   const ring = openRing(points)
@@ -107,7 +106,7 @@ function polyboolEpsilonFor(points: AcGePoint2dLike[]): number {
 }
 
 /**
- * Decomposes a self-intersecting hatch loop into simple even-odd regions.
+ * Decomposes a self-intersecting fill loop into simple even-odd regions.
  *
  * Uses PolyBool's segment rebuild (`segments` → `polygon`), which splits at
  * crossings and emits non-self-intersecting rings earcut can triangulate.
@@ -115,11 +114,11 @@ function polyboolEpsilonFor(points: AcGePoint2dLike[]): number {
  *
  * @returns One or more simple rings. On failure, returns the original loop.
  */
-export function resolveSelfIntersectingHatchLoop(
+export function resolveSelfIntersectingFillLoop(
   points: AcGePoint2dLike[]
 ): AcGePoint2d[][] {
   const ring = openRing(points)
-  if (ring.length < 3 || !hatchLoopHasSelfIntersection(ring)) {
+  if (ring.length < 3 || !fillLoopHasSelfIntersection(ring)) {
     return [ring.map(p => new AcGePoint2d(p.x, p.y))]
   }
 
@@ -140,9 +139,9 @@ export function resolveSelfIntersectingHatchLoop(
     if (regions.length > 0) {
       return regions
     }
-    log.warn('PolyBool hatch loop repair produced no regions')
+    log.warn('PolyBool fill loop repair produced no regions')
   } catch (error) {
-    log.warn(`PolyBool hatch loop repair failed: ${error}, epsilon=${epsilon}`)
+    log.warn(`PolyBool fill loop repair failed: ${error}, epsilon=${epsilon}`)
   }
   return [ring.map(p => new AcGePoint2d(p.x, p.y))]
 }

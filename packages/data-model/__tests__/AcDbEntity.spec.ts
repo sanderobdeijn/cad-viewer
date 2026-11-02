@@ -5,7 +5,6 @@ import {
   AcGeMatrix3d,
   AcGePoint2d,
   AcGePoint3d,
-  AcGePolyline2d,
   AcGeVector3d
 } from '@mlightcad/geometry-engine'
 
@@ -26,7 +25,6 @@ import { AcDbBlockReference } from '../src/entity/AcDbBlockReference'
 import { AcDbCircle } from '../src/entity/AcDbCircle'
 import { AcDbEntity } from '../src/entity/AcDbEntity'
 import { AcDbFace } from '../src/entity/AcDbFace'
-import { AcDbHatch } from '../src/entity/AcDbHatch'
 import { AcDbLine } from '../src/entity/AcDbLine'
 import { AcDbMText } from '../src/entity/AcDbMText'
 import { AcDbOrdinateDimension } from '../src/entity/dimension/AcDbOrdinateDimension'
@@ -521,7 +519,7 @@ describe('AcDbEntity.transformBy', () => {
     expect(blockRef.scaleFactors.z).toBeCloseTo(12, 8)
   })
 
-  it('transforms text-like, hatch-like and mesh entities', () => {
+  it('transforms text-like and mesh entities', () => {
     const text = new AcDbText()
     text.position = new AcGePoint3d(0, 0, 0)
     text.height = 2
@@ -542,23 +540,6 @@ describe('AcDbEntity.transformBy', () => {
     expect(mtext.location.y).toBeCloseTo(1, 8)
     expect(mtext.direction.x).toBeCloseTo(0, 8)
     expect(mtext.direction.y).toBeCloseTo(1, 8)
-
-    const hatch = new AcDbHatch()
-    hatch.elevation = 1
-    hatch.add(
-      new AcGePolyline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 2, y: 0 },
-          { x: 2, y: 2 },
-          { x: 0, y: 2 }
-        ],
-        true
-      )
-    )
-    hatch.transformBy(new AcGeMatrix3d().makeTranslation(5, 6, 7))
-    expect(hatch.elevation).toBeCloseTo(8, 8)
-    expect(hatch.geometricExtents.min).toMatchObject({ x: 5, y: 6, z: 8 })
 
     const viewport = new AcDbViewport()
     viewport.centerPoint = new AcGePoint3d(1, 2, 0)
@@ -594,7 +575,7 @@ describe('AcDbEntity.transformBy', () => {
     })
   })
 
-  it('updates text, mtext, hatch and viewport under combined transforms', () => {
+  it('updates text, mtext and viewport under combined transforms', () => {
     const text = new AcDbText()
     text.position = new AcGePoint3d(1, 0, 0)
     text.rotation = 0
@@ -620,24 +601,6 @@ describe('AcDbEntity.transformBy', () => {
     expectVector3dClose(mtext.direction, { x: 1, y: 0, z: 0 })
     expect(mtext.width).toBeCloseTo(10, 8)
     expect(mtext.height).toBeCloseTo(6, 8)
-
-    const hatch = new AcDbHatch()
-    hatch.patternAngle = Math.PI / 6
-    hatch.patternScale = 2
-    hatch.add(
-      new AcGePolyline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 1, y: 1 },
-          { x: 0, y: 1 }
-        ],
-        true
-      )
-    )
-    hatch.transformBy(new AcGeMatrix3d().makeScale(3, 2, 1))
-    expect(hatch.patternAngle).toBeCloseTo(Math.PI / 6, 8)
-    expect(hatch.patternScale).toBeCloseTo(6, 8)
 
     const viewport = new AcDbViewport()
     viewport.centerPoint = new AcGePoint3d(1, 1, 0)

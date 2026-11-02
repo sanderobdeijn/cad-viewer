@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcGeLine2d, AcGeLoop2d } from '@mlightcad/geometry-engine'
 
 import { AcDbBlockTableRecord } from '../database/AcDbBlockTableRecord'
 import { AcDbDatabase } from '../database/AcDbDatabase'
@@ -10,9 +9,9 @@ import {
 import { AcDbLayerTableRecord } from '../database/AcDbLayerTableRecord'
 import { AcDbLinetypeTableRecord } from '../database/AcDbLinetypeTableRecord'
 import { AcDbTextStyleTableRecord } from '../database/AcDbTextStyleTableRecord'
-import { AcDbHatch } from '../entity/AcDbHatch'
+import { AcDbTrace } from '../entity/AcDbTrace'
 import { AcDbLayout } from '../object/layout/AcDbLayout'
-import { DEFAULT_TEXT_STYLE, HATCH_PATTERN_SOLID } from './AcDbConstants'
+import { DEFAULT_TEXT_STYLE } from './AcDbConstants'
 
 /** Line weight of layer 0 in a new drawing: the default line weight. */
 const NEW_DRAWING_LAYER_LINE_WEIGHT = -3
@@ -213,18 +212,16 @@ export class AcDbDataGenerator {
     const blockName = '_CAXARROW'
     if (!this.db.tables.blockTable.getAt(blockName)) {
       // Create arrow
-      const hatch = new AcDbHatch()
-      hatch.patternName = HATCH_PATTERN_SOLID
-      const loop = new AcGeLoop2d()
-      loop.add(new AcGeLine2d({ x: 0, y: 0 }, { x: -1, y: 0.125 }))
-      loop.add(new AcGeLine2d({ x: -1, y: 0.125 }, { x: -1, y: -0.125 }))
-      loop.add(new AcGeLine2d({ x: -1, y: -0.125 }, { x: 0, y: 0 }))
-      hatch.add(loop)
+      const arrow = new AcDbTrace()
+      arrow.setPointAt(0, { x: 0, y: 0, z: 0 })
+      arrow.setPointAt(1, { x: 0, y: 0, z: 0 })
+      arrow.setPointAt(2, { x: -1, y: -0.125, z: 0 })
+      arrow.setPointAt(3, { x: -1, y: 0.125, z: 0 })
 
-      // Create block and add the hatch entity in this block
+      // Create block and add the arrow in this block
       const block = new AcDbBlockTableRecord()
       block.name = '_CAXARROW'
-      block.appendEntity(hatch)
+      block.appendEntity(arrow)
       this.db.tables.blockTable.add(block)
     }
   }

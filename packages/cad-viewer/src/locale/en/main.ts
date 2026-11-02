@@ -8,69 +8,7 @@ export default {
     tab: {
       home: 'Home',
       measurement: 'Measurement',
-      hatchContext: 'Hatch',
       mtextEditorContext: 'Text Editor'
-    },
-    hatch: {
-      group: {
-        boundary: 'Boundaries',
-        pattern: 'Pattern',
-        properties: 'Properties',
-        options: 'Options',
-        close: 'Close'
-      },
-      command: {
-        pickPoints: 'Pick Points',
-        selectObjects: 'Select Objects',
-        close: 'Close'
-      },
-      field: {
-        pattern: 'Pattern',
-        scale: 'Scale',
-        angle: 'Angle',
-        style: 'Style',
-        associative: 'Associative',
-        fillType: 'Fill Type',
-        fillColor: 'Color',
-        patternColor: 'Pattern Color',
-        gradient1Color: 'Gradient Color 1',
-        backgroundColor: 'Background Color',
-        gradient2Color: 'Gradient Color 2',
-        opacity: 'Transparency',
-        imageScale: 'Image Scale'
-      },
-      style: {
-        normal: 'Normal',
-        outer: 'Outer',
-        ignore: 'Ignore'
-      },
-      fillType: {
-        solid: 'Solid',
-        pattern: 'Pattern',
-        gradient: 'Gradient'
-      },
-      associative: {
-        on: 'On',
-        off: 'Off'
-      },
-      tooltip: {
-        pickPoints: 'Pick internal points to create hatch regions.',
-        selectObjects: 'Select closed boundary objects to hatch.',
-        pattern: 'Choose the hatch pattern name.',
-        scale: 'Set the hatch pattern scale.',
-        angle: 'Set the hatch pattern angle in degrees.',
-        style: 'Control island detection style for hatch creation.',
-        associative: 'Toggle associative hatch mode.',
-        fillType: 'Select fill type: solid, pattern, or gradient.',
-        fillColor: 'Choose the fill color.',
-        patternColor: 'Choose the pattern line color.',
-        gradient1Color: 'Choose the first gradient color.',
-        backgroundColor: 'Choose the background color for pattern fill.',
-        gradient2Color: 'Choose the second gradient color.',
-        opacity: 'Set the hatch transparency (0-90).',
-        imageScale: 'Set the fill image scale.',
-        close: 'Exit Hatch creation and close this contextual tab.'
-      }
     },
     mtext: {
       group: {
@@ -253,7 +191,6 @@ export default {
       ellipse: 'Draw an ellipse or elliptical arc.',
       rect: 'Draw a rectangle or regular polygon.',
       point: 'Place a point object in the drawing.',
-      hatch: 'Fill a closed area with a hatch pattern.',
       text: 'Create multiline text annotations in the drawing.',
       move: 'Move selected objects to a new position.',
       rotate: 'Rotate selected objects around a base point.',
@@ -338,7 +275,6 @@ export default {
       polygon: 'Polygon',
       point: 'Point',
       divide: 'Divide',
-      hatch: 'Hatch',
       text: 'Text',
       gradient: 'Gradient',
       move: 'Move',

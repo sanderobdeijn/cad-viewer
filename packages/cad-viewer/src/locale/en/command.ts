@@ -1,8 +1,5 @@
 export default {
   ACAD: {
-    hatch: {
-      description: 'Creates hatch fills with a ribbon-based contextual workflow'
-    },
     md: {
       description:
         'Opens the Missing / External Resources palette for fonts, images, and xrefs'

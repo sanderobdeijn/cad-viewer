@@ -118,7 +118,7 @@ class AcTrDirectCapturePlaceholder extends AcTrEntity {
  * - `'lineStrip'`: connected polyline vertices from {@link AcTrRenderer.lines}
  *   (and other paths that funnel through private `linePoints`).
  * - `'point'`: a single point plus its display style.
- * - `'area'`: a filled/hatched 2-D area.
+ * - `'area'`: a filled 2-D area.
  * - `'lineSegments'`: raw interleaved segment buffer (positions + indices).
  */
 export type AcTrDirectCapturePayload =
@@ -137,7 +137,7 @@ export type AcTrDirectCapturePayload =
       style: AcGiPointStyle
     }
   | {
-      /** Filled/hatched area captured from {@link AcTrRenderer.area}. */
+      /** Filled area captured from {@link AcTrRenderer.area}. */
       kind: 'area'
       /** Area geometry in drawing coordinates. */
       area: AcGeArea2d

@@ -698,32 +698,26 @@ function signedPointTriangleArea(
 }
 
 /**
- * Builds rebased mesh geometry from a solid or gradient hatch area.
+ * Builds rebased mesh geometry from a solid fill area.
  *
- * Patterned hatches (definition lines without gradient) return `null`.
  * A temporary {@link AcTrPolygon} is built and disposed; mesh materials from
  * the style manager are preserved by swapping dummy geometry/material first.
  *
- * @param area - Filled/hatched 2-D area in drawing coordinates.
- * @param traits - Sub-entity traits used for fill style and material lookup.
+ * @param area - Filled 2-D area in drawing coordinates.
+ * @param traits - Sub-entity traits used for material lookup.
  * @param context - Render context providing the style manager.
  * @returns Built mesh geometry ready for direct batch append, or `null` when
- *   the hatch is patterned, empty, or merge/bbox computation fails.
+ *   the area is empty, or merge/bbox computation fails.
  */
 export function buildAreaGeometry(
   area: AcGeArea2d,
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): AcTrBuiltDirectGeometry | null {
-  const style = traits.fillType
-  if (!style.gradient && !!style.definitionLines?.length) {
-    return null
-  }
-
   // Solid single-loop fills (SOLID / TRACE quads, ≤ 4 corners) triangulate
   // directly, skipping THREE.Shape, earcut and the temporary AcTrPolygon.
-  // Gradient fills and the test-only forced general path skip the probe —
-  // they always use AcTrPolygon, and probing would only duplicate tessellation.
+  // The test-only forced general path skips the probe — it always uses
+  // AcTrPolygon, and probing would only duplicate tessellation.
   //
   // Align tessellation with AcTrPolygon (same options, cached results) so both
   // paths see identical boundary points for equivalence testing.
@@ -735,7 +729,7 @@ export function buildAreaGeometry(
   let pointBoundaries: AcGePoint2dLike[][] | undefined
   let hierarchy: AcGeIndexNode | undefined
   let areaForGeneralPath: AcGeArea2d = area
-  if (!style.gradient && !_forceGeneralAreaPath) {
+  if (!_forceGeneralAreaPath) {
     const tessellateOptions = acdbDrawTessellateOptions({ context })
     const areaApi = area as AcGeArea2d & {
       tessellate?: (options: unknown) => AcGePoint2dLike[][]
@@ -838,8 +832,7 @@ export function buildAreaGeometry(
   let wcsBbox: THREE.Box3
   let worldOffset: THREE.Vector3
   if (prebasedWcsBbox && prebasedWorldOffset) {
-    // Already rebased at write time; the geometry's own (local-space) bbox
-    // would not be the WCS one needed for gradientBounds below.
+    // Already rebased at write time.
     wcsBbox = prebasedWcsBbox
     worldOffset = prebasedWorldOffset
     const localBox = AcTrBufferGeometryUtil.safeComputeBoundingBox(geometry)
@@ -866,15 +859,7 @@ export function buildAreaGeometry(
     }
   }
 
-  const gradientBounds = {
-    minX: wcsBbox.min.x,
-    minY: wcsBbox.min.y,
-    maxX: wcsBbox.max.x,
-    maxY: wcsBbox.max.y
-  }
-  const material =
-    resolvedMaterial ??
-    context.styleManager.getFillMaterial(traits, undefined, gradientBounds)
+  const material = resolvedMaterial ?? context.styleManager.getFillMaterial(traits)
 
   return {
     kind: 'mesh',
@@ -996,7 +981,7 @@ export function buildLineSegmentsGeometry(
  * Subtracts `worldOffset` from every position attribute vertex in place and
  * refreshes the geometry bounding box / sphere.
  *
- * Used after merging hatch mesh geometries so the returned buffer is local to
+ * Used after merging fill mesh geometries so the returned buffer is local to
  * the WCS bbox center (matching other direct-batch builders).
  *
  * @param geometry - Buffer whose `position` attribute is rewritten.

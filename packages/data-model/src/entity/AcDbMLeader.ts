@@ -2197,15 +2197,7 @@ export class AcDbMLeader extends AcDbEntity {
 
     const area = new AcGeArea2d()
     area.add(new AcGePolyline2d(arrowPoints, true))
-    const traits = renderer.subEntityTraits
-    const originalFillType = traits.fillType
-    traits.fillType = {
-      solidFill: true,
-      patternAngle: 0,
-      definitionLines: []
-    }
     const entity = renderer.area(area)
-    traits.fillType = originalFillType
     return entity
   }
 

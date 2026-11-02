@@ -21,11 +21,6 @@ export class AcTrSubEntityTraitsUtil {
       },
       lineTypeScale: 1,
       lineWeight: AcGiLineWeight.ByLayer,
-      fillType: {
-        solidFill: true,
-        patternAngle: 0,
-        definitionLines: []
-      },
       transparency: new AcCmTransparency(),
       thickness: 0,
       layer: '0',
@@ -49,11 +44,6 @@ export class AcTrSubEntityTraitsUtil {
       },
       lineTypeScale: 1,
       lineWeight: AcGiLineWeight.ByLayer,
-      fillType: {
-        solidFill: true,
-        patternAngle: 0,
-        definitionLines: []
-      },
       transparency: new AcCmTransparency(),
       thickness: 0,
       layer: colorSettings.layer ?? '0',

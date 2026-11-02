@@ -29,9 +29,6 @@ export {
   ACAD_APPID,
   acdbCoerceIntegerSysVar,
   acdbIntegerSysVarIfInRange,
-  ACDB_COMPAREHATCH_DEFAULT,
-  ACDB_COMPAREHATCH_MAX,
-  ACDB_COMPAREHATCH_MIN,
   ACDB_COMPAREPROPS_COLOR,
   ACDB_COMPAREPROPS_DEFAULT,
   ACDB_COMPAREPROPS_LAYER,
@@ -67,16 +64,10 @@ export {
   ACTIVE_VPORT_NAME,
   ByBlock,
   ByLayer,
-  DEFAULT_GRADIENT_HATCH_NAME,
-  DEFAULT_HATCH_PATTERN_IMPERIAL,
-  DEFAULT_HATCH_PATTERN_METRIC,
   DEFAULT_LINE_TYPE,
   DEFAULT_MLEADER_STYLE,
   DEFAULT_MLINE_STYLE,
   DEFAULT_TEXT_STYLE,
-  HATCH_PATTERN_SOLID,
-  acdbIsSolidHatchPatternName,
-  HATCH_PATTERN_USER,
   MLIGHTCAD_APPID,
   VPORT_FALLBACK_CENTER_2D,
   VPORT_FALLBACK_LLC,
@@ -122,12 +113,6 @@ export {
 } from './AcDbOsnapMode'
 export { AcDbUnitsValue } from './AcDbUnitsValue'
 export {
-  AcDbPatParser,
-  AcDbPatSvgRenderer,
-  AcDbPredefinedAcadIsoPat,
-  AcDbPredefinedAcadPat
-} from './pat'
-export {
   AcDbProxyGraphic,
   AcDbProxyGraphicType,
   ACDB_PROXY_GRAPHIC_CHUNK_SIZE
@@ -141,15 +126,6 @@ export {
   acdbHexStringsToBytes
 } from './proxyGraphic'
 export { acdbPreviewIconToDataUrl, acdbThumbnailImageToDataUrl } from './AcDbPreviewIcon'
-export type {
-  AcDbPatDocument,
-  AcDbPatGradientColor,
-  AcDbPatGradientPreviewOptions,
-  AcDbPatLine,
-  AcDbPatParseIssue,
-  AcDbPatPattern,
-  AcDbPatPreviewOptions
-} from './pat'
 export {
   ACDB_DYN_BLOCK_ENHANCED_BLOCK,
   ACDB_DYN_BLOCK_GUID_APP,
