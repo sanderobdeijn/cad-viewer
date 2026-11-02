@@ -1,20 +1,20 @@
 import {
-  AcGeBoundaryEdgeType,
-  AcGeCircArc2d,
-  AcGeEllipseArc2d,
-  AcGeIntersectPrimitive,
-  AcGeLine2d,
-  AcGeLoop2d,
-  AcGeLoop2dType,
-  AcGeMatrix3d,
-  AcGePoint2dLike,
-  AcGePolyline2d,
-  AcGePolyline2dVertex,
-  AcGeSpline2d,
-  acgeTransformIntersectPrimitive,
-  acgeTransformOcsPointToWcs,
-  AcGeVector3d,
-  AcGeVector3dLike,
+  GeometryBoundaryEdgeType,
+  GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  GeometryIntersectPrimitive,
+  GeometryLine2d,
+  GeometryLoop2d,
+  GeometryLoop2dType,
+  GeometryMatrix3d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  GeometryPolyline2dVertex,
+  GeometrySpline2d,
+  geometryTransformIntersectPrimitive,
+  geometryTransformOcsPointToWcs,
+  GeometryVector3d,
+  GeometryVector3dLike,
   TAU
 } from '@mlightcad/geometry-engine'
 
@@ -28,14 +28,14 @@ const BULGE_EPS = 1e-10
  * default for every segment (for example mesh edges).
  */
 export function acdbIntersectPrimitivesFromPointPath(
-  points: readonly AcGePoint2dLike[],
+  points: readonly GeometryPoint2dLike[],
   closed: boolean,
   extendable?: boolean
-): AcGeIntersectPrimitive[] {
+): GeometryIntersectPrimitive[] {
   const count = closed ? points.length : points.length - 1
   if (count < 1 || points.length < 2) return []
 
-  const primitives: AcGeIntersectPrimitive[] = []
+  const primitives: GeometryIntersectPrimitive[] = []
   for (let i = 0; i < count; i++) {
     const start = points[i]
     const end = points[(i + 1) % points.length]
@@ -43,7 +43,7 @@ export function acdbIntersectPrimitivesFromPointPath(
     const isEndSegment = !closed && (i === 0 || i === count - 1)
     primitives.push({
       kind: 'line',
-      line: new AcGeLine2d(start, end),
+      line: new GeometryLine2d(start, end),
       extent: 'bounded',
       extendable: extendable ?? isEndSegment
     })
@@ -55,14 +55,14 @@ export function acdbIntersectPrimitivesFromPointPath(
  * Converts a 2D polyline (including bulge arcs) into WCS intersection primitives.
  */
 export function acdbIntersectPrimitivesFromPolyline2d(
-  vertices: readonly AcGePolyline2dVertex[],
+  vertices: readonly GeometryPolyline2dVertex[],
   closed: boolean,
-  normal: AcGeVector3dLike
-): AcGeIntersectPrimitive[] {
+  normal: GeometryVector3dLike
+): GeometryIntersectPrimitive[] {
   const count = closed ? vertices.length : vertices.length - 1
   if (count < 1 || vertices.length < 2) return []
 
-  const primitives: AcGeIntersectPrimitive[] = []
+  const primitives: GeometryIntersectPrimitive[] = []
   for (let i = 0; i < count; i++) {
     const start = vertices[i]
     const end = vertices[(i + 1) % vertices.length]
@@ -70,8 +70,8 @@ export function acdbIntersectPrimitivesFromPolyline2d(
     const extendable = isEndSegment
     const bulge = start.bulge ?? 0
     if (Math.abs(bulge) > BULGE_EPS) {
-      const primitive = circArc2dToPrimitive(
-        new AcGeCircArc2d(start, end, bulge),
+      const primitive = circularArc2dToPrimitive(
+        new GeometryCircularArc2d(start, end, bulge),
         normal,
         extendable
       )
@@ -83,7 +83,7 @@ export function acdbIntersectPrimitivesFromPolyline2d(
     if (isDegenerateSegment(startWcs, endWcs)) continue
     primitives.push({
       kind: 'line',
-      line: new AcGeLine2d(startWcs, endWcs),
+      line: new GeometryLine2d(startWcs, endWcs),
       extent: 'bounded',
       extendable
     })
@@ -95,12 +95,12 @@ export function acdbIntersectPrimitivesFromPolyline2d(
  * Converts hatch / area loops into WCS intersection primitives.
  */
 export function acdbIntersectPrimitivesFromAreaLoops(
-  loops: readonly AcGeLoop2dType[],
-  normal: AcGeVector3dLike
-): AcGeIntersectPrimitive[] {
-  const primitives: AcGeIntersectPrimitive[] = []
+  loops: readonly GeometryLoop2dType[],
+  normal: GeometryVector3dLike
+): GeometryIntersectPrimitive[] {
+  const primitives: GeometryIntersectPrimitive[] = []
   for (const loop of loops) {
-    if (loop instanceof AcGePolyline2d) {
+    if (loop instanceof GeometryPolyline2d) {
       primitives.push(
         ...acdbIntersectPrimitivesFromPolyline2d(
           loop.vertices,
@@ -110,7 +110,7 @@ export function acdbIntersectPrimitivesFromAreaLoops(
       )
       continue
     }
-    if (loop instanceof AcGeLoop2d) {
+    if (loop instanceof GeometryLoop2d) {
       for (const edge of loop.curves) {
         const converted = boundaryEdgeToPrimitive(edge, normal)
         if (converted) primitives.push(...converted)
@@ -124,40 +124,40 @@ export function acdbIntersectPrimitivesFromAreaLoops(
  * Transforms a list of intersection primitives by a WCS matrix.
  */
 export function acdbTransformIntersectPrimitives(
-  primitives: readonly AcGeIntersectPrimitive[],
-  matrix: AcGeMatrix3d
-): AcGeIntersectPrimitive[] {
+  primitives: readonly GeometryIntersectPrimitive[],
+  matrix: GeometryMatrix3d
+): GeometryIntersectPrimitive[] {
   return primitives.map(primitive =>
-    acgeTransformIntersectPrimitive(primitive, matrix)
+    geometryTransformIntersectPrimitive(primitive, matrix)
   )
 }
 
 function boundaryEdgeToPrimitive(
-  edge: AcGeBoundaryEdgeType,
-  normal: AcGeVector3dLike
-): AcGeIntersectPrimitive[] {
-  if (edge instanceof AcGeLine2d) {
+  edge: GeometryBoundaryEdgeType,
+  normal: GeometryVector3dLike
+): GeometryIntersectPrimitive[] {
+  if (edge instanceof GeometryLine2d) {
     const start = toWcs(edge.startPoint.x, edge.startPoint.y, normal)
     const end = toWcs(edge.endPoint.x, edge.endPoint.y, normal)
     if (isDegenerateSegment(start, end)) return []
     return [
       {
         kind: 'line',
-        line: new AcGeLine2d(start, end),
+        line: new GeometryLine2d(start, end),
         extent: 'bounded',
         extendable: false
       }
     ]
   }
-  if (edge instanceof AcGeCircArc2d) {
-    const primitive = circArc2dToPrimitive(edge, normal, false)
+  if (edge instanceof GeometryCircularArc2d) {
+    const primitive = circularArc2dToPrimitive(edge, normal, false)
     return primitive ? [primitive] : []
   }
-  if (edge instanceof AcGeEllipseArc2d) {
+  if (edge instanceof GeometryEllipseArc2d) {
     const primitive = ellipseArc2dToPrimitive(edge, normal, false)
     return primitive ? [primitive] : []
   }
-  if (edge instanceof AcGeSpline2d) {
+  if (edge instanceof GeometrySpline2d) {
     const spline = edge.clone()
     const matrix = ocsMatrix(normal)
     if (matrix) spline.transform3d(matrix)
@@ -166,16 +166,22 @@ function boundaryEdgeToPrimitive(
   return []
 }
 
-function circArc2dToPrimitive(
-  arc: AcGeCircArc2d,
-  normal: AcGeVector3dLike,
+function circularArc2dToPrimitive(
+  arc: GeometryCircularArc2d,
+  normal: GeometryVector3dLike,
   extendable: boolean
-): AcGeIntersectPrimitive | null {
+): GeometryIntersectPrimitive | null {
   if (arc.closed || Math.abs(arc.deltaAngle - TAU) < 1e-10) {
     const center = toWcs(arc.center.x, arc.center.y, normal)
     return {
-      kind: 'circArc',
-      arc: AcGeCircArc2d.fromMathAngles(center, arc.radius, 0, 0, false),
+      kind: 'circularArc',
+      arc: GeometryCircularArc2d.fromMathAngles(
+        center,
+        arc.radius,
+        0,
+        0,
+        false
+      ),
       extendable: false
     }
   }
@@ -183,28 +189,28 @@ function circArc2dToPrimitive(
   const start = toWcs(arc.startPoint.x, arc.startPoint.y, normal)
   const end = toWcs(arc.endPoint.x, arc.endPoint.y, normal)
   const mid = toWcs(arc.midPoint.x, arc.midPoint.y, normal)
-  const wcsArc = AcGeCircArc2d.tryCreateByThreePoints(start, mid, end)
+  const wcsArc = GeometryCircularArc2d.tryCreateByThreePoints(start, mid, end)
   if (!wcsArc) {
     if (isDegenerateSegment(start, end)) return null
     return {
       kind: 'line',
-      line: new AcGeLine2d(start, end),
+      line: new GeometryLine2d(start, end),
       extent: 'bounded',
       extendable
     }
   }
   return {
-    kind: 'circArc',
+    kind: 'circularArc',
     arc: wcsArc,
     extendable: extendable && !wcsArc.closed
   }
 }
 
 function ellipseArc2dToPrimitive(
-  arc: AcGeEllipseArc2d,
-  normal: AcGeVector3dLike,
+  arc: GeometryEllipseArc2d,
+  normal: GeometryVector3dLike,
   extendable: boolean
-): AcGeIntersectPrimitive | null {
+): GeometryIntersectPrimitive | null {
   const ellipse = arc.clone()
   const matrix = ocsMatrix(normal)
   if (matrix) ellipse.transform3d(matrix)
@@ -218,22 +224,25 @@ function ellipseArc2dToPrimitive(
   }
 }
 
-function toWcs(x: number, y: number, normal: AcGeVector3dLike) {
-  return acgeTransformOcsPointToWcs({ x, y }, normal)
+function toWcs(x: number, y: number, normal: GeometryVector3dLike) {
+  return geometryTransformOcsPointToWcs({ x, y }, normal)
 }
 
-function ocsMatrix(normal: AcGeVector3dLike) {
+function ocsMatrix(normal: GeometryVector3dLike) {
   const isDefaultNormal =
     Math.abs(normal.x) < 1e-10 &&
     Math.abs(normal.y) < 1e-10 &&
     Math.abs(normal.z - 1) < 1e-10
   if (isDefaultNormal) return null
-  return new AcGeMatrix3d().setFromExtrusionDirection(
-    new AcGeVector3d(normal.x, normal.y, normal.z)
+  return new GeometryMatrix3d().setFromExtrusionDirection(
+    new GeometryVector3d(normal.x, normal.y, normal.z)
   )
 }
 
-function isDegenerateSegment(start: AcGePoint2dLike, end: AcGePoint2dLike) {
+function isDegenerateSegment(
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike
+) {
   const dx = start.x - end.x
   const dy = start.y - end.y
   return dx * dx + dy * dy < 1e-20

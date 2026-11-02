@@ -1,16 +1,16 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Optional context for AutoCAD-style command-line point entry.
  */
 export interface AcEdPointInputContext {
   /** Last picked point or prompt base point for relative (`@`) entry. */
-  referencePoint?: AcGePoint2dLike | null
+  referencePoint?: GeometryPoint2dLike | null
   /**
    * Current cursor position in WCS. Required to interpret a lone distance value
    * as a point along the active rubber-band direction.
    */
-  cursorPoint?: AcGePoint2dLike | null
+  cursorPoint?: GeometryPoint2dLike | null
 }
 
 /**

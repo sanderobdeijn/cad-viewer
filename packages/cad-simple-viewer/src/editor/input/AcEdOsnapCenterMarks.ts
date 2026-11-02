@@ -8,10 +8,10 @@ import {
   AcDbObjectId,
   AcDbOsnapMode,
   AcDbPolyline,
-  AcGeCircArc2d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryCircularArc2d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 /** Geometric center acquired by hovering circular geometry. */
@@ -54,13 +54,13 @@ function distToSegment(
 }
 
 function tryBulgeArc(
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   bulge: number
-): AcGeCircArc2d | undefined {
+): GeometryCircularArc2d | undefined {
   if (!(Math.abs(bulge) > BULGE_EPS)) return undefined
   try {
-    const arc = new AcGeCircArc2d(start, end, bulge)
+    const arc = new GeometryCircularArc2d(start, end, bulge)
     if (!(arc.radius > 0) || !Number.isFinite(arc.radius)) return undefined
     return arc
   } catch {
@@ -68,7 +68,7 @@ function tryBulgeArc(
   }
 }
 
-function markFromPoint(point: AcGePoint2dLike): AcEdOsnapCenterMark {
+function markFromPoint(point: GeometryPoint2dLike): AcEdOsnapCenterMark {
   return {
     x: point.x,
     y: point.y,
@@ -78,9 +78,9 @@ function markFromPoint(point: AcGePoint2dLike): AcEdOsnapCenterMark {
 
 function transformMark(
   mark: AcEdOsnapCenterMark,
-  matrix: AcGeMatrix3d
+  matrix: GeometryMatrix3d
 ): AcEdOsnapCenterMark {
-  const point = new AcGePoint2d(mark.x, mark.y).applyMatrix4(matrix)
+  const point = new GeometryPoint2d(mark.x, mark.y).applyMatrix4(matrix)
   return markFromPoint(point)
 }
 
@@ -140,14 +140,14 @@ function polylineVertices(entity: AcDbPolyline | AcDb2dPolyline): Array<{
 
 function collectPolylineArcCenter(
   entity: AcDbPolyline | AcDb2dPolyline,
-  pickPoint: AcGePoint2dLike
+  pickPoint: GeometryPoint2dLike
 ): AcEdOsnapCenterMark | undefined {
   const vertices = polylineVertices(entity)
   if (vertices.length < 2) return undefined
 
   const segmentCount = entity.closed ? vertices.length : vertices.length - 1
   let bestDist = Number.POSITIVE_INFINITY
-  let bestArc: AcGeCircArc2d | undefined
+  let bestArc: GeometryCircularArc2d | undefined
 
   for (let i = 0; i < segmentCount; i++) {
     const start = vertices[i]!
@@ -182,10 +182,10 @@ function collectPolylineArcCenter(
 
 function collectFromOsnapCenter(
   entity: AcDbEntity,
-  pickPoint: AcGePoint2dLike,
+  pickPoint: GeometryPoint2dLike,
   gsMark?: AcDbObjectId
 ): AcEdOsnapCenterMark[] {
-  const points: AcGePoint2dLike[] = []
+  const points: GeometryPoint2dLike[] = []
   entity.subGetOsnapPoints(
     AcDbOsnapMode.Center,
     pickPoint,
@@ -197,8 +197,10 @@ function collectFromOsnapCenter(
 }
 
 /** Full INSERT transform (OCS blockTransform + extrusion), matching intersect curves. */
-function fullInsertionTransform(blockRef: AcDbBlockReference): AcGeMatrix3d {
-  return new AcGeMatrix3d()
+function fullInsertionTransform(
+  blockRef: AcDbBlockReference
+): GeometryMatrix3d {
+  return new GeometryMatrix3d()
     .setFromExtrusionDirection(blockRef.normal)
     .multiply(blockRef.blockTransform)
 }
@@ -218,9 +220,9 @@ function fullInsertionTransform(blockRef: AcDbBlockReference): AcGeMatrix3d {
 export function resolveBlockSubEntity(
   blockRef: AcDbBlockReference,
   gsMark: AcDbObjectId,
-  parentMat: AcGeMatrix3d = new AcGeMatrix3d(),
-  hintPoint?: AcGePoint2dLike
-): { entity: AcDbEntity; transform: AcGeMatrix3d } | undefined {
+  parentMat: GeometryMatrix3d = new GeometryMatrix3d(),
+  hintPoint?: GeometryPoint2dLike
+): { entity: AcDbEntity; transform: GeometryMatrix3d } | undefined {
   const occurrence = gsMarkOccurrence(gsMark)
   const result = resolveBlockSubEntityOccurrence(
     blockRef,
@@ -235,8 +237,8 @@ export function resolveBlockSubEntity(
 
 /** XY containment with padding — spatial child boxes have no Z (#745). */
 function extentsContainXY(
-  extents: { min: AcGePoint2dLike; max: AcGePoint2dLike },
-  point: AcGePoint2dLike,
+  extents: { min: GeometryPoint2dLike; max: GeometryPoint2dLike },
+  point: GeometryPoint2dLike,
   pad = 1e-4
 ): boolean {
   return (
@@ -251,12 +253,12 @@ function resolveBlockSubEntityOccurrence(
   blockRef: AcDbBlockReference,
   targetId: AcDbObjectId,
   remaining: number,
-  parentMat: AcGeMatrix3d,
-  hintPoint: AcGePoint2dLike | undefined,
+  parentMat: GeometryMatrix3d,
+  hintPoint: GeometryPoint2dLike | undefined,
   allowHintPrune: boolean
 ):
   | {
-      found: { entity: AcDbEntity; transform: AcGeMatrix3d }
+      found: { entity: AcDbEntity; transform: GeometryMatrix3d }
       remaining: number
     }
   | { found: undefined; remaining: number } {
@@ -265,14 +267,14 @@ function resolveBlockSubEntityOccurrence(
     return { found: undefined, remaining }
   }
 
-  const thisMat = new AcGeMatrix3d().multiplyMatrices(
+  const thisMat = new GeometryMatrix3d().multiplyMatrices(
     parentMat,
     fullInsertionTransform(blockRef)
   )
 
-  let localHint: AcGePoint2d | undefined
+  let localHint: GeometryPoint2d | undefined
   if (allowHintPrune && hintPoint != null && remaining === 0) {
-    localHint = new AcGePoint2d(hintPoint).applyMatrix4(
+    localHint = new GeometryPoint2d(hintPoint).applyMatrix4(
       thisMat.clone().invert()
     )
   }
@@ -312,7 +314,7 @@ function resolveBlockSubEntityOccurrence(
 
 function collectBlockCenterMarks(
   blockRef: AcDbBlockReference,
-  pickPoint: AcGePoint2dLike,
+  pickPoint: GeometryPoint2dLike,
   gsMark?: AcDbObjectId
 ): AcEdOsnapCenterMark[] {
   if (!gsMark) {
@@ -322,7 +324,7 @@ function collectBlockCenterMarks(
   const found = resolveBlockSubEntity(
     blockRef,
     gsMark,
-    new AcGeMatrix3d(),
+    new GeometryMatrix3d(),
     pickPoint
   )
   if (!found) {
@@ -330,7 +332,7 @@ function collectBlockCenterMarks(
   }
 
   const inverse = found.transform.clone().invert()
-  const localPick = new AcGePoint2d(pickPoint).applyMatrix4(inverse)
+  const localPick = new GeometryPoint2d(pickPoint).applyMatrix4(inverse)
   return collectCenterMarksFromEntity(found.entity, localPick).map(mark =>
     transformMark(mark, found.transform)
   )
@@ -344,7 +346,7 @@ function collectBlockCenterMarks(
  */
 export function collectCenterMarksFromEntity(
   entity: AcDbEntity,
-  pickPoint: AcGePoint2dLike,
+  pickPoint: GeometryPoint2dLike,
   gsMark?: AcDbObjectId
 ): AcEdOsnapCenterMark[] {
   if (entity instanceof AcDbBlockReference) {
@@ -400,8 +402,8 @@ export function mergeAcquiredCenterMarks(
 }
 
 export function centerMarksCoincide(
-  mark: AcGePoint2dLike,
-  snap: AcGePoint2dLike,
+  mark: GeometryPoint2dLike,
+  snap: GeometryPoint2dLike,
   tol = 1e-8
 ) {
   return hypot2(mark.x, mark.y, snap.x, snap.y) <= tol

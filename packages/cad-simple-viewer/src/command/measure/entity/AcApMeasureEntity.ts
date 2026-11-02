@@ -1,4 +1,4 @@
-import type { AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
+import type { AcDbDatabase, GeometryPoint2dLike } from '@mlightcad/data-model'
 import { type AcTrHtmlElement, AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
@@ -302,4 +302,4 @@ export abstract class AcApMeasureEntity
   }
 }
 
-export type { AcGePoint2dLike }
+export type { GeometryPoint2dLike }

@@ -2,7 +2,7 @@ import { AcCmColor } from '@mlightcad/common'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase, AcDbLinetypeTableRecord } from '../src/database'
-import { AcGeVector3d } from '@mlightcad/geometry-engine'
+import { GeometryVector3d } from '@mlightcad/geometry-engine'
 
 import { AcDbMLine, AcDbMLineJustification } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -709,13 +709,13 @@ describe('AcDbMLine', () => {
 
     const mline = createBasicMline(style)
 
-    mline.subMoveGripPointsAt([1], new AcGeVector3d(0, 5, 0))
+    mline.subMoveGripPointsAt([1], new GeometryVector3d(0, 5, 0))
 
     expect(mline.startPosition).toMatchObject({ x: 0, y: 0 })
     expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5 })
     expect(mline.segments[1].position).toMatchObject({ x: 20, y: 0 })
 
-    mline.subMoveGripPointsAt([0], new AcGeVector3d(2, 0, 0))
+    mline.subMoveGripPointsAt([0], new GeometryVector3d(2, 0, 0))
 
     expect(mline.startPosition).toMatchObject({ x: 2, y: 0 })
     expect(mline.segments[0].position).toMatchObject({ x: 10, y: 5 })

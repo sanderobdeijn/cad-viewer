@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrEntity } from '../src/object/AcTrEntity'
@@ -41,7 +41,7 @@ function getVisibleWorldExtents(camera: THREE.OrthographicCamera) {
   }
 }
 
-function getVisibleWorldExtentsFromBox2d(box: AcGeBox2d) {
+function getVisibleWorldExtentsFromBox2d(box: GeometryBox2d) {
   return {
     minX: box.min.x,
     minY: box.min.y,
@@ -68,9 +68,9 @@ describe('AcTrEntityPreview', () => {
 
   it('fitExportCamera matches export framing rules', () => {
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000)
-    const bounds = new AcGeBox2d(
-      new AcGePoint2d(10, 20),
-      new AcGePoint2d(110, 70)
+    const bounds = new GeometryBox2d(
+      new GeometryPoint2d(10, 20),
+      new GeometryPoint2d(110, 70)
     )
 
     AcTrEntityPreview.fitExportCamera(camera, bounds, 800, 400)

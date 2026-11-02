@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -51,7 +51,7 @@ const TOLERANCE_SLOT_COUNT = 6
  * @example
  * ```typescript
  * const fcf = new AcDbFcf();
- * fcf.location = new AcGePoint2d(10, 20);
+ * fcf.location = new GeometryPoint2d(10, 20);
  * fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|';
  * fcf.dimensionStyle = 'Standard';
  * ```
@@ -72,26 +72,26 @@ export class AcDbFcf extends AcDbEntity {
    * left (e.g. leader on the right), this insertion point coincides with the
    * right-edge center in WCS.
    */
-  private _location: AcGePoint2d
+  private _location: GeometryPoint2d
   /** The encoded tolerance text string (symbol and format codes). */
   private _text: string
   /** The dimension style name applied to this feature control frame. */
   private _dimensionStyle: string
   /** The plane normal vector in WCS coordinates. */
-  private _normal: AcGeVector3d
+  private _normal: GeometryVector3d
   /** The X-axis direction vector for the feature control frame in WCS coordinates. */
-  private _direction: AcGeVector3d
+  private _direction: GeometryVector3d
 
   /**
    * Creates a new feature control frame entity at the origin with default orientation.
    */
   constructor() {
     super()
-    this._location = new AcGePoint2d()
+    this._location = new GeometryPoint2d()
     this._text = ''
     this._dimensionStyle = ''
-    this._normal = new AcGeVector3d(0, 0, 1)
-    this._direction = new AcGeVector3d(1, 0, 0)
+    this._normal = new GeometryVector3d(0, 0, 1)
+    this._direction = new GeometryVector3d(1, 0, 0)
   }
 
   /**
@@ -99,7 +99,7 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::location()` in ObjectARX.
    */
-  get location(): AcGePoint2d {
+  get location(): GeometryPoint2d {
     return this._location
   }
 
@@ -108,7 +108,7 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::setLocation()` in ObjectARX.
    */
-  set location(value: AcGePoint2dLike) {
+  set location(value: GeometryPoint2dLike) {
     this._location.set(value.x, value.y)
   }
 
@@ -149,14 +149,14 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::normal()` in ObjectARX.
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
 
   /**
    * Sets the plane normal vector in WCS coordinates.
    */
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.set(value.x, value.y, value.z ?? 0)
     if (this._normal.lengthSq() > 0) {
       this._normal.normalize()
@@ -168,14 +168,14 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::direction()` in ObjectARX.
    */
-  get direction(): AcGeVector3d {
+  get direction(): GeometryVector3d {
     return this._direction
   }
 
   /**
    * Sets the X-axis direction vector in WCS coordinates.
    */
-  set direction(value: AcGeVector3dLike) {
+  set direction(value: GeometryVector3dLike) {
     this._direction.set(value.x, value.y, value.z ?? 0)
     if (this._direction.lengthSq() > 0) {
       this._direction.normalize()
@@ -187,7 +187,10 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::setOrientation()` in ObjectARX.
    */
-  setOrientation(normal: AcGeVector3dLike, direction: AcGeVector3dLike) {
+  setOrientation(
+    normal: GeometryVector3dLike,
+    direction: GeometryVector3dLike
+  ) {
     this.normal = normal
     this.direction = direction
     return this
@@ -198,7 +201,7 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::getBoundingPoints()` in ObjectARX.
    */
-  getBoundingPoints(): AcGePoint2d[] {
+  getBoundingPoints(): GeometryPoint2d[] {
     return this.getBoundingPolyline().slice(0, 4)
   }
 
@@ -207,23 +210,23 @@ export class AcDbFcf extends AcDbEntity {
    *
    * Mirrors `AcDbFcf::getBoundingPolyline()` in ObjectARX.
    */
-  getBoundingPolyline(): AcGePoint2d[] {
+  getBoundingPolyline(): GeometryPoint2d[] {
     const { width, rowHeight, rowCount } = this.resolveFrameLayout()
     const frameTop = rowHeight / 2
     const frameBottom = frameTop - rowHeight * rowCount
     const corners = [
-      new AcGePoint2d(0, frameTop),
-      new AcGePoint2d(width, frameTop),
-      new AcGePoint2d(width, frameBottom),
-      new AcGePoint2d(0, frameBottom),
-      new AcGePoint2d(0, frameTop)
+      new GeometryPoint2d(0, frameTop),
+      new GeometryPoint2d(width, frameTop),
+      new GeometryPoint2d(width, frameBottom),
+      new GeometryPoint2d(0, frameBottom),
+      new GeometryPoint2d(0, frameTop)
     ]
 
     return corners.map(corner => this.toFrameWcs(corner.x, corner.y))
   }
 
-  get geometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  get geometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     for (const point of this.getBoundingPoints()) {
       box.expandByPoint(point)
     }
@@ -238,23 +241,23 @@ export class AcDbFcf extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._location)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Insertion) {
       snapPoints.push(this._location)
     }
   }
 
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const basis = this.resolveLocalBasis()
     const origin = this._location.clone()
     const xAxisPoint = origin.clone().add(basis.xAxis)
@@ -264,18 +267,18 @@ export class AcDbFcf extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0
     )
 
-    let normal = new AcGeVector3d().crossVectors(xAxis, yAxis)
+    let normal = new GeometryVector3d().crossVectors(xAxis, yAxis)
     if (normal.lengthSq() === 0) {
       normal = this._normal.clone().transformDirection(matrix)
     } else {
@@ -450,7 +453,7 @@ export class AcDbFcf extends AcDbEntity {
     return renderer.group(entities)
   }
 
-  private collectFrameLineSegments(): [AcGePoint2d, AcGePoint2d][] {
+  private collectFrameLineSegments(): [GeometryPoint2d, GeometryPoint2d][] {
     const rows = this.parseToleranceFrame(this._text)
     const layout = this.resolveFrameLayout(rows)
     const { width, rowHeight, rowCount, columnDivisions } = layout
@@ -460,8 +463,8 @@ export class AcDbFcf extends AcDbEntity {
 
     const frameTop = rowHeight / 2
     const frameBottom = frameTop - rowHeight * rowCount
-    const segments: [AcGePoint2d, AcGePoint2d][] = []
-    const pushSegment = (start: AcGePoint2d, end: AcGePoint2d) => {
+    const segments: [GeometryPoint2d, GeometryPoint2d][] = []
+    const pushSegment = (start: GeometryPoint2d, end: GeometryPoint2d) => {
       segments.push([start, end])
     }
 
@@ -491,9 +494,9 @@ export class AcDbFcf extends AcDbEntity {
     return segments
   }
 
-  private toFrameWcs(localX: number, localY: number): AcGePoint2d {
+  private toFrameWcs(localX: number, localY: number): GeometryPoint2d {
     const basis = this.resolveLocalBasis()
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       this._location.x + basis.xAxis.x * localX + basis.yAxis.x * localY,
       this._location.y + basis.xAxis.y * localX + basis.yAxis.y * localY
     )
@@ -649,9 +652,9 @@ export class AcDbFcf extends AcDbEntity {
   }
 
   private resolveLocalBasis(): {
-    xAxis: AcGeVector3d
-    yAxis: AcGeVector3d
-    zAxis: AcGeVector3d
+    xAxis: GeometryVector3d
+    yAxis: GeometryVector3d
+    zAxis: GeometryVector3d
   } {
     const zAxis = this._normal.clone()
     if (zAxis.lengthSq() === 0) {
@@ -667,13 +670,13 @@ export class AcDbFcf extends AcDbEntity {
       xAxis.normalize()
     }
 
-    let yAxis = new AcGeVector3d().crossVectors(zAxis, xAxis)
+    let yAxis = new GeometryVector3d().crossVectors(zAxis, xAxis)
     if (yAxis.lengthSq() === 0) {
-      xAxis = AcGeVector3d.X_AXIS.clone()
-      yAxis = new AcGeVector3d().crossVectors(zAxis, xAxis)
+      xAxis = GeometryVector3d.X_AXIS.clone()
+      yAxis = new GeometryVector3d().crossVectors(zAxis, xAxis)
     }
     yAxis.normalize()
-    xAxis = new AcGeVector3d().crossVectors(yAxis, zAxis).normalize()
+    xAxis = new GeometryVector3d().crossVectors(yAxis, zAxis).normalize()
 
     return { xAxis, yAxis, zAxis }
   }

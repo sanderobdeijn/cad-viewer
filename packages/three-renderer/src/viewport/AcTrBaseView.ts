@@ -1,9 +1,9 @@
 import {
   AcCmEventManager,
-  AcGeBox2d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2d
+  GeometryBox2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2d
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -93,7 +93,7 @@ export class AcTrBaseView {
       this._height
     )
   }
-  set center(value: AcGePoint2d) {
+  set center(value: GeometryPoint2d) {
     const position = this._camera.position
     const dx = value.x - position.x
     const dy = value.y - position.y
@@ -112,7 +112,7 @@ export class AcTrBaseView {
    * @param point Input point to convert
    * @returns Return point coordinate in the world coordinate system
    */
-  screenToWorld(point: AcGePoint2dLike): AcGePoint2d {
+  screenToWorld(point: GeometryPoint2dLike): GeometryPoint2d {
     return this._camera.screenToWorld(point, this._width, this._height)
   }
 
@@ -122,7 +122,7 @@ export class AcTrBaseView {
    * @param point Input point to convert
    * @returns Return point coordinate in the screen coordinate system
    */
-  worldToScreen(point: AcGePoint2dLike): AcGePoint2d {
+  worldToScreen(point: GeometryPoint2dLike): GeometryPoint2d {
     return this._camera.worldToScreen(point, this._width, this._height)
   }
 
@@ -132,7 +132,7 @@ export class AcTrBaseView {
    * @param margin Input the margin in pixel unit.
    * @returns Return one bounding box
    */
-  pointToBox(point: AcGePoint2dLike, margin: number) {
+  pointToBox(point: GeometryPoint2dLike, margin: number) {
     const cwcsCoord = this.worldToScreen(point)
     const p1 = this.screenToWorld({
       x: cwcsCoord.x + margin,
@@ -142,7 +142,7 @@ export class AcTrBaseView {
       x: cwcsCoord.x - margin,
       y: cwcsCoord.y - margin
     })
-    return new AcGeBox2d().setFromPoints([p1, p2])
+    return new GeometryBox2d().setFromPoints([p1, p2])
   }
 
   /**
@@ -152,7 +152,7 @@ export class AcTrBaseView {
    * @param threshold Input line and point threshold to check for intersection with the ray.
    * @returns Return the raycaster associated with this view.
    */
-  resetRaycaster(point: AcGePoint2dLike, threshold: number) {
+  resetRaycaster(point: GeometryPoint2dLike, threshold: number) {
     const ndcCoord = this._camera.wcs2Ndc(point, this._width, this._height)
     this._raycaster.setFromCamera(
       new THREE.Vector2(ndcCoord.x, ndcCoord.y),
@@ -190,7 +190,11 @@ export class AcTrBaseView {
    *
    * Does not update OrbitControls target so interactive pan/zoom stay intact.
    */
-  applyExportCamera(box: AcGeBox2d, pixelWidth: number, pixelHeight: number) {
+  applyExportCamera(
+    box: GeometryBox2d,
+    pixelWidth: number,
+    pixelHeight: number
+  ) {
     AcTrEntityPreview.fitExportCamera(
       this._camera.internalCamera,
       box,
@@ -199,11 +203,11 @@ export class AcTrBaseView {
     )
   }
 
-  zoomTo(box: AcGeBox2d, margin: number = 1.1) {
-    const size = new AcGeVector2d()
+  zoomTo(box: GeometryBox2d, margin: number = 1.1) {
+    const size = new GeometryVector2d()
     box.getSize(size)
 
-    const center = new AcGeVector2d()
+    const center = new GeometryVector2d()
     box.getCenter(center)
 
     const fitWidth = Math.max(Math.abs(size.x) * margin, Number.EPSILON)
@@ -225,7 +229,7 @@ export class AcTrBaseView {
    * @param scale - The optional target zoom scale to apply after the transition.
    * If not specified, the scale will not change.
    */
-  flyTo(point: AcGePoint2dLike, scale?: number) {
+  flyTo(point: GeometryPoint2dLike, scale?: number) {
     const threeCenter = new THREE.Vector3(point.x, point.y, 0)
     this._camera.position.set(point.x, point.y, this._camera.position.z)
 

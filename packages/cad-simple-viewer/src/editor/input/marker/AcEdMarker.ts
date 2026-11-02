@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Supported marker shapes.
@@ -283,7 +283,7 @@ export class AcEdMarker {
    *
    * @param pos - Position in screen coordinate in pixels
    */
-  public setPosition(pos: AcGePoint2dLike) {
+  public setPosition(pos: GeometryPoint2dLike) {
     this._el.style.left = `${pos.x}px`
     this._el.style.top = `${pos.y}px`
   }

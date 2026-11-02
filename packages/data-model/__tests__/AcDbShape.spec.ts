@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -39,7 +39,7 @@ describe('AcDbShape', () => {
     expect(shape.styleName).toBe('')
 
     shape.name = 'ARROW'
-    shape.position = new AcGePoint2d(100, 200)
+    shape.position = new GeometryPoint2d(100, 200)
     shape.size = 2.5
     shape.rotation = Math.PI / 4
     shape.widthFactor = 1.5
@@ -83,11 +83,11 @@ describe('AcDbShape', () => {
 
     expect(shape.subGetGripPoints()).toEqual([shape.position])
 
-    const snapPoints: AcGePoint2d[] = []
+    const snapPoints: GeometryPoint2d[] = []
     shape.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(1)
@@ -102,7 +102,7 @@ describe('AcDbShape', () => {
     shape.widthFactor = 1
     shape.rotation = 0
 
-    shape.transformBy(new AcGeMatrix3d().makeTranslation(10, 0, 0))
+    shape.transformBy(new GeometryMatrix3d().makeTranslation(10, 0, 0))
 
     expect(shape.position).toMatchObject({ x: 11, y: 0 })
   })
@@ -122,7 +122,7 @@ describe('AcDbShape', () => {
     shape.database = db
     shape.name = '_GV_'
     shape.size = 0.01
-    shape.position = new AcGePoint2d(100, 200)
+    shape.position = new GeometryPoint2d(100, 200)
 
     const renderer = {
       shape: jest.fn(() => ({ objectId: 'S1' }))
@@ -145,7 +145,7 @@ describe('AcDbShape', () => {
     shape.shapeNumber = 33
     shape.size = 2.5
     shape.widthFactor = 1.5
-    shape.position = new AcGePoint2d(100, 200)
+    shape.position = new GeometryPoint2d(100, 200)
     shape.rotation = Math.PI / 4
     shape.oblique = Math.PI / 18
     shape.normal = { x: 0, y: 0, z: 1 }
@@ -185,7 +185,7 @@ describe('AcDbShape', () => {
     shape.database = db
     shape.name = '9'
     shape.size = 0.01
-    shape.position = new AcGePoint2d(1, 2)
+    shape.position = new GeometryPoint2d(1, 2)
 
     const renderer = {
       shape: jest.fn(() => ({ objectId: 'S1' }))

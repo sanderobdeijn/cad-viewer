@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
 
 /**
  * Interface that all of display objects need to implement.
@@ -55,7 +55,7 @@ export interface AcGiEntity {
    * Apply the matrix transform to the object and updates the object's position, rotation and scale.
    * @param matrix Input the matrix to apply
    */
-  applyMatrix(matrix: AcGeMatrix3d): void
+  applyMatrix(matrix: GeometryMatrix3d): void
 
   /**
    * Highlight this entity.

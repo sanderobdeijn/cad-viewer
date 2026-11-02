@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 
 import { ACTIVE_VPORT_NAME } from '../misc/AcDbConstants'
 import { AcDbDatabase } from './AcDbDatabase'
@@ -68,8 +68,8 @@ export class AcDbViewportTable extends AcDbSymbolTable<AcDbViewportTableRecord> 
    */
   getActiveVportBox(
     canvasAspectRatio: number,
-    drawingExtents?: AcGeBox2d
-  ): AcGeBox2d | undefined {
+    drawingExtents?: GeometryBox2d
+  ): GeometryBox2d | undefined {
     const vport = this.getActiveVport()
     return vport?.resolveModelViewBox(canvasAspectRatio, drawingExtents)
   }

@@ -1,11 +1,11 @@
 import {
   acdbDrawTessellateOptions,
-  AcGeArea2d,
-  AcGeGeometryUtil,
-  AcGeIndexNode,
-  AcGePoint2d,
-  AcGePoint2dLike,
   AcGiSubEntityTraits,
+  GeometryArea2d,
+  GeometryIndexNode,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryUtil,
   log
 } from '@mlightcad/data-model'
 import { GeometryEpsilon, PolyBool } from '@velipso/polybool'
@@ -19,7 +19,7 @@ import { AcTrBufferGeometryUtil } from '../util/AcTrBufferGeometryUtil'
 import { AcTrEntity } from './AcTrEntity'
 import { resolveSelfIntersectingFillLoop } from './AcTrFillLoopRepair'
 
-function toVector2(points: AcGePoint2dLike[]): THREE.Vector2[] {
+function toVector2(points: GeometryPoint2dLike[]): THREE.Vector2[] {
   return points
     .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y))
     .map(point => new THREE.Vector2(point.x, point.y))
@@ -31,14 +31,14 @@ function toVector2(points: AcGePoint2dLike[]): THREE.Vector2[] {
  * so each region only receives its own holes.
  */
 function isHoleInsideOuter(
-  hole: AcGePoint2dLike[],
-  outer: AcGePoint2dLike[]
+  hole: GeometryPoint2dLike[],
+  outer: GeometryPoint2dLike[]
 ): boolean {
   for (const point of hole) {
     if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
       continue
     }
-    return AcGeGeometryUtil.isPointInPolygon(point, outer, true)
+    return GeometryUtil.isPointInPolygon(point, outer, true)
   }
   return false
 }
@@ -57,7 +57,7 @@ function hasFillVertices(geometry: THREE.BufferGeometry | undefined): boolean {
  * coordinates.
  */
 function computeLocalOriginFromLoops(
-  loops: AcGePoint2dLike[][]
+  loops: GeometryPoint2dLike[][]
 ): THREE.Vector3 | undefined {
   const box = new THREE.Box3()
   let hasPoint = false
@@ -78,12 +78,12 @@ function computeLocalOriginFromLoops(
 
 /** Returns fill loops translated so `origin` becomes the local (0,0). */
 function offsetLoops(
-  loops: AcGePoint2d[][],
+  loops: GeometryPoint2d[][],
   origin: THREE.Vector3
-): AcGePoint2d[][] {
+): GeometryPoint2d[][] {
   return loops.map(loop =>
     loop.map(
-      point => new AcGePoint2d(point.x - origin.x, point.y - origin.y)
+      point => new GeometryPoint2d(point.x - origin.x, point.y - origin.y)
     )
   )
 }
@@ -92,7 +92,7 @@ const _tmpPoint = /*@__PURE__*/ new THREE.Vector3()
 
 export class AcTrPolygon extends AcTrEntity {
   constructor(
-    area: AcGeArea2d,
+    area: GeometryArea2d,
     traits: AcGiSubEntityTraits,
     context: AcTrRenderContext
   ) {
@@ -104,7 +104,7 @@ export class AcTrPolygon extends AcTrEntity {
     const hierarchy = (
       Object.create(area, {
         tessellate: { value: () => pointBoundaries }
-      }) as AcGeArea2d
+      }) as GeometryArea2d
     ).buildHierarchy(tessellateOptions)
     const hasRenderableBoundaries = pointBoundaries.some(
       loop => loop.length >= 3
@@ -160,8 +160,8 @@ export class AcTrPolygon extends AcTrEntity {
   }
 
   private buildFillGeometry(
-    pointBoundaries: AcGePoint2d[][],
-    node: AcGeIndexNode,
+    pointBoundaries: GeometryPoint2d[][],
+    node: GeometryIndexNode,
     geometries: THREE.BufferGeometry[]
   ) {
     if (node.children.length === 0) {
@@ -260,11 +260,11 @@ export class AcTrPolygon extends AcTrEntity {
    * Build hole rings for an outer, unioning overlapping hole components (#744).
    */
   private buildMergedHolePaths(
-    pointBoundaries: AcGePoint2d[][],
+    pointBoundaries: GeometryPoint2d[][],
     holeIndices: number[]
-  ): AcGePoint2dLike[][] {
-    const paths: AcGePoint2dLike[][] = []
-    const vec2Array = (vecs: AcGePoint2d[]) =>
+  ): GeometryPoint2dLike[][] {
+    const paths: GeometryPoint2dLike[][] = []
+    const vec2Array = (vecs: GeometryPoint2d[]) =>
       vecs.map(p => p.toArray() as [number, number])
     const needMergeHolesArr = this.findIntersectHole(
       pointBoundaries,
@@ -286,9 +286,7 @@ export class AcTrPolygon extends AcTrEntity {
           // One epsilon / PolyBool for the whole component — mixing
           // GeometryEpsilon across segment build and combine is unreliable.
           epsilon = Math.min(
-            ...validHoles.map(index =>
-              pointBoundaries[index][0].relativeEps()
-            ),
+            ...validHoles.map(index => pointBoundaries[index][0].relativeEps()),
             1e-6
           )
           const polybool = new PolyBool(new GeometryEpsilon(epsilon))
@@ -310,7 +308,7 @@ export class AcTrPolygon extends AcTrEntity {
               if (ps.length === 0) {
                 return
               }
-              paths.push(ps.map(p => new AcGePoint2d(p[0], p[1])))
+              paths.push(ps.map(p => new GeometryPoint2d(p[0], p[1])))
             })
             mergedOk = true
           } else {
@@ -349,7 +347,7 @@ export class AcTrPolygon extends AcTrEntity {
    * union before triangulation).
    */
   private findIntersectHole(
-    pointBoundaries: AcGePoint2dLike[][],
+    pointBoundaries: GeometryPoint2dLike[][],
     indexArr: number[]
   ): number[][] {
     const len = indexArr.length
@@ -383,7 +381,7 @@ export class AcTrPolygon extends AcTrEntity {
       const points1 = pointBoundaries[indexArr[i]]
       for (let j = i + 1; j < len; j++) {
         const points2 = pointBoundaries[indexArr[j]]
-        if (AcGeGeometryUtil.isPolygonIntersect(points1, points2)) {
+        if (GeometryUtil.isPolygonIntersect(points1, points2)) {
           unite(i, j)
         }
       }

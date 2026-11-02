@@ -38,13 +38,13 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
  * When present, the jig will call it whenever the input changes.
  *
  * ## Example Use Cases
- * - Point acquisition (`T = AcGePoint2d`)
+ * - Point acquisition (`T = GeometryPoint2d`)
  * - Distance jig (`T = number`)
  * - Angle jig (`T = number`)
  *
  * Example:
  * ```ts
- * const jig = new AcEdPreviewJig<AcGePoint2d>(view)
+ * const jig = new AcEdPreviewJig<GeometryPoint2d>(view)
  * jig.setEntity(circleEntity)
  * await editor.getPoint("Specify center:", { jig })
  * ```

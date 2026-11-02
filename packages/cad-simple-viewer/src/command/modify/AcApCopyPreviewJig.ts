@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { scaleCopyDisplacement } from '../../editor/input/AcEdBatchPreview'
@@ -16,24 +16,24 @@ import { AcEdBaseView } from '../../editor/view/AcEdBaseView'
  * overlay per copy placement, each with its own translation matrix. The legacy
  * transient clone path publishes once and then updates transforms only.
  */
-export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoint2dLike> {
-  private _basePoint: AcGePoint2d
+export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<GeometryPoint2dLike> {
+  private _basePoint: GeometryPoint2d
   private _fitMode: boolean
 
   constructor(
     view: AcEdBaseView,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint2dLike,
+    basePoint: GeometryPoint2dLike,
     copyCount = 1,
     fitMode = false
   ) {
     super(view, sourceEntities, Math.max(0, copyCount))
-    this._basePoint = new AcGePoint2d(basePoint)
+    this._basePoint = new GeometryPoint2d(basePoint)
     this._fitMode = fitMode
   }
 
-  override update(point: AcGePoint2dLike) {
-    const displacement = new AcGePoint2d(
+  override update(point: GeometryPoint2dLike) {
+    const displacement = new GeometryPoint2d(
       point.x - this._basePoint.x,
       point.y - this._basePoint.y
     )
@@ -50,8 +50,8 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoi
     super.update(point)
   }
 
-  protected buildTransforms(point: AcGePoint2dLike) {
-    const displacement = new AcGePoint2d(
+  protected buildTransforms(point: GeometryPoint2dLike) {
+    const displacement = new GeometryPoint2d(
       point.x - this._basePoint.x,
       point.y - this._basePoint.y
     )
@@ -68,7 +68,7 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<AcGePoi
       )
       return {
         objectId: entry.entity.objectId,
-        matrix: new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
+        matrix: new GeometryMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
       }
     })
   }

@@ -2,7 +2,7 @@ import {
   acdbHostApplicationServices,
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint2dLike
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../../view'
@@ -206,7 +206,7 @@ export class AcEdFloatingMessage {
    *
    * @param pos Mouse position in browser coordinates
    */
-  showAt(pos: AcGePoint2dLike) {
+  showAt(pos: GeometryPoint2dLike) {
     if (this.disposed) return
     if (!this.shouldShowPrompt()) return
 
@@ -255,7 +255,7 @@ export class AcEdFloatingMessage {
    *
    * @param pos Mouse position in browser coordinates
    */
-  protected setPosition(pos: AcGePoint2dLike) {
+  protected setPosition(pos: GeometryPoint2dLike) {
     const hostRect = this.host.getBoundingClientRect()
     const rect = this.container.getBoundingClientRect()
 

@@ -17,9 +17,9 @@ jest.mock('../src/entity', () => ({
 
 import { AcCmColor } from '@mlightcad/common'
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 
 import { AcDbRenderingCache } from '../src/misc/AcDbRenderingCache'
@@ -335,8 +335,8 @@ describe('AcDbRenderingCache', () => {
 
   it('converts WCS attributes to block-local space instead of baking block transform', () => {
     const cache = new AcDbRenderingCache()
-    const blockTransform = new AcGeMatrix3d().makeTranslation(10, 20, 0)
-    const normal = new AcGeVector3d(0, 0, 1)
+    const blockTransform = new GeometryMatrix3d().makeTranslation(10, 20, 0)
+    const normal = new GeometryVector3d(0, 0, 1)
     const blockGeometry = { id: 'line' }
     const attribute = {
       id: 'attr',
@@ -377,12 +377,12 @@ describe('AcDbRenderingCache', () => {
 
     expect(blockGroup.applyMatrix).toHaveBeenCalledTimes(1)
     const appliedTransform = blockGroup.applyMatrix.mock
-      .calls[0][0] as AcGeMatrix3d
+      .calls[0][0] as GeometryMatrix3d
     expect(appliedTransform.elements).toEqual(blockTransform.elements)
     expect(attribute.applyMatrix).toHaveBeenCalledTimes(1)
 
-    const inverse = attribute.applyMatrix.mock.calls[0][0] as AcGeMatrix3d
-    const localPoint = new AcGePoint2d(15, 25).applyMatrix4(inverse)
+    const inverse = attribute.applyMatrix.mock.calls[0][0] as GeometryMatrix3d
+    const localPoint = new GeometryPoint2d(15, 25).applyMatrix4(inverse)
     expect(localPoint).toMatchObject({ x: 5, y: 5 })
     expect(blockGroup.addChild).toHaveBeenCalledWith(attribute)
   })

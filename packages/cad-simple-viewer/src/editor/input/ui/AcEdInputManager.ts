@@ -3,8 +3,8 @@ import {
   acdbHostApplicationServices,
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGeBox2d,
-  AcGePoint2dLike
+  GeometryBox2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApDocManager, AcApSettingManager } from '../../../app'
@@ -137,7 +137,7 @@ export class AcEdInputManager {
   protected view: AcEdBaseView
 
   /** Stores last confirmed point from getPoint() or getBox() */
-  private lastPoint: AcGePoint2dLike | null = null
+  private lastPoint: GeometryPoint2dLike | null = null
 
   /**
    * Plus marks at confirmed pick points for the active command.
@@ -146,7 +146,7 @@ export class AcEdInputManager {
    * starts so single-point commands do not flash a mark. Cleared on command end.
    */
   private _confirmedPointMarks: AcEdMarkerManager | null = null
-  private _confirmedPointPositions: AcGePoint2dLike[] = []
+  private _confirmedPointPositions: GeometryPoint2dLike[] = []
   private readonly _boundRepositionConfirmedPointMarks: () => void
 
   /** Command line UI component */
@@ -480,8 +480,8 @@ export class AcEdInputManager {
    * Pushes live length/angle/Δ values into the mobile session panel.
    */
   private pushMobileMetrics(
-    cursor: AcGePoint2dLike,
-    basePoint?: AcGePoint2dLike | null
+    cursor: GeometryPoint2dLike,
+    basePoint?: GeometryPoint2dLike | null
   ): void {
     if (!this._mobileChrome.isOpen) return
     const metrics: AcEdMobileSessionMetrics = acedComputeSessionMetrics(
@@ -1061,7 +1061,7 @@ export class AcEdInputManager {
    */
   private resolveDistanceBasePoint(
     options: AcEdPromptDistanceOptions
-  ): AcGePoint2dLike | undefined {
+  ): GeometryPoint2dLike | undefined {
     if (!options.useBasePoint) return undefined
     if (options.basePoint) {
       return { x: options.basePoint.x, y: options.basePoint.y }
@@ -1073,9 +1073,9 @@ export class AcEdInputManager {
    * Builds the live distance preview callback for a fixed base point.
    */
   private createDistanceDynamicValue(
-    basePoint: AcGePoint2dLike
+    basePoint: GeometryPoint2dLike
   ): AcEdFloatingInputDynamicValueCallback<number> {
-    return (pos: AcGePoint2dLike) => {
+    return (pos: GeometryPoint2dLike) => {
       const dx = pos.x - basePoint.x
       const dy = pos.y - basePoint.y
       const dist = Math.sqrt(dx * dx + dy * dy)
@@ -1097,10 +1097,10 @@ export class AcEdInputManager {
     options: AcEdPromptDistanceOptions,
     handler: AcEdDistanceHandler
   ): Promise<number> {
-    let firstPoint: AcGePoint2dLike | undefined
+    let firstPoint: GeometryPoint2dLike | undefined
     let floatingInput: AcEdFloatingInput<number> | undefined
 
-    const getDynamicValue = (pos: AcGePoint2dLike) => {
+    const getDynamicValue = (pos: GeometryPoint2dLike) => {
       if (!firstPoint) {
         return { value: 0, raw: { x: '' } }
       }
@@ -1206,7 +1206,7 @@ export class AcEdInputManager {
       )
     }
 
-    const getDynamicValue = (pos: AcGePoint2dLike) => {
+    const getDynamicValue = (pos: GeometryPoint2dLike) => {
       const dx = pos.x - basePoint.x
       const dy = pos.y - basePoint.y
       const rawAngleRad = Math.atan2(dy, dx)
@@ -1459,8 +1459,8 @@ export class AcEdInputManager {
           })
 
           const selected = new Set<string>()
-          let startWcs: AcGePoint2dLike | null = null
-          let startCanvas: AcGePoint2dLike | null = null
+          let startWcs: GeometryPoint2dLike | null = null
+          let startCanvas: GeometryPoint2dLike | null = null
           let previewEl: HTMLDivElement | null = null
           let lastDragEvent: MouseEvent | null = null
           let disposeGesture: (() => void) | null = null
@@ -1592,8 +1592,8 @@ export class AcEdInputManager {
             this.view.viewportToCanvas({ x: clientX, y: clientY })
 
           const applySelectionAt = (
-            endCanvas: AcGePoint2dLike,
-            endWcs: AcGePoint2dLike,
+            endCanvas: GeometryPoint2dLike,
+            endWcs: GeometryPoint2dLike,
             action: 'add' | 'replace' | 'remove',
             isClick: boolean
           ) => {
@@ -1605,7 +1605,7 @@ export class AcEdInputManager {
                 this.view.selectionSet.clear()
               }
             } else if (startWcs && startCanvas) {
-              const box = new AcGeBox2d()
+              const box = new GeometryBox2d()
                 .expandByPoint(startWcs)
                 .expandByPoint(endWcs)
               const mode = this.view.getSelectionMode(startCanvas, endCanvas)
@@ -1775,7 +1775,7 @@ export class AcEdInputManager {
   async getEntity(
     options: AcEdPromptEntityOptions
   ): Promise<AcEdPromptEntityResult> {
-    let pickedPoint: AcGePoint2dLike | undefined
+    let pickedPoint: GeometryPoint2dLike | undefined
     return this.executePrompt(
       () =>
         new Promise<string | null>((resolve, reject) => {
@@ -1979,7 +1979,7 @@ export class AcEdInputManager {
       previewEl.remove()
     }
 
-    const drawPreview = (pos: AcGePoint2dLike) => {
+    const drawPreview = (pos: GeometryPoint2dLike) => {
       const cwcsP2 = this.view.worldToScreen(pos)
       const left = Math.min(cwcsP2.x, cwcsP1.x)
       const top = Math.min(cwcsP2.y, cwcsP1.y)
@@ -2004,7 +2004,7 @@ export class AcEdInputManager {
     options2.disableOSnap = options.disableOSnap
     const p2 = await this.getPointInternal(options2, cleanup, drawPreview)
 
-    const box = new AcGeBox2d().expandByPoint(p1).expandByPoint(p2)
+    const box = new GeometryBox2d().expandByPoint(p1).expandByPoint(p2)
     return new AcEdPromptBoxResult(AcEdPromptStatus.OK, box)
   }
 
@@ -2031,8 +2031,8 @@ export class AcEdInputManager {
         message
       })
 
-      let startWcs: AcGePoint2dLike | null = null
-      let startCanvas: AcGePoint2dLike | null = null
+      let startWcs: GeometryPoint2dLike | null = null
+      let startCanvas: GeometryPoint2dLike | null = null
       let previewEl: HTMLDivElement | null = null
       let settled = false
       let disposeGesture: (() => void) | null = null
@@ -2092,7 +2092,7 @@ export class AcEdInputManager {
         const endCanvas = clientToCanvas(clientX, clientY)
         if (this.view.isSelectionClick(startCanvas, endCanvas)) return false
         const endWcs = this.view.screenToWorld(endCanvas)
-        const box = new AcGeBox2d()
+        const box = new GeometryBox2d()
           .expandByPoint(startWcs)
           .expandByPoint(endWcs)
         cleanup()
@@ -2280,7 +2280,7 @@ export class AcEdInputManager {
     // the next one (avoids a flash when the command ends after a single pick).
     this.showConfirmedPointMarksIfAny()
 
-    const getDynamicValue = (pos: AcGePoint2dLike) => {
+    const getDynamicValue = (pos: GeometryPoint2dLike) => {
       return {
         value: { x: pos.x, y: pos.y },
         raw: {
@@ -2291,7 +2291,7 @@ export class AcEdInputManager {
     }
 
     const handler = new AcEdPointHandler(options)
-    const value = await this.makeFloatingInputPromise<AcGePoint2dLike>({
+    const value = await this.makeFloatingInputPromise<GeometryPoint2dLike>({
       inputCount: 2,
       promptOptions: options,
       disableOSnap: options.disableOSnap,
@@ -2324,7 +2324,7 @@ export class AcEdInputManager {
    */
   private recordConfirmedPointMarkIfNeeded(
     options: AcEdPromptPointOptions,
-    point: AcGePoint2dLike
+    point: GeometryPoint2dLike
   ): void {
     if (!this.shouldShowConfirmedPointMark(options)) return
     this._confirmedPointPositions.push({ x: point.x, y: point.y })
@@ -2369,7 +2369,7 @@ export class AcEdInputManager {
    */
   private tryGetScriptedPoint(
     options: AcEdPromptPointOptions
-  ): AcGePoint2dLike | undefined {
+  ): GeometryPoint2dLike | undefined {
     const token = this.dequeueScriptInput()
     if (token === undefined) return undefined
 
@@ -2614,7 +2614,7 @@ export class AcEdInputManager {
 
     const basePoint =
       hasBasePoint && options.basePoint
-        ? (options.basePoint as unknown as AcGePoint2dLike)
+        ? (options.basePoint as unknown as GeometryPoint2dLike)
         : undefined
     const useBasePoint = hasUseBasePoint ? options.useBasePoint : false
     const showBaseLineOnly = hasUseDashedLine ? !options.useDashedLine : false
@@ -2681,7 +2681,7 @@ export class AcEdInputManager {
         true
       )
 
-      let basePoint: AcGePoint2dLike | undefined = undefined
+      let basePoint: GeometryPoint2dLike | undefined = undefined
       if (promptDefaults.useBasePoint && promptDefaults.basePoint) {
         basePoint = promptDefaults.basePoint
       }
@@ -2732,7 +2732,7 @@ export class AcEdInputManager {
         allowPickCommit,
         validate: validate,
         getDynamicValue,
-        drawPreview: (pos: AcGePoint2dLike) => {
+        drawPreview: (pos: GeometryPoint2dLike) => {
           if (promptDefaults.jig) {
             const defaults = options.getDynamicValue(pos)
             promptDefaults.jig.update(defaults.value)
@@ -2740,7 +2740,7 @@ export class AcEdInputManager {
           }
           options.drawPreview?.(pos)
         },
-        onCommit: (val: T, pos?: AcGePoint2dLike) => {
+        onCommit: (val: T, pos?: GeometryPoint2dLike) => {
           let result = false
           if (!options.onCommit || options.onCommit(val, pos)) {
             resolver(val)
@@ -2883,7 +2883,7 @@ export class AcEdInputManager {
         switch (result.kind) {
           case 'value':
             if (options.handler instanceof AcEdPointHandler) {
-              const point = result.value as unknown as AcGePoint2dLike
+              const point = result.value as unknown as GeometryPoint2dLike
               if (
                 point &&
                 Number.isFinite(point.x) &&

@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDxfCode } from '../src/base/AcDbDxfCode'
@@ -48,7 +48,10 @@ describe('AcDbDynBlockReference', () => {
     const anon = new AcDbBlockTableRecord()
     anon.name = '*U60'
     anon.objectId = 'A4240'
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(2, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(2, 0)
+    )
     anon.appendEntity(line)
     db.tables.blockTable.add(anon)
 

@@ -1,18 +1,18 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
 import {
-  AcGeArea2d,
-  AcGeCircArc2d,
-  AcGeEllipseArc2d,
-  acgeGetOcsReferenceVector,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePolyline2d,
-  acgeTransformOcsPointToWcs,
-  acgeTransformWcsPointToOcs,
-  AcGeVector2d,
-  AcGeVector3d,
-  AcGeVector3dLike,
+  GeometryArea2d,
+  GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  geometryGetOcsReferenceVector,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  geometryTransformOcsPointToWcs,
+  geometryTransformWcsPointToOcs,
+  GeometryVector2d,
+  GeometryVector3d,
+  GeometryVector3dLike,
   TAU
 } from '@mlightcad/geometry-engine'
 import {
@@ -117,7 +117,7 @@ export enum AcDbProxyGraphicType {
 }
 
 /** World Z axis used as the default entity normal. */
-const Z_AXIS = AcGeVector3d.Z_AXIS
+const Z_AXIS = GeometryVector3d.Z_AXIS
 
 /** Maximum raw lineweight value before sign extension is applied. */
 const MAX_VALID_LINEWEIGHT = 0x211
@@ -175,32 +175,32 @@ function decodeProxyGraphicRawColor(raw: number): {
 }
 
 /**
- * Converts a {@link AcGeVector3dLike} object to an {@link AcGeVector3d}.
+ * Converts a {@link GeometryVector3dLike} object to an {@link GeometryVector3d}.
  *
  * @param v - Input vector-like value.
  * @returns A concrete 3D vector with `z` defaulting to `0` when omitted.
  */
-function vectorFromLike(v: AcGeVector3dLike) {
-  return new AcGeVector3d(v.x, v.y, v.z ?? 0)
+function vectorFromLike(v: GeometryVector3dLike) {
+  return new GeometryVector3d(v.x, v.y, v.z ?? 0)
 }
 
 /**
- * Converts a {@link AcGePoint2dLike} object to an {@link AcGePoint2d}.
+ * Converts a {@link GeometryPoint2dLike} object to an {@link GeometryPoint2d}.
  *
  * @param p - Input point-like value.
  * @returns A concrete 2D point.
  */
-function pointFromLike(p: AcGePoint2dLike) {
-  return new AcGePoint2d(p.x, p.y)
+function pointFromLike(p: GeometryPoint2dLike) {
+  return new GeometryPoint2d(p.x, p.y)
 }
 
 /**
- * Converts a numeric vertex tuple to a {@link AcGePoint2dLike} object.
+ * Converts a numeric vertex tuple to a {@link GeometryPoint2dLike} object.
  *
  * @param v - Vertex as `[x, y, z]`.
  * @returns A point-like object suitable for geometry helpers.
  */
-function vertexTuple(v: [number, number, number]): AcGePoint2dLike {
+function vertexTuple(v: [number, number, number]): GeometryPoint2dLike {
   return { x: v[0], y: v[1] }
 }
 
@@ -266,10 +266,10 @@ export class AcDbProxyGraphic {
   private readonly _linetypes: string[] = []
 
   /** Active transform stack applied to decoded points and vectors. */
-  private readonly _matrices: AcGeMatrix3d[] = []
+  private readonly _matrices: GeometryMatrix3d[] = []
 
   /** Most recently parsed extents corners, when an EXTENTS chunk was seen. */
-  private _extents?: AcGePoint2d[]
+  private _extents?: GeometryPoint2d[]
 
   /**
    * Creates a proxy-graphic parser over the given byte stream.
@@ -318,7 +318,7 @@ export class AcDbProxyGraphic {
    * @returns The minimum and maximum corners when an EXTENTS chunk is found,
    *   otherwise `undefined`.
    */
-  scanExtents(): [AcGePoint2d, AcGePoint2d] | undefined {
+  scanExtents(): [GeometryPoint2d, GeometryPoint2d] | undefined {
     const buffer = this._buffer
     let index = this._index
     while (index < buffer.length) {
@@ -552,9 +552,11 @@ export class AcDbProxyGraphic {
    * Applies the active matrix stack to a point.
    *
    * @param point - Source point in proxy-graphic coordinates.
-   * @returns The transformed {@link AcGePoint2d}.
+   * @returns The transformed {@link GeometryPoint2d}.
    */
-  private transformPoint(point: AcGePoint2dLike | [number, number, number]) {
+  private transformPoint(
+    point: GeometryPoint2dLike | [number, number, number]
+  ) {
     const like = Array.isArray(point) ? vertexTuple(point) : point
     const transformed = pointFromLike(like)
     if (this._matrices.length > 0) {
@@ -569,7 +571,9 @@ export class AcDbProxyGraphic {
    * @param vector - Source vector in proxy-graphic coordinates.
    * @returns The transformed unit vector.
    */
-  private transformVector(vector: AcGeVector3dLike | [number, number, number]) {
+  private transformVector(
+    vector: GeometryVector3dLike | [number, number, number]
+  ) {
     const like = Array.isArray(vector)
       ? { x: vector[0], y: vector[1], z: vector[2] }
       : vector
@@ -608,8 +612,8 @@ export class AcDbProxyGraphic {
     const min = bs.readVertex()
     const max = bs.readVertex()
     this._extents = [
-      new AcGePoint2d(min[0], min[1]),
-      new AcGePoint2d(max[0], max[1])
+      new GeometryPoint2d(min[0], min[1]),
+      new GeometryPoint2d(max[0], max[1])
     ]
   }
 
@@ -731,7 +735,7 @@ export class AcDbProxyGraphic {
    */
   private pushMatrix(data: Uint8Array) {
     const values = new Float64Array(data.buffer, data.byteOffset, 16)
-    const matrix = new AcGeMatrix3d().fromArray(Array.from(values))
+    const matrix = new GeometryMatrix3d().fromArray(Array.from(values))
     matrix.transpose()
     this._matrices.push(matrix)
   }
@@ -758,7 +762,7 @@ export class AcDbProxyGraphic {
     if (loadNormal) {
       count += 1
     }
-    const vertices: AcGePoint2d[] = []
+    const vertices: GeometryPoint2d[] = []
     let normal = Z_AXIS
     while (count > 0) {
       const vertex = bs.readVertex()
@@ -790,11 +794,11 @@ export class AcDbProxyGraphic {
     const normalVec = this.transformVector(bs.readVertex())
     let centerPoint = pointFromLike({ x: center[0], y: center[1] })
     if (!normalVec.equals(Z_AXIS)) {
-      centerPoint = acgeTransformWcsPointToOcs(centerPoint, normalVec)
+      centerPoint = geometryTransformWcsPointToOcs(centerPoint, normalVec)
     }
     centerPoint = this.transformPoint(centerPoint)
-    const arc = new AcGeCircArc2d(
-      acgeTransformOcsPointToWcs(centerPoint, normalVec),
+    const arc = new GeometryCircularArc2d(
+      geometryTransformOcsPointToWcs(centerPoint, normalVec),
       radius,
       0,
       TAU,
@@ -820,9 +824,15 @@ export class AcDbProxyGraphic {
     const p1 = this.transformPoint(bs.readVertex())
     const p2 = this.transformPoint(bs.readVertex())
     const p3 = this.transformPoint(bs.readVertex())
-    const circle = AcGeCircArc2d.computeCircumcircle(p1, p2, p3)
+    const circle = GeometryCircularArc2d.computeCircumcircle(p1, p2, p3)
     if (!circle) return
-    const arc = new AcGeCircArc2d(circle.center, circle.radius, 0, TAU, false)
+    const arc = new GeometryCircularArc2d(
+      circle.center,
+      circle.radius,
+      0,
+      TAU,
+      false
+    )
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
   }
@@ -858,10 +868,10 @@ export class AcDbProxyGraphic {
     const refVec =
       Number.isFinite(rawStart.lengthSq()) && rawStart.lengthSq() >= 1e-24
         ? rawStart.normalize()
-        : acgeGetOcsReferenceVector(normalVec)
+        : geometryGetOcsReferenceVector(normalVec)
     const clockwise = normalVec.z < 0
     const startAngle = Math.atan2(refVec.y, refVec.x)
-    const arc = AcGeCircArc2d.fromMathAngles(
+    const arc = GeometryCircularArc2d.fromMathAngles(
       this.transformPoint(centerWcs),
       radius,
       startAngle,
@@ -888,7 +898,7 @@ export class AcDbProxyGraphic {
     const p1 = this.transformPoint(bs.readVertex())
     const p2 = this.transformPoint(bs.readVertex())
     const p3 = this.transformPoint(bs.readVertex())
-    const arc = AcGeCircArc2d.tryCreateByThreePoints(p1, p2, p3)
+    const arc = GeometryCircularArc2d.tryCreateByThreePoints(p1, p2, p3)
     if (!arc) return
     this.applyTraits(renderer)
     this.pushEntity(entities, renderer.circularArc(arc))
@@ -914,7 +924,7 @@ export class AcDbProxyGraphic {
     const startParam = bs.readFloat()
     const endParam = bs.readFloat()
     const majorAxisAngle = bs.readFloat()
-    const majorAxis = acgeTransformOcsPointToWcs(
+    const majorAxis = geometryTransformOcsPointToWcs(
       {
         x: Math.cos(majorAxisAngle) * majorAxisLength,
         y: Math.sin(majorAxisAngle) * majorAxisLength
@@ -922,7 +932,7 @@ export class AcDbProxyGraphic {
       extrusion
     )
     const clockwise = extrusion.z < 0
-    const ellipse = new AcGeEllipseArc2d(
+    const ellipse = new GeometryEllipseArc2d(
       center,
       majorAxisLength,
       minorAxisLength,
@@ -991,11 +1001,11 @@ export class AcDbProxyGraphic {
     const { vertices } = this.loadVertices(data, false)
     if (vertices.length < 2) return
     if (this._fill) {
-      const polyline = new AcGePolyline2d(
+      const polyline = new GeometryPolyline2d(
         vertices.map(vertex => ({ x: vertex.x, y: vertex.y })),
         true
       )
-      const area = new AcGeArea2d()
+      const area = new GeometryArea2d()
       area.add(polyline)
       const traits = renderer.subEntityTraits
       traits.drawOrder = -1
@@ -1051,7 +1061,7 @@ export class AcDbProxyGraphic {
     }
 
     const rawVertices = bs.readRawDouble(2) as [number, number]
-    const vertices: AcGePoint2d[] = [
+    const vertices: GeometryPoint2d[] = [
       this.transformPoint({
         x: rawVertices[0],
         y: rawVertices[1]
@@ -1089,12 +1099,12 @@ export class AcDbProxyGraphic {
   ) {
     const bs = new AcDbProxyGraphicByteStream(data)
     const totalVertexCount = bs.readLong()
-    const vertices: AcGePoint2d[] = []
+    const vertices: GeometryPoint2d[] = []
     for (let i = 0; i < totalVertexCount; i++) {
       vertices.push(this.transformPoint(bs.readVertex()))
     }
     const faceEntryCount = bs.readLong()
-    const lines: AcGePoint2d[] = []
+    const lines: GeometryPoint2d[] = []
     let readCount = 0
     while (readCount < faceEntryCount) {
       const edgeCount = Math.abs(bs.readSignedLong())
@@ -1205,11 +1215,11 @@ export class AcDbProxyGraphic {
     entities: AcGiEntity[],
     options: {
       /** Text insertion point in WCS coordinates. */
-      insert: AcGePoint2d
+      insert: GeometryPoint2d
       /** Text plane normal in WCS coordinates. */
-      normal: AcGeVector3d
+      normal: GeometryVector3d
       /** Text baseline direction in WCS coordinates. */
-      textDirection: AcGeVector3d
+      textDirection: GeometryVector3d
       /** Literal text content. */
       text: string
       /** Text height in drawing units. */
@@ -1268,7 +1278,7 @@ export class AcDbProxyGraphic {
     const bs = new AcDbProxyGraphicByteStream(data)
     const start = this.transformPoint(bs.readVertex())
     const other = this.transformPoint(bs.readVertex())
-    const direction = new AcGeVector2d().subVectors(other, start)
+    const direction = new GeometryVector2d().subVectors(other, start)
     if (direction.lengthSq() === 0) return
     const far = 1e6
     const end = isRay

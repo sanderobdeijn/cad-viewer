@@ -1,7 +1,7 @@
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 import { AcDbCircle } from '../src/entity'
@@ -10,14 +10,14 @@ import { expectDetachedClone } from '../test-utils/cloneTestUtils'
 
 describe('AcDbCircle', () => {
   it('exposes static and DXF type names', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(), 1)
+    const circle = new AcDbCircle(new GeometryPoint2d(), 1)
 
     expect(AcDbCircle.typeName).toBe('Circle')
     expect(circle.dxfTypeName).toBe('CIRCLE')
   })
 
   it('initializes center radius normal and closed state', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 4)
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 4)
 
     expect(circle.center).toMatchObject({ x: 1, y: 2 })
     expect(circle.radius).toBe(4)
@@ -29,9 +29,9 @@ describe('AcDbCircle', () => {
   })
 
   it('supports center and radius setters', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 1)
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 1)
 
-    circle.center = new AcGePoint2d(-2, 3)
+    circle.center = new GeometryPoint2d(-2, 3)
     circle.radius = 7
 
     expect(circle.center).toMatchObject({ x: -2, y: 3 })
@@ -39,12 +39,12 @@ describe('AcDbCircle', () => {
   })
 
   it('updates geometricExtents when center and radius change', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 4)
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 4)
 
     expect(circle.geometricExtents.min).toMatchObject({ x: -3, y: -2 })
     expect(circle.geometricExtents.max).toMatchObject({ x: 5, y: 6 })
 
-    circle.center = new AcGePoint2d(10, 20)
+    circle.center = new GeometryPoint2d(10, 20)
     circle.radius = 2
 
     expect(circle.geometricExtents.min).toMatchObject({ x: 8, y: 18 })
@@ -52,7 +52,7 @@ describe('AcDbCircle', () => {
   })
 
   it('returns grip points with center and quadrant points', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 3)
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 3)
 
     const grips = circle.subGetGripPoints()
 
@@ -73,31 +73,31 @@ describe('AcDbCircle', () => {
   })
 
   it('translates the circle when moving grip index 0', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(2, 3), 5)
+    const circle = new AcDbCircle(new GeometryPoint2d(2, 3), 5)
 
-    circle.subMoveGripPointsAt([0], new AcGeVector3d(1, -2, 3))
+    circle.subMoveGripPointsAt([0], new GeometryVector3d(1, -2, 3))
 
     expect(circle.center).toMatchObject({ x: 3, y: 1 })
     expect(circle.radius).toBe(5)
   })
 
   it('scales the circle when moving a quadrant grip', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 5)
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 5)
 
-    circle.subMoveGripPointsAt([1], new AcGeVector3d(3, 0, 0))
+    circle.subMoveGripPointsAt([1], new GeometryVector3d(3, 0, 0))
 
     expect(circle.center).toMatchObject({ x: 0, y: 0 })
     expect(circle.radius).toBeCloseTo(8, 8)
   })
 
   it('collects center and centroid osnap points', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(3, 4), 2)
+    const circle = new AcDbCircle(new GeometryPoint2d(3, 4), 2)
 
-    const centerPoints: AcGePoint2d[] = []
+    const centerPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       centerPoints
     )
     expect(centerPoints).toHaveLength(1)
@@ -106,11 +106,11 @@ describe('AcDbCircle', () => {
       y: circle.center.y
     })
 
-    const centroidPoints: AcGePoint2d[] = []
+    const centroidPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Centroid,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       centroidPoints
     )
     expect(centroidPoints).toHaveLength(1)
@@ -121,13 +121,13 @@ describe('AcDbCircle', () => {
   })
 
   it('collects quadrant osnap points', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 3)
-    const snapPoints: AcGePoint2d[] = []
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 3)
+    const snapPoints: GeometryPoint2d[] = []
 
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Quadrant,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       snapPoints
     )
 
@@ -143,23 +143,23 @@ describe('AcDbCircle', () => {
   })
 
   it('collects nearest and tangent osnap points and ignores unsupported mode', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 2)
-    const nearestPoints: AcGePoint2d[] = []
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 2)
+    const nearestPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(3, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(3, 1),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0].x).toBeCloseTo((2 * 3) / Math.sqrt(10), 8)
     expect(nearestPoints[0].y).toBeCloseTo(2 / Math.sqrt(10), 8)
 
-    const tangentPoints: AcGePoint2d[] = []
+    const tangentPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Tangent,
-      new AcGePoint2d(6, 0),
-      new AcGePoint2d(),
+      new GeometryPoint2d(6, 0),
+      new GeometryPoint2d(),
       tangentPoints
     )
     expect(tangentPoints).toHaveLength(2)
@@ -168,28 +168,28 @@ describe('AcDbCircle', () => {
       expect(Math.abs(point.y)).toBeCloseTo(2 * Math.sqrt(8 / 9), 8)
     }
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(6, 0),
-      new AcGePoint2d(),
+      new GeometryPoint2d(6, 0),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
     expect(perpendicularPoints[0]).toMatchObject({ x: 2, y: 0 })
 
-    const unsupportedPoints: AcGePoint2d[] = []
+    const unsupportedPoints: GeometryPoint2d[] = []
     circle.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
   })
 
   it('exposes geometry properties with editable accessors and derived values', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 4)
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 4)
     const geometryGroup = circle.properties.groups.find(
       group => group.groupName === 'geometry'
     )
@@ -215,10 +215,10 @@ describe('AcDbCircle', () => {
   })
 
   it('transforms by matrix and returns itself', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(1, 2), 2)
+    const circle = new AcDbCircle(new GeometryPoint2d(1, 2), 2)
 
     const result = circle.transformBy(
-      new AcGeMatrix3d().makeTranslation(4, -2, 5)
+      new GeometryMatrix3d().makeTranslation(4, -2, 5)
     )
 
     expect(result).toBe(circle)
@@ -227,7 +227,7 @@ describe('AcDbCircle', () => {
   })
 
   it('delegates drawing to renderer.circularArc', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 2)
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 2)
     const rendered = { id: 'entity' }
     const renderer = {
       circularArc: jest.fn(() => rendered)
@@ -242,16 +242,16 @@ describe('AcDbCircle', () => {
   })
 
   it('creates a detached clone with a new objectId', () => {
-    expectDetachedClone(() => new AcDbCircle(new AcGePoint2d(), 1))
+    expectDetachedClone(() => new AcDbCircle(new GeometryPoint2d(), 1))
   })
 
   it('increases radius when offsetting outward', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 5)
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 5)
     expect((circle.getOffsetCurves(3)[0] as AcDbCircle).radius).toBeCloseTo(8)
   })
 
   it('computes area as πr²', () => {
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 5)
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 5)
     expect(circle.area).toBeCloseTo(Math.PI * 25, 8)
   })
 })

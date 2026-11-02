@@ -2,8 +2,8 @@ import {
   AcDbDatabase,
   AcDbEntity,
   AcDbObjectId,
-  AcGeMatrix3d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { createRotationMatrix } from '../util/AcApGeTransform'
@@ -54,7 +54,7 @@ export class AcApEntityService {
    * @param matrix - Transform to apply via {@link AcDbEntity.transformBy}.
    * @returns Number of entities successfully transformed.
    */
-  transformEntities(entities: AcDbEntity[], matrix: AcGeMatrix3d): number {
+  transformEntities(entities: AcDbEntity[], matrix: GeometryMatrix3d): number {
     let count = 0
     entities.forEach(entity => {
       const opened = this.db.openEntityForWrite(entity)
@@ -74,9 +74,9 @@ export class AcApEntityService {
    */
   translateEntities(
     entities: AcDbEntity[],
-    displacement: AcGePoint2dLike
+    displacement: GeometryPoint2dLike
   ): number {
-    const matrix = new AcGeMatrix3d().makeTranslation(
+    const matrix = new GeometryMatrix3d().makeTranslation(
       displacement.x,
       displacement.y,
       0
@@ -94,7 +94,7 @@ export class AcApEntityService {
    */
   rotateEntities(
     entities: AcDbEntity[],
-    basePoint: AcGePoint2dLike,
+    basePoint: GeometryPoint2dLike,
     angleRad: number
   ): number {
     const matrix = createRotationMatrix(basePoint, angleRad)
@@ -111,7 +111,7 @@ export class AcApEntityService {
    */
   cloneAndTransform(
     sourceEntities: AcDbEntity[],
-    matrix: AcGeMatrix3d,
+    matrix: GeometryMatrix3d,
     options: AcApCloneAndTransformOptions = {}
   ): AcDbEntity[] {
     const append = options.append ?? true

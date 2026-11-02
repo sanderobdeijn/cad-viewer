@@ -53,7 +53,7 @@ jest.mock('rbush', () => {
   }
 })
 
-import { AcCmColor, AcGeBox2d } from '@mlightcad/data-model'
+import { AcCmColor, GeometryBox2d } from '@mlightcad/data-model'
 import type { AcTrEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
@@ -199,7 +199,7 @@ describe('handleGroup WCS spatial index registration', () => {
     layout.addLayer(createLayerInfo('L2'))
     layout.addEntity(entity)
 
-    const queryBox = new AcGeBox2d()
+    const queryBox = new GeometryBox2d()
     queryBox.min.set(109, 204)
     queryBox.max.set(111, 206)
 

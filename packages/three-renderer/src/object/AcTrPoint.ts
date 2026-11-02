@@ -1,8 +1,7 @@
 import {
-  AcGePoint2dLike,
   AcGiPointStyle,
-  AcGiSubEntityTraits
-} from '@mlightcad/data-model'
+  AcGiSubEntityTraits,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrDrawMode } from '../draw/AcTrDrawMode'
@@ -19,10 +18,10 @@ export class AcTrPoint extends AcTrEntity {
    * The flag whether to use one point using THREE.Points
    */
   isShowPoint: boolean
-  private _point: AcGePoint2dLike
+  private _point: GeometryPoint2dLike
 
   constructor(
-    point: AcGePoint2dLike,
+    point: GeometryPoint2dLike,
     traits: AcGiSubEntityTraits,
     style: AcGiPointStyle,
     context: AcTrRenderContext
@@ -75,7 +74,7 @@ export class AcTrPoint extends AcTrEntity {
 
   private unionWorldBoundingBox(
     geometry: THREE.BufferGeometry,
-    worldOrigin: AcGePoint2dLike
+    worldOrigin: GeometryPoint2dLike
   ) {
     const boundingBox = AcTrBufferGeometryUtil.safeComputeBoundingBox(geometry)
     if (!boundingBox) {

@@ -1,7 +1,7 @@
 import {
-  AcGeBox2d,
-  AcGeBox3d,
-  AcGePoint2d
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryPoint2d
 } from '@mlightcad/data-model'
 
 import type { AcEdBaseView } from '../editor'
@@ -10,16 +10,16 @@ import type { AcEdBaseView } from '../editor'
  * Minimal database surface needed to fall back to header extents.
  */
 export type AcApDrawingExtentsDatabase = {
-  extents: AcGeBox3d
+  extents: GeometryBox3d
 }
 
 /**
  * Projects a 3D extents box to world XY bounds.
  */
-export function box3dToBox2d(extents: AcGeBox3d): AcGeBox2d {
-  return new AcGeBox2d(
-    new AcGePoint2d(extents.min.x, extents.min.y),
-    new AcGePoint2d(extents.max.x, extents.max.y)
+export function box3dToBox2d(extents: GeometryBox3d): GeometryBox2d {
+  return new GeometryBox2d(
+    new GeometryPoint2d(extents.min.x, extents.min.y),
+    new GeometryPoint2d(extents.max.x, extents.max.y)
   )
 }
 
@@ -41,7 +41,7 @@ export function box3dToBox2d(extents: AcGeBox3d): AcGeBox2d {
 export function resolveDrawingExtents(
   view: Pick<AcEdBaseView, 'getDrawingExtents'>,
   database?: AcApDrawingExtentsDatabase
-): AcGeBox2d | undefined {
+): GeometryBox2d | undefined {
   const fromScene = view.getDrawingExtents()
   if (fromScene && !fromScene.isEmpty()) {
     return fromScene

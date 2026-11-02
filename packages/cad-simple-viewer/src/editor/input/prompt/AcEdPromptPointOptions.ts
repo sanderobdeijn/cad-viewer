@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 
 import { AcEdPromptOptions } from './AcEdPromptOptions'
 
@@ -8,14 +8,14 @@ import { AcEdPromptOptions } from './AcEdPromptOptions'
  *
  * Supports specifying a base point, keywords, and how the message is displayed.
  */
-export class AcEdPromptPointOptions extends AcEdPromptOptions<AcGePoint2d> {
-  private _basePoint?: AcGePoint2d
+export class AcEdPromptPointOptions extends AcEdPromptOptions<GeometryPoint2d> {
+  private _basePoint?: GeometryPoint2d
   private _useBasePoint: boolean = false
   private _useDashedLine: boolean = false
   private _allowNone: boolean = false
   private _disableOSnap: boolean = false
   private _showConfirmedPointMark?: boolean
-  private _defaultValue?: AcGePoint2d
+  private _defaultValue?: GeometryPoint2d
   private _useDefaultValue: boolean = false
 
   /**
@@ -33,17 +33,17 @@ export class AcEdPromptPointOptions extends AcEdPromptOptions<AcGePoint2d> {
    * AutoCAD .NET `PromptPointOptions` does not expose this property; it is
    * provided here so commands can show and accept defaults such as `<0,0>`.
    */
-  get defaultValue(): AcGePoint2d | undefined {
+  get defaultValue(): GeometryPoint2d | undefined {
     return this._defaultValue
   }
-  set defaultValue(point: AcGePoint2d | undefined) {
+  set defaultValue(point: GeometryPoint2d | undefined) {
     if (!this.isReadOnly) {
       if (point == null) {
         this._defaultValue = point
       } else {
         this._defaultValue = this._defaultValue
           ? this._defaultValue.copy(point)
-          : new AcGePoint2d(point)
+          : new GeometryPoint2d(point)
       }
     }
   }
@@ -72,17 +72,17 @@ export class AcEdPromptPointOptions extends AcEdPromptOptions<AcGePoint2d> {
    * In AutoCAD .NET, this is `PromptPointOptions.BasePoint`.
    * When `useBasePoint` is true, a rubber-band line will be drawn from the base point to the cursor.
    */
-  get basePoint(): AcGePoint2d | undefined {
+  get basePoint(): GeometryPoint2d | undefined {
     return this._basePoint
   }
-  set basePoint(point: AcGePoint2d | undefined) {
+  set basePoint(point: GeometryPoint2d | undefined) {
     if (!this.isReadOnly) {
       if (point == null) {
         this._basePoint = point
       } else {
         this._basePoint = this._basePoint
           ? this._basePoint.copy(point)
-          : new AcGePoint2d(point)
+          : new GeometryPoint2d(point)
       }
     }
   }

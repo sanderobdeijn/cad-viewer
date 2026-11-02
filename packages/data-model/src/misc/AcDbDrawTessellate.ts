@@ -1,6 +1,6 @@
 import {
-  AcGeCircArc2d,
-  type AcGeTessellateOptions
+  GeometryCircularArc2d,
+  type GeometryTessellateOptions
 } from '@mlightcad/geometry-engine'
 import type { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -8,7 +8,7 @@ import type { AcGiRenderer } from '@mlightcad/graphic-interface'
 export const ACDB_DRAW_CIRCLE_SIDES_DRAFT = 50
 /** Standard display tessellation, matching historical `getPoints(100)`. */
 export const ACDB_DRAW_CIRCLE_SIDES_STANDARD =
-  AcGeCircArc2d.DEFAULT_CIRCLE_SIDES
+  GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES
 /** High display tessellation: smoother curves, more memory. */
 export const ACDB_DRAW_CIRCLE_SIDES_HIGH = 1000
 
@@ -17,7 +17,7 @@ export const ACDB_DRAW_CIRCLE_SIDES_HIGH = 1000
  *
  * Uses {@link AcDbDatabase.drawCircleSides} from {@link AcGiContext.database}
  * (set by {@link AcDbEntity.worldDraw}). When the renderer has no database
- * this falls back to {@link AcGeCircArc2d.DEFAULT_CIRCLE_SIDES}.
+ * this falls back to {@link GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES}.
  *
  * AutoCAD VIEWRES is not read here. DWG files often store 1000, which would
  * inflate GPU memory and HTML export size unless the user explicitly chooses
@@ -31,8 +31,10 @@ export const ACDB_DRAW_CIRCLE_SIDES_HIGH = 1000
  * @param renderer - Current renderer; `context.database` is duck-typed
  */
 export function acdbDrawTessellateOptions(
-  renderer?: Pick<AcGiRenderer, 'context'> | { context?: { database?: unknown } }
-): AcGeTessellateOptions {
+  renderer?:
+    | Pick<AcGiRenderer, 'context'>
+    | { context?: { database?: unknown } }
+): GeometryTessellateOptions {
   const circleSides = acdbDrawCircleSides(renderer?.context?.database)
   return {
     circleSides,
@@ -44,7 +46,7 @@ export function acdbDrawTessellateOptions(
  * Circle-side count used for display tessellation.
  *
  * Prefers {@link AcDbDatabase.drawCircleSides} from the open-time option.
- * Falls back to {@link AcGeCircArc2d.DEFAULT_CIRCLE_SIDES}.
+ * Falls back to {@link GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES}.
  *
  * @param database - Runtime `AcDbDatabase`; typed as `unknown` so this helper
  * can run against `AcGiContext.database`
@@ -53,10 +55,10 @@ export function acdbDrawCircleSides(database: unknown): number {
   if (database != null && typeof database === 'object') {
     const sides = (database as { drawCircleSides?: unknown }).drawCircleSides
     if (typeof sides === 'number' && Number.isFinite(sides)) {
-      return AcGeCircArc2d.resolveCircleSides(sides)
+      return GeometryCircularArc2d.resolveCircleSides(sides)
     }
   }
-  return AcGeCircArc2d.DEFAULT_CIRCLE_SIDES
+  return GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES
 }
 
 /**
@@ -70,7 +72,7 @@ export function acdbDrawCircleSides(database: unknown): number {
  */
 export function acdbResolveCircleSides(database: unknown): number {
   if (database == null || typeof database !== 'object') {
-    return AcGeCircArc2d.DEFAULT_CIRCLE_SIDES
+    return GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES
   }
   const tables = (
     database as {
@@ -83,7 +85,7 @@ export function acdbResolveCircleSides(database: unknown): number {
   ).tables
   const sides = tables?.viewportTable?.getActiveVport?.()?.circleSides
   if (typeof sides !== 'number' || !Number.isFinite(sides)) {
-    return AcGeCircArc2d.DEFAULT_CIRCLE_SIDES
+    return GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES
   }
-  return AcGeCircArc2d.resolveCircleSides(sides)
+  return GeometryCircularArc2d.resolveCircleSides(sides)
 }

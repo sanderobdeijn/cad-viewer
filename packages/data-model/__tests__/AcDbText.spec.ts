@@ -1,8 +1,8 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
@@ -38,7 +38,7 @@ describe('AcDbText', () => {
 
   it('supports all property getters and setters', () => {
     const text = new AcDbText()
-    const sourcePos = new AcGePoint2d(1, 2)
+    const sourcePos = new GeometryPoint2d(1, 2)
     text.textString = 'Hello'
     text.thickness = 2
     text.height = 3.5
@@ -64,10 +64,10 @@ describe('AcDbText', () => {
     expect(text.widthFactor).toBe(0.8)
   })
 
-  it('returns an AcGeBox3d from geometricExtents', () => {
+  it('returns an GeometryBox3d from geometricExtents', () => {
     const text = new AcDbText()
 
-    expect(text.geometricExtents).toBeInstanceOf(AcGeBox3d)
+    expect(text.geometricExtents).toBeInstanceOf(GeometryBox3d)
   })
 
   it('returns geometricExtents and recomputes when position changes', () => {
@@ -75,13 +75,13 @@ describe('AcDbText', () => {
     text.textString = 'AB'
     text.height = 2
     text.verticalMode = AcDbTextVerticalMode.BASELINE
-    text.position = new AcGePoint2d(10, 20)
+    text.position = new GeometryPoint2d(10, 20)
 
     expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(text.geometricExtents.max.x).toBeCloseTo(14)
     expect(text.geometricExtents.max.y).toBeCloseTo(22)
 
-    text.position = new AcGePoint2d(0, 0)
+    text.position = new GeometryPoint2d(0, 0)
 
     expect(text.geometricExtents.min).toMatchObject({ x: 0, y: 0 })
     expect(text.geometricExtents.max.x).toBeCloseTo(4)
@@ -94,7 +94,7 @@ describe('AcDbText', () => {
     text.height = 2
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.BASELINE
-    text.position = new AcGePoint2d(10, 20)
+    text.position = new GeometryPoint2d(10, 20)
 
     expect(text.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(text.geometricExtents.max.x).toBeCloseTo(14)
@@ -103,30 +103,30 @@ describe('AcDbText', () => {
 
   it('treats an API-set alignment point as provided even when equal to position', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(10, 20)
+    text.position = new GeometryPoint2d(10, 20)
     expect(text.hasAlignmentPoint).toBe(false)
 
-    text.alignmentPoint = new AcGePoint2d(10, 20)
+    text.alignmentPoint = new GeometryPoint2d(10, 20)
     expect(text.hasAlignmentPoint).toBe(true)
   })
 
   it('returns insertion osnap point only for insertion mode', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(3, 4)
-    const snapPoints: AcGePoint2d[] = []
+    text.position = new GeometryPoint2d(3, 4)
+    const snapPoints: GeometryPoint2d[] = []
 
     text.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(0)
 
     text.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       snapPoints
     )
     expect(snapPoints).toHaveLength(1)
@@ -135,7 +135,7 @@ describe('AcDbText', () => {
 
   it('returns insertion point as grip point', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(3, 4)
+    text.position = new GeometryPoint2d(3, 4)
     const grips = text.subGetGripPoints()
     expect(grips).toHaveLength(1)
     expect(grips[0]).toMatchObject({
@@ -146,16 +146,16 @@ describe('AcDbText', () => {
 
   it('transforms text with normal scale and rotation updates', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(1, 0)
+    text.position = new GeometryPoint2d(1, 0)
     text.rotation = 0
     text.height = 2
     text.widthFactor = 1
     text.thickness = 4
 
     const result = text.transformBy(
-      new AcGeMatrix3d()
+      new GeometryMatrix3d()
         .makeRotationZ(Math.PI / 2)
-        .multiply(new AcGeMatrix3d().makeScale(2, 3, 5))
+        .multiply(new GeometryMatrix3d().makeScale(2, 3, 5))
     )
 
     expect(result).toBe(text)
@@ -170,11 +170,14 @@ describe('AcDbText', () => {
     const text = new AcDbText()
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.TOP
-    text.position = new AcGePoint2d(417.4074308462113, 141.1597540414588)
-    text.alignmentPoint = new AcGePoint2d(437.6794664300651, 156.1597540414587)
+    text.position = new GeometryPoint2d(417.4074308462113, 141.1597540414588)
+    text.alignmentPoint = new GeometryPoint2d(
+      437.6794664300651,
+      156.1597540414587
+    )
     const alignmentBefore = text.alignmentPoint.clone()
 
-    text.transformBy(new AcGeMatrix3d().makeTranslation(10, 20, 0))
+    text.transformBy(new GeometryMatrix3d().makeTranslation(10, 20, 0))
 
     expect(text.position.x).toBeCloseTo(427.4074308462113, 6)
     expect(text.position.y).toBeCloseTo(161.1597540414588, 6)
@@ -186,11 +189,14 @@ describe('AcDbText', () => {
     const text = new AcDbText()
     text.horizontalMode = AcDbTextHorizontalMode.CENTER
     text.verticalMode = AcDbTextVerticalMode.TOP
-    text.position = new AcGePoint2d(417.4074308462113, 141.1597540414588)
-    text.alignmentPoint = new AcGePoint2d(437.6794664300651, 156.1597540414587)
+    text.position = new GeometryPoint2d(417.4074308462113, 141.1597540414588)
+    text.alignmentPoint = new GeometryPoint2d(
+      437.6794664300651,
+      156.1597540414587
+    )
     const alignmentBefore = text.alignmentPoint.clone()
 
-    text.subMoveGripPointsAt([0], new AcGeVector3d(5, -3, 0))
+    text.subMoveGripPointsAt([0], new GeometryVector3d(5, -3, 0))
 
     expect(text.position.x).toBeCloseTo(422.4074308462113, 6)
     expect(text.position.y).toBeCloseTo(138.1597540414588, 6)
@@ -200,13 +206,13 @@ describe('AcDbText', () => {
 
   it('keeps rotation and thickness when corresponding transformed axes collapse', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(1, 2)
+    text.position = new GeometryPoint2d(1, 2)
     text.rotation = 0
     text.height = 5
     text.widthFactor = 0.5
     text.thickness = 7
 
-    text.transformBy(new AcGeMatrix3d().makeScale(0, 2, 0))
+    text.transformBy(new GeometryMatrix3d().makeScale(0, 2, 0))
 
     expect(text.rotation).toBeCloseTo(0, 8)
     expect(text.height).toBeCloseTo(10, 8)
@@ -262,7 +268,7 @@ describe('AcDbText', () => {
     text.textString = 'render'
     text.height = 2.2
     text.widthFactor = 0.6
-    text.position = new AcGePoint2d(7, 8)
+    text.position = new GeometryPoint2d(7, 8)
     text.rotation = 1.2
     text.styleName = 'NotExists'
 

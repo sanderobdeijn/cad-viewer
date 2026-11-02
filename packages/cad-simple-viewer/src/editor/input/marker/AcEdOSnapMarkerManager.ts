@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../../view'
 import { AcEdMarker, AcEdMarkerType } from './AcEdMarker'
@@ -23,7 +23,7 @@ export class AcEdMarkerManager {
 
   /** AutoCAD-style acquired center ticks (plus marks), not part of the snap stack. */
   private hintMarkers: AcEdMarker[] = []
-  private hintPositions: AcGePoint2dLike[] = []
+  private hintPositions: GeometryPoint2dLike[] = []
 
   constructor(view: AcEdBaseView) {
     this.view = view
@@ -39,7 +39,7 @@ export class AcEdMarkerManager {
    * @param color - Marker color (CSS string)
    */
   public showMarker(
-    pos: AcGePoint2dLike,
+    pos: GeometryPoint2dLike,
     type?: AcEdMarkerType,
     size?: number,
     color?: string
@@ -59,7 +59,7 @@ export class AcEdMarkerManager {
    * layout by destroying and recreating every tick.
    */
   public setHintMarkers(
-    positions: readonly AcGePoint2dLike[],
+    positions: readonly GeometryPoint2dLike[],
     type: AcEdMarkerType = 'plus',
     size?: number,
     color?: string
@@ -91,7 +91,7 @@ export class AcEdMarkerManager {
    * node is not rebuilt 60 times a second.
    */
   public showOrRepositionMarker(
-    pos: AcGePoint2dLike,
+    pos: GeometryPoint2dLike,
     type?: AcEdMarkerType,
     size?: number,
     color?: string
@@ -121,7 +121,7 @@ export class AcEdMarkerManager {
   /**
    * Repositions the top marker to a new world coordinate without recreating it.
    */
-  public repositionTop(pos: AcGePoint2dLike) {
+  public repositionTop(pos: GeometryPoint2dLike) {
     const marker = this.top()
     if (!marker) return
 
@@ -163,7 +163,7 @@ export class AcEdMarkerManager {
   }
 
   private createMarker(
-    pos: AcGePoint2dLike,
+    pos: GeometryPoint2dLike,
     type?: AcEdMarkerType,
     size?: number,
     color?: string
@@ -173,12 +173,14 @@ export class AcEdMarkerManager {
     return marker
   }
 
-  private toContainerPos(pos: AcGePoint2dLike) {
+  private toContainerPos(pos: GeometryPoint2dLike) {
     const canvasPos = this.view.worldToScreen(pos)
     return this.view.canvasToContainer(canvasPos)
   }
 
-  private hintPositionsMatch(positions: readonly AcGePoint2dLike[]): boolean {
+  private hintPositionsMatch(
+    positions: readonly GeometryPoint2dLike[]
+  ): boolean {
     if (positions.length !== this.hintPositions.length) return false
     for (let i = 0; i < positions.length; i++) {
       const next = positions[i]!

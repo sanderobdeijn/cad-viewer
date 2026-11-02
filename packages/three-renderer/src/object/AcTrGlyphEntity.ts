@@ -1,7 +1,7 @@
 import {
-  AcGePoint2dLike,
   AcGiSubEntityTraits,
   AcGiTextStyle,
+  GeometryPoint2dLike,
   log
 } from '@mlightcad/data-model'
 import { ColorSettings, MTextObject } from '@mlightcad/mtext-renderer'
@@ -150,7 +150,7 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    *
    * @returns World-space insertion point for this glyph entity.
    */
-  protected abstract getDrawPosition(): AcGePoint2dLike
+  protected abstract getDrawPosition(): GeometryPoint2dLike
 
   /**
    * Renders this entity synchronously through the shared mtext-renderer.

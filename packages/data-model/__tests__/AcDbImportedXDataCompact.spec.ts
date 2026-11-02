@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDxfCode, AcDbResultBuffer } from '../src/base'
 import { AcDbLine } from '../src/entity'
@@ -20,7 +20,10 @@ const threeApps = () => [
 
 describe('compact imported XData', () => {
   it('materializes losslessly and preserves mutable getXData semantics', () => {
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.setImportedXData(imported() as never)
 
     const xdata = line.getXData('MYAPP')
@@ -31,7 +34,10 @@ describe('compact imported XData', () => {
   })
 
   it('lets setXData replace imported data and removeXData remove it', () => {
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.setImportedXData(imported() as never)
 
     line.setXData(
@@ -53,7 +59,10 @@ describe('compact imported XData', () => {
   })
 
   it('clones/restores compact imported XData without data loss', () => {
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.setImportedXData(imported() as never)
 
     const snapshot = line.clonePreservingIdentity()
@@ -64,7 +73,10 @@ describe('compact imported XData', () => {
   })
 
   it('removes one imported app and leaves the others', () => {
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.setImportedXData(threeApps() as never)
 
     line.removeXData('APP2')

@@ -1,8 +1,8 @@
 import {
   AcDbPolyline,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol,
   TAU
 } from '@mlightcad/data-model'
 
@@ -36,12 +36,12 @@ import { AcApI18n } from '../../i18n'
  * - We update the polyline incrementally (add/remove a single temp vertex)
  *   instead of `reset()` to avoid flicker and preserve transient state.
  */
-export class AcApPolylineJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _polyline: AcDbPolyline
-  private _points: AcGePoint2d[]
+  private _points: GeometryPoint2d[]
   private _bulges: (number | undefined)[]
   private _currentBulge?: number
-  private _bulgeProvider?: (endPoint: AcGePoint2dLike) => number | undefined
+  private _bulgeProvider?: (endPoint: GeometryPoint2dLike) => number | undefined
   private _baseCount: number
   private _hasTemp: boolean = false
   private _appliedBulge?: number
@@ -63,10 +63,10 @@ export class AcApPolylineJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    points: AcGePoint2d[],
+    points: GeometryPoint2d[],
     bulges: (number | undefined)[],
     currentBulge?: number,
-    bulgeProvider?: (endPoint: AcGePoint2dLike) => number | undefined
+    bulgeProvider?: (endPoint: GeometryPoint2dLike) => number | undefined
   ) {
     super(view)
     this._polyline = new AcDbPolyline()
@@ -93,7 +93,7 @@ export class AcApPolylineJig extends AcEdPreviewJig<AcGePoint2dLike> {
    * - The bulge of the last confirmed vertex (if needed).
    * - A single temporary vertex representing the current cursor position.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     if (this._baseCount === 0) return
 
     if (this._hasTemp) {
@@ -115,7 +115,7 @@ export class AcApPolylineJig extends AcEdPreviewJig<AcGePoint2dLike> {
 
     this._polyline.addVertexAt(
       this._baseCount,
-      new AcGePoint2d(point),
+      new GeometryPoint2d(point),
       undefined
     )
     this._hasTemp = true
@@ -157,7 +157,7 @@ class AcApPolylineStaticJig<T> extends AcEdPreviewJig<T> {
    */
   constructor(
     view: AcEdBaseView,
-    points: AcGePoint2d[],
+    points: GeometryPoint2d[],
     bulges: (number | undefined)[]
   ) {
     super(view)
@@ -199,11 +199,11 @@ export class AcApPolylineCmd extends AcEdCommand {
    * @returns Bulge for the other arc on the same circle.
    */
   private complementBulge(bulge: number) {
-    if (AcGeTol.equalToZero(bulge)) return bulge
+    if (GeometryTol.equalToZero(bulge)) return bulge
     const sweep = 4 * Math.atan(bulge)
     const sign = Math.sign(sweep) || 1
     const complementSweep = sign * (Math.PI * 2 - Math.abs(sweep))
-    if (AcGeTol.equalToZero(complementSweep)) return bulge
+    if (GeometryTol.equalToZero(complementSweep)) return bulge
     return Math.tan(complementSweep / 4)
   }
 
@@ -223,14 +223,14 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Arc center from chord endpoints and bulge (polyline arc convention).
    */
   private computeArcCenterFromBulge(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
     bulge: number
   ) {
     const dx = end.x - start.x
     const dy = end.y - start.y
     const chord = Math.hypot(dx, dy)
-    if (AcGeTol.isNonPositive(chord)) return undefined
+    if (GeometryTol.isNonPositive(chord)) return undefined
 
     const mx = (start.x + end.x) / 2
     const my = (start.y + end.y) / 2
@@ -244,8 +244,8 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Forward tangent at a point on a circular arc, from center and sweep direction.
    */
   private getGeometricTangentAtPoint(
-    point: AcGePoint2dLike,
-    center: AcGePoint2dLike,
+    point: GeometryPoint2dLike,
+    center: GeometryPoint2dLike,
     ccw: boolean
   ) {
     const vx = point.x - center.x
@@ -257,8 +257,8 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Tangent direction (radians) at the end of an arc segment, along polyline flow.
    */
   private getArcTangentAtEnd(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
     bulge: number
   ) {
     const center = this.computeArcCenterFromBulge(start, end, bulge)
@@ -270,7 +270,7 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Incoming tangent at the last vertex (direction of the previous segment).
    */
   private getIncomingTangentRadians(
-    points: AcGePoint2d[],
+    points: GeometryPoint2d[],
     bulges: (number | undefined)[]
   ) {
     if (points.length < 2) return 0
@@ -278,7 +278,7 @@ export class AcApPolylineCmd extends AcEdCommand {
     const start = points[points.length - 1]
     const prev = points[points.length - 2]
     const prevBulge = bulges[points.length - 2]
-    if (prevBulge == null || AcGeTol.equalToZero(prevBulge)) {
+    if (prevBulge == null || GeometryTol.equalToZero(prevBulge)) {
       return Math.atan2(start.y - prev.y, start.x - prev.x)
     }
     const exitTangent = this.getArcTangentAtEnd(prev, start, prevBulge)
@@ -289,8 +289,8 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Bulge for an arc through `start` and `end` that is tangent to `tangentRad` at `start`.
    */
   private computeBulgeFromTangentDirection(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
     tangentRad: number
   ) {
     const tx = Math.cos(tangentRad)
@@ -300,7 +300,7 @@ export class AcApPolylineCmd extends AcEdCommand {
     const nx = -ty
     const ny = tx
     const denominator = 2 * (dx * nx + dy * ny)
-    if (AcGeTol.equalToZero(denominator)) return undefined
+    if (GeometryTol.equalToZero(denominator)) return undefined
 
     const lambda = (dx * dx + dy * dy) / denominator
     if (!Number.isFinite(lambda)) return undefined
@@ -325,9 +325,9 @@ export class AcApPolylineCmd extends AcEdCommand {
    * `AcApArcCmd`: compare the incoming tangent with the start radius vector.
    */
   private computeBulgeFromCenterWithTangent(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
-    center: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
+    center: GeometryPoint2dLike,
     tangentRad: number
   ) {
     const v1x = start.x - center.x
@@ -341,7 +341,7 @@ export class AcApPolylineCmd extends AcEdCommand {
 
     const crossStartTangent = v1x * ty - v1y * tx
     let ccw: boolean
-    if (AcGeTol.isPositive(Math.abs(crossStartTangent))) {
+    if (GeometryTol.isPositive(Math.abs(crossStartTangent))) {
       ccw = crossStartTangent > 0
     } else {
       const chordCrossTangent = chordX * ty - chordY * tx
@@ -354,12 +354,12 @@ export class AcApPolylineCmd extends AcEdCommand {
     let sweep: number
     if (ccw) {
       sweep = endAngle - startAngle
-      if (AcGeTol.isNonPositive(sweep)) sweep += Math.PI * 2
+      if (GeometryTol.isNonPositive(sweep)) sweep += Math.PI * 2
     } else {
       sweep = startAngle - endAngle
-      if (AcGeTol.isNonPositive(sweep)) sweep += Math.PI * 2
+      if (GeometryTol.isNonPositive(sweep)) sweep += Math.PI * 2
     }
-    if (!AcGeTol.great(TAU - sweep, 0)) return undefined
+    if (!GeometryTol.great(TAU - sweep, 0)) return undefined
 
     return ccw ? Math.tan(sweep / 4) : -Math.tan(sweep / 4)
   }
@@ -368,8 +368,8 @@ export class AcApPolylineCmd extends AcEdCommand {
    * Bulge for an arc with a fixed included angle that is tangent at `start`.
    */
   private computeBulgeFromTangentAndIncludedAngle(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
     tangentRad: number,
     includedAngleRad: number
   ) {
@@ -380,7 +380,7 @@ export class AcApPolylineCmd extends AcEdCommand {
     const nx = -ty
     const ny = tx
     const denominator = 2 * (dx * nx + dy * ny)
-    if (AcGeTol.equalToZero(denominator)) return undefined
+    if (GeometryTol.equalToZero(denominator)) return undefined
 
     const lambda = (dx * dx + dy * dy) / denominator
     if (!Number.isFinite(lambda)) return undefined
@@ -403,9 +403,9 @@ export class AcApPolylineCmd extends AcEdCommand {
   }
 
   private computeBulgeFromCenter(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
-    center: AcGePoint2dLike
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
+    center: GeometryPoint2dLike
   ) {
     const v1x = start.x - center.x
     const v1y = start.y - center.y
@@ -419,9 +419,9 @@ export class AcApPolylineCmd extends AcEdCommand {
   }
 
   private computeCircleCenter(
-    p1: AcGePoint2dLike,
-    p2: AcGePoint2dLike,
-    p3: AcGePoint2dLike
+    p1: GeometryPoint2dLike,
+    p2: GeometryPoint2dLike,
+    p3: GeometryPoint2dLike
   ) {
     const x1 = p1.x
     const y1 = p1.y
@@ -437,17 +437,17 @@ export class AcApPolylineCmd extends AcEdCommand {
     const e = (x1 * x1 - x2 * x2 + y1 * y1 - y2 * y2) / 2
     const f = (x1 * x1 - x3 * x3 + y1 * y1 - y3 * y3) / 2
     const det = a * d - b * c
-    if (AcGeTol.equalToZero(det)) return undefined
+    if (GeometryTol.equalToZero(det)) return undefined
 
     const cx = (d * e - b * f) / det
     const cy = (-c * e + a * f) / det
-    return new AcGePoint2d(cx, cy)
+    return new GeometryPoint2d(cx, cy)
   }
 
   private computeBulgeFromThreePoints(
-    start: AcGePoint2dLike,
-    mid: AcGePoint2dLike,
-    end: AcGePoint2dLike
+    start: GeometryPoint2dLike,
+    mid: GeometryPoint2dLike,
+    end: GeometryPoint2dLike
   ) {
     const center = this.computeCircleCenter(start, mid, end)
     if (!center) return undefined
@@ -455,8 +455,8 @@ export class AcApPolylineCmd extends AcEdCommand {
   }
 
   private computeBulgeFromRadius(
-    start: AcGePoint2dLike,
-    end: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
+    end: GeometryPoint2dLike,
     radius: number
   ) {
     const r = Math.abs(radius)
@@ -473,13 +473,13 @@ export class AcApPolylineCmd extends AcEdCommand {
     const sign = radius >= 0 ? 1 : -1
     const cx = midx + ux * h * sign
     const cy = midy + uy * h * sign
-    const center = new AcGePoint2d(cx, cy)
+    const center = new GeometryPoint2d(cx, cy)
     return this.computeBulgeFromCenter(start, end, center)
   }
 
   async execute(context: AcApContext) {
     AcApDocManager.instance.editor.resetInputToggles()
-    const points: AcGePoint2d[] = []
+    const points: GeometryPoint2d[] = []
     const bulges: (number | undefined)[] = []
     let closed = false
     const applyArcDirection = (bulge?: number) => {
@@ -488,23 +488,23 @@ export class AcApPolylineCmd extends AcEdCommand {
       return toggles.ctrlArcFlip ? this.flipArcBulgeForCtrl(bulge) : bulge
     }
     const computeBulgeFromCenter = (
-      start: AcGePoint2dLike,
-      end: AcGePoint2dLike,
-      center: AcGePoint2dLike
+      start: GeometryPoint2dLike,
+      end: GeometryPoint2dLike,
+      center: GeometryPoint2dLike
     ) => this.computeBulgeFromCenter(start, end, center)
     const computeBulgeFromThreePoints = (
-      start: AcGePoint2dLike,
-      mid: AcGePoint2dLike,
-      end: AcGePoint2dLike
+      start: GeometryPoint2dLike,
+      mid: GeometryPoint2dLike,
+      end: GeometryPoint2dLike
     ) => this.computeBulgeFromThreePoints(start, mid, end)
     const computeBulgeFromRadius = (
-      start: AcGePoint2dLike,
-      end: AcGePoint2dLike,
+      start: GeometryPoint2dLike,
+      end: GeometryPoint2dLike,
       radius: number
     ) => this.computeBulgeFromRadius(start, end, radius)
     const getIncomingTangent = () =>
       this.getIncomingTangentRadians(points, bulges)
-    const computeDefaultArcBulge = (end: AcGePoint2dLike) => {
+    const computeDefaultArcBulge = (end: GeometryPoint2dLike) => {
       const start = getCurrentPoint()
       if (!start) return undefined
       return this.computeBulgeFromTangentDirection(
@@ -514,8 +514,8 @@ export class AcApPolylineCmd extends AcEdCommand {
       )
     }
     const computeBulgeFromTangentAndIncludedAngle = (
-      start: AcGePoint2dLike,
-      end: AcGePoint2dLike,
+      start: GeometryPoint2dLike,
+      end: GeometryPoint2dLike,
       tangentRad: number,
       includedAngleRad: number
     ) =>
@@ -529,7 +529,7 @@ export class AcApPolylineCmd extends AcEdCommand {
       new AcApPolylineStaticJig<T>(context.view, points, bulges)
     const createPreviewJig = (
       currentBulge?: number,
-      bulgeProvider?: (endPoint: AcGePoint2dLike) => number | undefined
+      bulgeProvider?: (endPoint: GeometryPoint2dLike) => number | undefined
     ) =>
       new AcApPolylineJig(
         context.view,
@@ -544,8 +544,8 @@ export class AcApPolylineCmd extends AcEdCommand {
         bulges[points.length - 1] = bulge
       }
     }
-    const appendPoint = (point: AcGePoint2dLike) => {
-      points.push(new AcGePoint2d(point))
+    const appendPoint = (point: GeometryPoint2dLike) => {
+      points.push(new GeometryPoint2d(point))
       bulges.push(undefined)
     }
     const undoLast = () => {
@@ -593,7 +593,7 @@ export class AcApPolylineCmd extends AcEdCommand {
         prompt.useBasePoint = true
         const basePoint = getCurrentPoint()
         if (basePoint) {
-          prompt.basePoint = new AcGePoint2d(basePoint)
+          prompt.basePoint = new GeometryPoint2d(basePoint)
         }
         prompt.jig = createPreviewJig(undefined)
         // AutoCAD PLINE: Enter at "next point" ends the command without adding a vertex.
@@ -672,7 +672,7 @@ export class AcApPolylineCmd extends AcEdCommand {
         prompt.useBasePoint = true
         const basePoint = getCurrentPoint()
         if (basePoint) {
-          prompt.basePoint = new AcGePoint2d(basePoint)
+          prompt.basePoint = new GeometryPoint2d(basePoint)
         }
         prompt.jig = createPreviewJig(undefined, end =>
           applyArcDirection(computeDefaultArcBulge(end))
@@ -724,7 +724,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint2d(startPoint)
+          endPrompt.basePoint = new GeometryPoint2d(startPoint)
           const angleRad = (angleResult.value ?? 0) * (Math.PI / 180)
           const tangent = getIncomingTangent()
           endPrompt.jig = createPreviewJig(undefined, end =>
@@ -757,7 +757,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           const centerPrompt = new AcEdPromptPointOptions(
             AcApI18n.t('jig.polyline.arcCenter')
           )
-          centerPrompt.jig = createStaticJig<AcGePoint2d>()
+          centerPrompt.jig = createStaticJig<GeometryPoint2d>()
           const centerResult =
             await AcApDocManager.instance.editor.getPoint(centerPrompt)
           if (shouldFinish(centerResult.status)) return 'finish'
@@ -767,7 +767,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint2d(startPoint)
+          endPrompt.basePoint = new GeometryPoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromCenter(startPoint, end, centerResult.value!)
@@ -792,10 +792,10 @@ export class AcApPolylineCmd extends AcEdCommand {
           const secondPrompt = new AcEdPromptPointOptions(
             AcApI18n.t('jig.polyline.arcSecondPoint')
           )
-          secondPrompt.jig = createStaticJig<AcGePoint2d>()
+          secondPrompt.jig = createStaticJig<GeometryPoint2d>()
           secondPrompt.useDashedLine = true
           secondPrompt.useBasePoint = true
-          secondPrompt.basePoint = new AcGePoint2d(startPoint)
+          secondPrompt.basePoint = new GeometryPoint2d(startPoint)
           const secondResult =
             await AcApDocManager.instance.editor.getPoint(secondPrompt)
           if (shouldFinish(secondResult.status)) return 'finish'
@@ -805,7 +805,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint2d(startPoint)
+          endPrompt.basePoint = new GeometryPoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromThreePoints(startPoint, secondResult.value!, end)
@@ -840,7 +840,7 @@ export class AcApPolylineCmd extends AcEdCommand {
           )
           endPrompt.useDashedLine = true
           endPrompt.useBasePoint = true
-          endPrompt.basePoint = new AcGePoint2d(startPoint)
+          endPrompt.basePoint = new GeometryPoint2d(startPoint)
           endPrompt.jig = createPreviewJig(undefined, end =>
             applyArcDirection(
               computeBulgeFromRadius(startPoint, end, radiusResult.value ?? 0)

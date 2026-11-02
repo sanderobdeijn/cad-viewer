@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGeVector2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryVector2d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../renderer/AcTrRenderer'
@@ -23,7 +23,7 @@ export class AcTrOverlayViewport {
   /** On-canvas rectangle in CSS pixels (origin top-left). */
   private _screenRect: AcTrCssRect = { x: 0, y: 0, width: 1, height: 1 }
   /** World-space extents shown in {@link screenRect}. */
-  private readonly _viewBox = new AcGeBox2d()
+  private readonly _viewBox = new GeometryBox2d()
   /** CSS width used when fitting the camera to {@link viewBox}. */
   private _width = 1
   /** CSS height used when fitting the camera to {@link viewBox}. */
@@ -68,7 +68,7 @@ export class AcTrOverlayViewport {
   /**
    * World-space box shown in {@link screenRect}.
    */
-  get viewBox(): AcGeBox2d {
+  get viewBox(): GeometryBox2d {
     return this._viewBox
   }
 
@@ -92,7 +92,7 @@ export class AcTrOverlayViewport {
    *
    * @param box - World box mapped onto {@link screenRect}.
    */
-  setViewBox(box: AcGeBox2d) {
+  setViewBox(box: GeometryBox2d) {
     this._viewBox.min.copy(box.min)
     this._viewBox.max.copy(box.max)
     this.applyViewBox()
@@ -108,9 +108,15 @@ export class AcTrOverlayViewport {
   render(scene: THREE.Object3D, canvasCssHeight: number) {
     if (!this._visible || this._viewBox.isEmpty()) return
     if (this._screenRect.width < 1 || this._screenRect.height < 1) return
-    this.renderRect(scene, this._screenRect, this._screenRect, canvasCssHeight, {
-      clearColor: true
-    })
+    this.renderRect(
+      scene,
+      this._screenRect,
+      this._screenRect,
+      canvasCssHeight,
+      {
+        clearColor: true
+      }
+    )
   }
 
   /**
@@ -127,7 +133,7 @@ export class AcTrOverlayViewport {
    */
   renderNested(
     scene: THREE.Object3D,
-    viewBox: AcGeBox2d,
+    viewBox: GeometryBox2d,
     viewportRect: AcTrCssRect,
     scissorRect: AcTrCssRect,
     canvasCssHeight: number,
@@ -159,14 +165,14 @@ export class AcTrOverlayViewport {
    * @param twist - Optional DVIEW twist in radians.
    */
   private fitCamera(
-    box: AcGeBox2d,
+    box: GeometryBox2d,
     width: number,
     height: number,
     twist?: number
   ) {
-    const size = new AcGeVector2d()
+    const size = new GeometryVector2d()
     box.getSize(size)
-    const center = new AcGeVector2d()
+    const center = new GeometryVector2d()
     box.getCenter(center)
 
     const frustum = Math.max(height, 1) / 2

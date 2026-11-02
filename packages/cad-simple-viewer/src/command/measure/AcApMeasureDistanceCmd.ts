@@ -1,8 +1,8 @@
 import {
   AcCmColor,
   AcDbDatabase,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
@@ -43,7 +43,7 @@ import { MEASUREMENT_LIVE_LAYER } from './AcApMeasurementStore'
 import { AcApMeasureDistanceEntity } from './entity'
 
 /** Returns the 2D Euclidean distance between two world points. */
-function calcDist(p1: AcGePoint2dLike, p2: AcGePoint2dLike): number {
+function calcDist(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
   return Math.sqrt(dx * dx + dy * dy)
@@ -55,8 +55,8 @@ function calcDist(p1: AcGePoint2dLike, p2: AcGePoint2dLike): number {
 export function placeDistanceMeasurement(
   view: AcTrView2d,
   db: AcDbDatabase,
-  p1: AcGePoint2dLike,
-  p2: AcGePoint2dLike,
+  p1: GeometryPoint2dLike,
+  p2: GeometryPoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
@@ -68,21 +68,21 @@ export function placeDistanceMeasurement(
  *
  * Renders a live HTML rubber-band segment and length badge (no AcDb preview).
  */
-export class AcApMeasureDistanceJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
-  private readonly _p1: AcGePoint2dLike
+  private readonly _p1: GeometryPoint2dLike
   private readonly _db: AcDbDatabase
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badge: AcTrHtmlBadge
   private readonly _badgeId: string
   private readonly _preview: AcApHtmlLivePreview
   private _color: AcCmColor
-  private _p2: AcGePoint2dLike
+  private _p2: GeometryPoint2dLike
 
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    p1: AcGePoint2dLike,
+    p1: GeometryPoint2dLike,
     color: AcCmColor
   ) {
     super(view)
@@ -123,7 +123,7 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return null
   }
 
-  update(p2: AcGePoint2dLike) {
+  update(p2: GeometryPoint2dLike) {
     this._p2 = p2
     this._color = acapGetMeasurementColor(this._db)
     this._badge.setColor(this._color)
@@ -217,7 +217,7 @@ export class AcApMeasureDistanceCmd extends AcApMeasureDrawCmd {
         AcApI18n.t('jig.measureDistance.secondPoint')
       )
       p2Prompt.useBasePoint = true
-      p2Prompt.basePoint = new AcGePoint2d(p1)
+      p2Prompt.basePoint = new GeometryPoint2d(p1)
       p2Prompt.jig = new AcApMeasureDistanceJig(context.view, db, p1, color)
       const p2Result = await editor.getPoint(p2Prompt)
       if (p2Result.status !== AcEdPromptStatus.OK) return

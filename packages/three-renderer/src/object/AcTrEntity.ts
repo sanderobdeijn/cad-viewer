@@ -1,4 +1,7 @@
-import { AcGeMatrix3d, AcGePoint2d, AcGiEntity } from '@mlightcad/data-model'
+import {
+  AcGiEntity,
+  GeometryMatrix3d,
+  GeometryPoint2d} from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrBatchDrawPolicy } from '../draw/AcTrBatchDrawPolicy'
@@ -23,7 +26,7 @@ import { AcTrObject } from './AcTrObject'
 export class AcTrEntity extends AcTrObject implements AcGiEntity {
   declare userData: AcTrEntityUserData
   protected _wcsBbox: THREE.Box3
-  protected _basePoint?: AcGePoint2d
+  protected _basePoint?: GeometryPoint2d
 
   constructor(context: AcTrRenderContext) {
     super(context)
@@ -73,13 +76,13 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
   get basePoint() {
     return this._basePoint
   }
-  set basePoint(value: AcGePoint2d | undefined) {
+  set basePoint(value: GeometryPoint2d | undefined) {
     if (value == null) {
       this._basePoint = value
     } else {
       this._basePoint = this._basePoint
         ? this._basePoint.copy(value)
-        : new AcGePoint2d(value)
+        : new GeometryPoint2d(value)
     }
   }
 
@@ -391,7 +394,7 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
    * After this call {@link matrixAutoUpdate} is `false` so the exact 4×4 matrix
    * (including reflection) is what {@link updateMatrixWorld} propagates.
    */
-  applyMatrix(matrix: AcGeMatrix3d) {
+  applyMatrix(matrix: GeometryMatrix3d) {
     const threeMatrix = AcTrMatrixUtil.createMatrix4(matrix)
     this.applyFullMatrix4(threeMatrix)
     if (!this._wcsBbox.isEmpty()) {

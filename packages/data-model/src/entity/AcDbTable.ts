@@ -1,10 +1,10 @@
 import { AcCmColor } from '@mlightcad/common'
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeQuaternion,
-  AcGeVector3d
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryQuaternion,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -108,7 +108,7 @@ export interface AcDbTableCellTypeOverride {
   }
 }
 
-const tempVector = /*@__PURE__*/ new AcGeVector3d()
+const tempVector = /*@__PURE__*/ new GeometryVector3d()
 
 /**
  * Represents a table entity in AutoCAD.
@@ -147,7 +147,7 @@ export class AcDbTable extends AcDbBlockReference {
   /** Hard pointer ID of the owning BLOCK record (DXF group code 343) */
   owningBlockRecordId?: string
   /** Horizontal direction vector (DXF group code 11,21,31) */
-  horizontalDirection?: AcGeVector3d
+  horizontalDirection?: GeometryVector3d
   /** Flag for table value (DXF group code 90) */
   tableValueFlag?: number
   /** Flag for an override (DXF group code 93) */
@@ -422,7 +422,7 @@ export class AcDbTable extends AcDbBlockReference {
    * @returns A 3D bounding box containing the table entity
    * @inheritdoc
    */
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     let blockTableRecord
     try {
       blockTableRecord = this.blockTableRecord
@@ -431,7 +431,7 @@ export class AcDbTable extends AcDbBlockReference {
     }
 
     if (blockTableRecord && blockTableRecord.newIterator().count > 0) {
-      const box = new AcGeBox3d()
+      const box = new GeometryBox3d()
       for (const entity of blockTableRecord.newIterator()) {
         box.union(entity.geometricExtents)
       }
@@ -441,26 +441,26 @@ export class AcDbTable extends AcDbBlockReference {
 
     const totalWidth = this._columnWidth.reduce((sum, value) => sum + value, 0)
     const totalHeight = this._rowHeight.reduce((sum, value) => sum + value, 0)
-    const box = new AcGeBox3d()
+    const box = new GeometryBox3d()
 
     if (totalWidth === 0 && totalHeight === 0) {
       box.expandByPoint(this.position)
       return box
     }
 
-    const quaternion = new AcGeQuaternion()
-    quaternion.setFromAxisAngle(AcGeVector3d.Z_AXIS, this.rotation)
+    const quaternion = new GeometryQuaternion()
+    quaternion.setFromAxisAngle(GeometryVector3d.Z_AXIS, this.rotation)
     _tmpMatrix.compose(
-      new AcGeVector3d(this.position.x, this.position.y, 0),
+      new GeometryVector3d(this.position.x, this.position.y, 0),
       quaternion,
-      new AcGeVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
+      new GeometryVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
     )
 
     const localCorners = [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(totalWidth, 0),
-      new AcGePoint2d(totalWidth, -totalHeight),
-      new AcGePoint2d(0, -totalHeight)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(totalWidth, 0),
+      new GeometryPoint2d(totalWidth, -totalHeight),
+      new GeometryPoint2d(0, -totalHeight)
     ]
 
     for (const corner of localCorners) {
@@ -679,12 +679,12 @@ export class AcDbTable extends AcDbBlockReference {
     results.push(renderer.lineSegments(points, 3, indices))
 
     const group = renderer.group(results)
-    const quaternion = new AcGeQuaternion()
-    quaternion.setFromAxisAngle(AcGeVector3d.Z_AXIS, this.rotation)
+    const quaternion = new GeometryQuaternion()
+    quaternion.setFromAxisAngle(GeometryVector3d.Z_AXIS, this.rotation)
     _tmpMatrix.compose(
-      new AcGeVector3d(this.position.x, this.position.y, 0),
+      new GeometryVector3d(this.position.x, this.position.y, 0),
       quaternion,
-      new AcGeVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
+      new GeometryVector3d(this.scaleFactors.x, this.scaleFactors.y, 1)
     )
     group.applyMatrix(_tmpMatrix)
     return group
@@ -795,7 +795,7 @@ export class AcDbTable extends AcDbBlockReference {
    * @private
    */
   private getTableTextOffset(textAlign: number, width: number, height: number) {
-    const offset = new AcGeVector3d()
+    const offset = new GeometryVector3d()
     switch (textAlign) {
       case 1:
         break
@@ -850,5 +850,5 @@ export class AcDbTable extends AcDbBlockReference {
   }
 }
 
-const _tmpMatrix = /*@__PURE__*/ new AcGeMatrix3d()
+const _tmpMatrix = /*@__PURE__*/ new GeometryMatrix3d()
 const _tmpColor = /*@__PURE__*/ new AcCmColor()

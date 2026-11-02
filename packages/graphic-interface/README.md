@@ -42,14 +42,14 @@ npm install @mlightcad/graphic-interface
 ### Basic Entity Rendering
 ```typescript
 import { AcGiRenderer, AcGiEntity } from '@mlightcad/graphic-interface';
-import { AcDbLine, AcGePoint2d } from '@mlightcad/data-model';
+import { AcDbLine, GeometryPoint2d } from '@mlightcad/data-model';
 
 // Create a renderer
 const renderer = new AcGiRenderer();
 
 // Create an entity
-const startPoint = new AcGePoint2d(0, 0);
-const endPoint = new AcGePoint2d(10, 10);
+const startPoint = new GeometryPoint2d(0, 0);
+const endPoint = new GeometryPoint2d(10, 10);
 const line = new AcDbLine(startPoint, endPoint);
 
 // Render the entity
@@ -93,13 +93,13 @@ arrowStyle.setColor(1); // Red
 
 ### View and Viewport Management
 ```typescript
-import { AcGiView, AcGiViewport, AcGeVector3d } from '@mlightcad/graphic-interface';
+import { AcGiView, AcGiViewport, GeometryVector3d } from '@mlightcad/graphic-interface';
 
 // Create a view
 const view = new AcGiView();
-view.setEyePoint(new AcGeVector3d(0, 0, 100));
-view.setTargetPoint(new AcGeVector3d(0, 0, 0));
-view.setUpVector(new AcGeVector3d(0, 1, 0));
+view.setEyePoint(new GeometryVector3d(0, 0, 100));
+view.setTargetPoint(new GeometryVector3d(0, 0, 0));
+view.setUpVector(new GeometryVector3d(0, 1, 0));
 
 // Create a viewport
 const viewport = new AcGiViewport();

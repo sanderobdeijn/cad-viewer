@@ -1,35 +1,35 @@
-export { AcGeArea2d } from './AcGeArea2d'
-export type { AcGeIndexNode, AcGeLoop2dType } from './AcGeArea2d'
-export { AcGeShape2d } from './AcGeShape2d'
-export { AcGeCurve2d } from './AcGeCurve2d'
-export { AcGeCircArc2d } from './AcGeCircArc2d'
+export { GeometryArea2d } from './GeometryArea2d'
+export type { GeometryIndexNode, GeometryLoop2dType } from './GeometryArea2d'
+export { GeometryShape2d } from './GeometryShape2d'
+export { GeometryCurve2d } from './GeometryCurve2d'
+export { GeometryCircularArc2d } from './GeometryCircularArc2d'
 export type {
-  AcGeResolvedTessellateOptions,
-  AcGeTessellateOptions
-} from './AcGeCurveTessellate'
-export type { AcGeCircumcircle2d } from './AcGeCircArcUtil'
+  GeometryResolvedTessellateOptions,
+  GeometryTessellateOptions
+} from './GeometryCurveTessellate'
+export type { GeometryCircumcircle2d } from './GeometryCircularArcUtil'
 export {
-  acgeIsBetterDistanceAlign,
-  acgePointLiesOnCircle2d,
-  acgeSameCircle2d
-} from './AcGeCircArcUtil'
-export { AcGeEllipseArc2d } from './AcGeEllipseArc2d'
-export { AcGePolyline2d } from './AcGePolyline2d'
-export type { AcGePolyline2dVertex } from './AcGePolyline2d'
-export { AcGeLine2d } from './AcGeLine2d'
-export { AcGeLoop2d } from './AcGeLoop2d'
-export type { AcGeBoundaryEdgeType } from './AcGeLoop2d'
-export { AcGeSpline2d } from './AcGeSpline2d'
-export { AcGeNurbsCurve } from './AcGeNurbsCurve'
-export type { AcGeKnotParameterizationType } from './AcGeNurbsCurve'
-export { AcGeCatmullRomCurve2d } from './AcGeCatmullRomCurve2d'
-export type { CatmullRomCurveType } from './AcGeCatmullRomCurve2d'
+  geometryIsBetterDistanceAlign,
+  geometryPointLiesOnCircle2d,
+  geometrySameCircle2d
+} from './GeometryCircularArcUtil'
+export { GeometryEllipseArc2d } from './GeometryEllipseArc2d'
+export { GeometryPolyline2d } from './GeometryPolyline2d'
+export type { GeometryPolyline2dVertex } from './GeometryPolyline2d'
+export { GeometryLine2d } from './GeometryLine2d'
+export { GeometryLoop2d } from './GeometryLoop2d'
+export type { GeometryBoundaryEdgeType } from './GeometryLoop2d'
+export { GeometrySpline2d } from './GeometrySpline2d'
+export { GeometryNurbsCurve } from './GeometryNurbsCurve'
+export type { GeometryKnotParameterizationType } from './GeometryNurbsCurve'
+export { GeometryCatmullRomCurve2d } from './GeometryCatmullRomCurve2d'
+export type { CatmullRomCurveType } from './GeometryCatmullRomCurve2d'
 export {
-  acgeCloneIntersectPrimitive,
-  acgeIntersectCurves,
-  acgeTransformIntersectPrimitive
-} from './AcGeCurveIntersect'
+  geometryCloneIntersectPrimitive,
+  geometryIntersectCurves,
+  geometryTransformIntersectPrimitive
+} from './GeometryCurveIntersect'
 export type {
-  AcGeCurveExtent,
-  AcGeIntersectPrimitive
-} from './AcGeCurveIntersect'
+  GeometryCurveExtent,
+  GeometryIntersectPrimitive
+} from './GeometryCurveIntersect'

@@ -1,7 +1,7 @@
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -27,8 +27,8 @@ export class AcDbDiametricDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = 'DiametricDimension'
 
-  private _chordPoint: AcGePoint2d
-  private _farChordPoint: AcGePoint2d
+  private _chordPoint: GeometryPoint2d
+  private _farChordPoint: GeometryPoint2d
   private _extArcStartAngle: number
   private _extArcEndAngle: number
   private _leaderLength: number
@@ -51,15 +51,15 @@ export class AcDbDiametricDimension extends AcDbDimension {
    *                   formatting. If null, the current default style will be used
    */
   constructor(
-    chordPoint: AcGePoint2dLike,
-    farChordPoint: AcGePoint2dLike,
+    chordPoint: GeometryPoint2dLike,
+    farChordPoint: GeometryPoint2dLike,
     leaderLength: number = 0,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._chordPoint = new AcGePoint2d().copy(chordPoint)
-    this._farChordPoint = new AcGePoint2d().copy(farChordPoint)
+    this._chordPoint = new GeometryPoint2d().copy(chordPoint)
+    this._farChordPoint = new GeometryPoint2d().copy(farChordPoint)
     this._extArcStartAngle = 0
     this._extArcEndAngle = 0
     this._leaderLength = leaderLength
@@ -81,7 +81,7 @@ export class AcDbDiametricDimension extends AcDbDimension {
   get chordPoint() {
     return this._chordPoint
   }
-  set chordPoint(value: AcGePoint2d) {
+  set chordPoint(value: GeometryPoint2d) {
     this._chordPoint.copy(value)
   }
 
@@ -97,7 +97,7 @@ export class AcDbDiametricDimension extends AcDbDimension {
   get farChordPoint() {
     return this._farChordPoint
   }
-  set farChordPoint(value: AcGePoint2d) {
+  set farChordPoint(value: GeometryPoint2d) {
     this._farChordPoint.copy(value)
   }
 
@@ -206,7 +206,7 @@ export class AcDbDiametricDimension extends AcDbDimension {
   /**
    * @inheritdoc
    */
-  protected override subTransformBy(matrix: AcGeMatrix3d) {
+  protected override subTransformBy(matrix: GeometryMatrix3d) {
     this._chordPoint.applyMatrix4(matrix)
     this._farChordPoint.applyMatrix4(matrix)
   }

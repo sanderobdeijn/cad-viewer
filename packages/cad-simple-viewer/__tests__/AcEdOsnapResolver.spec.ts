@@ -10,9 +10,9 @@ import {
   AcDbOsnapMode,
   acdbOsnapModesToMask,
   AcDbPolyline,
-  AcGeCircArc2d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryCircularArc2d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/data-model'
 
 import { AcApSettingManager } from '../src/app/AcApSettingManager'
@@ -113,8 +113,14 @@ describe('AcEdOsnapResolver', () => {
 
   it('snaps to intersection of two crossing lines', () => {
     withWorkingDatabase(db => {
-      const a = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 10))
-      const b = new AcDbLine(new AcGePoint2d(0, 10), new AcGePoint2d(10, 0))
+      const a = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 10)
+      )
+      const b = new AcDbLine(
+        new GeometryPoint2d(0, 10),
+        new GeometryPoint2d(10, 0)
+      )
       db.tables.blockTable.modelSpace.appendEntity(a)
       db.tables.blockTable.modelSpace.appendEntity(b)
 
@@ -143,8 +149,14 @@ describe('AcEdOsnapResolver', () => {
 
   it('does not report intersection when only nearest is enabled', () => {
     withWorkingDatabase(db => {
-      const a = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 10))
-      const b = new AcDbLine(new AcGePoint2d(0, 10), new AcGePoint2d(10, 0))
+      const a = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 10)
+      )
+      const b = new AcDbLine(
+        new GeometryPoint2d(0, 10),
+        new GeometryPoint2d(10, 0)
+      )
       db.tables.blockTable.modelSpace.appendEntity(a)
       db.tables.blockTable.modelSpace.appendEntity(b)
 
@@ -166,10 +178,13 @@ describe('AcEdOsnapResolver', () => {
 
   it('skips intersectWith for entity pairs whose extents do not overlap', () => {
     withWorkingDatabase(db => {
-      const left = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
+      const left = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 0)
+      )
       const right = new AcDbLine(
-        new AcGePoint2d(100, 0),
-        new AcGePoint2d(110, 0)
+        new GeometryPoint2d(100, 0),
+        new GeometryPoint2d(110, 0)
       )
       db.tables.blockTable.modelSpace.appendEntity(left)
       db.tables.blockTable.modelSpace.appendEntity(right)
@@ -204,22 +219,22 @@ describe('AcEdOsnapResolver', () => {
       // Dense block contents that must not all participate in INT.
       for (let i = 0; i < 40; i++) {
         block.appendEntity(
-          new AcDbLine(new AcGePoint2d(i, -50), new AcGePoint2d(i, 50))
+          new AcDbLine(new GeometryPoint2d(i, -50), new GeometryPoint2d(i, 50))
         )
       }
       const diagonal = new AcDbLine(
-        new AcGePoint2d(0, 0),
-        new AcGePoint2d(10, 10)
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 10)
       )
       block.appendEntity(diagonal)
 
       const insert = new AcDbBlockReference('INT_BLK')
-      insert.position = new AcGePoint2d(0, 0)
+      insert.position = new GeometryPoint2d(0, 0)
       db.tables.blockTable.modelSpace.appendEntity(insert)
 
       const crossing = new AcDbLine(
-        new AcGePoint2d(0, 10),
-        new AcGePoint2d(10, 0)
+        new GeometryPoint2d(0, 10),
+        new GeometryPoint2d(10, 0)
       )
       db.tables.blockTable.modelSpace.appendEntity(crossing)
 
@@ -276,18 +291,18 @@ describe('AcEdOsnapResolver', () => {
       db.tables.blockTable.add(block)
 
       const diagonal = new AcDbLine(
-        new AcGePoint2d(0, 0),
-        new AcGePoint2d(10, 10)
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 10)
       )
       block.appendEntity(diagonal)
 
       const insert = new AcDbBlockReference('XFRAME_BLK')
-      insert.position = new AcGePoint2d(0, 0)
+      insert.position = new GeometryPoint2d(0, 0)
       db.tables.blockTable.modelSpace.appendEntity(insert)
 
       const crossing = new AcDbPolyline()
-      crossing.addVertexAt(0, new AcGePoint2d(0, 10))
-      crossing.addVertexAt(1, new AcGePoint2d(10, 0))
+      crossing.addVertexAt(0, new GeometryPoint2d(0, 10))
+      crossing.addVertexAt(1, new GeometryPoint2d(10, 0))
       db.tables.blockTable.modelSpace.appendEntity(crossing)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -357,12 +372,12 @@ describe('AcEdOsnapResolver', () => {
     withWorkingDatabase(db => {
       // T-junction: vertical line endpoint lies on horizontal line
       const horizontal = new AcDbLine(
-        new AcGePoint2d(0, 0),
-        new AcGePoint2d(10, 0)
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 0)
       )
       const vertical = new AcDbLine(
-        new AcGePoint2d(5, 0),
-        new AcGePoint2d(5, 10)
+        new GeometryPoint2d(5, 0),
+        new GeometryPoint2d(5, 10)
       )
       db.tables.blockTable.modelSpace.appendEntity(horizontal)
       db.tables.blockTable.modelSpace.appendEntity(vertical)
@@ -390,7 +405,7 @@ describe('AcEdOsnapResolver', () => {
 
   it('acquires a center tick when hovering a large circle without snapping to the center', () => {
     withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 100)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
       db.tables.blockTable.modelSpace.appendEntity(circle)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -416,7 +431,7 @@ describe('AcEdOsnapResolver', () => {
 
   it('snaps to an acquired circle center after the cursor moves onto the tick', () => {
     withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 100)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
       db.tables.blockTable.modelSpace.appendEntity(circle)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -446,7 +461,7 @@ describe('AcEdOsnapResolver', () => {
 
   it('keeps the acquired center tick after the cursor leaves the curve until the command ends', () => {
     withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 100)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
       db.tables.blockTable.modelSpace.appendEntity(circle)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -481,7 +496,7 @@ describe('AcEdOsnapResolver', () => {
 
   it('snaps to circle center immediately when the center is already within the aperture', () => {
     withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 10)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 10)
       db.tables.blockTable.modelSpace.appendEntity(circle)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -503,7 +518,7 @@ describe('AcEdOsnapResolver', () => {
 
   it('acquires the arc center when hovering an arc', () => {
     withWorkingDatabase(db => {
-      const arc = new AcDbArc(new AcGePoint2d(0, 0), 50, 0, Math.PI / 2)
+      const arc = new AcDbArc(new GeometryPoint2d(0, 0), 50, 0, Math.PI / 2)
       db.tables.blockTable.modelSpace.appendEntity(arc)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -526,8 +541,8 @@ describe('AcEdOsnapResolver', () => {
   it('acquires the ellipse center when hovering an ellipse', () => {
     withWorkingDatabase(db => {
       const ellipse = new AcDbEllipse(
-        new AcGePoint2d(2, 3),
-        AcGeVector3d.X_AXIS,
+        new GeometryPoint2d(2, 3),
+        GeometryVector3d.X_AXIS,
         40,
         20,
         0,
@@ -555,11 +570,15 @@ describe('AcEdOsnapResolver', () => {
   it('acquires the bulge-arc center when hovering a polyline arc segment', () => {
     withWorkingDatabase(db => {
       const polyline = new AcDbPolyline()
-      polyline.addVertexAt(0, new AcGePoint2d(0, 0), 1)
-      polyline.addVertexAt(1, new AcGePoint2d(10, 0))
+      polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
+      polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
       db.tables.blockTable.modelSpace.appendEntity(polyline)
 
-      const expected = new AcGeCircArc2d({ x: 0, y: 0 }, { x: 10, y: 0 }, 1)
+      const expected = new GeometryCircularArc2d(
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        1
+      )
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
         AcDbOsnapMode.Center
@@ -589,7 +608,10 @@ describe('AcEdOsnapResolver', () => {
 
   it('does not acquire a center tick when hovering a line', () => {
     withWorkingDatabase(db => {
-      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
+      const line = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 0)
+      )
       db.tables.blockTable.modelSpace.appendEntity(line)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -610,8 +632,8 @@ describe('AcEdOsnapResolver', () => {
 
   it('accumulates center ticks from multiple hovered circles in one command', () => {
     withWorkingDatabase(db => {
-      const a = new AcDbCircle(new AcGePoint2d(0, 0), 40)
-      const b = new AcDbCircle(new AcGePoint2d(100, 0), 40)
+      const a = new AcDbCircle(new GeometryPoint2d(0, 0), 40)
+      const b = new AcDbCircle(new GeometryPoint2d(100, 0), 40)
       db.tables.blockTable.modelSpace.appendEntity(a)
       db.tables.blockTable.modelSpace.appendEntity(b)
 
@@ -642,11 +664,11 @@ describe('AcEdOsnapResolver', () => {
       const block = new AcDbBlockTableRecord()
       block.name = 'CEN_BLK'
       db.tables.blockTable.add(block)
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 80)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 80)
       block.appendEntity(circle)
 
       const insert = new AcDbBlockReference('CEN_BLK')
-      insert.position = new AcGePoint2d(30, 10)
+      insert.position = new GeometryPoint2d(30, 10)
       db.tables.blockTable.modelSpace.appendEntity(insert)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -675,20 +697,24 @@ describe('AcEdOsnapResolver', () => {
       block.name = 'PL_BLK'
       db.tables.blockTable.add(block)
       const polyline = new AcDbPolyline()
-      polyline.addVertexAt(0, new AcGePoint2d(0, 0), 1)
-      polyline.addVertexAt(1, new AcGePoint2d(10, 0))
+      polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
+      polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
       block.appendEntity(polyline)
 
       const insert = new AcDbBlockReference('PL_BLK')
-      insert.position = new AcGePoint2d(20, 0)
+      insert.position = new GeometryPoint2d(20, 0)
       db.tables.blockTable.modelSpace.appendEntity(insert)
 
-      const local = new AcGeCircArc2d({ x: 0, y: 0 }, { x: 10, y: 0 }, 1)
-      const expected = new AcGePoint2d(
+      const local = new GeometryCircularArc2d(
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        1
+      )
+      const expected = new GeometryPoint2d(
         local.center.x,
         local.center.y
       ).applyMatrix4(insert.blockTransform)
-      const mid = new AcGePoint2d(
+      const mid = new GeometryPoint2d(
         local.midPoint.x,
         local.midPoint.y
       ).applyMatrix4(insert.blockTransform)
@@ -717,7 +743,10 @@ describe('AcEdOsnapResolver', () => {
       const cell = new AcDbBlockTableRecord()
       cell.name = 'CELL_OSNAP_745'
       db.tables.blockTable.add(cell)
-      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+      const line = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(1, 0)
+      )
       cell.appendEntity(line)
 
       const row = new AcDbBlockTableRecord()
@@ -725,7 +754,7 @@ describe('AcEdOsnapResolver', () => {
       db.tables.blockTable.add(row)
       for (const x of [0, 100]) {
         const nested = new AcDbBlockReference('CELL_OSNAP_745')
-        nested.position = new AcGePoint2d(x, 0)
+        nested.position = new GeometryPoint2d(x, 0)
         row.appendEntity(nested)
       }
 
@@ -767,22 +796,22 @@ describe('AcEdOsnapResolver', () => {
       const inner = new AcDbBlockTableRecord()
       inner.name = 'INNER_CEN_BLK'
       db.tables.blockTable.add(inner)
-      const circle = new AcDbCircle(new AcGePoint2d(0, 0), 50)
+      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 50)
       inner.appendEntity(circle)
 
       const outer = new AcDbBlockTableRecord()
       outer.name = 'OUTER_CEN_BLK'
       db.tables.blockTable.add(outer)
       const nestedInsert = new AcDbBlockReference('INNER_CEN_BLK')
-      nestedInsert.position = new AcGePoint2d(10, 0)
+      nestedInsert.position = new GeometryPoint2d(10, 0)
       outer.appendEntity(nestedInsert)
 
       const insert = new AcDbBlockReference('OUTER_CEN_BLK')
-      insert.position = new AcGePoint2d(100, 20)
-      insert.scaleFactors = new AcGePoint2d(2, 2)
+      insert.position = new GeometryPoint2d(100, 20)
+      insert.scaleFactors = new GeometryPoint2d(2, 2)
       db.tables.blockTable.modelSpace.appendEntity(insert)
 
-      const expected = new AcGePoint2d(0, 0)
+      const expected = new GeometryPoint2d(0, 0)
         .applyMatrix4(nestedInsert.blockTransform)
         .applyMatrix4(insert.blockTransform)
 
@@ -818,7 +847,10 @@ describe('AcEdOsnapResolver', () => {
       const sheet = new AcDbBlockTableRecord()
       sheet.name = 'SHEET_BTR_746'
       db.tables.blockTable.add(sheet)
-      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0))
+      const line = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 0)
+      )
       sheet.appendEntity(line)
 
       AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
@@ -843,8 +875,8 @@ describe('AcEdOsnapResolver', () => {
   it('maps a viewport drill-through hit from model space back to paper space (#746)', () => {
     withWorkingDatabase(db => {
       const line = new AcDbLine(
-        new AcGePoint2d(100, 100),
-        new AcGePoint2d(110, 100)
+        new GeometryPoint2d(100, 100),
+        new GeometryPoint2d(110, 100)
       )
       db.tables.blockTable.modelSpace.appendEntity(line)
 
@@ -887,8 +919,8 @@ describe('AcEdOsnapResolver', () => {
   it('skips a viewport drill-through hit when no coordinate mapper is available', () => {
     withWorkingDatabase(db => {
       const line = new AcDbLine(
-        new AcGePoint2d(100, 100),
-        new AcGePoint2d(110, 100)
+        new GeometryPoint2d(100, 100),
+        new GeometryPoint2d(110, 100)
       )
       db.tables.blockTable.modelSpace.appendEntity(line)
 

@@ -1,65 +1,65 @@
-export { FLOAT_TOL, ORIGIN_POINT_2D, TAU } from './AcGeConstants'
-export { AcGeGeometryUtil } from './AcGeGeometryUtil'
+export { FLOAT_TOL, ORIGIN_POINT_2D, TAU } from './GeometryConstants'
+export { GeometryUtil } from './GeometryUtil'
 export {
-  AcGeMathUtil,
+  GeometryMathUtil,
   DEG2RAD,
   RAD2DEG,
-  acgeCeilPowerOfTwo,
-  acgeClamp,
-  acgeDamp,
-  acgeDegToRad,
-  acgeEuclideanModulo,
-  acgeFloorPowerOfTwo,
-  acgeGenerateUUID,
-  acgeIntPartLength,
-  acgeInverseLerp,
-  acgeIsBetween,
-  acgeIsBetweenAngle,
-  acgeIsAngleOnCcwSweep,
-  acgeIsPowerOfTwo,
-  acgeLerp,
-  acgeMapLinear,
-  acgeNormalizeAngle,
-  acgePingpong,
-  acgeRadToDeg,
-  acgeRandFloat,
-  acgeRandFloatSpread,
-  acgeRandInt,
-  acgeRelativeEps,
-  acgeSeededRandom,
-  acgeSmootherstep,
-  acgeSmoothstep
-} from './AcGeMathUtil'
+  geometryCeilPowerOfTwo,
+  geometryClamp,
+  geometryDamp,
+  geometryDegToRad,
+  geometryEuclideanModulo,
+  geometryFloorPowerOfTwo,
+  geometryGenerateUUID,
+  geometryIntPartLength,
+  geometryInverseLerp,
+  geometryIsBetween,
+  geometryIsBetweenAngle,
+  geometryIsAngleOnCcwSweep,
+  geometryIsPowerOfTwo,
+  geometryLerp,
+  geometryMapLinear,
+  geometryNormalizeAngle,
+  geometryPingpong,
+  geometryRadToDeg,
+  geometryRandFloat,
+  geometryRandFloatSpread,
+  geometryRandInt,
+  geometryRelativeEps,
+  geometrySeededRandom,
+  geometrySmootherstep,
+  geometrySmoothstep
+} from './GeometryMathUtil'
 export {
-  acgeBasisFunction,
-  acgeCalculateCurveLength,
-  acgeComputeParameterValues,
-  acgeEvaluateNurbsPoint,
-  acgeEvaluateNurbsDerivatives,
-  acgeSignedPlanarCurvature,
-  acgeGenerateAveragedKnots,
-  acgeGenerateChordKnots,
-  acgeGenerateSqrtChordKnots,
-  acgeGenerateUniformKnots,
-  acgeInterpolateControlPoints,
-  acgeInterpolateNurbsCurve
-} from './AcGeNurbsUtil'
+  geometryBasisFunction,
+  geometryCalculateCurveLength,
+  geometryComputeParameterValues,
+  geometryEvaluateNurbsPoint,
+  geometryEvaluateNurbsDerivatives,
+  geometrySignedPlanarCurvature,
+  geometryGenerateAveragedKnots,
+  geometryGenerateChordKnots,
+  geometryGenerateSqrtChordKnots,
+  geometryGenerateUniformKnots,
+  geometryInterpolateControlPoints,
+  geometryInterpolateNurbsCurve
+} from './GeometryNurbsUtil'
 export {
-  acgeGetOcsAngle,
-  acgeGetOcsReferenceVector,
-  acgeGetOcsReferenceVectorInto,
-  acgeTransformOcsPointToWcs,
-  acgeTransformOcsPointToWcsInto,
-  acgeTransformWcsPointToOcs
-} from './AcGeOcsUtil'
-export { AcGeTol, DEFAULT_TOL } from './AcGeTol'
+  geometryGetOcsAngle,
+  geometryGetOcsReferenceVector,
+  geometryGetOcsReferenceVectorInto,
+  geometryTransformOcsPointToWcs,
+  geometryTransformOcsPointToWcsInto,
+  geometryTransformWcsPointToOcs
+} from './GeometryOcsUtil'
+export { GeometryTol, DEFAULT_TOL } from './GeometryTol'
 export {
-  acgeOffsetPointByDirectionInXY,
-  acgeOffsetVertexPath
-} from './AcGeCurveOffsetUtil'
-export { acgeOffsetSmoothedSampledPath } from './AcGeSampledCurveOffsetUtil'
+  geometryOffsetPointByDirectionInXY,
+  geometryOffsetVertexPath
+} from './GeometryCurveOffsetUtil'
+export { geometryOffsetSmoothedSampledPath } from './GeometrySampledCurveOffsetUtil'
 export {
-  acgeClosedPolygonArea2d,
-  acgePolygonArea2d,
-  acgeSignedPolygonArea2d
-} from './AcGePolygonAreaUtil'
+  geometryClosedPolygonArea2d,
+  geometryPolygonArea2d,
+  geometrySignedPolygonArea2d
+} from './GeometryPolygonAreaUtil'

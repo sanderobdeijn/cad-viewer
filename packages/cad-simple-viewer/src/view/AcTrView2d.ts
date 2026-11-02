@@ -16,13 +16,13 @@ import {
   AcDbSysVarManager,
   AcDbViewport,
   AcDbXline,
-  AcGeBox2d,
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
   acgiForegroundColorForBackground,
   AcGiViewport,
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
   log
 } from '@mlightcad/data-model'
 import { AcDbSystemVariables } from '@mlightcad/data-model'
@@ -694,8 +694,8 @@ export class AcTrView2d extends AcEdBaseView {
       this._onSettingsModified
     )
 
-    let selectionStartWcs: AcGePoint2dLike | null = null
-    let selectionStartCanvas: AcGePoint2dLike | null = null
+    let selectionStartWcs: GeometryPoint2dLike | null = null
+    let selectionStartCanvas: GeometryPoint2dLike | null = null
     let selectionPreviewEl: HTMLDivElement | null = null
 
     const canHandleIdlePointer = () => {
@@ -808,7 +808,7 @@ export class AcTrView2d extends AcEdBaseView {
           this.selectionSet.clear()
         }
       } else {
-        const box = new AcGeBox2d()
+        const box = new GeometryBox2d()
           .expandByPoint(selectionStartWcs)
           .expandByPoint(endWcs)
         const mode = this.getSelectionMode(selectionStartCanvas, endCanvas)
@@ -841,7 +841,11 @@ export class AcTrView2d extends AcEdBaseView {
     this.canvas.addEventListener(
       'mousemove',
       e => {
-        if (!selectionStartWcs || !selectionPreviewEl || !selectionStartCanvas) {
+        if (
+          !selectionStartWcs ||
+          !selectionPreviewEl ||
+          !selectionStartCanvas
+        ) {
           return
         }
         if (acedIsTouchDerivedMouseEvent(e) || acedShouldIgnoreCompatMouse()) {
@@ -1400,7 +1404,7 @@ export class AcTrView2d extends AcEdBaseView {
   get center() {
     return this.activeLayoutView.center
   }
-  set center(value: AcGePoint2d) {
+  set center(value: GeometryPoint2d) {
     this.activeLayoutView.center = value
   }
 
@@ -1804,27 +1808,27 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  screenToWorld(point: AcGePoint2dLike): AcGePoint2d {
+  screenToWorld(point: GeometryPoint2dLike): GeometryPoint2d {
     const activeLayoutView = this.activeLayoutView
     return activeLayoutView
       ? activeLayoutView.screenToWorld(point)
-      : new AcGePoint2d(point)
+      : new GeometryPoint2d(point)
   }
 
   /**
    * @inheritdoc
    */
-  worldToScreen(point: AcGePoint2dLike): AcGePoint2d {
+  worldToScreen(point: GeometryPoint2dLike): GeometryPoint2d {
     const activeLayoutView = this.activeLayoutView
     return activeLayoutView
       ? activeLayoutView.worldToScreen(point)
-      : new AcGePoint2d(point)
+      : new GeometryPoint2d(point)
   }
 
   /**
    * @inheritdoc
    */
-  zoomTo(box: AcGeBox2d, margin: number = 1.1) {
+  zoomTo(box: GeometryBox2d, margin: number = 1.1) {
     this.activeLayoutView.zoomTo(box, margin)
     this._isDirty = true
   }
@@ -1947,7 +1951,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Reuses the layout cache until entity geometry extents are invalidated.
    * Collects and clusters cooperatively so the UI thread stays responsive.
    */
-  private async resolveSmartFitBox(): Promise<AcGeBox2d | undefined> {
+  private async resolveSmartFitBox(): Promise<GeometryBox2d | undefined> {
     const activeLayout = this._scene.activeLayout
     if (!activeLayout) return undefined
     const cached = activeLayout.cachedSmartExtents
@@ -1972,7 +1976,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  flyTo(point: AcGePoint2dLike, scale: number) {
+  flyTo(point: GeometryPoint2dLike, scale: number) {
     this.activeLayoutView.flyTo(point, scale)
     this._isDirty = true
   }
@@ -2101,7 +2105,7 @@ export class AcTrView2d extends AcEdBaseView {
    * the gesture consistent with how other entity edges behave — you
    * don't have to land pixel-perfect on the viewport line to grab it.
    */
-  pick(point?: AcGePoint2dLike, hitRadius?: number, pickOneOnly?: boolean) {
+  pick(point?: GeometryPoint2dLike, hitRadius?: number, pickOneOnly?: boolean) {
     if (point == null) point = this.curPos
     const results: AcEdSpatialQueryResultItemEx[] = []
     const activeLayout = this._scene.activeLayout
@@ -2199,8 +2203,8 @@ export class AcTrView2d extends AcEdBaseView {
    * paper-space pick.
    */
   private pickThroughViewports(
-    paperPoint: AcGePoint2dLike,
-    paperBox: AcGeBox2d,
+    paperPoint: GeometryPoint2dLike,
+    paperBox: GeometryBox2d,
     viewports: AcTrViewportView[],
     results: AcEdSpatialQueryResultItemEx[]
   ) {
@@ -2219,9 +2223,9 @@ export class AcTrView2d extends AcEdBaseView {
       const modelRadius = paperHalfRadius * vpView.paperToModelScale
       if (modelRadius <= 0) continue
 
-      const modelBox = new AcGeBox2d().setFromPoints([
-        new AcGePoint2d(modelPt.x - modelRadius, modelPt.y - modelRadius),
-        new AcGePoint2d(modelPt.x + modelRadius, modelPt.y + modelRadius)
+      const modelBox = new GeometryBox2d().setFromPoints([
+        new GeometryPoint2d(modelPt.x - modelRadius, modelPt.y - modelRadius),
+        new GeometryPoint2d(modelPt.x + modelRadius, modelPt.y + modelRadius)
       ])
 
       const vpRaycaster = vpView.resetRaycaster(modelPt, modelRadius)
@@ -2238,14 +2242,17 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  search(box: AcGeBox2d | AcGeBox3d, options?: AcTrSpatialSearchOptions) {
+  search(
+    box: GeometryBox2d | GeometryBox3d,
+    options?: AcTrSpatialSearchOptions
+  ) {
     return this._scene.search(box, options)
   }
 
   /**
    * @inheritdoc
    */
-  select(point?: AcGePoint2dLike) {
+  select(point?: GeometryPoint2dLike) {
     const idsAdded: Array<AcDbObjectId> = []
     const results = this.pick(point)
     results.forEach(item => idsAdded.push(item.id))
@@ -2255,7 +2262,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  selectByBox(box: AcGeBox2d) {
+  selectByBox(box: GeometryBox2d) {
     this.selectByBoxWithMode(box, 'crossing', 'add')
   }
 
@@ -2267,7 +2274,7 @@ export class AcTrView2d extends AcEdBaseView {
    * that interior also selects those polylines and can stall highlight work.
    */
   protected override refineCrossingSelectionHits(
-    box: AcGeBox2d,
+    box: GeometryBox2d,
     results: AcEdSpatialQueryResultItemEx[]
   ): AcDbObjectId[] {
     const database = AcApDocManager.instance.curDocument?.database
@@ -2282,7 +2289,7 @@ export class AcTrView2d extends AcEdBaseView {
         continue
       }
 
-      const entityBox = new AcGeBox2d(
+      const entityBox = new GeometryBox2d(
         { x: item.minX, y: item.minY },
         { x: item.maxX, y: item.maxY }
       )
@@ -2421,7 +2428,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  updateEntityPreview(handleId: string, matrix: AcGeMatrix3d): void {
+  updateEntityPreview(handleId: string, matrix: GeometryMatrix3d): void {
     if (
       this._scene.updatePreview(handleId, AcTrMatrixUtil.createMatrix4(matrix))
     ) {
@@ -2444,7 +2451,7 @@ export class AcTrView2d extends AcEdBaseView {
   updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
       objectId: AcDbObjectId
-      matrix: AcGeMatrix3d
+      matrix: GeometryMatrix3d
     }>
   ): void {
     const updated = this._scene.updateTransientPreviewTransforms(
@@ -2690,7 +2697,7 @@ export class AcTrView2d extends AcEdBaseView {
    *
    * @inheritdoc
    */
-  getDrawingExtents(): AcGeBox2d | undefined {
+  getDrawingExtents(): GeometryBox2d | undefined {
     const sceneBox = this._scene.box
     if (sceneBox && !sceneBox.isEmpty()) {
       return AcTrGeometryUtil.threeBox3dToGeBox2d(sceneBox)
@@ -2765,7 +2772,7 @@ export class AcTrView2d extends AcEdBaseView {
         } else if (layout.extents && !layout.extents.isEmpty()) {
           const extents = layout.extents
           this.zoomTo(
-            new AcGeBox2d(
+            new GeometryBox2d(
               { x: extents.min.x, y: extents.min.y },
               { x: extents.max.x, y: extents.max.y }
             )
@@ -3718,10 +3725,9 @@ export class AcTrView2d extends AcEdBaseView {
     const singleton = AcApDocManager as unknown as {
       _instance?: AcApDocManager
     }
-    const preset =
-      singleton._instance?.lastPresetFontsForOpen?.length
-        ? [...singleton._instance.lastPresetFontsForOpen]
-        : [...fallbackFonts]
+    const preset = singleton._instance?.lastPresetFontsForOpen?.length
+      ? [...singleton._instance.lastPresetFontsForOpen]
+      : [...fallbackFonts]
     this._fontPreloadDiag = {
       critical: [...plan.critical],
       workerWarm: [],
@@ -4630,7 +4636,8 @@ export class AcTrView2d extends AcEdBaseView {
       for (const [layerName, objects] of objectsGroupByLayer) {
         // Nested layer-0 may already be resolved to an inner INSERT layer during
         // flatten. Remaining "0" buckets inherit this (outermost) INSERT layer.
-        const effectiveLayerName = layerName === '0' ? groupLayerName : layerName
+        const effectiveLayerName =
+          layerName === '0' ? groupLayerName : layerName
 
         // Material remap must still treat authored layer-0 drawables as layer-0
         // ByLayer even when nest resolution already rewrote layerName.

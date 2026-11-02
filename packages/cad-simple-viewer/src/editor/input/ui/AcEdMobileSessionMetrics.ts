@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Live values shown on the mobile command session panel, replacing desktop
@@ -28,8 +28,8 @@ export interface AcEdMobileSessionMetrics {
  * @param basePoint - Rubber-band origin or last point; omit for absolute X/Y.
  */
 export function acedComputeSessionMetrics(
-  cursor: AcGePoint2dLike,
-  basePoint?: AcGePoint2dLike | null
+  cursor: GeometryPoint2dLike,
+  basePoint?: GeometryPoint2dLike | null
 ): AcEdMobileSessionMetrics {
   const x = cursor.x
   const y = cursor.y

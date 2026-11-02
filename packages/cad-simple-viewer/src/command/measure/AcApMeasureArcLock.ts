@@ -2,8 +2,8 @@ import {
   AcDbArc,
   AcDbCircle,
   AcDbPolyline,
-  AcGeCircArc2d,
-  AcGePoint2dLike,
+  GeometryCircularArc2d,
+  GeometryPoint2dLike,
   TAU
 } from '@mlightcad/data-model'
 
@@ -14,7 +14,7 @@ const BULGE_EPS = 1e-12
 
 type Point2 = { x: number; y: number }
 
-function geomFromCurve(curve: AcGeCircArc2d): AcApMeasureCircleGeom {
+function geomFromCurve(curve: GeometryCircularArc2d): AcApMeasureCircleGeom {
   return { cx: curve.center.x, cy: curve.center.y, r: curve.radius }
 }
 
@@ -32,7 +32,7 @@ function distSq(ax: number, ay: number, bx: number, by: number): number {
  * A positive value means the cursor is on this arc's side of the junction.
  */
 export function inwardLockAlignment(
-  curve: AcGeCircArc2d,
+  curve: GeometryCircularArc2d,
   nearest: Point2,
   mouse: Point2
 ): number {
@@ -101,14 +101,16 @@ function ccwDelta(startAngle: number, endAngle: number): number {
   return delta
 }
 
-function lockCurveFromDbArc(entity: AcDbArc): AcGeCircArc2d | undefined {
+function lockCurveFromDbArc(
+  entity: AcDbArc
+): GeometryCircularArc2d | undefined {
   if (!(entity.radius > 0)) return undefined
   const clockwise = entity.clockwise
   const delta = clockwise
     ? ccwDelta(entity.endAngle, entity.startAngle)
     : ccwDelta(entity.startAngle, entity.endAngle)
   if (!(delta > 1e-12) || delta >= TAU - 1e-12) return undefined
-  const curve = new AcGeCircArc2d(
+  const curve = new GeometryCircularArc2d(
     entity.startPoint,
     entity.endPoint,
     (clockwise ? -1 : 1) * Math.tan(delta / 4)
@@ -153,11 +155,11 @@ function polylineVertices(entity: AcDbPolyline): Array<{
  * Circular curves on `entity` that arc-length measure can lock onto:
  * CIRCLE, ARC, and polyline bulge segments (not straight chords).
  */
-export function lockCurvesFromEntity(entity: unknown): AcGeCircArc2d[] {
+export function lockCurvesFromEntity(entity: unknown): GeometryCircularArc2d[] {
   if (entity instanceof AcDbCircle) {
     if (!(entity.radius > 0)) return []
     return [
-      new AcGeCircArc2d(
+      new GeometryCircularArc2d(
         { x: entity.center.x, y: entity.center.y },
         entity.radius,
         0,
@@ -177,12 +179,12 @@ export function lockCurvesFromEntity(entity: unknown): AcGeCircArc2d[] {
   if (vertices.length < 2) return []
 
   const last = entity.closed ? vertices.length : vertices.length - 1
-  const curves: AcGeCircArc2d[] = []
+  const curves: GeometryCircularArc2d[] = []
   for (let i = 0; i < last; i++) {
     const start = vertices[i]
     const end = vertices[(i + 1) % vertices.length]
     if (!(Math.abs(start.bulge) > BULGE_EPS)) continue
-    const curve = new AcGeCircArc2d(start, end, start.bulge)
+    const curve = new GeometryCircularArc2d(start, end, start.bulge)
     if (curve.radius > 0) curves.push(curve)
   }
   return curves
@@ -199,7 +201,7 @@ export function lockCurvesFromEntity(entity: unknown): AcGeCircArc2d[] {
  */
 export function pickLockOnEntities(
   entities: unknown[],
-  p: AcGePoint2dLike,
+  p: GeometryPoint2dLike,
   worldThreshold: number
 ): { geom: AcApMeasureCircleGeom; nearest: Point2 } | undefined {
   if (!(worldThreshold > 0) || entities.length === 0) return undefined

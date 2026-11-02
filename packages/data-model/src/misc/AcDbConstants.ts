@@ -67,7 +67,7 @@ export const ACAD_APPID = 'ACAD'
 
 /**
  * Frozen 2D/3D placeholders when a VPORT table row omits geometry (partial DXF
- * groups, incomplete DWG decode). Used before `AcGePoint2d.copy` / `AcGePoint2d.copy`.
+ * groups, incomplete DWG decode). Used before `GeometryPoint2d.copy` / `GeometryPoint2d.copy`.
  */
 export const VPORT_FALLBACK_CENTER_2D = Object.freeze({ x: 0, y: 0 })
 export const VPORT_FALLBACK_LLC = Object.freeze({ x: 0, y: 0 })

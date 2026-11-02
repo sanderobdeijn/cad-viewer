@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../../view'
 import { AcEdMarker, AcEdMarkerType } from '../marker/AcEdMarker'
@@ -79,7 +79,11 @@ export class AcEdSnapLoupe {
       usesSessionChrome: acedInteractionStrategy().point.usesSessionChrome
     })
     const { x: inset, y: top, size } = placement
-    const viewBox = acedLoupeViewBoxFromCanvasSample(this.view, canvasX, canvasY)
+    const viewBox = acedLoupeViewBoxFromCanvasSample(
+      this.view,
+      canvasX,
+      canvasY
+    )
     this.view.setSnapLoupe({ x: inset, y: top, size, viewBox })
 
     const host = this.view.canvasToContainer({ x: inset, y: top })
@@ -90,7 +94,10 @@ export class AcEdSnapLoupe {
     if (snapCanvas && snapType) {
       this.marker.type = snapType
       this.marker.setPosition(
-        acedLoupeLocalFromCanvasDelta(snapCanvas.x - canvasX, snapCanvas.y - canvasY)
+        acedLoupeLocalFromCanvasDelta(
+          snapCanvas.x - canvasX,
+          snapCanvas.y - canvasY
+        )
       )
     } else {
       this.marker.setPosition({ x: -1000, y: -1000 })
@@ -153,12 +160,12 @@ export function acedLoupeViewBoxFromCanvasSample(
   view: AcEdBaseView,
   canvasX: number,
   canvasY: number
-): AcGeBox2d {
+): GeometryBox2d {
   const half = ACED_SNAP_LOUPE_SIZE_PX / ACED_SNAP_LOUPE_ZOOM / 2
   const p1 = view.screenToWorld({ x: canvasX - half, y: canvasY - half })
   const p2 = view.screenToWorld({ x: canvasX + half, y: canvasY + half })
-  const box = new AcGeBox2d()
-  box.expandByPoint(new AcGePoint2d(p1.x, p1.y))
-  box.expandByPoint(new AcGePoint2d(p2.x, p2.y))
+  const box = new GeometryBox2d()
+  box.expandByPoint(new GeometryPoint2d(p1.x, p1.y))
+  box.expandByPoint(new GeometryPoint2d(p2.x, p2.y))
   return box
 }

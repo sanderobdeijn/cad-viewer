@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/data-model'
 
 import {
   AcEdBatchedPreview,
@@ -12,7 +12,7 @@ function createMockView(options: {
   multiHandle?: boolean
 }) {
   const createdIds: string[][] = []
-  const updatedMatrices: AcGeMatrix3d[] = []
+  const updatedMatrices: GeometryMatrix3d[] = []
   const removedIds: string[] = []
   let nextHandle = 0
 
@@ -31,9 +31,11 @@ function createMockView(options: {
       }
       return options.handleId === undefined ? 'preview-1' : options.handleId
     }),
-    updateEntityPreview: jest.fn((_handleId: string, matrix: AcGeMatrix3d) => {
-      updatedMatrices.push(matrix)
-    }),
+    updateEntityPreview: jest.fn(
+      (_handleId: string, matrix: GeometryMatrix3d) => {
+        updatedMatrices.push(matrix)
+      }
+    ),
     removeEntityPreview: jest.fn((handleId: string) => {
       removedIds.push(handleId)
     }),
@@ -55,7 +57,7 @@ describe('AcEdBatchedPreview', () => {
     expect(createdIds).toHaveLength(1)
     expect(createdIds[0]).toEqual(ids)
 
-    preview.updateMatrix(view, new AcGeMatrix3d().makeTranslation(1, 2, 3))
+    preview.updateMatrix(view, new GeometryMatrix3d().makeTranslation(1, 2, 3))
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(2)
 
     preview.dispose(view)
@@ -85,7 +87,7 @@ describe('AcEdBatchedPreview', () => {
     const { view } = createMockView({})
     const preview = new AcEdBatchedPreview(view, ['id-1'], 1)
 
-    preview.updatePlacements(view, new AcGePoint2d(3, 4), false)
+    preview.updatePlacements(view, new GeometryPoint2d(3, 4), false)
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(2)
   })
 
@@ -99,7 +101,7 @@ describe('AcEdBatchedPreview', () => {
     expect(previews.useBatchPreview).toBe(true)
     expect(createdIds).toHaveLength(3)
 
-    previews.updatePlacements(view, new AcGePoint2d(9, 0), false)
+    previews.updatePlacements(view, new GeometryPoint2d(9, 0), false)
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(6)
 
     previews.dispose(view)
@@ -126,14 +128,14 @@ describe('AcEdBatchedPreview', () => {
 
 describe('scaleCopyDisplacement', () => {
   it('scales linearly for normal array mode', () => {
-    expect(scaleCopyDisplacement(new AcGePoint2d(6, 0), 2, 3, false)).toEqual(
-      new AcGePoint2d(12, 0)
-    )
+    expect(
+      scaleCopyDisplacement(new GeometryPoint2d(6, 0), 2, 3, false)
+    ).toEqual(new GeometryPoint2d(12, 0))
   })
 
   it('distributes evenly for fit array mode', () => {
-    expect(scaleCopyDisplacement(new AcGePoint2d(9, 0), 2, 3, true)).toEqual(
-      new AcGePoint2d(6, 0)
-    )
+    expect(
+      scaleCopyDisplacement(new GeometryPoint2d(9, 0), 2, 3, true)
+    ).toEqual(new GeometryPoint2d(6, 0))
   })
 })

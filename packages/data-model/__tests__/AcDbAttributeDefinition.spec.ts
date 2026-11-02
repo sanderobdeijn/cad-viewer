@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
@@ -237,12 +237,12 @@ describe('AcDbAttributeDefinition', () => {
     attDef.textString = 'TAG'
     attDef.height = 2
     attDef.verticalMode = AcDbTextVerticalMode.BASELINE
-    attDef.position = new AcGePoint2d(2, 3)
+    attDef.position = new GeometryPoint2d(2, 3)
 
     expect(attDef.geometricExtents.min).toMatchObject({ x: 2, y: 3 })
     expect(attDef.geometricExtents.max.x).toBeCloseTo(8)
 
-    attDef.position = new AcGePoint2d(11, 12)
+    attDef.position = new GeometryPoint2d(11, 12)
 
     expect(attDef.geometricExtents.min).toMatchObject({ x: 11, y: 12 })
     expect(attDef.geometricExtents.max.x).toBeCloseTo(17)

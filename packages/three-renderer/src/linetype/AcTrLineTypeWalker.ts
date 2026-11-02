@@ -1,7 +1,6 @@
 import type {
-  AcGePoint2dLike,
-  AcGiLineTypePatternElement
-} from '@mlightcad/data-model'
+  AcGiLineTypePatternElement,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 
 /**
  * Complex linetype pattern fields from RealDWG plus PDF-compatible aliases.
@@ -318,7 +317,7 @@ function penUpSlotLength(
  * renderer can inject glyphs.
  */
 export function walkLineType(
-  points: AcGePoint2dLike[] | AcTrLineWalkPoint[],
+  points: GeometryPoint2dLike[] | AcTrLineWalkPoint[],
   pattern: AcGiLineTypePatternElement[],
   scale: number
 ): AcTrLineWalkResult {

@@ -1,9 +1,8 @@
 import {
-  AcGeBox2d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGiViewport
-} from '@mlightcad/data-model'
+  AcGiViewport,
+  GeometryBox2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../renderer/AcTrRenderer'
@@ -31,7 +30,7 @@ export class AcTrViewportView extends AcTrBaseView {
     viewport: AcGiViewport
   ) {
     const wcsViewportBox = viewport.box
-    const cwcsViewportBox = new AcGeBox2d()
+    const cwcsViewportBox = new GeometryBox2d()
     cwcsViewportBox.expandByPoint(parentView.worldToScreen(wcsViewportBox.min))
     cwcsViewportBox.expandByPoint(parentView.worldToScreen(wcsViewportBox.max))
     return cwcsViewportBox
@@ -177,10 +176,7 @@ export class AcTrViewportView extends AcTrBaseView {
     // viewport that happens to pan near paper WCS usually aims via a
     // non-zero target; requiring target≈0 avoids sweeping those in.
     const target = viewport.viewTarget
-    if (
-      target &&
-      (Math.abs(target.x) >= eps || Math.abs(target.y) >= eps)
-    ) {
+    if (target && (Math.abs(target.x) >= eps || Math.abs(target.y) >= eps)) {
       return false
     }
 
@@ -245,7 +241,7 @@ export class AcTrViewportView extends AcTrBaseView {
    * decide whether a click should resolve against the model-space content
    * shown through this viewport.
    */
-  containsPaperPoint(paperPt: AcGePoint2dLike): boolean {
+  containsPaperPoint(paperPt: GeometryPoint2dLike): boolean {
     const box = this._viewport.box
     return (
       paperPt.x >= box.min.x &&
@@ -264,7 +260,7 @@ export class AcTrViewportView extends AcTrBaseView {
    * pixels (typically via `selectionBoxSize` already in WCS via
    * `pointToBox`).
    */
-  isNearPaperBorder(paperPt: AcGePoint2dLike, tolerance: number): boolean {
+  isNearPaperBorder(paperPt: GeometryPoint2dLike, tolerance: number): boolean {
     if (!this.containsPaperPoint(paperPt)) return false
     const box = this._viewport.box
     const distLeft = Math.abs(paperPt.x - box.min.x)
@@ -283,7 +279,7 @@ export class AcTrViewportView extends AcTrBaseView {
    * non-zero DVIEW twist matches `AcGiViewport.dcsCenterToWcs` and the
    * camera applied after zoom-to-fit.
    */
-  paperPointToModel(paperPt: AcGePoint2dLike): AcGePoint2d {
+  paperPointToModel(paperPt: GeometryPoint2dLike): GeometryPoint2d {
     const paperBox = this._viewport.box
     const modelBox = this._viewport.viewBox
     const paperW = paperBox.max.x - paperBox.min.x
@@ -291,7 +287,7 @@ export class AcTrViewportView extends AcTrBaseView {
     const centerX = (modelBox.min.x + modelBox.max.x) / 2
     const centerY = (modelBox.min.y + modelBox.max.y) / 2
     if (paperW <= 0 || paperH <= 0) {
-      return new AcGePoint2d(centerX, centerY)
+      return new GeometryPoint2d(centerX, centerY)
     }
     const localX =
       ((paperPt.x - paperBox.min.x) / paperW - 0.5) *
@@ -301,11 +297,11 @@ export class AcTrViewportView extends AcTrBaseView {
       (modelBox.max.y - modelBox.min.y)
     const twist = this._viewport.viewTwistAngle
     if (!Number.isFinite(twist) || twist === 0) {
-      return new AcGePoint2d(centerX + localX, centerY + localY)
+      return new GeometryPoint2d(centerX + localX, centerY + localY)
     }
     const cos = Math.cos(twist)
     const sin = Math.sin(twist)
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       centerX + localX * cos - localY * sin,
       centerY + localX * sin + localY * cos
     )
@@ -315,7 +311,7 @@ export class AcTrViewportView extends AcTrBaseView {
    * Transforms a point from the model-space WCS visible through this
    * viewport back into paper-space WCS. Inverse of {@link paperPointToModel}.
    */
-  modelPointToPaper(modelPt: AcGePoint2dLike): AcGePoint2d {
+  modelPointToPaper(modelPt: GeometryPoint2dLike): GeometryPoint2d {
     const paperBox = this._viewport.box
     const modelBox = this._viewport.viewBox
     const paperW = paperBox.max.x - paperBox.min.x
@@ -325,7 +321,7 @@ export class AcTrViewportView extends AcTrBaseView {
     const paperCenterX = (paperBox.min.x + paperBox.max.x) / 2
     const paperCenterY = (paperBox.min.y + paperBox.max.y) / 2
     if (modelW <= 0 || modelH <= 0) {
-      return new AcGePoint2d(paperCenterX, paperCenterY)
+      return new GeometryPoint2d(paperCenterX, paperCenterY)
     }
     const centerX = (modelBox.min.x + modelBox.max.x) / 2
     const centerY = (modelBox.min.y + modelBox.max.y) / 2
@@ -340,7 +336,7 @@ export class AcTrViewportView extends AcTrBaseView {
       localX = rotatedX
       localY = rotatedY
     }
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       paperCenterX + (localX / modelW) * paperW,
       paperCenterY + (localY / modelH) * paperH
     )
@@ -385,7 +381,7 @@ export class AcTrViewportView extends AcTrBaseView {
    * @returns On-canvas CSS rect and matching model box, or `null` when the
    *   viewport is fully off-screen or has an empty mapping.
    */
-  computeOnscreenPass(): { hit: AcTrCssRect; modelBox: AcGeBox2d } | null {
+  computeOnscreenPass(): { hit: AcTrCssRect; modelBox: GeometryBox2d } | null {
     const viewportWindowBox = AcTrViewportView.calculateViewportWindowBox(
       this._parentView,
       this._viewport
@@ -410,7 +406,7 @@ export class AcTrViewportView extends AcTrBaseView {
     // already calls `applyViewTwist()` after `zoomTo`. Using the twisted
     // AABB would zoom out fully on-screen twisted viewports.
     const mapped = acTrCssRectToWcsBox(hit, this._viewport.viewBox, cssVp)
-    const modelBox = new AcGeBox2d()
+    const modelBox = new GeometryBox2d()
     modelBox.expandByPoint({ x: mapped.minX, y: mapped.minY })
     modelBox.expandByPoint({ x: mapped.maxX, y: mapped.maxY })
     if (modelBox.isEmpty()) return null
@@ -460,8 +456,7 @@ export class AcTrViewportView extends AcTrBaseView {
     const restore = applyAnnotationScalePass(scene, {
       annotationScaleFactor: factor,
       // AutoCAD ANNOALLVISIBLE initial value is 1 (show unsupported).
-      annoAllVisible:
-        this._renderer.context?.database?.annoallvisible !== false
+      annoAllVisible: this._renderer.context?.database?.annoallvisible !== false
     })
     try {
       draw()

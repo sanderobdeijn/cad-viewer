@@ -1,16 +1,20 @@
-import { AcDbEntity, AcGeBox2d, AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  AcDbEntity,
+  GeometryBox2d,
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 
 /**
  * Minimal line primitive shape used for crossing-selection refinement.
  *
- * Matches {@code AcGeIntersectPrimitive} line entries without importing the
+ * Matches {@code GeometryIntersectPrimitive} line entries without importing the
  * geometry-engine type (not re-exported from `@mlightcad/data-model`).
  */
 type SelectionIntersectLinePrimitive = {
   kind: 'line'
   line: {
-    startPoint: AcGePoint2dLike
-    endPoint: AcGePoint2dLike
+    startPoint: GeometryPoint2dLike
+    endPoint: GeometryPoint2dLike
   }
 }
 
@@ -21,9 +25,9 @@ type SelectionIntersectLinePrimitive = {
  * against the four box edges.
  */
 export function acedLineSegmentIntersectsBox2d(
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
-  box: AcGeBox2d
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
+  box: GeometryBox2d
 ): boolean {
   if (box.containsPoint(start) || box.containsPoint(end)) {
     return true
@@ -63,7 +67,7 @@ export function acedLineSegmentIntersectsBox2d(
  */
 export function acedPrimitiveIntersectsSelectionBox(
   primitive: { kind: string },
-  box: AcGeBox2d
+  box: GeometryBox2d
 ): boolean {
   if (primitive.kind === 'line') {
     const linePrimitive = primitive as SelectionIntersectLinePrimitive
@@ -86,7 +90,7 @@ export function acedPrimitiveIntersectsSelectionBox(
  */
 export function acedEntityIntersectsSelectionBox(
   entity: AcDbEntity,
-  box: AcGeBox2d
+  box: GeometryBox2d
 ): boolean {
   const curves = entity.subGetIntersectCurves()
   if (curves.length === 0) {

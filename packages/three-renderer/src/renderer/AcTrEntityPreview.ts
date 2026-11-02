@@ -1,4 +1,8 @@
-import { AcGeBox2d, AcGePoint2d, AcGeVector2d } from '@mlightcad/data-model'
+import {
+  GeometryBox2d,
+  GeometryPoint2d,
+  GeometryVector2d
+} from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 
@@ -16,7 +20,7 @@ export interface AcTrEntityPreviewOptions {
    * World-space bounds used to frame the preview.
    * When omitted, bounds are computed from drawable geometry in `object`.
    */
-  bounds?: AcGeBox2d
+  bounds?: GeometryBox2d
   /** Margin multiplier applied around computed or supplied bounds. Default `1.1`. */
   margin?: number
   /** Background colour; defaults to {@link AcTrRenderer.currentBackgroundColor}. */
@@ -44,7 +48,7 @@ export interface AcTrEntityPreviewResult {
   /** Canvas containing the rendered preview image. */
   canvas: HTMLCanvasElement
   /** World-space bounds used to frame the preview. */
-  bounds: AcGeBox2d
+  bounds: GeometryBox2d
 }
 
 /** Saved WebGL renderer state restored after offscreen preview capture. */
@@ -182,7 +186,7 @@ export class AcTrEntityPreview {
     return { canvas, bounds }
   }
 
-  static box3ToBounds2d(box: THREE.Box3, margin = 1.1): AcGeBox2d | null {
+  static box3ToBounds2d(box: THREE.Box3, margin = 1.1): GeometryBox2d | null {
     if (box.isEmpty() || !AcTrEntityPreview.isFiniteBox3(box)) {
       return null
     }
@@ -199,7 +203,7 @@ export class AcTrEntityPreview {
   static computeObjectBounds2d(
     object: THREE.Object3D,
     margin = 1.1
-  ): AcGeBox2d | null {
+  ): GeometryBox2d | null {
     object.updateMatrixWorld(true)
 
     const box3 = new THREE.Box3()
@@ -247,7 +251,7 @@ export class AcTrEntityPreview {
   static computeObjectBounds2dFromObject(
     object: THREE.Object3D,
     margin = 1.1
-  ): AcGeBox2d | null {
+  ): GeometryBox2d | null {
     object.updateMatrixWorld(true)
     const box3 = new THREE.Box3().setFromObject(object)
     if (box3.isEmpty() || !AcTrEntityPreview.isFiniteBox3(box3)) {
@@ -269,14 +273,14 @@ export class AcTrEntityPreview {
    */
   static fitExportCamera(
     camera: THREE.OrthographicCamera,
-    box: AcGeBox2d,
+    box: GeometryBox2d,
     pixelWidth: number,
     pixelHeight: number
   ) {
-    const size = new AcGeVector2d()
+    const size = new GeometryVector2d()
     box.getSize(size)
 
-    const center = new AcGeVector2d()
+    const center = new GeometryVector2d()
     box.getCenter(center)
 
     const fitWidth = Math.max(Math.abs(size.x), Number.EPSILON)
@@ -307,9 +311,9 @@ export class AcTrEntityPreview {
    */
   private static resolvePreviewBounds(
     object: THREE.Object3D,
-    bounds: AcGeBox2d | undefined,
+    bounds: GeometryBox2d | undefined,
     margin: number
-  ): AcGeBox2d | null {
+  ): GeometryBox2d | null {
     let resolved =
       bounds ?? AcTrEntityPreview.computeObjectBounds2d(object, margin)
     if (!resolved) {
@@ -492,9 +496,9 @@ export class AcTrEntityPreview {
     const halfWidth = (Math.max(Math.abs(size.x), Number.EPSILON) * margin) / 2
     const halfHeight = (Math.max(Math.abs(size.y), Number.EPSILON) * margin) / 2
 
-    return new AcGeBox2d(
-      new AcGePoint2d(center.x - halfWidth, center.y - halfHeight),
-      new AcGePoint2d(center.x + halfWidth, center.y + halfHeight)
+    return new GeometryBox2d(
+      new GeometryPoint2d(center.x - halfWidth, center.y - halfHeight),
+      new GeometryPoint2d(center.x + halfWidth, center.y + halfHeight)
     )
   }
 
@@ -504,18 +508,18 @@ export class AcTrEntityPreview {
    * @param box - Source bounds supplied by the caller
    * @param margin - Margin multiplier applied around the raw bounds
    */
-  private static expandBox2d(box: AcGeBox2d, margin: number) {
-    const size = new AcGeVector2d()
+  private static expandBox2d(box: GeometryBox2d, margin: number) {
+    const size = new GeometryVector2d()
     box.getSize(size)
-    const center = new AcGeVector2d()
+    const center = new GeometryVector2d()
     box.getCenter(center)
 
     const halfWidth = (Math.max(Math.abs(size.x), Number.EPSILON) * margin) / 2
     const halfHeight = (Math.max(Math.abs(size.y), Number.EPSILON) * margin) / 2
 
-    return new AcGeBox2d(
-      new AcGePoint2d(center.x - halfWidth, center.y - halfHeight),
-      new AcGePoint2d(center.x + halfWidth, center.y + halfHeight)
+    return new GeometryBox2d(
+      new GeometryPoint2d(center.x - halfWidth, center.y - halfHeight),
+      new GeometryPoint2d(center.x + halfWidth, center.y + halfHeight)
     )
   }
 

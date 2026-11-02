@@ -1,4 +1,8 @@
-import { AcGeCircArc2d, ORIGIN_POINT_2D, TAU } from '@mlightcad/geometry-engine'
+import {
+  GeometryCircularArc2d,
+  ORIGIN_POINT_2D,
+  TAU
+} from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../src/database'
 import { AcDbViewportTableRecord } from '../src/database/AcDbViewportTableRecord'
@@ -15,7 +19,7 @@ import {
 describe('acdbDrawTessellateOptions', () => {
   it('falls back to the geometry default without a database', () => {
     expect(acdbResolveCircleSides(undefined)).toBe(
-      AcGeCircArc2d.DEFAULT_CIRCLE_SIDES
+      GeometryCircularArc2d.DEFAULT_CIRCLE_SIDES
     )
     expect(acdbDrawTessellateOptions().circleSides).toBe(
       ACDB_DRAW_CIRCLE_SIDES_STANDARD
@@ -34,7 +38,7 @@ describe('acdbDrawTessellateOptions', () => {
       acdbDrawTessellateOptions({ context: { database: db } }).circleSides
     ).toBe(ACDB_DRAW_CIRCLE_SIDES_DRAFT)
     expect(
-      new AcGeCircArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(
+      new GeometryCircularArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(
         acdbDrawTessellateOptions({ context: { database: db } })
       )
     ).toHaveLength(ACDB_DRAW_CIRCLE_SIDES_DRAFT + 1)
@@ -66,7 +70,9 @@ describe('acdbDrawTessellateOptions', () => {
     const options = acdbDrawTessellateOptions({ context: { database: db } })
     expect(options.circleSides).toBe(ACDB_DRAW_CIRCLE_SIDES_DRAFT)
     expect(
-      new AcGeCircArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(options)
+      new GeometryCircularArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(
+        options
+      )
     ).toHaveLength(ACDB_DRAW_CIRCLE_SIDES_DRAFT + 1)
   })
 
@@ -78,7 +84,9 @@ describe('acdbDrawTessellateOptions', () => {
     expect(options.circleSides).toBe(ACDB_DRAW_CIRCLE_SIDES_HIGH)
     expect(options.maxSegments).toBe(ACDB_DRAW_CIRCLE_SIDES_HIGH)
     expect(
-      new AcGeCircArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(options)
+      new GeometryCircularArc2d(ORIGIN_POINT_2D, 10, 0, TAU, false).tessellate(
+        options
+      )
     ).toHaveLength(ACDB_DRAW_CIRCLE_SIDES_HIGH + 1)
   })
 })

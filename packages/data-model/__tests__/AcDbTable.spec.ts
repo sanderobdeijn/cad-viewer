@@ -1,4 +1,4 @@
-import { AcGeBox3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryBox3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
   AcGiContext,
@@ -119,19 +119,19 @@ describe('AcDbTable', () => {
       AcGiMTextAttachmentPoint.MiddleCenter
     )
 
-    expect(table.geometricExtents).toBeInstanceOf(AcGeBox3d)
+    expect(table.geometricExtents).toBeInstanceOf(GeometryBox3d)
   })
 
   it('returns geometricExtents and recomputes when position changes', () => {
     const table = new AcDbTable('TABLE_EXTENTS', 2, 2)
-    table.position = new AcGePoint2d(0, 0)
+    table.position = new GeometryPoint2d(0, 0)
     table.setUniformRowHeight(10)
     table.setUniformColumnWidth(20)
 
     expect(table.geometricExtents.min).toMatchObject({ x: 0, y: -20 })
     expect(table.geometricExtents.max).toMatchObject({ x: 40, y: 0 })
 
-    table.position = new AcGePoint2d(5, 5)
+    table.position = new GeometryPoint2d(5, 5)
 
     expect(table.geometricExtents.min).toMatchObject({ x: 5, y: -15 })
     expect(table.geometricExtents.max).toMatchObject({ x: 45, y: 5 })
@@ -139,7 +139,7 @@ describe('AcDbTable', () => {
 
   it('exposes editable runtime properties for table and geometry groups', () => {
     const table = new AcDbTable('TABLE_PROPERTIES', 2, 2)
-    table.position = new AcGePoint2d(1, 2)
+    table.position = new GeometryPoint2d(1, 2)
     table.setUniformRowHeight(10)
     table.setUniformColumnWidth(20)
 
@@ -188,9 +188,9 @@ describe('AcDbTable', () => {
     const table = new AcDbTable('TABLE_DRAW', 3, 3)
     db.tables.blockTable.modelSpace.appendEntity(table)
 
-    table.position = new AcGePoint2d(4, 5)
+    table.position = new GeometryPoint2d(4, 5)
     table.rotation = Math.PI / 6
-    table.scaleFactors = new AcGePoint2d(2, 2)
+    table.scaleFactors = new GeometryPoint2d(2, 2)
     table.attachmentPoint = 0 as AcGiMTextAttachmentPoint
     table.setUniformRowHeight(10)
     table.setUniformColumnWidth(20)

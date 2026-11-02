@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbXline } from '../src/entity'
@@ -25,8 +25,8 @@ describe('AcDbXline', () => {
 
   it('supports basePoint/unitDir setters via copy semantics', () => {
     const xline = new AcDbXline()
-    const base = new AcGePoint2d(2, 3)
-    const dir = new AcGePoint2d(5, -6)
+    const base = new GeometryPoint2d(2, 3)
+    const dir = new GeometryPoint2d(5, -6)
 
     xline.basePoint = base
     xline.unitDir = dir
@@ -39,8 +39,8 @@ describe('AcDbXline', () => {
 
   it('returns geometricExtents around +/-10 units from basePoint along unitDir', () => {
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(1, 2)
-    xline.unitDir = new AcGePoint2d(2, -1)
+    xline.basePoint = new GeometryPoint2d(1, 2)
+    xline.unitDir = new GeometryPoint2d(2, -1)
 
     const extents = xline.geometricExtents
 
@@ -50,12 +50,12 @@ describe('AcDbXline', () => {
 
   it('updates geometricExtents when basePoint changes', () => {
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(0, 0)
-    xline.unitDir = new AcGePoint2d(1, 0)
+    xline.basePoint = new GeometryPoint2d(0, 0)
+    xline.unitDir = new GeometryPoint2d(1, 0)
 
     expect(xline.geometricExtents.min).toMatchObject({ x: -10, y: 0 })
 
-    xline.basePoint = new AcGePoint2d(20, 0)
+    xline.basePoint = new GeometryPoint2d(20, 0)
 
     expect(xline.geometricExtents.min).toMatchObject({ x: 10, y: 0 })
     expect(xline.geometricExtents.max).toMatchObject({ x: 30, y: 0 })
@@ -98,7 +98,7 @@ describe('AcDbXline', () => {
 
   it('returns basePoint as the only grip point', () => {
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(7, 8)
+    xline.basePoint = new GeometryPoint2d(7, 8)
 
     const gripPoints = xline.subGetGripPoints()
 
@@ -109,34 +109,34 @@ describe('AcDbXline', () => {
 
   it('computes osnap points for endpoint, nearest, and perpendicular modes', () => {
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(0, 0)
-    xline.unitDir = new AcGePoint2d(1, 0)
+    xline.basePoint = new GeometryPoint2d(0, 0)
+    xline.unitDir = new GeometryPoint2d(1, 0)
 
-    const endPoints: AcGePoint2d[] = []
+    const endPoints: GeometryPoint2d[] = []
     xline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       endPoints
     )
     expect(endPoints).toHaveLength(1)
     expect(endPoints[0]).toMatchObject({ x: 0, y: 0 })
 
-    const nearestPoints: AcGePoint2d[] = []
+    const nearestPoints: GeometryPoint2d[] = []
     xline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(-5, 4),
-      new AcGePoint2d(),
+      new GeometryPoint2d(-5, 4),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0]).toMatchObject({ x: -5, y: 0 })
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     xline.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(2, 3),
-      new AcGePoint2d(),
+      new GeometryPoint2d(2, 3),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
@@ -145,13 +145,13 @@ describe('AcDbXline', () => {
 
   it('transforms itself and draws through renderer.lines', () => {
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(1, 0)
-    xline.unitDir = new AcGePoint2d(1, 0)
+    xline.basePoint = new GeometryPoint2d(1, 0)
+    xline.unitDir = new GeometryPoint2d(1, 0)
 
-    const matrix = new AcGeMatrix3d().makeRotationZ(Math.PI / 2)
+    const matrix = new GeometryMatrix3d().makeRotationZ(Math.PI / 2)
     const drawResult = { id: 'xline-rendered' }
     const renderer = {
-      lines: jest.fn<unknown, [AcGePoint2d[]]>(() => drawResult)
+      lines: jest.fn<unknown, [GeometryPoint2d[]]>(() => drawResult)
     }
 
     expect(xline.transformBy(matrix)).toBe(xline)

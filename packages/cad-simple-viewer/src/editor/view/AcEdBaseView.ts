@@ -5,11 +5,11 @@ import {
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
   AcDbObjectId,
-  AcGeBox2d,
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 import { debounce } from 'lodash-es'
 
@@ -102,7 +102,7 @@ export interface AcEdSnapLoupeViewState {
   /** Width and height of the square loupe (CSS pixels). */
   size: number
   /** World-space box mapped onto the loupe. */
-  viewBox: AcGeBox2d
+  viewBox: GeometryBox2d
 }
 
 /**
@@ -195,10 +195,10 @@ export type AcEdCalculateSizeCallback = () => { width: number; height: number }
  * ```
  */
 export interface AcEdViewportCoordinateMapper {
-  paperToModel(point: AcGePoint2dLike): AcGePoint2d
-  modelToPaper(point: AcGePoint2dLike): AcGePoint2d
+  paperToModel(point: GeometryPoint2dLike): GeometryPoint2d
+  modelToPaper(point: GeometryPoint2dLike): GeometryPoint2d
   /** Returns true when `paperPt` lies within the viewport's paper rectangle. */
-  containsPaperPoint(point: AcGePoint2dLike): boolean
+  containsPaperPoint(point: GeometryPoint2dLike): boolean
 }
 
 export abstract class AcEdBaseView {
@@ -209,16 +209,16 @@ export abstract class AcEdBaseView {
   /** Optional callback to calculate canvas size on resize */
   private _calculateSizeCallback?: AcEdCalculateSizeCallback
   /** Bounding box of all entities in the view */
-  private _bbox: AcGeBox3d
+  private _bbox: GeometryBox3d
   /** Current mouse position in world coordinates */
-  private _curPos: AcGePoint2d
+  private _curPos: GeometryPoint2d
   /**
    * Current mouse position in canvas-local screen coordinates (pixels).
    *
    * This value is derived from viewport/client mouse coordinates by subtracting
    * the canvas bounding-rect origin (`viewportToCanvas`).
    */
-  private _curMousePos: AcGePoint2d
+  private _curMousePos: GeometryPoint2d
   /**
    * True after at least one mouse or pointer sample has updated
    * {@link curMousePos}. Touch devices never fire `mousemove` until a finger
@@ -314,11 +314,11 @@ export abstract class AcEdBaseView {
     this._container = container
     this._canvas = canvas
     const rect = canvas.getBoundingClientRect()
-    this._bbox = new AcGeBox3d()
+    this._bbox = new GeometryBox3d()
     this._width = rect.width
     this._height = rect.height
-    this._curPos = new AcGePoint2d()
-    this._curMousePos = new AcGePoint2d()
+    this._curPos = new GeometryPoint2d()
+    this._curMousePos = new GeometryPoint2d()
     this._hasCursorPos = false
     this._selectionSet = new AcEdSelectionSet()
     this._editor = new AcEditor(this)
@@ -499,14 +499,14 @@ export abstract class AcEdBaseView {
    *
    * @returns The view center point
    */
-  abstract get center(): AcGePoint2d
+  abstract get center(): GeometryPoint2d
 
   /**
    * Sets the center point of the current view in world coordinates.
    *
    * @param value - The new center point
    */
-  abstract set center(value: AcGePoint2d)
+  abstract set center(value: GeometryPoint2d)
 
   /**
    * Converts a point from screen coordinates to world coordinates.
@@ -525,7 +525,7 @@ export abstract class AcEdBaseView {
    * console.log('World coordinates:', worldPoint.x, worldPoint.y);
    * ```
    */
-  abstract screenToWorld(point: AcGePoint2dLike): AcGePoint2d
+  abstract screenToWorld(point: GeometryPoint2dLike): GeometryPoint2d
 
   /**
    * Converts a point from world coordinates to screen coordinates.
@@ -538,12 +538,12 @@ export abstract class AcEdBaseView {
    *
    * @example
    * ```typescript
-   * const worldPoint = new AcGePoint2d(10, 20); // CAD coordinates
+   * const worldPoint = new GeometryPoint2d(10, 20); // CAD coordinates
    * const screenPoint = view.worldToScreen(worldPoint);
    * console.log('Screen position:', screenPoint.x, screenPoint.y);
    * ```
    */
-  abstract worldToScreen(point: AcGePoint2dLike): AcGePoint2d
+  abstract worldToScreen(point: GeometryPoint2dLike): GeometryPoint2d
 
   /**
    * Zooms the view to fit the specified bounding box with optional margin.
@@ -555,7 +555,7 @@ export abstract class AcEdBaseView {
    * @param box - The bounding box to zoom to, in world coordinates
    * @param margin - Additional margin around the bounding box (in world units)
    */
-  abstract zoomTo(box: AcGeBox2d, margin: number): void
+  abstract zoomTo(box: GeometryBox2d, margin: number): void
 
   /**
    * Returns the axis-aligned world XY extents of drawable geometry in the
@@ -567,7 +567,7 @@ export abstract class AcEdBaseView {
    *
    * @returns Drawable extents, or `undefined` when the scene has no geometry.
    */
-  abstract getDrawingExtents(): AcGeBox2d | undefined
+  abstract getDrawingExtents(): GeometryBox2d | undefined
 
   /**
    * Zooms the view to fit all visible entities in the current drawing.
@@ -606,7 +606,7 @@ export abstract class AcEdBaseView {
    * @param scale - The optional target zoom scale to apply after the transition.
    * If not specified, the scale will not change.
    */
-  abstract flyTo(point: AcGePoint2dLike, scale?: number): void
+  abstract flyTo(point: GeometryPoint2dLike, scale?: number): void
 
   /**
    * Gets the background color of the view.
@@ -629,7 +629,7 @@ export abstract class AcEdBaseView {
    * @returns Return query results
    */
   abstract search(
-    box: AcGeBox2d | AcGeBox3d,
+    box: GeometryBox2d | GeometryBox3d,
     options?: AcTrSpatialSearchOptions
   ): AcEdSpatialQueryResultItemEx[]
 
@@ -655,7 +655,7 @@ export abstract class AcEdBaseView {
    * the hit-region.
    */
   abstract pick(
-    point?: AcGePoint2dLike,
+    point?: GeometryPoint2dLike,
     hitRadius?: number,
     pickOneOnly?: boolean
   ): AcEdSpatialQueryResultItemEx[]
@@ -681,14 +681,14 @@ export abstract class AcEdBaseView {
    * them.
    * @param box Input one bounding box in the world coordinate system.
    */
-  abstract selectByBox(box: AcGeBox2d): void
+  abstract selectByBox(box: GeometryBox2d): void
 
   /**
    * Select entities intersected with the specified point in the world coordinate
    * system, add them to the current selection set, and highlight them.
    * @param box Input one point in the world coordinate system.
    */
-  abstract select(point?: AcGePoint2dLike): void
+  abstract select(point?: GeometryPoint2dLike): void
 
   /**
    * Clear the scene
@@ -744,7 +744,7 @@ export abstract class AcEdBaseView {
    * @param handleId - Preview handle returned by {@link createEntityPreview}
    * @param matrix - World transform to apply to the preview geometry
    */
-  abstract updateEntityPreview(handleId: string, matrix: AcGeMatrix3d): void
+  abstract updateEntityPreview(handleId: string, matrix: GeometryMatrix3d): void
 
   /**
    * Removes one batched preview overlay.
@@ -760,7 +760,7 @@ export abstract class AcEdBaseView {
   abstract updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
       objectId: AcDbObjectId
-      matrix: AcGeMatrix3d
+      matrix: GeometryMatrix3d
     }>
   ): void
 
@@ -882,8 +882,8 @@ export abstract class AcEdBaseView {
    * Left-to-right = window selection, right-to-left = crossing selection.
    */
   getSelectionMode(
-    startCanvas: AcGePoint2dLike,
-    endCanvas: AcGePoint2dLike
+    startCanvas: GeometryPoint2dLike,
+    endCanvas: GeometryPoint2dLike
   ): AcEdSelectionMode {
     return endCanvas.x >= startCanvas.x ? 'window' : 'crossing'
   }
@@ -903,8 +903,8 @@ export abstract class AcEdBaseView {
    * Determine whether a drag is effectively a click.
    */
   isSelectionClick(
-    startCanvas: AcGePoint2dLike,
-    endCanvas: AcGePoint2dLike,
+    startCanvas: GeometryPoint2dLike,
+    endCanvas: GeometryPoint2dLike,
     threshold: number = 2
   ) {
     const dx = endCanvas.x - startCanvas.x
@@ -961,7 +961,7 @@ export abstract class AcEdBaseView {
    * Select entities by box with window/crossing behavior.
    */
   selectByBoxWithMode(
-    box: AcGeBox2d,
+    box: GeometryBox2d,
     mode: AcEdSelectionMode,
     action: AcEdSelectionAction = 'add'
   ) {
@@ -977,7 +977,10 @@ export abstract class AcEdBaseView {
    * Subclasses with access to the drawing database should override
    * {@link refineCrossingSelectionHits} to drop those false positives.
    */
-  protected collectSelectionIdsByBox(box: AcGeBox2d, mode: AcEdSelectionMode) {
+  protected collectSelectionIdsByBox(
+    box: GeometryBox2d,
+    mode: AcEdSelectionMode
+  ) {
     const results = this.search(box, { selectionMode: mode }).filter(
       isEffectiveSpatialQueryHit
     )
@@ -994,7 +997,7 @@ export abstract class AcEdBaseView {
    * to test curve geometry against the pick box.
    */
   protected refineCrossingSelectionHits(
-    _box: AcGeBox2d,
+    _box: GeometryBox2d,
     results: AcEdSpatialQueryResultItemEx[]
   ): AcDbObjectId[] {
     return results.map(item => item.id)
@@ -1053,17 +1056,17 @@ export abstract class AcEdBaseView {
    * Converts a viewport/client-space point (e.g. MouseEvent.clientX/Y)
    * into canvas-local coordinates.
    */
-  viewportToCanvas(point: AcGePoint2dLike): AcGePoint2d {
+  viewportToCanvas(point: GeometryPoint2dLike): GeometryPoint2d {
     const rect = this._canvas.getBoundingClientRect()
-    return new AcGePoint2d(point.x - rect.left, point.y - rect.top)
+    return new GeometryPoint2d(point.x - rect.left, point.y - rect.top)
   }
 
   /**
    * Converts canvas-local coordinates into viewport/client-space coordinates.
    */
-  canvasToViewport(point: AcGePoint2dLike): AcGePoint2d {
+  canvasToViewport(point: GeometryPoint2dLike): GeometryPoint2d {
     const rect = this._canvas.getBoundingClientRect()
-    return new AcGePoint2d(point.x + rect.left, point.y + rect.top)
+    return new GeometryPoint2d(point.x + rect.left, point.y + rect.top)
   }
 
   /**
@@ -1072,10 +1075,10 @@ export abstract class AcEdBaseView {
    * This is useful for DOM overlays mounted in `container` while CAD APIs
    * return screen points in canvas space.
    */
-  canvasToContainer(point: AcGePoint2dLike): AcGePoint2d {
+  canvasToContainer(point: GeometryPoint2dLike): GeometryPoint2d {
     const canvasRect = this._canvas.getBoundingClientRect()
     const containerRect = this._container.getBoundingClientRect()
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       point.x + (canvasRect.left - containerRect.left),
       point.y + (canvasRect.top - containerRect.top)
     )
@@ -1084,9 +1087,9 @@ export abstract class AcEdBaseView {
   /**
    * Converts a viewport/client-space point into container-local coordinates.
    */
-  viewportToContainer(point: AcGePoint2dLike): AcGePoint2d {
+  viewportToContainer(point: GeometryPoint2dLike): GeometryPoint2d {
     const containerRect = this._container.getBoundingClientRect()
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       point.x - containerRect.left,
       point.y - containerRect.top
     )

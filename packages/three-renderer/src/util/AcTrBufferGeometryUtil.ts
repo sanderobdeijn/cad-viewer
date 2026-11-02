@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 const _vector1 = /*@__PURE__*/ new THREE.Vector3()
@@ -84,7 +84,7 @@ export class AcTrBufferGeometryUtil {
     })
   }
 
-  static createBufferGeometryByPoints(points: AcGePoint2dLike[]) {
+  static createBufferGeometryByPoints(points: GeometryPoint2dLike[]) {
     const geometry = new THREE.BufferGeometry()
     const position = new Float32Array(points.length * 3)
     const indices = new Uint16Array((points.length - 1) * 2)
@@ -480,7 +480,7 @@ export class AcTrBufferGeometryUtil {
   /**
    * Returns true when all coordinates of a 3D point are finite.
    */
-  static isFinitePoint(point: AcGePoint2dLike | null | undefined): boolean {
+  static isFinitePoint(point: GeometryPoint2dLike | null | undefined): boolean {
     return !!point && Number.isFinite(point.x) && Number.isFinite(point.y)
   }
 

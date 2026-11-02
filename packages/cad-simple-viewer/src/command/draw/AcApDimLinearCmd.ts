@@ -2,7 +2,7 @@ import {
   AcDbAlignedDimension,
   AcDbDatabase,
   AcDbDataGenerator,
-  AcGePoint2dLike
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -16,7 +16,7 @@ import {
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
 
-export class AcApDimJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _db: AcDbDatabase
   private _dim: AcDbAlignedDimension
   private _dimBlockName = '*UDIM'
@@ -29,8 +29,8 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint2dLike> {
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    xline1Point: AcGePoint2dLike,
-    xline2Point: AcGePoint2dLike
+    xline1Point: GeometryPoint2dLike,
+    xline2Point: GeometryPoint2dLike
   ) {
     super(view)
     this._db = db
@@ -45,7 +45,7 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return this._dim
   }
 
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     this._dim.dimLinePoint = point
     this._dim.rotation = this.calculateAngle(
       this._dim.xLine1Point,
@@ -66,7 +66,7 @@ export class AcApDimJig extends AcEdPreviewJig<AcGePoint2dLike> {
     this._db.tables.blockTable.remove(this._dimBlockName)
   }
 
-  private calculateAngle(p1: AcGePoint2dLike, p2: AcGePoint2dLike) {
+  private calculateAngle(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
     return Math.atan2(dy, dx)

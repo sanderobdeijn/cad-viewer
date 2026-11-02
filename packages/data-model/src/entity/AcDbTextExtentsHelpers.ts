@@ -1,9 +1,9 @@
 import {
-  AcGeBox3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiMTextAttachmentPoint } from '@mlightcad/graphic-interface'
 
@@ -211,15 +211,15 @@ export function acdbGetLocalBoundsFromAttachment(
  * @returns Normalized local X and Y axis vectors.
  * @internal
  */
-function getTextAxes(rotation: number, direction?: AcGeVector3d) {
-  let xAxis: AcGeVector3d
+function getTextAxes(rotation: number, direction?: GeometryVector3d) {
+  let xAxis: GeometryVector3d
   if (direction && direction.lengthSq() > 0) {
     xAxis = direction.clone().normalize()
   } else {
-    xAxis = new AcGeVector3d(Math.cos(rotation), Math.sin(rotation), 0)
+    xAxis = new GeometryVector3d(Math.cos(rotation), Math.sin(rotation), 0)
   }
 
-  const yAxis = new AcGeVector3d(-xAxis.y, xAxis.x, xAxis.z)
+  const yAxis = new GeometryVector3d(-xAxis.y, xAxis.x, xAxis.z)
   if (yAxis.lengthSq() === 0) {
     yAxis.set(0, 1, 0)
   } else {
@@ -233,13 +233,13 @@ function getTextAxes(rotation: number, direction?: AcGeVector3d) {
  * Expands a box with an oriented text rectangle anchored at `anchor`.
  */
 export function acdbExpandBoxByOrientedTextRect(
-  box: AcGeBox3d,
-  anchor: AcGePoint2dLike,
+  box: GeometryBox3d,
+  anchor: GeometryPoint2dLike,
   width: number,
   height: number,
   attachment: AcGiMTextAttachmentPoint,
   rotation = 0,
-  direction?: AcGeVector3dLike
+  direction?: GeometryVector3dLike
 ) {
   if (width <= 0 && height <= 0) {
     box.expandByPoint(anchor)
@@ -250,7 +250,7 @@ export function acdbExpandBoxByOrientedTextRect(
   const { xAxis, yAxis } = getTextAxes(
     rotation,
     direction
-      ? new AcGeVector3d(direction.x, direction.y, direction.z || 0)
+      ? new GeometryVector3d(direction.x, direction.y, direction.z || 0)
       : undefined
   )
 
@@ -263,7 +263,7 @@ export function acdbExpandBoxByOrientedTextRect(
 
   for (const [localX, localY] of corners) {
     box.expandByPoint(
-      new AcGePoint2d(
+      new GeometryPoint2d(
         anchor.x + xAxis.x * localX + yAxis.x * localY,
         anchor.y + xAxis.y * localX + yAxis.y * localY
       )
@@ -291,9 +291,9 @@ export interface AcDbMTextLayoutMetrics {
   /** Rotation angle in radians relative to the text OCS X axis. */
   rotation: number
   /** Optional direction vector overriding {@link AcDbMTextLayoutMetrics.rotation}. */
-  direction?: AcGeVector3d
+  direction?: GeometryVector3d
   /** Insertion/anchor point of the MTEXT entity in world coordinates. */
-  location: AcGePoint2d
+  location: GeometryPoint2d
 }
 
 /**
@@ -340,8 +340,8 @@ export function acdbResolveMTextLayoutMetrics(input: {
   lineSpacingStyle?: number
   attachmentPoint: AcGiMTextAttachmentPoint
   rotation: number
-  direction: AcGeVector3d
-  location: AcGePoint2dLike
+  direction: GeometryVector3d
+  location: GeometryPoint2dLike
 }): AcDbMTextLayoutMetrics {
   const width =
     input.extentsWidth > 0
@@ -363,7 +363,7 @@ export function acdbResolveMTextLayoutMetrics(input: {
     rotation: input.rotation,
     direction:
       input.direction.lengthSq() > 0 ? input.direction.clone() : undefined,
-    location: new AcGePoint2d(input.location.x, input.location.y)
+    location: new GeometryPoint2d(input.location.x, input.location.y)
   }
 }
 
@@ -379,7 +379,7 @@ export function acdbResolveMTextLayoutMetrics(input: {
  * @returns Local coordinates `{ x, y }` relative to {@link AcDbMTextLayoutMetrics.location}.
  */
 export function acdbWorldPointToMTextLocal(
-  point: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
   layout: AcDbMTextLayoutMetrics
 ): { x: number; y: number } {
   const { xAxis, yAxis } = getTextAxes(layout.rotation, layout.direction)
@@ -403,7 +403,7 @@ export function acdbWorldPointToMTextLocal(
  */
 export function acdbCollectMTextOrientedCorners(
   layout: AcDbMTextLayoutMetrics
-): AcGePoint2d[] {
+): GeometryPoint2d[] {
   const bounds = acdbGetLocalBoundsFromAttachment(
     layout.width,
     layout.height,
@@ -419,7 +419,7 @@ export function acdbCollectMTextOrientedCorners(
 
   return localCorners.map(
     ([localX, localY]) =>
-      new AcGePoint2d(
+      new GeometryPoint2d(
         layout.location.x + xAxis.x * localX + yAxis.x * localY,
         layout.location.y + xAxis.y * localX + yAxis.y * localY
       )
@@ -439,7 +439,7 @@ export function acdbCollectMTextOrientedCorners(
  * @returns Association score, or `null` when the point is outside padded bounds.
  */
 export function acdbScorePointAgainstMTextLayout(
-  point: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
   layout: AcDbMTextLayoutMetrics,
   padding: AcDbMTextAssociationPadding
 ): number | null {

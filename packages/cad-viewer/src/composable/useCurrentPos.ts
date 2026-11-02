@@ -1,6 +1,6 @@
 import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
 import { AcEdBaseView, AcEdMouseEventArgs } from '@mlightcad/cad-simple-viewer'
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 function formatCoordinatePair(x: number, y: number): string {
@@ -8,7 +8,7 @@ function formatCoordinatePair(x: number, y: number): string {
   if (!db) {
     return `${x.toFixed(3)}, ${y.toFixed(3)}`
   }
-  return db.formatter.formatPoint2d(new AcGePoint2d(x, y))
+  return db.formatter.formatPoint2d(new GeometryPoint2d(x, y))
 }
 
 export function useCurrentPos(view: AcEdBaseView) {

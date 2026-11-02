@@ -1,15 +1,15 @@
 import {
-  AcGeArea2d,
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePointLike,
-  AcGePolyline2d,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryArea2d,
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPointLike,
+  GeometryPolyline2d,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -35,10 +35,10 @@ import { acdbOffsetVertexPathAsPolyline, AcDbPolyline } from './AcDbPolyline'
  * ```typescript
  * // Create a trace entity
  * const trace = new AcDbTrace();
- * trace.setPointAt(0, new AcGePoint2d(0, 0));
- * trace.setPointAt(1, new AcGePoint2d(10, 0));
- * trace.setPointAt(2, new AcGePoint2d(10, 5));
- * trace.setPointAt(3, new AcGePoint2d(0, 5));
+ * trace.setPointAt(0, new GeometryPoint2d(0, 0));
+ * trace.setPointAt(1, new GeometryPoint2d(10, 0));
+ * trace.setPointAt(2, new GeometryPoint2d(10, 5));
+ * trace.setPointAt(3, new GeometryPoint2d(0, 5));
  *
  * // Access trace properties
  * console.log(`Elevation: ${trace.elevation}`);
@@ -56,11 +56,16 @@ export class AcDbTrace extends AcDbCurve {
   /** The elevation (Z-coordinate) of the trace plane */
   private _elevation: number
   /** The four vertices of the trace */
-  private _vertices: [AcGePoint2d, AcGePoint2d, AcGePoint2d, AcGePoint2d]
+  private _vertices: [
+    GeometryPoint2d,
+    GeometryPoint2d,
+    GeometryPoint2d,
+    GeometryPoint2d
+  ]
   /** The thickness (extrusion) of the trace */
   private _thickness: number
   /** Extrusion / plane normal (DXF group 210) */
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _normal = new GeometryVector3d(0, 0, 1)
 
   /**
    * Creates a new trace entity.
@@ -72,10 +77,10 @@ export class AcDbTrace extends AcDbCurve {
    * ```typescript
    * const trace = new AcDbTrace();
    * // Set the four vertices to create a rectangle
-   * trace.setPointAt(0, new AcGePoint2d(0, 0));
-   * trace.setPointAt(1, new AcGePoint2d(10, 0));
-   * trace.setPointAt(2, new AcGePoint2d(10, 5));
-   * trace.setPointAt(3, new AcGePoint2d(0, 5));
+   * trace.setPointAt(0, new GeometryPoint2d(0, 0));
+   * trace.setPointAt(1, new GeometryPoint2d(10, 0));
+   * trace.setPointAt(2, new GeometryPoint2d(10, 5));
+   * trace.setPointAt(3, new GeometryPoint2d(0, 5));
    * ```
    */
   constructor() {
@@ -83,10 +88,10 @@ export class AcDbTrace extends AcDbCurve {
     this._elevation = 0
     this._thickness = 0
     this._vertices = [
-      new AcGePoint2d(),
-      new AcGePoint2d(),
-      new AcGePoint2d(),
-      new AcGePoint2d()
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d()
     ]
   }
 
@@ -135,7 +140,7 @@ export class AcDbTrace extends AcDbCurve {
 
   /** @inheritdoc */
   override get area(): number {
-    const polyline = new AcGePolyline2d(
+    const polyline = new GeometryPolyline2d(
       AcDbTrace.boundaryPointsFromVertices(this._vertices),
       true
     )
@@ -177,10 +182,10 @@ export class AcDbTrace extends AcDbCurve {
   /**
    * Extrusion direction / plane normal (DXF group 210).
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
@@ -200,7 +205,7 @@ export class AcDbTrace extends AcDbCurve {
    * console.log(`Vertex 0: ${point0.x}, ${point0.y}`);
    * ```
    */
-  getPointAt(index: number): AcGePoint2d {
+  getPointAt(index: number): GeometryPoint2d {
     if (index < 0) return this._vertices[0]
     if (index > 3) return this._vertices[3]
     return this._vertices[index]
@@ -217,13 +222,13 @@ export class AcDbTrace extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * trace.setPointAt(0, new AcGePoint2d(0, 0));
-   * trace.setPointAt(1, new AcGePoint2d(10, 0));
-   * trace.setPointAt(2, new AcGePoint2d(10, 5));
-   * trace.setPointAt(3, new AcGePoint2d(0, 5));
+   * trace.setPointAt(0, new GeometryPoint2d(0, 0));
+   * trace.setPointAt(1, new GeometryPoint2d(10, 0));
+   * trace.setPointAt(2, new GeometryPoint2d(10, 5));
+   * trace.setPointAt(3, new GeometryPoint2d(0, 5));
    * ```
    */
-  setPointAt(index: number, point: AcGePointLike) {
+  setPointAt(index: number, point: GeometryPointLike) {
     if (index < 0) this._vertices[0].copy(point)
     if (index > 3) return this._vertices[3].copy(point)
     this._vertices[index].copy(point)
@@ -240,12 +245,12 @@ export class AcDbTrace extends AcDbCurve {
    * console.log(`Trace bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
-    return new AcGeBox3d().setFromPoints(this._vertices)
+  get geometricExtents(): GeometryBox3d {
+    return new GeometryBox3d().setFromPoints(this._vertices)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     const v0 = this._vertices[0]
     const v1 = this._vertices[1]
     const v2 = this._vertices[2]
@@ -268,13 +273,13 @@ export class AcDbTrace extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     gripPoints.push(...this._vertices)
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePointArrayGripAt(indices, offset, this._vertices)
     return this
   }
@@ -293,9 +298,9 @@ export class AcDbTrace extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const perimeter = [
       this._vertices[0],
@@ -315,7 +320,7 @@ export class AcDbTrace extends AcDbCurve {
   /**
    * Transforms this trace by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._vertices.forEach(vertex => vertex.applyMatrix4(matrix))
     return this
   }
@@ -339,11 +344,11 @@ export class AcDbTrace extends AcDbCurve {
    * @returns The rendered trace entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const polyline = new AcGePolyline2d(
+    const polyline = new GeometryPolyline2d(
       AcDbTrace.boundaryPointsFromVertices(this._vertices),
       true
     )
-    const area = new AcGeArea2d()
+    const area = new GeometryArea2d()
     area.add(polyline)
 
     return renderer.area(area)
@@ -365,7 +370,7 @@ export class AcDbTrace extends AcDbCurve {
    *
    * Treats the trace outline as a closed polygon in XY.
    */
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const path = this.collectBoundary2d()
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, true).getOffsetSideAtPoint(point)
@@ -388,7 +393,7 @@ export class AcDbTrace extends AcDbCurve {
    *
    * @returns XY boundary vertices
    */
-  private collectBoundary2d(): AcGePoint2d[] {
+  private collectBoundary2d(): GeometryPoint2d[] {
     return AcDbTrace.boundaryPointsFromVertices(this._vertices)
   }
 
@@ -399,17 +404,17 @@ export class AcDbTrace extends AcDbCurve {
    * sequential perimeter. The filled outline follows 1 → 2 → 4 → 3.
    */
   static boundaryPointsFromVertices(
-    vertices: ReadonlyArray<AcGePoint2dLike>
-  ): AcGePoint2d[] {
+    vertices: ReadonlyArray<GeometryPoint2dLike>
+  ): GeometryPoint2d[] {
     const v0 = vertices[0]
     const v1 = vertices[1]
     const v2 = vertices[2]
     const v3 = vertices[3]
     return [
-      new AcGePoint2d(v0.x, v0.y),
-      new AcGePoint2d(v1.x, v1.y),
-      new AcGePoint2d(v3.x, v3.y),
-      new AcGePoint2d(v2.x, v2.y)
+      new GeometryPoint2d(v0.x, v0.y),
+      new GeometryPoint2d(v1.x, v1.y),
+      new GeometryPoint2d(v3.x, v3.y),
+      new GeometryPoint2d(v2.x, v2.y)
     ]
   }
 }

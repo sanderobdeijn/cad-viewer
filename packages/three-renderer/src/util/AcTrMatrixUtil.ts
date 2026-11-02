@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 /**
@@ -6,7 +6,7 @@ import * as THREE from 'three'
  * @internal
  */
 export class AcTrMatrixUtil {
-  static createMatrix4(matrix: AcGeMatrix3d) {
+  static createMatrix4(matrix: GeometryMatrix3d) {
     const elements = matrix.elements
     return new THREE.Matrix4(
       elements[0],

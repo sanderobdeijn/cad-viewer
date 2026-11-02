@@ -1,8 +1,8 @@
 import { defaults } from '@mlightcad/common'
 import {
-  AcGePoint2d,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryPoint2d,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiDefaultLightingType,
@@ -17,9 +17,9 @@ import {
 } from './AcDbSymbolTableRecord'
 
 const createDefaultView = (): AcGiView => ({
-  center: new AcGePoint2d(),
-  viewDirectionFromTarget: new AcGeVector3d(0, 0, 1),
-  viewTarget: new AcGePoint2d(0, 0),
+  center: new GeometryPoint2d(),
+  viewDirectionFromTarget: new GeometryVector3d(0, 0, 1),
+  viewTarget: new GeometryPoint2d(0, 0),
   lensLength: 500,
   frontClippingPlane: 0,
   backClippingPlane: 0,
@@ -30,9 +30,9 @@ const createDefaultView = (): AcGiView => ({
   renderMode: AcGiRenderMode.OPTIMIZED_2D,
   viewMode: 0,
   ucsIconSetting: 0,
-  ucsOrigin: new AcGePoint2d(0, 0),
-  ucsXAxis: new AcGePoint2d(1, 0),
-  ucsYAxis: new AcGePoint2d(0, 1),
+  ucsOrigin: new GeometryPoint2d(0, 0),
+  ucsXAxis: new GeometryPoint2d(1, 0),
+  ucsYAxis: new GeometryPoint2d(0, 1),
   orthographicType: AcGiOrthographicType.TOP,
   shadePlotSetting: 0,
   shadePlotObjectId: undefined,
@@ -91,7 +91,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get centerPoint() {
     return this.gsView.center
   }
-  set centerPoint(value: AcGePoint2d) {
+  set centerPoint(value: GeometryPoint2d) {
     this.gsView.center.copy(value)
   }
 
@@ -101,7 +101,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get viewDirectionFromTarget() {
     return this.gsView.viewDirectionFromTarget
   }
-  set viewDirectionFromTarget(value: AcGeVector3dLike) {
+  set viewDirectionFromTarget(value: GeometryVector3dLike) {
     this.gsView.viewDirectionFromTarget.copy(value)
   }
 
@@ -111,7 +111,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get viewTarget() {
     return this.gsView.viewTarget
   }
-  set viewTarget(value: AcGePoint2d) {
+  set viewTarget(value: GeometryPoint2d) {
     this.gsView.viewTarget.copy(value)
   }
 
@@ -201,7 +201,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsOrigin() {
     return this.gsView.ucsOrigin
   }
-  set ucsOrigin(value: AcGePoint2d) {
+  set ucsOrigin(value: GeometryPoint2d) {
     this.gsView.ucsOrigin.copy(value)
   }
 
@@ -211,7 +211,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsXAxis() {
     return this.gsView.ucsXAxis
   }
-  set ucsXAxis(value: AcGePoint2d) {
+  set ucsXAxis(value: GeometryPoint2d) {
     this.gsView.ucsXAxis.copy(value)
   }
 
@@ -221,7 +221,7 @@ export abstract class AcDbAbstractViewTableRecord<
   get ucsYAxis() {
     return this.gsView.ucsYAxis
   }
-  set ucsYAxis(value: AcGePoint2d) {
+  set ucsYAxis(value: GeometryPoint2d) {
     this.gsView.ucsYAxis.copy(value)
   }
 

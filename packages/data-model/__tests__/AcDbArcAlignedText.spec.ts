@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import {
   AcDbArcAlignedText,
@@ -15,7 +15,7 @@ describe('AcDbArcAlignedText', () => {
     text.xScale = 1
     text.characterSpacing = 0.5
     text.offsetFromArc = 0.2
-    text.center = new AcGePoint2d(0, 0.4256743291778875)
+    text.center = new GeometryPoint2d(0, 0.4256743291778875)
     text.radius = 0.9506306524048814
     text.startAngle = -2.677310584020677
     text.endAngle = -0.46428206956911633

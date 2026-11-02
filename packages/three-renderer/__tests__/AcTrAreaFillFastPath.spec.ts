@@ -1,11 +1,11 @@
 import {
   AcDbSolid,
   AcDbTrace,
-  AcGeArea2d,
-  AcGeIndexNode,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePolyline2d
+  GeometryArea2d,
+  GeometryIndexNode,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
@@ -32,9 +32,9 @@ const AREA_TOLERANCE = 1e-4
 const LARGE = 39_652_926.8
 
 /** Builds a fake area whose single loop is exactly `points`. */
-function areaFromLoop(points: AcGePoint2dLike[]): AcGeArea2d {
-  const loop = points.map(point => new AcGePoint2d(point.x, point.y))
-  const hierarchy: AcGeIndexNode = {
+function areaFromLoop(points: GeometryPoint2dLike[]): GeometryArea2d {
+  const loop = points.map(point => new GeometryPoint2d(point.x, point.y))
+  const hierarchy: GeometryIndexNode = {
     index: -1,
     children: [{ index: 0, children: [] }]
   }
@@ -45,16 +45,16 @@ function areaFromLoop(points: AcGePoint2dLike[]): AcGeArea2d {
     getPoints: () => [loop],
     tessellate: () => [loop],
     buildHierarchy: () => hierarchy
-  } as unknown as AcGeArea2d
+  } as unknown as GeometryArea2d
 }
 
 /** Builds a real closed polyline area, as `AcDbTrace.subWorldDraw` does. */
-function areaFromVertices(vertices: AcGePoint2dLike[]): AcGeArea2d {
-  const polyline = new AcGePolyline2d(
-    vertices.map(point => new AcGePoint2d(point.x, point.y)),
+function areaFromVertices(vertices: GeometryPoint2dLike[]): GeometryArea2d {
+  const polyline = new GeometryPolyline2d(
+    vertices.map(point => new GeometryPoint2d(point.x, point.y)),
     true
   )
-  const area = new AcGeArea2d()
+  const area = new GeometryArea2d()
   area.add(polyline)
   return area
 }
@@ -65,7 +65,7 @@ function rectangle(
   minY: number,
   maxX: number,
   maxY: number
-): AcGePoint2dLike[] {
+): GeometryPoint2dLike[] {
   return [
     { x: minX, y: minY },
     { x: maxX, y: minY },
@@ -131,7 +131,7 @@ function usedVertexKeys(built: AcTrBuiltDirectGeometry): Set<string> {
  * mesh geometry.
  */
 function build(
-  area: AcGeArea2d,
+  area: GeometryArea2d,
   context: AcTrRenderContext,
   traits = defaultTraits
 ): AcTrBuiltDirectGeometry {
@@ -192,7 +192,7 @@ function expectSameFill(
  * The general path is forced with the builder's test-only seam so both builds
  * receive identical traits and therefore resolve the same material.
  */
-function expectFastPathMatchesGeneral(area: AcGeArea2d) {
+function expectFastPathMatchesGeneral(area: GeometryArea2d) {
   // One shared context so the style-cache material instance is identical.
   const context = new AcTrRenderContext()
   resetAreaBuildStats()
@@ -315,7 +315,7 @@ describe('buildAreaGeometry single-loop fast path', () => {
 
   it('falls back to the general path for a curved loop', () => {
     resetAreaBuildStats()
-    const curved = new AcGePolyline2d(
+    const curved = new GeometryPolyline2d(
       [
         { x: 0, y: 0, bulge: 1 },
         { x: 10, y: 0 },
@@ -324,7 +324,7 @@ describe('buildAreaGeometry single-loop fast path', () => {
       ],
       true
     )
-    const area = new AcGeArea2d()
+    const area = new GeometryArea2d()
     area.add(curved)
 
     const built = build(area, new AcTrRenderContext())
@@ -369,25 +369,25 @@ describe('buildAreaGeometry single-loop fast path', () => {
   it('falls back to the general path when the loop has a hole', () => {
     resetAreaBuildStats()
     const outer = [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(10, 0),
-      new AcGePoint2d(10, 10),
-      new AcGePoint2d(0, 10)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(10, 0),
+      new GeometryPoint2d(10, 10),
+      new GeometryPoint2d(0, 10)
     ]
     const inner = [
-      new AcGePoint2d(4, 4),
-      new AcGePoint2d(6, 4),
-      new AcGePoint2d(6, 6),
-      new AcGePoint2d(4, 6)
+      new GeometryPoint2d(4, 4),
+      new GeometryPoint2d(6, 4),
+      new GeometryPoint2d(6, 6),
+      new GeometryPoint2d(4, 6)
     ]
     const area = {
       getPoints: () => [outer, inner],
       tessellate: () => [outer, inner],
-      buildHierarchy: (): AcGeIndexNode => ({
+      buildHierarchy: (): GeometryIndexNode => ({
         index: -1,
         children: [{ index: 0, children: [{ index: 1, children: [] }] }]
       })
-    } as unknown as AcGeArea2d
+    } as unknown as GeometryArea2d
 
     const built = build(area, new AcTrRenderContext())
     expect(getAreaBuildStats()).toEqual({
@@ -412,7 +412,7 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
         x: corner.x,
         y: corner.y,
         z: 0
-      } as unknown as AcGePoint2dLike)
+      } as unknown as GeometryPoint2dLike)
     }
     return solid
   }
@@ -444,7 +444,7 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
         x: corners[i].x,
         y: corners[i].y,
         z: 0
-      } as unknown as AcGePoint2dLike)
+      } as unknown as GeometryPoint2dLike)
     }
 
     expectFastPathMatchesGeneral(areaFromVertices(trace.subGetGripPoints()))
@@ -453,13 +453,13 @@ describe('AcDbSolid / AcDbTrace fill capacity', () => {
 
 describe('buildOffsetRingCenterline', () => {
   it('returns a closed midpoint loop for aligned outer/inner rings', () => {
-    const outer: AcGePoint2dLike[] = [
+    const outer: GeometryPoint2dLike[] = [
       { x: 0, y: 0 },
       { x: 10, y: 0 },
       { x: 10, y: 10 },
       { x: 0, y: 10 }
     ]
-    const inner: AcGePoint2dLike[] = [
+    const inner: GeometryPoint2dLike[] = [
       { x: 1, y: 1 },
       { x: 9, y: 1 },
       { x: 9, y: 9 },
@@ -494,7 +494,7 @@ describe('buildOffsetRingCenterline', () => {
 
 describe('buildOffsetRingDirectGeometry', () => {
   function ringPoints(radius: number, count: number) {
-    const points: AcGePoint2dLike[] = []
+    const points: GeometryPoint2dLike[] = []
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2
       points.push({
@@ -505,17 +505,20 @@ describe('buildOffsetRingDirectGeometry', () => {
     return points
   }
 
-  function ringArea(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
-    const area = new AcGeArea2d()
+  function ringArea(
+    outer: GeometryPoint2dLike[],
+    inner: GeometryPoint2dLike[]
+  ) {
+    const area = new GeometryArea2d()
     area.add(
-      new AcGePolyline2d(
-        outer.map(point => new AcGePoint2d(point.x, point.y)),
+      new GeometryPolyline2d(
+        outer.map(point => new GeometryPoint2d(point.x, point.y)),
         true
       )
     )
     area.add(
-      new AcGePolyline2d(
-        inner.map(point => new AcGePoint2d(point.x, point.y)),
+      new GeometryPolyline2d(
+        inner.map(point => new GeometryPoint2d(point.x, point.y)),
         true
       )
     )
@@ -555,7 +558,7 @@ describe('buildOffsetRingDirectGeometry', () => {
     const cx = LARGE
     const cy = LARGE
     const count = 32
-    const shift = (points: AcGePoint2dLike[]) =>
+    const shift = (points: GeometryPoint2dLike[]) =>
       points.map(p => ({ x: p.x + cx, y: p.y + cy, z: 0 }))
     const outer = shift(ringPoints(10, count))
     const inner = shift(ringPoints(9.95, count))
@@ -596,13 +599,13 @@ describe('buildOffsetRingDirectGeometry', () => {
     const cx = 38_500_000
     const cy = 12_000_000
     const halfWidth = 1.05
-    const outer: AcGePoint2dLike[] = [
+    const outer: GeometryPoint2dLike[] = [
       { x: cx - 10 - halfWidth, y: cy - 4 - halfWidth },
       { x: cx + 10 + halfWidth, y: cy - 4 - halfWidth },
       { x: cx + 10 + halfWidth, y: cy + 4 + halfWidth },
       { x: cx - 10 - halfWidth, y: cy + 4 + halfWidth }
     ]
-    const inner: AcGePoint2dLike[] = [
+    const inner: GeometryPoint2dLike[] = [
       { x: cx - 10 + halfWidth, y: cy - 4 + halfWidth },
       { x: cx + 10 - halfWidth, y: cy - 4 + halfWidth },
       { x: cx + 10 - halfWidth, y: cy + 4 - halfWidth },

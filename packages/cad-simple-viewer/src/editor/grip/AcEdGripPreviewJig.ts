@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector3d
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector3d
 } from '@mlightcad/data-model'
 
 import { AcEdPreviewJig } from '../input/AcEdPreviewJig'
@@ -12,18 +12,18 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
  * Preview jig that applies {@link AcDbEntity.subMoveGripPointsAt} on a clone
  * while the user drags a grip handle.
  */
-export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcEdGripPreviewJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcEdBaseView
   private readonly _sourceClone: AcDbEntity
   private readonly _gripIndex: number
-  private readonly _gripBaseWcs: AcGePoint2d
+  private readonly _gripBaseWcs: GeometryPoint2d
   private _previewEntity: AcDbEntity | null = null
 
   constructor(
     view: AcEdBaseView,
     entity: AcDbEntity,
     gripIndex: number,
-    gripBaseWcs: AcGePoint2dLike
+    gripBaseWcs: GeometryPoint2dLike
   ) {
     super(view)
     this._view = view
@@ -33,14 +33,14 @@ export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
     }
     this._sourceClone = sourceClone
     this._gripIndex = gripIndex
-    this._gripBaseWcs = new AcGePoint2d(gripBaseWcs)
+    this._gripBaseWcs = new GeometryPoint2d(gripBaseWcs)
   }
 
   get entity(): AcDbEntity | null {
     return this._previewEntity
   }
 
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     if (this._previewEntity) {
       this._view.removeTransientEntity(this._previewEntity.objectId)
       this._previewEntity = null
@@ -53,8 +53,8 @@ export class AcEdGripPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
     this._previewEntity = preview
   }
 
-  computeOffset(point: AcGePoint2dLike): AcGeVector3d {
-    return new AcGeVector3d(
+  computeOffset(point: GeometryPoint2dLike): GeometryVector3d {
+    return new GeometryVector3d(
       point.x - this._gripBaseWcs.x,
       point.y - this._gripBaseWcs.y,
       0

@@ -1,5 +1,5 @@
 import type { AcDbEntity } from '@mlightcad/data-model'
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/data-model'
 
 import {
   AcEdSelectionStaticPreviewJig,
@@ -37,9 +37,9 @@ function createBatchView() {
   } as unknown as AcEdBaseView
 }
 
-class TestTransformJig extends AcEdSelectionTransformPreviewJig<AcGePoint2d> {
-  protected buildTransforms(point: AcGePoint2d) {
-    const matrix = new AcGeMatrix3d().makeTranslation(point.x, point.y, 0)
+class TestTransformJig extends AcEdSelectionTransformPreviewJig<GeometryPoint2d> {
+  protected buildTransforms(point: GeometryPoint2d) {
+    const matrix = new GeometryMatrix3d().makeTranslation(point.x, point.y, 0)
     return this.previewEntries.map(entry => ({
       objectId: entry.entity.objectId,
       matrix
@@ -53,9 +53,9 @@ describe('AcEdSelectionTransformPreviewJig', () => {
     const entities = [createEntity('line-1'), createEntity('line-2')]
     const jig = new TestTransformJig(view, entities)
 
-    jig.update(new AcGePoint2d(5, 0))
+    jig.update(new GeometryPoint2d(5, 0))
     jig.render()
-    jig.update(new AcGePoint2d(10, 2))
+    jig.update(new GeometryPoint2d(10, 2))
     jig.render()
     jig.end()
 
@@ -69,7 +69,7 @@ describe('AcEdSelectionTransformPreviewJig', () => {
     const entities = [createEntity('line-1')]
     const jig = new TestTransformJig(view, entities)
 
-    jig.update(new AcGePoint2d(3, 4))
+    jig.update(new GeometryPoint2d(3, 4))
     jig.render()
     jig.end()
 
@@ -83,7 +83,7 @@ describe('AcEdSelectionTransformPreviewJig', () => {
     const entities = [createEntity('line-1'), createEntity('line-2')]
     const jig = new TestTransformJig(view, entities, 2)
 
-    jig.update(new AcGePoint2d(0, 0))
+    jig.update(new GeometryPoint2d(0, 0))
     jig.render()
 
     expect(view.addTransientEntity).toHaveBeenCalledWith(

@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeLine2d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryLine2d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -25,8 +25,8 @@ import { acdbForEachGripIndex } from './AcDbGripHelpers'
  * ```typescript
  * // Create a line from point (0,0,0) to point (10,10,0)
  * const line = new AcDbLine(
- *   new AcGePoint2d(0, 0),
- *   new AcGePoint2d(10, 10)
+ *   new GeometryPoint2d(0, 0),
+ *   new GeometryPoint2d(10, 10)
  * );
  *
  * // Access line properties
@@ -44,21 +44,24 @@ export class AcDbLine extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric line object. */
-  private _geoData: AcGeLine2d | null = null
+  private _geoData: GeometryLine2d | null = null
 
   /**
    * The underlying geometric line object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate a default line
    * that dxfIn would immediately replace.
    */
-  private get _geo(): AcGeLine2d {
+  private get _geo(): GeometryLine2d {
     if (this._geoData == null) {
-      this._geoData = new AcGeLine2d(new AcGePoint2d(), new AcGePoint2d())
+      this._geoData = new GeometryLine2d(
+        new GeometryPoint2d(),
+        new GeometryPoint2d()
+      )
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeLine2d) {
+  private set _geo(value: GeometryLine2d) {
     this._geoData = value
   }
 
@@ -74,17 +77,17 @@ export class AcDbLine extends AcDbCurve {
    * @example
    * ```typescript
    * const line = new AcDbLine(
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(100, 50)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(100, 50)
    * );
    * ```
    */
   constructor()
-  constructor(start: AcGePoint2dLike, end: AcGePoint2dLike)
-  constructor(start?: AcGePoint2dLike, end?: AcGePoint2dLike) {
+  constructor(start: GeometryPoint2dLike, end: GeometryPoint2dLike)
+  constructor(start?: GeometryPoint2dLike, end?: GeometryPoint2dLike) {
     super()
     if (start !== undefined && end !== undefined) {
-      this._geo = new AcGeLine2d(start, end)
+      this._geo = new GeometryLine2d(start, end)
     }
   }
 
@@ -99,7 +102,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line starts at: ${startPoint.x}, ${startPoint.y}`);
    * ```
    */
-  get startPoint(): AcGePoint2d {
+  get startPoint(): GeometryPoint2d {
     return this._geo.startPoint
   }
 
@@ -110,10 +113,10 @@ export class AcDbLine extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * line.startPoint = new AcGePoint2d(5, 5);
+   * line.startPoint = new GeometryPoint2d(5, 5);
    * ```
    */
-  set startPoint(value: AcGePoint2dLike) {
+  set startPoint(value: GeometryPoint2dLike) {
     this._geo.startPoint = value
   }
 
@@ -128,7 +131,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line ends at: ${endPoint.x}, ${endPoint.y}`);
    * ```
    */
-  get endPoint(): AcGePoint2d {
+  get endPoint(): GeometryPoint2d {
     return this._geo.endPoint
   }
 
@@ -139,10 +142,10 @@ export class AcDbLine extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * line.endPoint = new AcGePoint2d(15, 15);
+   * line.endPoint = new GeometryPoint2d(15, 15);
    * ```
    */
-  set endPoint(value: AcGePoint2dLike) {
+  set endPoint(value: GeometryPoint2dLike) {
     this._geo.endPoint = value
   }
 
@@ -159,7 +162,7 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line midpoint: ${midPoint.x}, ${midPoint.y}`);
    * ```
    */
-  get midPoint(): AcGePoint2d {
+  get midPoint(): GeometryPoint2d {
     return this._geo.midPoint
   }
 
@@ -174,12 +177,12 @@ export class AcDbLine extends AcDbCurve {
    * console.log(`Line bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
-    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
+  get geometricExtents(): GeometryBox3d {
+    return new GeometryBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return [
       {
         kind: 'line',
@@ -296,7 +299,7 @@ export class AcDbLine extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     gripPoints.push(this.midPoint)
     gripPoints.push(this.startPoint)
     gripPoints.push(this.endPoint)
@@ -309,11 +312,13 @@ export class AcDbLine extends AcDbCurve {
    * Index 0 moves the midpoint and translates the whole line. Indices 1 and 2
    * move the start and end points respectively.
    */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       switch (index) {
         case 0:
-          this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
+          this.transformBy(
+            GeometryMatrix3d.makeTranslation({ ...offset, z: 0 })
+          )
           break
         case 1:
           this.startPoint.add(offset)
@@ -342,9 +347,9 @@ export class AcDbLine extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const geo = this._geo
     switch (osnapMode) {
@@ -388,14 +393,14 @@ export class AcDbLine extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * const translationMatrix = AcGeMatrix3d.translation(10, 0, 0);
+   * const translationMatrix = GeometryMatrix3d.translation(10, 0, 0);
    * line.transformBy(translationMatrix);
    * // Line is now translated 10 units in the X direction
    * ```
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const geo = this._geo.transform3d(matrix)
-    this._geo = new AcGeLine2d(geo.startPoint, geo.endPoint)
+    this._geo = new GeometryLine2d(geo.startPoint, geo.endPoint)
     return this
   }
 
@@ -426,7 +431,7 @@ export class AcDbLine extends AcDbCurve {
     return [new AcDbLine(geo.startPoint, geo.endPoint)]
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const s = this.startPoint
     const e = this.endPoint
     return (e.x - s.x) * (point.y - s.y) - (e.y - s.y) * (point.x - s.x) >= 0

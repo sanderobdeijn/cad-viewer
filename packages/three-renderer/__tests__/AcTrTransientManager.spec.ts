@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrEntity } from '../src/object/AcTrEntity'
@@ -42,14 +42,14 @@ describe('AcTrTransientManager.applyTransforms', () => {
       context
     )
     const group = new AcTrGroup([line], context)
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
     group.objectId = 'INSERT-7B33'
 
     manager.add(group)
     const baseline = group.matrix.clone()
 
     const rotation = AcTrMatrixUtil.createMatrix4(
-      new AcGeMatrix3d().makeRotationZ(Math.PI / 4)
+      new GeometryMatrix3d().makeRotationZ(Math.PI / 4)
     )
     manager.applyTransforms([{ id: group.objectId, matrix: rotation }])
 

@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
 import { AcDbLine, AcDbRotatedDimension } from '../src/entity'
@@ -16,9 +16,9 @@ describe('AcDbRotatedDimension', () => {
     expectDetachedClone(
       () =>
         new AcDbRotatedDimension(
-          new AcGePoint2d(),
-          new AcGePoint2d(1, 0),
-          new AcGePoint2d(0, 1)
+          new GeometryPoint2d(),
+          new GeometryPoint2d(1, 0),
+          new GeometryPoint2d(0, 1)
         )
     )
   })
@@ -29,22 +29,22 @@ describe('AcDbRotatedDimension', () => {
     const dimBlock = new AcDbBlockTableRecord()
     dimBlock.name = '*D_ROTATED'
     dimBlock.appendEntity(
-      new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(3, 0))
+      new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(3, 0))
     )
     db.tables.blockTable.add(dimBlock)
 
     const dim = new AcDbRotatedDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(5, 0),
-      new AcGePoint2d(5, 1)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(5, 0),
+      new GeometryPoint2d(5, 1)
     )
     dim.dimBlockId = '*D_ROTATED'
-    dim.dimBlockPosition = new AcGePoint2d(0, 0)
+    dim.dimBlockPosition = new GeometryPoint2d(0, 0)
     db.tables.blockTable.modelSpace.appendEntity(dim)
 
     expect(dim.geometricExtents.max.x).toBeCloseTo(3)
 
-    dim.dimBlockPosition = new AcGePoint2d(10, 20)
+    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
 
     expect(dim.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
     expect(dim.geometricExtents.max.x).toBeCloseTo(13)

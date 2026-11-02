@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
 } from '@mlightcad/data-model'
 
 import {
@@ -26,7 +26,7 @@ export class AcApRotateStaticJig<T> extends AcEdSelectionStaticPreviewJig<T> {}
  * clone path publishes once and then updates transforms only.
  */
 export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<number> {
-  private _basePoint: AcGePoint2d
+  private _basePoint: GeometryPoint2d
   private _lastAngleRad = 0
   private _referenceAngleDeg: number
 
@@ -41,11 +41,11 @@ export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<numbe
   constructor(
     view: AcEdBaseView,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint2dLike,
+    basePoint: GeometryPoint2dLike,
     referenceAngleDeg = 0
   ) {
     super(view, sourceEntities)
-    this._basePoint = new AcGePoint2d(basePoint)
+    this._basePoint = new GeometryPoint2d(basePoint)
     this._referenceAngleDeg = referenceAngleDeg
   }
 
@@ -67,7 +67,7 @@ export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<numbe
     const angleRad = ((angleDeg - this._referenceAngleDeg) * Math.PI) / 180
 
     if (this.batchPreview.useBatchPreview) {
-      if (AcGeTol.equalToZero(angleRad - this._lastAngleRad)) return
+      if (GeometryTol.equalToZero(angleRad - this._lastAngleRad)) return
       this.batchPreview.updateMatrix(
         this._view,
         createRotationMatrix(this._basePoint, angleRad)

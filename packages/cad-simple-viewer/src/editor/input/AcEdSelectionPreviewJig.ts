@@ -1,4 +1,8 @@
-import { AcDbEntity, AcDbObjectId, AcGeMatrix3d } from '@mlightcad/data-model'
+import {
+  AcDbEntity,
+  AcDbObjectId,
+  GeometryMatrix3d
+} from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import { AcEdBatchedPreview } from './AcEdBatchPreview'
@@ -17,7 +21,7 @@ export interface AcEdSelectionPreviewEntry {
  */
 export interface AcEdSelectionPreviewTransform {
   objectId: AcDbObjectId
-  matrix: AcGeMatrix3d
+  matrix: GeometryMatrix3d
 }
 
 /**

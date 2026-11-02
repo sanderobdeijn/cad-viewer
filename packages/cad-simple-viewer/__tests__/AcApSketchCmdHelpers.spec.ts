@@ -57,7 +57,7 @@ jest.mock('../src/i18n', () => ({
   }
 }))
 
-import { AcDbPolyline, AcGePoint2d } from '@mlightcad/data-model'
+import { AcDbPolyline, GeometryPoint2d } from '@mlightcad/data-model'
 
 import {
   accumulateSketchPoint,
@@ -66,7 +66,7 @@ import {
 
 describe('AcApSketchCmd helpers', () => {
   test('accumulateSketchPoint ignores moves shorter than the increment', () => {
-    const points = [new AcGePoint2d(0, 0)]
+    const points = [new GeometryPoint2d(0, 0)]
     expect(accumulateSketchPoint(points, { x: 0.05, y: 0 }, 0.1)).toBe(false)
     expect(points).toHaveLength(1)
     expect(accumulateSketchPoint(points, { x: 0.2, y: 0 }, 0.1)).toBe(true)

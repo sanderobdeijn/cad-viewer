@@ -1,9 +1,9 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -45,7 +45,7 @@ export class AcDb2dVertex extends AcDbEntity {
     return 'VERTEX'
   }
 
-  private _position: AcGePoint2d
+  private _position: GeometryPoint2d
   /**
    * The bulge factor used to indicate how much of an arc segment is present at this vertex.
    * The bulge factor is the tangent of one fourth the included angle for an arc segment, made
@@ -65,7 +65,7 @@ export class AcDb2dVertex extends AcDbEntity {
    */
   constructor() {
     super()
-    this._position = new AcGePoint2d()
+    this._position = new GeometryPoint2d()
     this._bulge = 0
     this._startWidth = 0
     this._endWidth = 0
@@ -79,7 +79,7 @@ export class AcDb2dVertex extends AcDbEntity {
    *
    * @returns The position value of the vertex
    */
-  get position(): AcGePoint2d {
+  get position(): GeometryPoint2d {
     return this._position
   }
 
@@ -90,7 +90,7 @@ export class AcDb2dVertex extends AcDbEntity {
    *
    * @param value - The position value of the vertex
    */
-  set position(value: AcGePoint2dLike) {
+  set position(value: GeometryPoint2dLike) {
     this._position.copy(value)
   }
 
@@ -174,7 +174,7 @@ export class AcDb2dVertex extends AcDbEntity {
    * @returns The bounding box that encompasses the entire vertex
    */
   get geometricExtents() {
-    return new AcGeBox3d().expandByPoint(this._position)
+    return new GeometryBox3d().expandByPoint(this._position)
   }
 
   /**
@@ -183,13 +183,13 @@ export class AcDb2dVertex extends AcDbEntity {
    * @returns Array of grip points (center, start point, end point)
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     gripPoints.push(this._position)
     return gripPoints
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._position)
     return this
   }
@@ -208,9 +208,9 @@ export class AcDb2dVertex extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (
       osnapMode === AcDbOsnapMode.EndPoint ||
@@ -226,7 +226,7 @@ export class AcDb2dVertex extends AcDbEntity {
    * @param matrix - The transformation matrix to apply
    * @returns This vertex after transformation
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._position.applyMatrix4(matrix)
     return this
   }

@@ -1,10 +1,10 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 import { AcEdSpatialQueryResultItemEx } from '../editor'
 
 export function sortPickResults(
   results: AcEdSpatialQueryResultItemEx[],
-  point: AcGePoint2dLike
+  point: GeometryPoint2dLike
 ) {
   return [...results].sort((a, b) => comparePickResults(a, b, point))
 }
@@ -12,7 +12,7 @@ export function sortPickResults(
 function comparePickResults(
   a: AcEdSpatialQueryResultItemEx,
   b: AcEdSpatialQueryResultItemEx,
-  point: AcGePoint2dLike
+  point: GeometryPoint2dLike
 ) {
   const areaDelta = bboxArea(a) - bboxArea(b)
   if (Math.abs(areaDelta) > Number.EPSILON) return areaDelta
@@ -29,7 +29,7 @@ function bboxArea(item: AcEdSpatialQueryResultItemEx) {
 }
 
 function squaredDistanceToBox(
-  point: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
   item: AcEdSpatialQueryResultItemEx
 ) {
   const dx =

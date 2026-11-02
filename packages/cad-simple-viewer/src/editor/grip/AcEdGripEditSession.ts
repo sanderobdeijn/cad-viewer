@@ -1,7 +1,7 @@
 import {
   AcDbEntity,
   AcDbObjectId,
-  AcGePoint2dLike
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { acapRunDatabaseEdit } from '../../util/AcApDatabaseEdit'
@@ -13,7 +13,7 @@ import { AcEdGripPreviewJig } from './AcEdGripPreviewJig'
 export interface AcEdGripEditTarget {
   entityId: AcDbObjectId
   gripIndex: number
-  gripBaseWcs: AcGePoint2dLike
+  gripBaseWcs: GeometryPoint2dLike
 }
 
 /**
@@ -93,7 +93,7 @@ export class AcEdGripEditSession {
     this._onEnd()
   }
 
-  private resolveWcs(e: MouseEvent): AcGePoint2dLike {
+  private resolveWcs(e: MouseEvent): GeometryPoint2dLike {
     const canvasPos = this._view.viewportToCanvas({
       x: e.clientX,
       y: e.clientY

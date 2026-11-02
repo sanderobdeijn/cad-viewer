@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbObject, AcDbObjectId } from '../../base/AcDbObject'
 
@@ -241,19 +241,19 @@ export class AcDbPlotSettings extends AcDbObject {
   /** Plot style table name (CTB/STB). */
   private _currentStyleSheet: string
   /** Plot origin (paper offset) in paper units. */
-  private _plotOrigin: AcGePoint2d
+  private _plotOrigin: GeometryPoint2d
   /** Custom print scale as a ratio of paperspace to media units. */
   private _customPrintScale: AcDbPlotScale
   /** Physical paper size in millimeters (width, height). */
-  private _plotPaperSize: AcGePoint2d
+  private _plotPaperSize: GeometryPoint2d
   /** Unprintable paper margins in millimeters. */
   private _plotPaperMargins: AcDbPlotPaperMargins
   /** Named view used when plot type is set to view. */
   private _plotViewName: string
   /** Paper image origin offset in paper units (DXF groups 148/149). */
-  private _paperImageOrigin: AcGePoint2d
+  private _paperImageOrigin: GeometryPoint2d
   /** Plot window area used when plot type is set to window. */
-  private _plotWindowArea: AcGeBox2d
+  private _plotWindowArea: GeometryBox2d
   /** Whether this plot settings object is for model space. */
   private _modelType: boolean
   /** Whether the plot should be centered on the paper. */
@@ -309,13 +309,13 @@ export class AcDbPlotSettings extends AcDbObject {
     this._plotCfgName = ''
     this._canonicalMediaName = ''
     this._currentStyleSheet = ''
-    this._plotOrigin = new AcGePoint2d()
+    this._plotOrigin = new GeometryPoint2d()
     this._customPrintScale = { numerator: 1, denominator: 1 }
-    this._plotPaperSize = new AcGePoint2d()
+    this._plotPaperSize = new GeometryPoint2d()
     this._plotPaperMargins = { left: 0, right: 0, top: 0, bottom: 0 }
     this._plotViewName = ''
-    this._paperImageOrigin = new AcGePoint2d()
-    this._plotWindowArea = new AcGeBox2d()
+    this._paperImageOrigin = new GeometryPoint2d()
+    this._plotWindowArea = new GeometryBox2d()
     this._modelType = modelType
     this._plotCentered = false
     this._plotHidden = false
@@ -437,7 +437,7 @@ export class AcDbPlotSettings extends AcDbObject {
   /**
    * Sets the plot origin (paper offset).
    */
-  set plotOrigin(value: AcGePoint2d) {
+  set plotOrigin(value: GeometryPoint2d) {
     this._plotOrigin = value
   }
 
@@ -479,7 +479,7 @@ export class AcDbPlotSettings extends AcDbObject {
   /**
    * Sets the plot paper size (physical size in millimeters).
    */
-  set plotPaperSize(value: AcGePoint2d) {
+  set plotPaperSize(value: GeometryPoint2d) {
     this._plotPaperSize = value
   }
 
@@ -542,7 +542,7 @@ export class AcDbPlotSettings extends AcDbObject {
   /**
    * Sets the paper image origin offset in paper units (DXF groups 148/149).
    */
-  set paperImageOrigin(value: AcGePoint2d) {
+  set paperImageOrigin(value: GeometryPoint2d) {
     this._paperImageOrigin = value
   }
 
@@ -556,7 +556,7 @@ export class AcDbPlotSettings extends AcDbObject {
   /**
    * Sets the plot window area used when plot type is kWindow.
    */
-  set plotWindowArea(value: AcGeBox2d) {
+  set plotWindowArea(value: GeometryBox2d) {
     this._plotWindowArea = value
   }
 
@@ -935,4 +935,3 @@ export class AcDbPlotSettings extends AcDbObject {
     this._useStandardScale = value
   }
 }
-

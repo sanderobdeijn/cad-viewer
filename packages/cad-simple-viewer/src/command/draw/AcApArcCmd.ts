@@ -1,9 +1,9 @@
 import {
   AcDbArc,
-  AcGeCircArc2d,
-  AcGeMathUtil,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryCircularArc2d,
+  GeometryMathUtil,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -26,7 +26,7 @@ import { AcApI18n } from '../../i18n'
 type ArcDirectionSign = 1 | -1
 
 interface ArcDefinition {
-  center: AcGePoint2dLike
+  center: GeometryPoint2dLike
   radius: number
   startAngle: number
   endAngle: number
@@ -40,7 +40,7 @@ interface ArcDefinition {
  * @param to - Target point.
  * @returns Direction angle in degrees.
  */
-function directionAngleDeg(from: AcGePoint2dLike, to: AcGePoint2dLike) {
+function directionAngleDeg(from: GeometryPoint2dLike, to: GeometryPoint2dLike) {
   return (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI
 }
 
@@ -51,8 +51,8 @@ function directionAngleDeg(from: AcGePoint2dLike, to: AcGePoint2dLike) {
  * @param point - Point on the arc/circle.
  * @returns Normalized angle in radians.
  */
-function polarAngle(center: AcGePoint2dLike, point: AcGePoint2dLike) {
-  return AcGeMathUtil.normalizeAngle(
+function polarAngle(center: GeometryPoint2dLike, point: GeometryPoint2dLike) {
+  return GeometryMathUtil.normalizeAngle(
     Math.atan2(point.y - center.y, point.x - center.x)
   )
 }
@@ -60,7 +60,9 @@ function polarAngle(center: AcGePoint2dLike, point: AcGePoint2dLike) {
 /**
  * Maps a geometry-engine arc onto the OCS fields stored by `AcDbArc`.
  */
-function toArcDefinition(arc: AcGeCircArc2d | null): ArcDefinition | undefined {
+function toArcDefinition(
+  arc: GeometryCircularArc2d | null
+): ArcDefinition | undefined {
   if (!arc) return undefined
   const directionSign: ArcDirectionSign = arc.clockwise ? -1 : 1
   const center = { x: arc.center.x, y: arc.center.y }
@@ -119,7 +121,7 @@ function applyArcDefinition(entity: AcDbArc, definition: ArcDefinition) {
  * @param point - Seed location for fallback arc center.
  * @returns Minimal valid arc definition.
  */
-function createFallbackArc(point: AcGePoint2dLike): ArcDefinition {
+function createFallbackArc(point: GeometryPoint2dLike): ArcDefinition {
   return {
     center: { x: point.x, y: point.y },
     radius: 1e-6,
@@ -132,17 +134,22 @@ function createFallbackArc(point: AcGePoint2dLike): ArcDefinition {
 /**
  * Builds an arc from 3-point input (start / point-on-arc / end).
  *
- * Geometry is computed by {@link AcGeCircArc2d.tryCreateByThreePoints}. If
+ * Geometry is computed by {@link GeometryCircularArc2d.tryCreateByThreePoints}. If
  * `reverseDirection` is true, the complementary sweep is used (Ctrl toggle).
  */
 function createArcFromThreePoints(
-  start: AcGePoint2dLike,
-  second: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  start: GeometryPoint2dLike,
+  second: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   reverseDirection: boolean = false
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByThreePoints(start, second, end, reverseDirection)
+    GeometryCircularArc2d.tryCreateByThreePoints(
+      start,
+      second,
+      end,
+      reverseDirection
+    )
   )
 }
 
@@ -150,13 +157,13 @@ function createArcFromThreePoints(
  * Builds arc by center/start/end with explicit orientation.
  */
 function createArcFromCenterStartEnd(
-  center: AcGePoint2dLike,
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   directionSign: ArcDirectionSign
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByCenterStartEnd(
+    GeometryCircularArc2d.tryCreateByCenterStartEnd(
       center,
       start,
       end,
@@ -169,13 +176,13 @@ function createArcFromCenterStartEnd(
  * Builds center-start arc where user end input is projected onto the circle.
  */
 function createArcFromCenterStartProjectedEnd(
-  center: AcGePoint2dLike,
-  start: AcGePoint2dLike,
-  rawEnd: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
+  start: GeometryPoint2dLike,
+  rawEnd: GeometryPoint2dLike,
   directionSign: ArcDirectionSign
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByCenterStartProjectedEnd(
+    GeometryCircularArc2d.tryCreateByCenterStartProjectedEnd(
       center,
       start,
       rawEnd,
@@ -189,12 +196,12 @@ function createArcFromCenterStartProjectedEnd(
  * Positive sweep = counterclockwise, negative sweep = clockwise.
  */
 function createArcFromCenterStartSweep(
-  center: AcGePoint2dLike,
-  start: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
+  start: GeometryPoint2dLike,
   sweepRad: number
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByCenterStartSweep(center, start, sweepRad)
+    GeometryCircularArc2d.tryCreateByCenterStartSweep(center, start, sweepRad)
   )
 }
 
@@ -202,12 +209,16 @@ function createArcFromCenterStartSweep(
  * Builds center-start arc from chord length.
  */
 function createArcFromCenterStartChord(
-  center: AcGePoint2dLike,
-  start: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
+  start: GeometryPoint2dLike,
   chordLength: number
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByCenterStartChord(center, start, chordLength)
+    GeometryCircularArc2d.tryCreateByCenterStartChord(
+      center,
+      start,
+      chordLength
+    )
   )
 }
 
@@ -215,12 +226,12 @@ function createArcFromCenterStartChord(
  * Builds start-end arc from included angle.
  */
 function createArcFromStartEndAngle(
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   sweepRad: number
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByStartEndAngle(start, end, sweepRad)
+    GeometryCircularArc2d.tryCreateByStartEndAngle(start, end, sweepRad)
   )
 }
 
@@ -228,12 +239,12 @@ function createArcFromStartEndAngle(
  * Builds start-end arc from tangent direction at start.
  */
 function createArcFromStartEndDirection(
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   directionRad: number
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByStartEndDirection(start, end, directionRad)
+    GeometryCircularArc2d.tryCreateByStartEndDirection(start, end, directionRad)
   )
 }
 
@@ -242,12 +253,12 @@ function createArcFromStartEndDirection(
  * Radius sign controls side/orientation (AutoCAD-like behavior).
  */
 function createArcFromStartEndRadius(
-  start: AcGePoint2dLike,
-  end: AcGePoint2dLike,
+  start: GeometryPoint2dLike,
+  end: GeometryPoint2dLike,
   radiusInput: number
 ) {
   return toArcDefinition(
-    AcGeCircArc2d.tryCreateByStartEndRadius(start, end, radiusInput)
+    GeometryCircularArc2d.tryCreateByStartEndRadius(start, end, radiusInput)
   )
 }
 
@@ -257,7 +268,7 @@ function createArcFromStartEndRadius(
  * The jig holds one transient `AcDbArc` and updates it from a builder callback
  * as cursor input changes.
  */
-class AcApArcJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApArcJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient arc entity reused across preview updates.
    */
@@ -265,7 +276,7 @@ class AcApArcJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Builder callback that resolves current cursor point to arc definition.
    */
-  private _builder: (point: AcGePoint2dLike) => ArcDefinition | undefined
+  private _builder: (point: GeometryPoint2dLike) => ArcDefinition | undefined
 
   /**
    * Creates a preview jig.
@@ -276,7 +287,7 @@ class AcApArcJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    builder: (point: AcGePoint2dLike) => ArcDefinition | undefined,
+    builder: (point: GeometryPoint2dLike) => ArcDefinition | undefined,
     fallback: ArcDefinition
   ) {
     super(view)
@@ -296,7 +307,7 @@ class AcApArcJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param point - Current cursor/input point.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     // Ignore invalid intermediate states while the cursor moves.
     const definition = this._builder(point)
     if (!definition) return
@@ -685,12 +696,12 @@ export class AcApArcCmd extends AcEdCommand {
    * @param basePoint - Optional reference point.
    * @returns Selected center point, or `undefined` when the prompt is aborted.
    */
-  private async promptCenterPoint(basePoint?: AcGePoint2dLike) {
+  private async promptCenterPoint(basePoint?: GeometryPoint2dLike) {
     const prompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.centerPoint'))
     if (basePoint) {
       prompt.useBasePoint = true
       prompt.useDashedLine = true
-      prompt.basePoint = new AcGePoint2d(basePoint)
+      prompt.basePoint = new GeometryPoint2d(basePoint)
     }
     const result = await AcApDocManager.instance.editor.getPoint(prompt)
     return result.status === AcEdPromptStatus.OK ? result.value! : undefined
@@ -705,12 +716,12 @@ export class AcApArcCmd extends AcEdCommand {
    * @param basePoint - Optional reference point.
    * @returns Selected end point, or `undefined` when the prompt is aborted.
    */
-  private async promptEndPoint(basePoint?: AcGePoint2dLike) {
+  private async promptEndPoint(basePoint?: GeometryPoint2dLike) {
     const prompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.endPoint'))
     if (basePoint) {
       prompt.useBasePoint = true
       prompt.useDashedLine = true
-      prompt.basePoint = new AcGePoint2d(basePoint)
+      prompt.basePoint = new GeometryPoint2d(basePoint)
     }
     const result = await AcApDocManager.instance.editor.getPoint(prompt)
     return result.status === AcEdPromptStatus.OK ? result.value! : undefined
@@ -726,11 +737,11 @@ export class AcApArcCmd extends AcEdCommand {
    * @param start - Arc start point.
    * @returns Selected second point, or `undefined` when the prompt is aborted.
    */
-  private async promptSecondPoint(start: AcGePoint2dLike) {
+  private async promptSecondPoint(start: GeometryPoint2dLike) {
     const prompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.secondPoint'))
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint2d(start)
+    prompt.basePoint = new GeometryPoint2d(start)
     const result = await AcApDocManager.instance.editor.getPoint(prompt)
     return result.status === AcEdPromptStatus.OK ? result.value! : undefined
   }
@@ -803,7 +814,7 @@ export class AcApArcCmd extends AcEdCommand {
       anglePrompt.allowZero = false
       anglePrompt.useBasePoint = true
       anglePrompt.useDashedLine = true
-      anglePrompt.basePoint = new AcGePoint2d(center)
+      anglePrompt.basePoint = new GeometryPoint2d(center)
       anglePrompt.baseAngle = directionAngleDeg(center, start)
       anglePrompt.jig = new AcApArcValueJig(
         context.view,
@@ -843,7 +854,7 @@ export class AcApArcCmd extends AcEdCommand {
     chordPrompt.allowZero = false
     chordPrompt.useBasePoint = true
     chordPrompt.useDashedLine = true
-    chordPrompt.basePoint = new AcGePoint2d(start)
+    chordPrompt.basePoint = new GeometryPoint2d(start)
     chordPrompt.jig = new AcApArcValueJig(
       context.view,
       chordValue =>
@@ -906,7 +917,7 @@ export class AcApArcCmd extends AcEdCommand {
       anglePrompt.allowZero = false
       anglePrompt.useBasePoint = true
       anglePrompt.useDashedLine = true
-      anglePrompt.basePoint = new AcGePoint2d(center)
+      anglePrompt.basePoint = new GeometryPoint2d(center)
       anglePrompt.baseAngle = directionAngleDeg(center, start)
       anglePrompt.jig = new AcApArcValueJig(
         context.view,
@@ -946,7 +957,7 @@ export class AcApArcCmd extends AcEdCommand {
     chordPrompt.allowZero = false
     chordPrompt.useBasePoint = true
     chordPrompt.useDashedLine = true
-    chordPrompt.basePoint = new AcGePoint2d(start)
+    chordPrompt.basePoint = new GeometryPoint2d(start)
     chordPrompt.jig = new AcApArcValueJig(
       context.view,
       chordValue =>
@@ -1004,7 +1015,7 @@ export class AcApArcCmd extends AcEdCommand {
       anglePrompt.allowZero = false
       anglePrompt.useBasePoint = true
       anglePrompt.useDashedLine = true
-      anglePrompt.basePoint = new AcGePoint2d(start)
+      anglePrompt.basePoint = new GeometryPoint2d(start)
       anglePrompt.baseAngle = directionAngleDeg(start, end)
       anglePrompt.jig = new AcApArcValueJig(
         context.view,
@@ -1043,7 +1054,7 @@ export class AcApArcCmd extends AcEdCommand {
       )
       directionPrompt.useBasePoint = true
       directionPrompt.useDashedLine = true
-      directionPrompt.basePoint = new AcGePoint2d(start)
+      directionPrompt.basePoint = new GeometryPoint2d(start)
       directionPrompt.jig = new AcApArcJig(
         context.view,
         point =>
@@ -1082,7 +1093,7 @@ export class AcApArcCmd extends AcEdCommand {
     radiusPrompt.allowZero = false
     radiusPrompt.useBasePoint = true
     radiusPrompt.useDashedLine = true
-    radiusPrompt.basePoint = new AcGePoint2d(start)
+    radiusPrompt.basePoint = new GeometryPoint2d(start)
     radiusPrompt.jig = new AcApArcValueJig(
       context.view,
       radiusValue =>
@@ -1137,11 +1148,11 @@ export class AcApArcCmd extends AcEdCommand {
    * @param center - Arc center point.
    * @returns Selected start point, or `undefined` when the prompt is aborted.
    */
-  private async promptStartPointFromCenter(center: AcGePoint2dLike) {
+  private async promptStartPointFromCenter(center: GeometryPoint2dLike) {
     const prompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.startPoint'))
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint2d(center)
+    prompt.basePoint = new GeometryPoint2d(center)
     const result = await AcApDocManager.instance.editor.getPoint(prompt)
     return result.status === AcEdPromptStatus.OK ? result.value! : undefined
   }
@@ -1159,13 +1170,13 @@ export class AcApArcCmd extends AcEdCommand {
    */
   private async finishExactCenterStartEnd(
     context: AcApContext,
-    center: AcGePoint2dLike,
-    start: AcGePoint2dLike
+    center: GeometryPoint2dLike,
+    start: GeometryPoint2dLike
   ) {
     const endPrompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.endPoint'))
     endPrompt.useBasePoint = true
     endPrompt.useDashedLine = true
-    endPrompt.basePoint = new AcGePoint2d(start)
+    endPrompt.basePoint = new GeometryPoint2d(start)
     endPrompt.jig = new AcApArcJig(
       context.view,
       point =>
@@ -1247,7 +1258,7 @@ export class AcApArcCmd extends AcEdCommand {
    * @param context - Current app context.
    * @param start - Start point picked by user.
    */
-  private async runStartFlow(context: AcApContext, start: AcGePoint2dLike) {
+  private async runStartFlow(context: AcApContext, start: GeometryPoint2dLike) {
     // After Start:
     // - Pick second point directly -> 3-point arc
     // - Or choose Center / End option families
@@ -1258,7 +1269,7 @@ export class AcApArcCmd extends AcEdCommand {
     this.addKeyword(prompt, 'end')
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint2d(start)
+    prompt.basePoint = new GeometryPoint2d(start)
 
     const result = await AcApDocManager.instance.editor.getPoint(prompt)
     if (result.status === AcEdPromptStatus.OK) {
@@ -1285,13 +1296,13 @@ export class AcApArcCmd extends AcEdCommand {
    */
   private async finishThreePointArc(
     context: AcApContext,
-    start: AcGePoint2dLike,
-    second: AcGePoint2dLike
+    start: GeometryPoint2dLike,
+    second: GeometryPoint2dLike
   ) {
     const prompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.endPoint'))
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint2d(start)
+    prompt.basePoint = new GeometryPoint2d(start)
     prompt.jig = new AcApArcJig(
       context.view,
       point =>
@@ -1342,7 +1353,7 @@ export class AcApArcCmd extends AcEdCommand {
     )
     startPrompt.useBasePoint = true
     startPrompt.useDashedLine = true
-    startPrompt.basePoint = new AcGePoint2d(center)
+    startPrompt.basePoint = new GeometryPoint2d(center)
     const startResult =
       await AcApDocManager.instance.editor.getPoint(startPrompt)
     if (startResult.status !== AcEdPromptStatus.OK) return
@@ -1359,14 +1370,14 @@ export class AcApArcCmd extends AcEdCommand {
    */
   private async runStartCenterFlow(
     context: AcApContext,
-    start: AcGePoint2dLike
+    start: GeometryPoint2dLike
   ) {
     const centerPrompt = new AcEdPromptPointOptions(
       AcApI18n.t('jig.arc.centerPoint')
     )
     centerPrompt.useBasePoint = true
     centerPrompt.useDashedLine = true
-    centerPrompt.basePoint = new AcGePoint2d(start)
+    centerPrompt.basePoint = new GeometryPoint2d(start)
     const centerResult =
       await AcApDocManager.instance.editor.getPoint(centerPrompt)
     if (centerResult.status !== AcEdPromptStatus.OK) return
@@ -1388,8 +1399,8 @@ export class AcApArcCmd extends AcEdCommand {
    */
   private async finishCenterStartFlow(
     context: AcApContext,
-    center: AcGePoint2dLike,
-    start: AcGePoint2dLike
+    center: GeometryPoint2dLike,
+    start: GeometryPoint2dLike
   ) {
     // Center/Start branch:
     // End by pick, or numeric Angle / ChordLength.
@@ -1400,7 +1411,7 @@ export class AcApArcCmd extends AcEdCommand {
     this.addKeyword(endPrompt, 'chordLength')
     endPrompt.useBasePoint = true
     endPrompt.useDashedLine = true
-    endPrompt.basePoint = new AcGePoint2d(start)
+    endPrompt.basePoint = new GeometryPoint2d(start)
     endPrompt.jig = new AcApArcJig(
       context.view,
       point =>
@@ -1461,7 +1472,7 @@ export class AcApArcCmd extends AcEdCommand {
       chordPrompt.allowNegative = true
       chordPrompt.useBasePoint = true
       chordPrompt.useDashedLine = true
-      chordPrompt.basePoint = new AcGePoint2d(start)
+      chordPrompt.basePoint = new GeometryPoint2d(start)
       const chordResult =
         await AcApDocManager.instance.editor.getDistance(chordPrompt)
       if (chordResult.status !== AcEdPromptStatus.OK) return
@@ -1491,11 +1502,14 @@ export class AcApArcCmd extends AcEdCommand {
    * @param context - Current app context.
    * @param start - Arc start point.
    */
-  private async runStartEndFlow(context: AcApContext, start: AcGePoint2dLike) {
+  private async runStartEndFlow(
+    context: AcApContext,
+    start: GeometryPoint2dLike
+  ) {
     const endPrompt = new AcEdPromptPointOptions(AcApI18n.t('jig.arc.endPoint'))
     endPrompt.useBasePoint = true
     endPrompt.useDashedLine = true
-    endPrompt.basePoint = new AcGePoint2d(start)
+    endPrompt.basePoint = new GeometryPoint2d(start)
     const endResult = await AcApDocManager.instance.editor.getPoint(endPrompt)
     if (endResult.status !== AcEdPromptStatus.OK) return
     const end = endResult.value!
@@ -1510,7 +1524,7 @@ export class AcApArcCmd extends AcEdCommand {
     this.addKeyword(centerOrOptionPrompt, 'radius')
     centerOrOptionPrompt.useBasePoint = true
     centerOrOptionPrompt.useDashedLine = true
-    centerOrOptionPrompt.basePoint = new AcGePoint2d(start)
+    centerOrOptionPrompt.basePoint = new GeometryPoint2d(start)
     centerOrOptionPrompt.jig = new AcApArcJig(
       context.view,
       point =>
@@ -1570,7 +1584,7 @@ export class AcApArcCmd extends AcEdCommand {
       )
       directionPrompt.useBasePoint = true
       directionPrompt.useDashedLine = true
-      directionPrompt.basePoint = new AcGePoint2d(start)
+      directionPrompt.basePoint = new GeometryPoint2d(start)
       const directionResult =
         await AcApDocManager.instance.editor.getPoint(directionPrompt)
       if (directionResult.status !== AcEdPromptStatus.OK) return
@@ -1597,7 +1611,7 @@ export class AcApArcCmd extends AcEdCommand {
       radiusPrompt.allowNegative = true
       radiusPrompt.useBasePoint = true
       radiusPrompt.useDashedLine = true
-      radiusPrompt.basePoint = new AcGePoint2d(start)
+      radiusPrompt.basePoint = new GeometryPoint2d(start)
       const radiusResult =
         await AcApDocManager.instance.editor.getDistance(radiusPrompt)
       if (radiusResult.status !== AcEdPromptStatus.OK) return

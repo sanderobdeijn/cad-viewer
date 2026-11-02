@@ -1,10 +1,10 @@
 import { AcCmColor } from '@mlightcad/common'
 import { DEFAULT_ACGI_CONTEXT, AcGiContext } from '@mlightcad/graphic-interface'
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base/AcDbHostApplicationServices'
@@ -63,7 +63,7 @@ class DummyEntity extends AcDbEntity {
   }
 
   override get geometricExtents() {
-    return new AcGeBox3d().expandByPoint(new AcGePoint2d())
+    return new GeometryBox3d().expandByPoint(new GeometryPoint2d())
   }
 
   override subWorldDraw() {
@@ -83,10 +83,10 @@ describe('AcDbEntity.dxfTypeName', () => {
     expect(new AcDbTable('TEST', 1, 1).dxfTypeName).toBe('ACAD_TABLE')
     expect(
       new AcDb3PointAngularDimension(
-        new AcGePoint2d(),
-        new AcGePoint2d(1, 0),
-        new AcGePoint2d(0, 1),
-        new AcGePoint2d(1, 1)
+        new GeometryPoint2d(),
+        new GeometryPoint2d(1, 0),
+        new GeometryPoint2d(0, 1),
+        new GeometryPoint2d(1, 1)
       ).dxfTypeName
     ).toBe('DIMENSION')
   })
@@ -164,7 +164,10 @@ describe('AcDbEntity.color resolution', () => {
     db.clayer = '0'
     db.cecolor = new AcCmColor().setRGBValue(0x336699)
 
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.layer = '0'
     line.color.setByBlock()
 
@@ -180,7 +183,10 @@ describe('AcDbEntity.color resolution', () => {
     db.clayer = 'CURRENT_LAYER'
     db.cecolor = new AcCmColor().setByLayer()
 
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.layer = 'ENTITY_LAYER'
     line.color.setByBlock()
 
@@ -195,7 +201,10 @@ describe('AcDbEntity.color resolution', () => {
     db.clayer = 'CURRENT_LAYER'
     db.cecolor = new AcCmColor().setRGBValue(0xff00ff)
 
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     line.layer = 'ENTITY_LAYER'
     line.color.setByLayer()
 
@@ -208,24 +217,24 @@ describe('AcDbEntity.transformBy', () => {
     const cases = [
       {
         name: 'translation',
-        matrix: new AcGeMatrix3d().makeTranslation(3, 4, 5)
+        matrix: new GeometryMatrix3d().makeTranslation(3, 4, 5)
       },
       {
         name: 'rotation',
-        matrix: new AcGeMatrix3d().makeRotationZ(Math.PI / 2)
+        matrix: new GeometryMatrix3d().makeRotationZ(Math.PI / 2)
       },
       {
         name: 'mirror',
-        matrix: new AcGeMatrix3d().makeScale(-1, 1, 1)
+        matrix: new GeometryMatrix3d().makeScale(-1, 1, 1)
       },
       {
         name: 'non-uniform-scale',
-        matrix: new AcGeMatrix3d().makeScale(2, 3, 4)
+        matrix: new GeometryMatrix3d().makeScale(2, 3, 4)
       }
     ]
 
     cases.forEach(({ name, matrix }) => {
-      const source = new AcGePoint2d(1, 2)
+      const source = new GeometryPoint2d(1, 2)
 
       const point = new AcDbPoint()
       point.position = source.clone()
@@ -245,7 +254,7 @@ describe('AcDbEntity.transformBy', () => {
   it('keeps the base AcDbEntity transformBy as a no-op', () => {
     const entity = new DummyEntity()
     const result = entity.transformBy(
-      new AcGeMatrix3d().makeTranslation(1, 2, 3)
+      new GeometryMatrix3d().makeTranslation(1, 2, 3)
     )
 
     expect(result).toBe(entity)
@@ -254,10 +263,10 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms lightweight and legacy polylines', () => {
     const lwPolyline = new AcDbPolyline()
-    lwPolyline.addVertexAt(0, new AcGePoint2d(0, 0), 1)
-    lwPolyline.addVertexAt(1, new AcGePoint2d(2, 0))
+    lwPolyline.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
+    lwPolyline.addVertexAt(1, new GeometryPoint2d(2, 0))
 
-    lwPolyline.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 5))
+    lwPolyline.transformBy(new GeometryMatrix3d().makeTranslation(3, 4, 5))
 
     const legacyPolyline = new AcDb2dPolyline(
       AcDbPoly2dType.SimplePoly,
@@ -267,7 +276,7 @@ describe('AcDbEntity.transformBy', () => {
       ],
       2
     )
-    legacyPolyline.transformBy(new AcGeMatrix3d().makeTranslation(-1, 2, 3))
+    legacyPolyline.transformBy(new GeometryMatrix3d().makeTranslation(-1, 2, 3))
 
     expect(legacyPolyline.getPointAt(0)).toMatchObject({ x: -1, y: 2 })
     expect(legacyPolyline.getPointAt(1)).toMatchObject({ x: 0, y: 2 })
@@ -275,41 +284,44 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms primitive entities and vertex entities', () => {
     const point = new AcDbPoint()
-    point.position = new AcGePoint2d(1, 2)
-    point.transformBy(new AcGeMatrix3d().makeTranslation(4, -1, 2))
+    point.position = new GeometryPoint2d(1, 2)
+    point.transformBy(new GeometryMatrix3d().makeTranslation(4, -1, 2))
     expectPoint3dClose(point.position, { x: 5, y: 1 })
 
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 2))
-    line.transformBy(new AcGeMatrix3d().makeTranslation(2, 3, 4))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 2)
+    )
+    line.transformBy(new GeometryMatrix3d().makeTranslation(2, 3, 4))
     expectPoint3dClose(line.startPoint, { x: 2, y: 3 })
     expectPoint3dClose(line.endPoint, { x: 3, y: 5 })
 
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 2, 0, Math.PI / 2)
-    arc.transformBy(new AcGeMatrix3d().makeTranslation(1, 2, 3))
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 2, 0, Math.PI / 2)
+    arc.transformBy(new GeometryMatrix3d().makeTranslation(1, 2, 3))
     expectPoint3dClose(arc.center, { x: 1, y: 2 })
     expectPoint3dClose(arc.startPoint, { x: 3, y: 2 })
 
-    const circle = new AcDbCircle(new AcGePoint2d(0, 0), 3)
-    circle.transformBy(new AcGeMatrix3d().makeTranslation(-2, 4, 1))
+    const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 3)
+    circle.transformBy(new GeometryMatrix3d().makeTranslation(-2, 4, 1))
     expectPoint3dClose(circle.center, { x: -2, y: 4 })
     expect(circle.radius).toBeCloseTo(3, 8)
 
     const vertex2d = new AcDb2dVertex()
-    vertex2d.position = new AcGePoint2d(1, 1)
-    vertex2d.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 5))
+    vertex2d.position = new GeometryPoint2d(1, 1)
+    vertex2d.transformBy(new GeometryMatrix3d().makeTranslation(3, 4, 5))
     expectPoint3dClose(vertex2d.position, { x: 4, y: 5 })
   })
 
   it('keeps line-like entities aligned across translation rotation and mirror', () => {
     const cases = [
-      new AcGeMatrix3d().makeTranslation(4, -1, 2),
-      new AcGeMatrix3d().makeRotationZ(Math.PI / 2),
-      new AcGeMatrix3d().makeScale(-1, 1, 1)
+      new GeometryMatrix3d().makeTranslation(4, -1, 2),
+      new GeometryMatrix3d().makeRotationZ(Math.PI / 2),
+      new GeometryMatrix3d().makeScale(-1, 1, 1)
     ]
 
     cases.forEach(matrix => {
-      const start = new AcGePoint2d(1, 2)
-      const end = new AcGePoint2d(4, 5)
+      const start = new GeometryPoint2d(1, 2)
+      const end = new GeometryPoint2d(4, 5)
 
       const line = new AcDbLine(start.clone(), end.clone())
       line.transformBy(matrix)
@@ -318,14 +330,14 @@ describe('AcDbEntity.transformBy', () => {
 
       const ray = new AcDbRay()
       ray.basePoint = start.clone()
-      ray.unitDir = new AcGePoint2d(1, 0)
+      ray.unitDir = new GeometryPoint2d(1, 0)
       ray.transformBy(matrix)
       expectPoint3dClose(ray.basePoint, start.clone().applyMatrix4(matrix))
       expect(ray.unitDir.length()).toBeCloseTo(1, 8)
 
       const xline = new AcDbXline()
       xline.basePoint = start.clone()
-      xline.unitDir = new AcGePoint2d(1, 0)
+      xline.unitDir = new GeometryPoint2d(1, 0)
       xline.transformBy(matrix)
       expectPoint3dClose(xline.basePoint, start.clone().applyMatrix4(matrix))
       expect(xline.unitDir.length()).toBeCloseTo(1, 8)
@@ -335,19 +347,19 @@ describe('AcDbEntity.transformBy', () => {
   it('keeps polyline entities aligned across rotation and mirror transforms', () => {
     const cases = [
       {
-        matrix: new AcGeMatrix3d().makeRotationZ(Math.PI / 2),
+        matrix: new GeometryMatrix3d().makeRotationZ(Math.PI / 2),
         expectedBulge: 1
       },
       {
-        matrix: new AcGeMatrix3d().makeScale(-1, 1, 1),
+        matrix: new GeometryMatrix3d().makeScale(-1, 1, 1),
         expectedBulge: -1
       }
     ]
 
     cases.forEach(({ matrix, expectedBulge }) => {
       const lwPolyline = new AcDbPolyline()
-      lwPolyline.addVertexAt(0, new AcGePoint2d(0, 0), 1)
-      lwPolyline.addVertexAt(1, new AcGePoint2d(2, 0))
+      lwPolyline.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
+      lwPolyline.addVertexAt(1, new GeometryPoint2d(2, 0))
       lwPolyline.transformBy(matrix)
       expect(
         (
@@ -384,57 +396,57 @@ describe('AcDbEntity.transformBy', () => {
       ],
       [0, 0, 0, 0, 1, 1, 1, 1]
     )
-    const splineSnapPoints: AcGePoint2d[] = []
-    spline.transformBy(new AcGeMatrix3d().makeTranslation(2, 3, 4))
+    const splineSnapPoints: GeometryPoint2d[] = []
+    spline.transformBy(new GeometryMatrix3d().makeTranslation(2, 3, 4))
     spline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       splineSnapPoints
     )
     expect(splineSnapPoints[0]).toMatchObject({ x: 2, y: 3 })
 
     const ellipse = new AcDbEllipse(
-      new AcGePoint2d(0, 0),
-      AcGeVector3d.X_AXIS,
+      new GeometryPoint2d(0, 0),
+      GeometryVector3d.X_AXIS,
       4,
       2,
       0,
       Math.PI / 2
     )
-    ellipse.transformBy(new AcGeMatrix3d().makeTranslation(1, 2, 3))
+    ellipse.transformBy(new GeometryMatrix3d().makeTranslation(1, 2, 3))
     expect(ellipse.center).toMatchObject({ x: 1, y: 2 })
 
     const leader = new AcDbLeader()
     leader.appendVertex({ x: 0, y: 0 })
     leader.appendVertex({ x: 1, y: 0 })
-    leader.transformBy(new AcGeMatrix3d().makeTranslation(5, 6, 7))
+    leader.transformBy(new GeometryMatrix3d().makeTranslation(5, 6, 7))
     expect(leader.vertices[0]).toMatchObject({ x: 5, y: 6 })
     expect(leader.vertices[1]).toMatchObject({ x: 6, y: 6 })
 
     const ray = new AcDbRay()
-    ray.basePoint = new AcGePoint2d(1, 0)
-    ray.unitDir = new AcGePoint2d(1, 0)
-    ray.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    ray.basePoint = new GeometryPoint2d(1, 0)
+    ray.unitDir = new GeometryPoint2d(1, 0)
+    ray.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
     expect(ray.basePoint.x).toBeCloseTo(0, 8)
     expect(ray.basePoint.y).toBeCloseTo(1, 8)
     expect(ray.unitDir.x).toBeCloseTo(0, 8)
     expect(ray.unitDir.y).toBeCloseTo(1, 8)
 
     const xline = new AcDbXline()
-    xline.basePoint = new AcGePoint2d(2, 0)
-    xline.unitDir = new AcGePoint2d(1, 0)
-    xline.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    xline.basePoint = new GeometryPoint2d(2, 0)
+    xline.unitDir = new GeometryPoint2d(1, 0)
+    xline.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
     expectPoint3dClose(xline.basePoint, { x: 0, y: 2 })
     expectVector3dClose(xline.unitDir, { x: 0, y: 1 })
 
     const blockRef = new AcDbBlockReference('TEST')
-    blockRef.position = new AcGePoint2d(1, 0)
-    blockRef.scaleFactors = new AcGePoint2d(2, 3)
+    blockRef.position = new GeometryPoint2d(1, 0)
+    blockRef.scaleFactors = new GeometryPoint2d(2, 3)
     const attrib = new AcDbAttribute()
-    attrib.position = new AcGePoint2d(2, 0)
+    attrib.position = new GeometryPoint2d(2, 0)
     blockRef.appendAttributes(attrib)
-    blockRef.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    blockRef.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
     expect(blockRef.position.x).toBeCloseTo(0, 8)
     expect(blockRef.position.y).toBeCloseTo(1, 8)
     expect(blockRef.rotation).toBeCloseTo(Math.PI / 2, 8)
@@ -445,14 +457,14 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms block references correctly under combined rotation and scaling', () => {
     const blockRef = new AcDbBlockReference('TEST')
-    blockRef.position = new AcGePoint2d(2, 1)
+    blockRef.position = new GeometryPoint2d(2, 1)
     blockRef.rotation = Math.PI / 4
-    blockRef.scaleFactors = new AcGePoint2d(2, 1)
+    blockRef.scaleFactors = new GeometryPoint2d(2, 1)
 
     blockRef.transformBy(
-      new AcGeMatrix3d()
+      new GeometryMatrix3d()
         .makeRotationZ(Math.PI / 2)
-        .multiply(new AcGeMatrix3d().makeScale(2, 3, 4))
+        .multiply(new GeometryMatrix3d().makeScale(2, 3, 4))
     )
 
     expectPoint3dClose(blockRef.position, { x: -3, y: 4 })
@@ -463,31 +475,31 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms text-like and mesh entities', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(0, 0)
+    text.position = new GeometryPoint2d(0, 0)
     text.height = 2
     text.widthFactor = 1
     text.thickness = 1
-    text.transformBy(new AcGeMatrix3d().makeScale(2, 3, 4))
+    text.transformBy(new GeometryMatrix3d().makeScale(2, 3, 4))
     expect(text.height).toBeCloseTo(6, 8)
     expect(text.widthFactor).toBeCloseTo(2 / 3, 8)
 
     const mtext = new AcDbMText()
-    mtext.location = new AcGePoint2d(1, 0)
-    mtext.direction = new AcGeVector3d(1, 0, 0)
+    mtext.location = new GeometryPoint2d(1, 0)
+    mtext.direction = new GeometryVector3d(1, 0, 0)
     mtext.width = 10
     mtext.height = 2
-    mtext.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    mtext.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
     expect(mtext.location.x).toBeCloseTo(0, 8)
     expect(mtext.location.y).toBeCloseTo(1, 8)
     expect(mtext.direction.x).toBeCloseTo(0, 8)
     expect(mtext.direction.y).toBeCloseTo(1, 8)
 
     const viewport = new AcDbViewport()
-    viewport.centerPoint = new AcGePoint2d(1, 2)
+    viewport.centerPoint = new GeometryPoint2d(1, 2)
     viewport.width = 2
     viewport.height = 4
     viewport.viewHeight = 10
-    viewport.transformBy(new AcGeMatrix3d().makeScale(2, 3, 1))
+    viewport.transformBy(new GeometryMatrix3d().makeScale(2, 3, 1))
     expect(viewport.centerPoint).toMatchObject({ x: 2, y: 6 })
     expect(viewport.width).toBeCloseTo(4, 8)
     expect(viewport.height).toBeCloseTo(12, 8)
@@ -496,14 +508,14 @@ describe('AcDbEntity.transformBy', () => {
 
   it('updates text, mtext and viewport under combined transforms', () => {
     const text = new AcDbText()
-    text.position = new AcGePoint2d(1, 0)
+    text.position = new GeometryPoint2d(1, 0)
     text.rotation = 0
     text.height = 2
     text.widthFactor = 1
     text.transformBy(
-      new AcGeMatrix3d()
+      new GeometryMatrix3d()
         .makeRotationZ(Math.PI / 2)
-        .multiply(new AcGeMatrix3d().makeScale(2, 3, 1))
+        .multiply(new GeometryMatrix3d().makeScale(2, 3, 1))
     )
     expectPoint3dClose(text.position, { x: 0, y: 2 })
     expect(text.rotation).toBeCloseTo(Math.PI / 2, 8)
@@ -511,25 +523,25 @@ describe('AcDbEntity.transformBy', () => {
     expect(text.widthFactor).toBeCloseTo(2 / 3, 8)
 
     const mtext = new AcDbMText()
-    mtext.location = new AcGePoint2d(2, 0)
-    mtext.direction = new AcGeVector3d(1, 0, 0)
+    mtext.location = new GeometryPoint2d(2, 0)
+    mtext.direction = new GeometryVector3d(1, 0, 0)
     mtext.width = 5
     mtext.height = 2
-    mtext.transformBy(new AcGeMatrix3d().makeScale(2, 3, 1))
+    mtext.transformBy(new GeometryMatrix3d().makeScale(2, 3, 1))
     expectPoint3dClose(mtext.location, { x: 4, y: 0 })
     expectVector3dClose(mtext.direction, { x: 1, y: 0 })
     expect(mtext.width).toBeCloseTo(10, 8)
     expect(mtext.height).toBeCloseTo(6, 8)
 
     const viewport = new AcDbViewport()
-    viewport.centerPoint = new AcGePoint2d(1, 1)
+    viewport.centerPoint = new GeometryPoint2d(1, 1)
     viewport.width = 2
     viewport.height = 3
     viewport.viewHeight = 4
     viewport.transformBy(
-      new AcGeMatrix3d()
+      new GeometryMatrix3d()
         .makeRotationZ(Math.PI / 2)
-        .multiply(new AcGeMatrix3d().makeScale(2, 5, 1))
+        .multiply(new GeometryMatrix3d().makeScale(2, 5, 1))
     )
     expectPoint3dClose(viewport.centerPoint, { x: -5, y: 2 })
     expect(viewport.width).toBeCloseTo(4, 8)
@@ -539,30 +551,32 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms trace entities', () => {
     const trace = new AcDbTrace()
-    trace.setPointAt(0, new AcGePoint2d(0, 0))
-    trace.setPointAt(1, new AcGePoint2d(1, 0))
-    trace.setPointAt(2, new AcGePoint2d(1, 1))
-    trace.setPointAt(3, new AcGePoint2d(0, 1))
-    trace.transformBy(new AcGeMatrix3d().makeTranslation(-1, 2, 5))
+    trace.setPointAt(0, new GeometryPoint2d(0, 0))
+    trace.setPointAt(1, new GeometryPoint2d(1, 0))
+    trace.setPointAt(2, new GeometryPoint2d(1, 1))
+    trace.setPointAt(3, new GeometryPoint2d(0, 1))
+    trace.transformBy(new GeometryMatrix3d().makeTranslation(-1, 2, 5))
     expectPoint3dClose(trace.getPointAt(0), { x: -1, y: 2 })
   })
 
   it('transforms inherited text and block-reference entity kinds', () => {
     const attribute = new AcDbAttribute()
-    attribute.position = new AcGePoint2d(0, 0)
+    attribute.position = new GeometryPoint2d(0, 0)
     attribute.height = 1
-    attribute.transformBy(new AcGeMatrix3d().makeScale(2, 3, 1))
+    attribute.transformBy(new GeometryMatrix3d().makeScale(2, 3, 1))
     expect(attribute.height).toBeCloseTo(3, 8)
 
     const attributeDefinition = new AcDbAttributeDefinition()
-    attributeDefinition.position = new AcGePoint2d(1, 1)
-    attributeDefinition.transformBy(new AcGeMatrix3d().makeTranslation(2, 4, 6))
+    attributeDefinition.position = new GeometryPoint2d(1, 1)
+    attributeDefinition.transformBy(
+      new GeometryMatrix3d().makeTranslation(2, 4, 6)
+    )
     expectPoint3dClose(attributeDefinition.position, { x: 3, y: 5 })
 
     const table = new AcDbTable('TEST', 1, 1)
-    table.position = new AcGePoint2d(2, 0)
-    table.scaleFactors = new AcGePoint2d(1, 2)
-    table.transformBy(new AcGeMatrix3d().makeRotationZ(Math.PI / 2))
+    table.position = new GeometryPoint2d(2, 0)
+    table.scaleFactors = new GeometryPoint2d(1, 2)
+    table.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
     expectPoint3dClose(table.position, { x: 0, y: 2 })
     expect(table.rotation).toBeCloseTo(Math.PI / 2, 8)
     expect(table.scaleFactors.y).toBeCloseTo(2, 8)
@@ -570,18 +584,18 @@ describe('AcDbEntity.transformBy', () => {
 
   it('transforms dimension entities through base and subclass definition points', () => {
     const dimension = new AcDbAlignedDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(2, 0),
-      new AcGePoint2d(1, 1)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(2, 0),
+      new GeometryPoint2d(1, 1)
     )
-    dimension.dimBlockPosition = new AcGePoint2d(1, 2)
-    dimension.textPosition = new AcGePoint2d(2, 0)
+    dimension.dimBlockPosition = new GeometryPoint2d(1, 2)
+    dimension.textPosition = new GeometryPoint2d(2, 0)
     dimension.textRotation = 0
-    dimension.normal = AcGeVector3d.Z_AXIS
+    dimension.normal = GeometryVector3d.Z_AXIS
     dimension.transformBy(
-      new AcGeMatrix3d()
+      new GeometryMatrix3d()
         .makeRotationZ(Math.PI / 2)
-        .multiply(new AcGeMatrix3d().makeTranslation(3, 4, 5))
+        .multiply(new GeometryMatrix3d().makeTranslation(3, 4, 5))
     )
 
     expectPoint3dClose(dimension.xLine1Point, { x: -4, y: 3 })
@@ -592,50 +606,54 @@ describe('AcDbEntity.transformBy', () => {
     expect(dimension.textRotation).toBeCloseTo(Math.PI / 2, 8)
 
     const angularDimension = new AcDb3PointAngularDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 0),
-      new AcGePoint2d(0, 1),
-      new AcGePoint2d(1, 1)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0),
+      new GeometryPoint2d(0, 1),
+      new GeometryPoint2d(1, 1)
     )
-    angularDimension.transformBy(new AcGeMatrix3d().makeTranslation(1, 2, 3))
+    angularDimension.transformBy(
+      new GeometryMatrix3d().makeTranslation(1, 2, 3)
+    )
     expectPoint3dClose(angularDimension.centerPoint, { x: 1, y: 2 })
     expectPoint3dClose(angularDimension.arcPoint, { x: 2, y: 3 })
 
     const arcDimension = new AcDbArcDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 0),
-      new AcGePoint2d(0, 1),
-      new AcGePoint2d(1, 1)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0),
+      new GeometryPoint2d(0, 1),
+      new GeometryPoint2d(1, 1)
     )
-    arcDimension.transformBy(new AcGeMatrix3d().makeTranslation(2, 3, 4))
+    arcDimension.transformBy(new GeometryMatrix3d().makeTranslation(2, 3, 4))
     expectPoint3dClose(arcDimension.centerPoint, { x: 2, y: 3 })
     expectPoint3dClose(arcDimension.arcPoint, { x: 3, y: 4 })
 
     const diametricDimension = new AcDbDiametricDimension(
-      new AcGePoint2d(1, 0),
-      new AcGePoint2d(-1, 0),
+      new GeometryPoint2d(1, 0),
+      new GeometryPoint2d(-1, 0),
       2
     )
-    diametricDimension.transformBy(new AcGeMatrix3d().makeTranslation(5, 6, 7))
+    diametricDimension.transformBy(
+      new GeometryMatrix3d().makeTranslation(5, 6, 7)
+    )
     expectPoint3dClose(diametricDimension.chordPoint, { x: 6, y: 6 })
     expectPoint3dClose(diametricDimension.farChordPoint, { x: 4, y: 6 })
 
     const ordinateDimension = new AcDbOrdinateDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 2)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 2)
     )
     ordinateDimension.transformBy(
-      new AcGeMatrix3d().makeTranslation(-1, -2, -3)
+      new GeometryMatrix3d().makeTranslation(-1, -2, -3)
     )
     expectPoint3dClose(ordinateDimension.definingPoint, { x: -1, y: -2 })
     expectPoint3dClose(ordinateDimension.leaderEndPoint, { x: 0, y: 0 })
 
     const radialDimension = new AcDbRadialDimension(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(2, 0),
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(2, 0),
       1
     )
-    radialDimension.transformBy(new AcGeMatrix3d().makeTranslation(7, 8, 9))
+    radialDimension.transformBy(new GeometryMatrix3d().makeTranslation(7, 8, 9))
     expectPoint3dClose(radialDimension.center, { x: 7, y: 8 })
     expectPoint3dClose(radialDimension.chordPoint, { x: 9, y: 8 })
   })

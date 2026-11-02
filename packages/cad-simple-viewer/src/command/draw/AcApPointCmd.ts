@@ -1,4 +1,4 @@
-import { AcDbPoint, AcGePoint2d } from '@mlightcad/data-model'
+import { AcDbPoint, GeometryPoint2d } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -37,7 +37,7 @@ export class AcApPointCmd extends AcEdCommand {
       }
 
       const point = new AcDbPoint()
-      point.position = new AcGePoint2d(pointResult.value)
+      point.position = new GeometryPoint2d(pointResult.value)
       context.doc.database.tables.blockTable.modelSpace.appendEntity(point)
     }
   }

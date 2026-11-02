@@ -1,9 +1,9 @@
 import {
-  AcGeArea2d,
-  AcGeCircArc2d,
-  AcGeEllipseArc2d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryArea2d,
+  GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcGiContext } from './AcGiContext'
@@ -46,7 +46,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param style Input point style applied to point
    * @returns Return an object which can be added to scene
    */
-  point(point: AcGePoint2d, style: AcGiPointStyle): T
+  point(point: GeometryPoint2d, style: AcGiPointStyle): T
 
   /**
    * Draw a circular arc or full circle.
@@ -57,7 +57,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param arc Input circular arc to draw
    * @returns Return an object which can be added to scene
    */
-  circularArc(arc: AcGeCircArc2d): T
+  circularArc(arc: GeometryCircularArc2d): T
 
   /**
    * Draw an elliptical arc or full ellipse.
@@ -68,14 +68,14 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param ellipseArc Input elliptical arc to draw
    * @returns Return an object which can be added to scene
    */
-  ellipticalArc(ellipseArc: AcGeEllipseArc2d): T
+  ellipticalArc(ellipseArc: GeometryEllipseArc2d): T
 
   /**
    * Draw lines using gl.LINE_STRIP.
    * @param points Input a point array which contains all line vertices
    * @returns Return an object which can be added to scene
    */
-  lines(points: AcGePoint2dLike[]): T
+  lines(points: GeometryPoint2dLike[]): T
 
   /**
    * Draw lines using gl.LINES.
@@ -98,7 +98,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param area Input area to draw
    * @returns Return an object which can be added to scene
    */
-  area(area: AcGeArea2d): T
+  area(area: GeometryArea2d): T
 
   /**
    * Draw a closed wide polyline as an index-aligned offset ring.
@@ -112,7 +112,7 @@ export interface AcGiRenderer<T extends AcGiEntity = AcGiEntity> {
    * @param inner - Inner boundary in the same order and count as `outer`
    * @returns Return an object which can be added to scene
    */
-  offsetRing(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]): T
+  offsetRing(outer: GeometryPoint2dLike[], inner: GeometryPoint2dLike[]): T
 
   /**
    * Draw multiple line texts

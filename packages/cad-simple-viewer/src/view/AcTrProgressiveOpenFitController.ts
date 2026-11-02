@@ -1,8 +1,8 @@
-import { AcGeBox2d, AcGeVector2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryVector2d } from '@mlightcad/data-model'
 
 /** Callback that applies a zoom-to-fit in the host view. */
 export type AcTrProgressiveOpenFitZoomFn = (
-  box: AcGeBox2d,
+  box: GeometryBox2d,
   margin?: number
 ) => void
 
@@ -33,7 +33,7 @@ export class AcTrProgressiveOpenFitController {
   private incrementalEnabled = false
   private initialPendingCount = 0
   private convertedCount = 0
-  private lastFittedBox?: AcGeBox2d
+  private lastFittedBox?: GeometryBox2d
   private lastZoomAt = 0
 
   constructor(private readonly zoomTo: AcTrProgressiveOpenFitZoomFn) {}
@@ -81,7 +81,7 @@ export class AcTrProgressiveOpenFitController {
    * Applies the terminal fit after all entities are converted, unless the user
    * already adjusted the view manually.
    */
-  applyFinalFit(resolveFitBox: () => AcGeBox2d | undefined) {
+  applyFinalFit(resolveFitBox: () => GeometryBox2d | undefined) {
     if (this.userAdjusted) {
       return
     }
@@ -99,7 +99,7 @@ export class AcTrProgressiveOpenFitController {
    * `viewChanged` listener does not mark the open fit as user-adjusted and
    * cancel {@link applyFinalFit}.
    */
-  frameProgrammatically(box: AcGeBox2d) {
+  frameProgrammatically(box: GeometryBox2d) {
     if (this.userAdjusted) {
       return
     }
@@ -123,7 +123,7 @@ export class AcTrProgressiveOpenFitController {
    * Called after one entity (or group bucket) was added to the scene during open.
    */
   afterGeometryBatch(
-    resolveFitBox: () => AcGeBox2d | undefined,
+    resolveFitBox: () => GeometryBox2d | undefined,
     _entityIndex?: number
   ) {
     if (!this.active) {
@@ -149,7 +149,7 @@ export class AcTrProgressiveOpenFitController {
     }
   }
 
-  private maybeIncrementalFit(resolveFitBox: () => AcGeBox2d | undefined) {
+  private maybeIncrementalFit(resolveFitBox: () => GeometryBox2d | undefined) {
     if (!this.active || !this.incrementalEnabled || this.userAdjusted) {
       return
     }
@@ -171,7 +171,7 @@ export class AcTrProgressiveOpenFitController {
     this.applyZoom(box)
   }
 
-  private shouldApplyIncrementalFit(box: AcGeBox2d) {
+  private shouldApplyIncrementalFit(box: GeometryBox2d) {
     const lastBox = this.lastFittedBox
     if (!lastBox) {
       return true
@@ -188,7 +188,7 @@ export class AcTrProgressiveOpenFitController {
     )
   }
 
-  private applyZoom(box: AcGeBox2d, margin: number = 1.1) {
+  private applyZoom(box: GeometryBox2d, margin: number = 1.1) {
     this.programmaticDepth++
     try {
       this.zoomTo(box, margin)
@@ -198,14 +198,14 @@ export class AcTrProgressiveOpenFitController {
     }
   }
 
-  private estimateBoxArea(box: AcGeBox2d) {
-    const size = new AcGeVector2d()
+  private estimateBoxArea(box: GeometryBox2d) {
+    const size = new GeometryVector2d()
     box.getSize(size)
     return Math.abs(size.x) * Math.abs(size.y)
   }
 
-  private snapshotFitBox(box: AcGeBox2d) {
-    return new AcGeBox2d(
+  private snapshotFitBox(box: GeometryBox2d) {
+    return new GeometryBox2d(
       { x: box.min.x, y: box.min.y },
       { x: box.max.x, y: box.max.y }
     )

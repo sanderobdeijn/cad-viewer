@@ -1,12 +1,12 @@
 import {
-  AcGeBox3d,
-  AcGeCircArc2d,
-  AcGeIntersectPrimitive,
-  AcGeMathUtil,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryCircularArc2d,
+  GeometryIntersectPrimitive,
+  GeometryMathUtil,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -26,7 +26,7 @@ import { acdbPickNearestOsnapPoint } from './AcDbOsnapHelpers'
  * ```typescript
  * // Create a 90-degree arc from 0 to π/2 radians
  * const arc = new AcDbArc(
- *   new AcGePoint2d(0, 0),
+ *   new GeometryPoint2d(0, 0),
  *   10,
  *   0,
  *   Math.PI / 2
@@ -48,16 +48,16 @@ export class AcDbArc extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric circular arc object. */
-  private _geoData: AcGeCircArc2d | null = null
+  private _geoData: GeometryCircularArc2d | null = null
 
   /**
    * The underlying geometric circular arc object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate default geometry.
    */
-  private get _geo(): AcGeCircArc2d {
+  private get _geo(): GeometryCircularArc2d {
     if (this._geoData == null) {
-      this._geoData = AcGeCircArc2d.fromMathAngles(
-        new AcGePoint2d(),
+      this._geoData = GeometryCircularArc2d.fromMathAngles(
+        new GeometryPoint2d(),
         1,
         0,
         Math.PI / 2,
@@ -67,7 +67,7 @@ export class AcDbArc extends AcDbCurve {
     return this._geoData
   }
 
-  private set _geo(value: AcGeCircArc2d) {
+  private set _geo(value: GeometryCircularArc2d) {
     this._geoData = value
   }
 
@@ -89,7 +89,7 @@ export class AcDbArc extends AcDbCurve {
    * ```typescript
    * // Create a quarter circle arc (0 to 90 degrees)
    * const quarterArc = new AcDbArc(
-   *   new AcGePoint2d(0, 0),
+   *   new GeometryPoint2d(0, 0),
    *   15,
    *   0,
    *   Math.PI / 2
@@ -97,7 +97,7 @@ export class AcDbArc extends AcDbCurve {
    *
    * // Create a semicircle arc (0 to 180 degrees)
    * const semicircle = new AcDbArc(
-   *   new AcGePoint2d(10, 20),
+   *   new GeometryPoint2d(10, 20),
    *   25,
    *   0,
    *   Math.PI
@@ -106,14 +106,14 @@ export class AcDbArc extends AcDbCurve {
    */
   constructor()
   constructor(
-    center: AcGePoint2dLike,
+    center: GeometryPoint2dLike,
     radius: number,
     startAngle: number,
     endAngle: number,
     clockwise?: boolean
   )
   constructor(
-    center?: AcGePoint2dLike,
+    center?: GeometryPoint2dLike,
     radius?: number,
     startAngle?: number,
     endAngle?: number,
@@ -126,7 +126,7 @@ export class AcDbArc extends AcDbCurve {
       startAngle !== undefined &&
       endAngle !== undefined
     ) {
-      this._geo = AcGeCircArc2d.fromMathAngles(
+      this._geo = GeometryCircularArc2d.fromMathAngles(
         center,
         radius,
         startAngle,
@@ -147,7 +147,7 @@ export class AcDbArc extends AcDbCurve {
    * console.log(`Arc center: ${centerPoint.x}, ${centerPoint.y}`);
    * ```
    */
-  get center(): AcGePoint2d {
+  get center(): GeometryPoint2d {
     return this._geo.center
   }
 
@@ -158,10 +158,10 @@ export class AcDbArc extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * arc.center = new AcGePoint2d(5, 5);
+   * arc.center = new GeometryPoint2d(5, 5);
    * ```
    */
-  set center(value: AcGePoint2dLike) {
+  set center(value: GeometryPoint2dLike) {
     this._geo.center = value
   }
 
@@ -269,7 +269,7 @@ export class AcDbArc extends AcDbCurve {
     return this._geo.clockwise
   }
   set clockwise(value: boolean) {
-    this._geo = AcGeCircArc2d.fromMathAngles(
+    this._geo = GeometryCircularArc2d.fromMathAngles(
       this.center,
       this.radius,
       this.startAngle,
@@ -278,7 +278,7 @@ export class AcDbArc extends AcDbCurve {
     )
   }
 
-  get startPoint(): AcGePoint2d {
+  get startPoint(): GeometryPoint2d {
     return this._geo.startPoint
   }
 
@@ -295,14 +295,14 @@ export class AcDbArc extends AcDbCurve {
    * console.log(`Arc end point: ${endPoint.x}, ${endPoint.y}`);
    * ```
    */
-  get endPoint(): AcGePoint2d {
+  get endPoint(): GeometryPoint2d {
     return this._geo.endPoint
   }
 
   /**
    * The middle point of the circular arc
    */
-  get midPoint(): AcGePoint2d {
+  get midPoint(): GeometryPoint2d {
     return this._geo.midPoint
   }
 
@@ -318,14 +318,14 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
+    return new GeometryBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return [
       {
-        kind: 'circArc',
+        kind: 'circularArc',
         arc: this._geo,
         extendable: !this.closed
       }
@@ -435,7 +435,8 @@ export class AcDbArc extends AcDbCurve {
               type: 'float',
               editable: false,
               accessor: {
-                get: () => AcGeMathUtil.radToDeg(Math.abs(this._geo.deltaAngle))
+                get: () =>
+                  GeometryMathUtil.radToDeg(Math.abs(this._geo.deltaAngle))
               }
             },
             {
@@ -467,7 +468,7 @@ export class AcDbArc extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     gripPoints.push(this.center)
     gripPoints.push(this.startPoint)
     gripPoints.push(this.endPoint)
@@ -475,7 +476,7 @@ export class AcDbArc extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       this.moveGripAt(index, offset)
     })
@@ -496,9 +497,9 @@ export class AcDbArc extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const geo = this._geo
     switch (osnapMode) {
@@ -552,12 +553,12 @@ export class AcDbArc extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * const translationMatrix = AcGeMatrix3d.translation(10, 0, 0);
+   * const translationMatrix = GeometryMatrix3d.translation(10, 0, 0);
    * arc.transformBy(translationMatrix);
    * // Arc is now translated 10 units in the X direction
    * ```
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._geo = this._geo.transform3d(matrix)
     return this
   }
@@ -594,21 +595,21 @@ export class AcDbArc extends AcDbCurve {
     return curve ? [curve] : []
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const c = this.center
     const r = this.radius
     return Math.sqrt((point.x - c.x) ** 2 + (point.y - c.y) ** 2) >= r ? 1 : -1
   }
 
-  private polarAngleOf(point: AcGePoint2dLike) {
+  private polarAngleOf(point: GeometryPoint2dLike) {
     const center = this.center
-    return AcGeMathUtil.normalizeAngle(
+    return GeometryMathUtil.normalizeAngle(
       Math.atan2(point.y - center.y, point.x - center.x)
     )
   }
 
   private setAngles(startAngle: number, endAngle: number) {
-    this._geo = AcGeCircArc2d.fromMathAngles(
+    this._geo = GeometryCircularArc2d.fromMathAngles(
       this.center,
       this.radius,
       startAngle,
@@ -617,10 +618,10 @@ export class AcDbArc extends AcDbCurve {
     )
   }
 
-  private moveGripAt(gripIndex: number, offset: AcGeVector2dLike) {
+  private moveGripAt(gripIndex: number, offset: GeometryVector2dLike) {
     switch (gripIndex) {
       case 0:
-        this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
+        this.transformBy(GeometryMatrix3d.makeTranslation({ ...offset, z: 0 }))
         break
       case 1: {
         const point = this._geo.startPoint

@@ -1,8 +1,8 @@
 import {
   AcDbPolyline,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -24,13 +24,13 @@ type PolygonMode = 'Inscribed' | 'Circumscribed'
 type PolygonKeywordKey = 'edge' | 'inscribed' | 'circumscribed'
 type PolygonInvalidKey = 'sides' | 'radius' | 'edge'
 
-function distance2d(p1: AcGePoint2dLike, p2: AcGePoint2dLike) {
+function distance2d(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
   return Math.hypot(p2.x - p1.x, p2.y - p1.y)
 }
 
 function updatePolylineVertices(
   polyline: AcDbPolyline,
-  vertices: AcGePoint2d[]
+  vertices: GeometryPoint2d[]
 ) {
   polyline.reset(false)
   vertices.forEach((point, index) => polyline.addVertexAt(index, point))
@@ -38,29 +38,29 @@ function updatePolylineVertices(
 }
 
 function buildPolygonFromCenter(
-  center: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
   sides: number,
-  point: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
   mode: PolygonMode
 ) {
   const inputRadius = distance2d(center, point)
-  if (AcGeTol.isNonPositive(inputRadius)) return undefined
+  if (GeometryTol.isNonPositive(inputRadius)) return undefined
 
   const step = (Math.PI * 2) / sides
   const baseAngle = Math.atan2(point.y - center.y, point.x - center.x)
   const circumRadius =
     mode === 'Inscribed' ? inputRadius : inputRadius / Math.cos(Math.PI / sides)
-  if (!Number.isFinite(circumRadius) || AcGeTol.isNonPositive(circumRadius))
+  if (!Number.isFinite(circumRadius) || GeometryTol.isNonPositive(circumRadius))
     return undefined
 
   const firstVertexAngle =
     mode === 'Inscribed' ? baseAngle : baseAngle + step / 2
 
-  const vertices: AcGePoint2d[] = []
+  const vertices: GeometryPoint2d[] = []
   for (let i = 0; i < sides; i++) {
     const angle = firstVertexAngle + i * step
     vertices.push(
-      new AcGePoint2d(
+      new GeometryPoint2d(
         center.x + circumRadius * Math.cos(angle),
         center.y + circumRadius * Math.sin(angle)
       )
@@ -71,19 +71,19 @@ function buildPolygonFromCenter(
 }
 
 function buildPolygonFromEdge(
-  firstPoint: AcGePoint2dLike,
-  secondPoint: AcGePoint2dLike,
+  firstPoint: GeometryPoint2dLike,
+  secondPoint: GeometryPoint2dLike,
   sides: number
 ) {
   const dx = secondPoint.x - firstPoint.x
   const dy = secondPoint.y - firstPoint.y
   const edgeLength = Math.hypot(dx, dy)
-  if (AcGeTol.isNonPositive(edgeLength)) return undefined
+  if (GeometryTol.isNonPositive(edgeLength)) return undefined
 
   const step = (Math.PI * 2) / sides
-  const vertices: AcGePoint2d[] = [
-    new AcGePoint2d(firstPoint),
-    new AcGePoint2d(secondPoint)
+  const vertices: GeometryPoint2d[] = [
+    new GeometryPoint2d(firstPoint),
+    new GeometryPoint2d(secondPoint)
   ]
 
   let currentX = secondPoint.x
@@ -96,7 +96,7 @@ function buildPolygonFromEdge(
     const rotatedY = edgeX * Math.sin(step) + edgeY * Math.cos(step)
     currentX += rotatedX
     currentY += rotatedY
-    vertices.push(new AcGePoint2d(currentX, currentY))
+    vertices.push(new GeometryPoint2d(currentX, currentY))
     edgeX = rotatedX
     edgeY = rotatedY
   }
@@ -107,7 +107,7 @@ function buildPolygonFromEdge(
 /**
  * Dynamic preview jig for center-based polygon creation.
  */
-class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApPolygonCenterJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient polygon polyline shown during preview.
    */
@@ -115,7 +115,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Fixed polygon center point.
    */
-  private _center: AcGePoint2dLike
+  private _center: GeometryPoint2dLike
   /**
    * Number of polygon sides.
    */
@@ -135,7 +135,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    center: AcGePoint2dLike,
+    center: GeometryPoint2dLike,
     sides: number,
     modeProvider: () => PolygonMode
   ) {
@@ -158,7 +158,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param point - Current cursor point.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     const vertices = buildPolygonFromCenter(
       this._center,
       this._sides,
@@ -173,7 +173,7 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<AcGePoint2dLike> {
 /**
  * Dynamic preview jig for edge-based polygon creation.
  */
-class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApPolygonEdgeJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient polygon polyline shown during edge preview.
    */
@@ -181,7 +181,7 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Fixed first endpoint of the polygon edge.
    */
-  private _firstPoint: AcGePoint2dLike
+  private _firstPoint: GeometryPoint2dLike
   /**
    * Number of polygon sides.
    */
@@ -194,7 +194,11 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint2dLike> {
    * @param firstPoint - First endpoint of the seed edge.
    * @param sides - Number of polygon sides.
    */
-  constructor(view: AcEdBaseView, firstPoint: AcGePoint2dLike, sides: number) {
+  constructor(
+    view: AcEdBaseView,
+    firstPoint: GeometryPoint2dLike,
+    sides: number
+  ) {
     super(view)
     this._polyline = new AcDbPolyline()
     this._firstPoint = firstPoint
@@ -213,7 +217,7 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param secondPoint - Current cursor point for edge endpoint.
    */
-  update(secondPoint: AcGePoint2dLike) {
+  update(secondPoint: GeometryPoint2dLike) {
     const vertices = buildPolygonFromEdge(
       this._firstPoint,
       secondPoint,
@@ -294,7 +298,7 @@ export class AcApPolygonCmd extends AcEdCommand {
    * @param context - Current application/document context.
    * @param vertices - Polygon vertex list in world coordinates.
    */
-  private appendPolygon(context: AcApContext, vertices: AcGePoint2d[]) {
+  private appendPolygon(context: AcApContext, vertices: GeometryPoint2d[]) {
     const polygon = new AcDbPolyline()
     updatePolylineVertices(polygon, vertices)
     context.doc.database.tables.blockTable.modelSpace.appendEntity(polygon)
@@ -353,7 +357,7 @@ export class AcApPolygonCmd extends AcEdCommand {
   private async runCenterFlow(
     context: AcApContext,
     sides: number,
-    center: AcGePoint2dLike
+    center: GeometryPoint2dLike
   ) {
     let mode: PolygonMode = 'Inscribed'
 
@@ -365,7 +369,7 @@ export class AcApPolygonCmd extends AcEdCommand {
       this.addKeyword(radiusPrompt, 'circumscribed')
       radiusPrompt.useDashedLine = true
       radiusPrompt.useBasePoint = true
-      radiusPrompt.basePoint = new AcGePoint2d(center)
+      radiusPrompt.basePoint = new GeometryPoint2d(center)
       radiusPrompt.jig = new AcApPolygonCenterJig(
         context.view,
         center,
@@ -425,7 +429,7 @@ export class AcApPolygonCmd extends AcEdCommand {
     )
     secondEdgePrompt.useDashedLine = true
     secondEdgePrompt.useBasePoint = true
-    secondEdgePrompt.basePoint = new AcGePoint2d(firstPoint)
+    secondEdgePrompt.basePoint = new GeometryPoint2d(firstPoint)
     secondEdgePrompt.jig = new AcApPolygonEdgeJig(
       context.view,
       firstPoint,

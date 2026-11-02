@@ -2,7 +2,7 @@ import {
   AcDbObjectId,
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint2dLike
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../app'
@@ -29,7 +29,7 @@ interface AcEdGripEntry {
   /** Zero-based index into the entity's grip point array. */
   gripIndex: number
   /** Grip location in world (WCS) coordinates at creation time. */
-  wcsPoint: AcGePoint2dLike
+  wcsPoint: GeometryPoint2dLike
   /** DOM handle rendered in the view container for this grip. */
   handle: AcEdGripHandle
 }

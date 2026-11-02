@@ -1,13 +1,13 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeSpline2d,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometrySpline2d,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -61,9 +61,9 @@ export enum AcDbLeaderAnnotationType {
  * ```typescript
  * // Create a leader entity
  * const leader = new AcDbLeader();
- * leader.appendVertex(new AcGePoint2d(0, 0));
- * leader.appendVertex(new AcGePoint2d(5, 5));
- * leader.appendVertex(new AcGePoint2d(10, 5));
+ * leader.appendVertex(new GeometryPoint2d(0, 0));
+ * leader.appendVertex(new GeometryPoint2d(5, 5));
+ * leader.appendVertex(new GeometryPoint2d(10, 5));
  * leader.hasArrowHead = true;
  * leader.hasHookLine = true;
  * leader.annoType = AcDbLeaderAnnotationType.MText;
@@ -85,13 +85,13 @@ export class AcDbLeader extends AcDbCurve {
   /** Whether this leader is spline-fit */
   private _isSplined: boolean
   /** The spline geometry if this leader is spline-fit */
-  private _splineGeo?: AcGeSpline2d
+  private _splineGeo?: GeometrySpline2d
   /** Whether this leader has been updated */
   private _updated: boolean
   /** Whether this leader has an arrowhead */
   private _hasArrowHead: boolean
   /** The vertices of the leader line */
-  private _vertices: AcGePoint2d[]
+  private _vertices: GeometryPoint2d[]
   /** The dimension style applied to this leader */
   private _dimensionStyle: string
   /** Whether this leader has a hook line */
@@ -104,10 +104,10 @@ export class AcDbLeader extends AcDbCurve {
   private _textWidth: number
   private _byBlockColor?: number
   private _associatedAnnotation: string
-  private _normal: AcGeVector3d
-  private _horizontalDirection: AcGeVector3d
-  private _offsetFromBlock?: AcGeVector3d
-  private _offsetFromAnnotation?: AcGeVector3d
+  private _normal: GeometryVector3d
+  private _horizontalDirection: GeometryVector3d
+  private _offsetFromBlock?: GeometryVector3d
+  private _offsetFromAnnotation?: GeometryVector3d
 
   /**
    * Creates a new leader entity.
@@ -119,8 +119,8 @@ export class AcDbLeader extends AcDbCurve {
    * @example
    * ```typescript
    * const leader = new AcDbLeader();
-   * leader.appendVertex(new AcGePoint2d(0, 0));
-   * leader.appendVertex(new AcGePoint2d(5, 5));
+   * leader.appendVertex(new GeometryPoint2d(0, 0));
+   * leader.appendVertex(new GeometryPoint2d(5, 5));
    * ```
    */
   constructor() {
@@ -136,8 +136,8 @@ export class AcDbLeader extends AcDbCurve {
     this._textHeight = 0
     this._textWidth = 0
     this._associatedAnnotation = ''
-    this._normal = new AcGeVector3d(0, 0, 1)
-    this._horizontalDirection = new AcGeVector3d(1, 0, 0)
+    this._normal = new GeometryVector3d(0, 0, 1)
+    this._horizontalDirection = new GeometryVector3d(1, 0, 0)
   }
 
   /**
@@ -345,29 +345,29 @@ export class AcDbLeader extends AcDbCurve {
   get normal() {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
   get horizontalDirection() {
     return this._horizontalDirection
   }
-  set horizontalDirection(value: AcGeVector3dLike) {
+  set horizontalDirection(value: GeometryVector3dLike) {
     this._horizontalDirection.copy(value)
   }
 
   get offsetFromBlock() {
     return this._offsetFromBlock?.clone()
   }
-  set offsetFromBlock(value: AcGeVector3dLike | undefined) {
-    this._offsetFromBlock = value ? new AcGeVector3d(value) : undefined
+  set offsetFromBlock(value: GeometryVector3dLike | undefined) {
+    this._offsetFromBlock = value ? new GeometryVector3d(value) : undefined
   }
 
   get offsetFromAnnotation() {
     return this._offsetFromAnnotation?.clone()
   }
-  set offsetFromAnnotation(value: AcGeVector3dLike | undefined) {
-    this._offsetFromAnnotation = value ? new AcGeVector3d(value) : undefined
+  set offsetFromAnnotation(value: GeometryVector3dLike | undefined) {
+    this._offsetFromAnnotation = value ? new GeometryVector3d(value) : undefined
   }
 
   /**
@@ -377,8 +377,8 @@ export class AcDbLeader extends AcDbCurve {
    * next to it (that is, within 1.e-10 for X, Y, and Z), the new vertex will not be appended.
    * @param point Input point (in WCS coordinates) to add to the vertex list
    */
-  appendVertex(point: AcGePoint2dLike) {
-    this._vertices.push(new AcGePoint2d().copy(point))
+  appendVertex(point: GeometryPoint2dLike) {
+    this._vertices.push(new GeometryPoint2d().copy(point))
     this._updated = true
   }
 
@@ -389,7 +389,7 @@ export class AcDbLeader extends AcDbCurve {
    * @param index Input index number (0 based) of the vertex to change
    * @param point Input new point value (in WCS) to use
    */
-  setVertexAt(index: number, point: AcGePoint2dLike) {
+  setVertexAt(index: number, point: GeometryPoint2dLike) {
     if (index < 0 || index >= this._vertices.length) {
       throw new Error('The vertex index is out of range!')
     }
@@ -420,7 +420,7 @@ export class AcDbLeader extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePointArrayGripAt(indices, offset, this._vertices)
     return this
   }
@@ -430,9 +430,9 @@ export class AcDbLeader extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (this.numVertices === 0) return
 
@@ -459,9 +459,9 @@ export class AcDbLeader extends AcDbCurve {
       case AcDbOsnapMode.MidPoint:
       case AcDbOsnapMode.Nearest:
       case AcDbOsnapMode.Perpendicular: {
-        const candidates: AcGePoint2d[] = []
+        const candidates: GeometryPoint2d[] = []
         for (let index = 0; index < vertices.length - 1; index++) {
-          const segmentSnaps: AcGePoint2d[] = []
+          const segmentSnaps: GeometryPoint2d[] = []
           acdbCollectLineSegmentOsnapPoints(
             vertices[index],
             vertices[index + 1],
@@ -490,14 +490,14 @@ export class AcDbLeader extends AcDbCurve {
   get geometricExtents() {
     if (this._isSplined && this.splineGeo) {
       const { min, max } = this.splineGeo.box
-      return new AcGeBox3d(min, max)
+      return new GeometryBox3d(min, max)
     }
-    const box = new AcGeBox3d()
+    const box = new GeometryBox3d()
     return box.setFromPoints(this.collectDrawPoints())
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     if (this.isSplined && this.splineGeo) {
       return [
         {
@@ -528,7 +528,7 @@ export class AcDbLeader extends AcDbCurve {
   /**
    * Transforms this leader by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._vertices.forEach(point => point.applyMatrix4(matrix))
     this.transformVector(this._normal, matrix)
     this.transformVector(this._horizontalDirection, matrix)
@@ -566,7 +566,7 @@ export class AcDbLeader extends AcDbCurve {
    * Builds the leader polyline including the optional horizontal hook line
    * segment that spans the associated annotation width.
    */
-  private collectDrawPoints(renderer?: AcGiRenderer): AcGePoint2d[] {
+  private collectDrawPoints(renderer?: AcGiRenderer): GeometryPoint2d[] {
     if (this.isSplined && this.splineGeo) {
       return this.splineGeo.tessellate(acdbDrawTessellateOptions(renderer))
     }
@@ -588,7 +588,7 @@ export class AcDbLeader extends AcDbCurve {
   /**
    * Whether a hook line should be rendered for the landing vertex.
    */
-  private shouldDrawHookLine(lastVertex: AcGePoint2d): boolean {
+  private shouldDrawHookLine(lastVertex: GeometryPoint2d): boolean {
     if (this.resolveHookLineLength(lastVertex) <= 0) {
       return false
     }
@@ -614,7 +614,9 @@ export class AcDbLeader extends AcDbCurve {
   /**
    * Computes the hook-line endpoint from the last leader vertex.
    */
-  private computeHookLineEndPoint(lastVertex: AcGePoint2d): AcGePoint2d | null {
+  private computeHookLineEndPoint(
+    lastVertex: GeometryPoint2d
+  ): GeometryPoint2d | null {
     const hookLength = this.resolveHookLineLength(lastVertex)
     if (hookLength <= 0) {
       return null
@@ -628,7 +630,7 @@ export class AcDbLeader extends AcDbCurve {
    * Resolves hook-line length using dimension-style gap plus associated MTEXT
    * geometry when available.
    */
-  private resolveHookLineLength(lastVertex: AcGePoint2d): number {
+  private resolveHookLineLength(lastVertex: GeometryPoint2d): number {
     const dimStyle = this.resolveDimensionStyle()
     const gap =
       (dimStyle?.dimgap ?? AcDbDimStyleTableRecord.DEFAULT_DIM_VALUES.dimgap) *
@@ -655,7 +657,7 @@ export class AcDbLeader extends AcDbCurve {
   /**
    * Returns the signed axis along which the hook line extends.
    */
-  private resolveHookAxis(): AcGeVector3d {
+  private resolveHookAxis(): GeometryVector3d {
     const direction = this._horizontalDirection.clone()
     if (direction.lengthSq() === 0) {
       direction.set(1, 0, 0)
@@ -672,7 +674,7 @@ export class AcDbLeader extends AcDbCurve {
    */
   private resolveHookSpanFromMText(
     mtext: AcDbMText,
-    lastVertex: AcGePoint2d
+    lastVertex: GeometryPoint2d
   ): number {
     const axis = this.resolveHookAxis()
     const layout = this.resolveMTextLayoutMetrics(mtext)
@@ -726,7 +728,7 @@ export class AcDbLeader extends AcDbCurve {
    */
   private scoreMTextAssociation(
     mtext: AcDbMText,
-    lastVertex: AcGePoint2d
+    lastVertex: GeometryPoint2d
   ): number | null {
     const layout = this.resolveMTextLayoutMetrics(mtext)
     const padX = Math.max(mtext.height * 2, 1)
@@ -822,7 +824,7 @@ export class AcDbLeader extends AcDbCurve {
       this.numVertices >= 2 &&
       (this._splineGeo == null || this._updated)
     ) {
-      this._splineGeo = new AcGeSpline2d(this._vertices, 'Uniform')
+      this._splineGeo = new GeometrySpline2d(this._vertices, 'Uniform')
       this._updated = false
     }
   }
@@ -844,7 +846,7 @@ export class AcDbLeader extends AcDbCurve {
    *
    * Side test follows the straight or sampled spline path as an open polyline.
    */
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const path = this.collectPath2d()
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, false).getOffsetSideAtPoint(point)
@@ -870,18 +872,18 @@ export class AcDbLeader extends AcDbCurve {
    *
    * @returns Leader path in the XY plane
    */
-  private collectPath2d(): AcGePoint2d[] {
+  private collectPath2d(): GeometryPoint2d[] {
     if (this.isSplined && this.splineGeo) {
       return this.splineGeo
         .getPoints(64)
-        .map(point => new AcGePoint2d(point.x, point.y))
+        .map(point => new GeometryPoint2d(point.x, point.y))
     }
-    return this._vertices.map(vertex => new AcGePoint2d(vertex.x, vertex.y))
+    return this._vertices.map(vertex => new GeometryPoint2d(vertex.x, vertex.y))
   }
 
-  private transformVector(vector: AcGeVector3d, matrix: AcGeMatrix3d) {
-    const origin = new AcGePoint2d()
-    const endpoint = new AcGePoint2d(vector.x, vector.y)
+  private transformVector(vector: GeometryVector3d, matrix: GeometryMatrix3d) {
+    const origin = new GeometryPoint2d()
+    const endpoint = new GeometryPoint2d(vector.x, vector.y)
     origin.applyMatrix4(matrix)
     endpoint.applyMatrix4(matrix)
     vector.set(endpoint.x - origin.x, endpoint.y - origin.y, 0)

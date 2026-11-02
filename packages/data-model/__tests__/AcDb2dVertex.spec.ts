@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { AcDb2dVertex, AcDb2dVertexType } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
@@ -62,30 +62,30 @@ describe('AcDb2dVertex', () => {
     expect(grips).toHaveLength(1)
     expect(grips[0]).toBe(vertex.position)
 
-    const snapPoints: AcGePoint2d[] = []
+    const snapPoints: GeometryPoint2d[] = []
     vertex.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 1),
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 1),
       snapPoints
     )
     expect(snapPoints).toHaveLength(1)
     expect(snapPoints[0]).toBe(vertex.position)
 
-    const nodeSnaps: AcGePoint2d[] = []
+    const nodeSnaps: GeometryPoint2d[] = []
     vertex.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 1),
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 1),
       nodeSnaps
     )
     expect(nodeSnaps).toHaveLength(1)
 
-    const unsupportedSnaps: AcGePoint2d[] = []
+    const unsupportedSnaps: GeometryPoint2d[] = []
     vertex.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(1, 1),
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 1),
       unsupportedSnaps
     )
     expect(unsupportedSnaps).toHaveLength(0)
@@ -95,7 +95,7 @@ describe('AcDb2dVertex', () => {
     const vertex = new AcDb2dVertex()
     vertex.position = { x: 1, y: 2 }
 
-    const matrix = new AcGeMatrix3d().makeTranslation(4, -5, 6)
+    const matrix = new GeometryMatrix3d().makeTranslation(4, -5, 6)
     const result = vertex.transformBy(matrix)
 
     expect(result).toBe(vertex)

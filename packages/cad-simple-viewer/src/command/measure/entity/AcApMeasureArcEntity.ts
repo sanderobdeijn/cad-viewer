@@ -1,4 +1,4 @@
-import { type AcDbDatabase, AcGeCircArc2d } from '@mlightcad/data-model'
+import { type AcDbDatabase, GeometryCircularArc2d } from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,
@@ -108,11 +108,11 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
     start: Point2,
     end: Point2,
     through?: Point2
-  ): AcGeCircArc2d | null {
+  ): GeometryCircularArc2d | null {
     if (through) {
-      return AcGeCircArc2d.tryCreateByThreePoints(start, through, end)
+      return GeometryCircularArc2d.tryCreateByThreePoints(start, through, end)
     }
-    return AcGeCircArc2d.tryCreateShorterArc(start, end, {
+    return GeometryCircularArc2d.tryCreateShorterArc(start, end, {
       x: geom.cx,
       y: geom.cy
     })
@@ -213,7 +213,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
 
     const syncGeomFromThreePoints = (): boolean => {
       if (!live.through) return true
-      const arc = AcGeCircArc2d.tryCreateByThreePoints(
+      const arc = GeometryCircularArc2d.tryCreateByThreePoints(
         live.start,
         live.through,
         live.end

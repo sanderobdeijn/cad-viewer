@@ -1,4 +1,4 @@
-import { AcCmEventManager, AcGePoint2d } from '@mlightcad/data-model'
+import { AcCmEventManager, GeometryPoint2d } from '@mlightcad/data-model'
 
 import {
   AcEdHoverController,
@@ -13,7 +13,7 @@ class MockHoverHost implements AcEdHoverHost {
   >()
   onHover = jest.fn()
   onUnhover = jest.fn()
-  curMousePos = new AcGePoint2d(20, 30)
+  curMousePos = new GeometryPoint2d(20, 30)
 }
 
 describe('AcEdHoverController', () => {
@@ -56,7 +56,7 @@ describe('AcEdHoverController', () => {
     expect(host.onHover).toHaveBeenCalledWith('entity-1')
 
     host.pick.mockReturnValueOnce([])
-    host.curMousePos = new AcGePoint2d(40, 50)
+    host.curMousePos = new GeometryPoint2d(40, 50)
 
     controller.handleMouseMove(10, 20)
 

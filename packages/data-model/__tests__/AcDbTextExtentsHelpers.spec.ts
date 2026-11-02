@@ -1,7 +1,7 @@
 import {
-  AcGeBox3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryBox3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiMTextAttachmentPoint } from '@mlightcad/graphic-interface'
 
@@ -132,10 +132,10 @@ describe('AcDbTextExtentsHelpers', () => {
 
   describe('acdbExpandBoxByOrientedTextRect', () => {
     it('expands only the anchor when width and height are zero', () => {
-      const box = new AcGeBox3d()
+      const box = new GeometryBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint2d(3, 4),
+        new GeometryPoint2d(3, 4),
         0,
         0,
         AcGiMTextAttachmentPoint.TopLeft
@@ -146,10 +146,10 @@ describe('AcDbTextExtentsHelpers', () => {
     })
 
     it('rotates local bounds around the anchor', () => {
-      const box = new AcGeBox3d()
+      const box = new GeometryBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint2d(0, 0),
+        new GeometryPoint2d(0, 0),
         4,
         2,
         AcGiMTextAttachmentPoint.BaselineLeft,
@@ -163,15 +163,15 @@ describe('AcDbTextExtentsHelpers', () => {
     })
 
     it('uses direction vector when provided', () => {
-      const box = new AcGeBox3d()
+      const box = new GeometryBox3d()
       acdbExpandBoxByOrientedTextRect(
         box,
-        new AcGePoint2d(0, 0),
+        new GeometryPoint2d(0, 0),
         4,
         2,
         AcGiMTextAttachmentPoint.BaselineLeft,
         0,
-        new AcGeVector3d(0, 1, 0)
+        new GeometryVector3d(0, 1, 0)
       )
 
       expect(box.min.x).toBeCloseTo(-2)
@@ -190,13 +190,16 @@ describe('AcDbTextExtentsHelpers', () => {
         lineSpacingFactor: 0.25,
         attachmentPoint: AcGiMTextAttachmentPoint.TopLeft,
         rotation: Math.PI / 2,
-        direction: new AcGeVector3d(0, 1, 0),
-        location: new AcGePoint2d(10, 10)
+        direction: new GeometryVector3d(0, 1, 0),
+        location: new GeometryPoint2d(10, 10)
       })
 
     it('maps world points into MTEXT-local coordinates using rotation/direction', () => {
       const layout = createRotatedLayout()
-      const local = acdbWorldPointToMTextLocal(new AcGePoint2d(12, 20), layout)
+      const local = acdbWorldPointToMTextLocal(
+        new GeometryPoint2d(12, 20),
+        layout
+      )
 
       expect(local.x).toBeCloseTo(10)
       expect(local.y).toBeCloseTo(-2)
@@ -208,7 +211,7 @@ describe('AcDbTextExtentsHelpers', () => {
 
       expect(
         acdbScorePointAgainstMTextLayout(
-          new AcGePoint2d(12, 20),
+          new GeometryPoint2d(12, 20),
           layout,
           padding
         )
@@ -216,7 +219,7 @@ describe('AcDbTextExtentsHelpers', () => {
 
       expect(
         acdbScorePointAgainstMTextLayout(
-          new AcGePoint2d(16, 40),
+          new GeometryPoint2d(16, 40),
           layout,
           padding
         )

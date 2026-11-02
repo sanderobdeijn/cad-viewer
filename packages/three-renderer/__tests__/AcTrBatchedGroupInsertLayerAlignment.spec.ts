@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrBatchedGroup } from '../src/batch/AcTrBatchedGroup'
@@ -139,7 +139,9 @@ function buildTitleBlockInsert(context: AcTrRenderContext) {
 
   const group = new AcTrGroup([frameLine, textLine], context)
   expect(group.isOnTheSameLayer).toBe(false)
-  group.applyMatrix(new AcGeMatrix3d().makeTranslation(INSERT_X, INSERT_Y, 0))
+  group.applyMatrix(
+    new GeometryMatrix3d().makeTranslation(INSERT_X, INSERT_Y, 0)
+  )
 
   const children = [...group.children]
   group.children = []

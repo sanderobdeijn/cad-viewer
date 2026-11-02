@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 
 import {
   acedLineSegmentIntersectsBox2d,
@@ -6,7 +6,7 @@ import {
 } from '../src/editor/view/AcEdSelectionBoxIntersect'
 
 describe('acedLineSegmentIntersectsBox2d', () => {
-  const box = new AcGeBox2d({ x: 0, y: 0 }, { x: 10, y: 10 })
+  const box = new GeometryBox2d({ x: 0, y: 0 }, { x: 10, y: 10 })
 
   it('hits when an endpoint lies inside the box', () => {
     expect(
@@ -22,7 +22,7 @@ describe('acedLineSegmentIntersectsBox2d', () => {
 
   it('misses a large closed frame when the pick box sits in empty interior', () => {
     // Outer rectangle edges around a 100x100 frame; pick box at center.
-    const pick = new AcGeBox2d({ x: 40, y: 40 }, { x: 60, y: 60 })
+    const pick = new GeometryBox2d({ x: 40, y: 40 }, { x: 60, y: 60 })
     const edges = [
       [
         { x: 0, y: 0, z: 0 },

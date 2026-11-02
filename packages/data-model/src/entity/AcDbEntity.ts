@@ -1,10 +1,10 @@
 import { AcCmColor, AcCmTransparency } from '@mlightcad/common'
 import {
-  AcGeBox3d,
-  acgeIntersectCurves,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d
+  GeometryBox3d,
+  geometryIntersectCurves,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d
 } from '@mlightcad/geometry-engine'
 import {
   AcGiDirectBatchPrimitive,
@@ -35,7 +35,7 @@ import {
  * @example
  * ```typescript
  * class MyEntity extends AcDbEntity {
- *   get geometricExtents(): AcGeBox3d {
+ *   get geometricExtents(): GeometryBox3d {
  *     // Implementation for geometric extents
  *   }
  *
@@ -524,7 +524,7 @@ export abstract class AcDbEntity extends AcDbObject {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     return gripPoints
   }
 
@@ -540,14 +540,14 @@ export abstract class AcDbEntity extends AcDbObject {
    *
    * @example
    * ```typescript
-   * entity.subMoveGripPointsAt([0], new AcGeVector3d(1, 0, 0));
+   * entity.subMoveGripPointsAt([0], new GeometryVector3d(1, 0, 0));
    * ```
    */
   subMoveGripPointsAt(
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     indices: number[],
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    offset: AcGeVector2dLike
+    offset: GeometryVector2dLike
   ): this {
     return this
   }
@@ -573,7 +573,7 @@ export abstract class AcDbEntity extends AcDbObject {
    *
    * @example
    * ```typescript
-   * const snapPoints: AcGePoint2d[] = [];
+   * const snapPoints: GeometryPoint2d[] = [];
    * entity.subGetOsnapPoints(AcDbOsnapMode.Endpoint, 0, pickPoint, lastPoint, snapPoints);
    * ```
    */
@@ -581,15 +581,15 @@ export abstract class AcDbEntity extends AcDbObject {
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     osnapMode: AcDbOsnapMode,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    pickPoint: AcGePoint2dLike,
+    pickPoint: GeometryPoint2dLike,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    lastPoint: AcGePoint2dLike,
+    lastPoint: GeometryPoint2dLike,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    snapPoints: AcGePoint2dLike[],
+    snapPoints: GeometryPoint2dLike[],
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     gsMark?: AcDbObjectId,
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    insertionMat?: AcGeMatrix3d
+    insertionMat?: GeometryMatrix3d
   ) {}
 
   /**
@@ -611,7 +611,7 @@ export abstract class AcDbEntity extends AcDbObject {
   intersectWith(
     entity: AcDbEntity,
     intType: AcDbIntersect = AcDbIntersect.OnBothOperands
-  ): AcGePoint2d[] {
+  ): GeometryPoint2d[] {
     const a = this.subGetIntersectCurves()
     const b = entity.subGetIntersectCurves()
     if (a.length === 0 || b.length === 0) return []
@@ -621,7 +621,7 @@ export abstract class AcDbEntity extends AcDbObject {
     const extendB =
       intType === AcDbIntersect.ExtendArg ||
       intType === AcDbIntersect.ExtendBoth
-    return acgeIntersectCurves(a, b, extendA, extendB)
+    return geometryIntersectCurves(a, b, extendA, extendB)
   }
 
   /**
@@ -632,7 +632,7 @@ export abstract class AcDbEntity extends AcDbObject {
    * Entities without curve primitives (text, points, attributes) keep this
    * empty default, matching ObjectARX.
    */
-  subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return []
   }
 
@@ -648,12 +648,12 @@ export abstract class AcDbEntity extends AcDbObject {
    *
    * @example
    * ```typescript
-   * const matrix = AcGeMatrix3d.translation(10, 0, 0);
+   * const matrix = GeometryMatrix3d.translation(10, 0, 0);
    * entity.transformBy(matrix);
    * ```
    */
   // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-  transformBy(matrix: AcGeMatrix3d): this {
+  transformBy(matrix: GeometryMatrix3d): this {
     return this
   }
 
@@ -671,7 +671,7 @@ export abstract class AcDbEntity extends AcDbObject {
    * console.log(`Min: ${extents.minPoint}, Max: ${extents.maxPoint}`);
    * ```
    */
-  abstract get geometricExtents(): AcGeBox3d
+  abstract get geometricExtents(): GeometryBox3d
 
   /**
    * Erase the current entity from the associated database.

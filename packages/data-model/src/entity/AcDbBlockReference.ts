@@ -1,13 +1,13 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeQuaternion,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike,
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryQuaternion,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike,
   ORIGIN_POINT_2D
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
@@ -39,9 +39,9 @@ import { acdbParseGsMark, acdbPickNearestOsnapPoint } from './AcDbOsnapHelpers'
  * ```typescript
  * // Create a block reference
  * const blockRef = new AcDbBlockReference("MyBlock");
- * blockRef.position = new AcGePoint2d(10, 20);
+ * blockRef.position = new GeometryPoint2d(10, 20);
  * blockRef.rotation = Math.PI / 4; // 45 degrees
- * blockRef.scaleFactors = new AcGePoint2d(2, 2); // 2x scale
+ * blockRef.scaleFactors = new GeometryPoint2d(2, 2); // 2x scale
  *
  * // Access block reference properties
  * console.log(`Block name: ${blockRef.blockTableRecord?.name}`);
@@ -58,13 +58,13 @@ export class AcDbBlockReference extends AcDbEntity {
   }
 
   /** The WCS position point (insertion point) of the block reference */
-  private _position: AcGePoint2d
+  private _position: GeometryPoint2d
   /** The rotation value in radians */
   private _rotation: number
   /** The X, Y, and Z scale factors for the block reference */
-  private _scaleFactors: AcGePoint2d
+  private _scaleFactors: GeometryPoint2d
   /** The normal vector of the plane containing the block reference */
-  private _normal: AcGeVector3d
+  private _normal: GeometryVector3d
   /** The name of the referenced block */
   private _blockName: string
   /** Attributes associated with this block reference */
@@ -89,17 +89,17 @@ export class AcDbBlockReference extends AcDbEntity {
    * @example
    * ```typescript
    * const blockRef = new AcDbBlockReference("MyBlock");
-   * blockRef.position = new AcGePoint2d(5, 10);
+   * blockRef.position = new GeometryPoint2d(5, 10);
    * blockRef.rotation = Math.PI / 6; // 30 degrees
    * ```
    */
   constructor(blockName: string) {
     super()
     this._blockName = blockName ?? ''
-    this._position = new AcGePoint2d()
+    this._position = new GeometryPoint2d()
     this._rotation = 0.0
-    this._normal = new AcGeVector3d(0, 0, 1)
-    this._scaleFactors = new AcGePoint2d(1, 1)
+    this._normal = new GeometryVector3d(0, 0, 1)
+    this._scaleFactors = new GeometryPoint2d(1, 1)
     this._attribs = new Map()
   }
 
@@ -114,7 +114,7 @@ export class AcDbBlockReference extends AcDbEntity {
    * console.log(`Block position: ${position.x}, ${position.y}`);
    * ```
    */
-  get position(): AcGePoint2d {
+  get position(): GeometryPoint2d {
     return this._position
   }
 
@@ -125,10 +125,10 @@ export class AcDbBlockReference extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * blockRef.position = new AcGePoint2d(15, 25);
+   * blockRef.position = new GeometryPoint2d(15, 25);
    * ```
    */
-  set position(value: AcGePoint2dLike) {
+  set position(value: GeometryPoint2dLike) {
     this._position.copy(value)
   }
 
@@ -177,7 +177,7 @@ export class AcDbBlockReference extends AcDbEntity {
    * console.log(`Scale factors: ${scaleFactors.x}, ${scaleFactors.y}`);
    * ```
    */
-  get scaleFactors(): AcGePoint2d {
+  get scaleFactors(): GeometryPoint2d {
     return this._scaleFactors
   }
 
@@ -188,10 +188,10 @@ export class AcDbBlockReference extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * blockRef.scaleFactors = new AcGePoint2d(2, 1.5); // 2x X scale, 1.5x Y scale
+   * blockRef.scaleFactors = new GeometryPoint2d(2, 1.5); // 2x X scale, 1.5x Y scale
    * ```
    */
-  set scaleFactors(value: AcGePoint2dLike) {
+  set scaleFactors(value: GeometryPoint2dLike) {
     this._scaleFactors.copy(value)
   }
 
@@ -206,7 +206,7 @@ export class AcDbBlockReference extends AcDbEntity {
    * console.log(`Normal: ${normal.x}, ${normal.y}, ${normal.z}`);
    * ```
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
 
@@ -217,10 +217,10 @@ export class AcDbBlockReference extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * blockRef.normal = new AcGeVector3d(0, 0, 1);
+   * blockRef.normal = new GeometryVector3d(0, 0, 1);
    * ```
    */
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value).normalize()
   }
 
@@ -411,7 +411,7 @@ export class AcDbBlockReference extends AcDbEntity {
    * @returns A transformation matrix representing the block-local INSERT transform
    *          in OCS, excluding extrusion.
    */
-  get blockTransform(): AcGeMatrix3d {
+  get blockTransform(): GeometryMatrix3d {
     // Retrieve the referenced block table record.
     // The block definition contains its own local coordinate system
     // whose origin is the block base point.
@@ -430,7 +430,7 @@ export class AcDbBlockReference extends AcDbEntity {
     //
     // AutoCAD always applies this compensation first.
     // ------------------------------------------------------------
-    const mBase = new AcGeMatrix3d().makeTranslation(
+    const mBase = new GeometryMatrix3d().makeTranslation(
       -basePoint.x,
       -basePoint.y,
       0
@@ -442,7 +442,7 @@ export class AcDbBlockReference extends AcDbEntity {
     // Scale factors are applied in block-local OCS coordinates.
     // Negative or non-uniform scales are supported.
     // ------------------------------------------------------------
-    const mScale = new AcGeMatrix3d().makeScale(
+    const mScale = new GeometryMatrix3d().makeScale(
       this._scaleFactors.x,
       this._scaleFactors.y,
       1
@@ -458,11 +458,11 @@ export class AcDbBlockReference extends AcDbEntity {
     //
     // Rotation is therefore constructed around (0,0,1).
     // ------------------------------------------------------------
-    const qRot = new AcGeQuaternion().setFromAxisAngle(
-      AcGeVector3d.Z_AXIS,
+    const qRot = new GeometryQuaternion().setFromAxisAngle(
+      GeometryVector3d.Z_AXIS,
       this._rotation
     )
-    const mRot = new AcGeMatrix3d().makeRotationFromQuaternion(qRot)
+    const mRot = new GeometryMatrix3d().makeRotationFromQuaternion(qRot)
 
     // ------------------------------------------------------------
     // Step 4: Translate to the insertion point
@@ -477,7 +477,7 @@ export class AcDbBlockReference extends AcDbEntity {
     // preserving that Z depth-clips their geometry even though XY is
     // on-screen. The stored position.z is unchanged for properties / DXF.
     // ------------------------------------------------------------
-    const mInsert = new AcGeMatrix3d().makeTranslation(
+    const mInsert = new GeometryMatrix3d().makeTranslation(
       this._position.x,
       this._position.y,
       0
@@ -498,7 +498,7 @@ export class AcDbBlockReference extends AcDbEntity {
     //   is intentionally excluded here
     // - Extrusion is applied later at render time
     // ------------------------------------------------------------
-    return new AcGeMatrix3d()
+    return new GeometryMatrix3d()
       .multiplyMatrices(mInsert, mRot)
       .multiply(mScale)
       .multiply(mBase)
@@ -514,7 +514,7 @@ export class AcDbBlockReference extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._position)
     return this
   }
@@ -540,13 +540,13 @@ export class AcDbBlockReference extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[],
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[],
     gsMark?: AcDbObjectId,
-    insertionMat?: AcGeMatrix3d
+    insertionMat?: GeometryMatrix3d
   ) {
-    const parentInsertionMat = insertionMat ?? new AcGeMatrix3d()
+    const parentInsertionMat = insertionMat ?? new GeometryMatrix3d()
 
     if (AcDbOsnapMode.Insertion === osnapMode) {
       snapPoints.push(this.getInsertionPoint(parentInsertionMat))
@@ -591,16 +591,21 @@ export class AcDbBlockReference extends AcDbEntity {
    * @param matrix - Transformation matrix in WCS.
    * @returns The current block reference instance.
    */
-  transformBy(matrix: AcGeMatrix3d) {
-    const extrusion = new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
-    const rotation = new AcGeMatrix3d().makeRotationZ(this._rotation)
-    const localToWcs = new AcGeMatrix3d().multiplyMatrices(extrusion, rotation)
+  transformBy(matrix: GeometryMatrix3d) {
+    const extrusion = new GeometryMatrix3d().setFromExtrusionDirection(
+      this._normal
+    )
+    const rotation = new GeometryMatrix3d().makeRotationZ(this._rotation)
+    const localToWcs = new GeometryMatrix3d().multiplyMatrices(
+      extrusion,
+      rotation
+    )
 
     const origin = this._position.clone()
-    const xAxisPoint = new AcGePoint2d(this._scaleFactors.x, 0)
+    const xAxisPoint = new GeometryPoint2d(this._scaleFactors.x, 0)
       .applyMatrix4(localToWcs)
       .add(origin)
-    const yAxisPoint = new AcGePoint2d(0, this._scaleFactors.y)
+    const yAxisPoint = new GeometryPoint2d(0, this._scaleFactors.y)
       .applyMatrix4(localToWcs)
       .add(origin)
 
@@ -608,25 +613,27 @@ export class AcDbBlockReference extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0
     )
 
-    let normal = new AcGeVector3d().crossVectors(xAxis, yAxis)
+    let normal = new GeometryVector3d().crossVectors(xAxis, yAxis)
     if (normal.lengthSq() === 0) {
       normal = this._normal.clone().transformDirection(matrix)
     } else {
       normal.normalize()
     }
 
-    const extrusionMatrix = new AcGeMatrix3d().setFromExtrusionDirection(normal)
+    const extrusionMatrix = new GeometryMatrix3d().setFromExtrusionDirection(
+      normal
+    )
     const ocsInverse = extrusionMatrix.clone().invert()
     const localXAxis = xAxis.clone().applyMatrix4(ocsInverse)
 
@@ -795,8 +802,8 @@ export class AcDbBlockReference extends AcDbEntity {
    * console.log(`Block bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  get geometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     const blockTableRecord = this.drawableBlockTableRecord
     if (blockTableRecord != null) {
       const entities = blockTableRecord.newIterator()
@@ -813,21 +820,21 @@ export class AcDbBlockReference extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     const blockTableRecord = this.drawableBlockTableRecord
     if (blockTableRecord == null) return []
 
-    const primitives: AcGeIntersectPrimitive[] = []
+    const primitives: GeometryIntersectPrimitive[] = []
     const cols = Math.max(1, this.columnCount)
     const rows = Math.max(1, this.rowCount)
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const localOffset = new AcGeMatrix3d().makeTranslation(
+        const localOffset = new GeometryMatrix3d().makeTranslation(
           col * this.columnSpacing,
           row * this.rowSpacing,
           0
         )
-        const matrix = new AcGeMatrix3d().multiplyMatrices(
+        const matrix = new GeometryMatrix3d().multiplyMatrices(
           this.getFullInsertionTransform(),
           localOffset
         )
@@ -873,12 +880,12 @@ export class AcDbBlockReference extends AcDbEntity {
       const instances: AcGiEntity[] = []
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
-          const localOffset = new AcGeMatrix3d().makeTranslation(
+          const localOffset = new GeometryMatrix3d().makeTranslation(
             col * this.columnSpacing,
             row * this.rowSpacing,
             0
           )
-          const matrix = new AcGeMatrix3d().multiplyMatrices(
+          const matrix = new GeometryMatrix3d().multiplyMatrices(
             this.blockTransform,
             localOffset
           )
@@ -906,25 +913,29 @@ export class AcDbBlockReference extends AcDbEntity {
    */
   private collectBlockOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[],
-    parentInsertionMat: AcGeMatrix3d
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[],
+    parentInsertionMat: GeometryMatrix3d
   ) {
     const blockTableRecord = this.drawableBlockTableRecord
     if (!blockTableRecord) return
 
-    const thisInsertionMat = new AcGeMatrix3d().multiplyMatrices(
+    const thisInsertionMat = new GeometryMatrix3d().multiplyMatrices(
       parentInsertionMat,
       this.getFullInsertionTransform()
     )
     const inverseMat = thisInsertionMat.clone().invert()
-    const localPickPoint = new AcGePoint2d(pickPoint).applyMatrix4(inverseMat)
-    const localLastPoint = new AcGePoint2d(lastPoint).applyMatrix4(inverseMat)
-    const candidates: AcGePoint2d[] = []
+    const localPickPoint = new GeometryPoint2d(pickPoint).applyMatrix4(
+      inverseMat
+    )
+    const localLastPoint = new GeometryPoint2d(lastPoint).applyMatrix4(
+      inverseMat
+    )
+    const candidates: GeometryPoint2d[] = []
 
     for (const entity of blockTableRecord.newIterator()) {
-      const localSnapPoints: AcGePoint2d[] = []
+      const localSnapPoints: GeometryPoint2d[] = []
       if (entity instanceof AcDbBlockReference) {
         entity.subGetOsnapPoints(
           osnapMode,
@@ -950,7 +961,9 @@ export class AcDbBlockReference extends AcDbEntity {
         thisInsertionMat
       )
       localSnapPoints.forEach(point =>
-        candidates.push(new AcGePoint2d(point).applyMatrix4(thisInsertionMat))
+        candidates.push(
+          new GeometryPoint2d(point).applyMatrix4(thisInsertionMat)
+        )
       )
     }
 
@@ -1000,11 +1013,11 @@ export class AcDbBlockReference extends AcDbEntity {
    */
   private subEntityGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[],
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[],
     gsMark: AcDbObjectId,
-    parentInsertionMat: AcGeMatrix3d,
+    parentInsertionMat: GeometryMatrix3d,
     visitedRefs = new Set<AcDbObjectId>(),
     remainingOccurrence?: number
   ): number {
@@ -1026,15 +1039,15 @@ export class AcDbBlockReference extends AcDbEntity {
       const blockTableRecord = this.drawableBlockTableRecord
       if (blockTableRecord == null) return remaining
 
-      const thisInsertionMat = new AcGeMatrix3d().multiplyMatrices(
+      const thisInsertionMat = new GeometryMatrix3d().multiplyMatrices(
         parentInsertionMat,
         this.getFullInsertionTransform()
       )
       const inverseInsertionMat = thisInsertionMat.clone().invert()
-      const localPickPoint = new AcGePoint2d(pickPoint).applyMatrix4(
+      const localPickPoint = new GeometryPoint2d(pickPoint).applyMatrix4(
         inverseInsertionMat
       )
-      const localLastPoint = new AcGePoint2d(lastPoint).applyMatrix4(
+      const localLastPoint = new GeometryPoint2d(lastPoint).applyMatrix4(
         inverseInsertionMat
       )
 
@@ -1045,7 +1058,7 @@ export class AcDbBlockReference extends AcDbEntity {
             continue
           }
 
-          const localSnapPoints: AcGePoint2d[] = []
+          const localSnapPoints: GeometryPoint2d[] = []
           entity.subGetOsnapPoints(
             osnapMode,
             localPickPoint,
@@ -1062,7 +1075,7 @@ export class AcDbBlockReference extends AcDbEntity {
           } else {
             localSnapPoints.forEach(point => {
               snapPoints.push(
-                new AcGePoint2d(point).applyMatrix4(thisInsertionMat)
+                new GeometryPoint2d(point).applyMatrix4(thisInsertionMat)
               )
             })
           }
@@ -1102,14 +1115,14 @@ export class AcDbBlockReference extends AcDbEntity {
    * @param parentInsertionMat - Cumulative transform from parent block references.
    * @returns The insertion point in the caller coordinate space.
    */
-  private getInsertionPoint(parentInsertionMat: AcGeMatrix3d) {
+  private getInsertionPoint(parentInsertionMat: GeometryMatrix3d) {
     const blockBasePoint =
       this.drawableBlockTableRecord?.origin ?? ORIGIN_POINT_2D
-    const insertionMat = new AcGeMatrix3d().multiplyMatrices(
+    const insertionMat = new GeometryMatrix3d().multiplyMatrices(
       parentInsertionMat,
       this.getFullInsertionTransform()
     )
-    return new AcGePoint2d(blockBasePoint).applyMatrix4(insertionMat)
+    return new GeometryPoint2d(blockBasePoint).applyMatrix4(insertionMat)
   }
 
   /**
@@ -1122,7 +1135,12 @@ export class AcDbBlockReference extends AcDbEntity {
    * @returns Full block insertion transform including OCS extrusion.
    */
   private getFullInsertionTransform() {
-    const extrusion = new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
-    return new AcGeMatrix3d().multiplyMatrices(extrusion, this.blockTransform)
+    const extrusion = new GeometryMatrix3d().setFromExtrusionDirection(
+      this._normal
+    )
+    return new GeometryMatrix3d().multiplyMatrices(
+      extrusion,
+      this.blockTransform
+    )
   }
 }

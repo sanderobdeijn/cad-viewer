@@ -1,11 +1,11 @@
 jest.mock('@mlightcad/data-model', () => ({
-  AcGePoint2d: class {
+  GeometryPoint2d: class {
     constructor(
       public x: number,
       public y: number
     ) {}
   },
-  AcGeBox2d: class {
+  GeometryBox2d: class {
     constructor(
       public min: { x: number; y: number },
       public max: { x: number; y: number }

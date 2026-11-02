@@ -1,7 +1,7 @@
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -24,8 +24,8 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   /** The entity type name */
   static override typeName: string = 'OrdinateDimension'
 
-  private _definingPoint: AcGePoint2d
-  private _leaderEndPoint: AcGePoint2d
+  private _definingPoint: GeometryPoint2d
+  private _leaderEndPoint: GeometryPoint2d
 
   /**
    * Creates a new ordinate dimension.
@@ -41,14 +41,14 @@ export class AcDbOrdinateDimension extends AcDbDimension {
    *                   formatting. If null, the current default style will be used
    */
   constructor(
-    definingPoint: AcGePoint2dLike,
-    leaderEndPoint: AcGePoint2dLike,
+    definingPoint: GeometryPoint2dLike,
+    leaderEndPoint: GeometryPoint2dLike,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._definingPoint = new AcGePoint2d().copy(definingPoint)
-    this._leaderEndPoint = new AcGePoint2d().copy(leaderEndPoint)
+    this._definingPoint = new GeometryPoint2d().copy(definingPoint)
+    this._leaderEndPoint = new GeometryPoint2d().copy(leaderEndPoint)
 
     this.dimensionText = dimText
     // TODO: Set it to the current default dimStyle within the AutoCAD editor if dimStyle is null
@@ -67,7 +67,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   get definingPoint() {
     return this._definingPoint
   }
-  set definingPoint(value: AcGePoint2d) {
+  set definingPoint(value: GeometryPoint2d) {
     this._definingPoint.copy(value)
   }
 
@@ -83,7 +83,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   get leaderEndPoint() {
     return this._leaderEndPoint
   }
-  set leaderEndPoint(value: AcGePoint2d) {
+  set leaderEndPoint(value: GeometryPoint2d) {
     this._leaderEndPoint.copy(value)
   }
 
@@ -120,7 +120,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
   /**
    * @inheritdoc
    */
-  protected override subTransformBy(matrix: AcGeMatrix3d) {
+  protected override subTransformBy(matrix: GeometryMatrix3d) {
     this._definingPoint.applyMatrix4(matrix)
     this._leaderEndPoint.applyMatrix4(matrix)
   }

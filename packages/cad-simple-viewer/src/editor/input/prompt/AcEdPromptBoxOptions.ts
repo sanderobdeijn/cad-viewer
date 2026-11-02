@@ -1,11 +1,11 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 
 import { AcEdPromptOptions } from './AcEdPromptOptions'
 
 /**
  * Represents prompt options for selecting a rectangular box (two corners).
  */
-export class AcEdPromptBoxOptions extends AcEdPromptOptions<AcGeBox2d> {
+export class AcEdPromptBoxOptions extends AcEdPromptOptions<GeometryBox2d> {
   private _secondCornerMessage: string
   private _useBasePoint: boolean = false
   private _useDashedLine: boolean = false

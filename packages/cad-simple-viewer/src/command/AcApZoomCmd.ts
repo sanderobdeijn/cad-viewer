@@ -1,10 +1,9 @@
 import {
   acdbHostApplicationServices,
-  AcGeBox2d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  FLOAT_TOL
-} from '@mlightcad/data-model'
+  FLOAT_TOL,
+  GeometryBox2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
 import {
@@ -46,13 +45,13 @@ export class AcApZoomCmd extends AcEdCommand {
   /**
    * Stores the last view box before a zoom operation so `Previous` can restore it.
    */
-  private static previousViewBox?: AcGeBox2d
+  private static previousViewBox?: GeometryBox2d
 
   /**
    * View boxes captured when each layout was first framed (open or first visit).
    * Keyed by layout block table record id.
    */
-  private static originalViewBoxByLayout = new Map<string, AcGeBox2d>()
+  private static originalViewBoxByLayout = new Map<string, GeometryBox2d>()
 
   /**
    * Captures the current view box as the "original" view for a layout.
@@ -95,7 +94,7 @@ export class AcApZoomCmd extends AcEdCommand {
       x: view.width,
       y: view.height
     })
-    return new AcGeBox2d().expandByPoint(topLeft).expandByPoint(bottomRight)
+    return new GeometryBox2d().expandByPoint(topLeft).expandByPoint(bottomRight)
   }
 
   /**
@@ -152,10 +151,10 @@ export class AcApZoomCmd extends AcEdCommand {
    */
   private zoomToWindow(
     context: AcApContext,
-    first: AcGePoint2dLike,
-    second: AcGePoint2dLike
+    first: GeometryPoint2dLike,
+    second: GeometryPoint2dLike
   ) {
-    const box = new AcGeBox2d().expandByPoint(first).expandByPoint(second)
+    const box = new GeometryBox2d().expandByPoint(first).expandByPoint(second)
     this.rememberViewBeforeZoom(context)
     context.view.zoomTo(box, 1)
   }
@@ -168,13 +167,13 @@ export class AcApZoomCmd extends AcEdCommand {
    */
   private async promptAndZoomWindowFromFirstCorner(
     context: AcApContext,
-    firstCorner: AcGePoint2dLike
+    firstCorner: GeometryPoint2dLike
   ) {
     const secondPrompt = new AcEdPromptPointOptions(
       AcApI18n.t('jig.zoom.secondCorner')
     )
     secondPrompt.useBasePoint = true
-    secondPrompt.basePoint = new AcGePoint2d(firstCorner)
+    secondPrompt.basePoint = new GeometryPoint2d(firstCorner)
     secondPrompt.useDashedLine = true
 
     const secondResult =
@@ -238,7 +237,7 @@ export class AcApZoomCmd extends AcEdCommand {
     const aspect = context.view.width / Math.max(context.view.height, 1)
     const halfHeight = viewHeight / 2
     const halfWidth = (viewHeight * aspect) / 2
-    const box = new AcGeBox2d()
+    const box = new GeometryBox2d()
       .expandByPoint({
         x: centerResult.value.x - halfWidth,
         y: centerResult.value.y - halfHeight
@@ -286,7 +285,7 @@ export class AcApZoomCmd extends AcEdCommand {
   private applyRelativeScale(
     context: AcApContext,
     factor: number,
-    centerPoint?: AcGePoint2dLike
+    centerPoint?: GeometryPoint2dLike
   ) {
     const current = this.captureCurrentViewBox(context)
     const width = Math.max(current.max.x - current.min.x, FLOAT_TOL)
@@ -299,7 +298,7 @@ export class AcApZoomCmd extends AcEdCommand {
       y: (current.min.y + current.max.y) / 2
     }
 
-    const target = new AcGeBox2d()
+    const target = new GeometryBox2d()
       .expandByPoint({ x: center.x - halfWidth, y: center.y - halfHeight })
       .expandByPoint({ x: center.x + halfWidth, y: center.y + halfHeight })
     this.rememberViewBeforeZoom(context)
@@ -342,7 +341,7 @@ export class AcApZoomCmd extends AcEdCommand {
    * @param context - Current command context.
    * @returns Saved view box, or `undefined` when missing / empty.
    */
-  private resolveSavedViewBox(context: AcApContext): AcGeBox2d | undefined {
+  private resolveSavedViewBox(context: AcApContext): GeometryBox2d | undefined {
     const db = context.doc.database
     const modelSpaceId = db.tables.blockTable.modelSpace.objectId
     const isModelSpace = db.currentSpaceId === modelSpaceId

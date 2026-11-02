@@ -1,10 +1,10 @@
-import { AcGeSpline2d } from '@mlightcad/geometry-engine'
+import { GeometrySpline2d } from '@mlightcad/geometry-engine'
 
 import { AcDbSpline } from '../src/entity/AcDbSpline'
 
 describe('AcDbSpline factory methods', () => {
   it('derives degree from knot and control point counts when declared degree is zero', () => {
-    const geo = AcGeSpline2d.fromControlPoints(
+    const geo = GeometrySpline2d.fromControlPoints(
       [
         { x: 0, y: 0 },
         { x: 1, y: 1 },
@@ -22,7 +22,7 @@ describe('AcDbSpline factory methods', () => {
   })
 
   it('clamps declared degree to available control points', () => {
-    const geo = AcGeSpline2d.fromControlPoints(
+    const geo = GeometrySpline2d.fromControlPoints(
       [
         { x: 0, y: 0 },
         { x: 1, y: 0 }
@@ -38,7 +38,7 @@ describe('AcDbSpline factory methods', () => {
   })
 
   it('clamps fit-point degree using tangent constraints', () => {
-    const withTangents = AcGeSpline2d.fromFitPoints(
+    const withTangents = GeometrySpline2d.fromFitPoints(
       [
         { x: 0, y: 0 },
         { x: 10, y: 0 }
@@ -49,7 +49,7 @@ describe('AcDbSpline factory methods', () => {
       { x: 1, y: 0 },
       { x: 1, y: 0 }
     )
-    const withoutTangents = AcGeSpline2d.fromFitPoints(
+    const withoutTangents = GeometrySpline2d.fromFitPoints(
       [
         { x: 0, y: 0 },
         { x: 10, y: 0 }

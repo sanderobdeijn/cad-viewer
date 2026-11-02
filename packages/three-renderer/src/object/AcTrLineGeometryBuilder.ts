@@ -1,10 +1,9 @@
 import {
   acdbDrawTessellateOptions,
-  AcGeArea2d,
-  AcGeIndexNode,
-  AcGePoint2dLike,
-  AcGiSubEntityTraits
-} from '@mlightcad/data-model'
+  AcGiSubEntityTraits,
+  GeometryArea2d,
+  GeometryIndexNode,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
@@ -40,7 +39,7 @@ export interface AcTrBuiltDirectGeometry {
   wcsBbox: THREE.Box3
   material: THREE.Material
   /** Point entities only — world position for bbox intersection. */
-  position?: AcGePoint2dLike
+  position?: GeometryPoint2dLike
 }
 
 /** Generalized direct-batch entity metadata (line, point, mesh). */
@@ -145,13 +144,13 @@ interface AcTrSmallFillLoopGeometry {
  * The general path remains the fallback for every rejected case.
  *
  * @param pointBoundaries - All boundary loops of the area, in WCS.
- * @param hierarchy - Loop hierarchy returned by {@link AcGeArea2d.buildHierarchy}.
+ * @param hierarchy - Loop hierarchy returned by {@link GeometryArea2d.buildHierarchy}.
  * @returns Triangle indices into the deduplicated boundary vertices, or `null`
  *   to use the general path.
  */
 function buildSmallFillLoopGeometry(
-  pointBoundaries: AcGePoint2dLike[][],
-  hierarchy: AcGeIndexNode
+  pointBoundaries: GeometryPoint2dLike[][],
+  hierarchy: GeometryIndexNode
 ): AcTrSmallFillLoopGeometry | null {
   if (pointBoundaries.length !== 1 || hierarchy.children.length !== 1) {
     return null
@@ -266,7 +265,10 @@ function signedTriangleArea2d(
 }
 
 /** Compares two 2-D points exactly; fill boundaries carry no tolerance. */
-function isSamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike): boolean {
+function isSamePoint2d(
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike
+): boolean {
   return a.x === b.x && a.y === b.y
 }
 
@@ -411,7 +413,7 @@ export function isDirectBatchRejectedMaterial(
  *   are provided.
  */
 export function buildLineGeometry(
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   material: THREE.Material
 ): AcTrBuiltLineGeometry | null {
   if (points.length < 2) {
@@ -499,7 +501,7 @@ export function buildLineGeometry(
  * @returns Built point geometry with a tiny WCS bbox around `point`.
  */
 export function buildPointGeometry(
-  point: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
   material: THREE.Material
 ): AcTrBuiltDirectGeometry {
   const worldOffset = new THREE.Vector3(point.x, point.y, 0)
@@ -532,8 +534,8 @@ export function buildPointGeometry(
  * is the two loops combined; this pass does not add samples.
  */
 function buildOffsetRingMesh(
-  outer: AcGePoint2dLike[],
-  inner: AcGePoint2dLike[],
+  outer: GeometryPoint2dLike[],
+  inner: GeometryPoint2dLike[],
   worldOffset: THREE.Vector3
 ): THREE.BufferGeometry | null {
   const outerCount = openLoopCount(outer)
@@ -614,8 +616,8 @@ function buildOffsetRingMesh(
  * `AcDbPolyline` has already decided these loops are one closed wide polyline.
  */
 export function buildOffsetRingDirectGeometry(
-  outer: AcGePoint2dLike[],
-  inner: AcGePoint2dLike[],
+  outer: GeometryPoint2dLike[],
+  inner: GeometryPoint2dLike[],
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): AcTrBuiltDirectGeometry | null {
@@ -655,16 +657,16 @@ export function buildOffsetRingDirectGeometry(
  *   aligned.
  */
 export function buildOffsetRingCenterline(
-  outer: AcGePoint2dLike[],
-  inner: AcGePoint2dLike[]
-): AcGePoint2dLike[] | null {
+  outer: GeometryPoint2dLike[],
+  inner: GeometryPoint2dLike[]
+): GeometryPoint2dLike[] | null {
   const outerCount = openLoopCount(outer)
   const innerCount = openLoopCount(inner)
   if (outerCount !== innerCount || outerCount < 2) {
     return null
   }
 
-  const centerline: AcGePoint2dLike[] = new Array(outerCount + 1)
+  const centerline: GeometryPoint2dLike[] = new Array(outerCount + 1)
   for (let i = 0; i < outerCount; i++) {
     const outerPoint = outer[i]
     const innerPoint = inner[i]
@@ -688,9 +690,9 @@ function openLoopCount(points: Array<{ x: number; y: number }>): number {
 }
 
 function signedPointTriangleArea(
-  a: AcGePoint2dLike,
-  b: AcGePoint2dLike,
-  c: AcGePoint2dLike
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike,
+  c: GeometryPoint2dLike
 ): number {
   return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) * 0.5
 }
@@ -708,7 +710,7 @@ function signedPointTriangleArea(
  *   the area is empty, or merge/bbox computation fails.
  */
 export function buildAreaGeometry(
-  area: AcGeArea2d,
+  area: GeometryArea2d,
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): AcTrBuiltDirectGeometry | null {
@@ -724,24 +726,24 @@ export function buildAreaGeometry(
   // tessellate-cached area into AcTrPolygon so the general path does not
   // tessellate a second time. Test fakes may only expose the legacy
   // getPoints/buildHierarchy shape; those are handled via a narrow optional API.
-  let pointBoundaries: AcGePoint2dLike[][] | undefined
-  let hierarchy: AcGeIndexNode | undefined
-  let areaForGeneralPath: AcGeArea2d = area
+  let pointBoundaries: GeometryPoint2dLike[][] | undefined
+  let hierarchy: GeometryIndexNode | undefined
+  let areaForGeneralPath: GeometryArea2d = area
   if (!_forceGeneralAreaPath) {
     const tessellateOptions = acdbDrawTessellateOptions({ context })
-    const areaApi = area as AcGeArea2d & {
-      tessellate?: (options: unknown) => AcGePoint2dLike[][]
-      getPoints?: (segments?: number) => AcGePoint2dLike[][]
-      buildHierarchy?: (options?: unknown) => AcGeIndexNode
+    const areaApi = area as GeometryArea2d & {
+      tessellate?: (options: unknown) => GeometryPoint2dLike[][]
+      getPoints?: (segments?: number) => GeometryPoint2dLike[][]
+      buildHierarchy?: (options?: unknown) => GeometryIndexNode
     }
     if (typeof areaApi.tessellate === 'function') {
       pointBoundaries = areaApi.tessellate(tessellateOptions)
       const areaCached = Object.create(area, {
         tessellate: { value: () => pointBoundaries }
-      }) as AcGeArea2d
+      }) as GeometryArea2d
       hierarchy = (
-        areaCached as AcGeArea2d & {
-          buildHierarchy: (options?: unknown) => AcGeIndexNode
+        areaCached as GeometryArea2d & {
+          buildHierarchy: (options?: unknown) => GeometryIndexNode
         }
       ).buildHierarchy(tessellateOptions)
       areaForGeneralPath = areaCached
@@ -1016,7 +1018,7 @@ function rebaseGeometryPositions(
  * @param points - World-space points to enclose.
  * @returns Center of the axis-aligned bounding box of `points`.
  */
-function computeLocalOrigin(points: AcGePoint2dLike[]) {
+function computeLocalOrigin(points: GeometryPoint2dLike[]) {
   const box = new THREE.Box3()
   for (let i = 0; i < points.length; i++) {
     const p = points[i]
@@ -1032,7 +1034,7 @@ function computeLocalOrigin(points: AcGePoint2dLike[]) {
  * @param points - World-space points to enclose.
  * @returns A new {@link THREE.Box3} expanded by every point in `points`.
  */
-function computeWcsBboxFromPoints(points: AcGePoint2dLike[]) {
+function computeWcsBboxFromPoints(points: GeometryPoint2dLike[]) {
   const box = new THREE.Box3()
   for (let i = 0; i < points.length; i++) {
     const p = points[i]

@@ -1,8 +1,8 @@
 import type {
   AcDbObjectId,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector3dLike
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector3dLike
 } from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
@@ -69,7 +69,7 @@ export abstract class AcApOverlayEntity {
    *
    * @returns Grip locations; empty array means no move grips.
    */
-  subGetGripPoints(): AcGePoint2d[] {
+  subGetGripPoints(): GeometryPoint2d[] {
     return []
   }
 
@@ -80,7 +80,7 @@ export abstract class AcApOverlayEntity {
    * @param _offset - World-space translation applied to each selected grip.
    * @returns This entity for chaining.
    */
-  subMoveGripPointsAt(_indices: number[], _offset: AcGeVector3dLike): this {
+  subMoveGripPointsAt(_indices: number[], _offset: GeometryVector3dLike): this {
     return this
   }
 
@@ -108,7 +108,7 @@ export abstract class AcApOverlayEntity {
    *
    * @returns Anchor point, or `undefined` when the overlay has no focus point.
    */
-  primaryPoint(): AcGePoint2dLike | undefined {
+  primaryPoint(): GeometryPoint2dLike | undefined {
     return undefined
   }
 }

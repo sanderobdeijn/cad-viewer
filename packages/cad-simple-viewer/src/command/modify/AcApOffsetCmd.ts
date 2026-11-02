@@ -1,9 +1,9 @@
 import {
   AcDbCurve,
   AcDbEntity,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -78,7 +78,7 @@ function isOffsettableCurve(
 function buildOffsetCurves(
   curve: AcDbCurve,
   offsetDistance: number,
-  sidePoint: AcGePoint2dLike
+  sidePoint: GeometryPoint2dLike
 ) {
   try {
     const side = curve.getOffsetSideAtPoint(sidePoint)
@@ -99,7 +99,7 @@ function buildOffsetCurves(
  * offset methods return fresh curve instances, this jig replaces its transient
  * preview set on each update instead of transforming a single cached entity.
  */
-class AcApOffsetPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApOffsetPreviewJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _view: AcEdBaseView
   private _curve: AcDbCurve
   private _distance: number
@@ -128,7 +128,7 @@ class AcApOffsetPreviewJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param point - Current cursor point used to determine offset side.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     this.clearRendered()
     this._previewCurves = buildOffsetCurves(this._curve, this._distance, point)
   }
@@ -264,7 +264,7 @@ export class AcApOffsetCmd extends AcEdCommand {
         }
         if (
           !Number.isFinite(result.value) ||
-          AcGeTol.isNonPositive(result.value)
+          GeometryTol.isNonPositive(result.value)
         ) {
           showCommandMessage(
             AcApI18n.t('jig.offset.invalidDistance'),
@@ -401,7 +401,7 @@ export class AcApOffsetCmd extends AcEdCommand {
         const offsetCurves = buildOffsetCurves(
           currentCurve,
           offsetDistance,
-          new AcGePoint2d(result.value)
+          new GeometryPoint2d(result.value)
         )
         if (offsetCurves.length === 0) {
           showCommandMessage(AcApI18n.t('jig.offset.offsetFailed'), 'warning')

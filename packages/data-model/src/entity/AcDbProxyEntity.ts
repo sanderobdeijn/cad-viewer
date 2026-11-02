@@ -1,8 +1,8 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -122,14 +122,14 @@ export class AcDbProxyEntity extends AcDbEntity {
    * Used at draw time for grips; not written with group code **92** (that code
    * is reserved for graphics-data size in classic DXF).
    */
-  private _entityOrigins: AcGePoint2d[] = []
+  private _entityOrigins: GeometryPoint2d[] = []
   /**
    * Cumulative world-space transform applied at draw time.
    *
    * The proxy-graphic byte stream is left unchanged; editor operations such as
    * MOVE, COPY, and ROTATE update this matrix instead of rewriting the stream.
    */
-  private _worldTransform = new AcGeMatrix3d()
+  private _worldTransform = new GeometryMatrix3d()
 
   /**
    * Gets the original DXF name of the proxied entity class.
@@ -316,13 +316,13 @@ export class AcDbProxyEntity extends AcDbEntity {
   /**
    * Replaces the entity-origin anchor points stored on this proxy entity.
    *
-   * Each input point is cloned into an {@link AcGePoint2d} instance.
+   * Each input point is cloned into an {@link GeometryPoint2d} instance.
    *
    * @param origins - New origin points (DXF group codes **92** / **10**).
    */
-  setEntityOrigins(origins: AcGePoint2d[]) {
+  setEntityOrigins(origins: GeometryPoint2d[]) {
     this._entityOrigins = origins.map(
-      origin => new AcGePoint2d(origin.x, origin.y)
+      origin => new GeometryPoint2d(origin.x, origin.y)
     )
   }
 
@@ -331,14 +331,14 @@ export class AcDbProxyEntity extends AcDbEntity {
    *
    * When the proxy-graphic stream contains an {@link AcDbProxyGraphicType.Extents}
    * chunk, the returned box is built from its minimum and maximum corners.
-   * Otherwise an empty {@link AcGeBox3d} is returned.
+   * Otherwise an empty {@link GeometryBox3d} is returned.
    *
    * @returns The axis-aligned bounding box derived from proxy graphics.
    */
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     const graphic = this._proxyGraphic
     if (!graphic?.length) {
-      return new AcGeBox3d()
+      return new GeometryBox3d()
     }
     const parser = new AcDbProxyGraphic(graphic, {
       database: this.database,
@@ -346,13 +346,13 @@ export class AcDbProxyEntity extends AcDbEntity {
     })
     const extents = parser.scanExtents()
     if (extents) {
-      const box = new AcGeBox3d().setFromPoints(extents)
-      if (!this._worldTransform.equals(new AcGeMatrix3d())) {
+      const box = new GeometryBox3d().setFromPoints(extents)
+      if (!this._worldTransform.equals(new GeometryMatrix3d())) {
         box.applyMatrix4(this._worldTransform)
       }
       return box
     }
-    return new AcGeBox3d()
+    return new GeometryBox3d()
   }
 
   /**
@@ -371,8 +371,8 @@ export class AcDbProxyEntity extends AcDbEntity {
     const extents = this.geometricExtents
     if (!extents.isEmpty()) {
       return [
-        new AcGePoint2d(extents.min.x, extents.min.y),
-        new AcGePoint2d(extents.max.x, extents.max.y)
+        new GeometryPoint2d(extents.min.x, extents.min.y),
+        new GeometryPoint2d(extents.max.x, extents.max.y)
       ]
     }
 
@@ -380,7 +380,7 @@ export class AcDbProxyEntity extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     if (this._entityOrigins.length > 0) {
       acdbMovePointArrayGripAt(indices, offset, this._entityOrigins)
       return this
@@ -393,7 +393,7 @@ export class AcDbProxyEntity extends AcDbEntity {
 
     acdbForEachGripIndex(indices, index => {
       if (index === 0) {
-        this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
+        this.transformBy(GeometryMatrix3d.makeTranslation({ ...offset, z: 0 }))
       }
     })
     return this
@@ -411,7 +411,7 @@ export class AcDbProxyEntity extends AcDbEntity {
    * @param matrix - World-space transformation matrix to apply.
    * @returns This entity for chaining.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._entityOrigins.forEach(origin => origin.applyMatrix4(matrix))
     this._worldTransform.premultiply(matrix)
     return this
@@ -440,7 +440,7 @@ export class AcDbProxyEntity extends AcDbEntity {
       defaultLayer: this.layer
     })
     const drawable = parser.worldDraw(renderer)
-    if (drawable && !this._worldTransform.equals(new AcGeMatrix3d())) {
+    if (drawable && !this._worldTransform.equals(new GeometryMatrix3d())) {
       drawable.applyMatrix(this._worldTransform)
     }
     return drawable

@@ -229,7 +229,7 @@ function pointOf(entity: EntityLike): { x: number; y: number } {
   return { x: Number(p.x) || 0, y: Number(p.y) || 0 }
 }
 
-/** 4x4 affine matrix, column-major (`AcGeMatrix3d.elements` layout). */
+/** 4x4 affine matrix, column-major (`GeometryMatrix3d.elements` layout). */
 type Matrix = number[]
 
 /** `a × b` for column-major 4x4 matrices. */

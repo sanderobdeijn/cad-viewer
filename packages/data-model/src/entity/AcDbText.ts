@@ -1,13 +1,13 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  acgeTransformOcsPointToWcs,
-  acgeTransformWcsPointToOcs,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  geometryTransformOcsPointToWcs,
+  geometryTransformWcsPointToOcs,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -71,7 +71,7 @@ export enum AcDbTextVerticalMode {
  * // Create a text entity
  * const text = new AcDbText();
  * text.textString = "Hello, World!";
- * text.position = new AcGePoint2d(0, 0);
+ * text.position = new GeometryPoint2d(0, 0);
  * text.height = 2.5;
  * text.horizontalMode = AcDbTextHorizontalMode.CENTER;
  * text.verticalMode = AcDbTextVerticalMode.BASELINE;
@@ -97,14 +97,14 @@ export class AcDbText extends AcDbEntity {
   /** The height of the text */
   private _height: number
   /** The insertion point of the text (DXF group 10). */
-  private _position: AcGePoint2d
+  private _position: GeometryPoint2d
   /**
    * The alignment point of the text (DXF group 11).
    *
    * Used when {@link horizontalMode} is not LEFT or {@link verticalMode} is
    * not BASELINE. Mirrors `AcDbText::alignmentPoint` in ObjectARX.
    */
-  private _alignmentPoint: AcGePoint2d
+  private _alignmentPoint: GeometryPoint2d
   /**
    * Whether the alignment point was explicitly provided by the source file
    * (DXF group 11 / DWG) or set through the API.
@@ -134,7 +134,7 @@ export class AcDbText extends AcDbEntity {
    */
   private _generationFlag = 0
   /** Extrusion / plane normal (DXF group 210). */
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _normal = new GeometryVector3d(0, 0, 1)
 
   /**
    * Creates a new text entity.
@@ -146,7 +146,7 @@ export class AcDbText extends AcDbEntity {
    * ```typescript
    * const text = new AcDbText();
    * text.textString = "Sample Text";
-   * text.position = new AcGePoint2d(10, 20);
+   * text.position = new GeometryPoint2d(10, 20);
    * text.height = 3.0;
    * ```
    */
@@ -155,8 +155,8 @@ export class AcDbText extends AcDbEntity {
     this._textString = ''
     this._height = 0
     this._thickness = 1
-    this._position = new AcGePoint2d()
-    this._alignmentPoint = new AcGePoint2d()
+    this._position = new GeometryPoint2d()
+    this._alignmentPoint = new GeometryPoint2d()
     this._rotation = 0
     this._oblique = 0
     this._horizontalMode = AcDbTextHorizontalMode.LEFT
@@ -280,10 +280,10 @@ export class AcDbText extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * text.position = new AcGePoint2d(15, 25);
+   * text.position = new GeometryPoint2d(15, 25);
    * ```
    */
-  set position(value: AcGePoint2d) {
+  set position(value: GeometryPoint2d) {
     this._position.copy(value)
   }
 
@@ -314,7 +314,7 @@ export class AcDbText extends AcDbEntity {
    *
    * @param value - The new alignment point
    */
-  set alignmentPoint(value: AcGePoint2d) {
+  set alignmentPoint(value: GeometryPoint2d) {
     this._alignmentPoint.copy(value)
     this._hasAlignmentPoint = true
   }
@@ -554,10 +554,10 @@ export class AcDbText extends AcDbEntity {
   }
 
   /** Extrusion / plane normal (DXF group 210). */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
@@ -572,8 +572,8 @@ export class AcDbText extends AcDbEntity {
    * console.log(`Text bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  get geometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     const { anchor, attachmentPoint } = this.resolveTextAnchor()
     const draw = this.extrusionDrawingAdjust()
     const width = acdbEstimatePlainTextWidth(
@@ -601,9 +601,9 @@ export class AcDbText extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     // Grips are exposed in WCS; storage is OCS — convert the drag delta.
-    const ocsOffset = acgeTransformWcsPointToOcs(offset, this._normal)
+    const ocsOffset = geometryTransformWcsPointToOcs(offset, this._normal)
     acdbMovePrimaryGripPointAt(indices, ocsOffset, this._position)
     // Non-default alignments render from group 11 (`alignmentPoint`), so a grip
     // drag on group 10 must translate both anchors together.
@@ -625,9 +625,9 @@ export class AcDbText extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (AcDbOsnapMode.Insertion === osnapMode) {
       snapPoints.push(this.pointToWcs(this._position))
@@ -637,29 +637,37 @@ export class AcDbText extends AcDbEntity {
   /**
    * Transforms this text by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const origin = this._position.clone()
     const xAxisPoint = this._position
       .clone()
       .add(
-        new AcGeVector3d(Math.cos(this._rotation), Math.sin(this._rotation), 0)
+        new GeometryVector3d(
+          Math.cos(this._rotation),
+          Math.sin(this._rotation),
+          0
+        )
       )
     const yAxisPoint = this._position
       .clone()
       .add(
-        new AcGeVector3d(-Math.sin(this._rotation), Math.cos(this._rotation), 0)
+        new GeometryVector3d(
+          -Math.sin(this._rotation),
+          Math.cos(this._rotation),
+          0
+        )
       )
 
     origin.applyMatrix4(matrix)
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0
@@ -864,8 +872,8 @@ export class AcDbText extends AcDbEntity {
   /**
    * Maps an OCS text point into WCS using {@link normal}.
    */
-  private pointToWcs(point: AcGePoint2dLike): AcGePoint2d {
-    return acgeTransformOcsPointToWcs(point, this._normal)
+  private pointToWcs(point: GeometryPoint2dLike): GeometryPoint2d {
+    return geometryTransformOcsPointToWcs(point, this._normal)
   }
 
   /**
@@ -888,13 +896,13 @@ export class AcDbText extends AcDbEntity {
         widthFactor: -this._widthFactor
       }
     }
-    const axis = new AcGeVector3d(
+    const axis = new GeometryVector3d(
       Math.cos(this._rotation),
       Math.sin(this._rotation),
       0
     )
     axis.transformDirection(
-      new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
+      new GeometryMatrix3d().setFromExtrusionDirection(this._normal)
     )
     return {
       rotation: Math.atan2(axis.y, axis.x),
@@ -910,7 +918,7 @@ export class AcDbText extends AcDbEntity {
    * When group 11 is missing, falls back to LEFT/BASELINE at `position`.
    */
   private resolveTextAnchor(): {
-    anchor: AcGePoint2d
+    anchor: GeometryPoint2d
     attachmentPoint: AcGiMTextAttachmentPoint
   } {
     const attachmentPoint = this.resolveAttachmentPoint()

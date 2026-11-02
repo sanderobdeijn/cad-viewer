@@ -1,4 +1,8 @@
-import { AcGeBox2d, AcGePoint2d, AcGiViewport } from '@mlightcad/data-model'
+import {
+  GeometryBox2d,
+  GeometryPoint2d,
+  AcGiViewport
+} from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../src/renderer'
@@ -21,11 +25,11 @@ function createMockRenderer(
 
 function createViewport(twist: number): AcGiViewport {
   const gi = new AcGiViewport()
-  gi.centerPoint = new AcGePoint2d(5, 5)
+  gi.centerPoint = new GeometryPoint2d(5, 5)
   gi.width = 10
   gi.height = 10
-  gi.viewCenter = new AcGePoint2d(0, 0)
-  gi.viewTarget = new AcGePoint2d(150, 300)
+  gi.viewCenter = new GeometryPoint2d(0, 0)
+  gi.viewTarget = new GeometryPoint2d(150, 300)
   gi.viewHeight = 200
   gi.viewTwistAngle = twist
   return gi
@@ -356,11 +360,14 @@ describe('AcTrBaseView center', () => {
   it('keeps the orbit target under the camera so a later update stays top-down', () => {
     const view = new AcTrBaseView(createMockRenderer(), 800, 600)
     view.zoomTo(
-      new AcGeBox2d(new AcGePoint2d(0, 0), new AcGePoint2d(100, 50)),
+      new GeometryBox2d(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(100, 50)
+      ),
       1
     )
     const before = view.internalCamera.quaternion.clone()
-    view.center = new AcGePoint2d(view.center.x + 40, view.center.y - 15)
+    view.center = new GeometryPoint2d(view.center.x + 40, view.center.y - 15)
     const controls = (
       view as unknown as {
         _cameraControls: {

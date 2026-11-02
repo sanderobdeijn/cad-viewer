@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbAngleUnits } from '../src/misc/AcDbAngleUnits'
@@ -86,7 +86,7 @@ describe('AcDbFormatter', () => {
       db.lunits = AcDbLinearUnits.Decimal
       db.luprec = 1
 
-      expect(formatter.formatPoint2d(new AcGePoint2d(1.23, 4.56))).toBe(
+      expect(formatter.formatPoint2d(new GeometryPoint2d(1.23, 4.56))).toBe(
         '1.2, 4.6'
       )
     })
@@ -96,7 +96,7 @@ describe('AcDbFormatter', () => {
       db.luprec = 1
 
       expect(
-        formatter.formatPoint2d(new AcGePoint2d(1.23, 4), {
+        formatter.formatPoint2d(new GeometryPoint2d(1.23, 4), {
           showApproximate: true
         })
       ).toBe('~ 1.2, 4')

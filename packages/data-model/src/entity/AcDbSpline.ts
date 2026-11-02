@@ -1,14 +1,14 @@
 import { AcCmErrors } from '@mlightcad/common'
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeKnotParameterizationType,
-  AcGeMatrix3d,
-  acgeOffsetSmoothedSampledPath,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeSpline2d,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryKnotParameterizationType,
+  GeometryMatrix3d,
+  geometryOffsetSmoothedSampledPath,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometrySpline2d,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -19,21 +19,21 @@ import { AcDbPolyline } from './AcDbPolyline'
 
 function resolveSplineKnotParameterization(
   flag: number
-): AcGeKnotParameterizationType {
+): GeometryKnotParameterizationType {
   if (flag & 2048) return 'SqrtChord'
   if (flag & 1024) return 'Chord'
   return 'Uniform'
 }
 
 function createAcDbSplineFromGeo(
-  geo: AcGeSpline2d,
+  geo: GeometrySpline2d,
   closed: boolean
 ): AcDbSpline | null {
   try {
     return new AcDbSpline(
       geo.controlPoints,
       geo.knots,
-      acgeNormalizeSplineWeights(geo.weights, geo.controlPoints.length),
+      geometryNormalizeSplineWeights(geo.weights, geo.controlPoints.length),
       geo.degree,
       closed
     )
@@ -42,7 +42,7 @@ function createAcDbSplineFromGeo(
   }
 }
 
-function acgeNormalizeSplineWeights(
+function geometryNormalizeSplineWeights(
   weights: number[] | undefined,
   controlPointCount: number
 ): number[] | undefined {
@@ -63,20 +63,20 @@ function acgeNormalizeSplineWeights(
  * ```typescript
  * // Create a spline from control points
  * const controlPoints = [
- *   new AcGePoint2d(0, 0),
- *   new AcGePoint2d(5, 5),
- *   new AcGePoint2d(10, 0)
+ *   new GeometryPoint2d(0, 0),
+ *   new GeometryPoint2d(5, 5),
+ *   new GeometryPoint2d(10, 0)
  * ];
  * const knots = [0, 0, 0, 1, 1, 1];
  * const spline = new AcDbSpline(controlPoints, knots);
  *
  * // Create a spline from fit points
  * const fitPoints = [
- *   new AcGePoint2d(0, 0),
- *   new AcGePoint2d(5, 5),
- *   new AcGePoint2d(10, 0)
+ *   new GeometryPoint2d(0, 0),
+ *   new GeometryPoint2d(5, 5),
+ *   new GeometryPoint2d(10, 0)
  * ];
- * const spline2 = new AcDbSpline(fitPoints, AcGeKnotParameterizationType.Uniform);
+ * const spline2 = new AcDbSpline(fitPoints, GeometryKnotParameterizationType.Uniform);
  * ```
  */
 export class AcDbSpline extends AcDbCurve {
@@ -121,13 +121,13 @@ export class AcDbSpline extends AcDbCurve {
    * ```
    */
   static fromControlPoints(
-    controlPoints: AcGePoint2dLike[],
+    controlPoints: GeometryPoint2dLike[],
     knots: number[],
     weights: number[] | undefined,
     declaredDegree: number | undefined,
     closed: boolean
   ): AcDbSpline | null {
-    const geo = AcGeSpline2d.fromControlPoints(
+    const geo = GeometrySpline2d.fromControlPoints(
       controlPoints,
       knots,
       weights,
@@ -166,14 +166,14 @@ export class AcDbSpline extends AcDbCurve {
    * ```
    */
   static fromFitPoints(
-    fitPoints: AcGePoint2dLike[],
-    knotParam: AcGeKnotParameterizationType,
+    fitPoints: GeometryPoint2dLike[],
+    knotParam: GeometryKnotParameterizationType,
     declaredDegree: number | undefined,
     closed: boolean,
-    startTangent?: AcGePoint2dLike | null,
-    endTangent?: AcGePoint2dLike | null
+    startTangent?: GeometryPoint2dLike | null,
+    endTangent?: GeometryPoint2dLike | null
   ): AcDbSpline | null {
-    const geo = AcGeSpline2d.fromFitPoints(
+    const geo = GeometrySpline2d.fromFitPoints(
       fitPoints,
       knotParam,
       declaredDegree,
@@ -219,12 +219,12 @@ export class AcDbSpline extends AcDbCurve {
     numberOfControlPoints: number
     numberOfKnots: number
     numberOfFitPoints: number
-    controlPoints: AcGePoint2dLike[]
+    controlPoints: GeometryPoint2dLike[]
     knots: number[]
     weights?: number[]
-    fitPoints: AcGePoint2dLike[]
-    startTangent?: AcGePoint2dLike | null
-    endTangent?: AcGePoint2dLike | null
+    fitPoints: GeometryPoint2dLike[]
+    startTangent?: GeometryPoint2dLike | null
+    endTangent?: GeometryPoint2dLike | null
   }): AcDbSpline | null {
     const closed = !!(spline.flag & 0x01)
     const knotParam = resolveSplineKnotParameterization(spline.flag)
@@ -266,13 +266,13 @@ export class AcDbSpline extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric spline object. */
-  private _geoData: AcGeSpline2d | null = null
+  private _geoData: GeometrySpline2d | null = null
 
   /**
    * The underlying geometric spline object. Materialized lazily so that
    * factory-created entities (dxfIn path) never build a dummy spline.
    */
-  private get _geo(): AcGeSpline2d {
+  private get _geo(): GeometrySpline2d {
     if (this._geoData == null) {
       const controlPoints = [
         { x: 0, y: 0 },
@@ -282,18 +282,18 @@ export class AcDbSpline extends AcDbCurve {
       ]
       const knots = [0, 0, 0, 0, 1, 1, 1, 1]
       this._geoData =
-        AcGeSpline2d.fromControlPoints(
+        GeometrySpline2d.fromControlPoints(
           controlPoints,
           knots,
           undefined,
           3,
           false
-        ) ?? new AcGeSpline2d(controlPoints, knots, undefined, 3, false)
+        ) ?? new GeometrySpline2d(controlPoints, knots, undefined, 3, false)
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeSpline2d) {
+  private set _geo(value: GeometrySpline2d) {
     this._geoData = value
   }
   /** Knot tolerance (DXF group 42) */
@@ -318,16 +318,16 @@ export class AcDbSpline extends AcDbCurve {
    * @example
    * ```typescript
    * const controlPoints = [
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(5, 5),
-   *   new AcGePoint2d(10, 0)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(5, 5),
+   *   new GeometryPoint2d(10, 0)
    * ];
    * const knots = [0, 0, 0, 1, 1, 1];
    * const spline = new AcDbSpline(controlPoints, knots);
    * ```
    */
   constructor(
-    controlPoints: AcGePoint2dLike[],
+    controlPoints: GeometryPoint2dLike[],
     knots: number[],
     weights?: number[],
     degree?: number,
@@ -347,17 +347,17 @@ export class AcDbSpline extends AcDbCurve {
    * @example
    * ```typescript
    * const fitPoints = [
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(5, 5),
-   *   new AcGePoint2d(10, 0)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(5, 5),
+   *   new GeometryPoint2d(10, 0)
    * ];
-   * const spline = new AcDbSpline(fitPoints, AcGeKnotParameterizationType.Uniform);
+   * const spline = new AcDbSpline(fitPoints, GeometryKnotParameterizationType.Uniform);
    * ```
    */
   constructor()
   constructor(
-    fitPoints: AcGePoint2dLike[],
-    knotParam: AcGeKnotParameterizationType,
+    fitPoints: GeometryPoint2dLike[],
+    knotParam: GeometryKnotParameterizationType,
     degree?: number,
     closed?: boolean
   )
@@ -367,7 +367,7 @@ export class AcDbSpline extends AcDbCurve {
     // dxfIn, and the lazy _geo accessor materializes the default on demand.
     if (a === undefined) return
     this.rebuild(
-      a as AcGePoint2dLike[],
+      a as GeometryPoint2dLike[],
       b as number[],
       c as number[],
       d as number | undefined,
@@ -390,16 +390,16 @@ export class AcDbSpline extends AcDbCurve {
    * @example
    * ```typescript
    * const controlPoints = [
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(5, 5),
-   *   new AcGePoint2d(10, 0)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(5, 5),
+   *   new GeometryPoint2d(10, 0)
    * ];
    * const knots = [0, 0, 0, 1, 1, 1];
    * spline.rebuild(controlPoints, knots);
    * ```
    */
   rebuild(
-    controlPoints: AcGePoint2dLike[],
+    controlPoints: GeometryPoint2dLike[],
     knots: number[],
     weights?: number[],
     degree?: number,
@@ -419,16 +419,16 @@ export class AcDbSpline extends AcDbCurve {
    * @example
    * ```typescript
    * const fitPoints = [
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(5, 5),
-   *   new AcGePoint2d(10, 0)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(5, 5),
+   *   new GeometryPoint2d(10, 0)
    * ];
-   * spline.rebuild(fitPoints, AcGeKnotParameterizationType.Uniform);
+   * spline.rebuild(fitPoints, GeometryKnotParameterizationType.Uniform);
    * ```
    */
   rebuild(
-    fitPoints: AcGePoint2dLike[],
-    knotParam: AcGeKnotParameterizationType,
+    fitPoints: GeometryPoint2dLike[],
+    knotParam: GeometryKnotParameterizationType,
     degree?: number,
     closed?: boolean
   ): void
@@ -447,15 +447,15 @@ export class AcDbSpline extends AcDbCurve {
     const isFitPointsConstructor = !Array.isArray(b)
 
     if (isFitPointsConstructor) {
-      this._geo = new AcGeSpline2d(
-        a as AcGePoint2dLike[],
-        b as AcGeKnotParameterizationType,
+      this._geo = new GeometrySpline2d(
+        a as GeometryPoint2dLike[],
+        b as GeometryKnotParameterizationType,
         c as number | undefined,
         d as boolean | undefined
       )
     } else {
-      this._geo = new AcGeSpline2d(
-        a as AcGePoint2dLike[],
+      this._geo = new GeometrySpline2d(
+        a as GeometryPoint2dLike[],
         b as number[],
         c as number[] | undefined,
         d as number | undefined,
@@ -476,11 +476,11 @@ export class AcDbSpline extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
+    return new GeometryBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return [
       {
         kind: 'spline',
@@ -563,7 +563,7 @@ export class AcDbSpline extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     this._geo.moveGripPointsAt(indices, offset)
     return this
   }
@@ -582,9 +582,9 @@ export class AcDbSpline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     switch (osnapMode) {
       case AcDbOsnapMode.EndPoint:
@@ -611,7 +611,7 @@ export class AcDbSpline extends AcDbCurve {
   /**
    * Transforms this spline by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._geo.transform3d(matrix)
     return this
   }
@@ -656,7 +656,7 @@ export class AcDbSpline extends AcDbCurve {
    *
    * Evaluates side relative to the sampled 2D approximation of the spline.
    */
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const path = this.collectPath2d(1)
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, this.closed).getOffsetSideAtPoint(
@@ -670,7 +670,7 @@ export class AcDbSpline extends AcDbCurve {
    */
   private createOffsetCurve(offsetDist: number): AcDbCurve | null {
     const { points, tangents } = this._geo.getOffsetSamplePath2d(offsetDist)
-    const geo = acgeOffsetSmoothedSampledPath(
+    const geo = geometryOffsetSmoothedSampledPath(
       points,
       this.closed,
       offsetDist,
@@ -680,12 +680,12 @@ export class AcDbSpline extends AcDbCurve {
   }
 
   /**
-   * Samples {@link AcGeSpline2d} for side tests (uniform parameter density).
+   * Samples {@link GeometrySpline2d} for side tests (uniform parameter density).
    *
    * @param offsetDist - Used only to choose sample spacing
    * @returns XY points along the spline
    */
-  private collectPath2d(offsetDist: number): AcGePoint2d[] {
+  private collectPath2d(offsetDist: number): GeometryPoint2d[] {
     return this._geo.getOffsetSamplePath2d(offsetDist).points
   }
 }

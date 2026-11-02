@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 import { injectMlGripHandleCss } from '@mlightcad/three-renderer'
 
 import {
@@ -47,7 +47,7 @@ export class AcEdGripHandle {
     this._el.className = `ml-grip-handle ml-grip-handle-${state}`
   }
 
-  setPosition(pos: AcGePoint2dLike) {
+  setPosition(pos: GeometryPoint2dLike) {
     this._el.style.left = `${pos.x}px`
     this._el.style.top = `${pos.y}px`
   }

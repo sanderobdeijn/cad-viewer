@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 
 import { AcEdPromptNumericalOptions } from './AcEdPromptNumericalOptions'
 
@@ -9,7 +9,7 @@ import { AcEdPromptNumericalOptions } from './AcEdPromptNumericalOptions'
  * Supports a base point, default distance, 2D projection, dashed-line preview, and keywords.
  */
 export class AcEdPromptDistanceOptions extends AcEdPromptNumericalOptions {
-  private _basePoint?: AcGePoint2d
+  private _basePoint?: GeometryPoint2d
   private _useBasePoint: boolean = false
   private _useDashedLine: boolean = true
   private _only2d: boolean = true
@@ -27,17 +27,17 @@ export class AcEdPromptDistanceOptions extends AcEdPromptNumericalOptions {
    * Gets or sets the base point for the distance prompt.
    * Corresponds to `PromptDistanceOptions.BasePoint`.
    */
-  get basePoint(): AcGePoint2d | undefined {
+  get basePoint(): GeometryPoint2d | undefined {
     return this._basePoint
   }
-  set basePoint(point: AcGePoint2d | undefined) {
+  set basePoint(point: GeometryPoint2d | undefined) {
     if (!this.isReadOnly) {
       if (point == null) {
         this._basePoint = point
       } else {
         this._basePoint = this._basePoint
           ? this._basePoint.copy(point)
-          : new AcGePoint2d(point)
+          : new GeometryPoint2d(point)
       }
     }
   }

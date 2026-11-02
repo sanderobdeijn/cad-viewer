@@ -1,15 +1,15 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 /**
  * This class ised used to pass back information to the user about the viewing characteristics of the
  * current viewport.
  */
 export class AcGiViewport {
-  private _centerPoint: AcGePoint2d
+  private _centerPoint: GeometryPoint2d
   private _height: number
   private _width: number
-  private _viewCenter: AcGePoint2d
-  private _viewTarget: AcGePoint2d
+  private _viewCenter: GeometryPoint2d
+  private _viewTarget: GeometryPoint2d
   private _viewTwistAngle: number
   private _viewHeight: number
   private _number: number
@@ -29,11 +29,11 @@ export class AcGiViewport {
     this._number = -1
     this._id = ''
     this._groupId = ''
-    this._centerPoint = new AcGePoint2d()
+    this._centerPoint = new GeometryPoint2d()
     this._height = 0
     this._width = 0
-    this._viewCenter = new AcGePoint2d()
-    this._viewTarget = new AcGePoint2d()
+    this._viewCenter = new GeometryPoint2d()
+    this._viewTarget = new GeometryPoint2d()
     this._viewTwistAngle = 0
     this._viewHeight = 0
     this._frozenLayerIds = []
@@ -123,7 +123,7 @@ export class AcGiViewport {
   get centerPoint() {
     return this._centerPoint
   }
-  set centerPoint(value: AcGePoint2d) {
+  set centerPoint(value: GeometryPoint2d) {
     this._centerPoint.copy(value)
   }
 
@@ -152,7 +152,7 @@ export class AcGiViewport {
    * The bounding box (in world coordinate system coordinates) of the viewport.
    */
   get box() {
-    const box = new AcGeBox2d()
+    const box = new GeometryBox2d()
     box.setFromCenterAndSize(this.centerPoint, {
       x: this.width,
       y: this.height
@@ -166,7 +166,7 @@ export class AcGiViewport {
   get viewCenter() {
     return this._viewCenter
   }
-  set viewCenter(value: AcGePoint2d) {
+  set viewCenter(value: GeometryPoint2d) {
     this._viewCenter.copy(value)
   }
 
@@ -179,7 +179,7 @@ export class AcGiViewport {
   get viewTarget() {
     return this._viewTarget
   }
-  set viewTarget(value: AcGePoint2d) {
+  set viewTarget(value: GeometryPoint2d) {
     this._viewTarget.copy(value)
   }
 
@@ -226,7 +226,7 @@ export class AcGiViewport {
       this.viewTarget,
       this.viewTwistAngle
     )
-    const box = new AcGeBox2d()
+    const box = new GeometryBox2d()
     box.setFromCenterAndSize(wcsCenter, {
       x: this.viewWidth,
       y: this.viewHeight
@@ -238,10 +238,10 @@ export class AcGiViewport {
    * Maps a DCS view center to WCS using the viewport target and twist.
    */
   static dcsCenterToWcs(
-    center: AcGePoint2d,
-    target: AcGePoint2d,
+    center: GeometryPoint2d,
+    target: GeometryPoint2d,
     twistAngle: number
-  ): AcGePoint2d {
+  ): GeometryPoint2d {
     let wcsCenterX = center.x
     let wcsCenterY = center.y
     if (Number.isFinite(twistAngle) && twistAngle !== 0) {
@@ -254,7 +254,7 @@ export class AcGiViewport {
       wcsCenterX += target.x
       wcsCenterY += target.y
     }
-    return new AcGePoint2d(wcsCenterX, wcsCenterY)
+    return new GeometryPoint2d(wcsCenterX, wcsCenterY)
   }
 
   /**

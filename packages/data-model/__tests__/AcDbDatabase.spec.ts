@@ -1,5 +1,5 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base/AcDbHostApplicationServices'
 import { AcDbBlockTableRecord } from '../src/database/AcDbBlockTableRecord'
@@ -91,7 +91,10 @@ describe('AcDbDatabase', () => {
     db.tables.blockTable.add(block)
     expect(block.objectId).toBe('BTR1')
 
-    const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(1, 0))
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 0)
+    )
     const attDef = new AcDbAttributeDefinition()
     attDef.tag = '设计日期'
     attDef.height = 2.5

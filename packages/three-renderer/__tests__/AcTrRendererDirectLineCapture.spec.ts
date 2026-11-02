@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../src/renderer/AcTrRenderer'
@@ -33,7 +33,7 @@ describe('AcTrRenderer direct capture', () => {
   it('captures point() payload without creating AcTrPoint children', () => {
     const renderer = createRenderer()
     renderer.beginDirectCapture()
-    const point = new AcGePoint2d(10, 20)
+    const point = new GeometryPoint2d(10, 20)
     const placeholder = renderer.point(point, {
       displayMode: 0,
       displaySize: 0

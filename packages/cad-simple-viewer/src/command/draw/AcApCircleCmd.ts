@@ -1,8 +1,8 @@
 import {
   AcDbCircle,
-  AcGeCircArc2d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryCircularArc2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -22,13 +22,13 @@ import {
 import { AcApI18n } from '../../i18n'
 
 interface CircleDefinition {
-  center: AcGePoint2dLike
+  center: GeometryPoint2dLike
   radius: number
 }
 
 type CircleKeywordKey = 'threeP' | 'twoP' | 'diameter'
 
-function createFallbackCircle(point: AcGePoint2dLike): CircleDefinition {
+function createFallbackCircle(point: GeometryPoint2dLike): CircleDefinition {
   return {
     center: { x: point.x, y: point.y },
     radius: 1e-6
@@ -55,7 +55,7 @@ function applyCircleDefinition(
 }
 
 function toCircleDefinition(
-  arc: AcGeCircArc2d | null
+  arc: GeometryCircularArc2d | null
 ): CircleDefinition | undefined {
   if (!arc) return undefined
   return {
@@ -65,28 +65,30 @@ function toCircleDefinition(
 }
 
 function createCircleFromCenterRadius(
-  center: AcGePoint2dLike,
+  center: GeometryPoint2dLike,
   radius: number
 ): CircleDefinition | undefined {
-  return toCircleDefinition(AcGeCircArc2d.tryCreateCircle(center, radius))
+  return toCircleDefinition(
+    GeometryCircularArc2d.tryCreateCircle(center, radius)
+  )
 }
 
 function createCircleFromTwoPoints(
-  first: AcGePoint2dLike,
-  second: AcGePoint2dLike
+  first: GeometryPoint2dLike,
+  second: GeometryPoint2dLike
 ): CircleDefinition | undefined {
   return toCircleDefinition(
-    AcGeCircArc2d.tryCreateCircleByDiameter(first, second)
+    GeometryCircularArc2d.tryCreateCircleByDiameter(first, second)
   )
 }
 
 function createCircleFromThreePoints(
-  p1: AcGePoint2dLike,
-  p2: AcGePoint2dLike,
-  p3: AcGePoint2dLike
+  p1: GeometryPoint2dLike,
+  p2: GeometryPoint2dLike,
+  p3: GeometryPoint2dLike
 ): CircleDefinition | undefined {
   return toCircleDefinition(
-    AcGeCircArc2d.tryCreateCircleByThreePoints(p1, p2, p3)
+    GeometryCircularArc2d.tryCreateCircleByThreePoints(p1, p2, p3)
   )
 }
 
@@ -104,7 +106,7 @@ export class AcApCircleJig extends AcEdPreviewJig<number> {
    *
    * @param view - The associated view
    */
-  constructor(view: AcEdBaseView, center: AcGePoint2dLike) {
+  constructor(view: AcEdBaseView, center: GeometryPoint2dLike) {
     super(view)
     this._circle = new AcDbCircle(center, 0)
   }
@@ -129,7 +131,7 @@ export class AcApCircleJig extends AcEdPreviewJig<number> {
 /**
  * Dynamic point-based circle preview jig used by 2P/3P workflows.
  */
-class AcApCircleDynamicJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApCircleDynamicJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient circle entity reused across cursor updates.
    */
@@ -137,7 +139,7 @@ class AcApCircleDynamicJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Callback that maps cursor point to circle definition.
    */
-  private _builder: (point: AcGePoint2dLike) => CircleDefinition | undefined
+  private _builder: (point: GeometryPoint2dLike) => CircleDefinition | undefined
 
   /**
    * Creates dynamic circle preview jig.
@@ -148,7 +150,7 @@ class AcApCircleDynamicJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    builder: (point: AcGePoint2dLike) => CircleDefinition | undefined,
+    builder: (point: GeometryPoint2dLike) => CircleDefinition | undefined,
     fallback: CircleDefinition
   ) {
     super(view)
@@ -168,7 +170,7 @@ class AcApCircleDynamicJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param point - Current cursor/input point.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     const definition = this._builder(point)
     if (!definition) return
     applyCircleDefinition(this._circle, definition)
@@ -319,7 +321,7 @@ export class AcApCircleCmd extends AcEdCommand {
        */
       constructor(
         private cmd: AcApCircleCmd,
-        private firstPoint: AcGePoint2dLike
+        private firstPoint: GeometryPoint2dLike
       ) {}
 
       /**
@@ -333,7 +335,7 @@ export class AcApCircleCmd extends AcEdCommand {
         )
         prompt.useBasePoint = true
         prompt.useDashedLine = true
-        prompt.basePoint = new AcGePoint2d(this.firstPoint)
+        prompt.basePoint = new GeometryPoint2d(this.firstPoint)
         prompt.jig = new AcApCircleDynamicJig(
           context.view,
           point => createCircleFromTwoPoints(this.firstPoint, point),
@@ -417,7 +419,7 @@ export class AcApCircleCmd extends AcEdCommand {
           AcEdPromptPointOptions,
           AcEdPromptPointResult
         >,
-        private firstPoint: AcGePoint2dLike
+        private firstPoint: GeometryPoint2dLike
       ) {}
 
       /**
@@ -431,7 +433,7 @@ export class AcApCircleCmd extends AcEdCommand {
         )
         prompt.useBasePoint = true
         prompt.useDashedLine = true
-        prompt.basePoint = new AcGePoint2d(this.firstPoint)
+        prompt.basePoint = new GeometryPoint2d(this.firstPoint)
         return prompt
       }
 
@@ -463,8 +465,8 @@ export class AcApCircleCmd extends AcEdCommand {
        */
       constructor(
         private cmd: AcApCircleCmd,
-        private firstPoint: AcGePoint2dLike,
-        private secondPoint: AcGePoint2dLike
+        private firstPoint: GeometryPoint2dLike,
+        private secondPoint: GeometryPoint2dLike
       ) {}
 
       /**
@@ -478,7 +480,7 @@ export class AcApCircleCmd extends AcEdCommand {
         )
         prompt.useBasePoint = true
         prompt.useDashedLine = true
-        prompt.basePoint = new AcGePoint2d(this.secondPoint)
+        prompt.basePoint = new GeometryPoint2d(this.secondPoint)
         prompt.jig = new AcApCircleDynamicJig(
           context.view,
           point =>
@@ -531,7 +533,10 @@ export class AcApCircleCmd extends AcEdCommand {
    * @param center - Picked center point.
    * @returns Resolved circle definition, or `undefined` on cancel/invalid input.
    */
-  private async runCenterFlow(context: AcApContext, center: AcGePoint2dLike) {
+  private async runCenterFlow(
+    context: AcApContext,
+    center: GeometryPoint2dLike
+  ) {
     const radiusPrompt = new AcEdPromptDistanceOptions(
       AcApI18n.t('jig.circle.radiusOrDiameter')
     )
@@ -539,7 +544,7 @@ export class AcApCircleCmd extends AcEdCommand {
     radiusPrompt.allowZero = false
     radiusPrompt.useBasePoint = true
     radiusPrompt.useDashedLine = true
-    radiusPrompt.basePoint = new AcGePoint2d(center)
+    radiusPrompt.basePoint = new GeometryPoint2d(center)
     radiusPrompt.jig = new AcApCircleJig(context.view, center)
     const radiusResult =
       await AcApDocManager.instance.editor.getDistance(radiusPrompt)
@@ -564,7 +569,7 @@ export class AcApCircleCmd extends AcEdCommand {
    */
   private async promptDiameterCircle(
     context: AcApContext,
-    center: AcGePoint2dLike
+    center: GeometryPoint2dLike
   ) {
     const diameterPrompt = new AcEdPromptDistanceOptions(
       AcApI18n.t('jig.circle.diameter')
@@ -572,7 +577,7 @@ export class AcApCircleCmd extends AcEdCommand {
     diameterPrompt.allowZero = false
     diameterPrompt.useBasePoint = true
     diameterPrompt.useDashedLine = true
-    diameterPrompt.basePoint = new AcGePoint2d(center)
+    diameterPrompt.basePoint = new GeometryPoint2d(center)
     diameterPrompt.jig = new AcApCircleJig(context.view, center)
     const diameterResult =
       await AcApDocManager.instance.editor.getDistance(diameterPrompt)
@@ -588,7 +593,10 @@ export class AcApCircleCmd extends AcEdCommand {
    * @param second - Second point of diameter.
    * @returns Circle definition, or `undefined` when points are invalid.
    */
-  private createFromTwoPoints(first: AcGePoint2dLike, second: AcGePoint2dLike) {
+  private createFromTwoPoints(
+    first: GeometryPoint2dLike,
+    second: GeometryPoint2dLike
+  ) {
     return createCircleFromTwoPoints(first, second)
   }
 
@@ -601,9 +609,9 @@ export class AcApCircleCmd extends AcEdCommand {
    * @returns Circle definition, or `undefined` when points are degenerate.
    */
   private createFromThreePoints(
-    p1: AcGePoint2dLike,
-    p2: AcGePoint2dLike,
-    p3: AcGePoint2dLike
+    p1: GeometryPoint2dLike,
+    p2: GeometryPoint2dLike,
+    p3: GeometryPoint2dLike
   ) {
     return createCircleFromThreePoints(p1, p2, p3)
   }

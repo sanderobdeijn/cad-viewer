@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { AcTrRenderer } from '../src/renderer'
@@ -44,9 +44,9 @@ describe('AcTrBaseView camera fitting', () => {
 
   it('applyExportCamera fits bounds to export pixel dimensions', () => {
     const view = new TestView(createMockRenderer(), 1280, 720)
-    const bounds = new AcGeBox2d(
-      new AcGePoint2d(10, 20),
-      new AcGePoint2d(110, 70)
+    const bounds = new GeometryBox2d(
+      new GeometryPoint2d(10, 20),
+      new GeometryPoint2d(110, 70)
     )
 
     view.applyExportCamera(bounds, 800, 400)
@@ -75,7 +75,10 @@ describe('AcTrBaseView camera fitting', () => {
     orbitTarget.z = 0
 
     view.applyExportCamera(
-      new AcGeBox2d(new AcGePoint2d(0, 0), new AcGePoint2d(100, 100)),
+      new GeometryBox2d(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(100, 100)
+      ),
       512,
       512
     )
@@ -87,9 +90,9 @@ describe('AcTrBaseView camera fitting', () => {
 
   it('zoomTo matches min(width/fitWidth, height/fitHeight) when frustum is height/2', () => {
     const view = new TestView(createMockRenderer(), 800, 600)
-    const bounds = new AcGeBox2d(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(200, 100)
+    const bounds = new GeometryBox2d(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(200, 100)
     )
     const margin = 1.1
     const fitWidth = 200 * margin
@@ -108,9 +111,9 @@ describe('AcTrBaseView camera fitting', () => {
 
   it('zoomTo centers on the box center', () => {
     const view = new TestView(createMockRenderer(), 800, 600)
-    const bounds = new AcGeBox2d(
-      new AcGePoint2d(10, 20),
-      new AcGePoint2d(110, 70)
+    const bounds = new GeometryBox2d(
+      new GeometryPoint2d(10, 20),
+      new GeometryPoint2d(110, 70)
     )
 
     view.zoomTo(bounds, 1)
@@ -121,9 +124,9 @@ describe('AcTrBaseView camera fitting', () => {
 
   it('applyExportCamera uses export aspect rather than view aspect', () => {
     const view = new TestView(createMockRenderer(), 1600, 900)
-    const bounds = new AcGeBox2d(
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(100, 100)
+    const bounds = new GeometryBox2d(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(100, 100)
     )
 
     view.applyExportCamera(bounds, 400, 800)

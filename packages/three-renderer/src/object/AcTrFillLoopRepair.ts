@@ -1,10 +1,17 @@
-import { AcGePoint2d, AcGePoint2dLike, log } from '@mlightcad/data-model'
+import {
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  log
+} from '@mlightcad/data-model'
 import { GeometryEpsilon, PolyBool } from '@velipso/polybool'
 
 /**
  * Returns whether two 2-D points are exactly equal.
  */
-function isSamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike): boolean {
+function isSamePoint2d(
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike
+): boolean {
   return a.x === b.x && a.y === b.y
 }
 
@@ -12,9 +19,9 @@ function isSamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike): boolean {
  * Orientation of `c` relative to the directed line `a`→`b`.
  */
 function orientation2d(
-  a: AcGePoint2dLike,
-  b: AcGePoint2dLike,
-  c: AcGePoint2dLike
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike,
+  c: GeometryPoint2dLike
 ): number {
   const value = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
   if (value > 0) return 1
@@ -26,10 +33,10 @@ function orientation2d(
  * Returns whether segments `ab` and `cd` cross in their interiors.
  */
 function segmentsProperlyIntersect(
-  a: AcGePoint2dLike,
-  b: AcGePoint2dLike,
-  c: AcGePoint2dLike,
-  d: AcGePoint2dLike
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike,
+  c: GeometryPoint2dLike,
+  d: GeometryPoint2dLike
 ): boolean {
   return (
     orientation2d(a, b, c) !== orientation2d(a, b, d) &&
@@ -40,8 +47,8 @@ function segmentsProperlyIntersect(
 /**
  * Open ring without a duplicated closing vertex.
  */
-function openRing(points: AcGePoint2dLike[]): AcGePoint2dLike[] {
-  const ring: AcGePoint2dLike[] = []
+function openRing(points: GeometryPoint2dLike[]): GeometryPoint2dLike[] {
+  const ring: GeometryPoint2dLike[] = []
   for (const point of points) {
     if (
       !Number.isFinite(point.x) ||
@@ -66,7 +73,7 @@ function openRing(points: AcGePoint2dLike[]): AcGePoint2dLike[] {
  * invents triangles that cover the concave exterior.
  */
 export function fillLoopHasSelfIntersection(
-  points: AcGePoint2dLike[]
+  points: GeometryPoint2dLike[]
 ): boolean {
   const ring = openRing(points)
   const count = ring.length
@@ -90,13 +97,10 @@ export function fillLoopHasSelfIntersection(
   return false
 }
 
-function polyboolEpsilonFor(points: AcGePoint2dLike[]): number {
+function polyboolEpsilonFor(points: GeometryPoint2dLike[]): number {
   const first = points[0]
-  if (
-    first &&
-    typeof (first as AcGePoint2d).relativeEps === 'function'
-  ) {
-    return Math.min((first as AcGePoint2d).relativeEps(), 1e-6)
+  if (first && typeof (first as GeometryPoint2d).relativeEps === 'function') {
+    return Math.min((first as GeometryPoint2d).relativeEps(), 1e-6)
   }
   const scale = Math.max(
     ...points.flatMap(p => [Math.abs(p.x), Math.abs(p.y)]),
@@ -115,11 +119,11 @@ function polyboolEpsilonFor(points: AcGePoint2dLike[]): number {
  * @returns One or more simple rings. On failure, returns the original loop.
  */
 export function resolveSelfIntersectingFillLoop(
-  points: AcGePoint2dLike[]
-): AcGePoint2d[][] {
+  points: GeometryPoint2dLike[]
+): GeometryPoint2d[][] {
   const ring = openRing(points)
   if (ring.length < 3 || !fillLoopHasSelfIntersection(ring)) {
-    return [ring.map(p => new AcGePoint2d(p.x, p.y))]
+    return [ring.map(p => new GeometryPoint2d(p.x, p.y))]
   }
 
   const epsilon = polyboolEpsilonFor(ring)
@@ -133,9 +137,7 @@ export function resolveSelfIntersectingFillLoop(
     )
     const regions = rebuilt.regions
       .filter(region => region.length >= 3)
-      .map(region =>
-        region.map(p => new AcGePoint2d(p[0], p[1]))
-      )
+      .map(region => region.map(p => new GeometryPoint2d(p[0], p[1])))
     if (regions.length > 0) {
       return regions
     }
@@ -143,5 +145,5 @@ export function resolveSelfIntersectingFillLoop(
   } catch (error) {
     log.warn(`PolyBool fill loop repair failed: ${error}, epsilon=${epsilon}`)
   }
-  return [ring.map(p => new AcGePoint2d(p.x, p.y))]
+  return [ring.map(p => new GeometryPoint2d(p.x, p.y))]
 }

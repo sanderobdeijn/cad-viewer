@@ -1,14 +1,14 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeLine2d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2d,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike,
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryLine2d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2d,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike,
   ORIGIN_POINT_2D
 } from '@mlightcad/geometry-engine'
 import {
@@ -72,7 +72,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /** The block table record ID containing the dimension entities */
   private _dimBlockId: string | null
   /** The relative position point of the block referenced by the dimension (in WCS coordinates). */
-  private _dimBlockPosition: AcGePoint2d
+  private _dimBlockPosition: GeometryPoint2d
   /**
    * DXF group code 10 definition point captured during {@link dxfInFields}.
    *
@@ -80,7 +80,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * as the dim-line / center / far-chord point when their typed point codes are
    * absent (matching AutoCAD DXF and dxf-json-converter).
    */
-  protected _dxfDefinitionPoint: AcGePoint2d
+  protected _dxfDefinitionPoint: GeometryPoint2d
   /** The dimension style name used by this dimension */
   private _dimensionStyleName: string | null
   /** The user-supplied dimension annotation text */
@@ -92,7 +92,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /** The line spacing style for dimension text */
   private _textLineSpacingStyle: AcDbLineSpacingStyle
   /** The position of the dimension text */
-  private _textPosition: AcGePoint2d
+  private _textPosition: GeometryPoint2d
   /** The rotation angle of the dimension text */
   private _textRotation: number
   /**
@@ -112,7 +112,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /** The cached dimension style record */
   private _dimStyle?: AcDbDimStyleTableRecord
   /** The normal vector of the plane containing the block reference */
-  private _normal: AcGeVector3d
+  private _normal: GeometryVector3d
   /**
    * Additional rotation (radians) applied when placing the anonymous dimension
    * block. Block geometry is authored at a fixed orientation; this accumulates
@@ -131,25 +131,25 @@ export abstract class AcDbDimension extends AcDbEntity {
    * ```typescript
    * const dimension = new MyDimension();
    * dimension.dimensionText = "10.0";
-   * dimension.textPosition = new AcGePoint2d(5, 5);
+   * dimension.textPosition = new GeometryPoint2d(5, 5);
    * ```
    */
   constructor() {
     super()
     this._dimBlockId = null
-    this._dimBlockPosition = new AcGePoint2d()
-    this._dxfDefinitionPoint = new AcGePoint2d()
+    this._dimBlockPosition = new GeometryPoint2d()
+    this._dxfDefinitionPoint = new GeometryPoint2d()
     this._dimensionStyleName = null
     this._dimensionText = null
     this._textLineSpacingFactor = 1.0
     this._textLineSpacingStyle = AcDbLineSpacingStyle.AtLeast
-    this._textPosition = new AcGePoint2d()
+    this._textPosition = new GeometryPoint2d()
     this._textRotation = 0
     this._horizontalRotation = 0
     this._dimensionType = 0
     this._attachmentPoint = AcGiMTextAttachmentPoint.MiddleCenter
     this._dxfVersion = 0
-    this._normal = new AcGeVector3d(0, 0, 1)
+    this._normal = new GeometryVector3d(0, 0, 1)
     this._dimBlockRotation = 0
   }
 
@@ -203,7 +203,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns The relative position point of the block referenced by the dimension.
    *
    */
-  get dimBlockPosition(): AcGePoint2d {
+  get dimBlockPosition(): GeometryPoint2d {
     return this._dimBlockPosition
   }
 
@@ -228,7 +228,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @param value - The relative position point of the block referenced by the dimension.
 
    */
-  set dimBlockPosition(value: AcGePoint2dLike) {
+  set dimBlockPosition(value: GeometryPoint2dLike) {
     this._dimBlockPosition.copy(value)
   }
 
@@ -351,7 +351,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   get textPosition() {
     return this._textPosition
   }
-  set textPosition(value: AcGePoint2d) {
+  set textPosition(value: GeometryPoint2d) {
     this._textPosition.copy(value)
   }
 
@@ -420,7 +420,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    *
    * @returns The normal vector
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
 
@@ -429,7 +429,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    *
    * @param value - The new normal vector
    */
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value).normalize()
   }
 
@@ -447,12 +447,12 @@ export abstract class AcDbDimension extends AcDbEntity {
   /**
    * Transforms this dimension by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d): this {
+  transformBy(matrix: GeometryMatrix3d): this {
     const origin = this._textPosition.clone()
     const rotationPoint = this._textPosition
       .clone()
       .add(
-        new AcGeVector3d(
+        new GeometryVector3d(
           Math.cos(this._textRotation),
           Math.sin(this._textRotation),
           0
@@ -463,9 +463,11 @@ export abstract class AcDbDimension extends AcDbEntity {
     this._textPosition.applyMatrix4(matrix)
     this._normal.transformDirection(matrix)
 
-    const dimBlockRotationAxis = new AcGeVector3d(1, 0, 0).transformDirection(
-      matrix
-    )
+    const dimBlockRotationAxis = new GeometryVector3d(
+      1,
+      0,
+      0
+    ).transformDirection(matrix)
     if (dimBlockRotationAxis.lengthSq() > 0) {
       this._dimBlockRotation += Math.atan2(
         dimBlockRotationAxis.y,
@@ -475,7 +477,7 @@ export abstract class AcDbDimension extends AcDbEntity {
 
     origin.applyMatrix4(matrix)
     rotationPoint.applyMatrix4(matrix)
-    const rotationVector = new AcGeVector2d(rotationPoint).sub(origin)
+    const rotationVector = new GeometryVector2d(rotationPoint).sub(origin)
     if (rotationVector.lengthSq() > 0) {
       this._textRotation = Math.atan2(rotationVector.y, rotationVector.x)
     }
@@ -493,19 +495,19 @@ export abstract class AcDbDimension extends AcDbEntity {
    */
   override subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[],
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[],
     gsMark?: AcDbObjectId
   ) {
     const blockTableRecord = this.getDimBlockTableRecord()
     if (!blockTableRecord) return
 
     const blockTransform = this.getFullDimBlockTransform()
-    const localPickPoint = new AcGePoint2d(pickPoint).applyMatrix4(
+    const localPickPoint = new GeometryPoint2d(pickPoint).applyMatrix4(
       blockTransform.clone().invert()
     )
-    const localLastPoint = new AcGePoint2d(lastPoint).applyMatrix4(
+    const localLastPoint = new GeometryPoint2d(lastPoint).applyMatrix4(
       blockTransform.clone().invert()
     )
 
@@ -513,7 +515,7 @@ export abstract class AcDbDimension extends AcDbEntity {
       entity: AcDbEntity,
       subEntityId?: AcDbObjectId
     ) => {
-      const localSnapPoints: AcGePoint2d[] = []
+      const localSnapPoints: GeometryPoint2d[] = []
       entity.subGetOsnapPoints(
         osnapMode,
         localPickPoint,
@@ -527,7 +529,9 @@ export abstract class AcDbDimension extends AcDbEntity {
         localSnapPoints.forEach(point => snapPoints.push(point.clone()))
       } else {
         localSnapPoints.forEach(point =>
-          snapPoints.push(new AcGePoint2d(point).applyMatrix4(blockTransform))
+          snapPoints.push(
+            new GeometryPoint2d(point).applyMatrix4(blockTransform)
+          )
         )
       }
     }
@@ -568,11 +572,11 @@ export abstract class AcDbDimension extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     const blockTableRecord = this.getDimBlockTableRecord()
     if (!blockTableRecord) return []
     const matrix = this.getFullDimBlockTransform()
-    const primitives: AcGeIntersectPrimitive[] = []
+    const primitives: GeometryIntersectPrimitive[] = []
     for (const entity of blockTableRecord.newIterator()) {
       primitives.push(
         ...acdbTransformIntersectPrimitives(
@@ -587,8 +591,8 @@ export abstract class AcDbDimension extends AcDbEntity {
   /**
    * Computes transformed geometric extents from the anonymous dimension block.
    */
-  protected getDimBlockGeometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  protected getDimBlockGeometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     const blockTableRecord = this.getDimBlockTableRecord()
     if (!blockTableRecord) return box
 
@@ -605,14 +609,14 @@ export abstract class AcDbDimension extends AcDbEntity {
    * the supplied WCS definition points and user-placed text position.
    */
   protected getGeometricExtentsFromDimBlockOrPoints(
-    points: AcGePoint2dLike[]
-  ): AcGeBox3d {
+    points: GeometryPoint2dLike[]
+  ): GeometryBox3d {
     const blockExtents = this.getDimBlockGeometricExtents()
     if (!blockExtents.isEmpty()) {
       return blockExtents
     }
 
-    const box = new AcGeBox3d()
+    const box = new GeometryBox3d()
     for (const point of points) {
       box.expandByPoint(point)
     }
@@ -636,7 +640,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Subclasses override this to expose their editable definition points,
    * matching AutoCAD `AcDbDimension::getGripPoints` behavior.
    */
-  protected collectDimensionDefinitionGripPoints(): AcGePoint2d[] {
+  protected collectDimensionDefinitionGripPoints(): GeometryPoint2d[] {
     return []
   }
 
@@ -656,7 +660,7 @@ export abstract class AcDbDimension extends AcDbEntity {
   /**
    * Moves dimension definition and text grip points by the given offset.
    */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     const definitionPoints = this.collectDimensionDefinitionGripPoints()
     acdbForEachGripIndex(indices, index => {
       if (index >= 0 && index < definitionPoints.length) {
@@ -769,7 +773,7 @@ export abstract class AcDbDimension extends AcDbEntity {
 
   protected createPoint2dProperties(
     prefix: string,
-    getPoint: () => AcGePoint2d
+    getPoint: () => GeometryPoint2d
   ): AcDbEntityRuntimeProperty<number>[] {
     return [
       this.createProperty(
@@ -804,8 +808,10 @@ export abstract class AcDbDimension extends AcDbEntity {
       return dimBlockTransform
     }
 
-    const extrusion = new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
-    return new AcGeMatrix3d().multiplyMatrices(extrusion, dimBlockTransform)
+    const extrusion = new GeometryMatrix3d().setFromExtrusionDirection(
+      this._normal
+    )
+    return new GeometryMatrix3d().multiplyMatrices(extrusion, dimBlockTransform)
   }
 
   protected get arrowScaleFactor() {
@@ -897,15 +903,15 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns Return the point `p3`.
    */
   protected findPointOnLine1(
-    p1: AcGePoint2d,
-    p2: AcGePoint2d,
+    p1: GeometryPoint2d,
+    p2: GeometryPoint2d,
     length: number
-  ): AcGePoint2d {
+  ): GeometryPoint2d {
     // Calculate the direction vector from p1 to p2
-    const direction = new AcGePoint2d().subVectors(p2, p1).normalize()
+    const direction = new GeometryPoint2d().subVectors(p2, p1).normalize()
 
     // Calculate p3 by moving in the direction from p2 by the specified length
-    const p3 = new AcGePoint2d(p2).addScaledVector(direction, length)
+    const p3 = new GeometryPoint2d(p2).addScaledVector(direction, length)
 
     return p3
   }
@@ -920,10 +926,10 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns Return the point `p2`.
    */
   protected findPointOnLine2(
-    p1: AcGePoint2dLike,
+    p1: GeometryPoint2dLike,
     angle: number,
     length: number
-  ): AcGePoint2dLike {
+  ): GeometryPoint2dLike {
     // Calculate the new point p2
     const x = p1.x + length * Math.cos(angle)
     const y = p1.y + length * Math.sin(angle)
@@ -934,7 +940,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * Adjust start point and end point of extension line according current dimension style
    * @param extensionLine Input extension line to adjust its start point and end point
    */
-  protected adjustExtensionLine(extensionLine: AcGeLine2d) {
+  protected adjustExtensionLine(extensionLine: GeometryLine2d) {
     const dimStyle = this.dimensionStyle
     extensionLine.extend(dimStyle.dimexe)
     extensionLine.extend(-dimStyle.dimexo, true)
@@ -1004,7 +1010,7 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @returns A transformation matrix that positions the anonymous dimension
    *          block in OCS space, excluding extrusion.
    */
-  private computeDimBlockTransform(): AcGeMatrix3d {
+  private computeDimBlockTransform(): GeometryMatrix3d {
     const blockTableRecord = this.dimBlockId
       ? this.database.tables.blockTable.getAt(this.dimBlockId)
       : undefined
@@ -1018,7 +1024,7 @@ export abstract class AcDbDimension extends AcDbEntity {
     // Move block geometry so that the block base point
     // coincides with the origin of dimension OCS.
     // ------------------------------------------------------------
-    const mBase = new AcGeMatrix3d().makeTranslation(
+    const mBase = new GeometryMatrix3d().makeTranslation(
       -basePoint.x,
       -basePoint.y,
       0
@@ -1030,13 +1036,13 @@ export abstract class AcDbDimension extends AcDbEntity {
     // This is the relative offset of the dimension block
     // in WCS, applied in dimension OCS coordinates.
     // ------------------------------------------------------------
-    const mInsert = new AcGeMatrix3d().makeTranslation(
+    const mInsert = new GeometryMatrix3d().makeTranslation(
       this._dimBlockPosition.x,
       this._dimBlockPosition.y,
       0
     )
 
-    const mRot = new AcGeMatrix3d().makeRotationZ(this._dimBlockRotation)
+    const mRot = new GeometryMatrix3d().makeRotationZ(this._dimBlockRotation)
 
     // ------------------------------------------------------------
     // Final matrix (OCS space only):
@@ -1050,14 +1056,14 @@ export abstract class AcDbDimension extends AcDbEntity {
     // - This matrix operates entirely in dimension OCS
     // - The extrusion / normal is intentionally excluded
     // ------------------------------------------------------------
-    return new AcGeMatrix3d().multiplyMatrices(
+    return new GeometryMatrix3d().multiplyMatrices(
       mInsert,
-      new AcGeMatrix3d().multiplyMatrices(mRot, mBase)
+      new GeometryMatrix3d().multiplyMatrices(mRot, mBase)
     )
   }
 
   /**
    * Subclasses can override this to transform their own definition points.
    */
-  protected subTransformBy(_matrix: AcGeMatrix3d) {}
+  protected subTransformBy(_matrix: GeometryMatrix3d) {}
 }

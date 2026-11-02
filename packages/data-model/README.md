@@ -97,15 +97,15 @@ const linetypeTable = database.getLinetypeTable();
 
 ### Entity Creation
 ```typescript
-import { AcDbLine, AcDbCircle, AcGePoint2d } from '@mlightcad/data-model';
+import { AcDbLine, AcDbCircle, GeometryPoint2d } from '@mlightcad/data-model';
 
 // Create a line entity
-const startPoint = new AcGePoint2d(0, 0);
-const endPoint = new AcGePoint2d(10, 10);
+const startPoint = new GeometryPoint2d(0, 0);
+const endPoint = new GeometryPoint2d(10, 10);
 const line = new AcDbLine(startPoint, endPoint);
 
 // Create a circle entity
-const center = new AcGePoint2d(0, 0);
+const center = new GeometryPoint2d(0, 0);
 const radius = 5;
 const circle = new AcDbCircle(center, radius);
 
@@ -132,10 +132,10 @@ layerTable.add(layerRecord);
 
 ### Block Operations
 ```typescript
-import { AcDbBlockReference, AcGePoint2d } from '@mlightcad/data-model';
+import { AcDbBlockReference, GeometryPoint2d } from '@mlightcad/data-model';
 
 // Create a block reference
-const insertionPoint = new AcGePoint2d(0, 0);
+const insertionPoint = new GeometryPoint2d(0, 0);
 const blockRef = new AcDbBlockReference(insertionPoint, 'MyBlock');
 
 // Set block properties
@@ -161,12 +161,12 @@ guide in the cad-viewer wiki.
 
 ### Dimension Creation
 ```typescript
-import { AcDbAlignedDimension, AcGePoint2d } from '@mlightcad/data-model';
+import { AcDbAlignedDimension, GeometryPoint2d } from '@mlightcad/data-model';
 
 // Create an aligned dimension
-const defPoint1 = new AcGePoint2d(0, 0);
-const defPoint2 = new AcGePoint2d(10, 0);
-const textPosition = new AcGePoint2d(5, 5);
+const defPoint1 = new GeometryPoint2d(0, 0);
+const defPoint2 = new GeometryPoint2d(10, 0);
+const textPosition = new GeometryPoint2d(5, 5);
 
 const dimension = new AcDbAlignedDimension(defPoint1, defPoint2, textPosition);
 dimension.setDimensionText('10.0');

@@ -1,8 +1,8 @@
 import {
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../../view'
@@ -60,7 +60,7 @@ import {
  */
 export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
   /** Stores last confirmed WCS point */
-  lastPoint: AcGePoint2d | null = null
+  lastPoint: GeometryPoint2d | null = null
 
   /** Inject styles only once */
   private static inputStylesInjected = false
@@ -77,10 +77,10 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
   /** Stores last confirmed osnap point */
   private lastOsnapPoint?: AcEdOsnapPoint
   /** Stores last dynamic WCS point used for preview updates */
-  private lastDynamicPoint?: AcGePoint2dLike
+  private lastDynamicPoint?: GeometryPoint2dLike
 
   /** Reference point for ORTHOMODE cursor locking */
-  private orthoReferencePoint?: AcGePoint2dLike
+  private orthoReferencePoint?: GeometryPoint2dLike
 
   /** Callbacks */
   private onCommit?: AcEdFloatingInputCommitCallback<T>
@@ -273,7 +273,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
     this.injectInputCSS()
   }
 
-  override showAt(pos: AcGePoint2dLike) {
+  override showAt(pos: GeometryPoint2dLike) {
     if (this.disposed) return
     this.updateDynamicInputDisplay()
     if (!this.suppressDisplay) {
@@ -604,7 +604,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
       this.applyClientSample(clientX, clientY)
     }
     const wcsPos = this.lastDynamicPoint
-      ? new AcGePoint2d(this.lastDynamicPoint.x, this.lastDynamicPoint.y)
+      ? new GeometryPoint2d(this.lastDynamicPoint.x, this.lastDynamicPoint.y)
       : this.getPosition({ x: clientX, y: clientY })
     const defaults = this.getDynamicValue(wcsPos)
     const committed = this.onCommit?.(defaults.value, wcsPos) ?? true
@@ -720,7 +720,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
    * Rubber-band origin after the prompt has started, if any.
    * Used by the mobile session panel for length / angle / Δ metrics.
    */
-  get sessionBasePoint(): AcGePoint2dLike | undefined {
+  get sessionBasePoint(): GeometryPoint2dLike | undefined {
     return this.rubberBand ? this.orthoReferencePoint : undefined
   }
 
@@ -729,7 +729,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
    * Used by two-point distance acquisition when the first point is picked by click.
    */
   setBasePoint(
-    basePoint: AcGePoint2dLike,
+    basePoint: GeometryPoint2dLike,
     options?: {
       color?: string
       showBaseLineOnly?: boolean
@@ -747,7 +747,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
     this.requestPreviewRefresh()
   }
 
-  private updateDynamicPreview(wcsPos: AcGePoint2dLike) {
+  private updateDynamicPreview(wcsPos: GeometryPoint2dLike) {
     this.lastDynamicPoint = { x: wcsPos.x, y: wcsPos.y }
     const defaults = this.getDynamicValue(wcsPos)
 
@@ -769,7 +769,7 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
   /**
    * Gets the current cursor position in WCS, considering OSNAP.
    */
-  private getPosition(e: AcGePoint2dLike) {
+  private getPosition(e: GeometryPoint2dLike) {
     // Update floating UI position (screen space)
     const mousePos = super.setPosition(e)
 

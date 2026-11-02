@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -23,7 +23,7 @@ type CopyMode = 'Single' | 'Multiple'
 
 interface CopyArrayPlacement {
   copyCount: number
-  endPoint: AcGePoint2d
+  endPoint: GeometryPoint2d
   fitMode: boolean
 }
 
@@ -72,10 +72,10 @@ export class AcApCopyCmd extends AcEdCommand {
    * @returns Translation vector that moves a clone from base to target.
    */
   private computeDisplacement(
-    basePoint: AcGePoint2dLike,
-    targetPoint: AcGePoint2dLike
+    basePoint: GeometryPoint2dLike,
+    targetPoint: GeometryPoint2dLike
   ) {
-    return new AcGePoint2d(targetPoint).sub(basePoint)
+    return new GeometryPoint2d(targetPoint).sub(basePoint)
   }
 
   /**
@@ -88,7 +88,7 @@ export class AcApCopyCmd extends AcEdCommand {
    * @returns Displacement assigned to the requested copy index.
    */
   private scaleDisplacement(
-    displacement: AcGePoint2dLike,
+    displacement: GeometryPoint2dLike,
     factor: number,
     copyCount: number,
     fitMode: boolean
@@ -126,7 +126,7 @@ export class AcApCopyCmd extends AcEdCommand {
    */
   private buildCopies(
     sourceEntities: AcDbEntity[],
-    displacement: AcGePoint2dLike,
+    displacement: GeometryPoint2dLike,
     copyCount: number = 1,
     fitMode: boolean = false
   ) {
@@ -142,7 +142,7 @@ export class AcApCopyCmd extends AcEdCommand {
         copyCount,
         fitMode
       )
-      const matrix = new AcGeMatrix3d().makeTranslation(
+      const matrix = new GeometryMatrix3d().makeTranslation(
         stepDisplacement.x,
         stepDisplacement.y,
         0
@@ -202,7 +202,7 @@ export class AcApCopyCmd extends AcEdCommand {
   private async promptArrayPlacement(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint2d
+    basePoint: GeometryPoint2d
   ): Promise<CopyArrayPlacement | undefined> {
     const itemCountPrompt = new AcEdPromptIntegerOptions(
       AcApI18n.t('jig.copy.arrayItemCount'),
@@ -241,7 +241,7 @@ export class AcApCopyCmd extends AcEdCommand {
       if (pointResult.status === AcEdPromptStatus.OK) {
         return {
           copyCount,
-          endPoint: new AcGePoint2d(pointResult.value!),
+          endPoint: new GeometryPoint2d(pointResult.value!),
           fitMode: false
         }
       }
@@ -269,7 +269,7 @@ export class AcApCopyCmd extends AcEdCommand {
         if (fitResult.status === AcEdPromptStatus.OK) {
           return {
             copyCount,
-            endPoint: new AcGePoint2d(fitResult.value!),
+            endPoint: new GeometryPoint2d(fitResult.value!),
             fitMode: true
           }
         }
@@ -291,7 +291,7 @@ export class AcApCopyCmd extends AcEdCommand {
   private async executeCopyLoop(
     context: AcApContext,
     sourceEntities: AcDbEntity[],
-    basePoint: AcGePoint2d,
+    basePoint: GeometryPoint2d,
     copyMode: CopyMode,
     useDisplacementPrompt: boolean = false
   ) {
@@ -378,7 +378,7 @@ export class AcApCopyCmd extends AcEdCommand {
     }
 
     let copyMode = AcApCopyCmd._defaultMode
-    let basePoint: AcGePoint2d | undefined
+    let basePoint: GeometryPoint2d | undefined
     let useDisplacementPrompt = false
 
     while (!basePoint) {
@@ -395,12 +395,12 @@ export class AcApCopyCmd extends AcEdCommand {
       const pointResult =
         await AcApDocManager.instance.editor.getPoint(pointPrompt)
       if (pointResult.status === AcEdPromptStatus.OK) {
-        basePoint = new AcGePoint2d(pointResult.value!)
+        basePoint = new GeometryPoint2d(pointResult.value!)
         break
       }
 
       if (pointResult.status === AcEdPromptStatus.None) {
-        basePoint = new AcGePoint2d(0, 0)
+        basePoint = new GeometryPoint2d(0, 0)
         useDisplacementPrompt = true
         break
       }
@@ -412,7 +412,7 @@ export class AcApCopyCmd extends AcEdCommand {
 
       const keyword = pointResult.stringResult ?? ''
       if (keyword === 'Displacement') {
-        basePoint = new AcGePoint2d(0, 0)
+        basePoint = new GeometryPoint2d(0, 0)
         useDisplacementPrompt = true
         break
       }

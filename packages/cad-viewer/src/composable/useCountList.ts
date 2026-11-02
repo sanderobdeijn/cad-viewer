@@ -7,8 +7,8 @@ import {
   AcDbBlockReference,
   AcDbEntity,
   AcDbObjectId,
-  AcGeBox2d,
-  AcGeMatrix3d
+  GeometryBox2d,
+  GeometryMatrix3d
 } from '@mlightcad/data-model'
 
 /** One counted block instance (top-level or nested). */
@@ -32,10 +32,10 @@ export interface MlCountListGroup {
 }
 
 /** Optional rectangular count area in WCS. */
-export type MlCountListArea = AcGeBox2d | null
+export type MlCountListArea = GeometryBox2d | null
 
 type InsertionTransformProvider = {
-  getFullInsertionTransform?: () => AcGeMatrix3d
+  getFullInsertionTransform?: () => GeometryMatrix3d
 }
 
 function isBlockReference(entity: AcDbEntity): entity is AcDbBlockReference {
@@ -52,7 +52,7 @@ function isCountableBlockName(blockName: string): boolean {
 }
 
 function applyMatrix(
-  matrix: AcGeMatrix3d,
+  matrix: GeometryMatrix3d,
   point: { x: number; y: number; z: number }
 ) {
   const e = matrix.elements
@@ -63,7 +63,7 @@ function applyMatrix(
   }
 }
 
-function getInsertionTransform(entity: AcDbBlockReference): AcGeMatrix3d {
+function getInsertionTransform(entity: AcDbBlockReference): GeometryMatrix3d {
   const withTransform = entity as unknown as InsertionTransformProvider
   if (typeof withTransform.getFullInsertionTransform === 'function') {
     return withTransform.getFullInsertionTransform()
@@ -113,7 +113,7 @@ export function collectCountListInstances(
   const walkNested = (
     blockName: string,
     parentId: AcDbObjectId,
-    parentMatrix: AcGeMatrix3d,
+    parentMatrix: GeometryMatrix3d,
     depth: number
   ) => {
     if (depth > 16) return
@@ -222,7 +222,7 @@ export function zoomToCountListInstances(
 ): boolean {
   const view = AcApDocManager.instance.curView
   const db = AcApDocManager.instance.curDocument.database
-  const box = new AcGeBox2d()
+  const box = new GeometryBox2d()
   let hasPoint = false
 
   for (const id of ids) {
@@ -264,7 +264,7 @@ export function zoomToCountListInstances(
 export async function promptCountListArea(
   firstCornerMessage: string,
   secondCornerMessage: string
-): Promise<AcGeBox2d | null | undefined> {
+): Promise<GeometryBox2d | null | undefined> {
   const boxOptions = new AcEdPromptBoxOptions(
     firstCornerMessage,
     secondCornerMessage

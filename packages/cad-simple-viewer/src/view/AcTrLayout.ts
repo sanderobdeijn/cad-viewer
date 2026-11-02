@@ -1,4 +1,8 @@
-import { AcDbObjectId, AcGeBox2d, AcGeBox3d } from '@mlightcad/data-model'
+import {
+  AcDbObjectId,
+  GeometryBox2d,
+  GeometryBox3d
+} from '@mlightcad/data-model'
 import {
   AcTrDirectEntityMeta,
   AcTrEntity,
@@ -101,7 +105,7 @@ export class AcTrLayout {
   /** Cached layout bounds derived from packed batch vertex buffers */
   private _cachedBox: THREE.Box3
   /** Cached smart-extents box; cleared whenever layout geometry extents change */
-  private _cachedSmartExtents: AcGeBox2d | undefined
+  private _cachedSmartExtents: GeometryBox2d | undefined
   /**
    * Bumped whenever {@link _cachedSmartExtents} is cleared so in-flight async
    * smart-extents work can detect stale results and skip writing the cache.
@@ -136,9 +140,7 @@ export class AcTrLayout {
    * layers created after {@link setCompareDisplay} so late layer groups
    * still receive role tints.
    */
-  private _compareDisplayOptions?: Parameters<
-    AcTrLayer['setCompareDisplay']
-  >[0]
+  private _compareDisplayOptions?: Parameters<AcTrLayer['setCompareDisplay']>[0]
 
   /**
    * Creates a new layout instance.
@@ -674,7 +676,7 @@ export class AcTrLayout {
   computeEntityPreviewBounds2d(
     entityIds: AcDbObjectId[],
     margin = 1.1
-  ): AcGeBox2d | null {
+  ): GeometryBox2d | null {
     const box = this.computeEntityPreviewBoundsBox(entityIds)
     return AcTrEntityPreview.box3ToBounds2d(box, margin)
   }
@@ -932,7 +934,10 @@ export class AcTrLayout {
    * @param box - Input the query bounding box (2D or 3D)
    * @returns Return query results containing entity IDs and their bounds
    */
-  search(box: AcGeBox2d | AcGeBox3d, options?: AcTrSpatialSearchOptions) {
+  search(
+    box: GeometryBox2d | GeometryBox3d,
+    options?: AcTrSpatialSearchOptions
+  ) {
     return this._spatialIndex.search(
       {
         minX: box.min.x,
@@ -982,7 +987,7 @@ export class AcTrLayout {
   /**
    * Returns the cached smart-extents box when still valid for this layout.
    */
-  get cachedSmartExtents(): AcGeBox2d | undefined {
+  get cachedSmartExtents(): GeometryBox2d | undefined {
     return this._cachedSmartExtents
   }
 
@@ -999,7 +1004,7 @@ export class AcTrLayout {
    * Only write when {@link smartExtentsGeneration} still matches the value
    * captured before the async computation started.
    */
-  set cachedSmartExtents(box: AcGeBox2d | undefined) {
+  set cachedSmartExtents(box: GeometryBox2d | undefined) {
     this._cachedSmartExtents = box
   }
 

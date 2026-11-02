@@ -1,8 +1,8 @@
 import {
   AcDbPolyline,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -37,7 +37,7 @@ type RectKeywordKey =
 type RectBuildInput =
   | {
       mode: 'corner'
-      secondPoint: AcGePoint2dLike
+      secondPoint: GeometryPoint2dLike
     }
   | {
       mode: 'dimensions'
@@ -54,7 +54,7 @@ interface RectSettings {
 }
 
 interface RectVertex {
-  point: AcGePoint2d
+  point: GeometryPoint2d
   bulge?: number
 }
 
@@ -86,28 +86,28 @@ function addDoubleKeyword(
 }
 
 function toWorldPoint(
-  origin: AcGePoint2dLike,
-  local: AcGePoint2dLike,
+  origin: GeometryPoint2dLike,
+  local: GeometryPoint2dLike,
   rotation: number
 ) {
   const cos = Math.cos(rotation)
   const sin = Math.sin(rotation)
-  return new AcGePoint2d(
+  return new GeometryPoint2d(
     origin.x + local.x * cos - local.y * sin,
     origin.y + local.x * sin + local.y * cos
   )
 }
 
 function toLocalVector(
-  origin: AcGePoint2dLike,
-  point: AcGePoint2dLike,
+  origin: GeometryPoint2dLike,
+  point: GeometryPoint2dLike,
   rotation: number
 ) {
   const dx = point.x - origin.x
   const dy = point.y - origin.y
   const cos = Math.cos(rotation)
   const sin = Math.sin(rotation)
-  return new AcGePoint2d(dx * cos + dy * sin, -dx * sin + dy * cos)
+  return new GeometryPoint2d(dx * cos + dy * sin, -dx * sin + dy * cos)
 }
 
 function normalizeNonNegative(value: number | undefined) {
@@ -117,10 +117,10 @@ function normalizeNonNegative(value: number | undefined) {
 
 function buildSquareVertices(lx: number, ly: number): RectVertex[] {
   return [
-    { point: new AcGePoint2d(0, 0) },
-    { point: new AcGePoint2d(lx, 0) },
-    { point: new AcGePoint2d(lx, ly) },
-    { point: new AcGePoint2d(0, ly) }
+    { point: new GeometryPoint2d(0, 0) },
+    { point: new GeometryPoint2d(lx, 0) },
+    { point: new GeometryPoint2d(lx, ly) },
+    { point: new GeometryPoint2d(0, ly) }
   ]
 }
 
@@ -137,18 +137,18 @@ function buildChamferVertices(
   const d1 = Math.min(normalizeNonNegative(distance1), absX / 2)
   const d2 = Math.min(normalizeNonNegative(distance2), absY / 2)
 
-  if (AcGeTol.isNonPositive(d1) && AcGeTol.isNonPositive(d2)) {
+  if (GeometryTol.isNonPositive(d1) && GeometryTol.isNonPositive(d2)) {
     return buildSquareVertices(lx, ly)
   }
 
-  const c1Out = new AcGePoint2d(sx * d1, 0)
-  const c1In = new AcGePoint2d(0, sy * d2)
-  const c2In = new AcGePoint2d(lx - sx * d1, 0)
-  const c2Out = new AcGePoint2d(lx, sy * d2)
-  const c3In = new AcGePoint2d(lx, ly - sy * d2)
-  const c3Out = new AcGePoint2d(lx - sx * d1, ly)
-  const c4In = new AcGePoint2d(sx * d1, ly)
-  const c4Out = new AcGePoint2d(0, ly - sy * d2)
+  const c1Out = new GeometryPoint2d(sx * d1, 0)
+  const c1In = new GeometryPoint2d(0, sy * d2)
+  const c2In = new GeometryPoint2d(lx - sx * d1, 0)
+  const c2Out = new GeometryPoint2d(lx, sy * d2)
+  const c3In = new GeometryPoint2d(lx, ly - sy * d2)
+  const c3Out = new GeometryPoint2d(lx - sx * d1, ly)
+  const c4In = new GeometryPoint2d(sx * d1, ly)
+  const c4Out = new GeometryPoint2d(0, ly - sy * d2)
 
   return [
     { point: c1Out },
@@ -170,7 +170,7 @@ function buildFilletVertices(
   const absX = Math.abs(lx)
   const absY = Math.abs(ly)
   const r = Math.min(normalizeNonNegative(radius), absX / 2, absY / 2)
-  if (AcGeTol.isNonPositive(r)) return buildSquareVertices(lx, ly)
+  if (GeometryTol.isNonPositive(r)) return buildSquareVertices(lx, ly)
 
   const chamferLike = buildChamferVertices(lx, ly, r, r)
   const orientation = lx * ly >= 0 ? 1 : -1
@@ -189,12 +189,12 @@ function resolveRectVertices(
   ly: number,
   settings: RectSettings
 ): RectVertex[] {
-  if (AcGeTol.isPositive(settings.filletRadius)) {
+  if (GeometryTol.isPositive(settings.filletRadius)) {
     return buildFilletVertices(lx, ly, settings.filletRadius)
   }
   if (
-    AcGeTol.isPositive(settings.chamferDist1) ||
-    AcGeTol.isPositive(settings.chamferDist2)
+    GeometryTol.isPositive(settings.chamferDist1) ||
+    GeometryTol.isPositive(settings.chamferDist2)
   ) {
     return buildChamferVertices(
       lx,
@@ -208,7 +208,7 @@ function resolveRectVertices(
 
 function updateRect(
   rect: AcDbPolyline,
-  firstPoint: AcGePoint2dLike,
+  firstPoint: GeometryPoint2dLike,
   input: RectBuildInput,
   settings: RectSettings
 ) {
@@ -227,7 +227,7 @@ function updateRect(
     ly = input.width
   }
 
-  if (AcGeTol.equalToZero(lx) || AcGeTol.equalToZero(ly)) return false
+  if (GeometryTol.equalToZero(lx) || GeometryTol.equalToZero(ly)) return false
 
   rect.reset(false)
   const vertices = resolveRectVertices(lx, ly, settings)
@@ -235,7 +235,7 @@ function updateRect(
 
   vertices.forEach((vertex, index) => {
     const worldPoint = toWorldPoint(firstPoint, vertex.point, settings.rotation)
-    if (AcGeTol.isPositive(segWidth)) {
+    if (GeometryTol.isPositive(segWidth)) {
       rect.addVertexAt(index, worldPoint, vertex.bulge, segWidth, segWidth)
     } else {
       rect.addVertexAt(index, worldPoint, vertex.bulge)
@@ -248,7 +248,7 @@ function updateRect(
 /**
  * Dynamic preview jig for RECT command.
  */
-export class AcApRectJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApRectJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Preview polyline entity reused across cursor updates.
    */
@@ -256,7 +256,7 @@ export class AcApRectJig extends AcEdPreviewJig<AcGePoint2dLike> {
   /**
    * Fixed first-corner point captured at jig start.
    */
-  private _firstPoint: AcGePoint2d
+  private _firstPoint: GeometryPoint2d
   /**
    * Lazily supplies latest rectangle settings (fillet/chamfer/rotation...).
    */
@@ -271,12 +271,12 @@ export class AcApRectJig extends AcEdPreviewJig<AcGePoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    start: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
     settingsProvider: () => RectSettings
   ) {
     super(view)
     this._rect = new AcDbPolyline()
-    this._firstPoint = new AcGePoint2d(start)
+    this._firstPoint = new GeometryPoint2d(start)
     this._settingsProvider = settingsProvider
   }
 
@@ -292,7 +292,7 @@ export class AcApRectJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param secondPoint - Dynamic opposite corner point under the cursor.
    */
-  update(secondPoint: AcGePoint2dLike) {
+  update(secondPoint: GeometryPoint2dLike) {
     updateRect(
       this._rect,
       this._firstPoint,
@@ -325,7 +325,7 @@ class AcApRectStaticJig<T> extends AcEdPreviewJig<T> {
    */
   constructor(
     view: AcEdBaseView,
-    firstPoint: AcGePoint2dLike,
+    firstPoint: GeometryPoint2dLike,
     input: RectBuildInput,
     settings: RectSettings
   ) {
@@ -362,7 +362,7 @@ function cloneRectSettings(settings: RectSettings): RectSettings {
 }
 
 function isPositive(value: number | undefined) {
-  return Number.isFinite(value ?? NaN) && AcGeTol.isPositive(value ?? 0)
+  return Number.isFinite(value ?? NaN) && GeometryTol.isPositive(value ?? 0)
 }
 
 /**
@@ -477,7 +477,7 @@ export class AcApRectCmd extends AcEdCommand {
    */
   private async promptSecondInput(
     context: AcApContext,
-    firstPoint: AcGePoint2dLike,
+    firstPoint: GeometryPoint2dLike,
     settings: RectSettings
   ) {
     let finalInput: RectBuildInput | undefined
@@ -513,7 +513,7 @@ export class AcApRectCmd extends AcEdCommand {
         addKeyword(prompt, 'rotation')
         prompt.useDashedLine = false
         prompt.useBasePoint = true
-        prompt.basePoint = new AcGePoint2d(firstPoint)
+        prompt.basePoint = new GeometryPoint2d(firstPoint)
         prompt.jig = new AcApRectJig(context.view, firstPoint, () => settings)
         return prompt
       }
@@ -663,7 +663,7 @@ export class AcApRectCmd extends AcEdCommand {
    */
   private async promptRotation(
     context: AcApContext,
-    firstPoint: AcGePoint2dLike,
+    firstPoint: GeometryPoint2dLike,
     settings: RectSettings
   ) {
     const prompt = new AcEdPromptAngleOptions(
@@ -671,7 +671,7 @@ export class AcApRectCmd extends AcEdCommand {
     )
     prompt.useBasePoint = true
     prompt.useDashedLine = true
-    prompt.basePoint = new AcGePoint2d(firstPoint)
+    prompt.basePoint = new GeometryPoint2d(firstPoint)
     prompt.allowNegative = true
     prompt.allowZero = true
     prompt.jig = new AcApRectStaticJig<number>(
@@ -696,7 +696,7 @@ export class AcApRectCmd extends AcEdCommand {
    */
   private async promptDimensions(
     context: AcApContext,
-    firstPoint: AcGePoint2dLike,
+    firstPoint: GeometryPoint2dLike,
     settings: RectSettings
   ) {
     const seedInput: RectBuildInput = {
@@ -743,7 +743,7 @@ export class AcApRectCmd extends AcEdCommand {
    */
   private async promptArea(
     context: AcApContext,
-    firstPoint: AcGePoint2dLike,
+    firstPoint: GeometryPoint2dLike,
     settings: RectSettings
   ) {
     const area = await this.promptPositiveDouble(

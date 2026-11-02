@@ -1,9 +1,8 @@
 import {
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint2dLike,
-  AcGiMTextAttachmentPoint
-} from '@mlightcad/data-model'
+  AcGiMTextAttachmentPoint,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 import {
   MTextInputBox,
   type MTextToolbarColorPickerFactory,
@@ -96,7 +95,7 @@ export interface AcEdMTextEditorResult {
   /** Final MTEXT contents (including inline formatting codes). */
   contents: string
   /** Final MTEXT insertion location in world coordinates. */
-  location: AcGePoint2dLike
+  location: GeometryPoint2dLike
   /** Final text box width in world units. */
   width: number
   /** Final text box height in world units. */
@@ -114,7 +113,7 @@ export interface AcEdMTextEditorOptions {
   /** Active 2D view where the editor overlay and text box are rendered. */
   view: AcTrView2d
   /** Insertion location (top-left anchor) in world coordinates. */
-  location: AcGePoint2dLike
+  location: GeometryPoint2dLike
   /**
    * Initial MTEXT attachment (DXF 71). When omitted, the editor uses top-left
    * until the user changes justify in the ribbon.

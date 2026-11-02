@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import {
@@ -88,7 +88,7 @@ describe('AcTrBatchedGroup INSERT preview subset', () => {
       context
     )
     const group = new AcTrGroup([titleLine], context)
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
 
     const attribute = createLine(
       'attr-1',
@@ -128,7 +128,7 @@ describe('AcTrBatchedGroup INSERT preview subset', () => {
       context
     )
     const group = new AcTrGroup([titleLine], context)
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
     group.objectId = INSERT_ID
     group.layerName = '图框层'
     group.visible = true

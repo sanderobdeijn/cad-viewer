@@ -1,7 +1,7 @@
-import { AcGeVector2dLike } from '@mlightcad/geometry-engine'
+import { GeometryVector2dLike } from '@mlightcad/geometry-engine'
 
 /** A 2D or 3D point that a grip move can offset in place. */
-type AcGeMovablePoint = { add(offset: AcGeVector2dLike): unknown }
+type GeometryMovablePoint = { add(offset: GeometryVector2dLike): unknown }
 
 /**
  * Invokes a grip move handler for each valid grip index.
@@ -22,8 +22,8 @@ export function acdbForEachGripIndex(
  */
 export function acdbMovePrimaryGripPointAt(
   indices: readonly number[],
-  offset: AcGeVector2dLike,
-  point: AcGeMovablePoint
+  offset: GeometryVector2dLike,
+  point: GeometryMovablePoint
 ) {
   acdbForEachGripIndex(indices, index => {
     if (index === 0) {
@@ -38,7 +38,7 @@ export function acdbMovePrimaryGripPointAt(
 export function acdbMovePolyline2dVertexAt(
   vertices: Array<{ x: number; y: number }>,
   index: number,
-  offset: AcGeVector2dLike
+  offset: GeometryVector2dLike
 ) {
   const vertex = vertices[index]
   if (!vertex) return
@@ -51,8 +51,8 @@ export function acdbMovePolyline2dVertexAt(
  */
 export function acdbMovePointArrayGripAt(
   indices: readonly number[],
-  offset: AcGeVector2dLike,
-  points: readonly AcGeMovablePoint[]
+  offset: GeometryVector2dLike,
+  points: readonly GeometryMovablePoint[]
 ) {
   acdbForEachGripIndex(indices, index => {
     const point = points[index]

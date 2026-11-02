@@ -1,7 +1,7 @@
 import {
-  AcGeArea2d,
-  AcGePoint2d,
-  AcGePolyline2d
+  GeometryArea2d,
+  GeometryPoint2d,
+  GeometryPolyline2d
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
@@ -18,12 +18,12 @@ function createRectangularArea(
   minY: number,
   maxX: number,
   maxY: number
-): AcGeArea2d {
+): GeometryArea2d {
   const loop = [
-    new AcGePoint2d(minX, minY),
-    new AcGePoint2d(maxX, minY),
-    new AcGePoint2d(maxX, maxY),
-    new AcGePoint2d(minX, maxY)
+    new GeometryPoint2d(minX, minY),
+    new GeometryPoint2d(maxX, minY),
+    new GeometryPoint2d(maxX, maxY),
+    new GeometryPoint2d(minX, maxY)
   ]
 
   const loops = [loop]
@@ -33,7 +33,7 @@ function createRectangularArea(
     buildHierarchy: () => ({
       children: [{ index: 0, children: [] }]
     })
-  } as unknown as AcGeArea2d
+  } as unknown as GeometryArea2d
 }
 
 function rectPolyline(
@@ -41,13 +41,13 @@ function rectPolyline(
   y: number,
   w: number,
   h: number
-): AcGePolyline2d {
-  return new AcGePolyline2d(
+): GeometryPolyline2d {
+  return new GeometryPolyline2d(
     [
-      new AcGePoint2d(x, y),
-      new AcGePoint2d(x + w, y),
-      new AcGePoint2d(x + w, y + h),
-      new AcGePoint2d(x, y + h)
+      new GeometryPoint2d(x, y),
+      new GeometryPoint2d(x + w, y),
+      new GeometryPoint2d(x + w, y + h),
+      new GeometryPoint2d(x, y + h)
     ],
     true
   )
@@ -113,7 +113,6 @@ describe('AcTrPolygon wcsBbox', () => {
 })
 
 describe('AcTrPolygon origin-shift', () => {
-
   it('origin-shifts solid fills so float32 vertices stay local (#724)', () => {
     const polygon = new AcTrPolygon(
       createRectangularArea(5, 10, 25, 30),
@@ -139,19 +138,19 @@ describe('AcTrPolygon self-intersecting fill loops', () => {
     // the long left edge crosses the bottom ledge, so naive earcut would
     // cover (1425, 640) which lies outside the even-odd boundary.
     const loop = [
-      new AcGePoint2d(1439.03, 691.02),
-      new AcGePoint2d(1439.03, 628.96),
-      new AcGePoint2d(1418.03, 628.96),
-      new AcGePoint2d(1418.03, 627.46),
-      new AcGePoint2d(1435.03, 627.46),
-      new AcGePoint2d(1435.03, 688.53)
+      new GeometryPoint2d(1439.03, 691.02),
+      new GeometryPoint2d(1439.03, 628.96),
+      new GeometryPoint2d(1418.03, 628.96),
+      new GeometryPoint2d(1418.03, 627.46),
+      new GeometryPoint2d(1435.03, 627.46),
+      new GeometryPoint2d(1435.03, 688.53)
     ]
     const area = {
       tessellate: () => [loop],
       buildHierarchy: () => ({
         children: [{ index: 0, children: [] }]
       })
-    } as unknown as AcGeArea2d
+    } as unknown as GeometryArea2d
 
     const polygon = new AcTrPolygon(
       area,
@@ -171,25 +170,29 @@ describe('AcTrPolygon self-intersecting outer with holes', () => {
     // Bow-tie outer (self-intersecting) → two triangular lobes. A hole sits only
     // in the right lobe; the left lobe must stay solid.
     const outer = [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(10, 10),
-      new AcGePoint2d(10, 0),
-      new AcGePoint2d(0, 10)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(10, 10),
+      new GeometryPoint2d(10, 0),
+      new GeometryPoint2d(0, 10)
     ]
     const hole = [
-      new AcGePoint2d(7, 3),
-      new AcGePoint2d(9, 3),
-      new AcGePoint2d(9, 5),
-      new AcGePoint2d(7, 5)
+      new GeometryPoint2d(7, 3),
+      new GeometryPoint2d(9, 3),
+      new GeometryPoint2d(9, 5),
+      new GeometryPoint2d(7, 5)
     ]
     const area = {
       tessellate: () => [outer, hole],
       buildHierarchy: () => ({
         children: [{ index: 0, children: [{ index: 1, children: [] }] }]
       })
-    } as unknown as AcGeArea2d
+    } as unknown as GeometryArea2d
 
-    const polygon = new AcTrPolygon(area, defaultTraits, new AcTrRenderContext())
+    const polygon = new AcTrPolygon(
+      area,
+      defaultTraits,
+      new AcTrRenderContext()
+    )
     polygon.updateMatrixWorld(true)
 
     expect(isFilledAt(polygon, 8, 4)).toBe(false) // inside hole (right lobe)
@@ -201,13 +204,17 @@ describe('AcTrPolygon self-intersecting outer with holes', () => {
 describe('AcTrPolygon overlapping hole merge (#744)', () => {
   it('keeps openings open when three hole loops overlap in a chain', () => {
     // Outer 100x100; hole A and C apart; hole B overlaps both (A–B–C chain).
-    const area = new AcGeArea2d()
+    const area = new GeometryArea2d()
     area.add(rectPolyline(0, 0, 100, 100))
     area.add(rectPolyline(10, 10, 20, 20)) // A
     area.add(rectPolyline(50, 10, 20, 20)) // C
     area.add(rectPolyline(20, 10, 40, 20)) // B
 
-    const polygon = new AcTrPolygon(area, defaultTraits, new AcTrRenderContext())
+    const polygon = new AcTrPolygon(
+      area,
+      defaultTraits,
+      new AcTrRenderContext()
+    )
     polygon.updateMatrixWorld(true)
 
     // Centers of A, the A∪B∪C merge, and C must all stay unfilled.
@@ -219,12 +226,16 @@ describe('AcTrPolygon overlapping hole merge (#744)', () => {
   })
 
   it('keeps two pairwise-overlapping holes open', () => {
-    const area = new AcGeArea2d()
+    const area = new GeometryArea2d()
     area.add(rectPolyline(0, 0, 100, 100))
     area.add(rectPolyline(10, 10, 30, 20))
     area.add(rectPolyline(30, 10, 30, 20))
 
-    const polygon = new AcTrPolygon(area, defaultTraits, new AcTrRenderContext())
+    const polygon = new AcTrPolygon(
+      area,
+      defaultTraits,
+      new AcTrRenderContext()
+    )
     polygon.updateMatrixWorld(true)
 
     expect(isFilledAt(polygon, 20, 20)).toBe(false)

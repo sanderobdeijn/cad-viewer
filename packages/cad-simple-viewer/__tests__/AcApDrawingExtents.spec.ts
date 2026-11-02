@@ -1,4 +1,8 @@
-import { AcGeBox2d, AcGeBox3d, AcGePoint2d } from '@mlightcad/data-model'
+import {
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryPoint2d
+} from '@mlightcad/data-model'
 
 import {
   box3dToBox2d,
@@ -7,13 +11,13 @@ import {
 
 describe('resolveDrawingExtents', () => {
   it('prefers drawable scene extents over stale header EXTMIN/EXTMAX', () => {
-    const scene = new AcGeBox2d(
-      new AcGePoint2d(-765, -680),
-      new AcGePoint2d(667, 506)
+    const scene = new GeometryBox2d(
+      new GeometryPoint2d(-765, -680),
+      new GeometryPoint2d(667, 506)
     )
-    const header = new AcGeBox3d(
-      new AcGePoint2d(-2669, -7979),
-      new AcGePoint2d(24573, 3859)
+    const header = new GeometryBox3d(
+      new GeometryPoint2d(-2669, -7979),
+      new GeometryPoint2d(24573, 3859)
     )
 
     const resolved = resolveDrawingExtents(
@@ -25,9 +29,9 @@ describe('resolveDrawingExtents', () => {
   })
 
   it('falls back to header extents when the scene has no geometry', () => {
-    const header = new AcGeBox3d(
-      new AcGePoint2d(10, 20),
-      new AcGePoint2d(30, 40)
+    const header = new GeometryBox3d(
+      new GeometryPoint2d(10, 20),
+      new GeometryPoint2d(30, 40)
     )
 
     const resolved = resolveDrawingExtents(
@@ -40,8 +44,8 @@ describe('resolveDrawingExtents', () => {
 
   it('returns undefined when both scene and header are empty', () => {
     const resolved = resolveDrawingExtents(
-      { getDrawingExtents: () => new AcGeBox2d() },
-      { extents: new AcGeBox3d() }
+      { getDrawingExtents: () => new GeometryBox2d() },
+      { extents: new GeometryBox3d() }
     )
 
     expect(resolved).toBeUndefined()

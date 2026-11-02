@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbViewportTableRecord } from '../src/database/AcDbViewportTableRecord'
@@ -22,7 +22,7 @@ function createDatabaseWithActiveVport(
   const database = new AcDbDatabase()
   const record = new AcDbViewportTableRecord()
   record.name = name
-  record.centerPoint = new AcGePoint2d(options.centerX, options.centerY)
+  record.centerPoint = new GeometryPoint2d(options.centerX, options.centerY)
   record.viewHeight = options.viewHeight
   if (options.aspectRatio != null) {
     setVportAspectRatio(record, options.aspectRatio)
@@ -49,19 +49,19 @@ describe('AcDbActiveModelView', () => {
 
   it('builds the view box from center, height, and canvas aspect ratio', () => {
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(100, 50)
+    record.centerPoint = new GeometryPoint2d(100, 50)
     record.viewHeight = 40
     setVportAspectRatio(record, 2)
 
     const box = record.modelViewBox(1.5)
-    expect(box).toBeInstanceOf(AcGeBox2d)
+    expect(box).toBeInstanceOf(GeometryBox2d)
     expect(box!.min).toEqual({ x: 70, y: 30 })
     expect(box!.max).toEqual({ x: 130, y: 70 })
   })
 
   it('falls back to stored VPORT aspect ratio when canvas aspect is invalid', () => {
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(100, 50)
+    record.centerPoint = new GeometryPoint2d(100, 50)
     record.viewHeight = 40
     setVportAspectRatio(record, 2)
 
@@ -72,7 +72,7 @@ describe('AcDbActiveModelView', () => {
 
   it('uses canvas aspect ratio when VPORT aspect ratio is missing', () => {
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(0, 0)
+    record.centerPoint = new GeometryPoint2d(0, 0)
     record.viewHeight = 10
 
     const box = record.modelViewBox(2)
@@ -86,8 +86,8 @@ describe('AcDbActiveModelView', () => {
     // view center is their sum (916026, -380826). Ignoring the target
     // framed empty space ~1.9M units away from the drawing.
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(165042, 1206723)
-    record.viewTarget = new AcGePoint2d(750984, -1587549)
+    record.centerPoint = new GeometryPoint2d(165042, 1206723)
+    record.viewTarget = new GeometryPoint2d(750984, -1587549)
     record.viewHeight = 40000
     setVportAspectRatio(record, 2)
 
@@ -98,7 +98,7 @@ describe('AcDbActiveModelView', () => {
 
   it('rotates the DCS view center by the view twist angle', () => {
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(100, 0)
+    record.centerPoint = new GeometryPoint2d(100, 0)
     record.viewTwistAngle = Math.PI / 2
     record.viewHeight = 10
     setVportAspectRatio(record, 1)
@@ -113,7 +113,7 @@ describe('AcDbActiveModelView', () => {
 
   it('returns undefined when view height is invalid', () => {
     const record = new AcDbViewportTableRecord()
-    record.centerPoint = new AcGePoint2d(0, 0)
+    record.centerPoint = new GeometryPoint2d(0, 0)
     record.viewHeight = 0
 
     expect(record.modelViewBox(1)).toBeUndefined()
@@ -139,7 +139,7 @@ describe('AcDbActiveModelView', () => {
       viewHeight: 62111,
       aspectRatio: 2.315
     })
-    const drawingExtents = new AcGeBox2d(
+    const drawingExtents = new GeometryBox2d(
       { x: -3500, y: -11024 },
       { x: 60760, y: 34416 }
     )
@@ -151,7 +151,7 @@ describe('AcDbActiveModelView', () => {
   })
 
   it('uses the same view box for DWG and DXF aspect ratios at equal canvas size', () => {
-    const drawingExtents = new AcGeBox2d(
+    const drawingExtents = new GeometryBox2d(
       { x: -3500, y: -11024 },
       { x: 60760, y: 34416 }
     )
@@ -199,7 +199,7 @@ describe('AcDbActiveModelView', () => {
       viewHeight: 1000,
       aspectRatio: 1.778
     })
-    const drawingExtents = new AcGeBox2d(
+    const drawingExtents = new GeometryBox2d(
       { x: -3500, y: -11024 },
       { x: 60760, y: 34416 }
     )
@@ -217,7 +217,7 @@ describe('AcDbActiveModelView', () => {
       viewHeight: 9000,
       aspectRatio: 1.778
     })
-    const drawingExtents = new AcGeBox2d(
+    const drawingExtents = new GeometryBox2d(
       { x: -3500, y: -11024 },
       { x: 60760, y: 34416 }
     )

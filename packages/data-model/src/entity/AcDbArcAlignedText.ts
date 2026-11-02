@@ -1,11 +1,11 @@
 import { AcCmColor } from '@mlightcad/common'
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -57,7 +57,7 @@ export enum AcDbArcTextPosition {
 /** One character of an {@link AcDbArcAlignedText}, placed on the arc. */
 export interface AcDbArcAlignedTextGlyph {
   text: string
-  position: AcGePoint2d
+  position: GeometryPoint2d
   rotation: number
 }
 
@@ -92,11 +92,11 @@ export class AcDbArcAlignedText extends AcDbEntity {
   private _offsetFromArc = 0
   private _rightOffset = 0
   private _leftOffset = 0
-  private _center = new AcGePoint2d()
+  private _center = new GeometryPoint2d()
   private _radius = 0
   private _startAngle = 0
   private _endAngle = 0
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _normal = new GeometryVector3d(0, 0, 1)
   private _characterSet = 0
   private _pitchAndFamily = 0
   private _isShx = false
@@ -187,10 +187,10 @@ export class AcDbArcAlignedText extends AcDbEntity {
   }
 
   /** Arc center in OCS (DXF group 10). */
-  get center(): AcGePoint2d {
+  get center(): GeometryPoint2d {
     return this._center
   }
-  set center(value: AcGePoint2dLike) {
+  set center(value: GeometryPoint2dLike) {
     this._center.copy(value)
   }
 
@@ -215,10 +215,10 @@ export class AcDbArcAlignedText extends AcDbEntity {
     this._endAngle = value
   }
 
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
@@ -413,7 +413,7 @@ export class AcDbArcAlignedText extends AcDbEntity {
       if (char === '\n') continue
       const mid = distance + width / 2
       const angle = this._startAngle + mid / radius
-      const local = new AcGePoint2d(
+      const local = new GeometryPoint2d(
         this._center.x + radius * Math.cos(angle),
         this._center.y + radius * Math.sin(angle)
       )
@@ -434,8 +434,8 @@ export class AcDbArcAlignedText extends AcDbEntity {
     return glyphs
   }
 
-  get geometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  get geometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     const glyphs = this.glyphPlacements()
     if (glyphs.length === 0) {
       box.expandByPoint(this._center)
@@ -450,10 +450,10 @@ export class AcDbArcAlignedText extends AcDbEntity {
       )
       const half = Math.max(width, height) / 2
       box.expandByPoint(
-        new AcGePoint2d(glyph.position.x - half, glyph.position.y - half)
+        new GeometryPoint2d(glyph.position.x - half, glyph.position.y - half)
       )
       box.expandByPoint(
-        new AcGePoint2d(glyph.position.x + half, glyph.position.y + half)
+        new GeometryPoint2d(glyph.position.x + half, glyph.position.y + half)
       )
     }
     return box
@@ -564,14 +564,14 @@ export class AcDbArcAlignedText extends AcDbEntity {
     )
   }
 
-  private extrusionMatrix(): AcGeMatrix3d {
-    if (this.isPlanarInWcs()) return new AcGeMatrix3d()
-    return new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
+  private extrusionMatrix(): GeometryMatrix3d {
+    if (this.isPlanarInWcs()) return new GeometryMatrix3d()
+    return new GeometryMatrix3d().setFromExtrusionDirection(this._normal)
   }
 
-  private rotationInWcs(rotation: number, extrusion: AcGeMatrix3d): number {
+  private rotationInWcs(rotation: number, extrusion: GeometryMatrix3d): number {
     if (this.isPlanarInWcs()) return rotation
-    const axis = new AcGeVector3d(Math.cos(rotation), Math.sin(rotation), 0)
+    const axis = new GeometryVector3d(Math.cos(rotation), Math.sin(rotation), 0)
     axis.transformDirection(extrusion)
     return Math.atan2(axis.y, axis.x)
   }

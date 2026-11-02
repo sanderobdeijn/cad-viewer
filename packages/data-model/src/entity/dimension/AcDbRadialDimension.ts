@@ -1,7 +1,7 @@
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
@@ -21,8 +21,8 @@ import { AcDbDimension } from './AcDbDimension'
  * ```typescript
  * // Create a radial dimension
  * const radialDim = new AcDbRadialDimension(
- *   new AcGePoint2d(0, 0),    // Center point
- *   new AcGePoint2d(5, 0),    // Point on curve
+ *   new GeometryPoint2d(0, 0),    // Center point
+ *   new GeometryPoint2d(5, 0),    // Point on curve
  *   2.0,                         // Leader length
  *   "5.0",                       // Dimension text
  *   "Standard"                   // Dimension style
@@ -39,9 +39,9 @@ export class AcDbRadialDimension extends AcDbDimension {
   static override typeName: string = 'RadialDimension'
 
   /** The center point of the curve being dimensioned */
-  private _center: AcGePoint2d
+  private _center: GeometryPoint2d
   /** The point where the dimension line intersects the curve being dimensioned */
-  private _chordPoint: AcGePoint2d
+  private _chordPoint: GeometryPoint2d
   /** The extension arc start angle in radians */
   private _extArcStartAngle: number
   /** The extension arc end angle in radians */
@@ -72,15 +72,15 @@ export class AcDbRadialDimension extends AcDbDimension {
    * ```typescript
    * // Create a radial dimension with default text and style
    * const radialDim = new AcDbRadialDimension(
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(5, 0),
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(5, 0),
    *   2.0
    * );
    *
    * // Create a radial dimension with custom text and style
    * const radialDim2 = new AcDbRadialDimension(
-   *   new AcGePoint2d(10, 10),
-   *   new AcGePoint2d(15, 10),
+   *   new GeometryPoint2d(10, 10),
+   *   new GeometryPoint2d(15, 10),
    *   3.0,
    *   "5.0",
    *   "Architectural"
@@ -88,15 +88,15 @@ export class AcDbRadialDimension extends AcDbDimension {
    * ```
    */
   constructor(
-    center: AcGePoint2dLike,
-    chordPoint: AcGePoint2dLike,
+    center: GeometryPoint2dLike,
+    chordPoint: GeometryPoint2dLike,
     leaderLength: number,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._center = new AcGePoint2d().copy(center)
-    this._chordPoint = new AcGePoint2d().copy(chordPoint)
+    this._center = new GeometryPoint2d().copy(center)
+    this._chordPoint = new GeometryPoint2d().copy(chordPoint)
     this._leaderLength = leaderLength
     this._extArcStartAngle = 0
     this._extArcEndAngle = 0
@@ -130,10 +130,10 @@ export class AcDbRadialDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * radialDim.center = new AcGePoint2d(0, 0);
+   * radialDim.center = new GeometryPoint2d(0, 0);
    * ```
    */
-  set center(value: AcGePoint2d) {
+  set center(value: GeometryPoint2d) {
     this._center.copy(value)
   }
 
@@ -159,10 +159,10 @@ export class AcDbRadialDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * radialDim.chordPoint = new AcGePoint2d(5, 0);
+   * radialDim.chordPoint = new GeometryPoint2d(5, 0);
    * ```
    */
-  set chordPoint(value: AcGePoint2d) {
+  set chordPoint(value: GeometryPoint2d) {
     this._chordPoint.copy(value)
   }
 
@@ -315,7 +315,7 @@ export class AcDbRadialDimension extends AcDbDimension {
   /**
    * @inheritdoc
    */
-  protected override subTransformBy(matrix: AcGeMatrix3d) {
+  protected override subTransformBy(matrix: GeometryMatrix3d) {
     this._center.applyMatrix4(matrix)
     this._chordPoint.applyMatrix4(matrix)
   }

@@ -1,5 +1,8 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
-import { AcGeVector3d, AcGeVector3dLike } from '@mlightcad/geometry-engine'
+import {
+  GeometryVector3d,
+  GeometryVector3dLike
+} from '@mlightcad/geometry-engine'
 
 import { AcDbObject } from '../base/AcDbObject'
 
@@ -42,7 +45,7 @@ export class AcDbMLeaderStyle extends AcDbObject {
   private _alignSpace: number
   private _blockId?: string
   private _blockColor: AcCmColor
-  private _blockScale: AcGeVector3d
+  private _blockScale: GeometryVector3d
   private _enableBlockScale: boolean
   private _blockRotation: number
   private _enableBlockRotation: boolean
@@ -88,7 +91,7 @@ export class AcDbMLeaderStyle extends AcDbObject {
     this._textAlignAlwaysLeft = false
     this._alignSpace = 0
     this._blockColor = new AcCmColor(AcCmColorMethod.ByBlock)
-    this._blockScale = new AcGeVector3d(1, 1, 1)
+    this._blockScale = new GeometryVector3d(1, 1, 1)
     this._enableBlockScale = true
     this._blockRotation = 0
     this._enableBlockRotation = false
@@ -583,7 +586,7 @@ export class AcDbMLeaderStyle extends AcDbObject {
   get blockScale() {
     return this._blockScale.clone()
   }
-  set blockScale(value: AcGeVector3dLike) {
+  set blockScale(value: GeometryVector3dLike) {
     this._blockScale.copy(value)
   }
 
@@ -594,7 +597,7 @@ export class AcDbMLeaderStyle extends AcDbObject {
   get blockContentScale() {
     return this.blockScale
   }
-  set blockContentScale(value: AcGeVector3dLike) {
+  set blockContentScale(value: GeometryVector3dLike) {
     this.blockScale = value
   }
 
@@ -840,4 +843,3 @@ export class AcDbMLeaderStyle extends AcDbObject {
     this._unknown2 = value
   }
 }
-

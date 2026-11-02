@@ -1,4 +1,4 @@
-import type { AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
+import type { AcDbDatabase, GeometryPoint2dLike } from '@mlightcad/data-model'
 import { AcTrHtmlBadge, AcTrHtmlGrip } from '@mlightcad/three-renderer'
 
 import {
@@ -29,7 +29,7 @@ import { selectMeasurementGroup } from './AcApMeasureEntityGrips'
  */
 export class AcApMeasurePointEntity extends AcApMeasureEntity {
   /** Measured point in world coordinates. */
-  private readonly point: AcGePoint2dLike
+  private readonly point: GeometryPoint2dLike
 
   /**
    * Creates a point measure entity at the given location.
@@ -37,7 +37,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
    * @param point - World position to measure
    * @param options - Shared id, layout, and style options
    */
-  constructor(point: AcGePoint2dLike, options: AcApMeasureEntityOptions) {
+  constructor(point: GeometryPoint2dLike, options: AcApMeasureEntityOptions) {
     super(
       options.id ?? `point-${Date.now()}`,
       options.layoutId,
@@ -57,7 +57,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasurePointEntity}
    */
   static create(
-    point: AcGePoint2dLike,
+    point: GeometryPoint2dLike,
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasurePointEntity {
@@ -73,7 +73,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
    *
    * @returns Copy of {@link point} with `z: 0`
    */
-  override primaryPoint(): AcGePoint2dLike {
+  override primaryPoint(): GeometryPoint2dLike {
     return { x: this.point.x, y: this.point.y }
   }
 

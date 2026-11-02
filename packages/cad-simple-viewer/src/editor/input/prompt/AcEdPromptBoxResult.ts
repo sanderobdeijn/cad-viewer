@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 
 import { AcEdPromptResult } from './AcEdPromptResult'
 import { AcEdPromptStatus } from './AcEdPromptStatus'
@@ -8,11 +8,11 @@ import { AcEdPromptStatus } from './AcEdPromptStatus'
  */
 export class AcEdPromptBoxResult extends AcEdPromptResult {
   /** Gets the rectangular bounding box that the user specified. */
-  readonly value?: AcGeBox2d
+  readonly value?: GeometryBox2d
 
   constructor(
     status: AcEdPromptStatus,
-    value?: AcGeBox2d,
+    value?: GeometryBox2d,
     stringResult?: string
   ) {
     super(status, stringResult)

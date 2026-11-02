@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 
 import {
   fillLoopHasSelfIntersection,
@@ -12,13 +12,13 @@ import {
  */
 function hatch14AeFootLoop() {
   return [
-    new AcGePoint2d(1439.03, 691.02),
-    new AcGePoint2d(1439.03, 628.96),
-    new AcGePoint2d(1418.03, 628.96),
-    new AcGePoint2d(1418.03, 627.46),
-    new AcGePoint2d(1435.03, 627.46),
-    new AcGePoint2d(1435.03, 688.53),
-    new AcGePoint2d(1439.03, 691.02)
+    new GeometryPoint2d(1439.03, 691.02),
+    new GeometryPoint2d(1439.03, 628.96),
+    new GeometryPoint2d(1418.03, 628.96),
+    new GeometryPoint2d(1418.03, 627.46),
+    new GeometryPoint2d(1435.03, 627.46),
+    new GeometryPoint2d(1435.03, 688.53),
+    new GeometryPoint2d(1439.03, 691.02)
   ]
 }
 
@@ -29,10 +29,10 @@ describe('AcTrFillLoopRepair', () => {
 
   it('leaves a simple rectangle unchanged', () => {
     const rect = [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(10, 0),
-      new AcGePoint2d(10, 5),
-      new AcGePoint2d(0, 5)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(10, 0),
+      new GeometryPoint2d(10, 5),
+      new GeometryPoint2d(0, 5)
     ]
     expect(fillLoopHasSelfIntersection(rect)).toBe(false)
     const regions = resolveSelfIntersectingFillLoop(rect)

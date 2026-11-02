@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbProxyEntity } from '../src/entity/AcDbProxyEntity'
 import {
@@ -80,7 +80,7 @@ describe('AcDbProxyGraphic', () => {
     expect(result).toBe(groupResult)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
     const points = (renderer.lines as jest.Mock).mock
-      .calls[0][0] as AcGePoint2d[]
+      .calls[0][0] as GeometryPoint2d[]
     expect(points).toHaveLength(2)
     expect(points[0]).toMatchObject({ x: 0, y: 0 })
     expect(points[1]).toMatchObject({ x: 10, y: 0 })
@@ -146,7 +146,7 @@ describe('AcDbProxyEntity', () => {
   it('returns entity origins or extents corners as grip points', () => {
     setupWorkingDatabase()
     const entity = new AcDbProxyEntity()
-    entity.setEntityOrigins([new AcGePoint2d(1, 2)])
+    entity.setEntityOrigins([new GeometryPoint2d(1, 2)])
 
     expect(entity.subGetGripPoints()).toEqual([entity.entityOrigins[0]])
 
@@ -171,7 +171,7 @@ describe('AcDbProxyEntity', () => {
       ])
     )
 
-    entity.transformBy(new AcGeMatrix3d().makeTranslation(5, 0, 0))
+    entity.transformBy(new GeometryMatrix3d().makeTranslation(5, 0, 0))
 
     const renderer = {
       subEntityTraits: {
@@ -198,7 +198,7 @@ describe('AcDbProxyEntity', () => {
 
     entity.subWorldDraw(renderer as never)
     const points = (renderer.lines as jest.Mock).mock
-      .calls[0][0] as AcGePoint2d[]
+      .calls[0][0] as GeometryPoint2d[]
     expect(points[0]).toMatchObject({ x: 0, y: 0 })
     expect(points[1]).toMatchObject({ x: 10, y: 0 })
     expect(renderer.group).toHaveBeenCalled()
@@ -211,7 +211,7 @@ describe('AcDbProxyEntity', () => {
     const entity = new AcDbProxyEntity()
     entity.setProxyGraphic(buildExtentsProxyGraphic([0, 0, 0], [10, 20, 0]))
 
-    entity.transformBy(new AcGeMatrix3d().makeTranslation(5, 0, 0))
+    entity.transformBy(new GeometryMatrix3d().makeTranslation(5, 0, 0))
 
     const extents = entity.geometricExtents
     expect(extents.min).toMatchObject({ x: 5, y: 0 })

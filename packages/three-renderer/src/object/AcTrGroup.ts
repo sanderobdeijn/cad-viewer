@@ -1,4 +1,4 @@
-import { AcDbObjectId, AcGeMatrix3d } from '@mlightcad/data-model'
+import { AcDbObjectId, GeometryMatrix3d } from '@mlightcad/data-model'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 
@@ -508,7 +508,10 @@ export class AcTrGroup extends AcTrEntity {
         pending.push(tasks[j]())
       }
       await Promise.all(pending)
-      if (end < tasks.length && performance.now() - budgetStart >= yieldBudgetMs) {
+      if (
+        end < tasks.length &&
+        performance.now() - budgetStart >= yieldBudgetMs
+      ) {
         await new Promise<void>(resolve => setTimeout(resolve, 0))
         budgetStart = performance.now()
       }
@@ -582,7 +585,7 @@ export class AcTrGroup extends AcTrEntity {
    *
    * @param matrix - INSERT transform in drawing coordinates.
    */
-  applyMatrix(matrix: AcGeMatrix3d) {
+  applyMatrix(matrix: GeometryMatrix3d) {
     const threeMatrix = AcTrMatrixUtil.createMatrix4(matrix)
     if (this._wcsChildBoxesTemplate) {
       if (!this._wcsChildBoxesPendingMatrix) {
@@ -1176,7 +1179,7 @@ export class AcTrGroup extends AcTrEntity {
    *
    * @param box - Child spatial-index rectangle to transform; updated in place.
    * @param matrix - INSERT transform as a {@link THREE.Matrix4}, typically
-   *   derived from {@link AcGeMatrix3d} via {@link AcTrMatrixUtil.createMatrix4}.
+   *   derived from {@link GeometryMatrix3d} via {@link AcTrMatrixUtil.createMatrix4}.
    */
   private applyMatrixToEntityBox(box: AcTrEntityBox, matrix: THREE.Matrix4) {
     const points = [

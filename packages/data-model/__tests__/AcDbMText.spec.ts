@@ -1,8 +1,8 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 import {
   AcGiMTextAttachmentPoint,
@@ -66,7 +66,7 @@ describe('AcDbMText', () => {
     expect(mtext.attachmentPoint).toBe(AcGiMTextAttachmentPoint.BottomRight)
     expect(mtext.direction).toMatchObject({ x: 2, y: 3 })
     expect(mtext.drawingDirection).toBe(AcGiMTextFlowDirection.TOP_TO_BOTTOM)
-    expect(mtext.geometricExtents).toBeInstanceOf(AcGeBox3d)
+    expect(mtext.geometricExtents).toBeInstanceOf(GeometryBox3d)
   })
 
   it('returns geometricExtents and recomputes when location changes', () => {
@@ -132,7 +132,7 @@ describe('AcDbMText', () => {
     mtext.extentsWidth = 10
     mtext.direction = { x: 1, y: 0, z: 0 }
 
-    mtext.transformBy(new AcGeMatrix3d().makeScale(2, 1, 1))
+    mtext.transformBy(new GeometryMatrix3d().makeScale(2, 1, 1))
 
     expect(mtext.extentsWidth).toBeCloseTo(20)
   })
@@ -142,20 +142,20 @@ describe('AcDbMText', () => {
     const mtext = new AcDbMText()
     mtext.location = { x: 9, y: 8 }
 
-    const insertionPoints: AcGePoint2d[] = []
+    const insertionPoints: GeometryPoint2d[] = []
     mtext.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       insertionPoints
     )
     expect(insertionPoints).toEqual([mtext.location])
 
-    const unsupportedPoints: AcGePoint2d[] = []
+    const unsupportedPoints: GeometryPoint2d[] = []
     mtext.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
@@ -164,7 +164,7 @@ describe('AcDbMText', () => {
   it('returns location as grip point', () => {
     createWorkingDb()
     const mtext = new AcDbMText()
-    mtext.location = new AcGePoint2d(6, 7)
+    mtext.location = new GeometryPoint2d(6, 7)
     const grips = mtext.subGetGripPoints()
     expect(grips).toHaveLength(1)
     expect(grips[0]).toBe(mtext.location)
@@ -178,7 +178,7 @@ describe('AcDbMText', () => {
     mtext.width = 5
     mtext.height = 7
 
-    const matrix = new AcGeMatrix3d().makeScale(2, 3, 1)
+    const matrix = new GeometryMatrix3d().makeScale(2, 3, 1)
 
     expect(mtext.transformBy(matrix)).toBe(mtext)
     expect(mtext.location).toMatchObject({ x: 2, y: 6 })
@@ -196,7 +196,7 @@ describe('AcDbMText', () => {
     mtext.width = 4
     mtext.height = 6
 
-    mtext.transformBy(new AcGeMatrix3d().makeScale(2, 3, 1))
+    mtext.transformBy(new GeometryMatrix3d().makeScale(2, 3, 1))
     expect(mtext.direction.x).toBeCloseTo(0, 5)
     expect(mtext.direction.y).toBeCloseTo(1, 5)
     expect(mtext.width).toBeCloseTo(12)
@@ -205,7 +205,7 @@ describe('AcDbMText', () => {
     mtext.width = 8
     mtext.height = 9
     const directionBefore = mtext.direction.clone()
-    mtext.transformBy(new AcGeMatrix3d().makeScale(0, 0, 1))
+    mtext.transformBy(new GeometryMatrix3d().makeScale(0, 0, 1))
     expect(mtext.direction).toEqual(directionBefore)
     expect(mtext.width).toBeCloseTo(8)
     expect(mtext.height).toBeCloseTo(9)
@@ -215,11 +215,11 @@ describe('AcDbMText', () => {
     createWorkingDb()
     const mtext = new AcDbMText()
     const lengthSqSpy = jest
-      .spyOn(AcGeVector3d.prototype, 'lengthSq')
+      .spyOn(GeometryVector3d.prototype, 'lengthSq')
       .mockReturnValue(0)
 
     try {
-      expect(mtext.transformBy(new AcGeMatrix3d())).toBe(mtext)
+      expect(mtext.transformBy(new GeometryMatrix3d())).toBe(mtext)
     } finally {
       lengthSqSpy.mockRestore()
     }

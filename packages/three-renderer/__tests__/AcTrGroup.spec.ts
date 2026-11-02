@@ -1,4 +1,4 @@
-import { AcGeMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { expectWcsBboxCloseTo } from './helpers/expectWcsBbox'
@@ -73,7 +73,7 @@ describe('AcTrGroup wcsBbox', () => {
     const line = createLine('line-a', { x: 0, y: 0 }, { x: 10, y: 5 }, context)
     const group = new AcTrGroup([line], context)
 
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(50, 25, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(50, 25, 0))
 
     expectWcsBboxCloseTo(group.wcsBbox, [50, 25, 0], [60, 30, 0])
     expect(group.wcsChildBoxes[0]).toMatchObject({
@@ -130,7 +130,7 @@ describe('AcTrGroup wcsBbox', () => {
     const group = new AcTrGroup([line0, lineL2], context)
     expect(group.isOnTheSameLayer).toBe(false)
 
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 200, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     expectWcsBboxCloseTo(group.wcsBbox, [100, 200, 0], [115, 210, 0])
     expect(group.wcsChildBoxes).toEqual([
@@ -160,7 +160,7 @@ describe('AcTrGroup wcsBbox', () => {
     const lineB = createLine('line-b', { x: 0, y: 0 }, { x: 0, y: 10 }, context)
     const group = new AcTrGroup([lineA, lineB], context)
 
-    group.applyMatrix(new AcGeMatrix3d().makeRotationZ(Math.PI / 4))
+    group.applyMatrix(new GeometryMatrix3d().makeRotationZ(Math.PI / 4))
 
     const union = new THREE.Box3()
     for (const box of group.wcsChildBoxes) {
@@ -197,7 +197,7 @@ describe('AcTrGroup wcsBbox', () => {
     deferred.wcsBbox.makeEmpty()
 
     const group = new AcTrGroup([line, deferred], context)
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 200, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     expect(group.wcsChildBoxes).toHaveLength(1)
 
@@ -228,7 +228,7 @@ describe('AcTrGroup wcsBbox', () => {
     )
     const group = new AcTrGroup([line], context)
 
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
     group.refreshWcsChildBoxesFromChildren()
 
     expect(group.wcsChildBoxes[0]).toMatchObject({
@@ -251,7 +251,7 @@ describe('AcTrGroup wcsBbox', () => {
     )
     const group = new AcTrGroup([line], context)
 
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
 
     // AcDbRenderingCache.draw converts WCS attribute geometry to block-local
     // space before addChild while the INSERT transform remains on the group.
@@ -285,7 +285,7 @@ describe('AcTrGroup wcsBbox', () => {
     const context = new AcTrRenderContext()
     const line = createLine('line-a', { x: 0, y: 0 }, { x: 10, y: 5 }, context)
     const group = new AcTrGroup([line], context)
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 200, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     // Block-local wcsBbbox can remain far from WCS after nested INSERT assembly.
     // A full refresh from source entities would inflate spatial bounds again.
@@ -315,10 +315,10 @@ describe('AcTrGroup wcsBbox', () => {
       context
     )
     const innerGroup = new AcTrGroup([innerLine], context)
-    innerGroup.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 200, 0))
+    innerGroup.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     const outerGroup = new AcTrGroup([innerGroup], context)
-    outerGroup.applyMatrix(new AcGeMatrix3d().makeTranslation(574, 0, 0))
+    outerGroup.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
     outerGroup.refreshWcsChildBoxesFromChildren()
 
     expect(
@@ -377,7 +377,7 @@ describe('AcTrGroup wcsBbox', () => {
       id: 'deferred-text'
     })
 
-    group.applyMatrix(new AcGeMatrix3d().makeTranslation(50, 25, 0))
+    group.applyMatrix(new GeometryMatrix3d().makeTranslation(50, 25, 0))
 
     expect(group.wcsChildBoxes[0]).toMatchObject({
       minX: 50,
@@ -578,7 +578,7 @@ describe('AcTrGroup dispose', () => {
     group.compactForInstancing()
 
     const cloned = group.fastDeepClone() as AcTrGroup
-    cloned.applyMatrix(new AcGeMatrix3d().makeTranslation(50, 25, 0))
+    cloned.applyMatrix(new GeometryMatrix3d().makeTranslation(50, 25, 0))
 
     expect(cloned.wcsChildBoxes[0]).toMatchObject({
       minX: 50,
@@ -614,7 +614,7 @@ describe('AcTrGroup dispose', () => {
     )
     // addChild while still lazy (no applyMatrix yet).
     cloned.addChild(attribute)
-    cloned.applyMatrix(new AcGeMatrix3d().makeTranslation(100, 0, 0))
+    cloned.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 0, 0))
 
     expect(cloned.wcsChildBoxes.find(box => box.id === 'line-a')).toMatchObject(
       {

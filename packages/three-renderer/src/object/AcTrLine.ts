@@ -1,4 +1,4 @@
-import { AcGePoint2dLike, AcGiSubEntityTraits } from '@mlightcad/data-model'
+import { AcGiSubEntityTraits,GeometryPoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
@@ -22,7 +22,7 @@ export class AcTrLine extends AcTrEntity {
   private _hasComplexGlyphs = false
 
   constructor(
-    points: AcGePoint2dLike[],
+    points: GeometryPoint2dLike[],
     traits: AcGiSubEntityTraits,
     context: AcTrRenderContext,
     basicMaterialOnly: boolean = false

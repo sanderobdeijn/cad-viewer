@@ -1,4 +1,8 @@
-import { AcDbLine, AcGePoint2d, AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  AcDbLine,
+  GeometryPoint2d,
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -18,7 +22,7 @@ import { AcApI18n } from '../../i18n'
 /**
  * Dynamic preview jig for LINE command.
  */
-export class AcApLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApLineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient line entity reused during interactive preview.
    */
@@ -29,7 +33,7 @@ export class AcApLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param view - The associated view
    */
-  constructor(view: AcEdBaseView, start: AcGePoint2dLike) {
+  constructor(view: AcEdBaseView, start: GeometryPoint2dLike) {
     super(view)
     this._line = new AcDbLine(start, start)
   }
@@ -46,7 +50,7 @@ export class AcApLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
    *
    * @param point - Current cursor/input point.
    */
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     this._line.endPoint = point
   }
 }
@@ -65,7 +69,7 @@ export class AcApLineCmd extends AcEdCommand {
    *
    * Used by "Continue" option at next LINE start.
    */
-  private static _lastEndpoint?: AcGePoint2d
+  private static _lastEndpoint?: GeometryPoint2d
 
   /**
    * Creates LINE command instance.
@@ -84,27 +88,27 @@ export class AcApLineCmd extends AcEdCommand {
    */
   async execute(context: AcApContext) {
     const db = context.doc.database
-    const points: AcGePoint2d[] = []
+    const points: GeometryPoint2d[] = []
     const createdSegments: AcDbLine[] = []
     const hasContinuePoint = () => !!AcApLineCmd._lastEndpoint
     const getContinuePoint = () =>
       AcApLineCmd._lastEndpoint
-        ? new AcGePoint2d(AcApLineCmd._lastEndpoint)
+        ? new GeometryPoint2d(AcApLineCmd._lastEndpoint)
         : undefined
     const syncLastEndpoint = () => {
       const current = getCurrentPoint()
       if (current) {
-        AcApLineCmd._lastEndpoint = new AcGePoint2d(current)
+        AcApLineCmd._lastEndpoint = new GeometryPoint2d(current)
       }
     }
-    const appendPoint = (point: AcGePoint2dLike) => {
-      points.push(new AcGePoint2d(point))
+    const appendPoint = (point: GeometryPoint2dLike) => {
+      points.push(new GeometryPoint2d(point))
     }
     const getCurrentPoint = () => points[points.length - 1]
-    const appendSegment = (endPoint: AcGePoint2dLike) => {
+    const appendSegment = (endPoint: GeometryPoint2dLike) => {
       const startPoint = getCurrentPoint()
       if (!startPoint) return
-      const segment = new AcDbLine(new AcGePoint2d(startPoint), endPoint)
+      const segment = new AcDbLine(new GeometryPoint2d(startPoint), endPoint)
       db.tables.blockTable.modelSpace.appendEntity(segment)
       createdSegments.push(segment)
       context.view.addEntity(segment)
@@ -190,7 +194,7 @@ export class AcApLineCmd extends AcEdCommand {
         if (basePoint) {
           prompt.useDashedLine = true
           prompt.useBasePoint = true
-          prompt.basePoint = new AcGePoint2d(basePoint)
+          prompt.basePoint = new GeometryPoint2d(basePoint)
           prompt.jig = new AcApLineJig(context.view, basePoint)
         }
         // AutoCAD LINE: Enter at "next point" ends the command without adding a segment.

@@ -1,12 +1,11 @@
 import {
   AcDbMLine,
   AcDbMLineJustification,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol,
-  AcGeVector3dLike,
-  DEFAULT_TOL
-} from '@mlightcad/data-model'
+  DEFAULT_TOL,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol,
+  GeometryVector3dLike} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -29,9 +28,9 @@ import { AcApI18n } from '../../i18n'
 /**
  * Preview jig that renders an MLINE from confirmed points and the current cursor point.
  */
-export class AcApMLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApMLineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _mline: AcDbMLine
-  private _points: AcGePoint2d[]
+  private _points: GeometryPoint2d[]
   private _resolveState: () => {
     justification: AcDbMLineJustification
     scale: number
@@ -41,7 +40,7 @@ export class AcApMLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
 
   constructor(
     view: AcEdBaseView,
-    points: AcGePoint2d[],
+    points: GeometryPoint2d[],
     resolveState: () => {
       justification: AcDbMLineJustification
       scale: number
@@ -71,9 +70,9 @@ export class AcApMLineJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return this._mline
   }
 
-  update(point: AcGePoint2dLike) {
+  update(point: GeometryPoint2dLike) {
     if (this._points.length <= 0) return
-    const previewPoints = [...this._points, new AcGePoint2d(point)]
+    const previewPoints = [...this._points, new GeometryPoint2d(point)]
     const state = this._resolveState()
     applyMLineGeometry(
       this._mline,
@@ -106,7 +105,7 @@ export class AcApMLineCmd extends AcEdCommand {
     let scale = db.cmlscale ?? 1
     let styleName = db.cmlstyle || 'STANDARD'
 
-    const points: AcGePoint2d[] = []
+    const points: GeometryPoint2d[] = []
     let shouldClose = false
     const resolveStyleElementOffsets = () => {
       const style = db.objects.mlineStyle.getAt(styleName)
@@ -116,8 +115,8 @@ export class AcApMLineCmd extends AcEdCommand {
         scale
       )
     }
-    const appendPoint = (point: AcGePoint2dLike) =>
-      points.push(new AcGePoint2d(point))
+    const appendPoint = (point: GeometryPoint2dLike) =>
+      points.push(new GeometryPoint2d(point))
     const undoLastPoint = () => {
       if (points.length > 1) {
         points.pop()
@@ -299,7 +298,7 @@ export class AcApMLineCmd extends AcEdCommand {
         }
         prompt.useDashedLine = true
         prompt.useBasePoint = true
-        prompt.basePoint = new AcGePoint2d(points[points.length - 1])
+        prompt.basePoint = new GeometryPoint2d(points[points.length - 1])
         prompt.jig = new AcApMLineJig(context.view, points, () => ({
           justification,
           scale,
@@ -363,7 +362,7 @@ export class AcApMLineCmd extends AcEdCommand {
 
 function applyMLineGeometry(
   mline: AcDbMLine,
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   styleName: string,
   justification: AcDbMLineJustification,
   scale: number,
@@ -393,7 +392,7 @@ function applyMLineGeometry(
 }
 
 function createMLineSegments(
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   elementOffsets: number[]
 ) {
   const edgeDirections = createEdgeDirections(points)
@@ -415,8 +414,10 @@ function createMLineSegments(
   })
 }
 
-function createEdgeDirections(points: AcGePoint2dLike[]): AcGeVector3dLike[] {
-  const directions: AcGeVector3dLike[] = []
+function createEdgeDirections(
+  points: GeometryPoint2dLike[]
+): GeometryVector3dLike[] {
+  const directions: GeometryVector3dLike[] = []
   for (let i = 0; i < points.length - 1; i++) {
     const from = points[i]
     const to = points[i + 1]
@@ -431,9 +432,9 @@ function createEdgeDirections(points: AcGePoint2dLike[]): AcGeVector3dLike[] {
 }
 
 function createMiterInfo(
-  edgeDirections: AcGeVector3dLike[],
+  edgeDirections: GeometryVector3dLike[],
   vertexIndex: number
-): { direction: AcGeVector3dLike; offsetScale: number } {
+): { direction: GeometryVector3dLike; offsetScale: number } {
   if (edgeDirections.length <= 0) {
     return { direction: { x: 0, y: 1, z: 0 }, offsetScale: 1 }
   }
@@ -459,7 +460,7 @@ function createMiterInfo(
   }
 
   const projection = Math.abs(dotVector(blended, nextNormal))
-  if (AcGeTol.isNonPositive(projection)) {
+  if (GeometryTol.isNonPositive(projection)) {
     return { direction: blended, offsetScale: 1 }
   }
 
@@ -493,7 +494,7 @@ function resolveMLineStyleElementOffsets(
   return elements.map(element => (element.offset + shift) * scale)
 }
 
-function leftNormal(vector: AcGeVector3dLike): AcGeVector3dLike {
+function leftNormal(vector: GeometryVector3dLike): GeometryVector3dLike {
   const normal = normalizeVector({
     x: -vector.y,
     y: vector.x,
@@ -503,12 +504,12 @@ function leftNormal(vector: AcGeVector3dLike): AcGeVector3dLike {
 }
 
 function normalizeVector(
-  vector: AcGeVector3dLike
-): AcGeVector3dLike | undefined {
+  vector: GeometryVector3dLike
+): GeometryVector3dLike | undefined {
   const length = Math.sqrt(
     vector.x * vector.x + vector.y * vector.y + vector.z * vector.z
   )
-  if (!AcGeTol.isPositive(length)) return undefined
+  if (!GeometryTol.isPositive(length)) return undefined
   return {
     x: vector.x / length,
     y: vector.y / length,
@@ -516,10 +517,13 @@ function normalizeVector(
   }
 }
 
-function dotVector(a: AcGeVector3dLike, b: AcGeVector3dLike): number {
+function dotVector(a: GeometryVector3dLike, b: GeometryVector3dLike): number {
   return a.x * b.x + a.y * b.y + a.z * b.z
 }
 
-function isSamePoint2d(a: AcGePoint2dLike, b: AcGePoint2dLike): boolean {
+function isSamePoint2d(
+  a: GeometryPoint2dLike,
+  b: GeometryPoint2dLike
+): boolean {
   return DEFAULT_TOL.equalPoint2d(a, b)
 }

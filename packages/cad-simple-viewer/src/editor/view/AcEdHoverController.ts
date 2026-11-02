@@ -1,7 +1,7 @@
 import {
   AcCmEventManager,
   AcDbObjectId,
-  AcGePoint2d
+  GeometryPoint2d
 } from '@mlightcad/data-model'
 
 import type { AcEdViewHoverEventArgs } from './AcEdBaseView'
@@ -52,7 +52,7 @@ export interface AcEdHoverHost {
    * Used when dispatching hover/unhover events so listeners can
    * know the cursor location at the time of the event.
    */
-  get curMousePos(): AcGePoint2d
+  get curMousePos(): GeometryPoint2d
 }
 
 /**

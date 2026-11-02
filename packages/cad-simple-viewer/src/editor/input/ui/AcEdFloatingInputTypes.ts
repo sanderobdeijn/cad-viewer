@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
 /**
  * Describes the raw text values from the X and Y fields in {@link AcEdFloatingInput}.
@@ -51,7 +51,7 @@ export type AcEdFloatingInputValidationCallback<T> = (
  */
 export type AcEdFloatingInputCommitCallback<T> = (
   value: T,
-  pos?: AcGePoint2dLike
+  pos?: GeometryPoint2dLike
 ) => boolean
 
 /**
@@ -79,14 +79,14 @@ export type AcEdFloatingInputNoneCallback = () => void
  * Callback invoked on mousemove to update the preview geometry.
  */
 export type AcEdFloatingInputDrawPreviewCallback = (
-  pos: AcGePoint2dLike
+  pos: GeometryPoint2dLike
 ) => void
 
 /**
  * Callback used to dynamically compute input values for the floating input fields.
  */
 export type AcEdFloatingInputDynamicValueCallback<T> = (
-  pos: AcGePoint2dLike
+  pos: GeometryPoint2dLike
 ) => AcEdFloatingInputDynamicValue<T>
 
 /**
@@ -135,13 +135,13 @@ export interface AcEdFloatingInputOptions<T> {
   /**
    * The base point used to draw rubber band or base line
    */
-  basePoint?: AcGePoint2dLike | undefined
+  basePoint?: GeometryPoint2dLike | undefined
 
   /**
    * Reference point used to constrain cursor movement when ORTHOMODE is on.
    * Defaults to {@link basePoint} when not specified.
    */
-  orthoReferencePoint?: AcGePoint2dLike | undefined
+  orthoReferencePoint?: GeometryPoint2dLike | undefined
 
   /**
    * Base angle in degrees used by angle rubber-band preview as the 0-degree direction.

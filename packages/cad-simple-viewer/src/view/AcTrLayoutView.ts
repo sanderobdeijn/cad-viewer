@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 import {
   AcTrBaseView,
   acTrCssRectToWcsBox,
@@ -152,9 +152,9 @@ export class AcTrLayoutView extends AcTrBaseView {
    * Paper-space bounding box enclosing all viewport borders in this layout.
    * Returns undefined when the layout has no viewports.
    */
-  get viewportsBoundingBox(): AcGeBox2d | undefined {
+  get viewportsBoundingBox(): GeometryBox2d | undefined {
     if (this._viewportViews.size === 0) return undefined
-    const box = new AcGeBox2d()
+    const box = new GeometryBox2d()
     this._viewportViews.forEach(vp => {
       const vpBox = vp.viewport.box
       box.expandByPoint(vpBox.min)
@@ -313,7 +313,7 @@ export class AcTrLayoutView extends AcTrBaseView {
       const hit = acTrIntersectCssRects(magRect, loupe)
       if (!hit) return
       const paperHit = acTrCssRectToWcsBox(hit, viewBox, loupe)
-      const modelBox = new AcGeBox2d()
+      const modelBox = new GeometryBox2d()
       modelBox.expandByPoint(
         viewportView.paperPointToModel({ x: paperHit.minX, y: paperHit.minY })
       )

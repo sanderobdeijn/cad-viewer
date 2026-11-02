@@ -15,8 +15,8 @@ import {
   acdbHostApplicationServices,
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGeMathUtil,
-  AcGePoint2dLike
+  GeometryMathUtil,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { constrainToOrtho, isOrthoModeEnabled } from './AcEdOrthoMode'
@@ -179,7 +179,7 @@ function toDisplayAngleRadians(
   if (angdir === 1) {
     angle = -angle
   }
-  return AcGeMathUtil.normalizeAngle(angle)
+  return GeometryMathUtil.normalizeAngle(angle)
 }
 
 /**
@@ -202,7 +202,7 @@ function fromDisplayAngleRadians(
   if (angdir === 1) {
     angle = -angle
   }
-  return AcGeMathUtil.normalizeAngle(angle + angbase)
+  return GeometryMathUtil.normalizeAngle(angle + angbase)
 }
 
 /**
@@ -275,7 +275,7 @@ function buildTrackingDisplayAnglesRadians(
     }
   }
 
-  return [...degreeSet].map(AcGeMathUtil.degToRad)
+  return [...degreeSet].map(GeometryMathUtil.degToRad)
 }
 
 /**
@@ -287,7 +287,7 @@ function buildTrackingDisplayAnglesRadians(
  * @internal
  */
 function smallestAngleDelta(a: number, b: number): number {
-  const diff = Math.abs(AcGeMathUtil.normalizeAngle(a - b))
+  const diff = Math.abs(GeometryMathUtil.normalizeAngle(a - b))
   return Math.min(diff, Math.PI * 2 - diff)
 }
 
@@ -335,10 +335,10 @@ function nearestDisplayAngle(target: number, candidates: number[]): number {
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-3E0AAC2C-0756-4626-B79C-ED8DAB930EA3
  */
 export function constrainToTracking(
-  point: AcGePoint2dLike,
-  reference: AcGePoint2dLike,
+  point: GeometryPoint2dLike,
+  reference: GeometryPoint2dLike,
   database?: AcDbDatabase
-): AcGePoint2dLike {
+): GeometryPoint2dLike {
   const db = getDatabase(database)
   const ortho = isOrthoModeEnabled(db)
   const polar = isPolarTrackingEnabled(db)

@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -32,7 +32,7 @@ describe('AcDbFcf', () => {
     expect(fcf.normal).toMatchObject({ x: 0, y: 0, z: 1 })
     expect(fcf.direction).toMatchObject({ x: 1, y: 0 })
 
-    fcf.location = new AcGePoint2d(10, 20)
+    fcf.location = new GeometryPoint2d(10, 20)
     fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|'
     fcf.dimensionStyle = 'Standard'
     fcf.normal = { x: 0, y: 0, z: 1 }
@@ -47,7 +47,7 @@ describe('AcDbFcf', () => {
   it('computes bounding points from tolerance cells', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(0, 0)
+    fcf.location = new GeometryPoint2d(0, 0)
     fcf.text = 'A|B|C'
     fcf.dimensionStyle = 'Standard'
 
@@ -78,7 +78,7 @@ describe('AcDbFcf', () => {
   it('keeps pipe-delimited tolerance text compatible', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(0, 0)
+    fcf.location = new GeometryPoint2d(0, 0)
     fcf.text = '{\\Fgdt.shx|b0|i0|c134|p6;j}|0.05|A|'
     fcf.dimensionStyle = 'Standard'
 
@@ -89,18 +89,18 @@ describe('AcDbFcf', () => {
   it('returns geometricExtents and grip/osnap points', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(5, 5)
+    fcf.location = new GeometryPoint2d(5, 5)
     fcf.text = 'Position|0.1'
     fcf.dimensionStyle = 'Standard'
 
     expect(fcf.geometricExtents.isEmpty()).toBe(false)
     expect(fcf.subGetGripPoints()).toEqual([fcf.location])
 
-    const snapPoints: AcGePoint2d[] = []
+    const snapPoints: GeometryPoint2d[] = []
     fcf.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       snapPoints
     )
     expect(snapPoints[0]).toMatchObject({ x: 5, y: 5 })
@@ -109,13 +109,13 @@ describe('AcDbFcf', () => {
   it('supports setOrientation and transformBy', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(1, 2)
+    fcf.location = new GeometryPoint2d(1, 2)
     fcf.setOrientation({ x: 0, y: 0, z: 1 }, { x: 0, y: 1, z: 0 })
 
     expect(fcf.normal).toMatchObject({ x: 0, y: 0, z: 1 })
     expect(fcf.direction).toMatchObject({ x: 0, y: 1 })
 
-    fcf.transformBy(new AcGeMatrix3d().makeTranslation(3, 4, 0))
+    fcf.transformBy(new GeometryMatrix3d().makeTranslation(3, 4, 0))
     expect(fcf.location).toMatchObject({ x: 4, y: 6 })
   })
 
@@ -126,7 +126,7 @@ describe('AcDbFcf', () => {
   it('anchors the frame at the left-edge center insertion point', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(100, 200)
+    fcf.location = new GeometryPoint2d(100, 200)
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
 
@@ -143,7 +143,7 @@ describe('AcDbFcf', () => {
   it('places the insertion point on the right edge when direction points left', () => {
     createWorkingDb()
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(344, 270)
+    fcf.location = new GeometryPoint2d(344, 270)
     fcf.direction = { x: -1, y: 0, z: 0 }
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
@@ -166,7 +166,7 @@ describe('AcDbFcf', () => {
     }
 
     const fcf = new AcDbFcf()
-    fcf.location = new AcGePoint2d(312.1120452047875, 270.2900270575117)
+    fcf.location = new GeometryPoint2d(312.1120452047875, 270.2900270575117)
     fcf.text = '{\\Fgdt;r}%%v{\\Fgdt;n}0.05%%v%%vA%%v%%v%%v^J'
     fcf.dimensionStyle = 'Standard'
 
@@ -194,7 +194,7 @@ describe('AcDbFcf', () => {
     fcf.subWorldDraw(renderer as never)
 
     expect(renderer.lines).toHaveBeenCalled()
-    for (const [points] of renderer.lines.mock.calls as [AcGePoint2d[]][]) {
+    for (const [points] of renderer.lines.mock.calls as [GeometryPoint2d[]][]) {
       expect(points).toHaveLength(2)
       const [start, end] = points
       const dx = Math.abs(end.x - start.x)

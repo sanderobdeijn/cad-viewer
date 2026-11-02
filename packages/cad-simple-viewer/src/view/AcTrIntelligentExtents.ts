@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 
 import {
   type AcTrClusterBox,
@@ -30,7 +30,7 @@ export interface AcTrExtentEntry {
  */
 export function computeIntelligentExtents(
   entries: ReadonlyArray<AcTrExtentEntry>
-): AcGeBox2d | undefined {
+): GeometryBox2d | undefined {
   const boxes = buildClusterCandidateBoxes(entries)
   if (!boxes) {
     return undefined
@@ -40,7 +40,7 @@ export function computeIntelligentExtents(
   if (!clustered) {
     return undefined
   }
-  return new AcGeBox2d(
+  return new GeometryBox2d(
     { x: clustered.minX, y: clustered.minY },
     { x: clustered.maxX, y: clustered.maxY }
   )
@@ -55,7 +55,7 @@ export function computeIntelligentExtents(
 export async function computeIntelligentExtentsAsync(
   entries: ReadonlyArray<AcTrExtentEntry>,
   work: AcTrWorkSlice = new AcTrWorkSlice()
-): Promise<AcGeBox2d | undefined> {
+): Promise<GeometryBox2d | undefined> {
   const boxes = await buildClusterCandidateBoxesAsync(entries, work)
   if (!boxes) {
     return undefined
@@ -70,7 +70,7 @@ export async function computeIntelligentExtentsAsync(
   if (!clustered) {
     return undefined
   }
-  return new AcGeBox2d(
+  return new GeometryBox2d(
     { x: clustered.minX, y: clustered.minY },
     { x: clustered.maxX, y: clustered.maxY }
   )
@@ -131,11 +131,7 @@ async function buildClusterCandidateBoxesAsync(
   const sizes = new Array<number>(finite.length)
   for (let i = 0; i < finite.length; i++) {
     const entry = finite[i]!
-    sizes[i] = Math.max(
-      entry.maxX - entry.minX,
-      entry.maxY - entry.minY,
-      1e-9
-    )
+    sizes[i] = Math.max(entry.maxX - entry.minX, entry.maxY - entry.minY, 1e-9)
     if ((i & 0x7ff) === 0x7ff) {
       await work.maybeYield()
     }
@@ -181,9 +177,7 @@ function peelFarCenterBoxes(boxes: AcTrClusterBox[]): AcTrClusterBox[] {
   sizes.sort((a, b) => a - b)
   const medianSize = sizes[Math.floor(sizes.length / 2)] || 1
   const limit = Math.max(medianSize * 50, 1e10)
-  const kept = centers.filter(
-    c => Math.hypot(c.x - medX, c.y - medY) <= limit
-  )
+  const kept = centers.filter(c => Math.hypot(c.x - medX, c.y - medY) <= limit)
   return kept.length > 0 ? kept.map(c => c.box) : boxes
 }
 

@@ -65,12 +65,12 @@ jest.mock('@mlightcad/data-model', () => {
         if (primitive === 'area') {
           // For wide polylines, call renderer.area()
           // Build a mock area that implements the tessellate and legacy APIs
-          const AcGePoint2d = actual.AcGePoint2d
+          const GeometryPoint2d = actual.GeometryPoint2d
           const loop: unknown[] = []
           const vertices = this._vertices || []
           for (let i = 0; i < vertices.length; i++) {
             const pt = vertices[i] as { x: number; y: number }
-            loop.push(new AcGePoint2d(pt.x, pt.y))
+            loop.push(new GeometryPoint2d(pt.x, pt.y))
           }
           const hierarchy = {
             index: -1,
@@ -98,7 +98,7 @@ import {
   acdbHostApplicationServices,
   AcDbLine,
   AcDbPolyline,
-  AcGePoint2d
+  GeometryPoint2d
 } from '@mlightcad/data-model'
 import { AcTrEntity, AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
@@ -170,9 +170,9 @@ describe('direct-batch capture placeholder', () => {
 
       const owned: Array<ReturnType<typeof tryBuildDirectEntityMeta>> = []
       const entities = [
-        new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 0)),
-        new AcDbLine(new AcGePoint2d(0, 5), new AcGePoint2d(10, 5)),
-        new AcDbLine(new AcGePoint2d(0, 9), new AcGePoint2d(10, 9))
+        new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(10, 0)),
+        new AcDbLine(new GeometryPoint2d(0, 5), new GeometryPoint2d(10, 5)),
+        new AcDbLine(new GeometryPoint2d(0, 9), new GeometryPoint2d(10, 9))
       ]
       for (const entity of entities) {
         db.tables.blockTable.modelSpace.appendEntity(entity)
@@ -215,7 +215,10 @@ describe('direct-batch capture placeholder', () => {
       const renderer = createRenderer()
       const placeholder = renderer.createDirectCapturePlaceholder()
 
-      const line = new AcDbLine(new AcGePoint2d(0, 0), new AcGePoint2d(10, 5))
+      const line = new AcDbLine(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 5)
+      )
       db.tables.blockTable.modelSpace.appendEntity(line)
 
       for (let round = 0; round < 4; round++) {
@@ -265,10 +268,10 @@ describe('direct-batch capture placeholder', () => {
       const placeholder = renderer.createDirectCapturePlaceholder()
 
       const wide = new AcDbPolyline()
-      wide.addVertexAt(0, new AcGePoint2d(0, 0), 0, 1, 1)
-      wide.addVertexAt(1, new AcGePoint2d(10, 0), 0, 1, 1)
-      wide.addVertexAt(2, new AcGePoint2d(10, 5), 0, 1, 1)
-      wide.addVertexAt(3, new AcGePoint2d(0, 5), 0, 1, 1)
+      wide.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 1, 1)
+      wide.addVertexAt(1, new GeometryPoint2d(10, 0), 0, 1, 1)
+      wide.addVertexAt(2, new GeometryPoint2d(10, 5), 0, 1, 1)
+      wide.addVertexAt(3, new GeometryPoint2d(0, 5), 0, 1, 1)
       db.tables.blockTable.modelSpace.appendEntity(wide)
       expect(wide.directBatchPrimitive).toBe('area')
 

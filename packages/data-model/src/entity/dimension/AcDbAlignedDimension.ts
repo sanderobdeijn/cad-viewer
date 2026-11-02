@@ -1,12 +1,12 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
 import {
-  AcGeLine2d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePointLike,
-  AcGeVector2d,
-  AcGeVector2dLike
+  GeometryLine2d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPointLike,
+  GeometryVector2d,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbBlockTableRecord } from '../../database'
@@ -31,9 +31,9 @@ import { AcDbDimension } from './AcDbDimension'
  * ```typescript
  * // Create an aligned dimension
  * const alignedDim = new AcDbAlignedDimension(
- *   new AcGePoint2d(0, 0),    // First extension line point
- *   new AcGePoint2d(10, 5),   // Second extension line point
- *   new AcGePoint2d(5, 2.5),  // Dimension line point
+ *   new GeometryPoint2d(0, 0),    // First extension line point
+ *   new GeometryPoint2d(10, 5),   // Second extension line point
+ *   new GeometryPoint2d(5, 2.5),  // Dimension line point
  *   "10.0",                      // Dimension text
  *   "Standard"                   // Dimension style
  * );
@@ -49,11 +49,11 @@ export class AcDbAlignedDimension extends AcDbDimension {
   static override typeName: string = 'AlignedDimension'
 
   /** The definition point that specifies where the dimension line will be */
-  private _dimLinePoint: AcGePoint2d
+  private _dimLinePoint: GeometryPoint2d
   /** The start point for the first extension line */
-  private _xLine1Point: AcGePoint2d
+  private _xLine1Point: GeometryPoint2d
   /** The start point for the second extension line */
-  private _xLine2Point: AcGePoint2d
+  private _xLine2Point: GeometryPoint2d
   /** The extension line obliquing angle in radians */
   private _oblique: number
   /** The dimension's rotation angle in radians */
@@ -75,32 +75,32 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * ```typescript
    * // Create an aligned dimension with default text and style
    * const alignedDim = new AcDbAlignedDimension(
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(10, 5),
-   *   new AcGePoint2d(5, 2.5)
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(10, 5),
+   *   new GeometryPoint2d(5, 2.5)
    * );
    *
    * // Create an aligned dimension with custom text and style
    * const alignedDim2 = new AcDbAlignedDimension(
-   *   new AcGePoint2d(0, 0),
-   *   new AcGePoint2d(15, 10),
-   *   new AcGePoint2d(7.5, 5),
+   *   new GeometryPoint2d(0, 0),
+   *   new GeometryPoint2d(15, 10),
+   *   new GeometryPoint2d(7.5, 5),
    *   "15.0",
    *   "Architectural"
    * );
    * ```
    */
   constructor(
-    xLine1Point: AcGePointLike,
-    xLine2Point: AcGePointLike,
-    dimLinePoint: AcGePointLike,
+    xLine1Point: GeometryPointLike,
+    xLine2Point: GeometryPointLike,
+    dimLinePoint: GeometryPointLike,
     dimText: string | null = null,
     dimStyle: string | null = null
   ) {
     super()
-    this._dimLinePoint = new AcGePoint2d().copy(dimLinePoint)
-    this._xLine1Point = new AcGePoint2d().copy(xLine1Point)
-    this._xLine2Point = new AcGePoint2d().copy(xLine2Point)
+    this._dimLinePoint = new GeometryPoint2d().copy(dimLinePoint)
+    this._xLine1Point = new GeometryPoint2d().copy(xLine1Point)
+    this._xLine2Point = new GeometryPoint2d().copy(xLine2Point)
     this._oblique = 0
     this._rotation = 0
     this.calculateRotation()
@@ -132,7 +132,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * console.log(`Dimension line point: ${dimLinePoint.x}, ${dimLinePoint.y}`);
    * ```
    */
-  get dimLinePoint(): AcGePoint2d {
+  get dimLinePoint(): GeometryPoint2d {
     return this._dimLinePoint
   }
 
@@ -143,10 +143,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * alignedDim.dimLinePoint = new AcGePoint2d(5, 2.5);
+   * alignedDim.dimLinePoint = new GeometryPoint2d(5, 2.5);
    * ```
    */
-  set dimLinePoint(value: AcGePoint2dLike) {
+  set dimLinePoint(value: GeometryPoint2dLike) {
     this._dimLinePoint.copy(value)
   }
 
@@ -161,7 +161,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * console.log(`Extension line 1 point: ${xLine1Point.x}, ${xLine1Point.y}`);
    * ```
    */
-  get xLine1Point(): AcGePoint2d {
+  get xLine1Point(): GeometryPoint2d {
     return this._xLine1Point
   }
 
@@ -172,10 +172,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * alignedDim.xLine1Point = new AcGePoint2d(0, 0);
+   * alignedDim.xLine1Point = new GeometryPoint2d(0, 0);
    * ```
    */
-  set xLine1Point(value: AcGePoint2dLike) {
+  set xLine1Point(value: GeometryPoint2dLike) {
     this._xLine1Point.copy(value)
   }
 
@@ -190,7 +190,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * console.log(`Extension line 2 point: ${xLine2Point.x}, ${xLine2Point.y}`);
    * ```
    */
-  get xLine2Point(): AcGePoint2d {
+  get xLine2Point(): GeometryPoint2d {
     return this._xLine2Point
   }
 
@@ -201,10 +201,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
    *
    * @example
    * ```typescript
-   * alignedDim.xLine2Point = new AcGePoint2d(10, 5);
+   * alignedDim.xLine2Point = new GeometryPoint2d(10, 5);
    * ```
    */
-  set xLine2Point(value: AcGePoint2dLike) {
+  set xLine2Point(value: GeometryPoint2dLike) {
     this._xLine2Point.copy(value)
   }
 
@@ -317,7 +317,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
   }
 
   /** @inheritdoc */
-  override subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  override subMoveGripPointsAt(
+    indices: number[],
+    offset: GeometryVector2dLike
+  ) {
     super.subMoveGripPointsAt(indices, offset)
     this.calculateRotation()
     return this
@@ -326,7 +329,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
   /**
    * @inheritdoc
    */
-  protected override subTransformBy(matrix: AcGeMatrix3d) {
+  protected override subTransformBy(matrix: GeometryMatrix3d) {
     this._dimLinePoint.applyMatrix4(matrix)
     this._xLine1Point.applyMatrix4(matrix)
     this._xLine2Point.applyMatrix4(matrix)
@@ -372,7 +375,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
     return block
   }
 
-  private createMText(pos: AcGePoint2dLike, rotation: number) {
+  private createMText(pos: GeometryPoint2dLike, rotation: number) {
     const angleDegToUnitVector = (angleRad: number) => {
       return {
         x: Math.cos(angleRad),
@@ -396,7 +399,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
     return undefined
   }
 
-  private createArrows(dimensionLine: AcGeLine2d) {
+  private createArrows(dimensionLine: GeometryLine2d) {
     const arrows: AcDbBlockReference[] = []
     arrows.push(
       this.createArrow(dimensionLine.startPoint, this.rotation + Math.PI, 10)
@@ -406,7 +409,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
   }
 
   private createArrow(
-    pos: AcGePoint2dLike,
+    pos: GeometryPoint2dLike,
     rotation: number,
     scaleFactor: number
   ) {
@@ -425,7 +428,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * @returns Return three lines of the alinged dimension
    */
   protected createLines() {
-    const lines: AcGeLine2d[] = []
+    const lines: GeometryLine2d[] = []
 
     const extensionLine1 = this.createExtensionLine(this._xLine1Point)
     const extensionLine2 = this.createExtensionLine(this._xLine2Point)
@@ -438,7 +441,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
       extensionLine2,
       this._dimLinePoint
     )
-    const dimensionLine = new AcGeLine2d(intersectionPoint1, intersectionPoint2)
+    const dimensionLine = new GeometryLine2d(
+      intersectionPoint1,
+      intersectionPoint2
+    )
     lines.push(dimensionLine)
 
     // Create the first extension line with extension
@@ -454,10 +460,10 @@ export class AcDbAlignedDimension extends AcDbDimension {
     return lines
   }
 
-  private createExtensionLine(point: AcGePoint2d) {
+  private createExtensionLine(point: GeometryPoint2d) {
     const angle = this.rotation + Math.PI / 2
     const anotherPoint = this.findPointOnLine2(point, angle, 100)
-    return new AcGeLine2d(point, anotherPoint)
+    return new GeometryLine2d(point, anotherPoint)
   }
 
   /**
@@ -468,24 +474,26 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * @param p The point through which the perpendicular 'line2' passes.
    * @returns Returns the intersection point of 'line1' and 'line2'.
    */
-  private findIntersectionPoint(line1: AcGeLine2d, p: AcGePoint2dLike) {
+  private findIntersectionPoint(line1: GeometryLine2d, p: GeometryPoint2dLike) {
     const p1 = line1.startPoint
     const p2 = line1.endPoint
 
     // Direction of line1 (p1 - p2)
-    const directionOfLine1 = new AcGeVector2d().subVectors(p2, p1).normalize()
+    const directionOfLine1 = new GeometryVector2d()
+      .subVectors(p2, p1)
+      .normalize()
 
     // Vector from point 'p1' to point 'p3'
-    const vectorFromP1ToP3 = new AcGeVector2d().subVectors(p, p1)
+    const vectorFromP1ToP3 = new GeometryVector2d().subVectors(p, p1)
 
     // Project vectorAP onto directionL to get the projection vector
     const projectionLength = vectorFromP1ToP3.dot(directionOfLine1)
-    const projectionVector = new AcGeVector2d()
+    const projectionVector = new GeometryVector2d()
       .copy(directionOfLine1)
       .multiplyScalar(projectionLength)
 
     // Intersection point is the point on line L at the projection
-    const intersection = new AcGePoint2d().addVectors(p1, projectionVector)
+    const intersection = new GeometryPoint2d().addVectors(p1, projectionVector)
 
     return intersection
   }

@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
 import { AcDbArc } from '../src/entity'
@@ -15,20 +15,20 @@ const createWorkingDb = () => {
 describe('AcDbArc', () => {
   it('creates a detached clone with a new objectId', () => {
     createWorkingDb()
-    expectDetachedClone(() => new AcDbArc(new AcGePoint2d(), 1, 0, Math.PI))
+    expectDetachedClone(() => new AcDbArc(new GeometryPoint2d(), 1, 0, Math.PI))
   })
 
   it('supports public geometric getters and setters', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(1, 2), 2, 0, Math.PI / 2)
+    const arc = new AcDbArc(new GeometryPoint2d(1, 2), 2, 0, Math.PI / 2)
 
     expect(arc.dxfTypeName).toBe('ARC')
-    expect(arc.center).toBeInstanceOf(AcGePoint2d)
+    expect(arc.center).toBeInstanceOf(GeometryPoint2d)
     expect(arc.radius).toBe(2)
     expect(arc.startAngle).toBe(0)
     expect(arc.endAngle).toBeCloseTo(Math.PI / 2)
 
-    arc.center = new AcGePoint2d(3, 4)
+    arc.center = new GeometryPoint2d(3, 4)
     arc.radius = 5
     arc.startAngle = Math.PI / 4
     arc.endAngle = Math.PI
@@ -39,23 +39,23 @@ describe('AcDbArc', () => {
     expect(arc.startAngle).toBeCloseTo(Math.PI / 4)
     expect(arc.endAngle).toBeCloseTo(Math.PI)
 
-    expect(arc.startPoint).toBeInstanceOf(AcGePoint2d)
-    expect(arc.endPoint).toBeInstanceOf(AcGePoint2d)
-    expect(arc.midPoint).toBeInstanceOf(AcGePoint2d)
+    expect(arc.startPoint).toBeInstanceOf(GeometryPoint2d)
+    expect(arc.endPoint).toBeInstanceOf(GeometryPoint2d)
+    expect(arc.midPoint).toBeInstanceOf(GeometryPoint2d)
     expect(arc.geometricExtents).toBeDefined()
     expect(typeof arc.closed).toBe('boolean')
   })
 
   it('returns geometricExtents and updates when center or radius change', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 3, 0, Math.PI / 2)
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 3, 0, Math.PI / 2)
 
     expect(arc.geometricExtents.min.x).toBeCloseTo(0, 5)
     expect(arc.geometricExtents.min.y).toBeCloseTo(0, 5)
     expect(arc.geometricExtents.max.x).toBeCloseTo(3, 5)
     expect(arc.geometricExtents.max.y).toBeCloseTo(3, 5)
 
-    arc.center = new AcGePoint2d(10, 10)
+    arc.center = new GeometryPoint2d(10, 10)
     arc.radius = 2
 
     expect(arc.geometricExtents.min.x).toBeCloseTo(10, 5)
@@ -66,7 +66,7 @@ describe('AcDbArc', () => {
 
   it('exposes runtime properties and accessors', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 3, 0, Math.PI / 2)
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 3, 0, Math.PI / 2)
     const properties = arc.properties
 
     expect(properties.type).toBe('Arc')
@@ -124,7 +124,7 @@ describe('AcDbArc', () => {
 
   it('returns grip points for center/start/end', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 2, 0, Math.PI / 2)
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 2, 0, Math.PI / 2)
     const gripPoints = arc.subGetGripPoints()
 
     expect(gripPoints).toHaveLength(3)
@@ -144,51 +144,51 @@ describe('AcDbArc', () => {
 
   it('computes osnap points for all supported modes', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 5, 0, Math.PI)
-    const endPoints: AcGePoint2d[] = []
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 5, 0, Math.PI)
+    const endPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       endPoints
     )
     expect(endPoints).toHaveLength(2)
 
-    const midPoints: AcGePoint2d[] = []
+    const midPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(1)
 
-    const nearestPoints: AcGePoint2d[] = []
+    const nearestPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0].x).toBeCloseTo(5 / Math.SQRT2, 8)
     expect(nearestPoints[0].y).toBeCloseTo(5 / Math.SQRT2, 8)
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(10, 0),
-      new AcGePoint2d(),
+      new GeometryPoint2d(10, 0),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
     expect(perpendicularPoints[0]).toMatchObject({ x: 5, y: 0 })
 
-    const tangentPoints: AcGePoint2d[] = []
+    const tangentPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Tangent,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       tangentPoints
     )
     expect(tangentPoints.length).toBeGreaterThan(0)
@@ -200,11 +200,11 @@ describe('AcDbArc', () => {
       )
     }
 
-    const centerPoints: AcGePoint2d[] = []
+    const centerPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       centerPoints
     )
     expect(centerPoints).toHaveLength(1)
@@ -213,11 +213,11 @@ describe('AcDbArc', () => {
       y: arc.center.y
     })
 
-    const unsupportedPoints: AcGePoint2d[] = []
+    const unsupportedPoints: GeometryPoint2d[] = []
     arc.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint2d(9, 9),
-      new AcGePoint2d(),
+      new GeometryPoint2d(9, 9),
+      new GeometryPoint2d(),
       unsupportedPoints
     )
     expect(unsupportedPoints).toHaveLength(0)
@@ -225,8 +225,8 @@ describe('AcDbArc', () => {
 
   it('transforms itself and draws with renderer', () => {
     createWorkingDb()
-    const arc = new AcDbArc(new AcGePoint2d(1, 2), 2, 0, Math.PI / 2)
-    const matrix = new AcGeMatrix3d().makeTranslation(10, -2, 1)
+    const arc = new AcDbArc(new GeometryPoint2d(1, 2), 2, 0, Math.PI / 2)
+    const matrix = new GeometryMatrix3d().makeTranslation(10, -2, 1)
 
     expect(arc.transformBy(matrix)).toBe(arc)
     expect(arc.center.x).toBeCloseTo(11)
@@ -242,18 +242,18 @@ describe('AcDbArc', () => {
   })
 
   it('increases radius when offsetting outward', () => {
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 5, 0, Math.PI)
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 5, 0, Math.PI)
     const [result] = arc.getOffsetCurves(2) as AcDbArc[]
     expect(result.radius).toBeCloseTo(7)
   })
 
   it('returns empty array when inward offset collapses radius', () => {
-    const arc = new AcDbArc(new AcGePoint2d(0, 0), 2, 0, Math.PI)
+    const arc = new AcDbArc(new GeometryPoint2d(0, 0), 2, 0, Math.PI)
     expect(arc.getOffsetCurves(-3)).toEqual([])
   })
 
   it('returns 0 area for open arc', () => {
-    const arc = new AcDbArc(new AcGePoint2d(), 5, 0, Math.PI / 2)
+    const arc = new AcDbArc(new GeometryPoint2d(), 5, 0, Math.PI / 2)
     expect(arc.area).toBe(0)
   })
 })

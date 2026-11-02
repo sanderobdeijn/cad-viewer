@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbObject } from '../base/AcDbObject'
 
@@ -37,11 +37,11 @@ export abstract class AcDbFilter extends AcDbObject {
    * wiring), so this data is captured here for forward compatibility;
    * subclasses like {@link AcDbLayerFilter} simply never populate it.
    */
-  private _boundaryVertices: AcGePoint2d[] = []
+  private _boundaryVertices: GeometryPoint2d[] = []
   /** Normal to the plane containing the clip boundary (DXF group 210). */
-  private _clipBoundaryNormal?: AcGePoint2d
+  private _clipBoundaryNormal?: GeometryPoint2d
   /** Origin of the clip boundary's local coordinate system (DXF group 11). */
-  private _clipBoundaryOrigin?: AcGePoint2d
+  private _clipBoundaryOrigin?: GeometryPoint2d
   /** Whether the clip boundary is displayed (DXF group 71). */
   private _clipBoundaryDisplayEnabled = false
   /** Whether front clipping is enabled (DXF group 72). */
@@ -63,14 +63,14 @@ export abstract class AcDbFilter extends AcDbObject {
   /**
    * Gets the clip boundary vertices in OCS (SPATIAL_FILTER DXF groups 10/20).
    */
-  get boundaryVertices(): readonly AcGePoint2d[] {
+  get boundaryVertices(): readonly GeometryPoint2d[] {
     return this._boundaryVertices
   }
 
   /**
    * Sets the clip boundary vertices in OCS (SPATIAL_FILTER DXF groups 10/20).
    */
-  set boundaryVertices(value: readonly AcGePoint2d[]) {
+  set boundaryVertices(value: readonly GeometryPoint2d[]) {
     this._boundaryVertices = value.map(vertex => vertex.clone())
   }
 
@@ -86,7 +86,7 @@ export abstract class AcDbFilter extends AcDbObject {
    * Sets the normal to the plane containing the clip boundary
    * (DXF group 210).
    */
-  set clipBoundaryNormal(value: AcGePoint2d | undefined) {
+  set clipBoundaryNormal(value: GeometryPoint2d | undefined) {
     this._clipBoundaryNormal = value?.clone()
   }
 
@@ -102,7 +102,7 @@ export abstract class AcDbFilter extends AcDbObject {
    * Sets the origin of the clip boundary's local coordinate system
    * (DXF group 11).
    */
-  set clipBoundaryOrigin(value: AcGePoint2d | undefined) {
+  set clipBoundaryOrigin(value: GeometryPoint2d | undefined) {
     this._clipBoundaryOrigin = value?.clone()
   }
 

@@ -1,9 +1,5 @@
-import {
-  AcCmColor,
-  AcCmUiYieldGate,
-  accmYieldToUi
-} from '@mlightcad/common'
-import { AcGeMatrix3d, AcGeVector3d } from '@mlightcad/geometry-engine'
+import { AcCmColor, AcCmUiYieldGate, accmYieldToUi } from '@mlightcad/common'
+import { GeometryMatrix3d, GeometryVector3d } from '@mlightcad/geometry-engine'
 import { AcGiEntity, AcGiRenderer } from '@mlightcad/graphic-interface'
 
 import { AcDbBlockTableRecord } from '../database/AcDbBlockTableRecord'
@@ -578,8 +574,8 @@ export class AcDbRenderingCache {
     blockColor: AcCmColor,
     attributes: AcGiEntity[] = [],
     cache: boolean = true,
-    transform?: AcGeMatrix3d,
-    normal?: AcGeVector3d
+    transform?: GeometryMatrix3d,
+    normal?: GeometryVector3d
   ) {
     const profile = AcDbRenderingCache.profiling
     if (profile) {
@@ -788,7 +784,9 @@ export class AcDbRenderingCache {
    * @param blockTableRecord - Block whose entities are scanned.
    * @returns `true` when at least one visible ByBlock-colored entity exists.
    */
-  private blockHasByBlockColor(blockTableRecord: AcDbBlockTableRecord): boolean {
+  private blockHasByBlockColor(
+    blockTableRecord: AcDbBlockTableRecord
+  ): boolean {
     for (const entity of blockTableRecord.newIterator()) {
       if (entity.visibility && entity.color.isByBlock) {
         return true
@@ -860,11 +858,11 @@ export class AcDbRenderingCache {
 }
 
 /** Scratch matrix for the INSERT world transform applied in {@link AcDbRenderingCache.draw}. */
-const _tmpWorldTransform = /*@__PURE__*/ new AcGeMatrix3d()
+const _tmpWorldTransform = /*@__PURE__*/ new GeometryMatrix3d()
 /** Scratch matrix for extrusion/normal correction in {@link AcDbRenderingCache.draw}. */
-const _tmpExtrusion = /*@__PURE__*/ new AcGeMatrix3d()
+const _tmpExtrusion = /*@__PURE__*/ new GeometryMatrix3d()
 /** Scratch inverse of the world transform used to bring ATTRIB geometry into block space. */
-const _tmpInverse = /*@__PURE__*/ new AcGeMatrix3d()
+const _tmpInverse = /*@__PURE__*/ new GeometryMatrix3d()
 
 /**
  * Minimum direct child count before {@link AcGiEntity.compactForInstancing} is
@@ -944,9 +942,8 @@ function shouldCompactTemplate(
  * @param entity - Block template about to be stored in the cache.
  */
 function prepareCacheTemplate(entity: AcGiEntity): void {
-  const prepare = (
-    entity as AcGiEntity & { prepareCacheTemplate?: () => void }
-  ).prepareCacheTemplate
+  const prepare = (entity as AcGiEntity & { prepareCacheTemplate?: () => void })
+    .prepareCacheTemplate
   if (typeof prepare === 'function') {
     prepare.call(entity)
   }

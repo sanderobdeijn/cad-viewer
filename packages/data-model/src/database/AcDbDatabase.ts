@@ -72,10 +72,10 @@ import { AcDbViewTable } from './AcDbViewTable'
 import { AcDbViewportTable } from './AcDbViewportTable'
 import { AcDbViewportTableRecord } from './AcDbViewportTableRecord'
 import {
-  AcGeBox3d,
-  AcGeCircArc2d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryBox3d,
+  GeometryCircularArc2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 import { AcDbDwgVersion } from './AcDbDwgVersion'
 import type { AcDbClass } from './AcDbClass'
@@ -209,7 +209,7 @@ export interface AcDbOpenDatabaseOptions {
    *
    * Lower values use less GPU memory and produce smaller HTML exports; higher
    * values look smoother on large arcs. Clamped to the DXF VPORT range
-   * `[{@link AcGeCircArc2d.MIN_CIRCLE_SIDES}, {@link AcGeCircArc2d.MAX_CIRCLE_SIDES}]`.
+   * `[{@link GeometryCircularArc2d.MIN_CIRCLE_SIDES}, {@link GeometryCircularArc2d.MAX_CIRCLE_SIDES}]`.
    * When omitted, {@link ACDB_DRAW_CIRCLE_SIDES_DRAFT} (50) is used so
    * AutoCAD's common VIEWRES 1000 is not applied accidentally.
    *
@@ -319,7 +319,7 @@ export class AcDbDatabase extends AcDbObject {
   /** Current dimension style name for the database ($DIMSTYLE) */
   private _dimstyle: string
   /** The extents of current Model Space */
-  private _extents: AcGeBox3d
+  private _extents: GeometryBox3d
   /** Insertion units for the database */
   private _insunits: AcDbUnitsValue
   /** Feet-inch / fractional delimiter style (UNITMODE) */
@@ -473,7 +473,7 @@ export class AcDbDatabase extends AcDbObject {
     this._cmleaderstyle = DEFAULT_MLEADER_STYLE
     this._textstyle = DEFAULT_TEXT_STYLE
     this._dimstyle = DEFAULT_TEXT_STYLE
-    this._extents = new AcGeBox3d()
+    this._extents = new GeometryBox3d()
     // TODO: Default value is 1 (imperial) or 4 (metric)
     this._insunits = AcDbUnitsValue.Millimeters
     this._unitmode = 0
@@ -1709,7 +1709,7 @@ export class AcDbDatabase extends AcDbObject {
     return this._drawCircleSides
   }
   set drawCircleSides(value: number) {
-    this._drawCircleSides = AcGeCircArc2d.resolveCircleSides(value)
+    this._drawCircleSides = GeometryCircularArc2d.resolveCircleSides(value)
   }
 
   /**
@@ -2068,10 +2068,10 @@ export class AcDbDatabase extends AcDbObject {
   /**
    * The current Model Space EXTMAX value
    */
-  get extmax(): AcGePoint2d {
-    return new AcGePoint2d(this._extents.max)
+  get extmax(): GeometryPoint2d {
+    return new GeometryPoint2d(this._extents.max)
   }
-  set extmax(value: AcGePoint2dLike) {
+  set extmax(value: GeometryPoint2dLike) {
     if (value) {
       const oldExtMax = this._extents.max.clone()
       this._extents.expandByPoint(value)
@@ -2088,10 +2088,10 @@ export class AcDbDatabase extends AcDbObject {
   /**
    * The current Model Space EXTMIN value
    */
-  get extmin(): AcGePoint2d {
-    return new AcGePoint2d(this._extents.min)
+  get extmin(): GeometryPoint2d {
+    return new GeometryPoint2d(this._extents.min)
   }
-  set extmin(value: AcGePoint2dLike) {
+  set extmin(value: GeometryPoint2dLike) {
     if (value) {
       const oldExtMin = this._extents.min.clone()
       this._extents.expandByPoint(value)

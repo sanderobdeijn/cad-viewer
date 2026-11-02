@@ -1,8 +1,8 @@
 import {
   AcDbObjectId,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
@@ -68,7 +68,7 @@ export class AcEdBatchedPreview {
         return
       }
       this._handleIds.push(handleId)
-      view.updateEntityPreview(handleId, new AcGeMatrix3d())
+      view.updateEntityPreview(handleId, new GeometryMatrix3d())
     }
     this.useBatchPreview = this._handleIds.length === this.copyCount
   }
@@ -82,7 +82,7 @@ export class AcEdBatchedPreview {
    * @param view - View that owns the preview overlay
    * @param matrix - World transform to apply to the preview geometry
    */
-  updateMatrix(view: AcEdBaseView, matrix: AcGeMatrix3d): void {
+  updateMatrix(view: AcEdBaseView, matrix: GeometryMatrix3d): void {
     if (!this.useBatchPreview || this._handleIds.length !== 1) {
       return
     }
@@ -104,7 +104,7 @@ export class AcEdBatchedPreview {
    */
   updatePlacements(
     view: AcEdBaseView,
-    displacement: AcGePoint2dLike,
+    displacement: GeometryPoint2dLike,
     fitMode: boolean
   ): void {
     if (!this.useBatchPreview) {
@@ -121,7 +121,7 @@ export class AcEdBatchedPreview {
       )
       view.updateEntityPreview(
         handleId,
-        new AcGeMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
+        new GeometryMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
       )
     })
   }
@@ -153,14 +153,14 @@ export class AcEdBatchedPreview {
  * @param copyCount - Total number of copies in the array preview
  * @param fitMode - When `true`, scales by `factor / copyCount`; otherwise
  *   scales by `factor`
- * @returns Scaled displacement as a new {@link AcGePoint2d}
+ * @returns Scaled displacement as a new {@link GeometryPoint2d}
  */
 export function scaleCopyDisplacement(
-  displacement: AcGePoint2dLike,
+  displacement: GeometryPoint2dLike,
   factor: number,
   copyCount: number,
   fitMode: boolean
-): AcGePoint2d {
+): GeometryPoint2d {
   const scale = fitMode && copyCount > 0 ? factor / copyCount : factor
-  return new AcGePoint2d(displacement.x * scale, displacement.y * scale)
+  return new GeometryPoint2d(displacement.x * scale, displacement.y * scale)
 }

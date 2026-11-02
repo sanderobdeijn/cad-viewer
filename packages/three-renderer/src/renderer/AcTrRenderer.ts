@@ -1,20 +1,19 @@
 import {
   AcCmEventManager,
   acdbDrawTessellateOptions,
-  AcGeArea2d,
-  AcGeCircArc2d,
-  AcGeEllipseArc2d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePolyline2d,
   AcGiFontMapping,
   AcGiMTextData,
   AcGiPointStyle,
   AcGiRenderer,
   AcGiShapeData,
   AcGiSubEntityTraits,
-  AcGiTextStyle
-} from '@mlightcad/data-model'
+  AcGiTextStyle,
+  GeometryArea2d,
+  GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d} from '@mlightcad/data-model'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 
@@ -125,13 +124,13 @@ export type AcTrDirectCapturePayload =
       /** Connected polyline captured from a line-strip draw. */
       kind: 'lineStrip'
       /** World-space vertices along the strip (at least two when captured). */
-      points: AcGePoint2dLike[]
+      points: GeometryPoint2dLike[]
     }
   | {
       /** Single point primitive captured from {@link AcTrRenderer.point}. */
       kind: 'point'
       /** World-space point location. */
-      point: AcGePoint2d
+      point: GeometryPoint2d
       /** Point display style (size, shape, etc.). */
       style: AcGiPointStyle
     }
@@ -139,7 +138,7 @@ export type AcTrDirectCapturePayload =
       /** Filled area captured from {@link AcTrRenderer.area}. */
       kind: 'area'
       /** Area geometry in drawing coordinates. */
-      area: AcGeArea2d
+      area: GeometryArea2d
     }
   | {
       /**
@@ -149,8 +148,8 @@ export type AcTrDirectCapturePayload =
        * accepts it. `outer[i]` / `inner[i]` are the two offsets of one sample.
        */
       kind: 'offsetRing'
-      outer: AcGePoint2dLike[]
-      inner: AcGePoint2dLike[]
+      outer: GeometryPoint2dLike[]
+      inner: GeometryPoint2dLike[]
     }
   | {
       /** Indexed line segments captured from {@link AcTrRenderer.lineSegments}. */
@@ -715,7 +714,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  point(point: AcGePoint2d, style: AcGiPointStyle) {
+  point(point: GeometryPoint2d, style: AcGiPointStyle) {
     if (this._directCapture !== 'off') {
       if (this.tryCaptureDirectPayload({ kind: 'point', point, style })) {
         return this.createDirectCapturePlaceholder() as AcTrPoint
@@ -728,14 +727,14 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  circularArc(arc: AcGeCircArc2d) {
+  circularArc(arc: GeometryCircularArc2d) {
     return this.linePoints(arc.tessellate(acdbDrawTessellateOptions(this)))
   }
 
   /**
    * @inheritdoc
    */
-  ellipticalArc(ellipseArc: AcGeEllipseArc2d) {
+  ellipticalArc(ellipseArc: GeometryEllipseArc2d) {
     return this.linePoints(
       ellipseArc.tessellate(acdbDrawTessellateOptions(this))
     )
@@ -744,7 +743,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  lines(points: AcGePoint2dLike[]) {
+  lines(points: GeometryPoint2dLike[]) {
     return this.linePoints(points)
   }
 
@@ -781,7 +780,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   /**
    * @inheritdoc
    */
-  area(area: AcGeArea2d) {
+  area(area: GeometryArea2d) {
     if (this._directCapture !== 'off') {
       if (this.tryCaptureDirectPayload({ kind: 'area', area })) {
         return this.createDirectCapturePlaceholder() as AcTrPolygon
@@ -799,7 +798,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
    * frames (small `constantWidth` × large INSERT scale) do not vanish at
    * fit-zoom.
    */
-  offsetRing(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
+  offsetRing(outer: GeometryPoint2dLike[], inner: GeometryPoint2dLike[]) {
     if (this._directCapture !== 'off') {
       // Fill + centerline cannot share one direct payload; fall back so the
       // hairline visibility stroke is not dropped.
@@ -835,11 +834,14 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
     return entity
   }
 
-  private offsetRingArea(outer: AcGePoint2dLike[], inner: AcGePoint2dLike[]) {
-    const area = new AcGeArea2d()
-    const toLoop = (points: AcGePoint2dLike[]) =>
-      new AcGePolyline2d(
-        points.map(point => new AcGePoint2d(point.x, point.y)),
+  private offsetRingArea(
+    outer: GeometryPoint2dLike[],
+    inner: GeometryPoint2dLike[]
+  ) {
+    const area = new GeometryArea2d()
+    const toLoop = (points: GeometryPoint2dLike[]) =>
+      new GeometryPolyline2d(
+        points.map(point => new GeometryPoint2d(point.x, point.y)),
         true
       )
     area.add(toLoop(outer))
@@ -917,7 +919,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
     this.clearMissedFonts()
   }
 
-  private linePoints(points: AcGePoint2dLike[]) {
+  private linePoints(points: GeometryPoint2dLike[]) {
     if (this._directCapture !== 'off') {
       if (points.length < 2) {
         this.missDirectCapture()

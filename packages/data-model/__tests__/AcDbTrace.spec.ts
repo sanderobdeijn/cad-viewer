@@ -1,7 +1,7 @@
 import {
-  AcGeArea2d,
-  AcGeMatrix3d,
-  AcGePoint2d
+  GeometryArea2d,
+  GeometryMatrix3d,
+  GeometryPoint2d
 } from '@mlightcad/geometry-engine'
 import { AcDbTrace } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -65,49 +65,49 @@ describe('AcDbTrace', () => {
     expect(grips).toHaveLength(4)
     expect(grips[0]).toBe(trace.getPointAt(0))
 
-    const endpointSnaps: AcGePoint2d[] = []
+    const endpointSnaps: GeometryPoint2d[] = []
     trace.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       endpointSnaps
     )
     expect(endpointSnaps).toHaveLength(4)
 
-    const otherSnaps: AcGePoint2d[] = []
+    const otherSnaps: GeometryPoint2d[] = []
     trace.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       otherSnaps
     )
     expect(otherSnaps).toHaveLength(0)
 
-    const midPoints: AcGePoint2d[] = []
+    const midPoints: GeometryPoint2d[] = []
     trace.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(4)
 
-    const nearestPoints: AcGePoint2d[] = []
+    const nearestPoints: GeometryPoint2d[] = []
     trace.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(0.5, -1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(0.5, -1),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0].x).toBeCloseTo(0.5)
     expect(nearestPoints[0].y).toBeCloseTo(-1)
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     trace.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(0.5, 10),
-      new AcGePoint2d(),
+      new GeometryPoint2d(0.5, 10),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
@@ -134,10 +134,10 @@ describe('AcDbTrace', () => {
     trace.setPointAt(2, { x: 0, y: 5, z: 0 })
     trace.setPointAt(3, { x: 10, y: 5, z: 0 })
 
-    let capturedArea: AcGeArea2d | undefined
+    let capturedArea: GeometryArea2d | undefined
     const renderer = {
       subEntityTraits: {},
-      area: jest.fn((area: AcGeArea2d) => {
+      area: jest.fn((area: GeometryArea2d) => {
         capturedArea = area
         return { id: 'trace-area' }
       })
@@ -165,7 +165,7 @@ describe('AcDbTrace', () => {
     trace.setPointAt(3, { x: 0, y: 1, z: 1 })
 
     expect(
-      trace.transformBy(new AcGeMatrix3d().makeTranslation(5, -2, 3))
+      trace.transformBy(new GeometryMatrix3d().makeTranslation(5, -2, 3))
     ).toBe(trace)
     expect(trace.getPointAt(0)).toMatchObject({ x: 5, y: -2 })
 
@@ -181,10 +181,10 @@ describe('AcDbTrace', () => {
 
   it('computes quadrilateral area', () => {
     const trace = new AcDbTrace()
-    trace.setPointAt(0, new AcGePoint2d(0, 0))
-    trace.setPointAt(1, new AcGePoint2d(10, 0))
-    trace.setPointAt(2, new AcGePoint2d(0, 5))
-    trace.setPointAt(3, new AcGePoint2d(10, 5))
+    trace.setPointAt(0, new GeometryPoint2d(0, 0))
+    trace.setPointAt(1, new GeometryPoint2d(10, 0))
+    trace.setPointAt(2, new GeometryPoint2d(0, 5))
+    trace.setPointAt(3, new GeometryPoint2d(10, 5))
     expect(trace.area).toBeCloseTo(50, 8)
   })
 })

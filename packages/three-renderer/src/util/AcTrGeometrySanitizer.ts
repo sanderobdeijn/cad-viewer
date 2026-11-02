@@ -1,8 +1,8 @@
 import {
   AcDbEntity,
-  AcGeCircArc2d,
-  AcGeEllipseArc2d,
-  AcGePoint2dLike
+  GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcTrBufferGeometryUtil } from './AcTrBufferGeometryUtil'
@@ -21,15 +21,15 @@ export interface AcTrGeometrySanitizerContext {
  * manually while investigating a DWG, or from tests.
  */
 export class AcTrGeometrySanitizer {
-  static isFinitePoint(point: AcGePoint2dLike | null | undefined): boolean {
+  static isFinitePoint(point: GeometryPoint2dLike | null | undefined): boolean {
     return AcTrBufferGeometryUtil.isFinitePoint(point)
   }
 
   static filterFinitePoints(
-    points: AcGePoint2dLike[],
+    points: GeometryPoint2dLike[],
     context?: AcTrGeometrySanitizerContext,
     source = 'lines'
-  ): AcGePoint2dLike[] {
+  ): GeometryPoint2dLike[] {
     const filtered = points.filter(point =>
       AcTrGeometrySanitizer.isFinitePoint(point)
     )
@@ -95,10 +95,10 @@ export class AcTrGeometrySanitizer {
   /**
    * Rejects circular arcs with a non-finite center or an invalid radius.
    */
-  static repairCircArc(
-    arc: AcGeCircArc2d,
+  static repairCircularArc(
+    arc: GeometryCircularArc2d,
     context?: AcTrGeometrySanitizerContext
-  ): AcGeCircArc2d | null {
+  ): GeometryCircularArc2d | null {
     if (!AcTrGeometrySanitizer.isFinitePoint(arc.center)) {
       AcTrGeometrySanitizer.reportIssue(
         context,
@@ -123,9 +123,9 @@ export class AcTrGeometrySanitizer {
    * Rejects elliptical arcs with a non-finite center or invalid axis radii.
    */
   static repairEllipseArc(
-    arc: AcGeEllipseArc2d,
+    arc: GeometryEllipseArc2d,
     context?: AcTrGeometrySanitizerContext
-  ): AcGeEllipseArc2d | null {
+  ): GeometryEllipseArc2d | null {
     if (!AcTrGeometrySanitizer.isFinitePoint(arc.center)) {
       AcTrGeometrySanitizer.reportIssue(
         context,

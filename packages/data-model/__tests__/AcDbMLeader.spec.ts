@@ -1,5 +1,5 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
-import { AcGePoint2d, AcGeVector3d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d, GeometryVector3d } from '@mlightcad/geometry-engine'
 import {
   AcGiLineWeight,
   AcGiSubEntityTraits,
@@ -66,8 +66,8 @@ const createSimpleLeader = (db: AcDbDatabase) => {
   const mleader = new AcDbMLeader()
   const leaderIndex = mleader.addLeader()
   mleader.addLeaderLine(leaderIndex, [
-    new AcGePoint2d(0, 0),
-    new AcGePoint2d(5, 0)
+    new GeometryPoint2d(0, 0),
+    new GeometryPoint2d(5, 0)
   ])
   db.tables.blockTable.modelSpace.appendEntity(mleader)
   return mleader
@@ -153,9 +153,9 @@ describe('AcDbMLeader arrowhead rendering', () => {
 
     const arrowBlock = new AcDbBlockTableRecord()
     arrowBlock.name = 'TRIM_ARROW_BLOCK'
-    arrowBlock.origin = new AcGePoint2d(0, 0)
+    arrowBlock.origin = new GeometryPoint2d(0, 0)
     arrowBlock.appendEntity(
-      new AcDbLine(new AcGePoint2d(-0.5, 0), new AcGePoint2d(0.5, 0))
+      new AcDbLine(new GeometryPoint2d(-0.5, 0), new GeometryPoint2d(0.5, 0))
     )
     db.tables.blockTable.add(arrowBlock)
     mleader.arrowheadId = arrowBlock.objectId
@@ -167,7 +167,7 @@ describe('AcDbMLeader arrowhead rendering', () => {
 
     mleader.worldDraw(renderer as never)
 
-    const linePoints = renderer.lines.mock.calls[0][0] as AcGePoint2d[]
+    const linePoints = renderer.lines.mock.calls[0][0] as GeometryPoint2d[]
     expect(linePoints[0].x).toBeCloseTo(2)
     expect(linePoints[0].y).toBeCloseTo(0)
     expect(linePoints[1].x).toBeCloseTo(5)
@@ -192,7 +192,7 @@ describe('AcDbMLeader arrowhead rendering', () => {
     const db = createWorkingDb()
     const mleader = createSimpleLeader(db)
     mleader.contents = 'yellow non-standard line'
-    mleader.textLocation = new AcGePoint2d(5, 2)
+    mleader.textLocation = new GeometryPoint2d(5, 2)
     mleader.contentType = AcDbMLeaderContentType.MTextContent
 
     // Real AutoCAD files (e.g. mleader-sytle.dxf) write ACI text color in
@@ -225,7 +225,7 @@ describe('AcDbMLeader arrowhead rendering', () => {
     const db = createWorkingDb()
     const mleader = createSimpleLeader(db)
     mleader.contents = 'Color by style'
-    mleader.textLocation = new AcGePoint2d(5, 2)
+    mleader.textLocation = new GeometryPoint2d(5, 2)
 
     // Simulate DXF payload that writes entity raw color fields as ByBlock.
     mleader.leaderLineColor = new AcCmColor().setByBlock()
@@ -265,7 +265,7 @@ describe('AcDbMLeader arrowhead rendering', () => {
     const db = createWorkingDb()
     const mleader = createSimpleLeader(db)
     mleader.contents = 'Delayed text'
-    mleader.textLocation = new AcGePoint2d(5, 2)
+    mleader.textLocation = new GeometryPoint2d(5, 2)
 
     const renderer = createRenderer()
     mleader.worldDraw(renderer as never, true)
@@ -318,12 +318,12 @@ describe('AcDbMLeader arrowhead rendering', () => {
     const db = createWorkingDb()
     const mleader = new AcDbMLeader()
     const leaderIndex = mleader.addLeader({
-      lastLeaderLinePoint: new AcGePoint2d(5, 0),
+      lastLeaderLinePoint: new GeometryPoint2d(5, 0),
       lastLeaderLinePointSet: true
     })
     mleader.addLeaderLine(leaderIndex, [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(5, 0)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(5, 0)
     ])
     db.tables.blockTable.modelSpace.appendEntity(mleader)
 
@@ -341,60 +341,60 @@ describe('AcDbMLeader arrowhead rendering', () => {
 
   it('computes osnap points on leader lines and content insertion', () => {
     const mleader = new AcDbMLeader()
-    mleader.contentBasePosition = new AcGePoint2d(10, 5)
+    mleader.contentBasePosition = new GeometryPoint2d(10, 5)
     const leaderIndex = mleader.addLeader({
-      lastLeaderLinePoint: new AcGePoint2d(5, 0),
+      lastLeaderLinePoint: new GeometryPoint2d(5, 0),
       lastLeaderLinePointSet: true
     })
     mleader.addLeaderLine(leaderIndex, [
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(5, 0)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(5, 0)
     ])
 
-    const endPoints: AcGePoint2d[] = []
+    const endPoints: GeometryPoint2d[] = []
     mleader.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       endPoints
     )
     expect(endPoints.length).toBeGreaterThanOrEqual(2)
 
-    const insertionSnaps: AcGePoint2d[] = []
+    const insertionSnaps: GeometryPoint2d[] = []
     mleader.subGetOsnapPoints(
       AcDbOsnapMode.Insertion,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       insertionSnaps
     )
     expect(insertionSnaps).toHaveLength(1)
     expect(insertionSnaps[0]).toMatchObject({ x: 10, y: 5 })
 
-    const midPoints: AcGePoint2d[] = []
+    const midPoints: GeometryPoint2d[] = []
     mleader.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint2d(2, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(2, 1),
+      new GeometryPoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(1)
     expect(midPoints[0]).toMatchObject({ x: 2.5, y: 0 })
 
-    const nearestPoints: AcGePoint2d[] = []
+    const nearestPoints: GeometryPoint2d[] = []
     mleader.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(2, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(2, 1),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0]).toMatchObject({ x: 2, y: 0 })
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     mleader.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(2, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(2, 1),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
@@ -412,7 +412,10 @@ describe('AcDbMLeader geometricExtents', () => {
     expect(before.min.x).toBeCloseTo(0)
     expect(before.max.x).toBeCloseTo(5)
 
-    mleader.addLeaderLine(0, [new AcGePoint2d(5, 0), new AcGePoint2d(5, 12)])
+    mleader.addLeaderLine(0, [
+      new GeometryPoint2d(5, 0),
+      new GeometryPoint2d(5, 12)
+    ])
 
     const after = mleader.geometricExtents
     expect(after.max.y).toBeCloseTo(12)
@@ -433,7 +436,7 @@ describe('AcDbMLeader dxfInFields CONTEXT_DATA', () => {
     mleader.textWidth = 0
     mleader.mtextContent = {
       text: '（配焊）',
-      anchorPoint: new AcGePoint2d(1342, 623)
+      anchorPoint: new GeometryPoint2d(1342, 623)
     }
 
     const renderer = createRenderer()
@@ -453,15 +456,15 @@ describe('AcDbMLeader dxfInFields CONTEXT_DATA', () => {
     const mleader = new AcDbMLeader()
     mleader.doglegEnabled = true
     mleader.doglegLength = 2.705
-    mleader.contentBasePosition = new AcGePoint2d(1275.419, 602.118)
+    mleader.contentBasePosition = new GeometryPoint2d(1275.419, 602.118)
     const leaderIndex = mleader.addLeader({
-      lastLeaderLinePoint: new AcGePoint2d(1345.537, 602.118),
+      lastLeaderLinePoint: new GeometryPoint2d(1345.537, 602.118),
       lastLeaderLinePointSet: true,
-      doglegVector: new AcGeVector3d(-1, 0, 0),
+      doglegVector: new GeometryVector3d(-1, 0, 0),
       doglegVectorSet: true,
       doglegLength: 2.705
     })
-    mleader.addLeaderLine(leaderIndex, [new AcGePoint2d(1406.346, 663.239)])
+    mleader.addLeaderLine(leaderIndex, [new GeometryPoint2d(1406.346, 663.239)])
     db.tables.blockTable.modelSpace.appendEntity(mleader)
 
     const renderer = createRenderer()
@@ -495,7 +498,7 @@ describe('AcDbMLeader dxfInFields CONTEXT_DATA', () => {
     mleader.textWidth = 40
     mleader.mtextContent = {
       text: 'wrapped label',
-      anchorPoint: new AcGePoint2d(0, 0)
+      anchorPoint: new GeometryPoint2d(0, 0)
     }
 
     const renderer = createRenderer()

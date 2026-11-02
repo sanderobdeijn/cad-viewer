@@ -57,7 +57,10 @@ jest.mock('../src/view', () => ({
       enqueueScriptInputs: jest.fn(),
       inputManager: {
         isMobilePromptOpen: false,
-        mobileChrome: { prepareAccessory: jest.fn(), clearAccessory: jest.fn() },
+        mobileChrome: {
+          prepareAccessory: jest.fn(),
+          clearAccessory: jest.fn()
+        },
         sessionAccessoryHost: {
           host: {},
           type: 'desktop'
@@ -158,7 +161,6 @@ jest.mock('../src/editor/input/ui/AcEdDesktopSessionAccessoryChrome', () => ({
 jest.mock('../src/command/measure/AcApRegisterMeasureCommands', () => ({
   registerMeasureCommands: jest.fn()
 }))
-
 
 jest.mock('../src/command/AcApInstallDrawStyleSessionAccessory', () => ({
   acapInstallDrawStyleSessionAccessory: jest.fn(),
@@ -262,7 +264,7 @@ jest.mock('@mlightcad/data-model', () => ({
       getAllDescriptors: jest.fn(() => [])
     }))
   },
-  AcGeBox2d: jest.fn(),
+  GeometryBox2d: jest.fn(),
   acdbHostApplicationServices: jest.fn(() => ({})),
   log: {
     error: jest.fn(),
@@ -353,9 +355,7 @@ describe('AcApDocManager preset fonts for open', () => {
     const names = call[0]
     const options = call[1]
     expect(names.length).toBeGreaterThan(0)
-    expect(names).toEqual(
-      expect.arrayContaining(['simsun', 'hztxt', 'amgdt'])
-    )
+    expect(names).toEqual(expect.arrayContaining(['simsun', 'hztxt', 'amgdt']))
     expect(options).toEqual({ scope: 'all' })
     expect(manager!.lastPresetFontsForOpen).toEqual(names)
   })
@@ -387,16 +387,17 @@ describe('AcApDocManager preset fonts for open', () => {
     let ensureCalled = false
     let ensureSettled = false
     let settleTimer: ReturnType<typeof setTimeout> | undefined
-    ;(manager as unknown as { ensurePresetFontsForOpen: () => Promise<void> }).ensurePresetFontsForOpen =
-      () => {
-        ensureCalled = true
-        return new Promise<void>(resolve => {
-          settleTimer = setTimeout(() => {
-            ensureSettled = true
-            resolve()
-          }, 50)
-        })
-      }
+    ;(
+      manager as unknown as { ensurePresetFontsForOpen: () => Promise<void> }
+    ).ensurePresetFontsForOpen = () => {
+      ensureCalled = true
+      return new Promise<void>(resolve => {
+        settleTimer = setTimeout(() => {
+          ensureSettled = true
+          resolve()
+        }, 50)
+      })
+    }
     ;(
       manager as unknown as {
         _openFileProgress: { setSeeThroughOverlay: (v: boolean) => void }
@@ -407,7 +408,6 @@ describe('AcApDocManager preset fonts for open', () => {
         _openFileProfiler: { begin: (db: unknown) => void }
       }
     )._openFileProfiler.begin = jest.fn()
-
     ;(
       manager as unknown as {
         onBeforeOpenDocument: (options?: unknown, replace?: boolean) => void
@@ -437,9 +437,9 @@ describe('AcApDocManager document sessions', () => {
 
   it('activateDocument is a no-op for the current document', async () => {
     const manager = AcApDocManager.createInstance({})
-    await expect(
-      manager!.activateDocument(manager!.curDocument)
-    ).resolves.toBe(true)
+    await expect(manager!.activateDocument(manager!.curDocument)).resolves.toBe(
+      true
+    )
     expect(manager!.documentCount).toBe(1)
   })
 

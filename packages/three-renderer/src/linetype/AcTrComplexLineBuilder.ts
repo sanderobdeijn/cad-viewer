@@ -1,11 +1,10 @@
 import {
-  AcGePoint2dLike,
   AcGiMTextAttachmentPoint,
   AcGiMTextData,
   AcGiShapeData,
   AcGiSubEntityTraits,
-  AcGiTextStyle
-} from '@mlightcad/data-model'
+  AcGiTextStyle,
+  GeometryPoint2dLike} from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
@@ -90,7 +89,7 @@ export const MAX_COMPLEX_LINETYPE_CYCLES = 4096
  * given polyline and scaled pattern.
  */
 export function estimateComplexLineTypeCycles(
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   pattern: NonNullable<AcGiSubEntityTraits['lineType']['pattern']>,
   scale: number
 ): number {
@@ -302,7 +301,7 @@ function appendComplexStrokes(
  */
 export function buildComplexLineTypeGeometry(
   entity: AcTrEntity,
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   traits: AcGiSubEntityTraits,
   context: AcTrRenderContext
 ): boolean {

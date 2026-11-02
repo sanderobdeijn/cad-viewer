@@ -1,5 +1,5 @@
 import { defaults } from '@mlightcad/common'
-import { AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import {
   AcDbSymbolTableRecord,
@@ -13,11 +13,11 @@ export interface AcDbUcsTableRecordAttrs extends AcDbSymbolTableRecordAttrs {
   /** Standard flags (group 70) */
   standardFlags: number
   /** UCS origin */
-  origin: AcGePoint2d
+  origin: GeometryPoint2d
   /** UCS X axis direction */
-  xAxis: AcGePoint2d
+  xAxis: GeometryPoint2d
   /** UCS Y axis direction */
-  yAxis: AcGePoint2d
+  yAxis: GeometryPoint2d
   /** Whether this UCS is orthographic (DXF group 79) */
   isOrthographic: boolean
   /** Elevation of this UCS (DXF group 146) */
@@ -36,7 +36,7 @@ export interface AcDbUcsTableRecordAttrs extends AcDbSymbolTableRecordAttrs {
    * Origin for {@link orthographicType} relative to this UCS
    * (DXF groups 13/23/33)
    */
-  orthographicOrigin?: AcGePoint2d
+  orthographicOrigin?: GeometryPoint2d
 }
 
 /**
@@ -50,9 +50,9 @@ export class AcDbUcsTableRecord extends AcDbSymbolTableRecord<AcDbUcsTableRecord
     attrs = attrs || {}
     defaults(attrs, {
       standardFlags: 0,
-      origin: new AcGePoint2d(0, 0),
-      xAxis: new AcGePoint2d(1, 0),
-      yAxis: new AcGePoint2d(0, 1),
+      origin: new GeometryPoint2d(0, 0),
+      xAxis: new GeometryPoint2d(1, 0),
+      yAxis: new GeometryPoint2d(0, 1),
       isOrthographic: false,
       elevation: 0
     })
@@ -69,21 +69,21 @@ export class AcDbUcsTableRecord extends AcDbSymbolTableRecord<AcDbUcsTableRecord
   get origin() {
     return this.getAttr('origin')
   }
-  set origin(value: AcGePoint2d) {
+  set origin(value: GeometryPoint2d) {
     this.setAttr('origin', value.clone())
   }
 
   get xAxis() {
     return this.getAttr('xAxis')
   }
-  set xAxis(value: AcGePoint2d) {
+  set xAxis(value: GeometryPoint2d) {
     this.setAttr('xAxis', value.clone())
   }
 
   get yAxis() {
     return this.getAttr('yAxis')
   }
-  set yAxis(value: AcGePoint2d) {
+  set yAxis(value: GeometryPoint2d) {
     this.setAttr('yAxis', value.clone())
   }
 
@@ -131,7 +131,7 @@ export class AcDbUcsTableRecord extends AcDbSymbolTableRecord<AcDbUcsTableRecord
   get orthographicOrigin() {
     return this.getAttrWithoutException('orthographicOrigin')
   }
-  set orthographicOrigin(value: AcGePoint2d | undefined) {
+  set orthographicOrigin(value: GeometryPoint2d | undefined) {
     this.setAttr('orthographicOrigin', value?.clone())
   }
 }

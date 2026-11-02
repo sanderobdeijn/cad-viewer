@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrDrawMode } from './AcTrDrawMode'
@@ -32,7 +32,7 @@ export interface AcTrBatchDrawContext {
    * Used when the entity has one canonical location (for example MTEXT/SHAPE
    * insertion, or a POINT entity coordinate).
    */
-  position?: AcGePoint2dLike
+  position?: GeometryPoint2dLike
 
   /**
    * Representative world-space point for geometry that spans multiple vertices.
@@ -41,7 +41,7 @@ export interface AcTrBatchDrawContext {
    * computed by {@link resolveAnchorFromBox}. Used by line-like entities and
    * hatches that do not have a single insertion point.
    */
-  anchor?: AcGePoint2dLike
+  anchor?: GeometryPoint2dLike
 }
 
 /**
@@ -82,7 +82,7 @@ export interface AcTrBatchDrawPolicy {
  * @returns `true` when the point exceeds the large-coordinate threshold.
  */
 export function isLargeWorldCoordinatePoint(
-  position?: AcGePoint2dLike
+  position?: GeometryPoint2dLike
 ): boolean {
   if (position == null) {
     return false
@@ -149,8 +149,8 @@ export function canMergeIntoBatchOrigin(
  * @returns Bounding-box center, or `undefined` when `points` is empty.
  */
 export function resolveAnchorFromPoints(
-  points: AcGePoint2dLike[]
-): AcGePoint2dLike | undefined {
+  points: GeometryPoint2dLike[]
+): GeometryPoint2dLike | undefined {
   if (points.length === 0) {
     return undefined
   }
@@ -184,7 +184,7 @@ export function resolveAnchorFromPoints(
  */
 export function resolveAnchorFromBox(
   box: THREE.Box3
-): AcGePoint2dLike | undefined {
+): GeometryPoint2dLike | undefined {
   if (box.isEmpty()) {
     return undefined
   }

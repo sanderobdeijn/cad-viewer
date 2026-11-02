@@ -1,4 +1,4 @@
-import { AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 /**
@@ -18,7 +18,7 @@ export interface AcTrBatchGeometryUserData {
   /**
    * Record position for point only
    */
-  position?: AcGePoint2dLike
+  position?: GeometryPoint2dLike
 }
 
 /**

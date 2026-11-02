@@ -1,4 +1,7 @@
-import { type AcDbDatabase, type AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  type AcDbDatabase,
+  type GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,
@@ -63,9 +66,9 @@ function calcDist(
  */
 export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
   /** First endpoint of the measured segment in world coordinates. */
-  private readonly p1: AcGePoint2dLike
+  private readonly p1: GeometryPoint2dLike
   /** Second endpoint of the measured segment in world coordinates. */
-  private readonly p2: AcGePoint2dLike
+  private readonly p2: GeometryPoint2dLike
 
   /**
    * Creates a distance measure entity between two points.
@@ -75,8 +78,8 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    * @param options - Shared id, layout, and style options
    */
   constructor(
-    p1: AcGePoint2dLike,
-    p2: AcGePoint2dLike,
+    p1: GeometryPoint2dLike,
+    p2: GeometryPoint2dLike,
     options: AcApMeasureEntityOptions
   ) {
     super(
@@ -101,8 +104,8 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasureDistanceEntity}
    */
   static create(
-    p1: AcGePoint2dLike,
-    p2: AcGePoint2dLike,
+    p1: GeometryPoint2dLike,
+    p2: GeometryPoint2dLike,
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasureDistanceEntity {
@@ -118,7 +121,7 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    *
    * @returns World point at the average of {@link p1} and {@link p2}, `z: 0`
    */
-  override primaryPoint(): AcGePoint2dLike {
+  override primaryPoint(): GeometryPoint2dLike {
     return {
       x: (this.p1.x + this.p2.x) / 2,
       y: (this.p1.y + this.p2.y) / 2

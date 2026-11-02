@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -34,7 +34,7 @@ import { acdbIntersectPrimitivesFromPointPath } from './AcDbIntersectHelpers'
  * @example
  * ```typescript
  * const viewport = new AcDbViewport();
- * viewport.centerPoint = new AcGePoint2d(0, 0);
+ * viewport.centerPoint = new GeometryPoint2d(0, 0);
  * viewport.width = 10;
  * viewport.height = 8;
  * viewport.number = 2;
@@ -48,18 +48,18 @@ export class AcDbViewport extends AcDbEntity {
     return 'VIEWPORT'
   }
 
-  private _centerPoint: AcGePoint2d
+  private _centerPoint: GeometryPoint2d
   private _height: number
   private _width: number
-  private _viewCenter: AcGePoint2d
-  private _viewTarget: AcGePoint2d
-  private _viewDirection: AcGeVector3d
+  private _viewCenter: GeometryPoint2d
+  private _viewTarget: GeometryPoint2d
+  private _viewDirection: GeometryVector3d
   private _viewTwistAngle: number
   private _viewHeight: number
   private _number: number
-  private _snapBase = new AcGePoint2d()
-  private _snapSpacing = new AcGePoint2d(1, 1)
-  private _gridSpacing = new AcGePoint2d(1, 1)
+  private _snapBase = new GeometryPoint2d()
+  private _snapSpacing = new GeometryPoint2d(1, 1)
+  private _gridSpacing = new GeometryPoint2d(1, 1)
   private _perspectiveLensLength = 50
   private _frontClipZ = 0
   private _backClipZ = 0
@@ -68,9 +68,9 @@ export class AcDbViewport extends AcDbEntity {
   private _ucsPerViewport = 0
   private _circleZoomPercent = 1000
   private _statusBitFlags = 0
-  private _ucsOrigin = new AcGePoint2d()
-  private _ucsXAxis = new AcGeVector3d(1, 0, 0)
-  private _ucsYAxis = new AcGeVector3d(0, 1, 0)
+  private _ucsOrigin = new GeometryPoint2d()
+  private _ucsXAxis = new GeometryVector3d(1, 0, 0)
+  private _ucsYAxis = new GeometryVector3d(0, 1, 0)
   private _elevation = 0
   private _frozenLayerIds: string[] = []
   private _sheetName = ''
@@ -110,12 +110,12 @@ export class AcDbViewport extends AcDbEntity {
    */
   constructor() {
     super()
-    this._centerPoint = new AcGePoint2d()
+    this._centerPoint = new GeometryPoint2d()
     this._height = 0
     this._width = 0
-    this._viewCenter = new AcGePoint2d()
-    this._viewTarget = new AcGePoint2d()
-    this._viewDirection = new AcGeVector3d(0, 0, 1)
+    this._viewCenter = new GeometryPoint2d()
+    this._viewTarget = new GeometryPoint2d()
+    this._viewDirection = new GeometryVector3d(0, 0, 1)
     this._viewTwistAngle = 0
     this._viewHeight = 0
     this._number = -1
@@ -154,7 +154,7 @@ export class AcDbViewport extends AcDbEntity {
   get centerPoint() {
     return this._centerPoint
   }
-  set centerPoint(value: AcGePoint2d) {
+  set centerPoint(value: GeometryPoint2d) {
     this._centerPoint = value
   }
 
@@ -205,7 +205,7 @@ export class AcDbViewport extends AcDbEntity {
   get viewCenter() {
     return this._viewCenter
   }
-  set viewCenter(value: AcGePoint2d) {
+  set viewCenter(value: GeometryPoint2d) {
     this._viewCenter = value
   }
 
@@ -219,7 +219,7 @@ export class AcDbViewport extends AcDbEntity {
   get viewTarget() {
     return this._viewTarget
   }
-  set viewTarget(value: AcGePoint2d) {
+  set viewTarget(value: GeometryPoint2d) {
     this._viewTarget = value
   }
 
@@ -229,7 +229,7 @@ export class AcDbViewport extends AcDbEntity {
   get viewDirection() {
     return this._viewDirection
   }
-  set viewDirection(value: AcGeVector3dLike) {
+  set viewDirection(value: GeometryVector3dLike) {
     this._viewDirection.copy(value)
   }
 
@@ -237,7 +237,7 @@ export class AcDbViewport extends AcDbEntity {
   get snapBase() {
     return this._snapBase
   }
-  set snapBase(value: AcGePoint2d) {
+  set snapBase(value: GeometryPoint2d) {
     this._snapBase.copy(value)
   }
 
@@ -245,7 +245,7 @@ export class AcDbViewport extends AcDbEntity {
   get snapSpacing() {
     return this._snapSpacing
   }
-  set snapSpacing(value: AcGePoint2d) {
+  set snapSpacing(value: GeometryPoint2d) {
     this._snapSpacing.copy(value)
   }
 
@@ -253,7 +253,7 @@ export class AcDbViewport extends AcDbEntity {
   get gridSpacing() {
     return this._gridSpacing
   }
-  set gridSpacing(value: AcGePoint2d) {
+  set gridSpacing(value: GeometryPoint2d) {
     this._gridSpacing.copy(value)
   }
 
@@ -325,7 +325,7 @@ export class AcDbViewport extends AcDbEntity {
   get ucsOrigin() {
     return this._ucsOrigin
   }
-  set ucsOrigin(value: AcGePoint2d) {
+  set ucsOrigin(value: GeometryPoint2d) {
     this._ucsOrigin.copy(value)
   }
 
@@ -349,7 +349,7 @@ export class AcDbViewport extends AcDbEntity {
   get ucsXAxis() {
     return this._ucsXAxis
   }
-  set ucsXAxis(value: AcGeVector3dLike) {
+  set ucsXAxis(value: GeometryVector3dLike) {
     this._ucsXAxis.copy(value)
   }
 
@@ -357,7 +357,7 @@ export class AcDbViewport extends AcDbEntity {
   get ucsYAxis() {
     return this._ucsYAxis
   }
-  set ucsYAxis(value: AcGeVector3dLike) {
+  set ucsYAxis(value: GeometryVector3dLike) {
     this._ucsYAxis.copy(value)
   }
 
@@ -567,18 +567,18 @@ export class AcDbViewport extends AcDbEntity {
    * @returns A bounding box containing the viewport entity
    * @inheritdoc
    */
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     const halfWidth = this._width / 2
     const halfHeight = this._height / 2
-    const box = new AcGeBox3d()
+    const box = new GeometryBox3d()
     box.expandByPoint(
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x - halfWidth,
         this._centerPoint.y - halfHeight
       )
     )
     box.expandByPoint(
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x + halfWidth,
         this._centerPoint.y + halfHeight
       )
@@ -587,23 +587,23 @@ export class AcDbViewport extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     const halfWidth = this._width / 2
     const halfHeight = this._height / 2
     const corners = [
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x - halfWidth,
         this._centerPoint.y - halfHeight
       ),
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x + halfWidth,
         this._centerPoint.y - halfHeight
       ),
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x + halfWidth,
         this._centerPoint.y + halfHeight
       ),
-      new AcGePoint2d(
+      new GeometryPoint2d(
         this._centerPoint.x - halfWidth,
         this._centerPoint.y + halfHeight
       )
@@ -620,26 +620,26 @@ export class AcDbViewport extends AcDbEntity {
    * @returns Array of grip points as 2D points
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     const halfWidth = this._width / 2
     const halfHeight = this._height / 2
 
     gripPoints.push(this._centerPoint)
     if (halfWidth > 0 || halfHeight > 0) {
       gripPoints.push(
-        new AcGePoint2d(
+        new GeometryPoint2d(
           this._centerPoint.x - halfWidth,
           this._centerPoint.y - halfHeight
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           this._centerPoint.x + halfWidth,
           this._centerPoint.y - halfHeight
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           this._centerPoint.x + halfWidth,
           this._centerPoint.y + halfHeight
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           this._centerPoint.x - halfWidth,
           this._centerPoint.y + halfHeight
         )
@@ -649,7 +649,7 @@ export class AcDbViewport extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       this.moveGripAt(index, offset)
     })
@@ -659,25 +659,25 @@ export class AcDbViewport extends AcDbEntity {
   /**
    * Transforms this viewport entity by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const origin = this._centerPoint.clone()
     const xAxisPoint = this._centerPoint
       .clone()
-      .add(new AcGeVector3d(this._width, 0, 0))
+      .add(new GeometryVector3d(this._width, 0, 0))
     const yAxisPoint = this._centerPoint
       .clone()
-      .add(new AcGeVector3d(0, this._height, 0))
+      .add(new GeometryVector3d(0, this._height, 0))
 
     origin.applyMatrix4(matrix)
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0
@@ -780,11 +780,11 @@ export class AcDbViewport extends AcDbEntity {
     const lines: AcGiEntity[] = []
     lines.push(
       renderer.lines([
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x - viewport.width / 2,
           viewport.centerPoint.y - viewport.height / 2
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x + viewport.width / 2,
           viewport.centerPoint.y - viewport.height / 2
         )
@@ -792,11 +792,11 @@ export class AcDbViewport extends AcDbEntity {
     )
     lines.push(
       renderer.lines([
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x + viewport.width / 2,
           viewport.centerPoint.y - viewport.height / 2
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x + viewport.width / 2,
           viewport.centerPoint.y + viewport.height / 2
         )
@@ -804,11 +804,11 @@ export class AcDbViewport extends AcDbEntity {
     )
     lines.push(
       renderer.lines([
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x + viewport.width / 2,
           viewport.centerPoint.y + viewport.height / 2
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x - viewport.width / 2,
           viewport.centerPoint.y + viewport.height / 2
         )
@@ -816,11 +816,11 @@ export class AcDbViewport extends AcDbEntity {
     )
     lines.push(
       renderer.lines([
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x - viewport.width / 2,
           viewport.centerPoint.y + viewport.height / 2
         ),
-        new AcGePoint2d(
+        new GeometryPoint2d(
           viewport.centerPoint.x - viewport.width / 2,
           viewport.centerPoint.y - viewport.height / 2
         )
@@ -829,7 +829,7 @@ export class AcDbViewport extends AcDbEntity {
     return lines
   }
 
-  private moveGripAt(gripIndex: number, offset: AcGeVector2dLike) {
+  private moveGripAt(gripIndex: number, offset: GeometryVector2dLike) {
     switch (gripIndex) {
       case 0:
         this._centerPoint.add(offset)

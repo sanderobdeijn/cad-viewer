@@ -1,16 +1,16 @@
 import {
-  AcGeBox3d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePolyline2d,
-  AcGePolyline2dVertex,
-  acgeTransformOcsPointToWcs,
-  acgeTransformWcsPointToOcs,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  GeometryPolyline2dVertex,
+  geometryTransformOcsPointToWcs,
+  geometryTransformWcsPointToOcs,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -79,16 +79,16 @@ export class AcDb2dPolyline extends AcDbCurve {
   /** The elevation (Z-coordinate) of the polyline plane */
   private _elevation: number
   /** Extrusion direction / plane normal (DXF group 210). */
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _normal = new GeometryVector3d(0, 0, 1)
   /** The underlying geometric polyline object */
-  private _geo: AcGePolyline2d<AcGePolyline2dVertex>
+  private _geo: GeometryPolyline2d<GeometryPolyline2dVertex>
 
   /**
    * Creates a new empty 2d polyline entity.
    */
   constructor(
     type: AcDbPoly2dType,
-    vertices: AcGePoint2dLike[],
+    vertices: GeometryPoint2dLike[],
     elevation = 0,
     closed = false,
     _startWidth = 0,
@@ -106,7 +106,7 @@ export class AcDb2dPolyline extends AcDbCurve {
         bulge: hasBulge ? bulges[index] : undefined
       }
     })
-    this._geo = new AcGePolyline2d(polylineVertices, closed)
+    this._geo = new GeometryPolyline2d(polylineVertices, closed)
   }
 
   /**
@@ -162,10 +162,10 @@ export class AcDb2dPolyline extends AcDbCurve {
   /**
    * Extrusion direction / plane normal (DXF group 210).
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
     if (this._normal.lengthSq() > 0) {
       this._normal.normalize()
@@ -239,14 +239,14 @@ export class AcDb2dPolyline extends AcDbCurve {
    * console.log(`Polyline bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     const box = this._geo.box
     // Empty OCS box uses ±Infinity; transforming those through the OCS matrix
     // yields NaN and can poison spatial indexes downstream.
     if (box.isEmpty()) {
-      return new AcGeBox3d()
+      return new GeometryBox3d()
     }
-    return new AcGeBox3d().setFromPoints([
+    return new GeometryBox3d().setFromPoints([
       this.ocsPointToWcs(box.min.x, box.min.y),
       this.ocsPointToWcs(box.max.x, box.min.y),
       this.ocsPointToWcs(box.max.x, box.max.y),
@@ -257,12 +257,12 @@ export class AcDb2dPolyline extends AcDbCurve {
   /**
    * Maps an OCS polyline point (plus elevation) into WCS using {@link normal}.
    */
-  private ocsPointToWcs(x: number, y: number): AcGePoint2d {
-    return acgeTransformOcsPointToWcs({ x, y }, this._normal)
+  private ocsPointToWcs(x: number, y: number): GeometryPoint2d {
+    return geometryTransformOcsPointToWcs({ x, y }, this._normal)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return acdbIntersectPrimitivesFromPolyline2d(
       this._geo.vertices,
       this.closed,
@@ -279,7 +279,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * @returns Array of grip points (all vertices)
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     for (let i = 0; i < this._geo.numberOfVertices; ++i) {
       const temp = this._geo.getPointAt(i)
       gripPoints.push(this.ocsPointToWcs(temp.x, temp.y))
@@ -288,9 +288,9 @@ export class AcDb2dPolyline extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     // Grips are exposed in WCS; 2D vertices are stored in OCS.
-    const ocsOffset = acgeTransformWcsPointToOcs(offset, this._normal)
+    const ocsOffset = geometryTransformWcsPointToOcs(offset, this._normal)
     acdbForEachGripIndex(indices, index => {
       acdbMovePolyline2dVertexAt(this._geo.vertices, index, ocsOffset)
     })
@@ -311,9 +311,9 @@ export class AcDb2dPolyline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const geo = this._geo
     const vertexCount = geo.numberOfVertices
@@ -331,9 +331,9 @@ export class AcDb2dPolyline extends AcDbCurve {
       case AcDbOsnapMode.Perpendicular:
       case AcDbOsnapMode.Tangent: {
         const segmentCount = this.closed ? vertexCount : vertexCount - 1
-        const candidates: AcGePoint2d[] = []
+        const candidates: GeometryPoint2d[] = []
         for (let index = 0; index < segmentCount; index++) {
-          const segmentSnaps: AcGePoint2d[] = []
+          const segmentSnaps: GeometryPoint2d[] = []
           acdbCollectPolyline2dSegmentOsnapPoints(
             geo.getPointAt(index),
             geo.getPointAt((index + 1) % vertexCount),
@@ -362,12 +362,13 @@ export class AcDb2dPolyline extends AcDbCurve {
   /**
    * Transforms this legacy 2D polyline by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const flipBulge = matrix.determinant() < 0
     this._geo.vertices.forEach(vertex => {
-      const transformedPoint = new AcGePoint2d(vertex.x, vertex.y).applyMatrix4(
-        matrix
-      )
+      const transformedPoint = new GeometryPoint2d(
+        vertex.x,
+        vertex.y
+      ).applyMatrix4(matrix)
       vertex.x = transformedPoint.x
       vertex.y = transformedPoint.y
       if (flipBulge && vertex.bulge != null) {
@@ -380,7 +381,7 @@ export class AcDb2dPolyline extends AcDbCurve {
       this._normal.normalize()
     }
     ;(
-      this._geo as AcGePolyline2d<AcGePolyline2dVertex> & {
+      this._geo as GeometryPolyline2d<GeometryPolyline2dVertex> & {
         _boundingBoxNeedsUpdate: boolean
       }
     )._boundingBoxNeedsUpdate = true
@@ -483,7 +484,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * @returns The rendered polyline entity, or undefined if drawing failed
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const points: AcGePoint2d[] = []
+    const points: GeometryPoint2d[] = []
     const tmp = this._geo.tessellate(acdbDrawTessellateOptions(renderer))
     tmp.forEach(point => points.push(this.ocsPointToWcs(point.x, point.y)))
     return renderer.lines(points)
@@ -506,7 +507,7 @@ export class AcDb2dPolyline extends AcDbCurve {
    * Projects the entity to a sampled 2D path and delegates the side test to a
    * temporary {@link AcDbPolyline}.
    */
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const path = this.collectPath2d()
     if (path.length < 2) return 1
     return AcDbPolyline.from2dPoints(path, this.closed).getOffsetSideAtPoint(
@@ -527,14 +528,14 @@ export class AcDb2dPolyline extends AcDbCurve {
   }
 
   /**
-   * Samples the underlying {@link AcGePolyline2d} into a dense 2D path for offsetting.
+   * Samples the underlying {@link GeometryPolyline2d} into a dense 2D path for offsetting.
    *
    * Sample count scales with vertex count so curved or fitted segments are represented
    * adequately in the planar approximation.
    *
    * @returns XY points along the polyline geometry
    */
-  private collectPath2d(): AcGePoint2d[] {
+  private collectPath2d(): GeometryPoint2d[] {
     const sampleCount = Math.max(32, this.numberOfVertices * 4)
     return this._geo.getPoints(sampleCount)
   }

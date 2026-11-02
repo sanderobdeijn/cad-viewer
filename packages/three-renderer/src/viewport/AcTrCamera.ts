@@ -1,4 +1,4 @@
-import { AcGePoint2d, AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2d, GeometryPoint2dLike } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 export class AcTrCamera {
@@ -74,12 +74,12 @@ export class AcTrCamera {
    * @param height Input height of the browser window
    * @returns Return point coordinate in the world coordinate system
    */
-  screenToWorld(point: AcGePoint2dLike, width: number, height: number) {
+  screenToWorld(point: GeometryPoint2dLike, width: number, height: number) {
     const cwcsPos = new THREE.Vector3(point.x, point.y, 0)
     cwcsPos.x = (point.x / width) * 2 - 1
     cwcsPos.y = -(point.y / height) * 2 + 1
     const wcsPos = cwcsPos.unproject(this._camera)
-    return new AcGePoint2d(wcsPos.x, wcsPos.y)
+    return new GeometryPoint2d(wcsPos.x, wcsPos.y)
   }
   /**
    * Convert point cooridinate from the world coordinate system to the screen coordinate system.
@@ -89,10 +89,10 @@ export class AcTrCamera {
    * @param height Input height of the browser window
    * @returns Return point coordinate in the screen coordinate system
    */
-  worldToScreen(point: AcGePoint2dLike, width: number, height: number) {
+  worldToScreen(point: GeometryPoint2dLike, width: number, height: number) {
     const wcsPos = new THREE.Vector3(point.x, point.y, 0)
     const cwcsPos = wcsPos.project(this._camera)
-    return new AcGePoint2d(
+    return new GeometryPoint2d(
       ((cwcsPos.x + 1) / 2) * width,
       ((-cwcsPos.y + 1) / 2) * height
     )
@@ -102,7 +102,7 @@ export class AcTrCamera {
    * Convert point cooridinate from the world coordinate system to the normalized device coordinate.
    * Bottom-left cooridinate in NDC (Normalized screen coordinate) is (-1, -1) and top-right is (1, 1).
    */
-  public wcs2Ndc(point: AcGePoint2dLike, width: number, height: number) {
+  public wcs2Ndc(point: GeometryPoint2dLike, width: number, height: number) {
     const cwcsCoord = this.worldToScreen(point, width, height)
     return this.cwcs2Ndc(cwcsCoord, width, height)
   }
@@ -111,8 +111,8 @@ export class AcTrCamera {
    * Convert point cooridinate from the client window coordinate system to the normalized device coordinate.
    * Bottom-left cooridinate in NDC (Normalized screen coordinate) is (-1, -1) and top-right is (1, 1).
    */
-  public cwcs2Ndc(point: AcGePoint2dLike, width: number, height: number) {
-    return new AcGePoint2d(
+  public cwcs2Ndc(point: GeometryPoint2dLike, width: number, height: number) {
+    return new GeometryPoint2d(
       (point.x / width) * 2 - 1,
       -(point.y / height) * 2 + 1
     )

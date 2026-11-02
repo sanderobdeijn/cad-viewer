@@ -1,7 +1,7 @@
 import {
   type AcCmColor,
-  AcGeCircArc2d,
-  AcGeMathUtil
+  GeometryCircularArc2d,
+  GeometryMathUtil
 } from '@mlightcad/data-model'
 
 import type { AcEdBaseView } from '../../../editor'
@@ -182,7 +182,7 @@ export function drawMeasureAngleArcOnCanvas(
   const startAngle = Math.atan2(sa1.y - sv.y, sa1.x - sv.x)
   const endAngle = Math.atan2(sa2.y - sv.y, sa2.x - sv.x)
   const antiClockwise =
-    AcGeMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
+    GeometryMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
 
   const arcR = acapWcsToScreenPx(
     measureAngleArcRadiusWcs(vertex, arm1, arm2),
@@ -280,14 +280,14 @@ export function strokeMeasureArcOnContext(
   const sa = Math.atan2(ss.y - sc.y, ss.x - sc.x)
   const ea = Math.atan2(se.y - sc.y, se.x - sc.x)
   const measured = through
-    ? AcGeCircArc2d.tryCreateByThreePoints(start, through, end)
+    ? GeometryCircularArc2d.tryCreateByThreePoints(start, through, end)
     : undefined
   // Collinear three-point input cannot define a circle; do not stroke the
   // previous circumcircle (start/end no longer lie on `g`).
   if (through && !measured) return
   const antiClockwise = measured
     ? !measured.clockwise
-    : AcGeMathUtil.normalizeAngle(ea - sa) > Math.PI
+    : GeometryMathUtil.normalizeAngle(ea - sa) > Math.PI
 
   ctx.beginPath()
   ctx.arc(sc.x, sc.y, screenR, sa, ea, antiClockwise)

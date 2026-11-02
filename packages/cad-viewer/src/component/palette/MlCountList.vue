@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { Crop } from '@element-plus/icons-vue'
 import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 import {
   ElButton,
   ElIcon,
@@ -78,7 +78,7 @@ const { t } = useI18n()
 const { fileName, docTitle } = useDocument()
 
 const search = ref('')
-const countArea = ref<AcGeBox2d | null>(null)
+const countArea = ref<GeometryBox2d | null>(null)
 const hasCountArea = ref(false)
 const groups = ref<MlCountListGroup[]>([])
 let refreshTimer: ReturnType<typeof setTimeout> | null = null

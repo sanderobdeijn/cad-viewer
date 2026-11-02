@@ -4,7 +4,7 @@ import {
   AcCmEventManager,
   AcCmTransparency
 } from '@mlightcad/common'
-import { AcGePointLike } from '@mlightcad/geometry-engine'
+import { GeometryPointLike } from '@mlightcad/geometry-engine'
 import { AcGiLineWeight } from '@mlightcad/graphic-interface'
 
 import { AcDbAngleUnits } from '../misc/AcDbAngleUnits'
@@ -76,7 +76,7 @@ export type AcDbSysVarType =
   | string
   | number
   | boolean
-  | AcGePointLike
+  | GeometryPointLike
   | AcCmColor
   | AcCmTransparency
 
@@ -970,7 +970,6 @@ export class AcDbSysVarManager {
 
     return false
   }
-
 
   private parseTransparency(value: AcDbSysVarType) {
     if (value instanceof AcCmTransparency) {

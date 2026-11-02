@@ -3,9 +3,9 @@ import {
   AcDbLine,
   AcDbPolyline,
   AcDbSpline,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeTol
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
 } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -33,7 +33,7 @@ export interface AcApSketchSettings {
 }
 
 interface AcApSketchStroke {
-  points: AcGePoint2d[]
+  points: GeometryPoint2d[]
   type: AcApSketchType
   tolerance: number
 }
@@ -63,16 +63,16 @@ function addKeyword(
   )
 }
 
-function distance2d(a: AcGePoint2dLike, b: AcGePoint2dLike): number {
+function distance2d(a: GeometryPoint2dLike, b: GeometryPoint2dLike): number {
   return Math.hypot(b.x - a.x, b.y - a.y)
 }
 
-function toPoint2d(point: AcGePoint2dLike): AcGePoint2d {
-  return new AcGePoint2d(point.x, point.y)
+function toPoint2d(point: GeometryPoint2dLike): GeometryPoint2d {
+  return new GeometryPoint2d(point.x, point.y)
 }
 
-function toPoint3d(point: AcGePoint2dLike): AcGePoint2d {
-  return new AcGePoint2d(point.x, point.y)
+function toPoint3d(point: GeometryPoint2dLike): GeometryPoint2d {
+  return new GeometryPoint2d(point.x, point.y)
 }
 
 /**
@@ -80,8 +80,8 @@ function toPoint3d(point: AcGePoint2dLike): AcGePoint2d {
  * The first point is always kept; the last point is appended if distinct.
  */
 export function accumulateSketchPoint(
-  points: AcGePoint2d[],
-  point: AcGePoint2dLike,
+  points: GeometryPoint2d[],
+  point: GeometryPoint2dLike,
   increment: number
 ): boolean {
   const next = toPoint2d(point)
@@ -100,14 +100,14 @@ export function accumulateSketchPoint(
  * `tolerance` apart, always retaining the first and last points.
  */
 export function simplifySketchPoints(
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   tolerance: number
-): AcGePoint2d[] {
+): GeometryPoint2d[] {
   if (points.length <= 2) {
     return points.map(toPoint2d)
   }
   const minDist = Math.max(tolerance, 1e-8)
-  const simplified: AcGePoint2d[] = [toPoint2d(points[0])]
+  const simplified: GeometryPoint2d[] = [toPoint2d(points[0])]
   for (let i = 1; i < points.length - 1; i++) {
     const last = simplified[simplified.length - 1]
     if (distance2d(last, points[i]) >= minDist) {
@@ -126,12 +126,16 @@ export function simplifySketchPoints(
  * Preview jig that records freehand movement once the pointer travels farther
  * than the current sketch increment.
  */
-export class AcApSketchJig extends AcEdPreviewJig<AcGePoint2dLike> {
+export class AcApSketchJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _polyline: AcDbPolyline
-  private _points: AcGePoint2d[]
+  private _points: GeometryPoint2d[]
   private _increment: number
 
-  constructor(view: AcEdBaseView, start: AcGePoint2dLike, increment: number) {
+  constructor(
+    view: AcEdBaseView,
+    start: GeometryPoint2dLike,
+    increment: number
+  ) {
     super(view)
     this._polyline = new AcDbPolyline()
     this._points = [toPoint2d(start)]
@@ -143,11 +147,11 @@ export class AcApSketchJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return this._polyline
   }
 
-  get points(): AcGePoint2d[] {
+  get points(): GeometryPoint2d[] {
     return this._points
   }
 
-  update(currentPoint: AcGePoint2dLike) {
+  update(currentPoint: GeometryPoint2dLike) {
     if (!accumulateSketchPoint(this._points, currentPoint, this._increment)) {
       return
     }
@@ -170,7 +174,7 @@ class AcApSketchStrokePreview {
 
   constructor(readonly view: AcEdBaseView) {}
 
-  addStroke(points: AcGePoint2dLike[]) {
+  addStroke(points: GeometryPoint2dLike[]) {
     if (points.length < 2) return
     const polyline = new AcDbPolyline()
     points.forEach((point, index) =>
@@ -364,7 +368,7 @@ export class AcApSketchCmd extends AcEdCommand {
     const result = await AcApDocManager.instance.editor.getDistance(prompt)
     if (result.status === AcEdPromptStatus.Cancel) return false
     const value = result.value ?? settings.increment
-    if (AcGeTol.isPositive(value)) {
+    if (GeometryTol.isPositive(value)) {
       settings.increment = value
     }
     return true
@@ -403,9 +407,9 @@ export class AcApSketchCmd extends AcEdCommand {
   private async captureStroke(
     context: AcApContext,
     settings: AcApSketchSettings,
-    start: AcGePoint2dLike,
+    start: GeometryPoint2dLike,
     preview: AcApSketchStrokePreview
-  ): Promise<AcGePoint2d[] | false> {
+  ): Promise<GeometryPoint2d[] | false> {
     preview.render()
     const jig = new AcApSketchJig(context.view, start, settings.increment)
     const prompt = new AcEdPromptPointOptions(

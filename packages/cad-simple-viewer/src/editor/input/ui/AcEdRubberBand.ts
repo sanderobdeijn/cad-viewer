@@ -1,4 +1,4 @@
-import { AcGePoint2d, AcGePoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2d, GeometryPoint2dLike } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../../app'
 import { AcEdBaseView } from '../../view'
@@ -47,7 +47,7 @@ export interface AcEdRubberBandOptions {
  */
 export class AcEdRubberBand {
   private view: AcEdBaseView
-  private basePoint?: AcGePoint2d
+  private basePoint?: GeometryPoint2d
 
   private container: HTMLDivElement | null = null
 
@@ -89,7 +89,7 @@ export class AcEdRubberBand {
   /**
    * Converts a world point to container-local screen coordinates.
    */
-  private toContainerPoint(point: AcGePoint2dLike): AcGePoint2dLike {
+  private toContainerPoint(point: GeometryPoint2dLike): GeometryPoint2dLike {
     return this.view.canvasToContainer(this.view.worldToScreen(point))
   }
 
@@ -108,8 +108,8 @@ export class AcEdRubberBand {
    * Starts the rubber-band preview.
    * @param basePoint The starting point in world coordinates.
    */
-  start(basePoint: AcGePoint2dLike, options?: AcEdRubberBandOptions) {
-    this.basePoint = new AcGePoint2d(basePoint)
+  start(basePoint: GeometryPoint2dLike, options?: AcEdRubberBandOptions) {
+    this.basePoint = new GeometryPoint2d(basePoint)
     this.options = options || {}
 
     const color = this.options.color || 'var(--ml-ui-canvas-line, #0f0)'
@@ -206,7 +206,7 @@ export class AcEdRubberBand {
    * Updates the rubber-band lines to a new target point.
    * @param targetPoint The current cursor position in world coordinates.
    */
-  update(targetPoint: AcGePoint2dLike) {
+  update(targetPoint: GeometryPoint2dLike) {
     if (!this.container || !this.basePoint || !this.baseLine) return
 
     const p0 = this.toContainerPoint(this.basePoint)
@@ -214,8 +214,8 @@ export class AcEdRubberBand {
 
     const drawLine = (
       line: HTMLDivElement,
-      start: AcGePoint2dLike,
-      end: AcGePoint2dLike
+      start: GeometryPoint2dLike,
+      end: GeometryPoint2dLike
     ) => {
       const dx = end.x - start.x
       const dy = end.y - start.y

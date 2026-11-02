@@ -1,4 +1,4 @@
-import { AcGeBox2d, AcGeMathUtil } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryMathUtil } from '@mlightcad/data-model'
 
 import {
   type AcApScreenPoint,
@@ -13,7 +13,10 @@ import type { AcApMeasurementGeometry } from './AcApMeasurementTypes'
 
 type WorldToScreen = (point: { x: number; y: number }) => AcApScreenPoint
 
-type ClientToWorld = (clientX: number, clientY: number) => {
+type ClientToWorld = (
+  clientX: number,
+  clientY: number
+) => {
   x: number
   y: number
 }
@@ -36,8 +39,8 @@ const DEGENERATE_FOCUS_PAD_WCS = 1
  */
 export function measurementGeometryBounds(
   geometry: AcApMeasurementGeometry
-): AcGeBox2d | undefined {
-  const box = new AcGeBox2d()
+): GeometryBox2d | undefined {
+  const box = new GeometryBox2d()
   switch (geometry.type) {
     case 'distance':
       box.expandByPoint(geometry.start).expandByPoint(geometry.end)
@@ -73,7 +76,7 @@ export function measurementGeometryBounds(
   return box.isEmpty() ? undefined : box
 }
 
-function padDegenerateMeasurementBox(box: AcGeBox2d): void {
+function padDegenerateMeasurementBox(box: GeometryBox2d): void {
   const width = box.max.x - box.min.x
   const height = box.max.y - box.min.y
   if (width > 1e-8 || height > 1e-8) return
@@ -94,11 +97,11 @@ export function measurementFocusBox(
   geometry: AcApMeasurementGeometry,
   overlayRects: ReadonlyArray<OverlayClientRect>,
   clientToWorld: ClientToWorld
-): AcGeBox2d | undefined {
+): GeometryBox2d | undefined {
   const geometryBox = measurementGeometryBounds(geometry)
   const box = geometryBox
-    ? new AcGeBox2d(geometryBox.min, geometryBox.max)
-    : new AcGeBox2d()
+    ? new GeometryBox2d(geometryBox.min, geometryBox.max)
+    : new GeometryBox2d()
   for (const rect of overlayRects) {
     if (rect.right <= rect.left && rect.bottom <= rect.top) continue
     box.expandByPoint(clientToWorld(rect.left, rect.top))
@@ -156,7 +159,7 @@ export function hitTestMeasurementGeometry(
       const startAngle = Math.atan2(arm1.y - vertex.y, arm1.x - vertex.x)
       const endAngle = Math.atan2(arm2.y - vertex.y, arm2.x - vertex.x)
       const antiClockwise =
-        AcGeMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
+        GeometryMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
       const origin = worldToScreen({ x: 0, y: 0 })
       const unit = worldToScreen({ x: 1, y: 0 })
       const ppu = Math.hypot(unit.x - origin.x, unit.y - origin.y)
@@ -200,11 +203,11 @@ export function hitTestMeasurementGeometry(
       const startAngle = Math.atan2(start.y - center.y, start.x - center.x)
       const endAngle = Math.atan2(end.y - center.y, end.x - center.x)
       let antiClockwise =
-        AcGeMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
+        GeometryMathUtil.normalizeAngle(endAngle - startAngle) > Math.PI
       if (geometry.through) {
         const through = worldToScreen(geometry.through)
         const midAngle = Math.atan2(through.y - center.y, through.x - center.x)
-        antiClockwise = !AcGeMathUtil.isAngleOnCcwSweep(
+        antiClockwise = !GeometryMathUtil.isAngleOnCcwSweep(
           startAngle,
           midAngle,
           endAngle

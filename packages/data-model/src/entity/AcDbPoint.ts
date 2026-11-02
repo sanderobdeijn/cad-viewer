@@ -1,9 +1,9 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -23,11 +23,11 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * // Create a point at the origin
  * const point = new AcDbPoint();
- * point.position = new AcGePoint2d(0, 0);
+ * point.position = new GeometryPoint2d(0, 0);
  *
  * // Create a point at a specific location
  * const point2 = new AcDbPoint();
- * point2.position = new AcGePoint2d(10, 20);
+ * point2.position = new GeometryPoint2d(10, 20);
  *
  * // Access point properties
  * console.log(`Point position: ${point.position}`);
@@ -42,7 +42,7 @@ export class AcDbPoint extends AcDbEntity {
   }
 
   /** The underlying geometric point object */
-  private _geo: AcGePoint2d
+  private _geo: GeometryPoint2d
   /**
    * Angle of the X axis for the UCS in effect when the point was drawn
    * (DXF group 50). Used when PDMODE is nonzero.
@@ -58,12 +58,12 @@ export class AcDbPoint extends AcDbEntity {
    * @example
    * ```typescript
    * const point = new AcDbPoint();
-   * point.position = new AcGePoint2d(5, 10);
+   * point.position = new GeometryPoint2d(5, 10);
    * ```
    */
   constructor() {
     super()
-    this._geo = new AcGePoint2d()
+    this._geo = new GeometryPoint2d()
   }
 
   /**
@@ -77,7 +77,7 @@ export class AcDbPoint extends AcDbEntity {
    * console.log(`Point at: ${position.x}, ${position.y}`);
    * ```
    */
-  get position(): AcGePoint2d {
+  get position(): GeometryPoint2d {
     return this._geo
   }
 
@@ -88,10 +88,10 @@ export class AcDbPoint extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * point.position = new AcGePoint2d(15, 25);
+   * point.position = new GeometryPoint2d(15, 25);
    * ```
    */
-  set position(value: AcGePoint2dLike) {
+  set position(value: GeometryPoint2dLike) {
     this._geo.set(value.x, value.y)
   }
 
@@ -119,8 +119,8 @@ export class AcDbPoint extends AcDbEntity {
    * console.log(`Point bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
-    return new AcGeBox3d().expandByPoint(this._geo)
+  get geometricExtents(): GeometryBox3d {
+    return new GeometryBox3d().expandByPoint(this._geo)
   }
 
   /**
@@ -145,16 +145,16 @@ export class AcDbPoint extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._geo)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Node) {
       snapPoints.push(this._geo)
@@ -218,12 +218,12 @@ export class AcDbPoint extends AcDbEntity {
    *
    * @example
    * ```typescript
-   * const translationMatrix = AcGeMatrix3d.translation(10, 0, 0);
+   * const translationMatrix = GeometryMatrix3d.translation(10, 0, 0);
    * point.transformBy(translationMatrix);
    * // Point is now translated 10 units in the X direction
    * ```
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._geo.copy(this._geo.applyMatrix4(matrix))
     return this
   }

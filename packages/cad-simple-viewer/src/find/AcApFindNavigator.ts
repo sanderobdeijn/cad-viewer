@@ -1,7 +1,7 @@
 import {
   acdbHostApplicationServices,
-  AcGeBox2d,
-  AcGePoint2d
+  GeometryBox2d,
+  GeometryPoint2d
 } from '@mlightcad/data-model'
 
 import type { AcApDocManager } from '../app/AcApDocManager'
@@ -53,7 +53,7 @@ interface InsetView {
  * cannot convert coordinates or the visible part is too small to matter.
  */
 function zoomToVisible(
-  view: InsetView & { zoomTo(box: AcGeBox2d, margin?: number): void },
+  view: InsetView & { zoomTo(box: GeometryBox2d, margin?: number): void },
   box: { min: { x: number; y: number }; max: { x: number; y: number } },
   margin: number,
   insets: AcApFindViewInsets | undefined
@@ -76,9 +76,9 @@ function zoomToVisible(
     !!view.screenToWorld
   if (!usable) {
     view.zoomTo(
-      new AcGeBox2d(
-        new AcGePoint2d(box.min.x, box.min.y),
-        new AcGePoint2d(box.max.x, box.max.y)
+      new GeometryBox2d(
+        new GeometryPoint2d(box.min.x, box.min.y),
+        new GeometryPoint2d(box.max.x, box.max.y)
       ),
       margin
     )
@@ -91,9 +91,9 @@ function zoomToVisible(
   const halfW = ((box.max.x - box.min.x) / 2) * (width / visibleW)
   const halfH = ((box.max.y - box.min.y) / 2) * (height / visibleH)
   view.zoomTo(
-    new AcGeBox2d(
-      new AcGePoint2d(cx - halfW, cy - halfH),
-      new AcGePoint2d(cx + halfW, cy + halfH)
+    new GeometryBox2d(
+      new GeometryPoint2d(cx - halfW, cy - halfH),
+      new GeometryPoint2d(cx + halfW, cy + halfH)
     ),
     margin
   )
@@ -106,7 +106,7 @@ function zoomToVisible(
     y: height / 2 + (hitOnScreen.y - targetY)
   })
   if (isFinite(newCenter.x) && isFinite(newCenter.y)) {
-    view.center = new AcGePoint2d(newCenter.x, newCenter.y)
+    view.center = new GeometryPoint2d(newCenter.x, newCenter.y)
   }
 }
 

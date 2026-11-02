@@ -3,7 +3,7 @@ import {
   acdbHostApplicationServices,
   AcDbSystemVariables,
   AcDbSysVarManager,
-  AcGePoint2dLike
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 /**
@@ -23,9 +23,9 @@ export function isOrthoModeEnabled(database?: AcDbDatabase): boolean {
  * point, matching AutoCAD ORTHOMODE behavior.
  */
 export function constrainToOrtho(
-  point: AcGePoint2dLike,
-  reference: AcGePoint2dLike
-): AcGePoint2dLike {
+  point: GeometryPoint2dLike,
+  reference: GeometryPoint2dLike
+): GeometryPoint2dLike {
   const dx = point.x - reference.x
   const dy = point.y - reference.y
 

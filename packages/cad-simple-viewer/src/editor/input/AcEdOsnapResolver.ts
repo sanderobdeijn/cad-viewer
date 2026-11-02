@@ -9,10 +9,10 @@ import {
   acdbMaskToOsnapModes,
   AcDbObjectId,
   AcDbOsnapMode,
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
@@ -32,15 +32,15 @@ import { AcEdMarkerType } from './marker/AcEdMarker'
 
 export type { AcEdOsnapCenterMark } from './AcEdOsnapCenterMarks'
 
-export type AcEdOsnapPoint = AcGePoint2dLike & {
+export type AcEdOsnapPoint = GeometryPoint2dLike & {
   type: AcDbOsnapMode
 }
 
 export interface AcEdOsnapResolveOptions {
   /** WCS point used as the osnap pick and proximity reference. */
-  cursorWcs: AcGePoint2dLike
+  cursorWcs: GeometryPoint2dLike
   /** Previous point passed to entity osnap queries. */
-  lastPoint?: AcGePoint2dLike
+  lastPoint?: GeometryPoint2dLike
   /** Screen-space pick aperture radius in pixels. */
   hitRadiusPx?: number
 }
@@ -67,10 +67,10 @@ const MAX_PRIMITIVES_PER_SOURCE = 32
 
 type IntersectionSource = {
   key: string
-  box: AcGeBox3d
+  box: GeometryBox3d
   entity: AcDbEntity
   /** Maps entity-local geometry into WCS. Identity for model-space entities. */
-  transform: AcGeMatrix3d
+  transform: GeometryMatrix3d
   /**
    * Set when this source came from a paper-space viewport drill-through:
    * `box`/`entity` geometry is in that viewport's model-space WCS, not the
@@ -82,7 +82,7 @@ type IntersectionSource = {
   viewportId?: AcDbObjectId
 }
 
-function boxesOverlapXY(a: AcGeBox3d, b: AcGeBox3d): boolean {
+function boxesOverlapXY(a: GeometryBox3d, b: GeometryBox3d): boolean {
   return (
     a.min.x <= b.max.x &&
     a.max.x >= b.min.x &&
@@ -96,15 +96,15 @@ function boxFromSpatialItem(item: {
   minY: number
   maxX: number
   maxY: number
-}): AcGeBox3d {
-  return new AcGeBox3d(
+}): GeometryBox3d {
+  return new GeometryBox3d(
     { x: item.minX, y: item.minY, z: -Infinity },
     { x: item.maxX, y: item.maxY, z: Infinity }
   )
 }
 
-function isIdentityTransform(matrix: AcGeMatrix3d): boolean {
-  return matrix.equals(AcGeMatrix3d.IDENTITY)
+function isIdentityTransform(matrix: GeometryMatrix3d): boolean {
+  return matrix.equals(GeometryMatrix3d.IDENTITY)
 }
 
 /**
@@ -116,14 +116,14 @@ function isIdentityTransform(matrix: AcGeMatrix3d): boolean {
  */
 function transformedEntityCopy(
   entity: AcDbEntity,
-  matrix: AcGeMatrix3d
+  matrix: GeometryMatrix3d
 ): AcDbEntity | undefined {
   if (isIdentityTransform(matrix)) return entity
 
   if (entity instanceof AcDbLine) {
     return new AcDbLine(
-      new AcGePoint2d(entity.startPoint).applyMatrix4(matrix),
-      new AcGePoint2d(entity.endPoint).applyMatrix4(matrix)
+      new GeometryPoint2d(entity.startPoint).applyMatrix4(matrix),
+      new GeometryPoint2d(entity.endPoint).applyMatrix4(matrix)
     )
   }
 
@@ -131,7 +131,7 @@ function transformedEntityCopy(
     const scale = matrix.getMaxScaleOnAxis()
     if (!(scale > 0) || !Number.isFinite(scale)) return undefined
     return new AcDbCircle(
-      new AcGePoint2d(entity.center).applyMatrix4(matrix),
+      new GeometryPoint2d(entity.center).applyMatrix4(matrix),
       entity.radius * scale
     )
   }
@@ -140,7 +140,7 @@ function transformedEntityCopy(
     const scale = matrix.getMaxScaleOnAxis()
     if (!(scale > 0) || !Number.isFinite(scale)) return undefined
     return new AcDbArc(
-      new AcGePoint2d(entity.center).applyMatrix4(matrix),
+      new GeometryPoint2d(entity.center).applyMatrix4(matrix),
       entity.radius * scale,
       entity.startAngle,
       entity.endAngle,
@@ -160,12 +160,12 @@ function isLightIntersectionEntity(entity: AcDbEntity): boolean {
  * Maps local intersect points through `frame` into WCS.
  */
 function mapIntersectPointsToWcs(
-  local: AcGePoint2d[],
-  frame: AcGeMatrix3d
-): AcGePoint2d[] {
+  local: GeometryPoint2d[],
+  frame: GeometryMatrix3d
+): GeometryPoint2d[] {
   if (isIdentityTransform(frame)) return local
   return local.map(point =>
-    new AcGePoint2d(point.x, point.y).applyMatrix4(frame)
+    new GeometryPoint2d(point.x, point.y).applyMatrix4(frame)
   )
 }
 
@@ -179,7 +179,7 @@ function mapIntersectPointsToWcs(
 function intersectSources(
   a: IntersectionSource,
   b: IntersectionSource
-): AcGePoint2d[] {
+): GeometryPoint2d[] {
   if (a.transform.equals(b.transform)) {
     return mapIntersectPointsToWcs(
       a.entity.intersectWith(b.entity),
@@ -187,7 +187,7 @@ function intersectSources(
     )
   }
 
-  const bToA = new AcGeMatrix3d().multiplyMatrices(
+  const bToA = new GeometryMatrix3d().multiplyMatrices(
     a.transform.clone().invert(),
     b.transform
   )
@@ -196,7 +196,7 @@ function intersectSources(
     return mapIntersectPointsToWcs(a.entity.intersectWith(bInA), a.transform)
   }
 
-  const aToB = new AcGeMatrix3d().multiplyMatrices(
+  const aToB = new GeometryMatrix3d().multiplyMatrices(
     b.transform.clone().invert(),
     a.transform
   )
@@ -338,8 +338,8 @@ export class AcEdOsnapResolver {
     entity: AcDbEntity,
     osnapMode: AcDbOsnapMode,
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
     gsMark?: AcDbObjectId
   ) {
     const start = osnapPoints.length
@@ -359,8 +359,8 @@ export class AcEdOsnapResolver {
   private collectOsnapPointsInAvailableModes(
     entity: AcDbEntity,
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
     gsMark?: AcDbObjectId
   ) {
     const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
@@ -383,20 +383,20 @@ export class AcEdOsnapResolver {
    * each hit child is walked once instead of once per mode (#745).
    */
   private collectOsnapPointsFromResolvedSubEntity(
-    found: { entity: AcDbEntity; transform: AcGeMatrix3d },
+    found: { entity: AcDbEntity; transform: GeometryMatrix3d },
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike
+    pickPoint: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike
   ) {
     const inverse = found.transform.clone().invert()
-    const localPick = new AcGePoint2d(pickPoint).applyMatrix4(inverse)
-    const localLast = new AcGePoint2d(lastPoint).applyMatrix4(inverse)
+    const localPick = new GeometryPoint2d(pickPoint).applyMatrix4(inverse)
+    const localLast = new GeometryPoint2d(lastPoint).applyMatrix4(inverse)
     const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
     const isNestedInsert = found.entity instanceof AcDbBlockReference
 
     for (const mode of modes) {
       if (mode === AcDbOsnapMode.Intersection) continue
-      const localSnapPoints: AcGePoint2dLike[] = []
+      const localSnapPoints: GeometryPoint2dLike[] = []
       if (isNestedInsert) {
         // Preserve INSERT self-marker semantics used by subEntityGetOsnapPoints.
         found.entity.subGetOsnapPoints(
@@ -422,7 +422,7 @@ export class AcEdOsnapResolver {
           localSnapPoints
         )
         for (const point of localSnapPoints) {
-          const world = new AcGePoint2d(point).applyMatrix4(found.transform)
+          const world = new GeometryPoint2d(point).applyMatrix4(found.transform)
           osnapPoints.push({
             x: world.x,
             y: world.y,
@@ -438,7 +438,7 @@ export class AcEdOsnapResolver {
     minY?: number
     maxX?: number
     maxY?: number
-  }): AcGePoint2dLike | undefined {
+  }): GeometryPoint2dLike | undefined {
     if (
       child.minX == null ||
       child.minY == null ||
@@ -457,7 +457,7 @@ export class AcEdOsnapResolver {
     pickResults: AcEdSpatialQueryResultItemEx[],
     db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
     osnapPoints: AcEdOsnapPoint[],
-    cursorWcs: AcGePoint2dLike,
+    cursorWcs: GeometryPoint2dLike,
     threshold: number
   ) {
     const sources: IntersectionSource[] = []
@@ -499,7 +499,7 @@ export class AcEdOsnapResolver {
             const found = resolveBlockSubEntity(
               entity,
               child.id,
-              new AcGeMatrix3d(),
+              new GeometryMatrix3d(),
               AcEdOsnapResolver.childBoxHint(child)
             )
             if (!found) continue
@@ -515,7 +515,7 @@ export class AcEdOsnapResolver {
               key,
               box: boxFromSpatialItem(child),
               entity,
-              transform: new AcGeMatrix3d(),
+              transform: new GeometryMatrix3d(),
               viewportId
             })
           }
@@ -533,7 +533,7 @@ export class AcEdOsnapResolver {
         key: item.id,
         box: entity.geometricExtents,
         entity,
-        transform: new AcGeMatrix3d(),
+        transform: new GeometryMatrix3d(),
         viewportId
       })
     }
@@ -593,8 +593,8 @@ export class AcEdOsnapResolver {
   }
 
   private collectOsnapPoints(
-    cursorWcs: AcGePoint2dLike,
-    lastPoint: AcGePoint2dLike,
+    cursorWcs: GeometryPoint2dLike,
+    lastPoint: GeometryPoint2dLike,
     hitRadiusPx: number,
     threshold: number
   ): AcEdOsnapPoint[] {
@@ -630,7 +630,7 @@ export class AcEdOsnapResolver {
             const found = resolveBlockSubEntity(
               entity,
               child.id,
-              new AcGeMatrix3d(),
+              new GeometryMatrix3d(),
               AcEdOsnapResolver.childBoxHint(child)
             )
             if (found) {
@@ -700,7 +700,7 @@ export class AcEdOsnapResolver {
   private updateAcquiredCenters(
     results: AcEdSpatialQueryResultItemEx[],
     db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
-    pickPoint: AcGePoint2dLike
+    pickPoint: GeometryPoint2dLike
   ) {
     if (
       !acdbHasOsnapMode(

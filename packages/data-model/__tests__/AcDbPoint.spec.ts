@@ -1,4 +1,4 @@
-import { AcGeMatrix3d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
 import { AcDbDatabase } from '../src/database'
@@ -28,7 +28,7 @@ describe('AcDbPoint', () => {
 
     expect(point.position).toMatchObject({ x: 0, y: 0 })
 
-    const source = new AcGePoint2d(1, 2)
+    const source = new GeometryPoint2d(1, 2)
     point.position = source
     source.x = 100
     source.y = 200
@@ -67,11 +67,11 @@ describe('AcDbPoint', () => {
     const point = new AcDbPoint()
     point.position = { x: 3, y: 4 }
 
-    const nodePoints: AcGePoint2d[] = []
+    const nodePoints: GeometryPoint2d[] = []
     point.subGetOsnapPoints(
       AcDbOsnapMode.Node,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       nodePoints
     )
     expect(nodePoints).toHaveLength(1)
@@ -80,11 +80,11 @@ describe('AcDbPoint', () => {
       y: point.position.y
     })
 
-    const unsupportedModePoints: AcGePoint2d[] = []
+    const unsupportedModePoints: GeometryPoint2d[] = []
     point.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       unsupportedModePoints
     )
     expect(unsupportedModePoints).toHaveLength(0)
@@ -133,7 +133,7 @@ describe('AcDbPoint', () => {
     point.position = { x: 1, y: 2 }
 
     const result = point.transformBy(
-      new AcGeMatrix3d().makeTranslation(4, -2, 1)
+      new GeometryMatrix3d().makeTranslation(4, -2, 1)
     )
 
     expect(result).toBe(point)
@@ -158,7 +158,7 @@ describe('AcDbPoint', () => {
     expect(result).toBe(rendered)
     expect(renderer.point).toHaveBeenCalledTimes(1)
     expect(renderer.point).toHaveBeenCalledWith(
-      new AcGePoint2d(point.position.x, point.position.y),
+      new GeometryPoint2d(point.position.x, point.position.y),
       {
         displayMode: 34,
         displaySize: 2.5

@@ -1,4 +1,7 @@
-import { type AcDbDatabase, type AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  type AcDbDatabase,
+  type GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,
@@ -52,11 +55,11 @@ type Point2 = { x: number; y: number }
  */
 export class AcApMeasureAngleEntity extends AcApMeasureEntity {
   /** Angle vertex in world coordinates. */
-  private readonly vertex: AcGePoint2dLike
+  private readonly vertex: GeometryPoint2dLike
   /** First arm endpoint in world coordinates. */
-  private readonly arm1: AcGePoint2dLike
+  private readonly arm1: GeometryPoint2dLike
   /** Second arm endpoint in world coordinates. */
-  private readonly arm2: AcGePoint2dLike
+  private readonly arm2: GeometryPoint2dLike
 
   /**
    * Creates an angle measure entity from a vertex and two arm endpoints.
@@ -67,9 +70,9 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    * @param options - Shared id, layout, and style options
    */
   constructor(
-    vertex: AcGePoint2dLike,
-    arm1: AcGePoint2dLike,
-    arm2: AcGePoint2dLike,
+    vertex: GeometryPoint2dLike,
+    arm1: GeometryPoint2dLike,
+    arm2: GeometryPoint2dLike,
     options: AcApMeasureEntityOptions
   ) {
     super(
@@ -95,9 +98,9 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    * @returns New {@link AcApMeasureAngleEntity}
    */
   static create(
-    vertex: AcGePoint2dLike,
-    arm1: AcGePoint2dLike,
-    arm2: AcGePoint2dLike,
+    vertex: GeometryPoint2dLike,
+    arm1: GeometryPoint2dLike,
+    arm2: GeometryPoint2dLike,
     style: AcApMeasurementStyle,
     options?: { id?: string; layoutId?: string }
   ): AcApMeasureAngleEntity {
@@ -113,7 +116,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    *
    * @returns Copy of {@link vertex} with `z: 0`
    */
-  override primaryPoint(): AcGePoint2dLike {
+  override primaryPoint(): GeometryPoint2dLike {
     return { x: this.vertex.x, y: this.vertex.y }
   }
 

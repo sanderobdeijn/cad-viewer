@@ -1,9 +1,9 @@
 import {
-  AcGeBox2d,
-  AcGeBox3d,
-  AcGePoint2d,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryPoint2d,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 
 import { AcDbPlotSettings } from './AcDbPlotSettings'
@@ -20,7 +20,7 @@ import { AcDbPlotSettings } from './AcDbPlotSettings'
  * const layout = new AcDbLayout();
  * layout.layoutName = 'A4 Landscape';
  * layout.tabOrder = 1;
- * layout.limits = new AcGeBox2d();
+ * layout.limits = new GeometryBox2d();
  * ```
  */
 export class AcDbLayout extends AcDbPlotSettings {
@@ -33,9 +33,9 @@ export class AcDbLayout extends AcDbPlotSettings {
   /** The associated block table record ID of this layout */
   private _blockTableRecordId: string
   /** Limits for this layout (defined by LIMMAX while this layout is current) */
-  private _limits: AcGeBox2d
+  private _limits: GeometryBox2d
   /** The current extents setting of the layout */
-  private _extents: AcGeBox3d
+  private _extents: GeometryBox3d
   /** Object IDs for viewports in this layout (paperspace). */
   private _viewportArray: string[]
   /**
@@ -49,13 +49,13 @@ export class AcDbLayout extends AcDbPlotSettings {
    */
   private _orthographicUcsId?: string
   /** Layout insertion base point (DXF group 12). */
-  private _insertionPoint = new AcGePoint2d()
+  private _insertionPoint = new GeometryPoint2d()
   /** UCS origin for this layout (DXF group 13). */
-  private _ucsOrigin = new AcGePoint2d()
+  private _ucsOrigin = new GeometryPoint2d()
   /** UCS X axis (DXF group 16). */
-  private _ucsXAxis = new AcGeVector3d(1, 0, 0)
+  private _ucsXAxis = new GeometryVector3d(1, 0, 0)
   /** UCS Y axis (DXF group 17). */
-  private _ucsYAxis = new AcGeVector3d(0, 1, 0)
+  private _ucsYAxis = new GeometryVector3d(0, 1, 0)
   /** Elevation (DXF group 146). */
   private _elevation = 0
   /** Orthographic type of UCS (DXF group 76). */
@@ -75,8 +75,8 @@ export class AcDbLayout extends AcDbPlotSettings {
     this._tabSelected = false
     this._blockTableRecordId = ''
     this._layoutName = ''
-    this._limits = new AcGeBox2d()
-    this._extents = new AcGeBox3d()
+    this._limits = new GeometryBox2d()
+    this._extents = new GeometryBox3d()
     this._viewportArray = []
   }
 
@@ -226,10 +226,10 @@ export class AcDbLayout extends AcDbPlotSettings {
    *
    * @example
    * ```typescript
-   * layout.limits = new AcGeBox2d();
+   * layout.limits = new GeometryBox2d();
    * ```
    */
-  set limits(value: AcGeBox2d) {
+  set limits(value: GeometryBox2d) {
     this._limits.copy(value)
   }
 
@@ -258,10 +258,10 @@ export class AcDbLayout extends AcDbPlotSettings {
    *
    * @example
    * ```typescript
-   * layout.extents = new AcGeBox3d();
+   * layout.extents = new GeometryBox3d();
    * ```
    */
-  set extents(value: AcGeBox3d) {
+  set extents(value: GeometryBox3d) {
     this._extents.copy(value)
   }
 
@@ -313,7 +313,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get insertionPoint() {
     return this._insertionPoint
   }
-  set insertionPoint(value: AcGePoint2d) {
+  set insertionPoint(value: GeometryPoint2d) {
     this._insertionPoint.copy(value)
   }
 
@@ -321,7 +321,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get ucsOrigin() {
     return this._ucsOrigin
   }
-  set ucsOrigin(value: AcGePoint2d) {
+  set ucsOrigin(value: GeometryPoint2d) {
     this._ucsOrigin.copy(value)
   }
 
@@ -329,7 +329,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get ucsXAxis() {
     return this._ucsXAxis
   }
-  set ucsXAxis(value: AcGeVector3dLike) {
+  set ucsXAxis(value: GeometryVector3dLike) {
     this._ucsXAxis.copy(value)
   }
 
@@ -337,7 +337,7 @@ export class AcDbLayout extends AcDbPlotSettings {
   get ucsYAxis() {
     return this._ucsYAxis
   }
-  set ucsYAxis(value: AcGeVector3dLike) {
+  set ucsYAxis(value: GeometryVector3dLike) {
     this._ucsYAxis.copy(value)
   }
 

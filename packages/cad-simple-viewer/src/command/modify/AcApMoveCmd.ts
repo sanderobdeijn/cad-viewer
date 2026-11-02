@@ -1,4 +1,4 @@
-import { AcGePoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -33,8 +33,8 @@ export class AcApMoveCmd extends AcEdCommand {
 
     const { entities: sourceEntities } = resolved
 
-    let basePoint: AcGePoint2d | undefined
-    let displacement: AcGePoint2d | undefined
+    let basePoint: GeometryPoint2d | undefined
+    let displacement: GeometryPoint2d | undefined
 
     type MoveState = AcEdPromptState<
       AcEdPromptPointOptions,
@@ -68,7 +68,7 @@ export class AcApMoveCmd extends AcEdCommand {
 
       async handleResult(result: AcEdPromptPointResult): Promise<MoveStep> {
         if (result.status === AcEdPromptStatus.OK) {
-          basePoint = new AcGePoint2d(result.value!)
+          basePoint = new GeometryPoint2d(result.value!)
           this.machine.setState(new SecondPointState(this.machine))
           return 'continue'
         }
@@ -114,8 +114,8 @@ export class AcApMoveCmd extends AcEdCommand {
 
       async handleResult(result: AcEdPromptPointResult): Promise<MoveStep> {
         if (result.status === AcEdPromptStatus.OK && basePoint) {
-          const secondPoint = new AcGePoint2d(result.value!)
-          displacement = new AcGePoint2d(secondPoint).sub(basePoint)
+          const secondPoint = new GeometryPoint2d(result.value!)
+          displacement = new GeometryPoint2d(secondPoint).sub(basePoint)
           return 'finish'
         }
 
@@ -138,7 +138,7 @@ export class AcApMoveCmd extends AcEdCommand {
         )
         prompt.useBasePoint = true
         prompt.useDashedLine = true
-        prompt.basePoint = new AcGePoint2d(0, 0)
+        prompt.basePoint = new GeometryPoint2d(0, 0)
         prompt.jig = new AcApMovePreviewJig(
           context.view,
           sourceEntities,
@@ -150,7 +150,7 @@ export class AcApMoveCmd extends AcEdCommand {
 
       async handleResult(result: AcEdPromptPointResult): Promise<MoveStep> {
         if (result.status === AcEdPromptStatus.OK) {
-          displacement = new AcGePoint2d(result.value!)
+          displacement = new GeometryPoint2d(result.value!)
         }
         return 'finish'
       }

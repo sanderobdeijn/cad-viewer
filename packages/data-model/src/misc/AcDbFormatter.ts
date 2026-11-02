@@ -1,4 +1,4 @@
-import { AcGeMathUtil, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMathUtil, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbDatabase } from '../database/AcDbDatabase'
 import { AcDbAngleUnits } from './AcDbAngleUnits'
@@ -96,7 +96,7 @@ const RAD_PER_GRAD = Math.PI / 200
  *
  * database.formatter.formatLength(12.3456); // "12.35"
  * database.formatter.formatLength(12.3456, { showUnits: true }); // "12.35 mm" (with INSUNITS = mm)
- * database.formatter.formatPoint2d(new AcGePoint2d(1, 2)); // "1, 2"
+ * database.formatter.formatPoint2d(new GeometryPoint2d(1, 2)); // "1, 2"
  * database.formatter.formatAngle(Math.PI / 4, { showUnits: true }); // "45°"
  * ```
  */
@@ -163,10 +163,13 @@ export class AcDbFormatter {
    * ```typescript
    * database.lunits = AcDbLinearUnits.Decimal;
    * database.luprec = 1;
-   * formatter.formatPoint2d(new AcGePoint2d(1.23, 4.56)); // "1.2, 4.6"
+   * formatter.formatPoint2d(new GeometryPoint2d(1.23, 4.56)); // "1.2, 4.6"
    * ```
    */
-  formatPoint2d(point: AcGePoint2d, options?: AcDbFormatterOptions): string {
+  formatPoint2d(
+    point: GeometryPoint2d,
+    options?: AcDbFormatterOptions
+  ): string {
     const ctx = this.createContext(options)
     return `${formatLengthWithContext(point.x, ctx)}, ${formatLengthWithContext(point.y, ctx)}`
   }
@@ -177,7 +180,7 @@ export class AcDbFormatter {
    * Processing order:
    * 1. Subtract {@link AcDbDatabase.angbase | ANGBASE} (zero direction).
    * 2. Negate if {@link AcDbDatabase.angdir | ANGDIR} = 1 (clockwise positive).
-   * 3. Normalize to \([0, 2\pi)\) via {@link AcGeMathUtil.normalizeAngle}.
+   * 3. Normalize to \([0, 2\pi)\) via {@link GeometryMathUtil.normalizeAngle}.
    * 4. Format using {@link AcDbDatabase.aunits | AUNITS} and {@link AcDbDatabase.auprec | AUPREC}.
    *
    * | **AUNITS** | Typical output (no unit suffix) |
@@ -216,7 +219,7 @@ export class AcDbFormatter {
           this.database.angbase,
           this.database.angdir
         )
-      : AcGeMathUtil.normalizeAngle(radians)
+      : GeometryMathUtil.normalizeAngle(radians)
     return formatAngleWithContext(displayRadians, ctx)
   }
 
@@ -381,7 +384,7 @@ function toDisplayAngleRadians(
   if (angdir === 1) {
     angle = -angle
   }
-  return AcGeMathUtil.normalizeAngle(angle)
+  return GeometryMathUtil.normalizeAngle(angle)
 }
 
 /**
@@ -493,14 +496,14 @@ function isAngleValueApproximate(
  * @internal
  */
 function isSurveyorAngleApproximate(radians: number, auprec: number): boolean {
-  const degrees = AcGeMathUtil.radToDeg(radians)
+  const degrees = GeometryMathUtil.radToDeg(radians)
   const bearing = (((90 - degrees) % 360) + 360) % 360
   const quadrant = bearingToQuadrant(bearing)
   const deflection = Math.min(
     Math.abs(bearing - quadrant.base),
     Math.abs(quadrant.base + 90 - bearing)
   )
-  const deflectionRadians = AcGeMathUtil.degToRad(deflection)
+  const deflectionRadians = GeometryMathUtil.degToRad(deflection)
   const quantizedDeflection = quantizeAngleDmsRadians(deflectionRadians, auprec)
   return differsAfterQuantization(deflectionRadians, quantizedDeflection)
 }
@@ -544,8 +547,8 @@ function quantizeAngleValue(radians: number, ctx: AcDbFormatContext): number {
       return quantizeDecimal(normalized, ctx.auprec)
     case AcDbAngleUnits.DecimalDegrees:
     default:
-      return AcGeMathUtil.degToRad(
-        quantizeDecimal(AcGeMathUtil.radToDeg(normalized), ctx.auprec)
+      return GeometryMathUtil.degToRad(
+        quantizeDecimal(GeometryMathUtil.radToDeg(normalized), ctx.auprec)
       )
   }
 }
@@ -622,7 +625,7 @@ function quantizeFractionalInches(inches: number, denominator: number): number {
  * @internal
  */
 function quantizeAngleDmsRadians(radians: number, auprec: number): number {
-  const degrees = AcGeMathUtil.radToDeg(radians)
+  const degrees = GeometryMathUtil.radToDeg(radians)
   const sign = degrees < 0 ? -1 : 1
   const absDegrees = Math.abs(degrees)
   const d = Math.floor(absDegrees)
@@ -630,7 +633,7 @@ function quantizeAngleDmsRadians(radians: number, auprec: number): number {
   const m = Math.floor(minutesFloat)
   const seconds = quantizeDecimal((minutesFloat - m) * 60, auprec)
   const quantizedDegrees = d + m / 60 + seconds / 3600
-  return AcGeMathUtil.degToRad(sign * quantizedDegrees)
+  return GeometryMathUtil.degToRad(sign * quantizedDegrees)
 }
 
 /**
@@ -803,7 +806,7 @@ function formatAngleDecimalDegrees(
   radians: number,
   ctx: AcDbFormatContext
 ): string {
-  const degrees = AcGeMathUtil.radToDeg(radians)
+  const degrees = GeometryMathUtil.radToDeg(radians)
   return `${formatDecimal(degrees, ctx.auprec)}${ctx.showUnits ? '°' : ''}`
 }
 
@@ -841,7 +844,7 @@ function formatAngleGradians(radians: number, ctx: AcDbFormatContext): string {
  * @internal
  */
 function formatAngleDms(radians: number, ctx: AcDbFormatContext): string {
-  const degrees = AcGeMathUtil.radToDeg(radians)
+  const degrees = GeometryMathUtil.radToDeg(radians)
   const sign = degrees < 0 ? '-' : ''
   const absDegrees = Math.abs(degrees)
   const d = Math.floor(absDegrees)
@@ -862,14 +865,14 @@ function formatAngleDms(radians: number, ctx: AcDbFormatContext): string {
  * @internal
  */
 function formatAngleSurveyor(radians: number, ctx: AcDbFormatContext): string {
-  const degrees = AcGeMathUtil.radToDeg(radians)
+  const degrees = GeometryMathUtil.radToDeg(radians)
   const bearing = (((90 - degrees) % 360) + 360) % 360
   const quadrant = bearingToQuadrant(bearing)
   const deflection = Math.min(
     Math.abs(bearing - quadrant.base),
     Math.abs(quadrant.base + 90 - bearing)
   )
-  const dms = formatAngleDms(AcGeMathUtil.degToRad(deflection), ctx)
+  const dms = formatAngleDms(GeometryMathUtil.degToRad(deflection), ctx)
   const dmsBody = dms.replace(/^-/, '')
   return `${quadrant.prefix} ${dmsBody} ${quadrant.suffix}`.trim()
 }

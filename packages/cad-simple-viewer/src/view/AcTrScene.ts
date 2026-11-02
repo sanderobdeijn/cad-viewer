@@ -1,4 +1,9 @@
-import { AcDbObjectId, AcGeBox2d, AcGeBox3d, log } from '@mlightcad/data-model'
+import {
+  AcDbObjectId,
+  GeometryBox2d,
+  GeometryBox3d,
+  log
+} from '@mlightcad/data-model'
 import {
   AcTrDirectEntityMeta,
   AcTrEntity,
@@ -403,7 +408,10 @@ export class AcTrScene {
    * @param box Input the query bounding box
    * @returns Return query results
    */
-  search(box: AcGeBox2d | AcGeBox3d, options?: AcTrSpatialSearchOptions) {
+  search(
+    box: GeometryBox2d | GeometryBox3d,
+    options?: AcTrSpatialSearchOptions
+  ) {
     const activeLayout = this.activeLayout
     return activeLayout ? activeLayout.search(box, options) : []
   }
@@ -544,7 +552,7 @@ export class AcTrScene {
     entityIds: AcDbObjectId[],
     margin = 1.1,
     scope: AcTrEntityPreviewScope = 'active-first'
-  ): AcGeBox2d | null {
+  ): GeometryBox2d | null {
     const box = this.computeEntityPreviewBoundsBox(entityIds, scope)
     return AcTrEntityPreview.box3ToBounds2d(box, margin)
   }

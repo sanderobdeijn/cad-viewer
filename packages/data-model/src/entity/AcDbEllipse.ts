@@ -1,12 +1,12 @@
 import {
-  AcGeBox3d,
-  AcGeEllipseArc2d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2d,
-  AcGeVector2dLike,
+  GeometryBox3d,
+  GeometryEllipseArc2d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2d,
+  GeometryVector2dLike,
   TAU
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
@@ -36,7 +36,7 @@ const ELLIPSE_QUADRANT_GRIP_ANGLES = [
  * ```typescript
  * // Create a full ellipse
  * const ellipse = new AcDbEllipse(
- *   new AcGePoint2d(0, 0),
+ *   new GeometryPoint2d(0, 0),
  *   { x: 1, y: 0 },
  *   10, // major axis radius
  *   5,  // minor axis radius
@@ -59,20 +59,26 @@ export class AcDbEllipse extends AcDbCurve {
   }
 
   /** Backing for the lazily materialized geometric ellipse arc object. */
-  private _geoData: AcGeEllipseArc2d | null = null
+  private _geoData: GeometryEllipseArc2d | null = null
 
   /**
    * The underlying geometric ellipse arc object. Materialized lazily so that
    * factory-created entities (dxfIn path) never allocate default geometry.
    */
-  private get _geo(): AcGeEllipseArc2d {
+  private get _geo(): GeometryEllipseArc2d {
     if (this._geoData == null) {
-      this._geoData = new AcGeEllipseArc2d(new AcGePoint2d(), 1, 1, 0, TAU)
+      this._geoData = new GeometryEllipseArc2d(
+        new GeometryPoint2d(),
+        1,
+        1,
+        0,
+        TAU
+      )
     }
     return this._geoData
   }
 
-  private set _geo(value: AcGeEllipseArc2d) {
+  private set _geo(value: GeometryEllipseArc2d) {
     this._geoData = value
   }
 
@@ -93,7 +99,7 @@ export class AcDbEllipse extends AcDbCurve {
    * ```typescript
    * // Create a full ellipse in the XY plane
    * const fullEllipse = new AcDbEllipse(
-   *   new AcGePoint2d(0, 0),
+   *   new GeometryPoint2d(0, 0),
    *   { x: 1, y: 0 },
    *   20, // major radius
    *   10, // minor radius
@@ -103,7 +109,7 @@ export class AcDbEllipse extends AcDbCurve {
    *
    * // Create a quarter ellipse
    * const quarterEllipse = new AcDbEllipse(
-   *   new AcGePoint2d(10, 20),
+   *   new GeometryPoint2d(10, 20),
    *   { x: 1, y: 0 },
    *   15,
    *   8,
@@ -114,16 +120,16 @@ export class AcDbEllipse extends AcDbCurve {
    */
   constructor()
   constructor(
-    center: AcGePoint2dLike,
-    majorAxis: AcGeVector2dLike,
+    center: GeometryPoint2dLike,
+    majorAxis: GeometryVector2dLike,
     majorAxisRadius: number,
     minorAxisRadius: number,
     startAngle: number,
     endAngle: number
   )
   constructor(
-    center?: AcGePoint2dLike,
-    majorAxis?: AcGeVector2dLike,
+    center?: GeometryPoint2dLike,
+    majorAxis?: GeometryVector2dLike,
     majorAxisRadius?: number,
     minorAxisRadius?: number,
     startAngle?: number,
@@ -138,14 +144,14 @@ export class AcDbEllipse extends AcDbCurve {
       startAngle !== undefined &&
       endAngle !== undefined
     ) {
-      this._geo = new AcGeEllipseArc2d(
+      this._geo = new GeometryEllipseArc2d(
         center,
         majorAxisRadius,
         minorAxisRadius,
         startAngle,
         endAngle,
         false,
-        new AcGeVector2d(majorAxis.x, majorAxis.y).angle()
+        new GeometryVector2d(majorAxis.x, majorAxis.y).angle()
       )
     }
   }
@@ -161,7 +167,7 @@ export class AcDbEllipse extends AcDbCurve {
    * console.log(`Ellipse center: ${centerPoint.x}, ${centerPoint.y}`);
    * ```
    */
-  get center(): AcGePoint2d {
+  get center(): GeometryPoint2d {
     return this._geo.center
   }
 
@@ -172,10 +178,10 @@ export class AcDbEllipse extends AcDbCurve {
    *
    * @example
    * ```typescript
-   * ellipse.center = new AcGePoint2d(5, 5);
+   * ellipse.center = new GeometryPoint2d(5, 5);
    * ```
    */
-  set center(value: AcGePoint2dLike) {
+  set center(value: GeometryPoint2dLike) {
     this._geo.center = value
   }
 
@@ -190,12 +196,12 @@ export class AcDbEllipse extends AcDbCurve {
    * console.log(`Major radius: ${majorRadius}`);
    * ```
    */
-  get majorAxis(): AcGeVector2d {
+  get majorAxis(): GeometryVector2d {
     const rotation = this._geo.rotation
-    return new AcGeVector2d(Math.cos(rotation), Math.sin(rotation))
+    return new GeometryVector2d(Math.cos(rotation), Math.sin(rotation))
   }
-  set majorAxis(value: AcGeVector2dLike) {
-    this._geo.rotation = new AcGeVector2d(value.x, value.y).angle()
+  set majorAxis(value: GeometryVector2dLike) {
+    this._geo.rotation = new GeometryVector2d(value.x, value.y).angle()
   }
 
   get majorAxisRadius(): number {
@@ -315,11 +321,11 @@ export class AcDbEllipse extends AcDbCurve {
    * ```
    */
   get geometricExtents() {
-    return new AcGeBox3d(this._geo.box.min, this._geo.box.max)
+    return new GeometryBox3d(this._geo.box.min, this._geo.box.max)
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return [
       {
         kind: 'ellipseArc',
@@ -355,7 +361,7 @@ export class AcDbEllipse extends AcDbCurve {
    * @returns Array of grip points
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     const geo = this._geo
     gripPoints.push(geo.center)
     if (this.closed) {
@@ -370,7 +376,7 @@ export class AcDbEllipse extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbForEachGripIndex(indices, index => {
       this.moveGripAt(index, offset)
     })
@@ -391,9 +397,9 @@ export class AcDbEllipse extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const geo = this._geo
     switch (osnapMode) {
@@ -439,7 +445,7 @@ export class AcDbEllipse extends AcDbCurve {
   /**
    * Transforms this ellipse by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     this._geo = this._geo.transform3d(matrix)
     return this
   }
@@ -576,7 +582,7 @@ export class AcDbEllipse extends AcDbCurve {
     return curve ? [curve] : []
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const c = this.center
     const dx = point.x - c.x
     const dy = point.y - c.y
@@ -593,10 +599,10 @@ export class AcDbEllipse extends AcDbCurve {
     return (u / majorLen) ** 2 + (v / minorLen) ** 2 >= 1 ? 1 : -1
   }
 
-  private moveGripAt(gripIndex: number, offset: AcGeVector2dLike) {
+  private moveGripAt(gripIndex: number, offset: GeometryVector2dLike) {
     switch (gripIndex) {
       case 0:
-        this.transformBy(AcGeMatrix3d.makeTranslation({ ...offset, z: 0 }))
+        this.transformBy(GeometryMatrix3d.makeTranslation({ ...offset, z: 0 }))
         break
       case 1:
         if (this.closed) {
@@ -639,10 +645,10 @@ export class AcDbEllipse extends AcDbCurve {
    * @param offset - Translation applied to the grip point before recomputing the radius.
    * @private
    */
-  private moveQuadrantGripAt(angle: number, offset: AcGeVector2dLike) {
+  private moveQuadrantGripAt(angle: number, offset: GeometryVector2dLike) {
     const geo = this._geo
     const point = geo.getPointAtAngle(angle)
-    const newPoint = new AcGePoint2d(point.x + offset.x, point.y + offset.y)
+    const newPoint = new GeometryPoint2d(point.x + offset.x, point.y + offset.y)
     const c = geo.center
     const dx = newPoint.x - c.x
     const dy = newPoint.y - c.y
@@ -661,7 +667,7 @@ export class AcDbEllipse extends AcDbCurve {
   /**
    * Returns the ellipse angle of the point on this ellipse in the direction of `point`.
    */
-  private angleAtPoint(point: AcGePoint2dLike) {
+  private angleAtPoint(point: GeometryPoint2dLike) {
     const geo = this._geo
     const dx = point.x - geo.center.x
     const dy = point.y - geo.center.y

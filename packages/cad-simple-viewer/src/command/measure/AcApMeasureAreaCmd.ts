@@ -1,4 +1,8 @@
-import { AcCmColor, AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  AcCmColor,
+  AcDbDatabase,
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import { AcTrHtmlBadge, AcTrHtmlCanvasOverlay } from '@mlightcad/three-renderer'
 
 import { AcApContext } from '../../app'
@@ -34,14 +38,14 @@ import { AcApMeasureAreaEntity } from './entity'
  * Rubber-band jig: fires onMove on each cursor update so the command can
  * redraw the live polygon fill / outline (HTML-only — no CAD transient).
  */
-class AcApMeasureAreaJig extends AcEdPreviewJig<AcGePoint2dLike> {
-  private _onMove: (p: AcGePoint2dLike) => void
+class AcApMeasureAreaJig extends AcEdPreviewJig<GeometryPoint2dLike> {
+  private _onMove: (p: GeometryPoint2dLike) => void
 
   constructor(
     view: AcEdBaseView,
-    _from: AcGePoint2dLike,
+    _from: GeometryPoint2dLike,
     _color: AcCmColor,
-    onMove: (p: AcGePoint2dLike) => void
+    onMove: (p: GeometryPoint2dLike) => void
   ) {
     super(view)
     this._onMove = onMove
@@ -52,7 +56,7 @@ class AcApMeasureAreaJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return null
   }
 
-  update(p: AcGePoint2dLike) {
+  update(p: GeometryPoint2dLike) {
     this._onMove(p)
   }
 }
@@ -62,10 +66,10 @@ class AcApMeasureAreaJig extends AcEdPreviewJig<AcGePoint2dLike> {
  * Endpoint-touches are intentionally excluded so adjacent edges never trigger.
  */
 function segmentsIntersect(
-  p1: AcGePoint2dLike,
-  p2: AcGePoint2dLike,
-  p3: AcGePoint2dLike,
-  p4: AcGePoint2dLike
+  p1: GeometryPoint2dLike,
+  p2: GeometryPoint2dLike,
+  p3: GeometryPoint2dLike,
+  p4: GeometryPoint2dLike
 ): boolean {
   const d1x = p2.x - p1.x,
     d1y = p2.y - p1.y
@@ -81,7 +85,7 @@ function segmentsIntersect(
 }
 
 /** Computes the area of a polygon using the shoelace (Gauss) formula. */
-function shoelaceArea(pts: AcGePoint2dLike[]): number {
+function shoelaceArea(pts: GeometryPoint2dLike[]): number {
   let area = 0
   const n = pts.length
   for (let i = 0; i < n; i++) {
@@ -93,7 +97,7 @@ function shoelaceArea(pts: AcGePoint2dLike[]): number {
 }
 
 /** Returns the arithmetic centroid of a set of world points. */
-function centroid(pts: AcGePoint2dLike[]): { x: number; y: number } {
+function centroid(pts: GeometryPoint2dLike[]): { x: number; y: number } {
   const x = pts.reduce((s, p) => s + p.x, 0) / pts.length
   const y = pts.reduce((s, p) => s + p.y, 0) / pts.length
   return { x, y }
@@ -105,7 +109,7 @@ function centroid(pts: AcGePoint2dLike[]): { x: number; y: number } {
 export function placeAreaMeasurement(
   view: AcTrView2d,
   db: AcDbDatabase,
-  points: AcGePoint2dLike[],
+  points: GeometryPoint2dLike[],
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
@@ -135,7 +139,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
     const style = acapGetCurrentMeasurementStyle(db)
     const canvasLineWidth = acapMeasurementCanvasLineWidth(style.lineWeight)
 
-    const points: AcGePoint2dLike[] = []
+    const points: GeometryPoint2dLike[] = []
 
     // Construction-phase canvas overlay — removed before this method returns
     const fillOverlay = new AcTrHtmlCanvasOverlay({
@@ -162,7 +166,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
     acapSyncLiveOverlayTextHeight(context.view, [liveBadge], style)
     liveBadge.object.visible = false
 
-    const drawPolygon = (cursor?: AcGePoint2dLike) => {
+    const drawPolygon = (cursor?: GeometryPoint2dLike) => {
       const rect = context.view.canvas.getBoundingClientRect()
       const dpr = window.devicePixelRatio || 1
       const w = Math.round(rect.width)
@@ -266,7 +270,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
             // finish picking vertices and close the area polygon.
             prompt.allowNone = true
 
-            const onMove = (cursor: AcGePoint2dLike) => {
+            const onMove = (cursor: GeometryPoint2dLike) => {
               if (points.length < 2) {
                 // Still stroke rubber-band from first point while picking 2nd
                 drawPolygon(cursor)
@@ -309,7 +313,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
 
             if (points.length >= 3) {
               const sp = context.view.worldToScreen(p)
-              const snap = (anchor: AcGePoint2dLike) => {
+              const snap = (anchor: GeometryPoint2dLike) => {
                 const sa = context.view.worldToScreen(anchor)
                 const dx = sp.x - sa.x
                 const dy = sp.y - sa.y

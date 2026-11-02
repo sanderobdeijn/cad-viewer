@@ -1,7 +1,7 @@
 import {
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGeVector3d
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 
 import { acdbHostApplicationServices } from '../src/base'
@@ -47,18 +47,18 @@ describe('AcDbPolyline', () => {
   it('supports add/get/remove/reset vertex operations', () => {
     const polyline = new AcDbPolyline()
 
-    polyline.addVertexAt(0, new AcGePoint2d(1, 2), 0.5, 1.2, 3.4)
-    polyline.addVertexAt(1, new AcGePoint2d(4, 5))
-    polyline.addVertexAt(1, new AcGePoint2d(9, 7), -0.25)
+    polyline.addVertexAt(0, new GeometryPoint2d(1, 2), 0.5, 1.2, 3.4)
+    polyline.addVertexAt(1, new GeometryPoint2d(4, 5))
+    polyline.addVertexAt(1, new GeometryPoint2d(9, 7), -0.25)
 
     expect(polyline.numberOfVertices).toBe(3)
-    expect(polyline.getPoint2dAt(0)).toEqual(new AcGePoint2d(1, 2))
-    expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(9, 7))
-    expect(polyline.getPoint2dAt(2)).toEqual(new AcGePoint2d(4, 5))
+    expect(polyline.getPoint2dAt(0)).toEqual(new GeometryPoint2d(1, 2))
+    expect(polyline.getPoint2dAt(1)).toEqual(new GeometryPoint2d(9, 7))
+    expect(polyline.getPoint2dAt(2)).toEqual(new GeometryPoint2d(4, 5))
 
     polyline.removeVertexAt(1)
     expect(polyline.numberOfVertices).toBe(2)
-    expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(4, 5))
+    expect(polyline.getPoint2dAt(1)).toEqual(new GeometryPoint2d(4, 5))
 
     polyline.reset(true, 1)
     expect(polyline.numberOfVertices).toBe(1)
@@ -69,8 +69,8 @@ describe('AcDbPolyline', () => {
 
   it('returns geometric extents at Z = 0', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(-1, 2))
-    polyline.addVertexAt(1, new AcGePoint2d(3, -4))
+    polyline.addVertexAt(0, new GeometryPoint2d(-1, 2))
+    polyline.addVertexAt(1, new GeometryPoint2d(3, -4))
 
     const extents = polyline.geometricExtents
     expect(extents.min).toMatchObject({ x: -1, y: -4 })
@@ -79,12 +79,12 @@ describe('AcDbPolyline', () => {
 
   it('updates geometricExtents when vertices change', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
 
     expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 0 })
 
-    polyline.addVertexAt(2, new AcGePoint2d(2, 5))
+    polyline.addVertexAt(2, new GeometryPoint2d(2, 5))
 
     expect(polyline.geometricExtents.min).toMatchObject({ x: 0, y: 0 })
     expect(polyline.geometricExtents.max).toMatchObject({ x: 2, y: 5 })
@@ -97,61 +97,61 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 1, db)
 
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
-    polyline.addVertexAt(2, new AcGePoint2d(2, 3))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
+    polyline.addVertexAt(2, new GeometryPoint2d(2, 3))
 
     const grips = polyline.subGetGripPoints()
     expect(grips).toEqual([
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(2, 0),
-      new AcGePoint2d(2, 3)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(2, 0),
+      new GeometryPoint2d(2, 3)
     ])
 
-    const endpointSnaps: AcGePoint2d[] = []
+    const endpointSnaps: GeometryPoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       endpointSnaps
     )
     expect(endpointSnaps).toEqual(grips)
 
-    const midPoints: AcGePoint2d[] = []
+    const midPoints: GeometryPoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.MidPoint,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       midPoints
     )
     expect(midPoints).toHaveLength(2)
     expect(midPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const nearestPoints: AcGePoint2d[] = []
+    const nearestPoints: GeometryPoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Nearest,
-      new AcGePoint2d(1, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(1, 1),
+      new GeometryPoint2d(),
       nearestPoints
     )
     expect(nearestPoints).toHaveLength(1)
     expect(nearestPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const perpendicularPoints: AcGePoint2d[] = []
+    const perpendicularPoints: GeometryPoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Perpendicular,
-      new AcGePoint2d(1, 1),
-      new AcGePoint2d(),
+      new GeometryPoint2d(1, 1),
+      new GeometryPoint2d(),
       perpendicularPoints
     )
     expect(perpendicularPoints).toHaveLength(1)
     expect(perpendicularPoints[0]).toMatchObject({ x: 1, y: 0 })
 
-    const centerSnaps: AcGePoint2d[] = []
+    const centerSnaps: GeometryPoint2d[] = []
     polyline.subGetOsnapPoints(
       AcDbOsnapMode.Center,
-      new AcGePoint2d(),
-      new AcGePoint2d(),
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
       centerSnaps
     )
     expect(centerSnaps).toHaveLength(0)
@@ -166,16 +166,16 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 2, db)
 
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
-    polyline.addVertexAt(2, new AcGePoint2d(2, 3))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
+    polyline.addVertexAt(2, new GeometryPoint2d(2, 3))
 
     const grips = polyline.subGetGripPoints()
     expect(grips).toHaveLength(5)
     expect(grips.slice(0, 3)).toEqual([
-      new AcGePoint2d(0, 0),
-      new AcGePoint2d(2, 0),
-      new AcGePoint2d(2, 3)
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(2, 0),
+      new GeometryPoint2d(2, 3)
     ])
     expect(grips[3]).toMatchObject({ x: 1, y: 0 })
     expect(grips[4]).toMatchObject({ x: 2, y: 1.5 })
@@ -190,40 +190,40 @@ describe('AcDbPolyline', () => {
     manager.setVar(AcDbSystemVariables.GRIPS, 2, db)
 
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
-    polyline.addVertexAt(2, new AcGePoint2d(2, 3))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
+    polyline.addVertexAt(2, new GeometryPoint2d(2, 3))
 
-    polyline.subMoveGripPointsAt([3], new AcGeVector3d(1, 0, 0))
+    polyline.subMoveGripPointsAt([3], new GeometryVector3d(1, 0, 0))
 
-    expect(polyline.getPoint2dAt(0)).toEqual(new AcGePoint2d(1, 0))
-    expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(3, 0))
-    expect(polyline.getPoint2dAt(2)).toEqual(new AcGePoint2d(2, 3))
+    expect(polyline.getPoint2dAt(0)).toEqual(new GeometryPoint2d(1, 0))
+    expect(polyline.getPoint2dAt(1)).toEqual(new GeometryPoint2d(3, 0))
+    expect(polyline.getPoint2dAt(2)).toEqual(new GeometryPoint2d(2, 3))
 
     manager.setVar(AcDbSystemVariables.GRIPS, oldGrips as number, db)
   })
 
   it('moves vertex grip points by index', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
-    polyline.addVertexAt(2, new AcGePoint2d(2, 3))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
+    polyline.addVertexAt(2, new GeometryPoint2d(2, 3))
 
-    polyline.subMoveGripPointsAt([1], new AcGeVector3d(1, 2, 0))
+    polyline.subMoveGripPointsAt([1], new GeometryVector3d(1, 2, 0))
 
-    expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(3, 2))
+    expect(polyline.getPoint2dAt(1)).toEqual(new GeometryPoint2d(3, 2))
   })
 
   it('transforms points and flips bulges for mirrored transforms', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(1, 2), 0.5)
-    polyline.addVertexAt(1, new AcGePoint2d(4, 5), -1)
+    polyline.addVertexAt(0, new GeometryPoint2d(1, 2), 0.5)
+    polyline.addVertexAt(1, new GeometryPoint2d(4, 5), -1)
 
     expect(
-      polyline.transformBy(new AcGeMatrix3d().makeTranslation(10, -2, 4))
+      polyline.transformBy(new GeometryMatrix3d().makeTranslation(10, -2, 4))
     ).toBe(polyline)
-    expect(polyline.getPoint2dAt(0)).toEqual(new AcGePoint2d(11, 0))
-    expect(polyline.getPoint2dAt(1)).toEqual(new AcGePoint2d(14, 3))
+    expect(polyline.getPoint2dAt(0)).toEqual(new GeometryPoint2d(11, 0))
+    expect(polyline.getPoint2dAt(1)).toEqual(new GeometryPoint2d(14, 3))
 
     const verticesBeforeMirror = polyline.properties.groups
       .find(g => g.groupName === 'geometry')
@@ -231,7 +231,7 @@ describe('AcDbPolyline', () => {
       ?.accessor.get() as Array<{ bulge?: number }>
     verticesBeforeMirror[0].bulge = undefined
 
-    polyline.transformBy(new AcGeMatrix3d().makeScale(-1, 1, 1))
+    polyline.transformBy(new GeometryMatrix3d().makeScale(-1, 1, 1))
 
     const vertices = polyline.properties.groups
       .find(g => g.groupName === 'geometry')
@@ -252,8 +252,8 @@ describe('AcDbPolyline', () => {
 
   it('exposes properties with working accessors', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0.25, 2, 3)
-    polyline.addVertexAt(1, new AcGePoint2d(3, 4))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0.25, 2, 3)
+    polyline.addVertexAt(1, new GeometryPoint2d(3, 4))
 
     const props = polyline.properties
     expect(props.type).toBe(polyline.type)
@@ -303,8 +303,8 @@ describe('AcDbPolyline', () => {
 
   it('draws with sampled points at Z = 0', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(2, 0))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(2, 0))
 
     const giEntity = { id: 'polyline-gi' }
     const renderer = {
@@ -315,17 +315,19 @@ describe('AcDbPolyline', () => {
     expect(result).toBe(giEntity)
     expect(renderer.lines).toHaveBeenCalledTimes(1)
 
-    const [points] = renderer.lines.mock.calls[0] as unknown as [AcGePoint2d[]]
+    const [points] = renderer.lines.mock.calls[0] as unknown as [
+      GeometryPoint2d[]
+    ]
     expect(points.length).toBeGreaterThan(1)
   })
 
   it('renders constant-width polyline as filled area', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = true
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 2, 2)
-    polyline.addVertexAt(1, new AcGePoint2d(10, 0), 0, 2, 2)
-    polyline.addVertexAt(2, new AcGePoint2d(10, 5), 0, 2, 2)
-    polyline.addVertexAt(3, new AcGePoint2d(0, 5), 0, 2, 2)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 2, 2)
+    polyline.addVertexAt(1, new GeometryPoint2d(10, 0), 0, 2, 2)
+    polyline.addVertexAt(2, new GeometryPoint2d(10, 5), 0, 2, 2)
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 5), 0, 2, 2)
 
     const giEntity = { id: 'wide-polyline-gi' }
     const renderer = {
@@ -376,8 +378,8 @@ describe('AcDbPolyline', () => {
     // Matches GAS-Valve / GAS-PRV LWPOLYLINE: 2 verts, startWidth 0, endWidth 0.75.
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 0, 0.75)
-    polyline.addVertexAt(1, new AcGePoint2d(0.661766, 0), 0, 0.25, 0.25)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 0, 0.75)
+    polyline.addVertexAt(1, new GeometryPoint2d(0.661766, 0), 0, 0.25, 0.25)
 
     const areaEntity = { id: 'valve-taper-wide-polyline-gi' }
     const strokeEntity = { id: 'valve-taper-centerline' }
@@ -408,8 +410,8 @@ describe('AcDbPolyline', () => {
     // constant width == diameter so the inner offset collapses to a point.
     const polyline = new AcDbPolyline()
     polyline.closed = true
-    polyline.addVertexAt(0, new AcGePoint2d(-0.25, 0), 1, 0.5, 0.5)
-    polyline.addVertexAt(1, new AcGePoint2d(0.25, 0), 1, 0.5, 0.5)
+    polyline.addVertexAt(0, new GeometryPoint2d(-0.25, 0), 1, 0.5, 0.5)
+    polyline.addVertexAt(1, new GeometryPoint2d(0.25, 0), 1, 0.5, 0.5)
 
     const areaEntity = { id: 'blowoff-filled-disk-gi' }
     const strokeEntity = { id: 'blowoff-centerline' }
@@ -448,9 +450,9 @@ describe('AcDbPolyline', () => {
 
   it('renders variable-width polyline as filled area', () => {
     const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 1, 6)
-    polyline.addVertexAt(1, new AcGePoint2d(20, 0), 0, 6, 2)
-    polyline.addVertexAt(2, new AcGePoint2d(25, 8), 0, 2, 2)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 1, 6)
+    polyline.addVertexAt(1, new GeometryPoint2d(20, 0), 0, 6, 2)
+    polyline.addVertexAt(2, new GeometryPoint2d(25, 8), 0, 2, 2)
 
     const areaEntity = { id: 'variable-width-polyline-gi' }
     const strokeEntity = { id: 'variable-width-centerline' }
@@ -472,11 +474,11 @@ describe('AcDbPolyline', () => {
   it('renders open constant-width polyline as a band without filling interior', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 40, 40)
-    polyline.addVertexAt(1, new AcGePoint2d(200, 0), 0, 40, 40)
-    polyline.addVertexAt(2, new AcGePoint2d(200, 400), 0, 40, 40)
-    polyline.addVertexAt(3, new AcGePoint2d(0, 400), 0, 40, 40)
-    polyline.addVertexAt(4, new AcGePoint2d(0, 200), 0, 40, 40)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 40, 40)
+    polyline.addVertexAt(1, new GeometryPoint2d(200, 0), 0, 40, 40)
+    polyline.addVertexAt(2, new GeometryPoint2d(200, 400), 0, 40, 40)
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 400), 0, 40, 40)
+    polyline.addVertexAt(4, new GeometryPoint2d(0, 200), 0, 40, 40)
 
     // Fill + centerline stroke cannot share one direct-batch payload.
     expect(polyline.directBatchPrimitive).toBeNull()
@@ -508,12 +510,12 @@ describe('AcDbPolyline', () => {
   it('renders a wide polyline with width when the path revisits a point', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 40, 40)
-    polyline.addVertexAt(1, new AcGePoint2d(200, 0), 0, 40, 40)
-    polyline.addVertexAt(2, new AcGePoint2d(200, 400), 0, 40, 40)
-    polyline.addVertexAt(3, new AcGePoint2d(0, 400), 0, 40, 40)
-    polyline.addVertexAt(4, new AcGePoint2d(0, 400), 0, 40, 40)
-    polyline.addVertexAt(5, new AcGePoint2d(0, 200), 0, 40, 40)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 40, 40)
+    polyline.addVertexAt(1, new GeometryPoint2d(200, 0), 0, 40, 40)
+    polyline.addVertexAt(2, new GeometryPoint2d(200, 400), 0, 40, 40)
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 400), 0, 40, 40)
+    polyline.addVertexAt(4, new GeometryPoint2d(0, 400), 0, 40, 40)
+    polyline.addVertexAt(5, new GeometryPoint2d(0, 200), 0, 40, 40)
 
     const areaEntity = { id: 'revisited-wide-polyline-gi' }
     const strokeEntity = { id: 'revisited-wide-centerline' }
@@ -545,16 +547,16 @@ describe('AcDbPolyline', () => {
     // splitWidePolylineProfileAtRevisits splits this into two overlapping
     // subpaths. Start and end stay far apart so this does not take the
     // nearly-closed offsetRing path. Pouring both subpaths' loops into one
-    // shared AcGeArea2d treated the second subpath's own outer band as a
+    // shared GeometryArea2d treated the second subpath's own outer band as a
     // hole inside the first's, silently losing coverage. Each subpath must
     // now get its own area and its own renderer.area() call.
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 4, 4)
-    polyline.addVertexAt(1, new AcGePoint2d(10, 0), 0, 4, 4)
-    polyline.addVertexAt(2, new AcGePoint2d(20, 0), 0, 4, 4)
-    polyline.addVertexAt(3, new AcGePoint2d(10, 0), 0, 4, 4)
-    polyline.addVertexAt(4, new AcGePoint2d(10, 50), 0, 4, 4)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 4, 4)
+    polyline.addVertexAt(1, new GeometryPoint2d(10, 0), 0, 4, 4)
+    polyline.addVertexAt(2, new GeometryPoint2d(20, 0), 0, 4, 4)
+    polyline.addVertexAt(3, new GeometryPoint2d(10, 0), 0, 4, 4)
+    polyline.addVertexAt(4, new GeometryPoint2d(10, 50), 0, 4, 4)
 
     // Multi-area draw must stay off the direct-batch 'area' path.
     expect(polyline.directBatchPrimitive).toBeNull()
@@ -597,10 +599,10 @@ describe('AcDbPolyline', () => {
   it('renders nearly-closed open wide polyline via offsetRing', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, 2, 2)
-    polyline.addVertexAt(1, new AcGePoint2d(10, 0), 0, 2, 2)
-    polyline.addVertexAt(2, new AcGePoint2d(10, 5), 0, 2, 2)
-    polyline.addVertexAt(3, new AcGePoint2d(0, 5), 0, 2, 2)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, 2, 2)
+    polyline.addVertexAt(1, new GeometryPoint2d(10, 0), 0, 2, 2)
+    polyline.addVertexAt(2, new GeometryPoint2d(10, 5), 0, 2, 2)
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 5), 0, 2, 2)
 
     // offsetRing is not a single area() call — stay off direct batching.
     expect(polyline.directBatchPrimitive).toBeNull()
@@ -634,11 +636,11 @@ describe('AcDbPolyline', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = false
     const width = 60
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0), 0, width, width)
-    polyline.addVertexAt(1, new AcGePoint2d(25000, 0), 0, width, width)
-    polyline.addVertexAt(2, new AcGePoint2d(25000, 10500), 0, width, width)
-    polyline.addVertexAt(3, new AcGePoint2d(0, 10500), 0, width, width)
-    polyline.addVertexAt(4, new AcGePoint2d(0, 0), 0, width, width)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0, width, width)
+    polyline.addVertexAt(1, new GeometryPoint2d(25000, 0), 0, width, width)
+    polyline.addVertexAt(2, new GeometryPoint2d(25000, 10500), 0, width, width)
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 10500), 0, width, width)
+    polyline.addVertexAt(4, new GeometryPoint2d(0, 0), 0, width, width)
 
     const giEntity = { id: 'building-outline-wide-polyline-gi' }
     const renderer = {
@@ -659,12 +661,12 @@ describe('AcDbPolyline', () => {
   it('renders open stadium wide polyline as a segment band instead of a ring', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = false
-    polyline.addVertexAt(0, new AcGePoint2d(0, 120), 0, 10, 10)
-    polyline.addVertexAt(1, new AcGePoint2d(0, 130), -1, 10, 10)
-    polyline.addVertexAt(2, new AcGePoint2d(70, 130), 0, 10, 10)
-    polyline.addVertexAt(3, new AcGePoint2d(70, -70), -1, 10, 10)
-    polyline.addVertexAt(4, new AcGePoint2d(0, -70), 0, 10, 10)
-    polyline.addVertexAt(5, new AcGePoint2d(0, -60), 0, 10, 10)
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 120), 0, 10, 10)
+    polyline.addVertexAt(1, new GeometryPoint2d(0, 130), -1, 10, 10)
+    polyline.addVertexAt(2, new GeometryPoint2d(70, 130), 0, 10, 10)
+    polyline.addVertexAt(3, new GeometryPoint2d(70, -70), -1, 10, 10)
+    polyline.addVertexAt(4, new GeometryPoint2d(0, -70), 0, 10, 10)
+    polyline.addVertexAt(5, new GeometryPoint2d(0, -60), 0, 10, 10)
 
     const areaEntity = { id: 'open-stadium-wide-polyline-gi' }
     const strokeEntity = { id: 'open-stadium-centerline' }
@@ -691,10 +693,10 @@ describe('AcDbPolyline', () => {
 
   it('offsets a closed square', () => {
     const poly = new AcDbPolyline()
-    poly.addVertexAt(0, new AcGePoint2d(0, 0))
-    poly.addVertexAt(1, new AcGePoint2d(10, 0))
-    poly.addVertexAt(2, new AcGePoint2d(10, 10))
-    poly.addVertexAt(3, new AcGePoint2d(0, 10))
+    poly.addVertexAt(0, new GeometryPoint2d(0, 0))
+    poly.addVertexAt(1, new GeometryPoint2d(10, 0))
+    poly.addVertexAt(2, new GeometryPoint2d(10, 10))
+    poly.addVertexAt(3, new GeometryPoint2d(0, 10))
     poly.closed = true
     const [result] = poly.getOffsetCurves(1) as AcDbPolyline[]
     expect(result.numberOfVertices).toBe(4)
@@ -713,8 +715,8 @@ describe('AcDbPolyline', () => {
 
   it('offsets an open polyline with 2 vertices', () => {
     const poly = new AcDbPolyline()
-    poly.addVertexAt(0, new AcGePoint2d(0, 0))
-    poly.addVertexAt(1, new AcGePoint2d(10, 0))
+    poly.addVertexAt(0, new GeometryPoint2d(0, 0))
+    poly.addVertexAt(1, new GeometryPoint2d(10, 0))
     const [result] = poly.getOffsetCurves(2) as AcDbPolyline[]
     expect(result.numberOfVertices).toBe(2)
     expect(result.getPoint2dAt(0).y).toBeCloseTo(2)
@@ -723,8 +725,8 @@ describe('AcDbPolyline', () => {
 
   it('offsets an open polyline with a bulge arc segment', () => {
     const poly = new AcDbPolyline()
-    poly.addVertexAt(0, new AcGePoint2d(0, 0), 1)
-    poly.addVertexAt(1, new AcGePoint2d(10, 0))
+    poly.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
+    poly.addVertexAt(1, new GeometryPoint2d(10, 0))
     const [result] = poly.getOffsetCurves(1) as AcDbPolyline[]
     let minY = Infinity
     for (let i = 0; i < result.numberOfVertices; i++) {
@@ -736,10 +738,10 @@ describe('AcDbPolyline', () => {
   it('computes area for closed polyline and returns 0 when open', () => {
     const polyline = new AcDbPolyline()
     polyline.closed = true
-    polyline.addVertexAt(0, new AcGePoint2d(0, 0))
-    polyline.addVertexAt(1, new AcGePoint2d(10, 0))
-    polyline.addVertexAt(2, new AcGePoint2d(10, 5))
-    polyline.addVertexAt(3, new AcGePoint2d(0, 5))
+    polyline.addVertexAt(0, new GeometryPoint2d(0, 0))
+    polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
+    polyline.addVertexAt(2, new GeometryPoint2d(10, 5))
+    polyline.addVertexAt(3, new GeometryPoint2d(0, 5))
     expect(polyline.area).toBeCloseTo(50, 8)
 
     polyline.closed = false

@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer, AcGiTextStyle } from '@mlightcad/graphic-interface'
 import {
@@ -50,7 +50,7 @@ import {
  * mtext.contents = "This is a\nmultiline text\nwith formatting";
  * mtext.height = 2.5;
  * mtext.width = 20;
- * mtext.location = new AcGePoint2d(0, 0);
+ * mtext.location = new GeometryPoint2d(0, 0);
  * mtext.attachmentPoint = AcGiMTextAttachmentPoint.TopLeft;
  *
  * // Access mtext properties
@@ -92,15 +92,15 @@ export class AcDbMText extends AcDbEntity {
   /** The text style name */
   private _styleName: string
   /** The location point of the text */
-  private _location: AcGePoint2d
+  private _location: GeometryPoint2d
   /** The attachment point for the text */
   private _attachmentPoint: AcGiMTextAttachmentPoint
   /** The direction vector of the text */
-  private _direction: AcGeVector3d
+  private _direction: GeometryVector3d
   /** The drawing direction of the text */
   private _drawingDirection: AcGiMTextFlowDirection
   /** Extrusion / plane normal (DXF group 210). */
-  private _normal = new AcGeVector3d(0, 0, 1)
+  private _normal = new GeometryVector3d(0, 0, 1)
   /** Annotation height when embedded in ATTRIB (DXF group 46). */
   private _annotationHeight = 0
   /** Column type (DXF group 75). */
@@ -144,9 +144,9 @@ export class AcDbMText extends AcDbEntity {
     this._backgroundScaleFactor = 1
     this._rotation = 0
     this._styleName = ''
-    this._location = new AcGePoint2d()
+    this._location = new GeometryPoint2d()
     this._attachmentPoint = AcGiMTextAttachmentPoint.TopLeft
-    this._direction = new AcGeVector3d(1, 0, 0)
+    this._direction = new GeometryVector3d(1, 0, 0)
     this._drawingDirection = AcGiMTextFlowDirection.LEFT_TO_RIGHT
   }
 
@@ -361,7 +361,7 @@ export class AcDbMText extends AcDbEntity {
   get location() {
     return this._location
   }
-  set location(value: AcGePoint2dLike) {
+  set location(value: GeometryPoint2dLike) {
     this._location.copy(value)
   }
 
@@ -382,10 +382,10 @@ export class AcDbMText extends AcDbEntity {
    * Represent the X axis ("horizontal") for the text. This direction vector is used to determine the text
    * flow direction.
    */
-  get direction(): AcGeVector3d {
+  get direction(): GeometryVector3d {
     return this._direction
   }
-  set direction(value: AcGeVector3dLike) {
+  set direction(value: GeometryVector3dLike) {
     this._direction.copy(value)
   }
 
@@ -397,10 +397,10 @@ export class AcDbMText extends AcDbEntity {
   }
 
   /** Extrusion / plane normal (DXF group 210). */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
@@ -468,8 +468,8 @@ export class AcDbMText extends AcDbEntity {
     height: number
     width: number
     extentsWidth: number
-    position: AcGePoint2d
-    direction: AcGeVector3d
+    position: GeometryPoint2d
+    direction: GeometryVector3d
     attachmentPoint: AcGiMTextAttachmentPoint
     preferred?: AcDbAnnotationScaleContext
     annotationScale?: AcDbAnnotationScaleDrawInfo
@@ -522,8 +522,8 @@ export class AcDbMText extends AcDbEntity {
   /**
    * @inheritdoc
    */
-  get geometricExtents(): AcGeBox3d {
-    const box = new AcGeBox3d()
+  get geometricExtents(): GeometryBox3d {
+    const box = new GeometryBox3d()
     const presentation = this.resolveAnnotativePresentation()
     const width =
       presentation.extentsWidth > 0
@@ -560,7 +560,7 @@ export class AcDbMText extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     const { preferred } = this.resolveAnnotativePresentation()
     const ctx = preferred?.contextData
     if (ctx) {
@@ -589,9 +589,9 @@ export class AcDbMText extends AcDbEntity {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (AcDbOsnapMode.Insertion === osnapMode) {
       snapPoints.push(this.resolveAnnotativePresentation().position)
@@ -601,17 +601,17 @@ export class AcDbMText extends AcDbEntity {
   /**
    * Transforms this mtext by the specified matrix.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const origin = this._location.clone()
     const xDir =
       this._direction.lengthSq() > 0
         ? this._direction.clone().normalize()
-        : new AcGeVector3d(
+        : new GeometryVector3d(
             Math.cos(this._rotation),
             Math.sin(this._rotation),
             0
           )
-    const yDir = new AcGeVector3d(-xDir.y, xDir.x, xDir.z)
+    const yDir = new GeometryVector3d(-xDir.y, xDir.x, xDir.z)
     if (yDir.lengthSq() === 0) {
       yDir.set(0, 1, 0)
     }
@@ -624,12 +624,12 @@ export class AcDbMText extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0

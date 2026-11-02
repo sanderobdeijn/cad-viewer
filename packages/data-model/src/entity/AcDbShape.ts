@@ -1,11 +1,11 @@
 import {
-  AcGeBox3d,
-  AcGeMatrix3d,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGeVector2dLike,
-  AcGeVector3d,
-  AcGeVector3dLike
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryVector2dLike,
+  GeometryVector3d,
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiEntity,
@@ -33,7 +33,7 @@ import { acdbMovePrimaryGripPointAt } from './AcDbGripHelpers'
  * ```typescript
  * const shape = new AcDbShape();
  * shape.name = 'ARROW';
- * shape.position = new AcGePoint2d(10, 20);
+ * shape.position = new GeometryPoint2d(10, 20);
  * shape.size = 2.5;
  * shape.rotation = Math.PI / 4;
  * ```
@@ -47,7 +47,7 @@ export class AcDbShape extends AcDbEntity {
   }
 
   /** The insertion point of the shape in WCS coordinates. */
-  private _position: AcGePoint2d
+  private _position: GeometryPoint2d
   /** The height of the shape. */
   private _size: number
   /** The name of the shape within the associated SHX font. */
@@ -61,7 +61,7 @@ export class AcDbShape extends AcDbEntity {
   /** The thickness along {@link normal}. */
   private _thickness: number
   /** The normal vector of the plane containing the shape, in WCS coordinates. */
-  private _normal: AcGeVector3d
+  private _normal: GeometryVector3d
   /** The numeric shape code within the SHX font. */
   private _shapeNumber: number
   /** The text style name that references the SHX font for this shape. */
@@ -72,14 +72,14 @@ export class AcDbShape extends AcDbEntity {
    */
   constructor() {
     super()
-    this._position = new AcGePoint2d()
+    this._position = new GeometryPoint2d()
     this._size = 1
     this._name = ''
     this._rotation = 0
     this._widthFactor = 1
     this._oblique = 0
     this._thickness = 0
-    this._normal = new AcGeVector3d(0, 0, 1)
+    this._normal = new GeometryVector3d(0, 0, 1)
     this._shapeNumber = 0
     this._styleName = ''
   }
@@ -89,12 +89,12 @@ export class AcDbShape extends AcDbEntity {
    *
    * Mirrors `AcDbShape::position()` in ObjectARX.
    */
-  get position(): AcGePoint2d {
+  get position(): GeometryPoint2d {
     return this._position
   }
 
   /** Sets the insertion point of this shape in WCS coordinates. */
-  set position(value: AcGePoint2dLike) {
+  set position(value: GeometryPoint2dLike) {
     this._position.copy(value)
   }
 
@@ -190,12 +190,12 @@ export class AcDbShape extends AcDbEntity {
    *
    * Mirrors `AcDbShape::normal()` in ObjectARX.
    */
-  get normal(): AcGeVector3d {
+  get normal(): GeometryVector3d {
     return this._normal
   }
 
   /** Sets the normal vector of the plane containing this shape. */
-  set normal(value: AcGeVector3dLike) {
+  set normal(value: GeometryVector3dLike) {
     this._normal.copy(value)
   }
 
@@ -261,16 +261,16 @@ export class AcDbShape extends AcDbEntity {
     return true
   }
 
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     const half = Math.abs(this._size) / 2
-    const extents = new AcGeBox3d()
+    const extents = new GeometryBox3d()
     extents.expandByPoint(this._position)
     if (half > 0) {
       extents.expandByPoint(
-        new AcGePoint2d(this._position.x - half, this._position.y - half)
+        new GeometryPoint2d(this._position.x - half, this._position.y - half)
       )
       extents.expandByPoint(
-        new AcGePoint2d(this._position.x + half, this._position.y + half)
+        new GeometryPoint2d(this._position.x + half, this._position.y + half)
       )
     }
     return extents
@@ -281,32 +281,37 @@ export class AcDbShape extends AcDbEntity {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     acdbMovePrimaryGripPointAt(indices, offset, this._position)
     return this
   }
 
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    _pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    _pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     if (osnapMode === AcDbOsnapMode.Insertion) {
       snapPoints.push(this._position)
     }
   }
 
-  transformBy(matrix: AcGeMatrix3d) {
-    const extrusion = new AcGeMatrix3d().setFromExtrusionDirection(this._normal)
-    const rotation = new AcGeMatrix3d().makeRotationZ(this._rotation)
-    const localToWcs = new AcGeMatrix3d().multiplyMatrices(extrusion, rotation)
+  transformBy(matrix: GeometryMatrix3d) {
+    const extrusion = new GeometryMatrix3d().setFromExtrusionDirection(
+      this._normal
+    )
+    const rotation = new GeometryMatrix3d().makeRotationZ(this._rotation)
+    const localToWcs = new GeometryMatrix3d().multiplyMatrices(
+      extrusion,
+      rotation
+    )
 
     const origin = this._position.clone()
-    const xAxisPoint = new AcGePoint2d(this._widthFactor, 0)
+    const xAxisPoint = new GeometryPoint2d(this._widthFactor, 0)
       .applyMatrix4(localToWcs)
       .add(origin)
-    const yAxisPoint = new AcGePoint2d(0, 1)
+    const yAxisPoint = new GeometryPoint2d(0, 1)
       .applyMatrix4(localToWcs)
       .add(origin)
 
@@ -314,25 +319,27 @@ export class AcDbShape extends AcDbEntity {
     xAxisPoint.applyMatrix4(matrix)
     yAxisPoint.applyMatrix4(matrix)
 
-    const xAxis = new AcGeVector3d(
+    const xAxis = new GeometryVector3d(
       xAxisPoint.x - origin.x,
       xAxisPoint.y - origin.y,
       0
     )
-    const yAxis = new AcGeVector3d(
+    const yAxis = new GeometryVector3d(
       yAxisPoint.x - origin.x,
       yAxisPoint.y - origin.y,
       0
     )
 
-    let normal = new AcGeVector3d().crossVectors(xAxis, yAxis)
+    let normal = new GeometryVector3d().crossVectors(xAxis, yAxis)
     if (normal.lengthSq() === 0) {
       normal = this._normal.clone().transformDirection(matrix)
     } else {
       normal.normalize()
     }
 
-    const extrusionMatrix = new AcGeMatrix3d().setFromExtrusionDirection(normal)
+    const extrusionMatrix = new GeometryMatrix3d().setFromExtrusionDirection(
+      normal
+    )
     const ocsInverse = extrusionMatrix.clone().invert()
     const localXAxis = xAxis.clone().applyMatrix4(ocsInverse)
     const yScale = yAxis.length()

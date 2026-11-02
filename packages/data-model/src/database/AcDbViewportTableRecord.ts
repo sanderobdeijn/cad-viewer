@@ -1,5 +1,5 @@
 import { defaults } from '@mlightcad/common'
-import { AcGeBox2d, AcGePoint2d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { ACTIVE_VPORT_NAME } from '../misc/AcDbConstants'
 import {
@@ -18,24 +18,23 @@ const MAX_VIEW_SPAN_WITHOUT_EXTENTS = 1e5
 /**
  * Interface defining the attributes for viewport table records.
  */
-export interface AcDbViewportTableRecordAttrs
-  extends AcDbAbstractViewTableRecordAttrs {
+export interface AcDbViewportTableRecordAttrs extends AcDbAbstractViewTableRecordAttrs {
   /** Number of sides used for circle tessellation */
   circleSides: number
   /** Lower left corner of the viewport window */
-  lowerLeftCorner: AcGePoint2d
+  lowerLeftCorner: GeometryPoint2d
   /** Upper right corner of the viewport window */
-  upperRightCorner: AcGePoint2d
+  upperRightCorner: GeometryPoint2d
   /** Snap base point for the viewport */
-  snapBase: AcGePoint2d
+  snapBase: GeometryPoint2d
   /** Snap angle for the viewport */
   snapAngle: number
   /** Snap spacing for the viewport */
-  snapSpacing: AcGePoint2d
+  snapSpacing: GeometryPoint2d
   /** Standard flags for the viewport */
   standardFlag: number
   /** Grid spacing for the viewport */
-  gridSpacing: AcGePoint2d
+  gridSpacing: GeometryPoint2d
   /** Grid major spacing for the viewport */
   gridMajor: number
   /** Background object ID for the viewport */
@@ -72,8 +71,8 @@ function resolveViewAspectRatio(
 }
 
 function intersectionArea(
-  viewBox: AcGeBox2d,
-  drawingExtents: AcGeBox2d
+  viewBox: GeometryBox2d,
+  drawingExtents: GeometryBox2d
 ): number {
   const minX = Math.max(viewBox.min.x, drawingExtents.min.x)
   const minY = Math.max(viewBox.min.y, drawingExtents.min.y)
@@ -85,7 +84,7 @@ function intersectionArea(
   return (maxX - minX) * (maxY - minY)
 }
 
-function viewCenter(viewBox: AcGeBox2d) {
+function viewCenter(viewBox: GeometryBox2d) {
   return {
     x: (viewBox.min.x + viewBox.max.x) / 2,
     y: (viewBox.min.y + viewBox.max.y) / 2
@@ -93,8 +92,8 @@ function viewCenter(viewBox: AcGeBox2d) {
 }
 
 function hasMeaningfulDrawingExtents(
-  drawingExtents?: AcGeBox2d
-): drawingExtents is AcGeBox2d {
+  drawingExtents?: GeometryBox2d
+): drawingExtents is GeometryBox2d {
   if (!drawingExtents || drawingExtents.isEmpty()) {
     return false
   }
@@ -116,8 +115,8 @@ function hasMeaningfulDrawingExtents(
  * const viewportRecord = new AcDbViewportTableRecord();
  * viewportRecord.name = ACTIVE_VPORT_NAME;
  * viewportRecord.circleSides = 100;
- * viewportRecord.lowerLeftCorner = new AcGePoint2d(0, 0);
- * viewportRecord.upperRightCorner = new AcGePoint2d(1, 1);
+ * viewportRecord.lowerLeftCorner = new GeometryPoint2d(0, 0);
+ * viewportRecord.upperRightCorner = new GeometryPoint2d(1, 1);
  * ```
  */
 export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbViewportTableRecordAttrs> {
@@ -145,13 +144,13 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
     attrs = attrs || {}
     defaults(attrs, {
       circleSides: 100,
-      lowerLeftCorner: new AcGePoint2d(0, 0),
-      upperRightCorner: new AcGePoint2d(1, 1),
-      snapBase: new AcGePoint2d(0, 0),
+      lowerLeftCorner: new GeometryPoint2d(0, 0),
+      upperRightCorner: new GeometryPoint2d(1, 1),
+      snapBase: new GeometryPoint2d(0, 0),
       snapAngle: 0,
-      snapSpacing: new AcGePoint2d(0, 0),
+      snapSpacing: new GeometryPoint2d(0, 0),
       standardFlag: 0,
-      gridSpacing: new AcGePoint2d(),
+      gridSpacing: new GeometryPoint2d(),
       gridMajor: 10,
       ucsElevation: 0
     })
@@ -193,7 +192,7 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   get center() {
     return this.centerPoint
   }
-  set center(value: AcGePoint2d) {
+  set center(value: GeometryPoint2d) {
     this.centerPoint = value
   }
 
@@ -212,13 +211,13 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
    * @example
    * ```typescript
    * const corner = viewportRecord.lowerLeftCorner;
-   * viewportRecord.lowerLeftCorner = new AcGePoint2d(0.25, 0.25);
+   * viewportRecord.lowerLeftCorner = new GeometryPoint2d(0.25, 0.25);
    * ```
    */
   get lowerLeftCorner() {
     return this.getAttr('lowerLeftCorner')
   }
-  set lowerLeftCorner(value: AcGePoint2d) {
+  set lowerLeftCorner(value: GeometryPoint2d) {
     this.getAttr('lowerLeftCorner').copy(value)
   }
 
@@ -232,7 +231,7 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   get upperRightCorner() {
     return this.getAttr('upperRightCorner')
   }
-  set upperRightCorner(value: AcGePoint2d) {
+  set upperRightCorner(value: GeometryPoint2d) {
     this.getAttr('upperRightCorner').copy(value)
   }
 
@@ -242,7 +241,7 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   get snapBase() {
     return this.getAttr('snapBase')
   }
-  set snapBase(value: AcGePoint2d) {
+  set snapBase(value: GeometryPoint2d) {
     this.getAttr('snapBase').copy(value)
   }
 
@@ -259,13 +258,13 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   }
 
   /**
-   * An AcGePoint2d in which the X value represents the X spacing of the snap grid and the Y value
+   * An GeometryPoint2d in which the X value represents the X spacing of the snap grid and the Y value
    * represents the Y spacing of the snap grid. Both values are in drawing units.
    */
   get snapIncrements() {
     return this.getAttr('snapSpacing')
   }
-  set snapIncrements(value: AcGePoint2d) {
+  set snapIncrements(value: GeometryPoint2d) {
     this.getAttr('snapSpacing').copy(value)
   }
 
@@ -280,13 +279,13 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   }
 
   /**
-   * An AcGePoint2d in which the X value represents the X spacing (in drawing units) of the grid and
+   * An GeometryPoint2d in which the X value represents the X spacing (in drawing units) of the grid and
    * the Y value represents the Y spacing of the grid.
    */
   get gridIncrements() {
     return this.getAttr('gridSpacing')
   }
-  set gridIncrements(value: AcGePoint2d) {
+  set gridIncrements(value: GeometryPoint2d) {
     this.getAttr('gridSpacing').copy(value)
   }
 
@@ -371,7 +370,7 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
    * aspect ratio so DWG/DXF exports of the same drawing frame identically even
    * when group 41 differs.
    */
-  modelViewBox(canvasAspectRatio: number): AcGeBox2d | undefined {
+  modelViewBox(canvasAspectRatio: number): GeometryBox2d | undefined {
     const center = this.centerPoint
     const viewHeight = this.viewHeight
 
@@ -409,7 +408,7 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
     const halfHeight = viewHeight / 2
     const halfWidth = viewWidth / 2
 
-    return new AcGeBox2d()
+    return new GeometryBox2d()
       .expandByPoint({
         x: wcsCenterX - halfWidth,
         y: wcsCenterY - halfHeight
@@ -427,8 +426,8 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
    * a huge `view height`) or panned to a corner with no real geometry.
    */
   static isModelViewBoxUsable(
-    viewBox: AcGeBox2d,
-    drawingExtents: AcGeBox2d
+    viewBox: GeometryBox2d,
+    drawingExtents: GeometryBox2d
   ): boolean {
     if (viewBox.isEmpty() || drawingExtents.isEmpty()) {
       return false
@@ -477,8 +476,8 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
    */
   resolveModelViewBox(
     canvasAspectRatio: number,
-    drawingExtents?: AcGeBox2d
-  ): AcGeBox2d | undefined {
+    drawingExtents?: GeometryBox2d
+  ): GeometryBox2d | undefined {
     const viewBox = this.modelViewBox(canvasAspectRatio)
     if (
       !viewBox ||
@@ -500,7 +499,9 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
     return viewBox
   }
 
-  private static isModelViewBoxStructurallyValid(viewBox: AcGeBox2d): boolean {
+  private static isModelViewBoxStructurallyValid(
+    viewBox: GeometryBox2d
+  ): boolean {
     if (viewBox.isEmpty()) {
       return false
     }
@@ -516,11 +517,10 @@ export class AcDbViewportTableRecord extends AcDbAbstractViewTableRecord<AcDbVie
   }
 
   private static isModelViewBoxPlausibleWithoutExtents(
-    viewBox: AcGeBox2d
+    viewBox: GeometryBox2d
   ): boolean {
     const viewSpanX = viewBox.max.x - viewBox.min.x
     const viewSpanY = viewBox.max.y - viewBox.min.y
     return Math.max(viewSpanX, viewSpanY) <= MAX_VIEW_SPAN_WITHOUT_EXTENTS
   }
 }
-

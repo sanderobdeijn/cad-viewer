@@ -1,4 +1,4 @@
-import { AcGeBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/data-model'
 
 import { measurementGeometryBounds } from '../command/measure/AcApMeasurementGeometry'
 import {
@@ -17,7 +17,7 @@ import type { AcTrView2d } from './AcTrView2d'
 /** Pixel radius used when clicking measurement strokes. */
 export const REVIEW_OVERLAY_HIT_THRESHOLD_PX = 10
 
-function toSpatialBBox(box: AcGeBox2d): AcTrSpatialIndexBBox {
+function toSpatialBBox(box: GeometryBox2d): AcTrSpatialIndexBBox {
   return {
     minX: box.min.x,
     minY: box.min.y,
@@ -39,7 +39,7 @@ function boxesIntersect(
 }
 
 function overlayMatchesBox(
-  bounds: AcGeBox2d,
+  bounds: GeometryBox2d,
   selection: AcTrSpatialIndexBBox,
   mode: AcEdSelectionMode
 ): boolean {
@@ -56,7 +56,7 @@ function overlayMatchesBox(
  */
 export function collectReviewOverlayIdsByBox(
   view: AcTrView2d,
-  box: AcGeBox2d,
+  box: GeometryBox2d,
   mode: AcEdSelectionMode
 ): string[] {
   const selection = toSpatialBBox(box)
@@ -169,7 +169,7 @@ export function trySelectReviewOverlay(
  */
 export function trySelectReviewOverlaysByBox(
   view: AcTrView2d,
-  box: AcGeBox2d,
+  box: GeometryBox2d,
   mode: AcEdSelectionMode,
   action: AcEdSelectionAction
 ): boolean {

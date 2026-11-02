@@ -1,4 +1,8 @@
-import { AcCmColor, AcDbDatabase, AcGePoint2dLike } from '@mlightcad/data-model'
+import {
+  AcCmColor,
+  AcDbDatabase,
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import {
   AcTrHtmlBadge,
   AcTrHtmlTransientManager
@@ -35,9 +39,9 @@ import { AcApMeasureAngleEntity } from './entity'
 
 /** Returns the angle in degrees between two arms sharing a common vertex. */
 function calcAngleDeg(
-  vertex: AcGePoint2dLike,
-  arm1: AcGePoint2dLike,
-  arm2: AcGePoint2dLike
+  vertex: GeometryPoint2dLike,
+  arm1: GeometryPoint2dLike,
+  arm2: GeometryPoint2dLike
 ): number {
   const dx1 = arm1.x - vertex.x
   const dy1 = arm1.y - vertex.y
@@ -55,9 +59,9 @@ function calcAngleDeg(
 export function placeAngleMeasurement(
   view: AcTrView2d,
   db: AcDbDatabase,
-  vertex: AcGePoint2dLike,
-  arm1: AcGePoint2dLike,
-  arm2: AcGePoint2dLike,
+  vertex: GeometryPoint2dLike,
+  arm1: GeometryPoint2dLike,
+  arm2: GeometryPoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
@@ -70,13 +74,17 @@ export function placeAngleMeasurement(
 /**
  * Rubber-band jig for picking arm1: solid HTML preview from vertex to cursor.
  */
-class AcApMeasureArm1Jig extends AcEdPreviewJig<AcGePoint2dLike> {
-  private readonly _vertex: AcGePoint2dLike
+class AcApMeasureArm1Jig extends AcEdPreviewJig<GeometryPoint2dLike> {
+  private readonly _vertex: GeometryPoint2dLike
   private readonly _preview: AcApHtmlLivePreview
   private readonly _color: AcCmColor
-  private _cursor: AcGePoint2dLike
+  private _cursor: GeometryPoint2dLike
 
-  constructor(view: AcEdBaseView, vertex: AcGePoint2dLike, color: AcCmColor) {
+  constructor(
+    view: AcEdBaseView,
+    vertex: GeometryPoint2dLike,
+    color: AcCmColor
+  ) {
     super(view)
     this._vertex = vertex
     this._cursor = vertex
@@ -94,7 +102,7 @@ class AcApMeasureArm1Jig extends AcEdPreviewJig<AcGePoint2dLike> {
     return null
   }
 
-  update(p: AcGePoint2dLike) {
+  update(p: GeometryPoint2dLike) {
     this._cursor = p
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     this._preview.acapSetDraw((ctx, view) => {
@@ -119,23 +127,23 @@ class AcApMeasureArm1Jig extends AcEdPreviewJig<AcGePoint2dLike> {
  * Preview jig for picking arm2: dashed arm1 + solid arm2 on one HTML canvas,
  * plus a live angle badge.
  */
-class AcApMeasureAngleJig extends AcEdPreviewJig<AcGePoint2dLike> {
+class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
-  private readonly _vertex: AcGePoint2dLike
-  private readonly _arm1: AcGePoint2dLike
+  private readonly _vertex: GeometryPoint2dLike
+  private readonly _arm1: GeometryPoint2dLike
   private readonly _db: AcDbDatabase
   private readonly _badge: AcTrHtmlBadge
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badgeId: string
   private readonly _preview: AcApHtmlLivePreview
   private _color: AcCmColor
-  private _arm2: AcGePoint2dLike
+  private _arm2: GeometryPoint2dLike
 
   constructor(
     view: AcEdBaseView,
     db: AcDbDatabase,
-    vertex: AcGePoint2dLike,
-    arm1: AcGePoint2dLike,
+    vertex: GeometryPoint2dLike,
+    arm1: GeometryPoint2dLike,
     color: AcCmColor
   ) {
     super(view)
@@ -178,7 +186,7 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<AcGePoint2dLike> {
     return null
   }
 
-  update(p: AcGePoint2dLike) {
+  update(p: GeometryPoint2dLike) {
     this._arm2 = p
     this._color = acapGetMeasurementColor(this._db)
     this._badge.setColor(this._color)

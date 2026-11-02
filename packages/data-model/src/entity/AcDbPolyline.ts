@@ -1,17 +1,17 @@
 import {
-  AcGeArea2d,
-  AcGeBox3d,
-  AcGeCircArc2d,
-  AcGeIntersectPrimitive,
-  AcGeMatrix3d,
-  acgeOffsetVertexPath,
-  AcGePoint2d,
-  AcGePoint2dLike,
-  AcGePolyline2d,
-  AcGePolyline2dVertex,
-  type AcGeTessellateOptions,
-  AcGeVector2dLike,
-  AcGeVector3d
+  GeometryArea2d,
+  GeometryBox3d,
+  GeometryCircularArc2d,
+  GeometryIntersectPrimitive,
+  GeometryMatrix3d,
+  geometryOffsetVertexPath,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  GeometryPolyline2dVertex,
+  type GeometryTessellateOptions,
+  GeometryVector2dLike,
+  GeometryVector3d
 } from '@mlightcad/geometry-engine'
 import { AcGiRenderer } from '@mlightcad/graphic-interface'
 
@@ -37,7 +37,7 @@ import {
  * A polyline vertex extends the basic vertex with additional properties
  * for width control and bulge (arc segments).
  */
-interface AcDbPolylineVertex extends AcGePolyline2dVertex {
+interface AcDbPolylineVertex extends GeometryPolyline2dVertex {
   /** The starting width at this vertex */
   startWidth?: number
   /** The ending width at this vertex */
@@ -66,10 +66,10 @@ interface AcDbPolylineVertex extends AcGePolyline2dVertex {
  * const polyline = new AcDbPolyline();
  *
  * // Add vertices to create a rectangle
- * polyline.addVertexAt(0, new AcGePoint2d(0, 0));
- * polyline.addVertexAt(1, new AcGePoint2d(10, 0));
- * polyline.addVertexAt(2, new AcGePoint2d(10, 5));
- * polyline.addVertexAt(3, new AcGePoint2d(0, 5));
+ * polyline.addVertexAt(0, new GeometryPoint2d(0, 0));
+ * polyline.addVertexAt(1, new GeometryPoint2d(10, 0));
+ * polyline.addVertexAt(2, new GeometryPoint2d(10, 5));
+ * polyline.addVertexAt(3, new GeometryPoint2d(0, 5));
  * polyline.closed = true; // Close the polyline
  *
  * // Access polyline properties
@@ -85,7 +85,7 @@ export class AcDbPolyline extends AcDbCurve {
     return 'LWPOLYLINE'
   }
   /** The underlying geometric polyline object */
-  private _geo: AcGePolyline2d<AcDbPolylineVertex>
+  private _geo: GeometryPolyline2d<AcDbPolylineVertex>
 
   /**
    * Creates a new empty polyline entity.
@@ -97,12 +97,12 @@ export class AcDbPolyline extends AcDbCurve {
    * ```typescript
    * const polyline = new AcDbPolyline();
    * // Add vertices as needed
-   * polyline.addVertexAt(0, new AcGePoint2d(0, 0));
+   * polyline.addVertexAt(0, new GeometryPoint2d(0, 0));
    * ```
    */
   constructor() {
     super()
-    this._geo = new AcGePolyline2d()
+    this._geo = new GeometryPolyline2d()
   }
 
   /**
@@ -174,18 +174,18 @@ export class AcDbPolyline extends AcDbCurve {
    * @example
    * ```typescript
    * // Add a straight line vertex
-   * polyline.addVertexAt(0, new AcGePoint2d(0, 0));
+   * polyline.addVertexAt(0, new GeometryPoint2d(0, 0));
    *
    * // Add a vertex with arc bulge
-   * polyline.addVertexAt(1, new AcGePoint2d(5, 0), 0.5);
+   * polyline.addVertexAt(1, new GeometryPoint2d(5, 0), 0.5);
    *
    * // Add a vertex with custom width
-   * polyline.addVertexAt(2, new AcGePoint2d(10, 0), 0, 2, 1);
+   * polyline.addVertexAt(2, new GeometryPoint2d(10, 0), 0, 2, 1);
    * ```
    */
   addVertexAt(
     index: number,
-    pt: AcGePoint2d,
+    pt: GeometryPoint2d,
     bulge: number = 0,
     startWidth: number = -1,
     endWidth: number = -1
@@ -239,14 +239,14 @@ export class AcDbPolyline extends AcDbCurve {
    * console.log(`Vertex 0: ${point2d.x}, ${point2d.y}`);
    * ```
    */
-  getPoint2dAt(index: number): AcGePoint2d {
+  getPoint2dAt(index: number): GeometryPoint2d {
     return this._geo.getPointAt(index)
   }
 
   /** Gets a vertex as a 3D point at Z = 0, for the shared grip and snap APIs. */
-  private getPoint3dAt(index: number): AcGePoint2d {
+  private getPoint3dAt(index: number): GeometryPoint2d {
     const vertex = this.getPoint2dAt(index)
-    return new AcGePoint2d(vertex.x, vertex.y)
+    return new GeometryPoint2d(vertex.x, vertex.y)
   }
 
   /**
@@ -260,25 +260,25 @@ export class AcDbPolyline extends AcDbCurve {
    * console.log(`Polyline bounds: ${extents.minPoint} to ${extents.maxPoint}`);
    * ```
    */
-  get geometricExtents(): AcGeBox3d {
+  get geometricExtents(): GeometryBox3d {
     const box = this._geo.box
     if (box.isEmpty()) {
-      return new AcGeBox3d()
+      return new GeometryBox3d()
     }
-    return new AcGeBox3d().setFromPoints([
-      new AcGePoint2d(box.min.x, box.min.y),
-      new AcGePoint2d(box.max.x, box.min.y),
-      new AcGePoint2d(box.max.x, box.max.y),
-      new AcGePoint2d(box.min.x, box.max.y)
+    return new GeometryBox3d().setFromPoints([
+      new GeometryPoint2d(box.min.x, box.min.y),
+      new GeometryPoint2d(box.max.x, box.min.y),
+      new GeometryPoint2d(box.max.x, box.max.y),
+      new GeometryPoint2d(box.min.x, box.max.y)
     ])
   }
 
   /** @inheritdoc */
-  override subGetIntersectCurves(): AcGeIntersectPrimitive[] {
+  override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
     return acdbIntersectPrimitivesFromPolyline2d(
       this._geo.vertices,
       this.closed,
-      AcGeVector3d.Z_AXIS
+      GeometryVector3d.Z_AXIS
     )
   }
 
@@ -298,7 +298,7 @@ export class AcDbPolyline extends AcDbCurve {
    * ```
    */
   subGetGripPoints() {
-    const gripPoints = new Array<AcGePoint2d>()
+    const gripPoints = new Array<GeometryPoint2d>()
     for (let index = 0; index < this.numberOfVertices; ++index) {
       gripPoints.push(this.getPoint3dAt(index))
     }
@@ -309,7 +309,7 @@ export class AcDbPolyline extends AcDbCurve {
   }
 
   /** @inheritdoc */
-  subMoveGripPointsAt(indices: number[], offset: AcGeVector2dLike) {
+  subMoveGripPointsAt(indices: number[], offset: GeometryVector2dLike) {
     const vertexCount = this.numberOfVertices
     const includeMidpoints = this.shouldIncludeSegmentMidpointGrips()
     const segmentCount = includeMidpoints ? this.getSegmentCount() : 0
@@ -371,13 +371,13 @@ export class AcDbPolyline extends AcDbCurve {
   /**
    * Appends one midpoint grip for each polyline segment.
    */
-  private appendSegmentMidpointGrips(gripPoints: AcGePoint2d[]) {
+  private appendSegmentMidpointGrips(gripPoints: GeometryPoint2d[]) {
     const geo = this._geo
     const segmentCount = this.getSegmentCount()
     const vertexCount = geo.numberOfVertices
 
     for (let index = 0; index < segmentCount; index++) {
-      const segmentSnaps: AcGePoint2d[] = []
+      const segmentSnaps: GeometryPoint2d[] = []
       acdbCollectPolyline2dSegmentOsnapPoints(
         geo.getPointAt(index),
         geo.getPointAt((index + 1) % vertexCount),
@@ -387,7 +387,7 @@ export class AcDbPolyline extends AcDbCurve {
         segmentSnaps
       )
       for (const snap of segmentSnaps) {
-        gripPoints.push(new AcGePoint2d(snap.x, snap.y))
+        gripPoints.push(new GeometryPoint2d(snap.x, snap.y))
       }
     }
   }
@@ -406,9 +406,9 @@ export class AcDbPolyline extends AcDbCurve {
    */
   subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
-    pickPoint: AcGePoint2dLike,
-    _lastPoint: AcGePoint2dLike,
-    snapPoints: AcGePoint2dLike[]
+    pickPoint: GeometryPoint2dLike,
+    _lastPoint: GeometryPoint2dLike,
+    snapPoints: GeometryPoint2dLike[]
   ) {
     const geo = this._geo
     const vertexCount = geo.numberOfVertices
@@ -425,9 +425,9 @@ export class AcDbPolyline extends AcDbCurve {
       case AcDbOsnapMode.Perpendicular:
       case AcDbOsnapMode.Tangent: {
         const segmentCount = this.closed ? vertexCount : vertexCount - 1
-        const candidates: AcGePoint2d[] = []
+        const candidates: GeometryPoint2d[] = []
         for (let index = 0; index < segmentCount; index++) {
-          const segmentSnaps: AcGePoint2d[] = []
+          const segmentSnaps: GeometryPoint2d[] = []
           acdbCollectPolyline2dSegmentOsnapPoints(
             geo.getPointAt(index),
             geo.getPointAt((index + 1) % vertexCount),
@@ -437,7 +437,7 @@ export class AcDbPolyline extends AcDbCurve {
             segmentSnaps
           )
           for (const snap of segmentSnaps) {
-            candidates.push(new AcGePoint2d(snap.x, snap.y))
+            candidates.push(new GeometryPoint2d(snap.x, snap.y))
           }
         }
         if (osnapMode === AcDbOsnapMode.MidPoint) {
@@ -459,13 +459,14 @@ export class AcDbPolyline extends AcDbCurve {
    * The lightweight polyline stores 2D vertices, so we transform each vertex in
    * 3D and then write the projected XY values back.
    */
-  transformBy(matrix: AcGeMatrix3d) {
+  transformBy(matrix: GeometryMatrix3d) {
     const flipBulge = matrix.determinant() < 0
 
     this._geo.vertices.forEach(vertex => {
-      const transformedPoint = new AcGePoint2d(vertex.x, vertex.y).applyMatrix4(
-        matrix
-      )
+      const transformedPoint = new GeometryPoint2d(
+        vertex.x,
+        vertex.y
+      ).applyMatrix4(matrix)
       vertex.x = transformedPoint.x
       vertex.y = transformedPoint.y
       if (flipBulge && vertex.bulge != null) {
@@ -473,7 +474,7 @@ export class AcDbPolyline extends AcDbCurve {
       }
     })
     ;(
-      this._geo as AcGePolyline2d<AcDbPolylineVertex> & {
+      this._geo as GeometryPolyline2d<AcDbPolylineVertex> & {
         _boundingBoxNeedsUpdate: boolean
       }
     )._boundingBoxNeedsUpdate = true
@@ -580,7 +581,7 @@ export class AcDbPolyline extends AcDbCurve {
       // Closed and nearly-closed open wide polylines (first≈last, common in
       // DWG exports that omit the closed flag) prefer the index-aligned
       // offsetRing path. Falling through to multi-quad area fills can nest
-      // overlapping segment quads as holes in AcGeArea2d.buildHierarchy and
+      // overlapping segment quads as holes in GeometryArea2d.buildHierarchy and
       // drop wall segments non-deterministically.
       const preferOffsetRing =
         this.closed ||
@@ -589,8 +590,8 @@ export class AcDbPolyline extends AcDbCurve {
         const ring = createClosedWidePolylineOffsetRing(widthProfile)
         if (ring != null) {
           return renderer.offsetRing(
-            ring.outer.map(point => new AcGePoint2d(point.x, point.y)),
-            ring.inner.map(point => new AcGePoint2d(point.x, point.y))
+            ring.outer.map(point => new GeometryPoint2d(point.x, point.y)),
+            ring.inner.map(point => new GeometryPoint2d(point.x, point.y))
           )
         }
       }
@@ -604,7 +605,7 @@ export class AcDbPolyline extends AcDbCurve {
         // world-space width projects to ≪ 1 device pixel (title blocks).
         // Closed rings already get a centerline from renderer.offsetRing.
         const strokePoints = widthProfile.map(
-          sample => new AcGePoint2d(sample.x, sample.y)
+          sample => new GeometryPoint2d(sample.x, sample.y)
         )
         // createWidthProfile omits the seam for closed paths; close the stroke.
         if (this.closed && strokePoints.length >= 2) {
@@ -617,8 +618,10 @@ export class AcDbPolyline extends AcDbCurve {
       }
     }
 
-    const points: AcGePoint2d[] = []
-    centerline.forEach(point => points.push(new AcGePoint2d(point.x, point.y)))
+    const points: GeometryPoint2d[] = []
+    centerline.forEach(point =>
+      points.push(new GeometryPoint2d(point.x, point.y))
+    )
     return renderer.lines(points)
   }
 
@@ -658,7 +661,7 @@ export class AcDbPolyline extends AcDbCurve {
    * if the polyline has insufficient geometry or no renderable width.
    */
   private createWidthProfile(
-    tessellateOptions?: AcGeTessellateOptions
+    tessellateOptions?: GeometryTessellateOptions
   ): WidePolylinePoint[] | null {
     const vertices = this._geo.vertices
     const count = vertices.length
@@ -706,7 +709,7 @@ export class AcDbPolyline extends AcDbCurve {
    * Samples one polyline segment into a point sequence.
    *
    * If the start vertex contains a non-zero bulge, this segment is treated as an
-   * arc and sampled via {@link AcGeCircArc2d}. Otherwise, the method returns the
+   * arc and sampled via {@link GeometryCircularArc2d}. Otherwise, the method returns the
    * two segment endpoints as a straight segment.
    *
    * @param startVertex - Segment start vertex. Its `bulge` controls whether arc
@@ -718,18 +721,22 @@ export class AcDbPolyline extends AcDbCurve {
   private sampleSegment(
     startVertex: AcDbPolylineVertex,
     endVertex: AcDbPolylineVertex,
-    tessellateOptions?: AcGeTessellateOptions
-  ): AcGePoint2d[] {
+    tessellateOptions?: GeometryTessellateOptions
+  ): GeometryPoint2d[] {
     if (startVertex.bulge && Math.abs(startVertex.bulge) > WIDTH_EPSILON) {
-      const arc = new AcGeCircArc2d(startVertex, endVertex, startVertex.bulge)
+      const arc = new GeometryCircularArc2d(
+        startVertex,
+        endVertex,
+        startVertex.bulge
+      )
       const sampled = arc.tessellate(tessellateOptions)
       if (sampled.length > 1) {
-        return sampled.map(point => new AcGePoint2d(point.x, point.y))
+        return sampled.map(point => new GeometryPoint2d(point.x, point.y))
       }
     }
     return [
-      new AcGePoint2d(startVertex.x, startVertex.y),
-      new AcGePoint2d(endVertex.x, endVertex.y)
+      new GeometryPoint2d(startVertex.x, startVertex.y),
+      new GeometryPoint2d(endVertex.x, endVertex.y)
     ]
   }
 
@@ -744,7 +751,10 @@ export class AcDbPolyline extends AcDbCurve {
    * @param closed - Whether the path forms a closed loop for offset and side tests
    * @returns A new lightweight polyline with the given topology
    */
-  static from2dPoints(points: AcGePoint2d[], closed: boolean): AcDbPolyline {
+  static from2dPoints(
+    points: GeometryPoint2d[],
+    closed: boolean
+  ): AcDbPolyline {
     const polyline = new AcDbPolyline()
     points.forEach((point, index) => polyline.addVertexAt(index, point))
     polyline.closed = closed
@@ -752,17 +762,17 @@ export class AcDbPolyline extends AcDbCurve {
   }
 
   /**
-   * Creates a polyline entity from {@link AcGePolyline2d} geometry.
+   * Creates a polyline entity from {@link GeometryPolyline2d} geometry.
    *
    * @param geo - Source polyline geometry
    * @returns Polyline entity with matching vertices and closed flag
    */
-  static fromGePolyline(geo: AcGePolyline2d): AcDbPolyline {
+  static fromGePolyline(geo: GeometryPolyline2d): AcDbPolyline {
     const polyline = new AcDbPolyline()
     geo.vertices.forEach((vertex, index) => {
       polyline.addVertexAt(
         index,
-        new AcGePoint2d(vertex.x, vertex.y),
+        new GeometryPoint2d(vertex.x, vertex.y),
         vertex.bulge ?? 0
       )
     })
@@ -775,7 +785,7 @@ export class AcDbPolyline extends AcDbCurve {
     return curve ? [curve] : []
   }
 
-  override getOffsetSideAtPoint(point: AcGePoint2dLike): 1 | -1 {
+  override getOffsetSideAtPoint(point: GeometryPoint2dLike): 1 | -1 {
     const n = this.numberOfVertices
     let bestDist = Infinity
     let bestSide: 1 | -1 = 1
@@ -808,7 +818,7 @@ export class AcDbPolyline extends AcDbCurve {
 }
 
 /**
- * Offsets a planar vertex path using {@link acgeOffsetVertexPath} and wraps the
+ * Offsets a planar vertex path using {@link geometryOffsetVertexPath} and wraps the
  * result as an {@link AcDbPolyline}.
  *
  * @param points - Sampled or vertex-derived 2D path in WCS (XY)
@@ -818,11 +828,11 @@ export class AcDbPolyline extends AcDbCurve {
  * or offsetting fails
  */
 export function acdbOffsetVertexPathAsPolyline(
-  points: AcGePoint2d[],
+  points: GeometryPoint2d[],
   closed: boolean,
   offsetDist: number
 ): AcDbPolyline | null {
-  const geo = acgeOffsetVertexPath(points, closed, offsetDist)
+  const geo = geometryOffsetVertexPath(points, closed, offsetDist)
   return geo ? AcDbPolyline.fromGePolyline(geo) : null
 }
 
@@ -875,8 +885,8 @@ function createClosedWidePolylineOffsetRing(points: WidePolylinePoint[]): {
  * A path that revisits a point (a closed polyline missing the closed flag, or
  * an open polyline with a retraced/orthogonal corner) is split into subpaths
  * by {@link splitWidePolylineProfileAtRevisits} so each strokes independently.
- * Each subpath gets its own {@link AcGeArea2d} rather than sharing one: in
- * `AcGeArea2d`, only the first loop added is the outer loop and every loop
+ * Each subpath gets its own {@link GeometryArea2d} rather than sharing one: in
+ * `GeometryArea2d`, only the first loop added is the outer loop and every loop
  * after it is an inner hole, so pouring a second subpath's loops into the
  * first subpath's area turned its own outer band into a (wrong) hole and
  * silently dropped it (#730).
@@ -889,7 +899,7 @@ function createClosedWidePolylineOffsetRing(points: WidePolylinePoint[]): {
 function createWidePolylineArea(
   points: WidePolylinePoint[],
   closed: boolean
-): AcGeArea2d[] | null {
+): GeometryArea2d[] | null {
   if (points.length < 2) return null
   if (closed) {
     const area = createWidePolylineAreaForSingleProfile(points, true)
@@ -897,7 +907,7 @@ function createWidePolylineArea(
   }
 
   const subpaths = splitWidePolylineProfileAtRevisits(points)
-  const areas: AcGeArea2d[] = []
+  const areas: GeometryArea2d[] = []
   for (const subpath of subpaths) {
     const part = createWidePolylineAreaForSingleProfile(subpath, false)
     if (part == null) {
@@ -920,7 +930,7 @@ function createWidePolylineAreaForSingleProfile(
     return null
   }
 
-  const area = new AcGeArea2d()
+  const area = new GeometryArea2d()
   if (closed) {
     const leftLoop = compactBoundaryLoop(left)
     const rightLoop = compactBoundaryLoop(right)
@@ -933,15 +943,15 @@ function createWidePolylineAreaForSingleProfile(
     // width == diameter), the inner offset collapses to a point. Keep the
     // outer loop alone as a solid filled disk instead of aborting to stroke.
     if (!leftOk || !rightOk) {
-      area.add(new AcGePolyline2d(leftOk ? leftLoop : rightLoop, true))
+      area.add(new GeometryPolyline2d(leftOk ? leftLoop : rightLoop, true))
       return area
     }
     const leftArea = Math.abs(calculateSignedArea(leftLoop))
     const rightArea = Math.abs(calculateSignedArea(rightLoop))
     const [outer, inner] =
       leftArea >= rightArea ? [leftLoop, rightLoop] : [rightLoop, leftLoop]
-    area.add(new AcGePolyline2d(outer, true))
-    area.add(new AcGePolyline2d(inner, true))
+    area.add(new GeometryPolyline2d(outer, true))
+    area.add(new GeometryPolyline2d(inner, true))
     return area
   }
 
@@ -1053,7 +1063,7 @@ function isNearlyClosedWidePolyline(centerline: WidePolylinePoint[]) {
  * stirrup-like paths whose endpoints are separated by a small gap.
  */
 function tryAddClosedOffsetWidePolylineRing(
-  area: AcGeArea2d,
+  area: GeometryArea2d,
   centerline: WidePolylinePoint[]
 ) {
   const { left, right } = createWidePolylineBoundaries(centerline, true)
@@ -1071,8 +1081,8 @@ function tryAddClosedOffsetWidePolylineRing(
 
   const [outer, inner] =
     leftArea >= rightArea ? [leftLoop, rightLoop] : [rightLoop, leftLoop]
-  area.add(new AcGePolyline2d(outer, true))
-  area.add(new AcGePolyline2d(inner, true))
+  area.add(new GeometryPolyline2d(outer, true))
+  area.add(new GeometryPolyline2d(inner, true))
   return true
 }
 
@@ -1088,8 +1098,10 @@ function createWidePolylineBoundaries(
   centerline: WidePolylinePoint[],
   closed: boolean
 ) {
-  const left: (AcGePolyline2dVertex | null)[] = new Array(centerline.length)
-  const right: (AcGePolyline2dVertex | null)[] = new Array(centerline.length)
+  const left: (GeometryPolyline2dVertex | null)[] = new Array(centerline.length)
+  const right: (GeometryPolyline2dVertex | null)[] = new Array(
+    centerline.length
+  )
   for (let i = 0; i < centerline.length; i++) {
     const point = centerline[i]
     const halfWidth = Math.max(0, point.width) / 2
@@ -1124,17 +1136,17 @@ function createWidePolylineBoundaries(
  * Adds one segment quad to an open wide-polyline band area.
  */
 function addOpenWidePolylineSegmentQuad(
-  area: AcGeArea2d,
-  leftStart: AcGePolyline2dVertex,
-  leftEnd: AcGePolyline2dVertex,
-  rightEnd: AcGePolyline2dVertex,
-  rightStart: AcGePolyline2dVertex
+  area: GeometryArea2d,
+  leftStart: GeometryPolyline2dVertex,
+  leftEnd: GeometryPolyline2dVertex,
+  rightEnd: GeometryPolyline2dVertex,
+  rightStart: GeometryPolyline2dVertex
 ) {
   const quad = [leftStart, leftEnd, rightEnd, rightStart]
   if (!isRenderableLoop(quad)) {
     return false
   }
-  area.add(new AcGePolyline2d(quad, true))
+  area.add(new GeometryPolyline2d(quad, true))
   return true
 }
 
@@ -1142,9 +1154,9 @@ function addOpenWidePolylineSegmentQuad(
  * Tessellates an open wide polyline into segment quads with flat end caps.
  */
 function addOpenWidePolylineBand(
-  area: AcGeArea2d,
-  left: (AcGePolyline2dVertex | null)[],
-  right: (AcGePolyline2dVertex | null)[]
+  area: GeometryArea2d,
+  left: (GeometryPolyline2dVertex | null)[],
+  right: (GeometryPolyline2dVertex | null)[]
 ) {
   let added = false
   for (let i = 0; i < left.length - 1; i++) {
@@ -1175,16 +1187,16 @@ function addOpenWidePolylineBand(
   return added
 }
 
-function countBoundaryPoints(boundary: (AcGePolyline2dVertex | null)[]) {
+function countBoundaryPoints(boundary: (GeometryPolyline2dVertex | null)[]) {
   return boundary.reduce(
     (count, point) => (point == null ? count : count + 1),
     0
   )
 }
 
-function compactBoundaryLoop(boundary: (AcGePolyline2dVertex | null)[]) {
+function compactBoundaryLoop(boundary: (GeometryPolyline2dVertex | null)[]) {
   return boundary.filter(
-    (point): point is AcGePolyline2dVertex => point != null
+    (point): point is GeometryPolyline2dVertex => point != null
   )
 }
 
@@ -1311,7 +1323,7 @@ function leftNormal(direction: { x: number; y: number }) {
  * @param points - Polygon vertices in order.
  * @returns Signed area value.
  */
-function calculateSignedArea(points: AcGePolyline2dVertex[]) {
+function calculateSignedArea(points: GeometryPolyline2dVertex[]) {
   let area = 0
   const count = points.length
   for (let i = 0; i < count; i++) {
@@ -1328,7 +1340,7 @@ function calculateSignedArea(points: AcGePolyline2dVertex[]) {
  * @param points - Loop vertices in order.
  * @returns `true` when the loop encloses non-zero area.
  */
-function isRenderableLoop(points: AcGePolyline2dVertex[]) {
+function isRenderableLoop(points: GeometryPolyline2dVertex[]) {
   return (
     points.length >= 3 && Math.abs(calculateSignedArea(points)) > WIDTH_EPSILON
   )

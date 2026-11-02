@@ -1,4 +1,4 @@
-import { AcDbObjectId, AcGePoint2dLike } from '@mlightcad/data-model'
+import { AcDbObjectId, GeometryPoint2dLike } from '@mlightcad/data-model'
 
 import { AcEdPromptResult } from './AcEdPromptResult'
 import { AcEdPromptStatus } from './AcEdPromptStatus'
@@ -10,12 +10,12 @@ export class AcEdPromptEntityResult extends AcEdPromptResult {
   /** Gets the entity that the user picked. */
   readonly objectId?: AcDbObjectId
   /** Gets the point that was used to pick the entity. */
-  readonly pickedPoint?: AcGePoint2dLike
+  readonly pickedPoint?: GeometryPoint2dLike
 
   constructor(
     status: AcEdPromptStatus,
     objectId?: AcDbObjectId,
-    pickedPoint?: AcGePoint2dLike
+    pickedPoint?: GeometryPoint2dLike
   ) {
     super(status)
     this.objectId = objectId
