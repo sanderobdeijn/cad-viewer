@@ -206,10 +206,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useData, useRoute } from 'vitepress'
 
 // ---------------------------------------------------------------------------
-// i18n translations
+// Labels
 // ---------------------------------------------------------------------------
 interface Labels {
   length: string
@@ -231,161 +230,23 @@ interface Labels {
   accessoryLabel: string
 }
 
-const TRANSLATIONS: Record<string, Labels> = {
-  zh: {
-    length: '长度',
-    angle: '角度',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: '确定',
-    cancel: '取消',
-    help: '帮助',
-    collapse: '收起',
-    expand: '展开',
-    color: '颜色',
-    fontSize: '文字大小',
-    defaultPrompt: '指定第一个点',
-    accessoryLabel: '命令会话附件',
-  },
-  en: {
-    length: 'Length',
-    angle: 'Angle',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: 'Confirm',
-    cancel: 'Cancel',
-    help: 'Help',
-    collapse: 'Collapse',
-    expand: 'Expand',
-    color: 'Color',
-    fontSize: 'Text height',
-    defaultPrompt: 'Specify first point',
-    accessoryLabel: 'Command session accessory',
-  },
-  ja: {
-    length: '長さ',
-    angle: '角度',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: '確定',
-    cancel: 'キャンセル',
-    help: 'ヘルプ',
-    collapse: '折りたたむ',
-    expand: '展開',
-    color: '色',
-    fontSize: '文字高さ',
-    defaultPrompt: '最初の点を指定',
-    accessoryLabel: 'コマンドセッションアクセサリ',
-  },
-  ko: {
-    length: '길이',
-    angle: '각도',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: '확인',
-    cancel: '취소',
-    help: '도움말',
-    collapse: '접기',
-    expand: '펼치기',
-    color: '색상',
-    fontSize: '글자 높이',
-    defaultPrompt: '첫 번째 점 지정',
-    accessoryLabel: '명령 세션 액세서리',
-  },
-  ar: {
-    length: 'الطول',
-    angle: 'الزاوية',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: 'تأكيد',
-    cancel: 'إلغاء',
-    help: 'مساعدة',
-    collapse: 'طي',
-    expand: 'توسيع',
-    color: 'اللون',
-    fontSize: 'ارتفاع النص',
-    defaultPrompt: 'حدد النقطة الأولى',
-    accessoryLabel: 'ملحق جلسة الأمر',
-  },
-  cs: {
-    length: 'Délka',
-    angle: 'Úhel',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: 'Potvrdit',
-    cancel: 'Zrušit',
-    help: 'Nápověda',
-    collapse: 'Sbalit',
-    expand: 'Rozbalit',
-    color: 'Barva',
-    fontSize: 'Výška textu',
-    defaultPrompt: 'Zadejte první bod',
-    accessoryLabel: 'Příslušenství relace příkazu',
-  },
-  tr: {
-    length: 'Uzunluk',
-    angle: 'Açı',
-    dx: 'ΔX',
-    dy: 'ΔY',
-    x: 'X',
-    y: 'Y',
-    confirm: 'Onayla',
-    cancel: 'İptal',
-    help: 'Yardım',
-    collapse: 'Daralt',
-    expand: 'Genişlet',
-    color: 'Renk',
-    fontSize: 'Metin yüksekliği',
-    defaultPrompt: 'İlk noktayı belirtin',
-    accessoryLabel: 'Komut oturum aksesuarı',
-  },
+const labels: Labels = {
+  length: 'Length',
+  angle: 'Angle',
+  dx: 'ΔX',
+  dy: 'ΔY',
+  x: 'X',
+  y: 'Y',
+  confirm: 'Confirm',
+  cancel: 'Cancel',
+  help: 'Help',
+  collapse: 'Collapse',
+  expand: 'Expand',
+  color: 'Color',
+  fontSize: 'Text height',
+  defaultPrompt: 'Specify first point',
+  accessoryLabel: 'Command session accessory',
 }
-
-// VitePress locale detection — use route path for SSR safety
-const route = useRoute()
-const currentLang = computed(() => {
-  const path = route.path || ''
-  const match = path.match(/\/(zh|ja|ko|ar|cs|tr)\/guide/)
-  if (match) {
-    const l = match[1]
-    if (l === 'zh') return 'zh'
-    if (l === 'ja') return 'ja'
-    if (l === 'ko') return 'ko'
-    if (l === 'ar') return 'ar'
-    if (l === 'cs') return 'cs'
-    if (l === 'tr') return 'tr'
-  }
-  try {
-    const data = useData()
-    const dl = (data.locale as any)?.value
-    if (dl) {
-      const ls = String(dl).toLowerCase()
-      if (ls.startsWith('zh')) return 'zh'
-      if (ls.startsWith('ja')) return 'ja'
-      if (ls.startsWith('ko')) return 'ko'
-      if (ls.startsWith('ar')) return 'ar'
-      if (ls.startsWith('cs')) return 'cs'
-      if (ls.startsWith('tr')) return 'tr'
-    }
-  } catch {
-    // ignore
-  }
-  return 'en'
-})
-
-const labels = computed(() => TRANSLATIONS[currentLang.value] || TRANSLATIONS.en)
 
 // ---------------------------------------------------------------------------
 // Props
@@ -442,12 +303,12 @@ const collapsed = ref<boolean>(props.initialCompact)
 // ---------------------------------------------------------------------------
 /** Prompt text — use prop override, else the locale-specific default. */
 const promptText = computed(() =>
-  (props.prompt || labels.value.defaultPrompt).replace(/[：:]\s*$/, '')
+  (props.prompt || labels.defaultPrompt).replace(/[：:]\s*$/, '')
 )
 
 /** Callout label — override via prop, else use locale default. */
 const calloutLabel = computed(() =>
-  props.accessoryLabelOverride || labels.value.accessoryLabel
+  props.accessoryLabelOverride || labels.accessoryLabel
 )
 
 const panelClasses = computed(() => ({

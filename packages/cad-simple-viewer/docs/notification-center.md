@@ -28,7 +28,7 @@ Key points:
 - **Notifications are per document session (MDI).** Each entry is tagged with `sessionId` (`AcApDocSession.id`). `notifications` / `unreadCount` reflect the **active** session only.
 - **Default chrome is canvas-relative**, not viewport-relative. The bell mounts on the view container (`curView.container`) unless you pass another `host`.
 - **Default DOM UI is `AcUi*`** (`src/ui/AcUiDefaultNotificationUi.ts`); the store / bridge / service stay `AcAp*` under `src/app/notification`.
-- **Copy uses `AcApI18n`.** If the host has its own i18n, keep `AcApI18n.setCurrentLocale` in sync, or localize inside your custom Center.
+- **Copy uses `AcApI18n`,** which is English only. To change the wording, localize inside your custom Center.
 
 ---
 
@@ -434,9 +434,6 @@ Set `notificationCenter: { showDefaultUi: false }` on `createInstance`, and call
 
 **Q: How do I programmatically hide the built-in bell?**  
 Clear the active list (`clear()` / remove items), or disable the default UI with `showDefaultUi: false`. There is no `hide()` method on the service.
-
-**Q: Wrong language?**  
-The bridge uses `AcApI18n.t(...)`. Call `AcApI18n.setCurrentLocale('zh' | 'en' | …)` when the locale changes (`cad-viewer`'s `useLocale` already does this).
 
 **Q: Can I keep the default Store and only swap UI?**  
 The public API replaces the whole Center. Easiest path: implement Store + UI yourself, or wrap `AcApNotificationStore` and drive your view from `subscribe`.

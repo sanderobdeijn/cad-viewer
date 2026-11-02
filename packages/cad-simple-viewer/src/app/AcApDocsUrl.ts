@@ -1,18 +1,13 @@
 /**
- * Builds localized user-guide URLs under a configurable docs root.
- *
- * English pages live at `{base}/{path}` (no locale segment). Other locales
- * use `{base}/{locale}/{path}`, matching the VitePress site layout.
+ * Builds user-guide URLs under a configurable docs root.
  *
  * Configure the root via {@link AcApDocManagerOptions.docsBaseUrl},
  * {@link acapSetDocsBaseUrl}, or the `docs-base-url` prop on `MlCadViewer`.
  *
  * @example
  * ```ts
- * acapDocsUrl('guide/magnifier.html', 'en')
+ * acapDocsUrl('guide/magnifier.html')
  * // → https://mlightcad.com/cad-viewer/docs/guide/magnifier.html
- * acapDocsUrl('guide/magnifier.html', 'zh')
- * // → https://mlightcad.com/cad-viewer/docs/zh/guide/magnifier.html
  * ```
  */
 
@@ -51,21 +46,14 @@ export function acapSetDocsBaseUrl(url: string): void {
 }
 
 /**
- * Builds a full docs URL for `docPath` under `locale`.
+ * Builds a full docs URL for `docPath`.
  *
  * @param docPath - Path under the docs root, with or without a leading slash
  *   (e.g. `guide/magnifier.html` or `/guide/magnifier.html`).
- * @param locale - Locale id (`en`, `zh`, `zh-CN`, …). English (`en`) omits the
- *   locale path segment. Callers should pass the active UI locale (for example
- *   {@link AcApI18n.currentLocale}).
- * @returns Absolute URL to the localized page.
+ * @returns Absolute URL to the page.
  */
-export function acapDocsUrl(docPath: string, locale: string = 'en'): string {
-  const base = acapGetDocsBaseUrl()
-  const lang = locale.toLowerCase().split(/[-_]/)[0]
-  const prefix = !lang || lang === 'en' ? '' : `/${lang}`
-  const path = docPath.replace(/^\/+/, '')
-  return `${base}${prefix}/${path}`
+export function acapDocsUrl(docPath: string): string {
+  return `${acapGetDocsBaseUrl()}/${docPath.replace(/^\/+/, '')}`
 }
 
 /**

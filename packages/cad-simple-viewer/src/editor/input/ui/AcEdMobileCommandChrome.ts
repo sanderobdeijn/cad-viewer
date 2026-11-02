@@ -82,8 +82,7 @@ export class AcEdMobileCommandChrome {
       host,
       isPhoneLayout: acedIsMobileUiLayout,
       subscribeLayout: acedSubscribeUiLayout,
-      helpDocsUrl: () =>
-        acapDocsUrl(ACAP_DOCS_PATH_MAGNIFIER, AcApI18n.currentLocale),
+      helpDocsUrl: () => acapDocsUrl(ACAP_DOCS_PATH_MAGNIFIER),
       labels: () => chromeLabels()
     })
     AcApI18n.events.localeChanged.addEventListener(this.boundRelabel)

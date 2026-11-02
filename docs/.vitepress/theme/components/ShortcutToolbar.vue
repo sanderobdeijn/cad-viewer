@@ -61,7 +61,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useData, useRoute } from 'vitepress'
 
 interface Labels {
   color: string
@@ -75,108 +74,16 @@ interface Labels {
   accessoryLabel: string
 }
 
-const TRANSLATIONS: Record<string, Labels> = {
-  zh: {
-    color: '颜色',
-    fontSize: '文字大小',
-    undo: '撤销',
-    redo: '重做',
-    delete: '删除',
-    more: '更多',
-    expand: '展开',
-    accessoryLabel: '选择会话附件',
-  },
-  en: {
-    color: 'Color',
-    fontSize: 'Text height',
-    undo: 'Undo',
-    redo: 'Redo',
-    delete: 'Delete',
-    more: 'More',
-    expand: 'Expand',
-    accessoryLabel: 'Selection session accessory',
-  },
-  ja: {
-    color: '色',
-    fontSize: '文字高さ',
-    undo: '元に戻す',
-    redo: 'やり直し',
-    delete: '削除',
-    more: 'その他',
-    expand: '展開',
-    accessoryLabel: '選択セッションアクセサリ',
-  },
-  ko: {
-    color: '색상',
-    fontSize: '글자 높이',
-    undo: '되돌리기',
-    redo: '다시 실행',
-    delete: '삭제',
-    more: '더보기',
-    expand: '펼치기',
-    accessoryLabel: '선택 세션 액세서리',
-  },
-  ar: {
-    color: 'اللون',
-    fontSize: 'ارتفاع النص',
-    undo: 'تراجع',
-    redo: 'إعادة',
-    delete: 'حذف',
-    more: 'المزيد',
-    expand: 'توسيع',
-    accessoryLabel: 'ملحق جلسة التحديد',
-  },
-  cs: {
-    color: 'Barva',
-    fontSize: 'Výška textu',
-    undo: 'Zpět',
-    redo: 'Znovu',
-    delete: 'Smazat',
-    more: 'Více',
-    expand: 'Rozbalit',
-    accessoryLabel: 'Příslušenství relace výběru',
-  },
-  tr: {
-    color: 'Renk',
-    fontSize: 'Metin yüksekliği',
-    undo: 'Geri al',
-    redo: 'İleri al',
-    delete: 'Sil',
-    more: 'Daha fazla',
-    expand: 'Genişlet',
-    accessoryLabel: 'Seçim oturum aksesuarı',
-  },
+const labels: Labels = {
+  color: 'Color',
+  fontSize: 'Text height',
+  undo: 'Undo',
+  redo: 'Redo',
+  delete: 'Delete',
+  more: 'More',
+  expand: 'Expand',
+  accessoryLabel: 'Selection session accessory',
 }
-
-const route = useRoute()
-const currentLang = computed(() => {
-  const path = route.path || ''
-  const match = path.match(/\/(zh|ja|ko|ar|cs|tr)\/guide/)
-  if (match) {
-    const l = match[1]
-    if (l === 'zh') return 'zh'
-    if (l === 'ja') return 'ja'
-    if (l === 'ko') return 'ko'
-    if (l === 'ar') return 'ar'
-    if (l === 'cs') return 'cs'
-    if (l === 'tr') return 'tr'
-  }
-  try {
-    const data = useData()
-    const dl = (data.locale as any)?.value
-    if (dl) {
-      const ls = String(dl).toLowerCase()
-      if (ls.startsWith('zh')) return 'zh'
-      if (ls.startsWith('ja')) return 'ja'
-      if (ls.startsWith('ko')) return 'ko'
-      if (ls.startsWith('ar')) return 'ar'
-      if (ls.startsWith('cs')) return 'cs'
-      if (ls.startsWith('tr')) return 'tr'
-    }
-  } catch { /* ignore */ }
-  return 'en'
-})
-const labels = computed(() => TRANSLATIONS[currentLang.value] || TRANSLATIONS.en)
 
 const props = withDefaults(defineProps<{
   highlightAccessory?: boolean
@@ -187,7 +94,7 @@ const props = withDefaults(defineProps<{
 })
 
 const calloutLabel = computed(() =>
-  props.accessoryLabelOverride || labels.value.accessoryLabel
+  props.accessoryLabelOverride || labels.accessoryLabel
 )
 </script>
 

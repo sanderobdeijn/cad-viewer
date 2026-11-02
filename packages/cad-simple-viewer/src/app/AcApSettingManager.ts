@@ -36,7 +36,6 @@ export interface AcApSettings {
   /** Whether entity info card is visible */
   isShowEntityInfo: boolean
   /** Whether language selector is visible */
-  isShowLanguageSelector: boolean
   /** Whether the command ribbon is visible */
   isShowRibbon: boolean
   /** Whether the toolbar is visible */
@@ -96,7 +95,6 @@ const DEFAULT_VALUES: AcApSettings = {
   isShowCommandLine: true,
   isShowCoordinate: true,
   isShowEntityInfo: false,
-  isShowLanguageSelector: true,
   isShowRibbon: true,
   isShowToolbar: true,
   isShowShortCutToolbar: true,
@@ -510,24 +508,6 @@ export class AcApSettingManager<T extends AcApSettings = AcApSettings> {
    */
   set isShowEntityInfo(value: boolean) {
     this.set('isShowEntityInfo', value)
-  }
-
-  /**
-   * Gets whether language selector is visible.
-   *
-   * @returns True if language selector should be displayed
-   */
-  get isShowLanguageSelector() {
-    return this.get('isShowLanguageSelector')
-  }
-
-  /**
-   * Sets whether language selector is visible.
-   *
-   * @param value - True to show language selector
-   */
-  set isShowLanguageSelector(value: boolean) {
-    this.set('isShowLanguageSelector', value)
   }
 
   /**

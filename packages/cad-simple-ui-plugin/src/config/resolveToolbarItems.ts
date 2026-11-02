@@ -59,7 +59,7 @@ function acuiIndexMissingToolbarItems(
  * `'phone'`. On desktop/pad, phone-only ids (`zoom`, `settings`) are added when
  * missing so custom lists can still reference them.
  *
- * @param context - Context for theme/locale/placement presets.
+ * @param context - Context for theme/placement presets.
  * @param layout - Layout whose shared-id variants should win for overlapping presets.
  */
 export function acuiCreateDefaultToolbarPresetMap(
@@ -117,7 +117,7 @@ export function acuiInsertToolbarItemsAt(
  * ids appear in {@link AcUiToolbarOptions.excludeItems} are then dropped.
  *
  * @param options - Toolbar subsection of plugin options.
- * @param context - Context for default theme/locale/placement items.
+ * @param context - Context for default theme/placement items.
  * @param layout - When `'phone'`, `'default'` resolves to the phone item set.
  * @returns Resolved toolbar items ready for {@link AcUiToolbar}.
  */

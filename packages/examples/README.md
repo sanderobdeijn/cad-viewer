@@ -15,7 +15,6 @@ A full-featured CAD viewer application built with Vue.js and Element Plus.
 
 **Features:**
 - 🎨 Complete UI with toolbars, menus, and status bar
-- 🌐 Multi-language support (English and Chinese)
 - 🎯 Advanced controls (point styles, settings)
 - 🎨 Modern UI with Element Plus and UnoCSS
 

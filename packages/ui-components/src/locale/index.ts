@@ -9,46 +9,26 @@ import {
   toValue
 } from 'vue'
 
-import { ar } from './ar'
-import { cs } from './cs'
 import { en } from './en'
-import { tr } from './tr'
 import type {
   MlLocale,
   MlLocaleId,
   MlLocaleName,
   MlLocalePartial
 } from './types'
-import { zh } from './zh'
 
-export { ar } from './ar'
-export { cs } from './cs'
 export { en } from './en'
-export { tr } from './tr'
-export { zh } from './zh'
-/** @deprecated Use {@link zh}. Kept as an alias of the `'zh'` pack. */
-export { zh as zhCn } from './zh'
 export type { MlLocale, MlLocaleId, MlLocaleName, MlLocalePartial } from './types'
 
 /** Built-in packs keyed by cad-viewer locale id. */
 export const locales: Record<MlLocaleName, MlLocale> = {
-  en,
-  zh,
-  tr,
-  cs,
-  ar
-}
-
-/** Non-canonical ids that resolve to a shipped pack. */
-const LOCALE_ALIASES: Record<string, MlLocaleName> = {
-  'zh-cn': 'zh'
+  en
 }
 
 function canonicalLocaleName(value: string): MlLocaleName | undefined {
-  if (Object.prototype.hasOwnProperty.call(locales, value)) {
-    return value as MlLocaleName
-  }
-  return LOCALE_ALIASES[value.toLowerCase()]
+  return Object.prototype.hasOwnProperty.call(locales, value)
+    ? (value as MlLocaleName)
+    : undefined
 }
 
 export function isMlLocaleName(value: string): value is MlLocaleId {
@@ -95,15 +75,13 @@ function resolveLocale(locale: MlLocaleInput): MlLocale {
  * Set the global default locale for all components that do not have a
  * nearer {@link provideLocale} in the Vue tree.
  *
- * Accepts a cad-viewer locale id (`'en'` | `'zh'` | `'tr'` | `'cs'` | `'ar'`),
- * the `'zh-cn'` / `'zh-CN'` alias of `'zh'`, a full pack, or a partial pack
- * merged onto English defaults.
+ * Accepts the locale id `'en'`, a full pack, or a partial pack merged onto
+ * English defaults.
  *
  * @example
  * ```ts
  * import { setLocale } from '@mlightcad/ui-components'
- * setLocale('zh')
- * setLocale('zh-cn')
+ * setLocale({ overflowTabs: { moreTabs: 'More' } })
  * ```
  */
 export function setLocale(locale: MlLocaleInput) {

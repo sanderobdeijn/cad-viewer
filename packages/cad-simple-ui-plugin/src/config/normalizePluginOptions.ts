@@ -2,7 +2,7 @@ import type { AcUiSimpleUiPluginOptions } from './types'
 
 /** Resolved plugin options with explicit defaults for nested sections. */
 export type AcUiNormalizedPluginOptions = Required<
-  Omit<AcUiSimpleUiPluginOptions, 'host' | 'locale'>
+  Omit<AcUiSimpleUiPluginOptions, 'host'>
 > & {
   host?: HTMLElement
   /** Whether the dock panel shell should be created on load. */

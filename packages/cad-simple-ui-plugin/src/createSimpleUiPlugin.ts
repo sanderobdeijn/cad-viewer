@@ -3,7 +3,6 @@ import {
   AcApContext,
   AcApDocManager,
   AcApI18n,
-  type AcApLocale,
   AcApPlugin,
   AcApSettingManager,
   AcEdCommandStack,
@@ -156,7 +155,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   /** Refreshes toolbar and measurement UI when the app locale changes. */
   private handleLocaleChanged = () => {
     this.rebuildToolbarItems(this.activeLayoutKind)
-    this.toolbar?.setSelectedChild('locale', `locale-${AcApI18n.currentLocale}`)
     this.measurementPaletteView?.refreshLocale()
     this.findPaletteView?.refreshLocale()
     this.dockPanel?.refreshLocale()
@@ -743,8 +741,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     return {
       getTheme: () => this.themeSync?.getTheme() ?? 'dark',
       setTheme: (theme: AcEdUiTheme) => this.themeSync?.setTheme(theme),
-      getLocale: () => AcApI18n.currentLocale,
-      setLocale: (locale: AcApLocale) => this.setLocale(locale),
       getPlacement: () => this.toolbarPlacement,
       setPlacement: (placement: AcUiToolbarPlacement) => {
         this.applyToolbarPlacement(placement)
@@ -1175,10 +1171,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     acuiRemoveUiStylesIfUnused()
   }
 
-  /** Sets {@link AcApI18n.currentLocale} to one of the supported locales. */
-  private setLocale(locale: AcApLocale) {
-    AcApI18n.setCurrentLocale(locale)
-  }
 }
 
 /**

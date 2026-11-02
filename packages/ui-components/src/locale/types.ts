@@ -1,17 +1,10 @@
 import type { DockSide } from '../composables/types'
 
-/**
- * Canonical locale ids shipped with this library. Same set as cad-viewer's
- * `AcApLocale`. `'zh-cn'` / `'zh-CN'` are accepted as input aliases of `'zh'`
- * (see {@link MlLocaleId}).
- */
-export type MlLocaleName = 'en' | 'zh' | 'tr' | 'cs' | 'ar'
+/** Locale id shipped with this library. Same as cad-viewer's `AcApLocale`. */
+export type MlLocaleName = 'en'
 
-/**
- * Locale ids accepted by `setLocale` / `provideLocale` / plugin `locale`.
- * `'zh-cn'` and `'zh-CN'` are treated as `'zh'`.
- */
-export type MlLocaleId = MlLocaleName | 'zh-cn' | 'zh-CN'
+/** Locale id accepted by `setLocale` / `provideLocale` / plugin `locale`. */
+export type MlLocaleId = MlLocaleName
 
 /**
  * Locale messages for built-in chrome of this library (menus, aria labels).
@@ -19,7 +12,7 @@ export type MlLocaleId = MlLocaleName | 'zh-cn' | 'zh-CN'
  * consuming application.
  */
 export interface MlLocale {
-  /** Locale identifier. Matches cad-viewer: `'en'` | `'zh'` | `'tr'` | `'cs'` | `'ar'`. */
+  /** Locale identifier. */
   name: MlLocaleName
   toolPalette: {
     /** Accessible label for the dock-side menu button. */

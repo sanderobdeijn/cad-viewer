@@ -23,14 +23,6 @@
             <span class="wml-ribbon__fileNameText">drawing.dwg</span>
           </div>
 
-          <!-- Tabs extra: language selector -->
-          <div class="wml-ribbon__tabsExtra">
-            <button class="wml-ribbon__lang">
-              <span class="wml-ico" v-html="I.language" aria-hidden="true"></span>
-              <span>English</span>
-              <span class="wml-ribbon__chev">▼</span>
-            </button>
-          </div>
         </div>
 
         <!-- Group pane (Home tab) -->
@@ -189,7 +181,6 @@ const I = {
   undo: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024"><path fill="currentColor" d="M289.088 296.704h92.992a32 32 0 0 1 0 64H232.96a32 32 0 0 1-32-32V179.712a32 32 0 0 1 64 0v50.56a384 384 0 0 1 643.84 282.88 384 384 0 0 1-383.936 384 384 384 0 0 1-384-384h64a320 320 0 1 0 640 0 320 320 0 0 0-555.712-216.448z"/></svg>',
   // Element Plus @element-plus/icons-vue RefreshRight (redo) — SVG inlined to avoid a dependency.
   redo: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024"><path fill="currentColor" d="M784.512 230.272v-50.56a32 32 0 1 1 64 0v149.056a32 32 0 0 1-32 32H667.52a32 32 0 1 1 0-64h92.992A320 320 0 1 0 524.8 833.152a320 320 0 0 0 320-320h64a384 384 0 0 1-384 384 384 384 0 0 1-384-384 384 384 0 0 1 643.712-282.88"/></svg>',
-  language: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M10 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8Z"/><path fill="none" stroke="currentColor" stroke-width="1.4" d="M2 10h16M10 2.2c2.2 2.2 3.4 4.8 3.8 7.8 0-3 .8-5.5-3.8-7.8ZM10 17.8c-4.6-2.2-3.8-7.8-3.8-7.8s-.8 5.6 3.8 7.8Z"/></svg>',
   // Right toolbar icons (matching screenshot: select, pan, entity info, properties, layers, measurements, review, annotate, measure, hide toggle, agent-like? we use the 11 in the screenshot order)
   // Screenshot right bar, top to bottom:
   //   1. Select (white arrow on dark button background)
@@ -229,7 +220,6 @@ const I = {
   sbLayout: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M3 3h7v7H3zM10 10h7v7h-7zM10 3h7v7h-7zM3 10h7v7H3z"/></svg>',
   sbStatusBar: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M3 4h14v12H3z"/><path fill="currentColor" d="M3 14h14v1.2H3z"/></svg>',
   sbPalette: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M3 4h10v5H3zM3 11h10v5H3zM14 4h3v5h-3zM14 11h3v5h-3z"/></svg>',
-  sbLanguage: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M2 10h16M10 2.2c2.2 2.2 3.4 4.8 3.8 7.8 0-3 .8-5.5-3.8-7.8ZM10 17.8c-4.6-2.2-3.8-7.8-3.8-7.8s-.8 5.6 3.8 7.8Z"/></svg>',
   sbFullscreen: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M3 6.5V3.5H6M17 6.5V3.5H14M3 13.5v3H6M17 13.5v3H14"/></svg>',
   sbPin: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M10 3v14M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>',
   sbSettings: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M8.08 2.1h3.84l.32 1.52a6.4 6.4 0 0 1 1.36.78l1.48-.64 1.92 1.92-.64 1.48c.3.42.54.88.78 1.36l1.52.32v3.84l-1.52.32a6.4 6.4 0 0 1-.78 1.36l.64 1.48-1.92 1.92-1.48-.64a6.4 6.4 0 0 1-1.36.78l-.32 1.52H8.08l-.32-1.52a6.4 6.4 0 0 1-1.36-.78l-1.48.64-1.92-1.92.64-1.48a6.4 6.4 0 0 1-.78-1.36L1.34 11.92V8.08l1.52-.32c.24-.48.48-.94.78-1.36l-.64-1.48 1.92-1.92 1.48.64c.42-.3.88-.54 1.36-.78L8.08 2.1ZM10 7.2A2.8 2.8 0 1 0 10 12.8 2.8 2.8 0 0 0 10 7.2Z"/></svg>',
@@ -251,7 +241,6 @@ const statusBar = [
   { key: 'layout',  title: 'Layout switcher',  icon: I.sbLayout,      on: false },
   { key: 'statbar', title: 'Status bar',       icon: I.sbStatusBar,   on: true },
   { key: 'palette', title: 'Palettes toggle',  icon: I.sbPalette,     on: false },
-  { key: 'lang',    title: 'Language',         icon: I.sbLanguage,    on: false },
   { key: 'fs',      title: 'Full screen',      icon: I.sbFullscreen,  on: false },
   { key: 'pin',     title: 'Minimize ribbon',  icon: I.sbPin,         on: false },
   { key: 'gear',    title: 'Settings',         icon: I.sbSettings,    on: false },
@@ -380,26 +369,6 @@ const statusBar = [
   vertical-align: middle;
 }
 
-.wml-ribbon__tabsExtra {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.wml-ribbon__lang {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: transparent;
-  border: 1px solid rgba(148,163,184,.25);
-  border-radius: 3px;
-  padding: 3px 7px;
-  color: inherit;
-  cursor: default;
-  font-size: 12px;
-}
-.wml-ribbon__lang:hover { background: rgba(255,255,255,.04); }
-.wml-ribbon__lang .wml-ico { font-size: 15px; }
-.wml-ribbon__lang .wml-ribbon__chev { padding: 0; margin-left: 2px; }
 
 /* === Group pane === */
 .wml-ribbon__pane {

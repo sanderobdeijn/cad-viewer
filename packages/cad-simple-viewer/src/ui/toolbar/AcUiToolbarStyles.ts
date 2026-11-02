@@ -402,20 +402,6 @@ export function acuiEnsureToolbarStyles(): void {
   height: 18px;
 }
 
-/* Locale short-code badges (EN / 中 / …): fill the icon box like SVG glyphs. */
-.ml-ex-ui-locale-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  user-select: none;
-}
-
 .ml-ex-ui-subtoolbar.is-overflow-wrap {
   flex-wrap: wrap;
   align-content: flex-start;

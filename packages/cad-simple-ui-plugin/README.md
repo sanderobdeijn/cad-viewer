@@ -12,7 +12,6 @@ This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Eleme
 - Optional in-canvas-parent layout: sit against the canvas edge instead of floating over it
 - Default toolbar differs by layout: compact phone bar, pad without Select/Pan, full desktop icon strip
 - UI theme follows `COLORTHEME` sysvar and `--ml-ui-*` tokens on `host` automatically
-- Locale follows `AcApI18n.currentLocale` automatically
 - Text search (**Find**) in a dock panel tab: TEXT, MTEXT, block attributes and block-definition text, dimension, multileader and table text of the whole drawing (or the current layout), click-to-zoom with selection, opened from the Find toolbar button (`find`)
 - Chrome DevTools-style **dock panel** with tabs, open/close, dock side (bottom/left/right), and resize handle
 - Dock panel closes via the close button
@@ -26,7 +25,7 @@ pnpm add @mlightcad/cad-simple-ui-plugin @mlightcad/cad-simple-viewer @mlightcad
 
 ## Quick start
 
-Load the plugin after creating the document manager. Apply the initial UI theme on `host` first so theme/locale/placement buttons work even before a drawing is opened:
+Load the plugin after creating the document manager. Apply the initial UI theme on `host` first so theme/placement buttons work even before a drawing is opened:
 
 ```typescript
 import { AcApDocManager, acedApplyUiTheme } from '@mlightcad/cad-simple-viewer'
@@ -375,7 +374,7 @@ See `cad-simple-viewer-example` (`demoToolbarPresets.ts`) for a working layout s
 | `preset` | Reference a built-in button by id (custom layouts only; use `{ preset: 'pan' }`) |
 | `disabled` | `boolean` or `() => boolean` |
 
-Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `measure`, `toolbar-placement`, `switch-bg`, `theme`, `locale`, and nested ids such as `placement-top`, `measure-distance`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
+Built-in preset ids include: `open` (not on the default toolbar; local picker, or a data-source menu), `select`, `pan`, `zoom` (saved / extents / smart extents / window), `measure`, `toolbar-placement`, `switch-bg`, `theme`, and nested ids such as `placement-top`, `measure-distance`, `locale-en`, `locale-zh`, `locale-cs`, `locale-tr`, etc.
 
 ### 1. Default toolbar + extra buttons
 
@@ -423,8 +422,7 @@ acuiCreateSimpleUiPlugin({
       acuiToolbarPreset('measure'),
       acuiCreateToolbarSeparator('sep-settings'),
       acuiToolbarPreset('switch-bg'),
-      acuiToolbarPreset('theme'),
-      acuiToolbarPreset('locale')
+      acuiToolbarPreset('theme')
     ]
   }
 })
@@ -545,9 +543,9 @@ When the parent icon should reflect the active submenu item:
 }
 ```
 
-Built-in buttons using `childIcon: 'selected'`: `toolbar-placement` and `locale`. `measure` uses a fixed parent icon.
+Built-in buttons using `childIcon: 'selected'`: `toolbar-placement`. `measure` uses a fixed parent icon.
 
-Built-in `childrenUi`: `measure`, `toolbar-placement`, and `locale` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
+Built-in `childrenUi`: `measure` and `toolbar-placement` are `'toolbar'`. Custom items default to `'menu'`. Use `'sticky-toolbar'` to keep a strip open until the parent is clicked again.
 
 Submenu flyout direction follows toolbar placement (e.g. arrow points left when the toolbar is on the right).
 

@@ -2,7 +2,6 @@ import type { App } from 'vue'
 
 import MlCollapse from './components/MlCollapse.vue'
 import MlDropdown from './components/MlDropdown.vue'
-import MlLanguage from './components/MlLanguage.vue'
 import MlOverflowTabs from './components/MlOverflowTabs.vue'
 import MlStatusBar from './components/MlStatusBar.vue'
 import MlToggleButton from './components/MlToggleButton.vue'
@@ -18,7 +17,6 @@ import {
 export {
   MlCollapse,
   MlDropdown,
-  MlLanguage,
   MlOverflowTabs,
   MlStatusBar,
   MlToggleButton,
@@ -34,8 +32,6 @@ export type {
   MlToolPaletteTab
 } from './components/MlToolPalette.vue'
 export {
-  ar,
-  cs,
   en,
   getLocale,
   isMlLocaleName,
@@ -44,10 +40,7 @@ export {
   mergeLocale,
   provideLocale,
   setLocale,
-  tr,
   useLocale,
-  zh,
-  zhCn
 } from './locale'
 export type {
   MlLocale,
@@ -67,7 +60,6 @@ export default {
   install(app: App, options?: MlUiComponentsOptions) {
     app.component('MlCollapse', MlCollapse)
     app.component('MlDropdown', MlDropdown)
-    app.component('MlLanguage', MlLanguage)
     app.component('MlOverflowTabs', MlOverflowTabs)
     app.component('MlStatusBar', MlStatusBar)
     app.component('MlToggleButton', MlToggleButton)

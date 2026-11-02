@@ -67,7 +67,6 @@ import {
   ref,
   shallowRef
 } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 import {
   buildLineTypeOptions,
@@ -97,23 +96,6 @@ interface LineTypeSelectProps {
 }
 
 const props = defineProps<LineTypeSelectProps>()
-const { locale } = useI18n()
-
-function localizeSymbolicLineTypeLabel(
-  value: string,
-  label: string
-) {
-  if (locale.value !== 'ar') return label
-
-  const normalized = value.trim().toLowerCase()
-
-  if (normalized === 'bylayer') return 'حسب الطبقة'
-  if (normalized === 'byblock') return 'حسب الكتلة'
-  if (normalized === 'continuous') return 'متصل'
-
-  return label
-}
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'change', value: string): void
@@ -127,8 +109,7 @@ const activeDatabase = shallowRef(
 
 const resolvedOptions = computed(() =>
   (props.options ?? buildLineTypeOptions(activeDatabase.value)).map(item => ({
-    ...item,
-    label: localizeSymbolicLineTypeLabel(item.value, item.label)
+    ...item
     // Intentionally omit per-option SVG. Large linetype tables (800+ complex
     // TEXT styles) plus multiple selects explode DOM/memory; CSS dash
     // previews stay cheap. The closed control still resolves SVG for the

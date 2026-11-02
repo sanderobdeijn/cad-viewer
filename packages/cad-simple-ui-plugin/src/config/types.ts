@@ -1,5 +1,4 @@
 import type {
-  AcApLocale,
   AcEdUiLayoutKind,
   AcEdUiTheme,
   AcUiToolbarItemConfig,
@@ -31,9 +30,6 @@ export type AcUiToolbarItemsInput = AcUiToolbarItemConfig[] | 'default'
 /** Dock panel edge placement relative to the viewer host element. */
 export type AcUiDockPanelSide = 'top' | 'bottom' | 'left' | 'right'
 
-/** Supported UI locale codes for plugin strings. */
-export type AcUiLocale = 'en' | 'zh' | 'cs' | 'tr'
-
 /**
  * Per-layout overrides for {@link AcUiSimpleUiPluginOptions.layouts}.
  *
@@ -56,17 +52,13 @@ export interface AcUiLayoutOptions {
 export type AcUiPluginLayoutMode = 'auto' | AcEdUiLayoutKind
 
 /**
- * Callbacks supplied when building the default toolbar (theme, locale, and placement).
+ * Callbacks supplied when building the default toolbar (theme and placement).
  */
 export interface AcUiDefaultToolbarContext {
   /** Returns the current UI theme. */
   getTheme: () => AcEdUiTheme
   /** Applies a UI theme change. */
   setTheme: (theme: AcEdUiTheme) => void
-  /** Returns the active application locale. */
-  getLocale: () => AcApLocale
-  /** Sets the application locale. */
-  setLocale: (locale: AcApLocale) => void
   /** Returns the current toolbar edge placement. */
   getPlacement: () => AcUiToolbarPlacement
   /** Moves the toolbar to the given host edge. */
@@ -79,8 +71,6 @@ export interface AcUiDefaultToolbarContext {
 export interface AcUiSimpleUiPluginOptions {
   /** Viewer host element; defaults to the active view container or `document.body`. */
   host?: HTMLElement
-  /** @deprecated Locale follows {@link AcApI18n.currentLocale} automatically. */
-  locale?: AcUiLocale
   /**
    * Layout mode. `'auto'` follows viewport width; otherwise forces one kind.
    * @default 'auto'

@@ -64,11 +64,9 @@ import { useI18n } from 'vue-i18n'
 
 import {
   useDocument,
-  useSettings,
   useUndoRedo
 } from '../../composable'
 import { markComponentConfigRaw } from '../../composable/markComponentConfigRaw'
-import { LocaleProp } from '../../locale'
 import {
   arcCenterStartAngle,
   arcCenterStartEnd,
@@ -123,7 +121,6 @@ import {
 } from '../../svg/toolbarIcons'
 import MlCharacterMapDialog from '../dialog/MlCharacterMapDialog.vue'
 import MlRibbonFileName from './MlRibbonFileName.vue'
-import MlRibbonLanguageSelector from './MlRibbonLanguageSelector.vue'
 import MlRibbonMeasurementUnitsPanel from './MlRibbonMeasurementUnitsPanel.vue'
 import MlRibbonPropertyColorDropdown from './MlRibbonPropertyColorDropdown.vue'
 import MlRibbonPropertyLineTypeSelect from './MlRibbonPropertyLineTypeSelect.vue'
@@ -139,10 +136,6 @@ const OVERLAY_STYLE_CONTROL_WIDTH = '120px'
 /** Authoring mode for overlay text height (Fit to screen vs world height). */
 type OverlayTextHeightMode = 'adaptive' | 'custom'
 
-interface Props {
-  currentLocale?: LocaleProp
-}
-
 /**
  * Subset of the system variable change event used by the ribbon property sync.
  */
@@ -153,11 +146,6 @@ interface RibbonSysVarChangeEvent {
   name: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  currentLocale: undefined
-})
-
-const features = useSettings()
 const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 const { canUndo, canRedo } = useUndoRedo()
@@ -1896,13 +1884,6 @@ const handleFileMenuSelect = async (command: string) => {
             />
           </el-tooltip>
         </div>
-      </template>
-      <template #tabs-extra="{ disabled }">
-        <ml-ribbon-language-selector
-          v-if="features.isShowLanguageSelector"
-          :current-locale="props.currentLocale"
-          :disabled="disabled"
-        />
       </template>
     </ml-ribbon>
     <ml-ribbon-file-name :container-el="ribbonContainerRef" />

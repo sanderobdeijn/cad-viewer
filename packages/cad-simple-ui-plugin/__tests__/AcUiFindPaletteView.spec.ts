@@ -537,17 +537,6 @@ describe('AcUiFindPaletteView', () => {
       view.destroy()
     })
 
-    it('translates the new hit types in the active locale', () => {
-      entities = [leader, insert]
-      blocks = { CARIMBO: [text('bt', 'Nota no carimbo', 1)] }
-      setLocale('ar')
-      const view = createView()
-      view.search('nota')
-      expect(meta(view, 0)).toBe('خط إشارة · (5, 6)')
-      expect(meta(view, 1)).toBe('نص كتلة · (1, 0)')
-      view.destroy()
-    })
-
     it('falls back to English for messages the active locale does not have', () => {
       entities = [leader]
       setLocale('xx') // a locale with no messages at all

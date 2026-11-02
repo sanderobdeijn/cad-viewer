@@ -26,9 +26,6 @@ features:
   - icon: ✏️
     title: More than a viewer
     details: Select, modify and create geometry with an AutoCAD-like command experience — real drafting work on the web, not just read-only preview.
-  - icon: 🌍
-    title: Multi-language
-    details: Built-in English, Chinese, Arabic, Czech, Turkish, Japanese and Korean interfaces.
   - icon: 📱
     title: Responsive UI
     details: One interface that adapts to phones, tablets and desktops — review drawings anywhere.

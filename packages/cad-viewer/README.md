@@ -123,7 +123,6 @@ The `MlCadViewer` component accepts the following props:
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `locale` | `'en' \| 'zh' \| 'default'` | `'default'` | Sets the language for the component interface. Use `'en'` for English, `'zh'` for Chinese, or `'default'` to use the browser's default language. |
 | `background` | `number` | `undefined` | Background color as 24-bit hexadecimal RGB (e.g., `0x000000` for black, `0x808080` for gray). |
 | `baseUrl` | `string` | `undefined` | Base URL for loading fonts, templates, and example files. This URL is used by the CAD viewer to load resources like fonts and drawing templates. **Note**: If not provided, uses the default URL. |
 | `useMainThreadDraw` | `boolean` | `false` | Optional flag whether to use main thread or webwork to render drawing. The true value means using main thread to render drawing. This approach take less memory and take longer time to show rendering results. The false value means using web worker to render drawing. This approach take more memory and take shorter time to show rendering results. |
@@ -140,7 +139,6 @@ Settings resolve in three layers (later wins): built-in defaults, user preferenc
 | `isShowCommandLine` | `boolean` | `true` | Controls command line visibility |
 | `isShowCoordinate` | `boolean` | `true` | Controls coordinate display visibility |
 | `isShowEntityInfo` | `boolean` | `false` | Controls entity info card visibility |
-| `isShowLanguageSelector` | `boolean` | `true` | Controls language selector visibility |
 | `isShowRibbon` | `boolean` | `true` | Controls ribbon visibility |
 | `isShowStats` | `boolean` | `false` | Controls performance statistics display |
 
@@ -149,7 +147,6 @@ Settings resolve in three layers (later wins): built-in defaults, user preferenc
 <template>
   <!-- Custom baseUrl for fonts and templates -->
   <!-- <MlCadViewer 
-    locale="en" 
     :base-url="'https://my-cdn.com/cad-data/'"
   /> -->
 </template>
@@ -230,7 +227,6 @@ The `MlCadViewer` component includes:
 - **Dialog Manager** - Modal dialogs for various operations
 - **File Reader** - Local file loading via file dialog and drag-and-drop support
 - **Entity Info** - Detailed information about selected entities
-- **Language Selector** - UI language switching
 - **Theme Support** - Dark/light mode driven by the `COLORTHEME` system variable
 
 ### Find (text search)
@@ -309,7 +305,7 @@ The viewer UI theme is synchronized through the `COLORTHEME` system variable man
 ### Locale
 
 - `i18n` - Internationalization instance
-- Language files for English and Chinese
+- English language files
 
 ### Styles
 

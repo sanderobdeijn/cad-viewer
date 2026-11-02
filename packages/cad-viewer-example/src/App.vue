@@ -1,7 +1,6 @@
 <template>
   <div id="app-root">
     <MlCadViewer
-      locale="default"
       :base-url="BASE_URL"
       :use-main-thread-draw="useMainThreadDraw"
       @create="exposeForTests"

@@ -184,7 +184,3 @@
   background: var(--vp-c-gray-2);
 }
 
-/* Keep RTL layout intact for Arabic — avoid hard-coded LTR margins */
-[dir='rtl'] .VPFeature:hover {
-  transform: translateY(-3px);
-}

@@ -273,3 +273,19 @@ test('draws a line from the ribbon button after using the text editor', async ({
   await page.keyboard.press('Escape')
   await expect(prompt).toHaveText('')
 })
+
+test('stays in English without a language selector', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'zh-CN' })
+  await context.addInitScript(() => {
+    localStorage.setItem('preferred_lang', 'zh')
+  })
+  const page = await context.newPage()
+  await page.goto('/')
+
+  await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible()
+  await expect(
+    page.getByRole('textbox', { name: 'Type command' })
+  ).toBeVisible()
+  await expect(page.locator('.ml-ribbon-language-switch')).toHaveCount(0)
+  await context.close()
+})

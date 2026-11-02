@@ -284,7 +284,7 @@ export interface AcApDocManagerOptions {
   }
 
   /**
-   * Absolute root URL for localized user-guide pages (trailing slash optional).
+   * Absolute root URL for user-guide pages (trailing slash optional).
    * Used by {@link acapDocsUrl} for in-app help links (e.g. mobile magnifier).
    * Defaults to {@link ACAP_DEFAULT_DOCS_BASE_URL} when omitted.
    *

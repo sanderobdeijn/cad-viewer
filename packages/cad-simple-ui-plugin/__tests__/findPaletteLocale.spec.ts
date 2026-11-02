@@ -1,10 +1,6 @@
-import { ar } from '../src/i18n/ar'
-import { cs } from '../src/i18n/cs'
 import { en } from '../src/i18n/en'
-import { tr } from '../src/i18n/tr'
-import { zh } from '../src/i18n/zh'
 
-const locales: Record<string, Record<string, string>> = { ar, cs, en, tr, zh }
+const locales: Record<string, Record<string, string>> = { en }
 const findKeys = Object.keys(en).filter(key => key.startsWith('findPalette.'))
 
 describe('Find palette locale messages', () => {
@@ -53,10 +49,4 @@ describe('Find palette locale messages', () => {
       )
     }
   )
-
-  it('Arabic wording does not depend on a plural form (the plugin has no plural rules)', () => {
-    for (const key of ['count', 'countLayouts', 'countTruncated']) {
-      expect(ar[`findPalette.${key}`]).not.toContain('|')
-    }
-  })
 })

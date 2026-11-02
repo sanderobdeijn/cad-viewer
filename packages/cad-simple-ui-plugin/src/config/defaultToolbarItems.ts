@@ -1,6 +1,5 @@
 import {
   AcApDocManager,
-  type AcApLocale,
   AcApSettingManager,
   type AcEdUiTheme,
   isMeasurementVisible
@@ -11,7 +10,6 @@ import {
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
   ICON_FIND,
-  ICON_LANGUAGE,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
   ICON_MEASURE,
@@ -85,56 +83,6 @@ function acuiCreateToolbarPlacementItem(
       icon: PLACEMENT_ICONS[placement],
       requiresDocument: false,
       action: () => context?.setPlacement(placement)
-    }))
-  }
-}
-
-const TOOLBAR_LOCALES: AcApLocale[] = ['en', 'zh', 'cs', 'tr', 'ar']
-
-const LOCALE_BADGES: Record<AcApLocale, string> = {
-  en: 'EN',
-  zh: '中',
-  cs: 'CS',
-  tr: 'TR',
-  ar: 'AR'
-}
-
-const LOCALE_LABELS: Record<AcApLocale, string> = {
-  en: 'toolbar.localeEn',
-  zh: 'toolbar.localeZh',
-  cs: 'toolbar.localeCs',
-  tr: 'toolbar.localeTr',
-  ar: 'toolbar.localeAr'
-}
-
-/**
- * Locale short-code badge for toolbar icons.
- *
- * Uses HTML text (not SVG `<text>`) so the glyph stays sharp at the 18px
- * toolbar icon size. SVG text often looks soft/blurry when CSS-scaled.
- */
-function localeBadgeIcon(badge: string): string {
-  return `<span class="ml-ex-ui-locale-badge">${badge}</span>`
-}
-
-function acuiCreateToolbarLocaleItem(
-  context?: AcUiDefaultToolbarContext
-): AcUiToolbarItem {
-  const current = context?.getLocale() ?? 'en'
-  return {
-    id: 'locale',
-    label: 'toolbar.locale',
-    icon: ICON_LANGUAGE,
-    requiresDocument: false,
-    childrenUi: 'toolbar',
-    childIcon: 'selected',
-    selectedChildId: `locale-${current}`,
-    children: TOOLBAR_LOCALES.map(locale => ({
-      id: `locale-${locale}`,
-      label: LOCALE_LABELS[locale],
-      icon: localeBadgeIcon(LOCALE_BADGES[locale]),
-      requiresDocument: false,
-      action: () => context?.setLocale(locale)
     }))
   }
 }
@@ -383,7 +331,7 @@ export function acuiCreateZoomToolbarItem(): AcUiToolbarItem {
  *
  * Used by phone and by desktop/pad so chrome preferences live in one strip.
  *
- * @param context - Optional callbacks for theme toggle, locale, and placement.
+ * @param context - Optional callbacks for theme toggle, and placement.
  * @returns Settings toolbar item with nested dismissible sub-toolbars.
  */
 export function acuiCreateSettingsToolbarItem(
@@ -408,8 +356,7 @@ export function acuiCreateSettingsToolbarItem(
         // visible effect until reading mode is turned off.
         disabled: acuiIsReadingModeEnabled
       },
-      acuiCreateReadingModeToolbarItem(),
-      acuiCreateToolbarLocaleItem(context)
+      acuiCreateReadingModeToolbarItem()
     ]
   }
 }
@@ -417,7 +364,7 @@ export function acuiCreateSettingsToolbarItem(
 /**
  * Builds the built-in desktop/pad toolbar item list.
  *
- * @param context - Optional callbacks for theme, locale, and placement items.
+ * @param context - Optional callbacks for theme and placement items.
  * @returns Default {@link AcUiToolbarItem} array.
  */
 export function acuiCreateDefaultToolbarItems(
@@ -453,7 +400,7 @@ export function acuiCreateDefaultToolbarItems(
 /**
  * Builds the phone-layout toolbar: zoom, measure, layout, settings.
  *
- * @param context - Optional callbacks for theme and locale items under settings.
+ * @param context - Optional callbacks for theme items under settings.
  * @returns Default phone {@link AcUiToolbarItem} array.
  */
 export function acuiCreatePhoneToolbarItems(

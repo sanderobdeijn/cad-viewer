@@ -6,19 +6,18 @@
   command execution, and various viewing tools.
   
   USAGE EXAMPLE:
-  MlCadViewer with locale="en"
+  MlCadViewer
   
   FEATURES:
   - Command line interface for CAD operations
   - Toolbars with common CAD tools (zoom, pan, select, etc.)
   - Entity information display
-  - Multi-language support (English/Chinese)
   - Dark/light theme support
   - Status bar with progress and settings
   - Customizable base URL for fonts, templates, and example files
   
   COMPONENTS INCLUDED:
-  - Ribbon with CAD commands and language selector
+  - Ribbon with CAD commands
   - Toolbars with CAD commands
   - Command line for text-based commands
   - Status bar with various controls
@@ -50,18 +49,15 @@
  * ```vue
  * // Basic usage
  * <MlCadViewer
- *   :locale="'en'"
  * />
  *
  * // Usage with custom baseUrl for fonts
  * <MlCadViewer
- *   :locale="'en'"
  *   :base-url="'https://my-cdn.com/cad-data/'"
  * />
  *
  * // Usage with a self-hosted user-guide root
  * <MlCadViewer
- *   :locale="'zh'"
  *   :docs-base-url="'https://example.com/my-product/docs/'"
  * />
  *
@@ -81,8 +77,8 @@ import {
   layoutBackgroundColorFromRgb
 } from '@mlightcad/cad-simple-viewer'
 import { ACDB_DRAW_CIRCLE_SIDES_DRAFT, ACGI_PAPER_SPACE_BACKGROUND, log } from '@mlightcad/data-model'
-import { provideLocale } from '@mlightcad/ui-components'
 import { ElConfigProvider, ElMessage } from 'element-plus'
+import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -102,10 +98,8 @@ import {
   setColorTheme,
   toggleDark,
   useDocument,
-  useLocale,
   useSettings
 } from '../composable'
-import { LocaleProp } from '../locale'
 import { MlDialogManager, MlFontFileReader } from './common'
 import { MlEntityInfo, MlToolBars } from './layout'
 import { MlNotificationCenter } from './notification'
@@ -127,14 +121,12 @@ const emit = defineEmits<{
 
 // Define component props with their purposes
 interface Props {
-  /** Language locale for internationalization ('en', 'zh', or 'default') */
-  locale?: LocaleProp
   /** Background color as 24-bit hexadecimal RGB number (e.g., 0x000000) */
   background?: number
   /** Base URL for loading fonts (e.g., 'https://example.com/cad-data/') */
   baseUrl?: string
   /**
-   * Absolute root URL for localized user-guide pages (trailing slash optional).
+   * Absolute root URL for user-guide pages (trailing slash optional).
    * Forwarded to {@link AcApDocManagerOptions.docsBaseUrl} for in-app help links
    * (e.g. mobile magnifier). Defaults to the public mlightcad docs site.
    */
@@ -179,7 +171,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  locale: 'default',
   background: undefined,
   baseUrl: undefined,
   docsBaseUrl: undefined,
@@ -200,10 +191,6 @@ const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
 })
 
 const { t } = useI18n()
-const { currentLocale, effectiveLocale, elementPlusLocale } = useLocale(
-  props.locale
-)
-provideLocale(currentLocale)
 // Canvas element reference
 const containerRef = ref<HTMLDivElement>()
 const layoutRef = ref<HTMLDivElement>()
@@ -467,13 +454,12 @@ const closeNotificationCenter = () => {
     class="ml-cad-viewer-container"
   >
     <!-- Element Plus configuration provider for internationalization -->
-    <el-config-provider :locale="elementPlusLocale">
+    <el-config-provider :locale="elementPlusEnglish">
       <div ref="layoutRef" class="ml-cad-layout">
         <!-- Header section with command ribbon -->
         <header v-if="editorRef" ref="headerRef" class="ml-cad-header">
           <ml-ribbon-commands
             v-if="features.isShowRibbon"
-            :current-locale="effectiveLocale"
           />
         </header>
 

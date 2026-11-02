@@ -97,23 +97,23 @@ async execute(context: AcApContext) {
 
 ## Step 4: Add Internationalization
 
-1. **Add jig prompts** to `src/i18n/[language]/jig.ts`
-2. **Add command description** to `src/i18n/[language]/command.ts`
+1. **Add jig prompts** to `src/i18n/en/jig.ts`
+2. **Add command description** to `src/i18n/en/command.ts`
 
-### Example: Jig Prompts (zh/jig.ts)
+### Example: Jig Prompts (en/jig.ts)
 
 ```typescript
 [command]: {
-  firstPoint: '指定第一个点：',
-  nextPoint: '指定下一个点：'
+  firstPoint: 'Specify first point:',
+  nextPoint: 'Specify next point:'
 }
 ```
 
-### Example: Command Description (zh/command.ts)
+### Example: Command Description (en/command.ts)
 
 ```typescript
 [command]: {
-  description: '命令描述'
+  description: 'Command description'
 }
 ```
 

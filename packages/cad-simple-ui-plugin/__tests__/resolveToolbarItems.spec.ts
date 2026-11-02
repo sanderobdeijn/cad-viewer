@@ -237,7 +237,7 @@ describe('acuiResolveEffectiveToolbarItem', () => {
 })
 
 describe('default toolbar items', () => {
-  it('has no export button and includes a settings strip with theme, locale, placement', () => {
+  it('has no export button and includes a settings strip with theme and placement', () => {
     const items = acuiCreateDefaultToolbarItems()
     expect(items.find(item => item.id === 'export')).toBeUndefined()
     const settings = items.find(item => item.id === 'settings')
@@ -245,7 +245,7 @@ describe('default toolbar items', () => {
     const childIds = settings?.children?.map(child => child.id) ?? []
     expect(childIds).toContain('simulated-mouse')
     expect(childIds).toContain('theme')
-    expect(childIds).toContain('locale')
+    expect(childIds).not.toContain('locale')
     expect(childIds).toContain('toolbar-placement')
   })
 
@@ -295,15 +295,12 @@ describe('default toolbar items', () => {
     })
   })
 
-  it('uses selected child icon for toolbar placement and locale', () => {
+  it('uses selected child icon for toolbar placement', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
     expect(
       settings?.children?.find(child => child.id === 'toolbar-placement')
         ?.childIcon
-    ).toBe('selected')
-    expect(
-      settings?.children?.find(child => child.id === 'locale')?.childIcon
     ).toBe('selected')
     expect(items.find(item => item.id === 'measure')?.childIcon).toBeUndefined()
   })
@@ -346,9 +343,6 @@ describe('default toolbar items', () => {
       settings?.children?.find(child => child.id === 'toolbar-placement')
         ?.childrenUi
     ).toBe('toolbar')
-    expect(
-      settings?.children?.find(child => child.id === 'locale')?.childrenUi
-    ).toBe('toolbar')
   })
 
   it('uses the same measurement submenu icons as cad-viewer', () => {
@@ -381,31 +375,6 @@ describe('default toolbar items', () => {
       measure?.children?.find(child => child.id === 'measurement-vis')?.toggle
         ?.on.icon
     ).toContain('M512 160c320 0 512 352')
-  })
-
-  it('offers all supported locales in a dismissible language sub-toolbar', () => {
-    const items = acuiCreateDefaultToolbarItems({
-      getTheme: () => 'light',
-      setTheme: () => undefined,
-      getLocale: () => 'cs',
-      setLocale: () => undefined,
-      getPlacement: () => 'right',
-      setPlacement: () => undefined
-    })
-    const settings = items.find(item => item.id === 'settings')
-    const locale = settings?.children?.find(child => child.id === 'locale')
-    expect(locale?.toggle).toBeUndefined()
-    expect(locale?.childrenUi).toBe('toolbar')
-    expect(locale?.selectedChildId).toBe('locale-cs')
-    expect(locale?.children?.map(child => child.id)).toEqual([
-      'locale-en',
-      'locale-zh',
-      'locale-cs',
-      'locale-tr',
-      'locale-ar'
-    ])
-    expect(locale?.children?.[0]?.icon).toContain('ml-ex-ui-locale-badge')
-    expect(locale?.children?.[0]?.icon).toContain('EN')
   })
 })
 

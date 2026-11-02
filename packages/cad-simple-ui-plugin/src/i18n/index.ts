@@ -1,15 +1,7 @@
 import { AcApI18n } from '@mlightcad/cad-simple-viewer'
 
-import { ar } from './ar'
-import { commandAr } from './command-ar'
-import { commandCs } from './command-cs'
 import { commandEn } from './command-en'
-import { commandTr } from './command-tr'
-import { commandZh } from './command-zh'
-import { cs } from './cs'
 import { en } from './en'
-import { tr } from './tr'
-import { zh } from './zh'
 
 /** Message namespace prefix merged into {@link AcApI18n}. */
 const MESSAGE_PREFIX = 'simpleUi'
@@ -55,22 +47,6 @@ export function acuiRegisterSimpleUiI18n(): void {
   AcApI18n.mergeLocaleMessage('en', {
     command: commandEn,
     [MESSAGE_PREFIX]: flatToNested(en)
-  })
-  AcApI18n.mergeLocaleMessage('zh', {
-    command: commandZh,
-    [MESSAGE_PREFIX]: flatToNested(zh)
-  })
-  AcApI18n.mergeLocaleMessage('cs', {
-    command: commandCs,
-    [MESSAGE_PREFIX]: flatToNested(cs)
-  })
-  AcApI18n.mergeLocaleMessage('tr', {
-    command: commandTr,
-    [MESSAGE_PREFIX]: flatToNested(tr)
-  })
-  AcApI18n.mergeLocaleMessage('ar', {
-    command: commandAr,
-    [MESSAGE_PREFIX]: flatToNested(ar)
   })
   isRegistered = true
 }
