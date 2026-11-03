@@ -1,6 +1,4 @@
 import {
-  AcDbSolid,
-  AcDbTrace,
   GeometryArea2d,
   GeometryIndexNode,
   GeometryPoint2d,
@@ -48,7 +46,7 @@ function areaFromLoop(points: GeometryPoint2dLike[]): GeometryArea2d {
   } as unknown as GeometryArea2d
 }
 
-/** Builds a real closed polyline area, as `AcDbTrace.subWorldDraw` does. */
+/** Builds a real closed polyline area, as a filled outline is drawn. */
 function areaFromVertices(vertices: GeometryPoint2dLike[]): GeometryArea2d {
   const polyline = new GeometryPolyline2d(
     vertices.map(point => new GeometryPoint2d(point.x, point.y)),
@@ -398,56 +396,6 @@ describe('buildAreaGeometry single-loop fast path', () => {
     // Outer 100 minus the 4-unit hole.
     expect(totalArea(built)).toBeCloseTo(96, 3)
     built.geometry.dispose()
-  })
-})
-
-describe('AcDbSolid / AcDbTrace fill capacity', () => {
-  /** Creates a SOLID/Trace whose corners 3/4 coincide for a 3-corner solid. */
-  function createSolid(cornerCount: number) {
-    const solid = new AcDbSolid()
-    const corners = rectangle(0, 0, 10, 6)
-    for (let i = 0; i < 4; i++) {
-      const corner = corners[i < cornerCount ? i : cornerCount - 1]
-      solid.setPointAt(i, {
-        x: corner.x,
-        y: corner.y,
-        z: 0
-      } as unknown as GeometryPoint2dLike)
-    }
-    return solid
-  }
-
-  it('routes every solid corner count through the fast path', () => {
-    for (const cornerCount of [3, 4]) {
-      const solid = createSolid(cornerCount)
-      resetAreaBuildStats()
-      const built = build(
-        areaFromVertices(solid.subGetGripPoints()),
-        new AcTrRenderContext()
-      )
-      expect(getAreaBuildStats()).toEqual({
-        smallLoopFastPath: 1,
-        generalPath: 0,
-        offsetRingFastPath: 0
-      })
-      // 3 corners → one triangle; 4 corners → two.
-      expect(built.geometry.getIndex()!.count).toBe(cornerCount === 3 ? 3 : 6)
-      built.geometry.dispose()
-    }
-  })
-
-  it('matches the general path for a real AcDbTrace boundary', () => {
-    const trace = new AcDbTrace()
-    const corners = rectangle(0, 0, 10, 6)
-    for (let i = 0; i < 4; i++) {
-      trace.setPointAt(i, {
-        x: corners[i].x,
-        y: corners[i].y,
-        z: 0
-      } as unknown as GeometryPoint2dLike)
-    }
-
-    expectFastPathMatchesGeneral(areaFromVertices(trace.subGetGripPoints()))
   })
 })
 

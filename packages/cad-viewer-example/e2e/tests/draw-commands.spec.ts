@@ -72,9 +72,6 @@ const cases: Array<[string, string[], string]> = [
   ['rectangle', ['rectang', '0,0', '100,50'], 'LWPOLYLINE'],
   ['polygon', ['polygon', '6', '0,0', 'I', '50'], 'LWPOLYLINE'],
   ['spline', ['spline', '0,0', '30,40', '60,0', '90,40', ''], 'SPLINE'],
-  ['multiline', ['mline', '0,0', '100,0', '100,50', ''], 'MLINE'],
-  ['ray', ['ray', '0,0', '100,50', ''], 'RAY'],
-  ['construction line', ['xline', '0,0', '100,50', ''], 'LINE'],
   ['point', ['point', '10,10'], 'POINT']
 ]
 

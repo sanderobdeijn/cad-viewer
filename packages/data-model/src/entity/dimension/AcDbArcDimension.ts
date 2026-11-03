@@ -191,7 +191,7 @@ export class AcDbArcDimension extends AcDbDimension {
    * @inheritdoc
    */
   get geometricExtents() {
-    return this.getGeometricExtentsFromDimBlockOrPoints([
+    return this.getGeometricExtentsFromPoints([
       this.xLine1Point,
       this.xLine2Point,
       this.centerPoint,

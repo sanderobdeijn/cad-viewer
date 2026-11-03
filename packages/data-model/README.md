@@ -78,7 +78,6 @@ npm install @mlightcad/data-model
 - **AcDbAngleUnits**: Angle unit utilities
 - **AcDbUnitsValue**: Unit value handling
 - **AcDbOsnapMode**: Object snap modes
-- **AcDbRenderingCache**: Rendering cache management
 
 ## Usage Examples
 

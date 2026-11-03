@@ -403,7 +403,7 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
   /**
    * Converts WCS-positioned attribute glyphs into block-local placement.
    *
-   * {@link AcDbRenderingCache.draw} applies the inverse INSERT matrix to
+   * The caller applies the inverse INSERT matrix to
    * attribute entities before glyphs are built. The mtext-renderer then
    * places glyphs with a WCS insertion point under that inverse. The product
    * cancels for rendering, but mirrored INSERT scales make

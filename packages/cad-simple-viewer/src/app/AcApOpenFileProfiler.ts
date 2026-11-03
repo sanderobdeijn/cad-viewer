@@ -2,7 +2,6 @@ import {
   AcCmPerformanceCollector,
   AcDbDatabase,
   AcDbProgressdEventArgs,
-  AcDbRenderingCache,
   AcDbSystemVariables,
   AcDbSysVarManager,
   log
@@ -27,31 +26,6 @@ export interface AcApOpenFileProfileSnapshot {
   parseMs: number
   entityMs: number
   stages: { name: string; durationMs: number }[]
-  cache: {
-    hits: number
-    misses: number
-    hitMs: number
-    cloneMs: number
-    missBuildMs: number
-    missCompactMs: number
-    setCloneMs: number
-    applyMs: number
-    topLevel: {
-      hits: number
-      misses: number
-      hitMs: number
-      cloneMs: number
-      missBuildMs: number
-      missCompactMs: number
-      setCloneMs: number
-      applyMs: number
-    }
-  }
-  slowBlocks: {
-    blockName: string
-    buildMs: number
-    compactMs: number
-  }[]
   progressive?: {
     enabled: boolean
     paintCount: number
@@ -77,8 +51,8 @@ export interface AcApOpenFileProfileSnapshot {
  * Session open-file profiler.
  *
  * Always records PARSE/ENTITY (and other `openProgress` sub-stages),
- * wall-clock read vs scene convert time, and {@link AcDbRenderingCache}
- * hit/miss counters for the last open. Console output remains gated by the
+ * and wall-clock read vs scene convert time for the last open. Console output
+ * remains gated by the
  * {@link AcDbSystemVariables.OPENPROF} system variable.
  *
  * Stage durations use **active-stage wall time**: from the first event of a
@@ -146,9 +120,6 @@ export class AcApOpenFileProfiler {
     this._activeStageStartedAt = 0
     this._database = database
 
-    AcDbRenderingCache.resetProfile()
-    AcDbRenderingCache.profiling = true
-
     this._progressListener = (args: AcDbProgressdEventArgs) => {
       this.onProgress(args)
     }
@@ -174,9 +145,6 @@ export class AcApOpenFileProfiler {
    */
   cancel(): void {
     this.detachProgressListener()
-    if (this._active) {
-      AcDbRenderingCache.profiling = false
-    }
     this._active = false
     this._printToConsole = false
     this._finishScheduled = false
@@ -259,8 +227,6 @@ export class AcApOpenFileProfiler {
     const totalMs = Math.max(0, convertEndMs - this._t0)
     const parseMs = this._stages.get('PARSE')?.durationMs ?? 0
     const entityMs = this._stages.get('ENTITY')?.durationMs ?? 0
-    const cache = { ...AcDbRenderingCache.profileStats }
-    const tl = cache.topLevel
     const progressiveStats = view.progressiveOpenStats
     const progressiveEnabled = view.progressiveRendering
     const convertPhaseRaw =
@@ -277,15 +243,6 @@ export class AcApOpenFileProfiler {
         }
       : undefined
 
-    const slowBlocks = [...cache.blockMisses]
-      .sort((a, b) => b.buildMs + b.compactMs - (a.buildMs + a.compactMs))
-      .slice(0, 10)
-      .map(block => ({
-        blockName: block.blockName,
-        buildMs: block.buildMs,
-        compactMs: block.compactMs
-      }))
-
     const stages = [...this._stages.entries()]
       .filter(([, stats]) => stats.durationMs > 0)
       .sort((a, b) => b[1].durationMs - a[1].durationMs)
@@ -300,18 +257,6 @@ export class AcApOpenFileProfiler {
       parseMs,
       entityMs,
       stages,
-      cache: {
-        hits: cache.hits,
-        misses: cache.misses,
-        hitMs: cache.hitMs,
-        cloneMs: cache.cloneMs,
-        missBuildMs: cache.missBuildMs,
-        missCompactMs: cache.missCompactMs,
-        setCloneMs: cache.setCloneMs,
-        applyMs: cache.applyMs,
-        topLevel: { ...tl }
-      },
-      slowBlocks,
       progressive: {
         enabled: progressiveEnabled,
         paintCount: progressiveStats.paintCount,
@@ -369,30 +314,6 @@ export class AcApOpenFileProfiler {
           ` (critical=[${fontLoad.criticalFonts.join(',')}]` +
           ` deferred=[${fontLoad.deferredFonts.join(',')}])`
       )
-    }
-
-    lines.push(
-      '',
-      '--- AcDbRenderingCache (top-level INSERT draws) ---',
-      `hits:   ${tl.hits}, hit path ${tl.hitMs.toFixed(0)} ms (clone ${tl.cloneMs.toFixed(0)} ms)`,
-      `misses: ${tl.misses}, build ${tl.missBuildMs.toFixed(0)} ms (incl. nested), compact ${tl.missCompactMs.toFixed(0)} ms, set/clone ${tl.setCloneMs.toFixed(0)} ms`,
-      `applyMatrix+attribs: ${tl.applyMs.toFixed(0)} ms`,
-      '',
-      `--- AcDbRenderingCache (all depths: hits=${cache.hits}, misses=${cache.misses}) ---`,
-      `hit ${cache.hitMs.toFixed(0)} ms (clone ${cache.cloneMs.toFixed(0)}), build ${cache.missBuildMs.toFixed(0)}, compact ${cache.missCompactMs.toFixed(0)}, set ${cache.setCloneMs.toFixed(0)}, apply ${cache.applyMs.toFixed(0)}`
-    )
-
-    if (slowBlocks.length > 0) {
-      lines.push('', '--- Slowest block template misses (build+compact) ---')
-      for (const block of slowBlocks) {
-        const name =
-          block.blockName.length > 40
-            ? `${block.blockName.slice(0, 37)}...`
-            : block.blockName
-        lines.push(
-          `${name.padEnd(40)} build=${block.buildMs.toFixed(0).padStart(7)}ms  compact=${block.compactMs.toFixed(0).padStart(7)}ms  total=${(block.buildMs + block.compactMs).toFixed(0).padStart(7)}ms`
-        )
-      }
     }
 
     const otherStages = stages.filter(

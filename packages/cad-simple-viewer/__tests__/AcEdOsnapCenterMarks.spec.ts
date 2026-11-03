@@ -1,118 +1,12 @@
 import {
-  AcDbBlockReference,
-  AcDbBlockTableRecord,
-  AcDbDatabase,
-  AcDbLine,
-  GeometryPoint2d
-} from '@mlightcad/data-model'
-
-import {
   ACED_MAX_ACQUIRED_CENTER_MARKS,
-  canonicalGsMark,
-  gsMarkOccurrence,
-  mergeAcquiredCenterMarks,
-  resolveBlockSubEntity,
-  type AcEdOsnapCenterMark
+  type AcEdOsnapCenterMark,
+  mergeAcquiredCenterMarks
 } from '../src/editor/input/AcEdOsnapCenterMarks'
 
 function mark(x: number, y = 0): AcEdOsnapCenterMark {
   return { x, y, z: 0 }
 }
-
-describe('gsMark helpers', () => {
-  it('parses canonical id and occurrence from spatial-index suffixes', () => {
-    expect(canonicalGsMark('abc')).toBe('abc')
-    expect(canonicalGsMark('abc#1')).toBe('abc')
-    expect(gsMarkOccurrence('abc')).toBe(0)
-    expect(gsMarkOccurrence('abc#1')).toBe(1)
-    expect(gsMarkOccurrence('abc#12')).toBe(12)
-  })
-})
-
-describe('resolveBlockSubEntity', () => {
-  it('resolves the Nth duplicate nested INSERT instance (#745)', () => {
-    const db = new AcDbDatabase()
-    db.createDefaultData()
-
-    const cell = new AcDbBlockTableRecord()
-    cell.name = 'CELL_745'
-    db.tables.blockTable.add(cell)
-    const line = new AcDbLine(
-      new GeometryPoint2d(0, 0),
-      new GeometryPoint2d(1, 0)
-    )
-    cell.appendEntity(line)
-
-    const row = new AcDbBlockTableRecord()
-    row.name = 'ROW_745'
-    db.tables.blockTable.add(row)
-    for (const x of [0, 100]) {
-      const nested = new AcDbBlockReference('CELL_745')
-      nested.position = new GeometryPoint2d(x, 0)
-      row.appendEntity(nested)
-    }
-
-    const ref = new AcDbBlockReference('ROW_745')
-    db.tables.blockTable.modelSpace.appendEntity(ref)
-
-    const first = resolveBlockSubEntity(ref, line.objectId)
-    expect(first).toBeDefined()
-    const firstOrigin = new GeometryPoint2d(0, 0).applyMatrix4(first!.transform)
-    expect(firstOrigin.x).toBeCloseTo(0)
-    expect(firstOrigin.y).toBeCloseTo(0)
-
-    const second = resolveBlockSubEntity(ref, `${line.objectId}#1`)
-    expect(second).toBeDefined()
-    const secondOrigin = new GeometryPoint2d(0, 0).applyMatrix4(
-      second!.transform
-    )
-    expect(secondOrigin.x).toBeCloseTo(100)
-    expect(secondOrigin.y).toBeCloseTo(0)
-
-    const byHint = resolveBlockSubEntity(ref, line.objectId, undefined, {
-      x: 100.5,
-      y: 0
-    })
-    expect(byHint).toBeDefined()
-    const hintOrigin = new GeometryPoint2d(0, 0).applyMatrix4(byHint!.transform)
-    expect(hintOrigin.x).toBeCloseTo(100)
-  })
-
-  it('hint-prunes nested INSERTs using XY only (#745)', () => {
-    const db = new AcDbDatabase()
-    db.createDefaultData()
-
-    const cell = new AcDbBlockTableRecord()
-    cell.name = 'CELL_745_Z'
-    db.tables.blockTable.add(cell)
-    const line = new AcDbLine(
-      new GeometryPoint2d(0, 0),
-      new GeometryPoint2d(1, 0)
-    )
-    cell.appendEntity(line)
-
-    const row = new AcDbBlockTableRecord()
-    row.name = 'ROW_745_Z'
-    db.tables.blockTable.add(row)
-    for (const x of [0, 100]) {
-      const nested = new AcDbBlockReference('CELL_745_Z')
-      nested.position = new GeometryPoint2d(x, 0)
-      row.appendEntity(nested)
-    }
-
-    const ref = new AcDbBlockReference('ROW_745_Z')
-    db.tables.blockTable.modelSpace.appendEntity(ref)
-
-    const byHint = resolveBlockSubEntity(ref, line.objectId, undefined, {
-      x: 100.5,
-      y: 0
-    })
-    expect(byHint).toBeDefined()
-    const hintOrigin = new GeometryPoint2d(0, 0).applyMatrix4(byHint!.transform)
-    expect(hintOrigin.x).toBeCloseTo(100)
-    expect(byHint!.entity.objectId).toBe(line.objectId)
-  })
-})
 
 describe('mergeAcquiredCenterMarks', () => {
   it('returns the same array when nothing new is hovered', () => {

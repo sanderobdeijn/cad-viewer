@@ -241,6 +241,6 @@ export class AcDbDiametricDimension extends AcDbDimension {
         points.push(this.farChordPoint.clone().add(direction))
       }
     }
-    return this.getGeometricExtentsFromDimBlockOrPoints(points)
+    return this.getGeometricExtentsFromPoints(points)
   }
 }

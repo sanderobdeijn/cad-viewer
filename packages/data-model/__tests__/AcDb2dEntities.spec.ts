@@ -6,10 +6,8 @@ import {
   AcDbEllipse,
   AcDbEntity,
   AcDbLine,
-  AcDbMLine,
   AcDbPoint,
   AcDbPolyline,
-  AcDbRay,
   AcDbSpline
 } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
@@ -25,13 +23,6 @@ const polyline = () => {
   const entity = new AcDbPolyline()
   entity.addVertexAt(0, new GeometryPoint2d(0, 0))
   entity.addVertexAt(1, new GeometryPoint2d(10, 0))
-  return entity
-}
-
-const ray = () => {
-  const entity = new AcDbRay()
-  entity.basePoint = { x: 1, y: 2 }
-  entity.unitDir = { x: 1, y: 0 }
   return entity
 }
 
@@ -52,7 +43,6 @@ const entities: Array<[string, () => AcDbEntity]> = [
   ],
   ['spline', () => new AcDbSpline(fitPoints, 'Chord', 3, false)],
   ['polyline', polyline],
-  ['ray', ray],
   ['point', point]
 ]
 
@@ -104,11 +94,6 @@ describe('2D draw entities', () => {
     expect(ellipse.center).not.toHaveProperty('z')
     expect(ellipse.majorAxis).not.toHaveProperty('z')
     expect(point().position).not.toHaveProperty('z')
-    expect(ray().basePoint).not.toHaveProperty('z')
-    expect(ray().unitDir).not.toHaveProperty('z')
-    const mline = new AcDbMLine()
-    mline.startPosition = new GeometryPoint2d(1, 2)
-    expect(mline.startPosition).not.toHaveProperty('z')
   })
 })
 

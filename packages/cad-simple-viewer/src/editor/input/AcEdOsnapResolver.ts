@@ -1,6 +1,5 @@
 import {
   AcDbArc,
-  AcDbBlockReference,
   AcDbCircle,
   AcDbEntity,
   acdbHasOsnapMode,
@@ -25,8 +24,7 @@ import {
   type AcEdOsnapCenterMark,
   centerMarksCoincide,
   collectCenterMarksFromEntity,
-  mergeAcquiredCenterMarks,
-  resolveBlockSubEntity
+  mergeAcquiredCenterMarks
 } from './AcEdOsnapCenterMarks'
 import { AcEdMarkerType } from './marker/AcEdMarker'
 
@@ -378,81 +376,6 @@ export class AcEdOsnapResolver {
     })
   }
 
-  /**
-   * Collects enabled osnap modes from an already-resolved block sub-entity so
-   * each hit child is walked once instead of once per mode (#745).
-   */
-  private collectOsnapPointsFromResolvedSubEntity(
-    found: { entity: AcDbEntity; transform: GeometryMatrix3d },
-    osnapPoints: AcEdOsnapPoint[],
-    pickPoint: GeometryPoint2dLike,
-    lastPoint: GeometryPoint2dLike
-  ) {
-    const inverse = found.transform.clone().invert()
-    const localPick = new GeometryPoint2d(pickPoint).applyMatrix4(inverse)
-    const localLast = new GeometryPoint2d(lastPoint).applyMatrix4(inverse)
-    const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
-    const isNestedInsert = found.entity instanceof AcDbBlockReference
-
-    for (const mode of modes) {
-      if (mode === AcDbOsnapMode.Intersection) continue
-      const localSnapPoints: GeometryPoint2dLike[] = []
-      if (isNestedInsert) {
-        // Preserve INSERT self-marker semantics used by subEntityGetOsnapPoints.
-        found.entity.subGetOsnapPoints(
-          mode,
-          localPick,
-          localLast,
-          localSnapPoints,
-          found.entity.objectId,
-          found.transform
-        )
-        for (const point of localSnapPoints) {
-          osnapPoints.push({
-            x: point.x,
-            y: point.y,
-            type: mode
-          })
-        }
-      } else {
-        found.entity.subGetOsnapPoints(
-          mode,
-          localPick,
-          localLast,
-          localSnapPoints
-        )
-        for (const point of localSnapPoints) {
-          const world = new GeometryPoint2d(point).applyMatrix4(found.transform)
-          osnapPoints.push({
-            x: world.x,
-            y: world.y,
-            type: mode
-          })
-        }
-      }
-    }
-  }
-
-  private static childBoxHint(child: {
-    minX?: number
-    minY?: number
-    maxX?: number
-    maxY?: number
-  }): GeometryPoint2dLike | undefined {
-    if (
-      child.minX == null ||
-      child.minY == null ||
-      child.maxX == null ||
-      child.maxY == null
-    ) {
-      return undefined
-    }
-    return {
-      x: (child.minX + child.maxX) / 2,
-      y: (child.minY + child.maxY) / 2
-    }
-  }
-
   private collectIntersectionOsnapPoints(
     pickResults: AcEdSpatialQueryResultItemEx[],
     db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
@@ -488,44 +411,20 @@ export class AcEdOsnapResolver {
       }
 
       if (item.children && item.children.length > 0) {
-        // INSERT (and other hierarchical hits): only the aperture-hit children.
-        // Never expand the whole block definition into INT snap.
+        // Hierarchical hits: only the aperture-hit children.
         for (const child of item.children) {
           if (sources.length >= MAX_INTERSECTION_SOURCES) break
           // Keep the `#n` occurrence suffix so two instances of the same part
           // do not collapse to one INT source (#745).
           const key = `${item.id}:${child.id}`
-          if (entity instanceof AcDbBlockReference) {
-            const found = resolveBlockSubEntity(
-              entity,
-              child.id,
-              new GeometryMatrix3d(),
-              AcEdOsnapResolver.childBoxHint(child)
-            )
-            if (!found) continue
-            tryAdd({
-              key,
-              box: boxFromSpatialItem(child),
-              entity: found.entity,
-              transform: found.transform,
-              viewportId
-            })
-          } else {
-            tryAdd({
-              key,
-              box: boxFromSpatialItem(child),
-              entity,
-              transform: new GeometryMatrix3d(),
-              viewportId
-            })
-          }
+          tryAdd({
+            key,
+            box: boxFromSpatialItem(child),
+            entity,
+            transform: new GeometryMatrix3d(),
+            viewportId
+          })
         }
-        continue
-      }
-
-      if (entity instanceof AcDbBlockReference) {
-        // Coarse root hit without children — skip. Whole-block intersectWith
-        // would expand every nested curve and freeze dense blocks on mobile.
         continue
       }
 
@@ -626,25 +525,6 @@ export class AcEdOsnapResolver {
       const localPoints: AcEdOsnapPoint[] = []
       if (item.children && item.children.length > 0) {
         item.children.forEach(child => {
-          if (entity instanceof AcDbBlockReference) {
-            const found = resolveBlockSubEntity(
-              entity,
-              child.id,
-              new GeometryMatrix3d(),
-              AcEdOsnapResolver.childBoxHint(child)
-            )
-            if (found) {
-              this.collectOsnapPointsFromResolvedSubEntity(
-                found,
-                localPoints,
-                queryPickPoint,
-                queryLastPoint
-              )
-              return
-            }
-          }
-          // Keep `#n` so data-model occurrence resolution can disambiguate
-          // duplicate nested INSERT parts when resolveBlockSubEntity misses.
           this.collectOsnapPointsInAvailableModes(
             entity,
             localPoints,

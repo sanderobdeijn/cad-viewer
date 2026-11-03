@@ -9,9 +9,7 @@ export const store = reactive({
      * Dev-oriented Open Performance tab. Hidden until OPENPERF runs so it
      * does not clutter the palette for ordinary users.
      */
-    openFileProfileTabVisible: false,
-    /** Bumped by the FIND command so the Find palette focuses its query field. */
-    findFocusTick: 0
+    openFileProfileTabVisible: false
   },
   /**
    * Bumped by the MEM command after publishing a fresh snapshot so an already

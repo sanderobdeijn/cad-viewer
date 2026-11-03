@@ -6,6 +6,5 @@
  */
 export {
   isDirectBatchCandidate,
-  shouldExtendBboxForDirectEntity,
   tryBuildDirectEntityMeta
 } from '@mlightcad/three-renderer'

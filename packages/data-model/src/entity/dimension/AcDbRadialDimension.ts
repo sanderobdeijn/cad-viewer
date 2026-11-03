@@ -343,6 +343,6 @@ export class AcDbRadialDimension extends AcDbDimension {
         points.push(this.chordPoint.clone().add(direction))
       }
     }
-    return this.getGeometricExtentsFromDimBlockOrPoints(points)
+    return this.getGeometricExtentsFromPoints(points)
   }
 }

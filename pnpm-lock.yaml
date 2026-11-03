@@ -6,7 +6,6 @@ settings:
 
 overrides:
   '@mlightcad/data-model': workspace:*
-  '@mlightcad/mtext-input-box': workspace:*
   '@mlightcad/mtext-parser': workspace:*
   '@mlightcad/mtext-renderer': workspace:*
   '@mlightcad/ribbon': workspace:*
@@ -128,9 +127,6 @@ importers:
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
-      '@mlightcad/mtext-input-box':
-        specifier: workspace:*
-        version: link:../mtext-input-box
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser
@@ -403,31 +399,6 @@ importers:
         specifier: ^0.0.10
         version: 0.0.10
 
-  packages/mtext-input-box:
-    dependencies:
-      '@mlightcad/text-box-cursor':
-        specifier: workspace:*
-        version: link:../text-box-cursor
-    devDependencies:
-      '@mlightcad/mtext-parser':
-        specifier: workspace:*
-        version: link:../mtext-parser
-      '@mlightcad/mtext-renderer':
-        specifier: workspace:*
-        version: link:../mtext-renderer
-      '@types/node':
-        specifier: ^24.4.0
-        version: 24.12.4
-      '@types/three':
-        specifier: ^0.186.0
-        version: 0.186.0
-      three:
-        specifier: ^0.186.1
-        version: 0.186.1
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.12.4)(jsdom@29.1.1)(sass@1.98.0)(yaml@2.8.3)
-
   packages/mtext-parser: {}
 
   packages/mtext-renderer:
@@ -493,22 +464,6 @@ importers:
       vue-tsc:
         specifier: ^3.2.6
         version: 3.3.14(typescript@5.9.3)
-
-  packages/text-box-cursor:
-    dependencies:
-      three:
-        specifier: ^0.186.1
-        version: 0.186.1
-    devDependencies:
-      '@types/node':
-        specifier: ^24.4.0
-        version: 24.12.4
-      '@types/three':
-        specifier: ^0.186.0
-        version: 0.186.0
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.12.4)(jsdom@29.1.1)(sass@1.98.0)(yaml@2.8.3)
 
   packages/three-renderer:
     dependencies:

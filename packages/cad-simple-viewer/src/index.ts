@@ -3,8 +3,6 @@ export * from './util'
 export * from './service'
 export * from './command'
 export * from './editor'
-export * from './find'
-export * from './find/AcApFindNavigator'
 export * from './i18n'
 export * from './plugin'
 export * from './view'
@@ -14,4 +12,3 @@ export {
   MTextParagraphAlignment,
   MTextParagraphAlignment as AcGiTextParagraphAlignment
 } from '@mlightcad/mtext-parser'
-export { type MTextToolbarColorPickerFactory } from '@mlightcad/mtext-input-box'

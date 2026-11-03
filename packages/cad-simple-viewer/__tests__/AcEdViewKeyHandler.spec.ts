@@ -7,12 +7,6 @@ jest.mock('../src/app', () => ({
   }
 }))
 
-jest.mock('../src/editor/input/ui/AcEdMTextEditor', () => ({
-  AcEdMTextEditor: {
-    getActiveInputBox: jest.fn(() => null)
-  }
-}))
-
 import { AcApDocManager } from '../src/app'
 import { AcEdViewKeyHandler } from '../src/view/AcEdViewKeyHandler'
 import type { AcTrView2d } from '../src/view/AcTrView2d'

@@ -23,7 +23,6 @@ function shouldSuppressGripsForSelectionCount(
 export function acedShouldShowGrips(
   openMode: AcEdOpenMode,
   editorActive: boolean,
-  mtextEditorActive: boolean,
   selectionCount: number,
   gripObjLimit: number
 ): boolean {
@@ -31,9 +30,6 @@ export function acedShouldShowGrips(
     return false
   }
   if (editorActive) {
-    return false
-  }
-  if (mtextEditorActive) {
     return false
   }
   return !shouldSuppressGripsForSelectionCount(selectionCount, gripObjLimit)

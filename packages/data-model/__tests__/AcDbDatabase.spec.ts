@@ -8,7 +8,6 @@ import { AcDbLayerTableRecord } from '../src/database/AcDbLayerTableRecord'
 import { AcDbSystemVariables } from '../src/database/AcDbSystemVariables'
 import { AcDbSysVarManager } from '../src/database/AcDbSysVarManager'
 import { AcDbTextStyleTableRecord } from '../src/database/AcDbTextStyleTableRecord'
-import { AcDbAttributeDefinition } from '../src/entity/AcDbAttributeDefinition'
 import { AcDbLine } from '../src/entity/AcDbLine'
 import { DEFAULT_TEXT_STYLE } from '../src/misc/AcDbConstants'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
@@ -95,12 +94,13 @@ describe('AcDbDatabase', () => {
       new GeometryPoint2d(0, 0),
       new GeometryPoint2d(1, 0)
     )
-    const attDef = new AcDbAttributeDefinition()
-    attDef.tag = '设计日期'
-    attDef.height = 2.5
-    block.appendEntity([line, attDef])
+    const otherLine = new AcDbLine(
+      new GeometryPoint2d(0, 1),
+      new GeometryPoint2d(1, 1)
+    )
+    block.appendEntity([line, otherLine])
     expect(line.ownerId).toBe('BTR1')
-    expect(attDef.ownerId).toBe('BTR1')
+    expect(otherLine.ownerId).toBe('BTR1')
 
     // A later non-temp object claims BTR1 → BTR is displaced to a generated id.
     const usurper = new AcDbLayerTableRecord({
@@ -116,8 +116,8 @@ describe('AcDbDatabase', () => {
     expect(usurper.objectId).toBe('BTR1')
     expect(block.objectId).not.toBe('BTR1')
     expect(line.ownerId).toBe(block.objectId)
-    expect(attDef.ownerId).toBe(block.objectId)
-    expect(db.tables.blockTable.getIdAt(attDef.ownerId)).toBe(block)
+    expect(otherLine.ownerId).toBe(block.objectId)
+    expect(db.tables.blockTable.getIdAt(otherLine.ownerId)).toBe(block)
   })
 
   it('initializes handle seed from hexadecimal HANDSEED values', () => {

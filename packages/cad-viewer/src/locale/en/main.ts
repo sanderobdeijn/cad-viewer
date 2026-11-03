@@ -7,134 +7,7 @@ export default {
   ribbon: {
     tab: {
       home: 'Home',
-      measurement: 'Measurement',
-      mtextEditorContext: 'Text Editor'
-    },
-    mtext: {
-      group: {
-        textStyle: 'Text Style',
-        format: 'Format',
-        paragraph: 'Paragraph',
-        insert: 'Insert',
-        close: 'Close'
-      },
-      field: {
-        textStyle: 'Text Style',
-        font: 'Font',
-        color: 'Color',
-        height: 'Height',
-        obliqueAngle: 'Oblique angle',
-        tracking: 'Tracking',
-        widthFactor: 'Width factor'
-      },
-      characterMap: {
-        title: 'Character Map',
-        font: 'Font(F):',
-        charsToCopy: 'Characters to copy(A):',
-        select: 'Select(S)',
-        copy: 'Copy(C)',
-        noGlyphs: 'No characters are available for this font.',
-        copyFailed: 'Unable to copy to the clipboard.'
-      },
-      command: {
-        bold: 'Bold',
-        underline: 'Underline',
-        superscript: 'Superscript',
-        italic: 'Italic',
-        overline: 'Overline',
-        subscript: 'Subscript',
-        strikethrough: 'Strikethrough',
-        stack: 'Stack',
-        toggleCase: 'Upper/Lower Case',
-        attachment: 'Justify',
-        list: 'Bullets and Numbering',
-        lineSpacing: 'Line Spacing',
-        paragraphAlignment: 'Paragraph Alignment',
-        symbol: 'Symbol',
-        close: 'Close'
-      },
-      tooltip: {
-        textStyle: 'Choose a text style from the current drawing.',
-        bold: 'Toggle bold formatting.',
-        underline: 'Toggle underline formatting.',
-        superscript: 'Toggle superscript formatting.',
-        italic: 'Toggle italic formatting.',
-        overline: 'Toggle overline formatting.',
-        subscript: 'Toggle subscript formatting.',
-        strikethrough: 'Toggle strikethrough formatting.',
-        stack: 'Stack or unstack selected fraction text.',
-        toggleCase: 'Toggle the selected text between upper and lower case.',
-        font: 'Set the current text font.',
-        color: 'Set the current text color.',
-        height: 'Set the current text height. Custom values are allowed.',
-        obliqueAngle:
-          'Set the slant angle in degrees for selected characters (negative tilts the other way).',
-        tracking:
-          'Increase or decrease spacing between selected characters (1 is default).',
-        widthFactor:
-          'Stretch or compress selected characters horizontally (1 is default).',
-        attachment: 'Set the multiline text attachment point.',
-        list: 'Insert or configure bullets and numbering.',
-        lineSpacing: 'Set line spacing.',
-        paragraphAlignment: 'Set paragraph horizontal alignment.',
-        symbol: 'Insert a common drafting symbol.',
-        close: 'Close the text editor and this contextual tab.'
-      },
-      attachment: {
-        TL: 'Top Left TL',
-        TC: 'Top Center TC',
-        TR: 'Top Right TR',
-        ML: 'Middle Left ML',
-        MC: 'Middle Center MC',
-        MR: 'Middle Right MR',
-        BL: 'Bottom Left BL',
-        BC: 'Bottom Center BC',
-        BR: 'Bottom Right BR'
-      },
-      list: {
-        off: 'Off',
-        number: 'Numbered',
-        letter: 'Lettered',
-        bullet: 'Bulleted',
-        start: 'Start',
-        continue: 'Continue',
-        auto: 'Allow Auto Bullets and Numbering',
-        allowList: 'Allow Bullets and Lists'
-      },
-      lineSpacing: {
-        more: 'More...',
-        clear: 'Clear Paragraph Spacing'
-      },
-      paragraphAlign: {
-        default: 'Default',
-        left: 'Left',
-        center: 'Center',
-        right: 'Right',
-        justified: 'Justified',
-        distributed: 'Distributed'
-      },
-      symbol: {
-        degree: 'Degrees  %%d',
-        plusMinus: 'Plus/Minus  %%p',
-        diameter: 'Diameter  %%c',
-        almostEqual: 'Almost Equal  \\U+2248',
-        angle: 'Angle  \\U+2220',
-        boundary: 'Boundary Line  \\U+E100',
-        centerLine: 'Center Line  \\U+2104',
-        delta: 'Delta  \\U+0394',
-        electricalPhase: 'Electrical Phase  \\U+0278',
-        flowLine: 'Flow Line  \\U+E101',
-        identical: 'Identical To  \\U+2261',
-        notEqual: 'Not Equal  \\U+2260',
-        ohm: 'Ohm  \\U+2126',
-        omega: 'Omega  \\U+03A9',
-        propertyLine: 'Property Line  \\U+214A',
-        subscriptTwo: 'Subscript 2  \\U+2082',
-        squared: 'Squared  \\U+00B2',
-        cubed: 'Cubed  \\U+00B3',
-        nbsp: 'Nonbreaking Space Ctrl+Shift+Space',
-        other: 'Other...'
-      }
+      measurement: 'Measurement'
     },
     group: {
       draw: 'Draw',
@@ -181,12 +54,8 @@ export default {
       polyline:
         'Draw a connected series of line or arc segments as one object.',
       spline: 'Draw a smooth spline curve through fit or control points.',
-      sketch: 'Create a series of freehand line segments.',
       circle: 'Draw a circle with multiple construction methods.',
       arc: 'Draw an arc with multiple construction methods.',
-      mline: 'Draw multiple parallel lines as a single multiline object.',
-      ray: 'Draw a semi-infinite construction ray from a start point.',
-      xline: 'Draw an infinite construction line.',
       ellipse: 'Draw an ellipse or elliptical arc.',
       rect: 'Draw a rectangle or regular polygon.',
       point: 'Place a point object in the drawing.',
@@ -201,8 +70,6 @@ export default {
       properties: 'Open the Properties palette for the current selection.',
       quickSelect:
         'Open Quick Select to filter and select entities by criteria.',
-      find: 'Open the Find palette to search text in the whole drawing or the current layout.',
-      countList: 'Open the Count palette to view and manage block counts.',
       missingResources:
         'Open the Missing / External Resources palette for fonts, images, and xrefs.',
       drawingUnits:
@@ -262,12 +129,8 @@ export default {
       polyline: 'Polyline',
       circle: 'Circle',
       arc: 'Arc',
-      mline: 'MLine',
-      ray: 'Ray',
-      xline: 'XLine',
       ellipse: 'Ellipse',
       spline: 'Spline',
-      sketch: 'Sketch',
       rect: 'Rect',
       rectangle: 'Rectangle',
       polygon: 'Polygon',
@@ -284,8 +147,6 @@ export default {
       redo: 'Redo',
       properties: 'Properties',
       quickSelect: 'Quick\nSelect',
-      find: 'Find',
-      countList: 'Count',
       drawingUnits: 'Drawing\nUnits'
     }
   },
@@ -467,49 +328,6 @@ export default {
         multipleEntitySelected: '{count} entities selected',
         propValCopied: 'Property value copied',
         failedToCopyPropVal: 'Failed to copy property value!'
-      }
-    },
-    find: {
-      tab: 'Find',
-      title: 'Find',
-      placeholder: 'Find text',
-      input: 'Search text',
-      find: 'Find',
-      matchCase: 'Match case',
-      currentLayoutOnly: 'Current layout only',
-      hint: 'Press Enter to search text, multiline text, attributes and the text in blocks, dimensions, leaders and tables in the whole drawing (all layouts).',
-      hintLayout:
-        'Press Enter to search text, multiline text, attributes and the text in blocks, dimensions, leaders and tables in the current layout.',
-      noResults: 'No text found',
-      count: '{count} found',
-      countLayouts: '{count} found in {layouts} layouts',
-      countTruncated: 'First {count} results shown — refine the search',
-      noDocument: 'Open a drawing to search',
-      layoutUnavailable: 'Could not open layout "{layout}"',
-      unnamedLayout: '(unnamed layout)',
-      kind: {
-        text: 'Text',
-        mtext: 'MText',
-        attribute: 'Attribute',
-        block: 'Block text',
-        dimension: 'Dimension',
-        leader: 'Leader',
-        table: 'Table'
-      }
-    },
-    countList: {
-      tab: 'Count',
-      title: 'Count',
-      searchPlaceholder: 'Search block name',
-      countInArea: 'Count in Area',
-      areaSet: 'Count area updated',
-      areaCleared: 'Counting entire model space',
-      blockName: 'Block',
-      count: 'Count',
-      empty: 'No visible blocks found',
-      prompt: {
-        firstCorner: 'Specify first corner of count area or [Entire]: ',
-        secondCorner: 'Specify opposite corner: '
       }
     },
     measurements: {

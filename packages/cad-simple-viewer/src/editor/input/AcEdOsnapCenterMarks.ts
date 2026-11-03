@@ -1,7 +1,6 @@
 import {
   AcDb2dPolyline,
   AcDbArc,
-  AcDbBlockReference,
   AcDbCircle,
   AcDbEllipse,
   AcDbEntity,
@@ -9,8 +8,6 @@ import {
   AcDbOsnapMode,
   AcDbPolyline,
   GeometryCircularArc2d,
-  GeometryMatrix3d,
-  GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
@@ -74,35 +71,6 @@ function markFromPoint(point: GeometryPoint2dLike): AcEdOsnapCenterMark {
     y: point.y,
     z: 0
   }
-}
-
-function transformMark(
-  mark: AcEdOsnapCenterMark,
-  matrix: GeometryMatrix3d
-): AcEdOsnapCenterMark {
-  const point = new GeometryPoint2d(mark.x, mark.y).applyMatrix4(matrix)
-  return markFromPoint(point)
-}
-
-/**
- * Child spatial-index ids may get a `#n` suffix when the same object appears
- * more than once in a block (see {@link uniquifySpatialItemIds}). Strip that
- * before matching database object ids.
- */
-export function canonicalGsMark(id: AcDbObjectId): AcDbObjectId {
-  if (typeof id !== 'string') return id
-  return id.replace(/#\d+$/, '')
-}
-
-/**
- * 0-based occurrence index encoded in a spatial-index child id (`id` → 0,
- * `id#1` → 1, …). Matches depth-first leaf order used when flattening nested
- * INSERT child boxes.
- */
-export function gsMarkOccurrence(id: AcDbObjectId): number {
-  if (typeof id !== 'string') return 0
-  const match = /#(\d+)$/.exec(id)
-  return match ? Number(match[1]) : 0
 }
 
 function polylineVertices(entity: AcDbPolyline | AcDb2dPolyline): Array<{
@@ -196,162 +164,16 @@ function collectFromOsnapCenter(
   return points.map(point => markFromPoint(point))
 }
 
-/** Full INSERT transform (OCS blockTransform + extrusion), matching intersect curves. */
-function fullInsertionTransform(
-  blockRef: AcDbBlockReference
-): GeometryMatrix3d {
-  return new GeometryMatrix3d()
-    .setFromExtrusionDirection(blockRef.normal)
-    .multiply(blockRef.blockTransform)
-}
-
-/**
- * Resolves a block-reference sub-entity identified by a spatial-index gsMark.
- *
- * Returns the leaf entity and the cumulative transform that maps its local
- * geometry into the caller space (typically WCS).
- *
- * When `gsMark` carries a `#n` suffix, the n-th depth-first match of the
- * canonical object id is returned so duplicate nested INSERT instances are
- * disambiguated (#745). When no suffix is present and `hintPoint` is given,
- * nested INSERTs whose extents do not contain the hint are skipped so the
- * instance under the cursor is preferred over the first DFS match.
- */
-export function resolveBlockSubEntity(
-  blockRef: AcDbBlockReference,
-  gsMark: AcDbObjectId,
-  parentMat: GeometryMatrix3d = new GeometryMatrix3d(),
-  hintPoint?: GeometryPoint2dLike
-): { entity: AcDbEntity; transform: GeometryMatrix3d } | undefined {
-  const occurrence = gsMarkOccurrence(gsMark)
-  const result = resolveBlockSubEntityOccurrence(
-    blockRef,
-    canonicalGsMark(gsMark),
-    occurrence,
-    parentMat,
-    hintPoint,
-    /* allowHintPrune */ occurrence === 0 && hintPoint != null
-  )
-  return result.found
-}
-
-/** XY containment with padding — spatial child boxes have no Z (#745). */
-function extentsContainXY(
-  extents: { min: GeometryPoint2dLike; max: GeometryPoint2dLike },
-  point: GeometryPoint2dLike,
-  pad = 1e-4
-): boolean {
-  return (
-    point.x >= extents.min.x - pad &&
-    point.x <= extents.max.x + pad &&
-    point.y >= extents.min.y - pad &&
-    point.y <= extents.max.y + pad
-  )
-}
-
-function resolveBlockSubEntityOccurrence(
-  blockRef: AcDbBlockReference,
-  targetId: AcDbObjectId,
-  remaining: number,
-  parentMat: GeometryMatrix3d,
-  hintPoint: GeometryPoint2dLike | undefined,
-  allowHintPrune: boolean
-):
-  | {
-      found: { entity: AcDbEntity; transform: GeometryMatrix3d }
-      remaining: number
-    }
-  | { found: undefined; remaining: number } {
-  const blockTableRecord = blockRef.blockTableRecord
-  if (!blockTableRecord) {
-    return { found: undefined, remaining }
-  }
-
-  const thisMat = new GeometryMatrix3d().multiplyMatrices(
-    parentMat,
-    fullInsertionTransform(blockRef)
-  )
-
-  let localHint: GeometryPoint2d | undefined
-  if (allowHintPrune && hintPoint != null && remaining === 0) {
-    localHint = new GeometryPoint2d(hintPoint).applyMatrix4(
-      thisMat.clone().invert()
-    )
-  }
-
-  for (const entity of blockTableRecord.newIterator()) {
-    if (entity.objectId === targetId) {
-      if (remaining > 0) {
-        remaining -= 1
-        continue
-      }
-      return { found: { entity, transform: thisMat }, remaining: 0 }
-    }
-    if (entity instanceof AcDbBlockReference) {
-      if (allowHintPrune && remaining === 0 && localHint) {
-        const extents = entity.geometricExtents
-        // Spatial hints are XY-only (childBoxHint uses z: 0). A full 3D
-        // containsPoint would drop elevated nested INSERTs whose Z range
-        // does not include 0 after the parent invert.
-        if (!extents.isEmpty() && !extentsContainXY(extents, localHint)) {
-          continue
-        }
-      }
-      const nested = resolveBlockSubEntityOccurrence(
-        entity,
-        targetId,
-        remaining,
-        thisMat,
-        hintPoint,
-        allowHintPrune
-      )
-      if (nested.found) return nested
-      remaining = nested.remaining
-    }
-  }
-  return { found: undefined, remaining }
-}
-
-function collectBlockCenterMarks(
-  blockRef: AcDbBlockReference,
-  pickPoint: GeometryPoint2dLike,
-  gsMark?: AcDbObjectId
-): AcEdOsnapCenterMark[] {
-  if (!gsMark) {
-    return collectFromOsnapCenter(blockRef, pickPoint)
-  }
-
-  const found = resolveBlockSubEntity(
-    blockRef,
-    gsMark,
-    new GeometryMatrix3d(),
-    pickPoint
-  )
-  if (!found) {
-    return collectFromOsnapCenter(blockRef, pickPoint, gsMark)
-  }
-
-  const inverse = found.transform.clone().invert()
-  const localPick = new GeometryPoint2d(pickPoint).applyMatrix4(inverse)
-  return collectCenterMarksFromEntity(found.entity, localPick).map(mark =>
-    transformMark(mark, found.transform)
-  )
-}
-
 /**
  * Collects AutoCAD-style center ticks for circular geometry under the cursor.
  *
- * Circle, arc, ellipse, polyline bulge segments, and the same geometry nested
- * in block references each contribute a center.
+ * Circle, arc, ellipse and polyline bulge segments each contribute a center.
  */
 export function collectCenterMarksFromEntity(
   entity: AcDbEntity,
   pickPoint: GeometryPoint2dLike,
   gsMark?: AcDbObjectId
 ): AcEdOsnapCenterMark[] {
-  if (entity instanceof AcDbBlockReference) {
-    return collectBlockCenterMarks(entity, pickPoint, gsMark)
-  }
   if (entity instanceof AcDbCircle) {
     return [markFromPoint(entity.center)]
   }

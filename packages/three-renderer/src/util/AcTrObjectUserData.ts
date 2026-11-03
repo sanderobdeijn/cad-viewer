@@ -100,8 +100,7 @@ export type AcTrBakedWorldMatrixUserData = {
  */
 export type AcTrSharedTemplateGeometryUserData = {
   /**
-   * When `true`, this leaf aliases geometry owned by an
-   * {@link AcDbRenderingCache} template (or another shared source).
+   * When `true`, this leaf aliases geometry owned by a shared source.
    * {@link AcTrEntity.disposeObject} skips `geometry.dispose()` for the leaf.
    */
   sharesTemplateGeometry?: boolean

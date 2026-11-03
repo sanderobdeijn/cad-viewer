@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 async function readNewDrawing(page: Page) {
   return page.evaluate(() => {
@@ -237,18 +237,9 @@ test('keeps keystrokes typed in the text editor out of the viewer', async ({
 
   await expect(editor).toHaveValue('line\ndone')
   await expect(editor).toBeFocused()
-  await expect(
-    page.getByRole('textbox', { name: 'Type command' })
-  ).toHaveValue('')
-
-  // The viewer's Find shortcut stops the event before it reaches the editor.
-  await editor.evaluate(element => {
-    element.addEventListener('keydown', event => {
-      if (event.key === 'f') element.dataset.findKeyReached = 'true'
-    })
-  })
-  await page.keyboard.press('Control+f')
-  await expect(editor).toHaveAttribute('data-find-key-reached', 'true')
+  await expect(page.getByRole('textbox', { name: 'Type command' })).toHaveValue(
+    ''
+  )
 })
 
 test('draws a line from the ribbon button after using the text editor', async ({
@@ -321,3 +312,30 @@ test('has no revcloud command or ribbon button', async ({ page }) => {
     'Unknown command: revcloud'
   )
 })
+
+for (const command of [
+  'mtext',
+  'mline',
+  'ray',
+  'xline',
+  'countlist',
+  'style',
+  'find',
+  'sketch'
+]) {
+  test(`has no ${command} command or ribbon button`, async ({ page }) => {
+    await page.goto('/')
+    await page.waitForFunction(
+      () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    )
+
+    await expect(page.locator(`[data-item-id="cmd-${command}"]`)).toHaveCount(0)
+
+    const input = page.getByRole('textbox', { name: 'Type command' })
+    await input.fill(command)
+    await input.press('Enter')
+    await expect(page.locator('.ml-cli-recent')).toContainText(
+      `Unknown command: ${command}`
+    )
+  })
+}

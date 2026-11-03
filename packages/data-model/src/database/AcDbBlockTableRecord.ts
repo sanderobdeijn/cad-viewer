@@ -415,7 +415,6 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
 
     const commitEntity = (item: AcDbEntity) => {
       item.database = this.database
-      this.database.ensureEntityStyleDefaults(item)
       // Commit before assigning ownerId: if the entity displaces this BTR's
       // handle, assignGeneratedHandle remints the BTR first.
       this.database.commitObjectHandle(item, id => this.hasEntityId(id))

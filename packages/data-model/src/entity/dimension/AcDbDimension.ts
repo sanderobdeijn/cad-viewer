@@ -1,4 +1,5 @@
 import {
+  GeometryArea2d,
   GeometryBox3d,
   GeometryDimension,
   GeometryIntersectPrimitive,
@@ -6,24 +7,23 @@ import {
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike,
+  GeometryPolyline2d,
   GeometryVector2d,
   GeometryVector2dLike,
   GeometryVector3d,
-  GeometryVector3dLike,
-  ORIGIN_POINT_2D
+  GeometryVector3dLike
 } from '@mlightcad/geometry-engine'
 import {
   AcGiArrowStyle,
   AcGiArrowType,
   AcGiMTextAttachmentPoint,
+  AcGiMTextFlowDirection,
   AcGiRenderer
 } from '@mlightcad/graphic-interface'
 
 import { AcDbObjectId } from '../../base'
 import { AcDbDimStyleTableRecord } from '../../database'
-import { AcDbRenderingCache } from '../../misc'
 import { AcDbOsnapMode } from '../../misc'
-import { AcDbBlockReference } from '../AcDbBlockReference'
 import { AcDbEntity } from '../AcDbEntity'
 import {
   AcDbEntityProperties,
@@ -32,7 +32,7 @@ import {
   AcDbEntityRuntimeProperty
 } from '../AcDbEntityProperties'
 import { acdbForEachGripIndex } from '../AcDbGripHelpers'
-import { acdbTransformIntersectPrimitives } from '../AcDbIntersectHelpers'
+import { AcDbLine } from '../AcDbLine'
 
 /**
  * Defines the line spacing style for dimension text.
@@ -42,6 +42,81 @@ export enum AcDbLineSpacingStyle {
   AtLeast = 1,
   /** Exactly the specified spacing */
   Exactly = 2
+}
+
+/**
+ * An arrowhead of a dimension.
+ */
+export interface AcDbDimensionArrow {
+  /** Position of the arrow tip */
+  position: GeometryPoint2d
+  /** Direction the arrow points in, in radians */
+  rotation: number
+  /** Length of the arrow */
+  size: number
+}
+
+/**
+ * The text label of a dimension.
+ */
+export interface AcDbDimensionLabel {
+  /** Text of the label */
+  text: string
+  /** Position of the label */
+  position: GeometryPoint2d
+  /** Direction of the text, in radians */
+  rotation: number
+  /** Height of the text */
+  height: number
+}
+
+/**
+ * What a dimension draws.
+ */
+export interface AcDbDimensionGraphics {
+  lines: GeometryLine2d[]
+  arrows: AcDbDimensionArrow[]
+  label?: AcDbDimensionLabel
+}
+
+/** Half the width of an arrow, relative to its length. */
+const ARROW_HALF_WIDTH = 0.125
+
+/** Estimated average character width, relative to the text height. */
+const LABEL_CHAR_WIDTH = 0.6
+
+const rotateAround = (
+  center: GeometryPoint2d,
+  x: number,
+  y: number,
+  rotation: number
+) =>
+  new GeometryPoint2d(
+    center.x + x * Math.cos(rotation) - y * Math.sin(rotation),
+    center.y + x * Math.sin(rotation) + y * Math.cos(rotation)
+  )
+
+const arrowOutline = ({ position, rotation, size }: AcDbDimensionArrow) => [
+  position.clone(),
+  rotateAround(position, -size, -size * ARROW_HALF_WIDTH, rotation),
+  rotateAround(position, -size, size * ARROW_HALF_WIDTH, rotation)
+]
+
+/** Estimated corners of a label centered on its position. */
+const labelCorners = ({
+  text,
+  position,
+  rotation,
+  height
+}: AcDbDimensionLabel) => {
+  const halfWidth = (text.length * height * LABEL_CHAR_WIDTH) / 2
+  const halfHeight = height / 2
+  return [
+    rotateAround(position, -halfWidth, -halfHeight, rotation),
+    rotateAround(position, halfWidth, -halfHeight, rotation),
+    rotateAround(position, halfWidth, halfHeight, rotation),
+    rotateAround(position, -halfWidth, halfHeight, rotation)
+  ]
 }
 
 /**
@@ -70,10 +145,6 @@ export abstract class AcDbDimension extends AcDbEntity {
     return 'DIMENSION'
   }
 
-  /** The block table record ID containing the dimension entities */
-  private _dimBlockId: string | null
-  /** The relative position point of the block referenced by the dimension (in WCS coordinates). */
-  private _dimBlockPosition: GeometryPoint2d
   /**
    * DXF group code 10 definition point captured during {@link dxfInFields}.
    *
@@ -114,13 +185,6 @@ export abstract class AcDbDimension extends AcDbEntity {
   private _dimStyle?: AcDbDimStyleTableRecord
   /** The normal vector of the plane containing the block reference */
   private _normal: GeometryVector3d
-  /**
-   * Additional rotation (radians) applied when placing the anonymous dimension
-   * block. Block geometry is authored at a fixed orientation; this accumulates
-   * rigid-body rotations from {@link transformBy} so the block rotates with the
-   * dimension definition points.
-   */
-  private _dimBlockRotation: number
 
   /**
    * Creates a new dimension entity.
@@ -137,8 +201,6 @@ export abstract class AcDbDimension extends AcDbEntity {
    */
   constructor() {
     super()
-    this._dimBlockId = null
-    this._dimBlockPosition = new GeometryPoint2d()
     this._dxfDefinitionPoint = new GeometryPoint2d()
     this._dimensionStyleName = null
     this._dimensionText = null
@@ -151,86 +213,6 @@ export abstract class AcDbDimension extends AcDbEntity {
     this._attachmentPoint = AcGiMTextAttachmentPoint.MiddleCenter
     this._dxfVersion = 0
     this._normal = new GeometryVector3d(0, 0, 1)
-    this._dimBlockRotation = 0
-  }
-
-  /**
-   * Gets the block table record ID containing the entities that this dimension displays.
-   *
-   * @returns The block table record ID, or null if not set
-   *
-   * @example
-   * ```typescript
-   * const blockId = dimension.dimBlockId;
-   * console.log(`Dimension block ID: ${blockId}`);
-   * ```
-   */
-  get dimBlockId() {
-    return this._dimBlockId
-  }
-
-  /**
-   * Sets the block table record ID for this dimension.
-   *
-   * @param value - The block table record ID, or null to clear
-   *
-   * @example
-   * ```typescript
-   * dimension.dimBlockId = "MyDimensionBlock";
-   * ```
-   */
-  set dimBlockId(value: string | null) {
-    this._dimBlockId = value
-  }
-
-  /**
-   * Gets the relative position point of the block referenced by the dimension (in WCS coordinates).
-   * The block position is the insertion point of the block referenced by the dimension, relative to
-   * the primary definition point (DXF group code 10) of the dimension itself.
-   *
-   * The block position (in WCS) is added to the dimension primary definition point (also in WCS) to
-   * get the actual insertion point for the anonymous block that is referenced by the dimension. So,
-   * for example, changing a dimension's block position from (0,0,0) to (0,0,1) (in WCS) will cause
-   * the dimension to display as though it has been moved 1 unit along the WCS Z axis.
-   *
-   * For a dimension newly created via any dimension command, the block position will be (0,0,0).
-   * For copies of existing dimensions, or if a dimension is moved, the block position will be the
-   * offset vector (in WCS) from where the original dimension was located. For example, moving a
-   * dimension 1 unit down the WCS Y axis will cause AutoCAD to update the block position value from
-   * (0,0,0) to (0,-1,0) (in WCS coordinates).
-   *
-   * The position point is used for DXF group code 12.
-   *
-   * @returns The relative position point of the block referenced by the dimension.
-   *
-   */
-  get dimBlockPosition(): GeometryPoint2d {
-    return this._dimBlockPosition
-  }
-
-  /**
-   * Sets the relative position point of the block referenced by the dimension (in WCS coordinates).
-   * The block position is the insertion point of the block referenced by the dimension, relative to
-   * the primary definition point (DXF group code 10) of the dimension itself.
-   * 
-   * The block position (in WCS) is added to the dimension primary definition point (also in WCS) to
-   * get the actual insertion point for the anonymous block that is referenced by the dimension. So,
-   * for example, changing a dimension's block position from (0,0,0) to (0,0,1) (in WCS) will cause 
-   * the dimension to display as though it has been moved 1 unit along the WCS Z axis.
-   * 
-   * For a dimension newly created via any dimension command, the block position will be (0,0,0). 
-   * For copies of existing dimensions, or if a dimension is moved, the block position will be the 
-   * offset vector (in WCS) from where the original dimension was located. For example, moving a 
-   * dimension 1 unit down the WCS Y axis will cause AutoCAD to update the block position value from 
-   * (0,0,0) to (0,-1,0) (in WCS coordinates).
-   * 
-   * The position point is used for DXF group code 12.
-   *
-   * @param value - The relative position point of the block referenced by the dimension.
-
-   */
-  set dimBlockPosition(value: GeometryPoint2dLike) {
-    this._dimBlockPosition.copy(value)
   }
 
   /**
@@ -481,21 +463,8 @@ export abstract class AcDbDimension extends AcDbEntity {
         )
       )
 
-    this._dimBlockPosition.applyMatrix4(matrix)
     this._textPosition.applyMatrix4(matrix)
     this._normal.transformDirection(matrix)
-
-    const dimBlockRotationAxis = new GeometryVector3d(
-      1,
-      0,
-      0
-    ).transformDirection(matrix)
-    if (dimBlockRotationAxis.lengthSq() > 0) {
-      this._dimBlockRotation += Math.atan2(
-        dimBlockRotationAxis.y,
-        dimBlockRotationAxis.x
-      )
-    }
 
     origin.applyMatrix4(matrix)
     rotationPoint.applyMatrix4(matrix)
@@ -509,65 +478,29 @@ export abstract class AcDbDimension extends AcDbEntity {
   }
 
   /**
-   * Resolves osnap points through the anonymous dimension block.
-   *
-   * Dimensions are rendered from `dimBlockId` contents, so osnap queries need
-   * to delegate to the block entities and map points between block-local space
-   * and WCS.
+   * Creates what this dimension draws, in WCS coordinates. Dimension types
+   * without their own geometry draw nothing.
+   */
+  protected createGraphics(): AcDbDimensionGraphics {
+    return { lines: [], arrows: [] }
+  }
+
+  /**
+   * Resolves osnap points through the lines of the dimension.
    */
   override subGetOsnapPoints(
     osnapMode: AcDbOsnapMode,
     pickPoint: GeometryPoint2dLike,
     lastPoint: GeometryPoint2dLike,
-    snapPoints: GeometryPoint2dLike[],
-    gsMark?: AcDbObjectId
+    snapPoints: GeometryPoint2dLike[]
   ) {
-    const blockTableRecord = this.getDimBlockTableRecord()
-    if (!blockTableRecord) return
-
-    const blockTransform = this.getFullDimBlockTransform()
-    const localPickPoint = new GeometryPoint2d(pickPoint).applyMatrix4(
-      blockTransform.clone().invert()
-    )
-    const localLastPoint = new GeometryPoint2d(lastPoint).applyMatrix4(
-      blockTransform.clone().invert()
-    )
-
-    const appendEntitySnapPoints = (
-      entity: AcDbEntity,
-      subEntityId?: AcDbObjectId
-    ) => {
-      const localSnapPoints: GeometryPoint2d[] = []
-      entity.subGetOsnapPoints(
+    for (const line of this.createGraphics().lines) {
+      new AcDbLine(line.startPoint, line.endPoint).subGetOsnapPoints(
         osnapMode,
-        localPickPoint,
-        localLastPoint,
-        localSnapPoints,
-        subEntityId,
-        blockTransform
+        pickPoint,
+        lastPoint,
+        snapPoints
       )
-
-      if (entity instanceof AcDbBlockReference) {
-        localSnapPoints.forEach(point => snapPoints.push(point.clone()))
-      } else {
-        localSnapPoints.forEach(point =>
-          snapPoints.push(
-            new GeometryPoint2d(point).applyMatrix4(blockTransform)
-          )
-        )
-      }
-    }
-
-    if (gsMark) {
-      const target = blockTableRecord.getIdAt(gsMark)
-      if (target) {
-        appendEntitySnapPoints(target, gsMark)
-        if (snapPoints.length > 0) return
-      }
-    }
-
-    for (const entity of blockTableRecord.newIterator()) {
-      appendEntitySnapPoints(entity)
     }
   }
 
@@ -575,70 +508,75 @@ export abstract class AcDbDimension extends AcDbEntity {
    * @inheritdoc
    */
   subWorldDraw(renderer: AcGiRenderer) {
-    const blockTableRecord = this.getDimBlockTableRecord()
-    if (blockTableRecord) {
-      const matrix = this.computeDimBlockTransform()
-      const group = AcDbRenderingCache.instance.draw(
-        renderer,
-        blockTableRecord,
-        this.resolvedColor,
-        [],
-        false,
-        matrix,
-        this._normal
-      )
-      return group
+    const { lines, arrows, label } = this.createGraphics()
+    const drawables = lines.map(line =>
+      renderer.lines([line.startPoint, line.endPoint])
+    )
+    for (const arrow of arrows) {
+      const area = new GeometryArea2d()
+      area.add(new GeometryPolyline2d(arrowOutline(arrow), true))
+      drawables.push(renderer.area(area))
     }
-    const group = renderer.group([])
-    return group
+    if (label) {
+      drawables.push(this.drawLabel(renderer, label))
+    }
+    return renderer.group(drawables)
+  }
+
+  private drawLabel(renderer: AcGiRenderer, label: AcDbDimensionLabel) {
+    const style = this.database.tables.textStyleTable.resolveAt(
+      this.dimensionStyle.dimtxsty
+    )
+    if (!style) {
+      throw new Error('No valid text style found in text style table.')
+    }
+    return renderer.mtext(
+      {
+        text: label.text,
+        height: label.height,
+        width: 0,
+        position: label.position,
+        rotation: 0,
+        directionVector: new GeometryVector3d(
+          Math.cos(label.rotation),
+          Math.sin(label.rotation),
+          0
+        ),
+        attachmentPoint: this.attachmentPoint,
+        drawingDirection: AcGiMTextFlowDirection.LEFT_TO_RIGHT,
+        lineSpaceFactor: 1,
+        lineSpaceStyle: 0
+      },
+      style.textStyle
+    )
   }
 
   /** @inheritdoc */
   override subGetIntersectCurves(): GeometryIntersectPrimitive[] {
-    const blockTableRecord = this.getDimBlockTableRecord()
-    if (!blockTableRecord) return []
-    const matrix = this.getFullDimBlockTransform()
-    const primitives: GeometryIntersectPrimitive[] = []
-    for (const entity of blockTableRecord.newIterator()) {
-      primitives.push(
-        ...acdbTransformIntersectPrimitives(
-          entity.subGetIntersectCurves(),
-          matrix
-        )
-      )
-    }
-    return primitives
+    return this.createGraphics().lines.flatMap(line =>
+      new AcDbLine(line.startPoint, line.endPoint).subGetIntersectCurves()
+    )
   }
 
   /**
-   * Computes transformed geometric extents from the anonymous dimension block.
+   * Builds geometric extents from what this dimension draws, the supplied WCS
+   * definition points and the user-placed text position.
    */
-  protected getDimBlockGeometricExtents(): GeometryBox3d {
-    const box = new GeometryBox3d()
-    const blockTableRecord = this.getDimBlockTableRecord()
-    if (!blockTableRecord) return box
-
-    for (const entity of blockTableRecord.newIterator()) {
-      box.union(entity.geometricExtents)
-    }
-
-    box.applyMatrix4(this.getFullDimBlockTransform())
-    return box
-  }
-
-  /**
-   * Builds geometric extents from a dimension block when present, otherwise from
-   * the supplied WCS definition points and user-placed text position.
-   */
-  protected getGeometricExtentsFromDimBlockOrPoints(
+  protected getGeometricExtentsFromPoints(
     points: GeometryPoint2dLike[]
   ): GeometryBox3d {
-    const blockExtents = this.getDimBlockGeometricExtents()
-    if (!blockExtents.isEmpty()) {
-      return blockExtents
-    }
-
     const box = new GeometryBox3d()
+    const { lines, arrows, label } = this.createGraphics()
+    for (const line of lines) {
+      box.expandByPoint(line.startPoint)
+      box.expandByPoint(line.endPoint)
+    }
+    for (const arrow of arrows) {
+      arrowOutline(arrow).forEach(point => box.expandByPoint(point))
+    }
+    if (label) {
+      labelCorners(label).forEach(point => box.expandByPoint(point))
+    }
     for (const point of points) {
       box.expandByPoint(point)
     }
@@ -694,15 +632,6 @@ export abstract class AcDbDimension extends AcDbEntity {
     return this
   }
 
-  /**
-   * Looks up the anonymous block referenced by `dimBlockId`.
-   */
-  protected getDimBlockTableRecord() {
-    return this.dimBlockId
-      ? this.database.tables.blockTable.getAt(this.dimBlockId)
-      : undefined
-  }
-
   protected getDimensionProperties(): AcDbEntityPropertyGroup {
     return {
       groupName: 'dimension',
@@ -725,15 +654,6 @@ export abstract class AcDbDimension extends AcDbEntity {
         ),
         this.createProperty('measurement', 'float', () =>
           this.getMeasurementPropertyValue()
-        ),
-        this.createProperty(
-          'dimBlockId',
-          'string',
-          () => this.dimBlockId ?? ''
-        ),
-        ...this.createPoint2dProperties(
-          'dimBlockPosition',
-          () => this.dimBlockPosition
         ),
         ...this.createPoint2dProperties(
           'textPosition',
@@ -819,21 +739,6 @@ export abstract class AcDbDimension extends AcDbEntity {
 
   protected getMeasurementPropertyValue(): number | undefined {
     return this.measurement
-  }
-
-  /**
-   * Builds the complete dimension-block transform (OCS transform + extrusion).
-   */
-  protected getFullDimBlockTransform() {
-    const dimBlockTransform = this.computeDimBlockTransform()
-    if (this._normal.x === 0 && this._normal.y === 0 && this._normal.z === 1) {
-      return dimBlockTransform
-    }
-
-    const extrusion = new GeometryMatrix3d().setFromExtrusionDirection(
-      this._normal
-    )
-    return new GeometryMatrix3d().multiplyMatrices(extrusion, dimBlockTransform)
   }
 
   protected get arrowScaleFactor() {
@@ -980,108 +885,6 @@ export abstract class AcDbDimension extends AcDbEntity {
         ? blockTableRecord.name.toUpperCase()
         : AcGiArrowType.Closed
     ) as AcGiArrowType
-  }
-
-  /**
-   * Computes the block-local transformation matrix for the anonymous block
-   * referenced by this dimension entity.
-   *
-   * In AutoCAD, each dimension references an **anonymous block** that contains
-   * the graphical representation of the dimension (dimension line, extension
-   * lines, arrows, and text). That block is defined in the **dimension?? Object
-   * Coordinate System (OCS)**.
-   *
-   * This method computes the transformation that positions the anonymous
-   * dimension block **within the dimension?? OCS**, excluding any extrusion
-   * (normal) transformation.
-   *
-   * Conceptually, AutoCAD applies the following steps when displaying a
-   * dimension block:
-   *
-   * 1. Translate block geometry by the negative block base point
-   * 2. Translate by the dimension block position (DXF group code 12)
-   * 3. Finally, transform from OCS to WCS using the dimension normal (DXF 210)
-   *
-   * This method implements **steps 1 and 2 only**.
-   *
-   * The OCS ??WCS transformation derived from {@link normal} is **intentionally
-   * excluded** and must be applied **after rendering** (see
-   * {@link AcDbRenderingCache.draw}). This matches AutoCAD / RealDWG behavior and
-   * ensures:
-   *
-   * - Dimension text rotation remains defined in OCS
-   * - Arrow orientation and extension line directions remain correct
-   * - Anonymous dimension blocks can be safely cached and reused
-   *
-   * ### Matrix composition (right-multiply convention)
-   *
-   * ```
-   * dimBlockTransform =
-   *   T(dimBlockPosition)
-   * ? R(dimBlockRotation)
-   * ? T(-blockBasePoint)
-   * ```
-   *
-   * ### Notes
-   *
-   * - The returned matrix operates entirely in dimension OCS
-   * - {@link transformBy} accumulates extra block rotation so cached anonymous
-   *   block geometry rotates with the dimension definition points
-   * - {@link normal} is applied later as a final orientation step
-   *
-   * @returns A transformation matrix that positions the anonymous dimension
-   *          block in OCS space, excluding extrusion.
-   */
-  private computeDimBlockTransform(): GeometryMatrix3d {
-    const blockTableRecord = this.dimBlockId
-      ? this.database.tables.blockTable.getAt(this.dimBlockId)
-      : undefined
-
-    // The base point of the anonymous dimension block definition
-    const basePoint = blockTableRecord?.origin ?? ORIGIN_POINT_2D
-
-    // ------------------------------------------------------------
-    // Step 1: Base point compensation
-    //
-    // Move block geometry so that the block base point
-    // coincides with the origin of dimension OCS.
-    // ------------------------------------------------------------
-    const mBase = new GeometryMatrix3d().makeTranslation(
-      -basePoint.x,
-      -basePoint.y,
-      0
-    )
-
-    // ------------------------------------------------------------
-    // Step 2: Insertion offset (DXF group code 12)
-    //
-    // This is the relative offset of the dimension block
-    // in WCS, applied in dimension OCS coordinates.
-    // ------------------------------------------------------------
-    const mInsert = new GeometryMatrix3d().makeTranslation(
-      this._dimBlockPosition.x,
-      this._dimBlockPosition.y,
-      0
-    )
-
-    const mRot = new GeometryMatrix3d().makeRotationZ(this._dimBlockRotation)
-
-    // ------------------------------------------------------------
-    // Final matrix (OCS space only):
-    //
-    // dimBlockTransform =
-    //   T(dimBlockPosition)
-    // ? R(dimBlockRotation)
-    // ? T(-blockBasePoint)
-    //
-    // NOTE:
-    // - This matrix operates entirely in dimension OCS
-    // - The extrusion / normal is intentionally excluded
-    // ------------------------------------------------------------
-    return new GeometryMatrix3d().multiplyMatrices(
-      mInsert,
-      new GeometryMatrix3d().multiplyMatrices(mRot, mBase)
-    )
   }
 
   /**

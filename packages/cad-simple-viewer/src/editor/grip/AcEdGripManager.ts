@@ -6,7 +6,6 @@ import {
 } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../app'
-import { AcEdMTextEditor } from '../input/ui/AcEdMTextEditor'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import {
   applyGripAppearanceToHost,
@@ -174,7 +173,6 @@ export class AcEdGripManager {
     return acedShouldShowGrips(
       doc.openMode,
       this._view.editor.isActive,
-      !!AcEdMTextEditor.getActiveInputBox(),
       this._view.selectionSet.count,
       gripObjLimit
     )

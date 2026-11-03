@@ -61,10 +61,7 @@ import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import {
-  useDocument,
-  useUndoRedo
-} from '../../composable'
+import { useDocument, useUndoRedo } from '../../composable'
 import { markComponentConfigRaw } from '../../composable/markComponentConfigRaw'
 import {
   arcCenterStartAngle,
@@ -83,26 +80,19 @@ import {
   circleTanTanTan,
   circleThreePoints,
   circleTwoPoints,
-  countlist,
   ellipseArc,
   ellipseCenter,
-  find,
   line,
-  mline,
   move,
-  mtext,
   multiPoints,
   offset,
   polygon,
   polyline,
   properties,
   qselect,
-  ray,
   rect,
-  revFreeDraw,
   setting,
-  splineFitPoints,
-  xline
+  splineFitPoints
 } from '../../svg'
 import {
   clearMeasurements,
@@ -116,7 +106,6 @@ import {
   measurementPanel,
   measurePoint
 } from '../../svg/toolbarIcons'
-import MlCharacterMapDialog from '../dialog/MlCharacterMapDialog.vue'
 import MlRibbonFileName from './MlRibbonFileName.vue'
 import MlRibbonMeasurementUnitsPanel from './MlRibbonMeasurementUnitsPanel.vue'
 import MlRibbonPropertyColorDropdown from './MlRibbonPropertyColorDropdown.vue'
@@ -124,7 +113,6 @@ import MlRibbonPropertyLineTypeSelect from './MlRibbonPropertyLineTypeSelect.vue
 import MlRibbonPropertyLineWeightSelect from './MlRibbonPropertyLineWeightSelect.vue'
 import MlRibbonTextHeightButton from './MlRibbonTextHeightButton.vue'
 import { classifyOverlaySelection } from './overlaySelectionKind'
-import { useMTextContextualRibbon } from './useMTextContextualRibbon'
 
 /** Shared control width for color / text-height in overlay Style panels. */
 const OVERLAY_STYLE_CONTROL_WIDTH = '120px'
@@ -169,19 +157,6 @@ const ribbonColorDisplay = ref('#7b8794')
 const ribbonLineType = ref<string | undefined>('ByLayer')
 const ribbonLineWeight = ref<AcGiLineWeight | undefined>(AcGiLineWeight.ByLayer)
 const activeRibbonTabId = ref('home')
-const {
-  handleCommandWillStart: handleMTextCommandWillStart,
-  handleCommandEnded: handleMTextCommandEnded,
-  handleItem: handleMTextItem,
-  buildContextualTab: buildMTextContextualTab,
-  characterMapVisible: mtextCharacterMapVisible,
-  characterMapFontOptions: mtextCharacterMapFontOptions,
-  characterMapInitialFont: mtextCharacterMapInitialFont,
-  handleCharacterMapInsert: handleMTextCharacterMapInsert
-} = useMTextContextualRibbon({
-  activeTabId: activeRibbonTabId
-})
-
 let observedDatabase: AcDbDatabase | undefined
 
 /**
@@ -493,13 +468,7 @@ onMounted(() => {
     handleSysVarChange
   )
   AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
-    handleMTextCommandWillStart
-  )
-  AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
     activateRibbonTabForDrawCommand
-  )
-  AcApDocManager.instance.editor.events.commandEnded.addEventListener(
-    handleMTextCommandEnded
   )
   AcApDocManager.instance.editor.events.commandEnded.addEventListener(
     syncMeasurementVisibility
@@ -525,13 +494,7 @@ onUnmounted(() => {
     handleSysVarChange
   )
   AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
-    handleMTextCommandWillStart
-  )
-  AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
     activateRibbonTabForDrawCommand
-  )
-  AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
-    handleMTextCommandEnded
   )
   AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
     syncMeasurementVisibility
@@ -771,12 +734,8 @@ const buildBaseTabs = (
     line: t('main.ribbon.tooltip.line'),
     polyline: t('main.ribbon.tooltip.polyline'),
     spline: t('main.ribbon.tooltip.spline'),
-    sketch: t('main.ribbon.tooltip.sketch'),
     circle: t('main.ribbon.tooltip.circle'),
     arc: t('main.ribbon.tooltip.arc'),
-    mline: t('main.ribbon.tooltip.mline'),
-    ray: t('main.ribbon.tooltip.ray'),
-    xline: t('main.ribbon.tooltip.xline'),
     ellipse: t('main.ribbon.tooltip.ellipse'),
     rect: t('main.ribbon.tooltip.rect'),
     point: t('main.ribbon.tooltip.point'),
@@ -790,8 +749,6 @@ const buildBaseTabs = (
     redo: t('main.ribbon.tooltip.redo'),
     properties: t('main.ribbon.tooltip.properties'),
     quickSelect: t('main.ribbon.tooltip.quickSelect'),
-    countList: t('main.ribbon.tooltip.countList'),
-    find: t('main.ribbon.tooltip.find'),
     drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
     propertyColor: t('main.ribbon.tooltip.propertyColor'),
     propertyLineType: t('main.ribbon.tooltip.propertyLineType'),
@@ -1139,34 +1096,6 @@ const buildBaseTabs = (
               label: t('main.ribbon.command.spline'),
               tooltip: ribbonTooltips.spline,
               props: { icon: splineFitPoints }
-            },
-            {
-              id: 'cmd-sketch',
-              type: 'button',
-              label: t('main.ribbon.command.sketch'),
-              tooltip: ribbonTooltips.sketch,
-              props: { icon: revFreeDraw }
-            },
-            {
-              id: 'cmd-mline',
-              type: 'button',
-              label: t('main.ribbon.command.mline'),
-              tooltip: ribbonTooltips.mline,
-              props: { icon: mline }
-            },
-            {
-              id: 'cmd-ray',
-              type: 'button',
-              label: t('main.ribbon.command.ray'),
-              tooltip: ribbonTooltips.ray,
-              props: { icon: ray }
-            },
-            {
-              id: 'cmd-xline',
-              type: 'button',
-              label: t('main.ribbon.command.xline'),
-              tooltip: ribbonTooltips.xline,
-              props: { icon: xline }
             },
             {
               id: 'cmd-point',
@@ -1519,27 +1448,6 @@ const buildBaseTabs = (
           ]
         },
         {
-          id: 'home-annotation',
-          title: t('main.ribbon.group.annotation'),
-          orientation: 'row',
-          collections: [
-            {
-              id: 'home-annotation-main',
-              layout: 'row',
-              items: [
-                {
-                  id: 'cmd-mtext',
-                  type: 'button',
-                  label: t('main.ribbon.command.text'),
-                  tooltip: ribbonTooltips.text,
-                  size: 'large',
-                  props: { icon: mtext }
-                }
-              ]
-            }
-          ]
-        },
-        {
           id: 'home-utilities',
           title: t('main.ribbon.group.utilities'),
           orientation: 'row',
@@ -1561,30 +1469,6 @@ const buildBaseTabs = (
                   }
                 },
                 {
-                  id: 'cmd-find',
-                  type: 'button',
-                  label: t('main.ribbon.command.find'),
-                  tooltip: ribbonTooltips.find,
-                  size: 'large',
-                  props: {
-                    icon: find,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                },
-                {
-                  id: 'cmd-countlist',
-                  type: 'button',
-                  label: t('main.ribbon.command.countList'),
-                  tooltip: ribbonTooltips.countList,
-                  size: 'large',
-                  props: {
-                    icon: countlist,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                },
-                {
                   id: 'cmd-drawing-units',
                   type: 'button',
                   label: t('main.ribbon.command.drawingUnits'),
@@ -1601,8 +1485,7 @@ const buildBaseTabs = (
           ]
         }
       ]
-    },
-    buildMTextContextualTab(t)
+    }
   ]
 
   tabs.push({
@@ -1632,7 +1515,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-line', 'line')
   commandByItemId.set('cmd-polyline', 'pline')
   commandByItemId.set('cmd-spline', 'spline')
-  commandByItemId.set('cmd-sketch', 'sketch')
   commandByItemId.set('cmd-circle', 'circle')
   commandByItemId.set('circle-center-radius', 'circle')
   commandByItemId.set('circle-center-diameter', 'circle\\nDiameter')
@@ -1664,10 +1546,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('rectang', 'rectang')
   commandByItemId.set('polygon', 'polygon')
   commandByItemId.set('cmd-point', 'point')
-  commandByItemId.set('cmd-ray', 'ray')
-  commandByItemId.set('cmd-mtext', 'mtext')
-  commandByItemId.set('cmd-mline', 'mline')
-  commandByItemId.set('cmd-xline', 'xline')
   commandByItemId.set('cmd-move', 'move')
   commandByItemId.set('cmd-rotate', 'rotate')
   commandByItemId.set('cmd-copy', 'copy')
@@ -1675,8 +1553,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-offset', 'offset')
   commandByItemId.set('cmd-properties', 'properties')
   commandByItemId.set('cmd-qselect', 'qselect')
-  commandByItemId.set('cmd-find', 'find')
-  commandByItemId.set('cmd-countlist', 'countlist')
   commandByItemId.set('cmd-drawing-units', 'units')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-continuous', 'measurecontinuous')
@@ -1744,7 +1620,6 @@ const handleRibbonItemClick = (payload: {
   itemId: string
 }) => {
   if (isRibbonDisabled.value) return
-  if (handleMTextItem(payload.itemId)) return
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return
   AcApDocManager.instance.sendStringToExecute(command)
@@ -1823,12 +1698,6 @@ const handleFileMenuSelect = async (command: string) => {
       </template>
     </ml-ribbon>
     <ml-ribbon-file-name :container-el="ribbonContainerRef" />
-    <ml-character-map-dialog
-      v-model="mtextCharacterMapVisible"
-      :font-options="mtextCharacterMapFontOptions"
-      :initial-font="mtextCharacterMapInitialFont"
-      @insert="handleMTextCharacterMapInsert"
-    />
   </div>
 </template>
 

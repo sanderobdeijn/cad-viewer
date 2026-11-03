@@ -8,11 +8,7 @@ import {
 } from '@mlightcad/cad-simple-viewer'
 
 import { registerCadViewerNotificationCenter } from './cadViewerNotificationCenter'
-import {
-  registerCmds,
-  registerDialogs,
-  registerMTextColorPicker
-} from './register'
+import { registerCmds, registerDialogs } from './register'
 
 /** Options for {@link initializeCadViewer}. */
 export type InitializeCadViewerOptions = AcApDocManagerOptions
@@ -31,5 +27,4 @@ export const initializeCadViewer = (
   registerCadViewerNotificationCenter()
   registerCmds()
   registerDialogs()
-  registerMTextColorPicker()
 }

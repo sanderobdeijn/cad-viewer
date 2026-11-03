@@ -64,25 +64,8 @@ export function formatOpenFileProfileText(
     `  db.read:            ${snapshot.readMs.toFixed(0)} ms  (${pct(snapshot.readMs, snapshot.totalMs)})`,
     `    PARSE:            ${snapshot.parseMs.toFixed(0)} ms  (${pct(snapshot.parseMs, snapshot.readMs)} of read)`,
     `    ENTITY flush:     ${snapshot.entityMs.toFixed(0)} ms  (${pct(snapshot.entityMs, snapshot.readMs)} of read)`,
-    `  scene convert:      ${snapshot.convertMs.toFixed(0)} ms  (${pct(snapshot.convertMs, snapshot.totalMs)})`,
-    '',
-    '--- AcDbRenderingCache (top-level INSERT draws) ---',
-    `hits:   ${snapshot.cache.topLevel.hits}, hit path ${snapshot.cache.topLevel.hitMs.toFixed(0)} ms (clone ${snapshot.cache.topLevel.cloneMs.toFixed(0)} ms)`,
-    `misses: ${snapshot.cache.topLevel.misses}, build ${snapshot.cache.topLevel.missBuildMs.toFixed(0)} ms, compact ${snapshot.cache.topLevel.missCompactMs.toFixed(0)} ms, set/clone ${snapshot.cache.topLevel.setCloneMs.toFixed(0)} ms`,
-    `applyMatrix+attribs: ${snapshot.cache.topLevel.applyMs.toFixed(0)} ms`,
-    '',
-    `--- AcDbRenderingCache (all depths: hits=${snapshot.cache.hits}, misses=${snapshot.cache.misses}) ---`,
-    `hit ${snapshot.cache.hitMs.toFixed(0)} ms (clone ${snapshot.cache.cloneMs.toFixed(0)}), build ${snapshot.cache.missBuildMs.toFixed(0)}, compact ${snapshot.cache.missCompactMs.toFixed(0)}, set ${snapshot.cache.setCloneMs.toFixed(0)}, apply ${snapshot.cache.applyMs.toFixed(0)}`
+    `  scene convert:      ${snapshot.convertMs.toFixed(0)} ms  (${pct(snapshot.convertMs, snapshot.totalMs)})`
   ].filter((line): line is string => line != null)
-
-  if (snapshot.slowBlocks.length > 0) {
-    lines.push('', '--- Slowest block template misses (build+compact) ---')
-    for (const block of snapshot.slowBlocks) {
-      lines.push(
-        `${block.blockName}\tbuild=${block.buildMs.toFixed(0)}ms\tcompact=${block.compactMs.toFixed(0)}ms\ttotal=${(block.buildMs + block.compactMs).toFixed(0)}ms`
-      )
-    }
-  }
 
   const otherStages = snapshot.stages.filter(
     stage => !['PARSE', 'FONT', 'ENTITY', 'START', 'END'].includes(stage.name)
@@ -147,39 +130,6 @@ export function useOpenFileProfile() {
     ]
   })
 
-  const cacheRows = computed(() => {
-    const s = snapshot.value
-    if (!s) return []
-    const tl = s.cache.topLevel
-    return [
-      {
-        id: 'tlHits',
-        label: t('main.toolPalette.openFileProfile.cacheHits'),
-        value: String(tl.hits)
-      },
-      {
-        id: 'tlMisses',
-        label: t('main.toolPalette.openFileProfile.cacheMisses'),
-        value: String(tl.misses)
-      },
-      {
-        id: 'tlBuild',
-        label: t('main.toolPalette.openFileProfile.cacheBuild'),
-        value: formatMs(tl.missBuildMs)
-      },
-      {
-        id: 'tlCompact',
-        label: t('main.toolPalette.openFileProfile.cacheCompact'),
-        value: formatMs(tl.missCompactMs)
-      },
-      {
-        id: 'tlHitPath',
-        label: t('main.toolPalette.openFileProfile.cacheHitPath'),
-        value: formatMs(tl.hitMs)
-      }
-    ]
-  })
-
   const progressiveRows = computed(() => {
     const progressive = snapshot.value?.progressive
     if (!progressive) return []
@@ -203,8 +153,6 @@ export function useOpenFileProfile() {
       }
     ]
   })
-
-  const slowBlocks = computed(() => snapshot.value?.slowBlocks ?? [])
 
   const adoptPublishedSnapshot = (): boolean => {
     const published = takePublishedOpenFileProfile()
@@ -236,8 +184,6 @@ export function useOpenFileProfile() {
     collectedAtLabel,
     timingRows,
     progressiveRows,
-    cacheRows,
-    slowBlocks,
     adoptPublishedSnapshot,
     refreshFromLast,
     copyText,

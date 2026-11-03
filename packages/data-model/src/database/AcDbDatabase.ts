@@ -28,8 +28,6 @@ import {
   ACTIVE_VPORT_NAME,
   ByBlock,
   ByLayer,
-  DEFAULT_MLEADER_STYLE,
-  DEFAULT_MLINE_STYLE,
   DEFAULT_LINE_TYPE,
   DEFAULT_TEXT_STYLE,
   MLIGHTCAD_APPID
@@ -45,8 +43,6 @@ import { AcDbDictionaryVar } from '../object/AcDbDictionaryVar'
 import { AcDbGroup } from '../object/AcDbGroup'
 import { AcDbLayerFilter } from '../object/AcDbLayerFilter'
 import { AcDbLayerIndex } from '../object/AcDbLayerIndex'
-import { AcDbMLeaderStyle } from '../object/AcDbMLeaderStyle'
-import { AcDbMlineStyle } from '../object/AcDbMlineStyle'
 import { AcDbMTextObjectContextData } from '../object/AcDbMTextObjectContextData'
 import { AcDbScale } from '../object/AcDbScale'
 import { AcDbSortentsTable } from '../object/AcDbSortentsTable'
@@ -308,12 +304,6 @@ export class AcDbDatabase extends AcDbObject {
   private _cetransparency: AcCmTransparency
   /** Current layer for the database */
   private _clayer: string
-  /** Current multiline style for newly created MLINE entities */
-  private _cmlstyle: string
-  /** Current multiline scale for newly created MLINE entities */
-  private _cmlscale: number
-  /** Current multileader style for newly created MLEADER entities */
-  private _cmleaderstyle: string
   /** Current text style name for the database */
   private _textstyle: string
   /** Current dimension style name for the database ($DIMSTYLE) */
@@ -360,8 +350,6 @@ export class AcDbDatabase extends AcDbObject {
     readonly layerFilter: AcDbDictionary<AcDbLayerFilter>
     readonly layerIndex: AcDbDictionary<AcDbLayerIndex>
     readonly layout: AcDbLayoutDictionary
-    readonly mleaderStyle: AcDbDictionary<AcDbMLeaderStyle>
-    readonly mlineStyle: AcDbDictionary<AcDbMlineStyle>
     readonly objectContextData: AcDbDictionary<AcDbMTextObjectContextData>
     readonly scale: AcDbDictionary<AcDbScale>
     readonly sortentsTable: AcDbDictionary<AcDbSortentsTable>
@@ -468,9 +456,6 @@ export class AcDbDatabase extends AcDbObject {
     this._celweight = AcGiLineWeight.ByLayer
     this._cetransparency = new AcCmTransparency()
     this._clayer = '0'
-    this._cmlstyle = DEFAULT_MLINE_STYLE
-    this._cmlscale = 1
-    this._cmleaderstyle = DEFAULT_MLEADER_STYLE
     this._textstyle = DEFAULT_TEXT_STYLE
     this._dimstyle = DEFAULT_TEXT_STYLE
     this._extents = new GeometryBox3d()
@@ -511,8 +496,6 @@ export class AcDbDatabase extends AcDbObject {
       layerFilter: new AcDbDictionary(this),
       layerIndex: new AcDbDictionary(this),
       layout: new AcDbLayoutDictionary(this),
-      mleaderStyle: new AcDbDictionary(this),
-      mlineStyle: new AcDbDictionary(this),
       objectContextData: new AcDbDictionary(this),
       scale: new AcDbDictionary(this),
       sortentsTable: new AcDbDictionary(this),
@@ -744,8 +727,6 @@ export class AcDbDatabase extends AcDbObject {
       this.objects.layerFilter,
       this.objects.layerIndex,
       this.objects.layout,
-      this.objects.mleaderStyle,
-      this.objects.mlineStyle,
       this.objects.objectContextData,
       this.objects.scale,
       this.objects.sortentsTable,
@@ -1144,8 +1125,6 @@ export class AcDbDatabase extends AcDbObject {
       this._objects.layerFilter,
       this._objects.layerIndex,
       this._objects.layout,
-      this._objects.mleaderStyle,
-      this._objects.mlineStyle,
       this._objects.objectContextData,
       this._objects.scale,
       this._objects.sortentsTable,
@@ -1945,57 +1924,6 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * The multiline style name used for newly created MLINE entities.
-   */
-  get cmlstyle(): string {
-    return this._cmlstyle
-  }
-  set cmlstyle(value: string) {
-    this.updateSysVar(
-      AcDbSystemVariables.CMLSTYLE,
-      this._cmlstyle,
-      value ?? DEFAULT_MLINE_STYLE,
-      nextValue => {
-        this._cmlstyle = nextValue
-      }
-    )
-  }
-
-  /**
-   * The multiline scale used for newly created MLINE entities.
-   */
-  get cmlscale(): number {
-    return this._cmlscale
-  }
-  set cmlscale(value: number) {
-    this.updateSysVar(
-      AcDbSystemVariables.CMLSCALE,
-      this._cmlscale,
-      value ?? 1,
-      nextValue => {
-        this._cmlscale = nextValue
-      }
-    )
-  }
-
-  /**
-   * The multileader style name used for newly created MLEADER entities.
-   */
-  get cmleaderstyle(): string {
-    return this._cmleaderstyle
-  }
-  set cmleaderstyle(value: string) {
-    this.updateSysVar(
-      AcDbSystemVariables.CMLEADERSTYLE,
-      this._cmleaderstyle,
-      value ?? DEFAULT_MLEADER_STYLE,
-      nextValue => {
-        this._cmleaderstyle = nextValue
-      }
-    )
-  }
-
-  /**
    * The text style name for new text objects.
    */
   get textstyle(): string {
@@ -2355,26 +2283,6 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * Ensures style dictionaries contain defaults required by one entity type.
-   *
-   * This is primarily used during entity append so newly created entities can
-   * immediately resolve their style references.
-   *
-   * @internal
-   */
-  ensureEntityStyleDefaults(entity: AcDbEntity) {
-    if (entity.dxfTypeName === 'MLINE') {
-      this.ensureMLineStyle(this._cmlstyle || DEFAULT_MLINE_STYLE)
-      return
-    }
-
-    if (entity.dxfTypeName === 'MULTILEADER') {
-      this.ensureMLeaderStyle(this._cmleaderstyle || DEFAULT_MLEADER_STYLE)
-      return
-    }
-  }
-
-  /**
    * Ensures the default text style exists in the text style table.
    *
    * This is invoked while converting STYLE records and again after a drawing
@@ -2491,9 +2399,6 @@ export class AcDbDatabase extends AcDbObject {
       this.tables.viewportTable.add(viewport)
     }
 
-    this.ensureMLineStyle(this._cmlstyle || DEFAULT_MLINE_STYLE)
-    this.ensureMLeaderStyle(this._cmleaderstyle || DEFAULT_MLEADER_STYLE)
-
     const modelSpace = this.tables.blockTable.modelSpace
     if (!this.objects.layout.getAt('Model')) {
       const layout = new AcDbLayout()
@@ -2513,83 +2418,6 @@ export class AcDbDatabase extends AcDbObject {
     if (!this.tables.appIdTable.has(MLIGHTCAD_APPID)) {
       this.tables.appIdTable.add(new AcDbRegAppTableRecord(MLIGHTCAD_APPID))
     }
-  }
-
-  /**
-   * Ensures one MLINE style exists for the provided style name.
-   */
-  private ensureMLineStyle(styleName: string) {
-    const dictionary = this.objects.mlineStyle
-    const normalizedName = styleName.trim()
-    if (!normalizedName) return
-
-    if (dictionary.getAt(normalizedName)) {
-      return
-    }
-
-    for (const [name, style] of dictionary.entries()) {
-      // LibreDWG / incomplete dictionaries can yield entries whose key or
-      // `styleName` is missing — skip those instead of throwing mid-open.
-      if (
-        name?.toUpperCase() === normalizedName.toUpperCase() ||
-        style.styleName?.toUpperCase() === normalizedName.toUpperCase()
-      ) {
-        return
-      }
-    }
-
-    const style = new AcDbMlineStyle()
-    style.styleName = normalizedName
-    style.elements = [
-      {
-        offset: 0.5,
-        color: new AcCmColor().setByLayer(),
-        lineType: ByLayer
-      },
-      {
-        offset: -0.5,
-        color: new AcCmColor().setByLayer(),
-        lineType: ByLayer
-      }
-    ]
-    dictionary.setAt(normalizedName, style)
-  }
-
-  /**
-   * Ensures one MLEADER style exists for the provided style name.
-   */
-  private ensureMLeaderStyle(styleName: string) {
-    const dictionary = this.objects.mleaderStyle
-    const normalizedName = styleName.trim()
-    if (!normalizedName) return
-
-    if (dictionary.getAt(normalizedName)) {
-      return
-    }
-
-    for (const [name] of dictionary.entries()) {
-      if (name?.toUpperCase() === normalizedName.toUpperCase()) {
-        return
-      }
-    }
-
-    const style = new AcDbMLeaderStyle()
-    // Match AutoCAD "Standard" defaults observed in exported DXF.
-    style.unknown1 = 2
-    style.maxLeaderSegmentsPoints = 2
-    style.leaderLineColor = new AcCmColor().setByBlock()
-    style.textColor = new AcCmColor().setByBlock()
-    style.blockColor = new AcCmColor().setByBlock()
-    style.alignSpace = 4
-    style.breakSize = 3.75
-    style.enableBlockRotation = true
-    style.unknown2 = false
-    const byBlockLinetype = this.tables.linetypeTable.getAt(ByBlock)
-    style.leaderLineTypeId = byBlockLinetype?.objectId
-    const standardTextStyle =
-      this.tables.textStyleTable.getAt(DEFAULT_TEXT_STYLE)
-    style.textStyleId = standardTextStyle?.objectId
-    dictionary.setAt(normalizedName, style)
   }
 
   /**
@@ -2620,8 +2448,6 @@ export class AcDbDatabase extends AcDbObject {
     this._objects.group.removeAll()
     this._objects.layerFilter.removeAll()
     this._objects.layerIndex.removeAll()
-    this._objects.mleaderStyle.removeAll()
-    this._objects.mlineStyle.removeAll()
     this._objects.objectContextData.removeAll()
     this._objects.scale.removeAll()
     this._objects.dictionaryVar.removeAll()

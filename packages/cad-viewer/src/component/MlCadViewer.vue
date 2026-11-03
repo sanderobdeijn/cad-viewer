@@ -71,12 +71,15 @@
 import {
   AcApDocManager,
   AcApOpenDatabaseOptions,
-  AcEdMTextEditor,
   AcEdOpenMode,
   eventBus,
   layoutBackgroundColorFromRgb
 } from '@mlightcad/cad-simple-viewer'
-import { ACDB_DRAW_CIRCLE_SIDES_DRAFT, ACGI_PAPER_SPACE_BACKGROUND, log } from '@mlightcad/data-model'
+import {
+  ACDB_DRAW_CIRCLE_SIDES_DRAFT,
+  ACGI_PAPER_SPACE_BACKGROUND,
+  log
+} from '@mlightcad/data-model'
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -86,11 +89,6 @@ import {
   initializeCadViewer,
   unregisterCadViewerNotificationCenter
 } from '../app'
-import {
-  isFindShortcut,
-  isFindShortcutInViewer,
-  openFindPalette
-} from '../command/AcApFindCmd'
 import {
   ensureColorThemeSync,
   isDark,
@@ -222,7 +220,6 @@ const isWriteMode = computed(
   () => effectiveOpenMode.value === AcEdOpenMode.Write
 )
 const bodyRef = ref<HTMLElement>()
-const sidePanelRef = ref<HTMLElement>()
 const SIDE_PANEL_MIN_FRACTION = 0.15
 const SIDE_PANEL_MAX_FRACTION = 0.85
 const SIDE_PANEL_KEY_STEP = 0.02
@@ -252,18 +249,12 @@ const onDividerKeyDown = (e: KeyboardEvent) => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
   e.preventDefault()
   const direction = e.key === 'ArrowLeft' ? -1 : 1
-  setSidePanelFraction(sidePanelFraction.value + direction * SIDE_PANEL_KEY_STEP)
+  setSidePanelFraction(
+    sidePanelFraction.value + direction * SIDE_PANEL_KEY_STEP
+  )
 }
 
 const headerHeightPx = ref(0)
-
-watch(
-  isWriteMode,
-  value => {
-    AcEdMTextEditor.setDefaultToolbarEnabled(!value)
-  },
-  { immediate: true }
-)
 
 provideViewerRect(containerRef)
 
@@ -334,24 +325,8 @@ const createInitialDrawing = async () => {
   }
 }
 
-/**
- * Ctrl/Cmd+F opens the Find palette. The browser's own page search cannot
- * find text drawn on the canvas, so it is only left alone while the user is
- * typing in a field outside the viewer or editing MText.
- */
-const onFindShortcut = (e: KeyboardEvent) => {
-  if (!isFindShortcut(e) || e.defaultPrevented) return
-  if (AcEdMTextEditor.getActiveInputBox()) return
-  if (sidePanelRef.value?.contains(e.target as Node)) return
-  if (!isFindShortcutInViewer(e.target, layoutRef.value)) return
-  e.preventDefault()
-  e.stopPropagation()
-  openFindPalette()
-}
-
 // Component lifecycle: Initialize and create the initial drawing
 onMounted(async () => {
-  window.addEventListener('keydown', onFindShortcut, true)
   beginPendingOpen(AcEdOpenMode.Write)
 
   // Initialize the CAD viewer with the internal canvas
@@ -393,9 +368,6 @@ onUnmounted(() => {
   // Notify consumers first
   emit('destroy')
 
-  window.removeEventListener('keydown', onFindShortcut, true)
-
-  AcEdMTextEditor.setDefaultToolbarEnabled(true)
   headerResizeObserver?.disconnect()
   unregisterCadViewerNotificationCenter()
   AcApDocManager.instance.destroy()
@@ -458,16 +430,13 @@ const closeNotificationCenter = () => {
       <div ref="layoutRef" class="ml-cad-layout">
         <!-- Header section with command ribbon -->
         <header v-if="editorRef" ref="headerRef" class="ml-cad-header">
-          <ml-ribbon-commands
-            v-if="features.isShowRibbon"
-          />
+          <ml-ribbon-commands v-if="features.isShowRibbon" />
         </header>
 
         <div ref="bodyRef" class="ml-cad-body">
           <!-- Optional host content beside the drawing, below the ribbon -->
           <template v-if="$slots['side-panel']">
             <aside
-              ref="sidePanelRef"
               :style="{ '--ml-side-panel-size': `${sidePanelFraction * 100}%` }"
               class="ml-cad-side-panel"
             >
@@ -640,5 +609,4 @@ const closeNotificationCenter = () => {
   visibility: hidden;
   pointer-events: none;
 }
-
 </style>

@@ -13,7 +13,6 @@ export const en: Record<string, string> = {
   'toolbar.zoomWindow': 'Window',
   'toolbar.zoomSaved': 'Saved',
   'toolbar.zoomOriginal': 'Saved',
-  'toolbar.find': 'Find',
   'toolbar.layout': 'Layout',
   'toolbar.settings': 'Settings',
   'toolbar.simulatedMouseOn': 'Mouse',
@@ -57,7 +56,6 @@ export const en: Record<string, string> = {
   'dockPanel.dockLeft': 'Dock to left',
   'dockPanel.dockRight': 'Dock to right',
   'dockPanel.moreTabs': 'More tabs',
-  'dockPanel.tab.find': 'Find',
   'dockPanel.tab.measurements': 'Measurements',
   'dockPanel.resize': 'Resize panel',
   'measurePalette.filterGroup': 'Filter by type',
@@ -70,29 +68,5 @@ export const en: Record<string, string> = {
   'measurePalette.typeValues.angle': 'Angle',
   'measurePalette.typeValues.area': 'Area',
   'measurePalette.typeValues.arc': 'Arc',
-  'measurePalette.typeValues.point': 'XY',
-  'findPalette.placeholder': 'Find text',
-  'findPalette.input': 'Search text',
-  'findPalette.find': 'Find',
-  'findPalette.matchCase': 'Match case',
-  'findPalette.currentLayoutOnly': 'Current layout only',
-  'findPalette.hint':
-    'Press Enter to search text, multiline text, attributes and the text in blocks, dimensions, leaders and tables in the whole drawing (all layouts).',
-  'findPalette.hintLayout':
-    'Press Enter to search text, multiline text, attributes and the text in blocks, dimensions, leaders and tables in the current layout.',
-  'findPalette.noResults': 'No text found',
-  'findPalette.count': '{count} found',
-  'findPalette.countLayouts': '{count} found in {layouts} layouts',
-  'findPalette.countTruncated':
-    'First {count} results shown — refine the search',
-  'findPalette.noDocument': 'Open a drawing to search',
-  'findPalette.layoutUnavailable': 'Could not open layout "{layout}"',
-  'findPalette.kind.text': 'Text',
-  'findPalette.kind.mtext': 'MText',
-  'findPalette.kind.attribute': 'Attribute',
-  'findPalette.kind.block': 'Block text',
-  'findPalette.kind.dimension': 'Dimension',
-  'findPalette.kind.leader': 'Leader',
-  'findPalette.kind.table': 'Table',
-  'findPalette.unnamedLayout': '(unnamed layout)'
+  'measurePalette.typeValues.point': 'XY'
 }

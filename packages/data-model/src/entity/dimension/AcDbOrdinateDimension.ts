@@ -142,7 +142,7 @@ export class AcDbOrdinateDimension extends AcDbDimension {
    * @inheritdoc
    */
   get geometricExtents() {
-    return this.getGeometricExtentsFromDimBlockOrPoints([
+    return this.getGeometricExtentsFromPoints([
       this.definingPoint,
       this.leaderEndPoint
     ])

@@ -1,7 +1,8 @@
 import {
   AcGiEntity,
   GeometryMatrix3d,
-  GeometryPoint2d} from '@mlightcad/data-model'
+  GeometryPoint2d
+} from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import type { AcTrBatchDrawPolicy } from '../draw/AcTrBatchDrawPolicy'
@@ -175,8 +176,7 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
       object.children = []
       for (const child of children) {
         // Propagate INSERT layer-0 inheritance downward. Nested AcTrGroup nodes
-        // already carry the nested INSERT layer (set by AcDbRenderingCache
-        // attachEntityInfo) before the outer group flattens them.
+        // already carry their own layer before the outer group flattens them.
         const objectData = getObjectUserData(object)
         const childData = getObjectUserData(child)
         if (objectData.layerName) {
@@ -368,8 +368,8 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
   /**
    * Direct child count for {@link AcGiEntity.childCount}.
    *
-   * Used by {@link AcDbRenderingCache} to skip {@link compactForInstancing} on
-   * tiny block templates. For {@link AcTrGroup}, this is the post-flatten leaf
+   * Used to skip {@link compactForInstancing} on tiny groups. For
+   * {@link AcTrGroup}, this is the post-flatten leaf
    * count under this object.
    */
   get childCount() {

@@ -12,7 +12,6 @@ This plugin provides ready-to-use CAD viewer chrome without Vue, React, or Eleme
 - Optional in-canvas-parent layout: sit against the canvas edge instead of floating over it
 - Default toolbar differs by layout: compact phone bar, pad without Select/Pan, full desktop icon strip
 - UI theme follows `COLORTHEME` sysvar and `--ml-ui-*` tokens on `host` automatically
-- Text search (**Find**) in a dock panel tab: TEXT, MTEXT, block attributes and block-definition text, dimension, multileader and table text of the whole drawing (or the current layout), click-to-zoom with selection, opened from the Find toolbar button (`find`)
 - Chrome DevTools-style **dock panel** with tabs, open/close, dock side (bottom/left/right), and resize handle
 - Dock panel closes via the close button
 - Optional collapsible toolbar: hide tool buttons and show only a chevron toggle
@@ -99,7 +98,7 @@ By default `appendItems` are added at the end of the toolbar. Use `appendItemsAf
 toolbar: {
   items: 'default',
   appendItems: [{ id: 'agent', label: 'Agent', command: 'agent' }],
-  appendItemsAfter: 'find'
+  appendItemsAfter: 'zoom'
 }
 ```
 
@@ -107,7 +106,7 @@ The built-in theme toggle button updates `COLORTHEME` when a document is open, o
 
 ### Dock panel
 
-The measurement and find tabs are enabled automatically when the resolved toolbar includes their buttons, and render as tabs in the dock panel.
+The measurement tab is enabled automatically when the resolved toolbar includes its button, and renders as a tab in the dock panel.
 
 ```typescript
 acuiCreateSimpleUiPlugin({
@@ -129,7 +128,7 @@ Dock panel behavior:
 - By default the dock mounts on the viewer canvas parent (inside `host`), so sibling header toolbars are not stretched
 - Override mount element with `dockPanel.mountTarget` when needed
 - Drag the resize handle on the panel edge to adjust height or width
-- Multiple tabs supported (measurements and find tabs registered automatically when those toolbar buttons are present)
+- Multiple tabs supported (the measurements tab is registered automatically when its toolbar button is present)
 - Canvas area shrinks when the panel is open (flex layout on `host`)
 
 Runtime dock panel controls:
@@ -154,56 +153,6 @@ acuiCreateSimpleUiPlugin({
   dockPanel: { enabled: true }
 })
 ```
-
-### Find text (dock panel)
-
-The Find tab is enabled automatically when the resolved toolbar includes the Find button (`id: 'find'`, in the default desktop/pad toolbar after Zoom and in the phone toolbar). Remove it with `excludeItems: ['find']`. It is a plain DOM view (no Vue) that searches the **whole drawing** (model space and every paper-space layout) by default - or only the active layout when **Current layout only** is checked - when the user submits a query. The same search is available in the full Vue `@mlightcad/cad-viewer` UI, which shares the implementation (`@mlightcad/cad-simple-viewer/find`).
-
-```typescript
-acuiCreateSimpleUiPlugin({ host }) // Find button included by default
-// or: toolbar: { items: [acuiToolbarPreset('find')] }
-```
-
-Searched fields:
-
-| Entity                                           | Field                                                                                                  | Notes                                                                                                                                                                           |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT`                                           | `textString`                                                                                           | `%%c` `%%d` `%%p` decoded                                                                                                                                                       |
-| `MTEXT`                                          | `contents`                                                                                             | formatting codes (`\f…;`, `\H…;`, `\C…;`, `\L`, braces…) removed, `\P` → space, `\U+XXXX` and stacks decoded                                                                    |
-| `ATTRIB`                                         | attribute value of every `INSERT`                                                                      | block name and tag are shown in the result label (not searched); invisible attributes are skipped                                                                               |
-| `TEXT` / `MTEXT` / `ATTRIB` in block definitions | text inside the block of every `INSERT`                                                                | nested (up to 8 levels), anonymous and dynamic blocks included; the hit selects the `INSERT` and zooms to the text; a block inserted several times is listed once per insertion |
-| `ATTDEF` (constant)                              | default value inside a block definition                                                                | only constant attribute definitions are drawn inside a block, so only those are searched; non-constant templates and invisible ones are skipped                                 |
-| `DIMENSION`                                      | text of its dimension block when that block has a match, otherwise the override text (`dimensionText`) | `<>` is the measured value and is not searched                                                                                                                                  |
-| `MULTILEADER`                                    | `contents`                                                                                             | formatting codes removed                                                                                                                                                        |
-| `ACAD_TABLE`                                     | cell text                                                                                              | from the table block, otherwise the cell strings                                                                                                                                |
-
-`DIMENSION`, `MULTILEADER` and `ACAD_TABLE` are searched as top-level entities only (in model space or a layout); they are not visited inside block definitions, so such an entity nested in a block is not found. Top-level `INSERT` attributes and the `TEXT` / `MTEXT` / `ATTRIB` / constant `ATTDEF` text inside block definitions are searched as described above.
-
-Matching:
-
-- Partial (substring) match; the query is trimmed and runs of whitespace collapse to one space
-- Default: case-, accent- and width-insensitive (`instalacao` finds `Instalação`, NFKC + diacritics removed)
-- **Match case** checkbox: exact case and accents
-- **Scope**: whole drawing by default (layouts are searched in tab order); the **Current layout only** checkbox limits the search to the layout that is currently shown and re-runs the last search when toggled
-- Blank query → no search; at most 500 results (shared across all searched layouts) (a "first N results" notice is shown when truncated)
-- Hidden entities are skipped, so every result is something you can see
-
-Usage:
-
-- Search runs only on **Enter** / the Find button (never while typing, never in the background). Both start a search and jump to the first hit; further Enter / Shift+Enter steps through the list. The scan is a single synchronous pass over the entities of the searched layouts (including the block definitions they insert); nothing is cached or stored globally
-- Each result shows its **layout name** (a layout with an empty name is shown as a localized "(unnamed layout)" placeholder), the matched text, type (Text / MText / Attribute / Block text / Dimension / Leader / Table; attributes also show block / tag) and `(x, y)`. Labels are translated in en, zh, cs, tr and ar; a message missing from the active locale falls back to English instead of showing its key
-- Click a result (or press Enter / Shift+Enter in the field to step through them) to zoom to the text and select its entity (attributes select their `INSERT`). Selection uses the normal selection set/highlight, so Escape or clicking elsewhere clears it. Pan, wheel/pinch zoom, layers and touch handling are untouched
-- A hit in another layout switches to that layout first (`layoutManager.setCurrentLayoutBtrId`), waits for its entities to be converted, then zooms and selects. The layout's first-visit auto zoom is suppressed so it cannot override the zoom to the hit. If the layout cannot be opened a notice is shown instead
-- With **Current layout only**, if the active layout changed since the search, clicking a result re-runs the search for the new layout instead of navigating (drawing-wide results stay valid)
-- Open with the toolbar button, the `find` command (`AcApDocManager.sendStringToExecute('find')`) or `plugin.toggleDockPanelTab('find')`
-
-Limitations: text produced by fields is not searched (only the stored text is); non-constant `ATTDEF` templates and `ATTDEF`s loose in a layout are not searched; a `DIMENSION` whose block has no matching text can still match its stored override text even if the block does not display it; only entities present in the loaded database are searched (what the DXF/DWG parser attaches to each layout - a layout never opened is searched from the database, not from the rendered scene); selecting a hit in a layout that has never been visited waits for its entities to be converted (up to 15 s) before zooming; no regex / whole-word / replace; selection highlight requires entity selection to be enabled on the view (it is by default); on large drawings the synchronous whole-drawing pass can hitch the UI briefly.
-
-Known follow-ups: the whole-drawing pass is synchronous and runs on the UI thread (it has not been benchmarked on large drawings; chunking or a worker is a possible follow-up); the real-drawing end-to-end check in `cad-viewer-example` (`find-b11l1.spec.ts`) is opt-in via `B11L1_DWG` and skipped in the default CI run, which exercises the committed fixtures only.
-
-Client-side only: there is no backend, index or upload - the search is a pass over the drawing already loaded in the browser, so the static-hosting / client-side deployment recommendation is unchanged.
-
-Demo / verification: `__tests__/fixtures/find-text.dxf` is a fictitious single-layout drawing (Portuguese labels, an MTEXT with formatting, an attribute, an off layer) and `../cad-viewer-example/e2e/fixtures/find-layouts.dxf` a fictitious three-layout drawing (Model, Planta, Alçados). `__tests__/e2e/find-text.e2e.mjs` and `__tests__/e2e/find-layouts.e2e.mjs` drive `cad-simple-viewer-example` with them in Chromium (see the file headers for usage); `packages/cad-viewer-example/e2e/tests/find-layouts.spec.ts` covers the Vue UI.
 
 ### Collapsible toolbar
 
@@ -249,9 +198,9 @@ By default the plugin uses `layout: 'auto'` and follows viewport width via `aced
 
 | Kind | Viewport | Chrome | Default buttons (`items: 'default'`) |
 | --- | --- | --- | --- |
-| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `find`, `measure`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
+| **phone** | ≤600px | Bottom bar, full width (`size: 'stretch'`), labels, `edgeOffset: 0`, not collapsible, no flyout arrows. Nested strips use `replaceOnNested: true`. | `zoom` (saved / extents / smart extents / window), `measure`, `layout`, `settings` (simulated mouse, placement, theme, background, reading mode, language) |
 | **pad** | 601–960px | Same floating chrome as desktop (right, icons only, `edgeOffset: 8`). | Desktop set **without** `select` and `pan` (`excludeItems: ['select', 'pan']`). Touch drag pans; a long-press starts window/crossing box select. |
-| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `find`, `layout`, `measure`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
+| **desktop** | >960px | Right-side floating icon toolbar. | `select`, `pan`, `zoom` (saved / extents / smart extents / window), `layout`, `measure`, then `settings` (simulated mouse, placement, theme, background, reading mode, language). **Open** is not shown; add it with `{ preset: 'open' }` or `acuiToolbarPreset('open')`. |
 
 Phone does **not** inherit top-level `toolbar.items`, `appendItems`, or chrome (placement, labels, size). It only inherits `enabled`, `mountTarget`, and `inCanvasParent`. Pad and desktop inherit the full top-level `toolbar` baseline on top of the built-ins above.
 
@@ -392,7 +341,7 @@ acuiCreateSimpleUiPlugin({
       {
         id: 'my-redline',
         label: 'Redline',
-        command: 'sketch',
+        command: 'pline',
         minOpenMode: AcEdOpenMode.Write
       }
     ]

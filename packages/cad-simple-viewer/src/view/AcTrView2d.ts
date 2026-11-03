@@ -1,7 +1,5 @@
 import {
   AcCmUiYieldGate,
-  AcDbAttribute,
-  AcDbBlockReference,
   AcDbBlockTableRecord,
   AcDbDatabase,
   AcDbEntity,
@@ -9,13 +7,9 @@ import {
   AcDbLayerTableRecord,
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
-  AcDbMText,
   AcDbObjectId,
-  AcDbRay,
-  AcDbRenderingCache,
   AcDbSysVarManager,
   AcDbViewport,
-  AcDbXline,
   acgiForegroundColorForBackground,
   AcGiViewport,
   GeometryBox2d,
@@ -56,8 +50,6 @@ import {
   acedGuardCanvasTouchCallout,
   acedInteractionStrategy,
   acedIsTouchDerivedMouseEvent,
-  AcEdMTextEditor,
-  AcEdOpenMode,
   AcEdSelectionAction,
   acedShouldIgnoreCompatMouse,
   AcEdSnapLoupeViewState,
@@ -82,7 +74,6 @@ import { isEffectiveSpatialQueryHit } from '../editor/view/AcEdSpatialQueryResul
 import type { AcTrLazySpatialChildren } from '../spatialIndex'
 import type { AcTrSpatialSearchOptions } from '../spatialIndex/AcTrSpatialIndex'
 import { AcTrGeometryUtil } from '../util'
-import { acapRunDatabaseEdit } from '../util/AcApDatabaseEdit'
 import {
   collectTextStyleFontNames,
   planTextStyleFontPreload
@@ -103,10 +94,7 @@ import {
   createConvertPending,
   hasPendingActiveOwner
 } from './AcTrConvertQueue'
-import {
-  shouldExtendBboxForDirectEntity,
-  tryBuildDirectEntityMeta
-} from './AcTrDirectBatch'
+import { tryBuildDirectEntityMeta } from './AcTrDirectBatch'
 import { AcTrEntityDisplayController } from './AcTrEntityDisplayController'
 import {
   assertAcTrGroupWcsBboxesConsistent,
@@ -699,11 +687,7 @@ export class AcTrView2d extends AcEdBaseView {
     let selectionPreviewEl: HTMLDivElement | null = null
 
     const canHandleIdlePointer = () => {
-      return (
-        !this.editor.isActive &&
-        !AcEdMTextEditor.getActiveInputBox() &&
-        !this._gripManager.isDragging
-      )
+      return !this.editor.isActive && !this._gripManager.isDragging
     }
 
     const canHandleSelectionGesture = () => {
@@ -917,21 +901,6 @@ export class AcTrView2d extends AcEdBaseView {
       }
     })
 
-    this.canvas.addEventListener(
-      'dblclick',
-      e => {
-        if (e.button !== 0) return
-        if (!canHandleSelectionGesture()) return
-        if (!this.entitySelectionEnabled) return
-        if (
-          AcApDocManager.instance.curDocument.openMode !== AcEdOpenMode.Write
-        ) {
-          return
-        }
-        void this.openPickedEntityEditor(e)
-      },
-      { signal: viewDomSignal }
-    )
     // When using OrbitControls in THREE.js, it attaches its own event listeners to the DOM elements,
     // such as the canvas or the entire document. This can interfere with other event listeners you
     // add, including the keydown event. Scope to this view's container so host-page shortcuts
@@ -1981,107 +1950,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._isDirty = true
   }
 
-  private async openPickedEntityEditor(e: MouseEvent) {
-    const point = this.viewportToCanvas({
-      x: e.clientX,
-      y: e.clientY
-    })
-    const worldPoint = this.screenToWorld(point)
-    const picked = this.pick(worldPoint, undefined, true)
-    if (!picked.length) return
-
-    const entity =
-      AcApDocManager.instance.curDocument.database.tables.blockTable.getEntityById(
-        picked[0].id
-      )
-    if (!entity) return
-
-    if (!(entity instanceof AcDbMText)) return
-
-    e.preventDefault()
-    await this.editMTextEntity(entity)
-  }
-
-  private async editMTextEntity(mtext: AcDbMText) {
-    const db = mtext.database
-
-    if (mtext.lineSpacingFactor !== AcEdMTextEditor.defaultLineSpacingFactor) {
-      acapRunDatabaseEdit(db, 'Edit MText', () => {
-        const opened = db.openEntityForWrite(mtext)
-        if (!(opened instanceof AcDbMText)) return
-        opened.lineSpacingFactor = AcEdMTextEditor.defaultLineSpacingFactor
-      })
-    }
-
-    // Hide the in-scene MTEXT while the inline editor renders its own copy; otherwise
-    // both draw at once (double text) when the user double-clicks to edit.
-    // this.removeEntity(mtext)
-    this._isDirty = true
-
-    const editor = new AcEdMTextEditor()
-    let applied = false
-    try {
-      const result = await editor.open({
-        view: this,
-        location: mtext.location,
-        width: this.resolveMTextEditorWidth(mtext),
-        textHeight: this.resolveMTextEditorTextHeight(mtext),
-        initialText: mtext.contents,
-        initialAttachmentPoint: mtext.attachmentPoint,
-        toolbarFontFamilies: await this.getMTextToolbarFontFamilies()
-      })
-      if (!result) return
-
-      acapRunDatabaseEdit(db, 'Edit MText', () => {
-        const opened = db.openEntityForWrite(mtext)
-        if (!(opened instanceof AcDbMText)) return
-        opened.location = result.location
-        opened.contents = result.contents
-        opened.width = result.width
-        opened.height = result.height
-        opened.lineSpacingFactor = result.lineSpacingFactor
-        opened.attachmentPoint = result.attachmentPoint
-      })
-      applied = true
-    } finally {
-      if (!applied) {
-        this.updateEntity(mtext)
-        this._isDirty = true
-      }
-    }
-  }
-
-  private resolveMTextEditorWidth(mtext: AcDbMText) {
-    const width = Number(mtext.width)
-    if (Number.isFinite(width) && width > 0) return width
-    return 1e-4
-  }
-
-  private resolveMTextEditorTextHeight(mtext: AcDbMText) {
-    const textHeight = Number(mtext.height)
-    if (Number.isFinite(textHeight) && textHeight > 0) return textHeight
-    return this.pixelsToWorldY(24)
-  }
-
-  private pixelsToWorldY(pixels: number) {
-    const p0 = this.screenToWorld({ x: 0, y: 0 })
-    const p1 = this.screenToWorld({ x: 0, y: pixels })
-    return Math.max(Math.abs(p1.y - p0.y), 1e-4)
-  }
-
-  private async getMTextToolbarFontFamilies() {
-    const availableFonts =
-      (await AcApDocManager.instance.getAvaiableFonts()) ?? []
-    return Array.from(
-      new Set(
-        availableFonts
-          .flatMap(fontInfo => fontInfo.name)
-          .map(fontName => fontName.trim())
-          .filter(fontName => fontName.length > 0)
-      )
-    )
-  }
-
   /**
    * @inheritdoc
    *
@@ -2568,15 +2436,9 @@ export class AcTrView2d extends AcEdBaseView {
    * Rebuilds scene geometry for entities whose shape or styling changed.
    *
    * Pure translations should use {@link translateEntity} instead.
-   *
-   * Attribute entities are drawn as part of their owning INSERT, so attribute
-   * edits are remapped to the parent {@link AcDbBlockReference} before the
-   * scene is updated.
    */
   updateEntity(entity: AcDbEntity | AcDbEntity[]) {
-    const entities = this.resolveSceneUpdateEntities(
-      Array.isArray(entity) ? entity : [entity]
-    )
+    const entities = Array.isArray(entity) ? entity : [entity]
     if (entities.length === 0) return
 
     const selectedIds = entities
@@ -2604,8 +2466,8 @@ export class AcTrView2d extends AcEdBaseView {
       }
     }
 
-    // Reconvert through the same path as initial load so block references are
-    // split by layer correctly and deferred MTEXT/SHAPE geometry is drawn.
+    // Reconvert through the same path as initial load so deferred geometry is
+    // drawn.
     void (async () => {
       await this.batchConvert(entities)
       await this.waitUntilDeferredGeometryIdle()
@@ -2621,33 +2483,6 @@ export class AcTrView2d extends AcEdBaseView {
     setTimeout(() => {
       this._isDirty = true
     }, 100)
-  }
-
-  /**
-   * Maps entities that are not independently drawn in the scene to the
-   * drawable entity that must be rebuilt (for example ATTRIB → INSERT).
-   */
-  private resolveSceneUpdateEntities(entities: AcDbEntity[]): AcDbEntity[] {
-    const db = AcApDocManager.instance.curDocument?.database
-    const resolved: AcDbEntity[] = []
-    const seen = new Set<AcDbObjectId>()
-
-    for (const entity of entities) {
-      let target: AcDbEntity = entity
-      if (entity instanceof AcDbAttribute) {
-        const owner = db?.tables.blockTable.getEntityById(entity.ownerId)
-        if (!(owner instanceof AcDbBlockReference)) {
-          continue
-        }
-        target = owner
-      }
-
-      if (seen.has(target.objectId)) continue
-      seen.add(target.objectId)
-      resolved.push(target)
-    }
-
-    return resolved
   }
 
   /**
@@ -2826,8 +2661,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._externallyFramedLayouts.clear()
     this._loadingLayouts.clear()
     this._renderer.dispose()
-    // Drop block templates when the scene is torn down (next open / close).
-    AcDbRenderingCache.instance.clear()
     eventBus.emit('missed-data-changed', {})
   }
 
@@ -3327,7 +3160,6 @@ export class AcTrView2d extends AcEdBaseView {
     this.htmlTransientManager.dispose()
     this._scene.clear()
     this._renderer.dispose()
-    AcDbRenderingCache.instance.clear()
 
     const webgl = this._renderer.internalRenderer
     webgl.dispose()
@@ -4329,10 +4161,7 @@ export class AcTrView2d extends AcEdBaseView {
             ) {
               superseded = true
             } else {
-              added = this._scene.addDirectEntity(
-                directMeta,
-                shouldExtendBboxForDirectEntity(entity)
-              )
+              added = this._scene.addDirectEntity(directMeta, true)
               if (added) {
                 this.applySessionHiddenObjectState(entity.objectId)
                 if (progressive) {
@@ -4412,9 +4241,6 @@ export class AcTrView2d extends AcEdBaseView {
               )
             }
           } else {
-            const isExtendBbox = !(
-              entity instanceof AcDbRay || entity instanceof AcDbXline
-            )
             const commitEntity = async () => {
               await this.finishEntityGeometry(threeEntity, progressive)
               if (epoch !== this._convertEpoch) {
@@ -4440,7 +4266,7 @@ export class AcTrView2d extends AcEdBaseView {
                 }
               }
               const tAdd = performance.now()
-              this._scene.addEntity(threeEntity, isExtendBbox)
+              this._scene.addEntity(threeEntity, true)
               this._convertPhaseMs.addEntity += performance.now() - tAdd
               this.applySessionHiddenObjectState(entity.objectId)
               // Release memory occupied by this entity
@@ -4597,8 +4423,7 @@ export class AcTrView2d extends AcEdBaseView {
       const groupObjectId = group.objectId
       const groupLayerName = group.layerName
 
-      // AcDbRenderingCache.draw (and similar paths such as AcDbTable) already call
-      // applyMatrix on the group, which updates wcsBbbox and wcsChildBoxes to WCS.
+      // applyMatrix on the group already updated wcsBbbox and wcsChildBoxes to WCS.
       // Do not multiply group.matrix here — that would double-transform spatial bounds.
       const lazyChildren = (
         group.userData as { lazySpatialChildren?: AcTrLazySpatialChildren }
@@ -4777,11 +4602,6 @@ export class AcTrView2d extends AcEdBaseView {
   private stampEntityProcessingIdle() {
     if (this._numOfEntitiesToProcess === 0 && this._pendingGeometryJobs === 0) {
       this._entityProcessingIdleAt = performance.now()
-      // Release block templates after INSERT convert/glyph work finishes.
-      // Clearing at converter END was too early (convert still draining);
-      // keeping templates until the next open kept baked shells in memory and
-      // OOMed large drawings.
-      AcDbRenderingCache.instance.clear()
     }
   }
 }

@@ -70,7 +70,6 @@ export const AC_TR_GROUP_WCS_BBOX_ASSERT_MAX_CHILDREN = 2048
  * union of its per-child {@link AcTrGroup.wcsChildBoxes}.
  *
  * Called from {@link AcTrView2d.handleGroup} in non-production builds. After
- * {@link AcDbRenderingCache.draw} applies the INSERT transform via
  * `applyMatrix`, both fields must stay in sync for spatial indexing.
  *
  * Oversized groups are skipped — unit tests still cover the consistency rule
@@ -82,9 +81,7 @@ export function assertGroupWcsBboxesConsistent(
   if (group.wcsChildBoxes.length === 0) {
     return
   }
-  if (
-    group.wcsChildBoxes.length > AC_TR_GROUP_WCS_BBOX_ASSERT_MAX_CHILDREN
-  ) {
+  if (group.wcsChildBoxes.length > AC_TR_GROUP_WCS_BBOX_ASSERT_MAX_CHILDREN) {
     return
   }
 
@@ -102,7 +99,7 @@ export function assertGroupWcsBboxesConsistent(
     throw new Error(
       `[AcTrView2d] Group wcsBbox [${wcs.min.x}, ${wcs.min.y}]–[${wcs.max.x}, ${wcs.max.y}] ` +
         `does not match wcsChildBoxes union [${union.min.x}, ${union.min.y}]–[${union.max.x}, ${union.max.y}]. ` +
-        'Ensure AcDbRenderingCache.draw applied the INSERT transform before handleGroup.'
+        'Ensure the group transform was applied before handleGroup.'
     )
   }
 }

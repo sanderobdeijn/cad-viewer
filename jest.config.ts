@@ -39,8 +39,6 @@ const packagesProject: ProjectConfig = {
     '/__tests__/helpers/',
     // These suites run on vitest (`pnpm test` runs both).
     '<rootDir>/packages/mtext-renderer/',
-    '<rootDir>/packages/mtext-input-box/',
-    '<rootDir>/packages/text-box-cursor/',
     '<rootDir>/packages/ribbon/',
     ...REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}/`)
   ],
@@ -50,8 +48,6 @@ const packagesProject: ProjectConfig = {
       '<rootDir>/packages/cad-simple-viewer/src/index.ts',
     '^@mlightcad/cad-simple-viewer/icons$':
       '<rootDir>/packages/cad-simple-viewer/src/ui/icons.ts',
-    '^@mlightcad/cad-simple-viewer/find$':
-      '<rootDir>/packages/cad-simple-viewer/src/find/index.ts',
     '^three/examples/jsm/lines/LineMaterial\\.js$':
       '<rootDir>/test/mocks/three/LineMaterial.js',
     '^three/examples/jsm/lines/LineSegments2\\.js$':

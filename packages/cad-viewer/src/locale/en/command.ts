@@ -7,14 +7,6 @@ export default {
     properties: {
       description: 'Entity properties palette'
     },
-    find: {
-      description:
-        'Opens the Find palette to search text, multiline text, attributes and text in blocks, dimensions, leaders and tables across layouts'
-    },
-    countlist: {
-      description:
-        'Opens the Count palette to display and manage counted blocks'
-    },
     mem: {
       description:
         'Opens the Memory profile palette to analyze drawing memory usage'
@@ -29,10 +21,6 @@ export default {
     units: {
       description:
         'Sets linear and angular unit formats, precision, angle direction, and insertion scaling units'
-    },
-    style: {
-      description:
-        'Creates, modifies, or specifies text styles for text and multiline text'
     }
   },
   USER: {}

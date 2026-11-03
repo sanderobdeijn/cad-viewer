@@ -197,86 +197,6 @@ export default {
       }
     }
   },
-  xline: {
-    firstPointOrOptions: 'Specify a point or',
-    secondPoint: 'Specify second point',
-    throughPoint: 'Specify through point',
-    angle: 'Enter angle of xline',
-    invalidDirection: 'Invalid direction for XLINE.',
-    keywords: {
-      hor: {
-        display: 'Hor(H)',
-        local: 'Hor',
-        global: 'Hor'
-      },
-      ver: {
-        display: 'Ver(V)',
-        local: 'Ver',
-        global: 'Ver'
-      },
-      ang: {
-        display: 'Ang(A)',
-        local: 'Ang',
-        global: 'Ang'
-      }
-    }
-  },
-  ray: {
-    startPoint: 'Specify start point',
-    throughPoint: 'Specify through point'
-  },
-  mline: {
-    startPointWithOptions: 'Specify start point or',
-    nextPointWithOptions: 'Specify next point or',
-    justificationPrompt: 'Enter justification type',
-    scalePrompt: 'Specify mline scale',
-    stylePrompt: 'Enter mline style name or [?] for list',
-    styleNotFound: 'Mline style not found',
-    styleListHeader: 'Loaded mline styles',
-    styleListEmpty: 'No mline style is loaded in current drawing.',
-    keywords: {
-      justification: {
-        display: 'Justification(J)',
-        local: 'Justification',
-        global: 'Justification'
-      },
-      scale: {
-        display: 'Scale(S)',
-        local: 'Scale',
-        global: 'Scale'
-      },
-      style: {
-        display: 'Style(ST)',
-        local: 'Style',
-        global: 'Style'
-      },
-      undo: {
-        display: 'Undo(U)',
-        local: 'Undo',
-        global: 'Undo'
-      },
-      close: {
-        display: 'Close(C)',
-        local: 'Close',
-        global: 'Close'
-      },
-      top: {
-        display: 'Top(T)',
-        local: 'Top',
-        global: 'Top'
-      },
-      zero: {
-        display: 'Zero(Z)',
-        local: 'Zero',
-        global: 'Zero'
-      },
-      bottom: {
-        display: 'Bottom(B)',
-        local: 'Bottom',
-        global: 'Bottom'
-      }
-    }
-  },
   measureAngle: {
     vertex: 'Specify vertex point',
     arm1: 'Specify point on first arm',
@@ -328,9 +248,6 @@ export default {
     invalidDistance: 'Offset distance must be greater than 0.',
     invalidSelection: 'Selected object cannot be offset.',
     offsetFailed: 'Unable to create an offset curve for the specified side.'
-  },
-  mtext: {
-    point: 'Specify mtext insertion point'
   },
   point: {
     point: 'Specify a point'
@@ -504,47 +421,6 @@ export default {
     },
     invalid: {
       referencePoints: 'Invalid reference points: points must be different.'
-    }
-  },
-  sketch: {
-    specifySketch: 'Specify sketch or',
-    sketching: 'Move the pointer to sketch (click or press Enter to stop)',
-    type: 'Enter sketch type',
-    increment: 'Specify sketch increment',
-    tolerance: 'Specify spline tolerance',
-    firstPoint: 'Specify the first point',
-    nextPoint: 'Specify the end point',
-    keywords: {
-      type: {
-        display: 'Type(T)',
-        local: 'Type',
-        global: 'Type'
-      },
-      increment: {
-        display: 'Increment(I)',
-        local: 'Increment',
-        global: 'Increment'
-      },
-      tolerance: {
-        display: 'toLerance(L)',
-        local: 'toLerance',
-        global: 'Tolerance'
-      },
-      line: {
-        display: 'Lines(L)',
-        local: 'Lines',
-        global: 'Lines'
-      },
-      polyline: {
-        display: 'Polyline(P)',
-        local: 'Polyline',
-        global: 'Polyline'
-      },
-      spline: {
-        display: 'Spline(S)',
-        local: 'Spline',
-        global: 'Spline'
-      }
     }
   },
   spline: {

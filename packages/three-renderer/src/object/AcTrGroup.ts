@@ -63,7 +63,7 @@ export class AcTrGroup extends AcTrEntity {
    * once deferred drawing (MText/Shape `syncDraw`) completes.
    *
    * This list is also extended by {@link addChild} when
-   * {@link AcDbRenderingCache.draw} appends block-reference attributes after
+   * the caller appends block-reference attributes after
    * the INSERT transform is applied. Attributes are converted to block-local
    * space before {@link addChild}; the group's INSERT transform then places
    * them correctly in WCS for spatial indexing.
@@ -272,7 +272,7 @@ export class AcTrGroup extends AcTrEntity {
    * Rebuilds {@link wcsChildBoxes} and the aggregate {@link wcsBbox} from
    * current entity geometry.
    *
-   * Block-reference conversion through {@link AcDbRenderingCache.draw} may
+   * Callers may
    * call {@link applyMatrix} while MText/Shape bounds are still empty. An empty
    * {@link THREE.Box3} contains `±Infinity` corners; transforming those values
    * yields `NaN` and breaks spatial-index consistency checks in
@@ -548,8 +548,8 @@ export class AcTrGroup extends AcTrEntity {
   }
 
   /**
-   * Block-reference attributes are appended after {@link applyMatrix}
-   * (see AcDbRenderingCache.draw). Register their bounds for spatial indexing.
+   * Block-reference attributes are appended after {@link applyMatrix}.
+   * Register their bounds for spatial indexing.
    *
    * Materializes any lazy {@link wcsChildBoxes} template first so
    * {@link storeBoxes} appends onto the live list instead of being wiped by a
@@ -563,8 +563,8 @@ export class AcTrGroup extends AcTrEntity {
       entity.userData.layerName != null &&
       entity.userData.layerName !== '0'
     ) {
-      // Block-reference attributes are appended after the group is constructed
-      // (see AcDbRenderingCache.draw). Without this update, isOnTheSameLayer
+      // Block-reference attributes are appended after the group is constructed.
+      // Without this update, isOnTheSameLayer
       // stays true and INSERT layer-0 inheritance is applied to every child,
       // including attributes on their own layers such as title-block CARTOUCHE.
       this._isOnTheSameLayer = false
@@ -811,39 +811,11 @@ export class AcTrGroup extends AcTrEntity {
   }
 
   /**
-   * Appends spatial boxes for block lines that were merged into shared
-   * geometries and therefore have no per-entity scene-graph node.
-   */
-  addExternalChildBoxes(
-    boxes: readonly {
-      minX: number
-      minY: number
-      maxX: number
-      maxY: number
-      id: string
-    }[]
-  ) {
-    for (let i = 0; i < boxes.length; i++) {
-      const box = boxes[i]
-      if (AcTrGroup.isFiniteEntityBox(box)) {
-        this._wcsChildBoxes.push({
-          minX: box.minX,
-          minY: box.minY,
-          maxX: box.maxX,
-          maxY: box.maxY,
-          id: box.id
-        })
-      }
-    }
-    this.syncWcsBboxFromChildBoxes()
-  }
-
-  /**
    * Marks this group as a shared block template after simple lines were
    * already merged into a few meshes.
    *
-   * {@link AcDbRenderingCache} only compacts templates with at least eight
-   * direct children. A coalesced block often has one mesh, so
+   * Only groups with at least eight direct children are compacted. A coalesced
+   * block often has one mesh, so
    * {@link fastDeepClone} would otherwise deep-copy that buffer for every
    * INSERT. Sealing shares the buffer and drops the empty source shells.
    */
@@ -945,7 +917,7 @@ export class AcTrGroup extends AcTrEntity {
    * {@link _sourceEntities}.
    *
    * Called from the constructor (before {@link flatten}) and from
-   * {@link addChild} when {@link AcDbRenderingCache.draw} attaches attributes.
+   * {@link addChild} when attributes are attached.
    *
    * Nested {@link AcTrGroup} instances are flattened into their own
    * {@link _sourceEntities} at construction time; this method copies that
@@ -956,8 +928,8 @@ export class AcTrGroup extends AcTrEntity {
    */
   private registerSourceEntities(object: THREE.Object3D) {
     if (object instanceof AcTrGroup) {
-      // Nested INSERT layer is attached before this outer group is built
-      // (AcDbRenderingCache.attachEntityInfo). Resolve layer-0 on tracked
+      // Nested INSERT layer is attached before this outer group is built.
+      // Resolve layer-0 on tracked
       // source entities so metadata matches flattened leaf layerNames.
       const insertLayer = object.layerName
       if (insertLayer) {

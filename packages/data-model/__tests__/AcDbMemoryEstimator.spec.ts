@@ -1,12 +1,11 @@
 import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbLine } from '../src/entity/AcDbLine'
-import { AcDbMText } from '../src/entity/AcDbMText'
 import { AcDbProxyEntity } from '../src/entity/AcDbProxyEntity'
 import {
   acdbEstimateDatabaseMemory,
-  acdbFormatMemoryEstimate,
-  acdbFormatMemoryBytes
+  acdbFormatMemoryBytes,
+  acdbFormatMemoryEstimate
 } from '../src/misc/AcDbMemoryEstimator'
 import {
   appendEntityToModelSpace,
@@ -47,28 +46,6 @@ describe('AcDbMemoryEstimator', () => {
     expect(after.byEntityType.Line?.count).toBe(50)
     expect(after.byEntityType.Line?.bytes).toBeGreaterThan(0)
     expect(after.objectCount).toBeGreaterThan(before.objectCount)
-  })
-
-  it('accounts for large MText string payloads', () => {
-    const db = setupWorkingDatabase()
-    const withShort = setupWorkingDatabase()
-    const short = new AcDbMText()
-    short.contents = 'hi'
-    appendEntityToModelSpace(withShort, short)
-
-    const long = new AcDbMText()
-    long.contents = 'x'.repeat(50_000)
-    appendEntityToModelSpace(db, long)
-
-    const shortReport = acdbEstimateDatabaseMemory(withShort)
-    const longReport = acdbEstimateDatabaseMemory(db)
-
-    const shortMText = shortReport.byEntityType.MText?.bytes ?? 0
-    const longMText = longReport.byEntityType.MText?.bytes ?? 0
-
-    // UTF-16 payload alone is ~100 KiB; long text must dominate.
-    expect(longMText - shortMText).toBeGreaterThan(80_000)
-    expect(longReport.totalBytes).toBeGreaterThan(shortReport.totalBytes)
   })
 
   it('accounts for TypedArray proxy graphic payloads', () => {

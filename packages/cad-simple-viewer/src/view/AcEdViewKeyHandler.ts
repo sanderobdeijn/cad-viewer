@@ -1,7 +1,6 @@
 import { AcApDocManager } from '../app'
 import { runMeasurementEdit } from '../command/measure/AcApMeasurementHistory'
 import { MEASUREMENT_LAYER } from '../command/measure/AcApMeasurementStore'
-import { AcEdMTextEditor } from '../editor/input/ui/AcEdMTextEditor'
 import type { AcTrView2d } from './AcTrView2d'
 
 /**
@@ -40,11 +39,7 @@ export class AcEdViewKeyHandler {
     }
 
     if (undoRedoShortcut) {
-      if (
-        !this.shouldHandleUndoRedoShortcut(e) ||
-        AcEdMTextEditor.getActiveInputBox() ||
-        this.view.editor.isActive
-      ) {
+      if (!this.shouldHandleUndoRedoShortcut(e) || this.view.editor.isActive) {
         return false
       }
 

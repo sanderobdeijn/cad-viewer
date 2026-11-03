@@ -1,29 +1,20 @@
-import {
-  AcApDocManager,
-  AcEdCommandStack,
-  AcEdMTextEditor
-} from '@mlightcad/cad-simple-viewer'
+import { AcApDocManager, AcEdCommandStack } from '@mlightcad/cad-simple-viewer'
 import { markRaw } from 'vue'
 
 import {
-  AcApCountListCmd,
   AcApDrawingUnitsCmd,
-  AcApFindCmd,
   AcApMeasurementPanelCmd,
   AcApMemCmd,
   AcApMissedDataCmd,
   AcApOpenPerfCmd,
   AcApPointStyleCmd,
   AcApPropertiesCmd,
-  AcApQSelectCmd,
-  AcApTextStyleCmd
+  AcApQSelectCmd
 } from '../command'
 import {
-  createMlColorIndexPickerToolbarFactory,
   MlDrawingUnitsDlg,
   MlPointStyleDlg,
-  MlQuickSelectDlg,
-  MlTextStyleDlg
+  MlQuickSelectDlg
 } from '../component'
 import { useDialogManager } from '../composable'
 
@@ -63,18 +54,6 @@ export const registerCmds = () => {
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'find',
-      'find',
-      new AcApFindCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'countlist',
-      'countlist',
-      new AcApCountListCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'measurementpanel',
       'measurementpanel',
       new AcApMeasurementPanelCmd()
@@ -92,13 +71,6 @@ export const registerCmds = () => {
       'openperf',
       new AcApOpenPerfCmd(),
       ['openprofile', 'openprofui']
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'style',
-      'style',
-      new AcApTextStyleCmd(),
-      'st'
     )
     isCommandRegistered = true
   }
@@ -123,21 +95,6 @@ export const registerDialogs = () => {
       component: markRaw(MlDrawingUnitsDlg),
       props: {}
     })
-    registerDialog({
-      name: 'TextStyleDlg',
-      component: markRaw(MlTextStyleDlg),
-      props: {}
-    })
     isDialogRegistered = true
-  }
-}
-
-let isMTextColorPickerRegistered = false
-export const registerMTextColorPicker = () => {
-  if (!isMTextColorPickerRegistered) {
-    AcEdMTextEditor.setDefaultColorPicker(
-      createMlColorIndexPickerToolbarFactory()
-    )
-    isMTextColorPickerRegistered = true
   }
 }

@@ -18,8 +18,6 @@ export type {
 export { AcDbFormatter } from './AcDbFormatter'
 export type { AcDbFormatterOptions } from './AcDbFormatter'
 export { AcDbLinearUnits } from './AcDbLinearUnits'
-export { AcDbRenderingCache } from './AcDbRenderingCache'
-export type { AcDbRenderingCacheProfileStats } from './AcDbRenderingCache'
 export {
   AcDbCodePage,
   acdbDwgCodePageToEncoding,
@@ -65,8 +63,6 @@ export {
   ByBlock,
   ByLayer,
   DEFAULT_LINE_TYPE,
-  DEFAULT_MLEADER_STYLE,
-  DEFAULT_MLINE_STYLE,
   DEFAULT_TEXT_STYLE,
   MLIGHTCAD_APPID,
   VPORT_FALLBACK_CENTER_2D,
@@ -125,23 +121,7 @@ export {
   acdbCombineDxfBinaryChunks,
   acdbHexStringsToBytes
 } from './proxyGraphic'
-export { acdbPreviewIconToDataUrl, acdbThumbnailImageToDataUrl } from './AcDbPreviewIcon'
 export {
-  ACDB_DYN_BLOCK_ENHANCED_BLOCK,
-  ACDB_DYN_BLOCK_GUID_APP,
-  ACDB_DYN_BLOCK_REP_BTAG_APP,
-  ACDB_DYN_BLOCK_REP_DATA,
-  ACDB_DYN_BLOCK_REP_ETAG_APP,
-  ACDB_DYN_BLOCK_REPRESENTATION_DICT,
-  ACDB_DYN_BLOCK_TRUE_NAME_APP,
-  acdbIsAnonymousUserBlockName
-} from './AcDbDynBlockConstants'
-export {
-  acdbImportDynBlockMetadata,
-  acdbNormalizeExtensionDictionaryId
-} from './AcDbImportDynBlockMetadata'
-export type {
-  AcDbDynBlockDictionarySource,
-  AcDbDynBlockRepresentationSource,
-  AcDbImportDynBlockMetadataOptions
-} from './AcDbImportDynBlockMetadata'
+  acdbPreviewIconToDataUrl,
+  acdbThumbnailImageToDataUrl
+} from './AcDbPreviewIcon'

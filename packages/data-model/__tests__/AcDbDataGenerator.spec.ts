@@ -1,6 +1,6 @@
+import { acdbHostApplicationServices } from '../src/base/AcDbHostApplicationServices'
 import { AcDbDatabase } from '../src/database/AcDbDatabase'
 import { AcDbDataGenerator } from '../src/misc/AcDbDataGenerator'
-import { acdbHostApplicationServices } from '../src/base/AcDbHostApplicationServices'
 
 describe('AcDbDataGenerator', () => {
   it('creates default records and arrow block', () => {
@@ -24,9 +24,5 @@ describe('AcDbDataGenerator', () => {
 
     generator.createDefaultLayout()
     expect(db.objects.layout.getAt('Model')).toBeDefined()
-
-    generator.createArrowBlock()
-    generator.createArrowBlock()
-    expect(db.tables.blockTable.getAt('_CAXARROW')).toBeDefined()
   })
 })

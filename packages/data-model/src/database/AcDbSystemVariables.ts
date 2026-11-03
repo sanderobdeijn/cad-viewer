@@ -37,12 +37,6 @@ export const AcDbSystemVariables = {
   CETRANSPARENCY: 'CETRANSPARENCY',
   /** Current layer name used when creating new entities. */
   CLAYER: 'CLAYER',
-  /** Current multileader style name used when creating new MLEADER entities. */
-  CMLEADERSTYLE: 'CMLEADERSTYLE',
-  /** Current multiline scale used when creating new MLINE entities. */
-  CMLSCALE: 'CMLSCALE',
-  /** Current multiline style name used when creating new MLINE entities. */
-  CMLSTYLE: 'CMLSTYLE',
   /** UI color theme selector used by the application shell or viewer integration. */
   COLORTHEME: 'COLORTHEME',
   /**

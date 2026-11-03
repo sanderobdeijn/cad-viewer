@@ -59,10 +59,13 @@ describe('acuiResolveToolbarItems', () => {
   })
 
   it('returns phone default items when layout is phone', () => {
-    const items = acuiResolveToolbarItems({ items: 'default' }, undefined, 'phone')
+    const items = acuiResolveToolbarItems(
+      { items: 'default' },
+      undefined,
+      'phone'
+    )
     expect(items.map(item => item.id)).toEqual([
       'zoom',
-      'find',
       'measure',
       'layout',
       'settings'
@@ -73,21 +76,6 @@ describe('acuiResolveToolbarItems', () => {
     expect(
       items[0].children?.some(child => child.id === 'zoom-smart-extents')
     ).toBe(true)
-  })
-
-  it('binds the find button to the find command on desktop and phone', () => {
-    const desktop = acuiCreateDefaultToolbarItems().find(
-      item => item.id === 'find'
-    )
-    expect(desktop?.command).toBe('find')
-    expect(desktop?.label).toBe('toolbar.find')
-    expect(desktop?.icon).toContain('<svg')
-    const phone = acuiResolveToolbarItems(
-      { items: 'default' },
-      undefined,
-      'phone'
-    ).find(item => item.id === 'find')
-    expect(phone?.command).toBe('find')
   })
 
   it('omits excluded root item ids', () => {
@@ -130,10 +118,10 @@ describe('acuiResolveToolbarItems', () => {
     const items = acuiResolveToolbarItems({
       items: 'default',
       appendItems: [{ id: 'agent', command: 'agent' }],
-      appendItemsAfter: 'find'
+      appendItemsAfter: 'zoom'
     })
-    const findIndex = items.findIndex(item => item.id === 'find')
-    expect(items[findIndex + 1]?.id).toBe('agent')
+    const zoomIndex = items.findIndex(item => item.id === 'zoom')
+    expect(items[zoomIndex + 1]?.id).toBe('agent')
   })
 
   it('inserts appendItems before a root toolbar item id', () => {
@@ -263,9 +251,9 @@ describe('default toolbar items', () => {
     expect(readingMode?.toggle?.getValue()).toBe(false)
 
     expect(switchBg?.disabled).toEqual(expect.any(Function))
-    expect(typeof switchBg?.disabled === 'function' && switchBg.disabled()).toBe(
-      false
-    )
+    expect(
+      typeof switchBg?.disabled === 'function' && switchBg.disabled()
+    ).toBe(false)
   })
 
   it('places toolbar placement before theme inside settings', () => {
@@ -276,13 +264,13 @@ describe('default toolbar items', () => {
     expect(childIds[themeIndex - 1]).toBe('toolbar-placement')
   })
 
-  it('places the layout switcher after find', () => {
+  it('places the layout switcher after zoom', () => {
     const items = acuiCreateDefaultToolbarItems()
-    const findIndex = items.findIndex(item => item.id === 'find')
-    expect(items[findIndex + 1]?.id).toBe('layout')
-    expect(items[findIndex + 1]?.childrenUi).toBe('menu')
-    expect(items[findIndex + 1]?.icon).toContain('rect x="2" y="2" width="8.2"')
-    expect(items[findIndex + 2]?.id).toBe('measure')
+    const zoomIndex = items.findIndex(item => item.id === 'zoom')
+    expect(items[zoomIndex + 1]?.id).toBe('layout')
+    expect(items[zoomIndex + 1]?.childrenUi).toBe('menu')
+    expect(items[zoomIndex + 1]?.icon).toContain('rect x="2" y="2" width="8.2"')
+    expect(items[zoomIndex + 2]?.id).toBe('measure')
   })
 
   it('includes a separator before the settings button', () => {
@@ -336,7 +324,9 @@ describe('default toolbar items', () => {
   it('uses dismissible sub-toolbars for measure and settings', () => {
     const items = acuiCreateDefaultToolbarItems()
     const settings = items.find(item => item.id === 'settings')
-    expect(items.find(item => item.id === 'measure')?.childrenUi).toBe('toolbar')
+    expect(items.find(item => item.id === 'measure')?.childrenUi).toBe(
+      'toolbar'
+    )
     expect(items.find(item => item.id === 'layout')?.childrenUi).toBe('menu')
     expect(settings?.childrenUi).toBe('toolbar')
     expect(
@@ -442,13 +432,9 @@ describe('toolbar presets and separators', () => {
 
   it('keeps desktop labels for shared presets and still resolves phone-only ids', () => {
     const items = acuiResolveToolbarItems({
-      items: [
-        { preset: 'find' },
-        { preset: 'zoom' },
-        { preset: 'settings' }
-      ]
+      items: [{ preset: 'measure' }, { preset: 'zoom' }, { preset: 'settings' }]
     })
-    expect(items[0].id).toBe('find')
+    expect(items[0].id).toBe('measure')
     expect(items[1].id).toBe('zoom')
     expect(items[2].id).toBe('settings')
   })

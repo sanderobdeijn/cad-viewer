@@ -50,15 +50,6 @@ export default {
       description:
         'Sets the current layer for new objects and editing operations'
     },
-    cmleaderstyle: {
-      description: 'Sets the name of the current multileader style'
-    },
-    cmlscale: {
-      description: 'Controls the overall width of a multiline'
-    },
-    cmlstyle: {
-      description: 'Sets the name of the current multiline style'
-    },
     colortheme: {
       description:
         'Controls the color theme of the user interface (dark or light)'
@@ -190,9 +181,6 @@ export default {
     modelbkcolor: {
       description: 'Sets the background color of the model-space drawing area'
     },
-    mline: {
-      description: 'Creates multiple parallel lines as one multiline object'
-    },
     move: {
       description: 'Moves selected entities by a displacement vector',
       prompt: 'Select entities'
@@ -200,9 +188,6 @@ export default {
     offset: {
       description:
         'Creates parallel curves, polylines, or circles at a specified distance'
-    },
-    mtext: {
-      description: 'Creates one mtext entity'
     },
     openprof: {
       description:
@@ -263,10 +248,6 @@ export default {
     close: {
       description: 'Closes the current drawing'
     },
-    ray: {
-      description:
-        'Creates a ray that starts at a point and extends to infinity'
-    },
     rectang: {
       description: 'Creates a rectangle by specifying two opposite corners'
     },
@@ -283,9 +264,6 @@ export default {
     shortcutmenu: {
       description:
         'Controls the availability of shortcut menus in the drawing area'
-    },
-    sketch: {
-      description: 'Creates a series of freehand line segments'
     },
     spline: {
       description: 'Creates a smooth spline curve by specifying control points'
@@ -314,10 +292,6 @@ export default {
     redo: {
       description: 'Redoes the last undone database editing operation',
       nothingToRedo: 'Nothing to redo.'
-    },
-    xline: {
-      description:
-        'Creates a construction line that extends infinitely in both directions'
     },
     zoom: {
       description: 'Zooms to display the maximum extents of all entities'

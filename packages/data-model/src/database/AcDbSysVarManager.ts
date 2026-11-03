@@ -32,8 +32,6 @@ import {
   ACDB_GRIPSIZE_MIN,
   acdbCoerceIntegerSysVar,
   ByLayer,
-  DEFAULT_MLEADER_STYLE,
-  DEFAULT_MLINE_STYLE,
   DEFAULT_TEXT_STYLE
 } from '../misc/AcDbConstants'
 import { AcDbLinearUnits } from '../misc/AcDbLinearUnits'
@@ -234,33 +232,6 @@ export class AcDbSysVarManager {
       type: 'string',
       isDbVar: true,
       defaultValue: '0'
-    })
-    /**
-     * Sets the name of the current multileader style.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.CMLEADERSTYLE,
-      type: 'string',
-      isDbVar: true,
-      defaultValue: DEFAULT_MLEADER_STYLE
-    })
-    /**
-     * Controls the overall width of a multiline.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.CMLSCALE,
-      type: 'number',
-      isDbVar: true,
-      defaultValue: 1
-    })
-    /**
-     * Sets the multiline style that governs the appearance of the multiline.
-     */
-    this.registerVar({
-      name: AcDbSystemVariables.CMLSTYLE,
-      type: 'string',
-      isDbVar: true,
-      defaultValue: DEFAULT_MLINE_STYLE
     })
     /**
      * Color theme of UI elements

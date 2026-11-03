@@ -1,5 +1,3 @@
-export { default as MlCountList } from './MlCountList.vue'
-export { default as MlFindPalette } from './MlFindPalette.vue'
 export { default as MlMeasurementPalette } from './MlMeasurementPalette.vue'
 export { default as MlMemoryProfile } from './MlMemoryProfile.vue'
 export { default as MlMissingResources } from './MlMissingResources.vue'

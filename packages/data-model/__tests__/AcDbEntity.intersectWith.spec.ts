@@ -1,31 +1,17 @@
 import {
   GeometryPoint2d,
-  geometryTransformOcsPointToWcs,
-  GeometryVector3d
+  geometryTransformOcsPointToWcs
 } from '@mlightcad/geometry-engine'
 
-import { acdbHostApplicationServices } from '../src/base'
-import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
 import {
   AcDb2dPolyline,
   AcDbAlignedDimension,
-  AcDbBlockReference,
   AcDbCircle,
   AcDbLine,
   AcDbPoly2dType,
-  AcDbPolyline,
-  AcDbRay,
-  AcDbText,
-  AcDbXline
+  AcDbPolyline
 } from '../src/entity'
 import { AcDbIntersect } from '../src/misc'
-
-const createDb = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  acdbHostApplicationServices().workingDatabase = db
-  return db
-}
 
 function expectPoint(
   points: GeometryPoint2d[],
@@ -113,101 +99,19 @@ describe('AcDbEntity.intersectWith', () => {
     expectPoint(extended, { x: 8, y: 0 })
   })
 
-  it('intersects a ray ahead of its origin but not behind it', () => {
-    const ray = new AcDbRay()
-    ray.basePoint = new GeometryPoint2d(0, 0)
-    ray.unitDir = new GeometryVector3d(1, 0, 0)
-
-    const ahead = new AcDbLine(
-      new GeometryPoint2d(5, -1),
-      new GeometryPoint2d(5, 1)
-    )
-    const behind = new AcDbLine(
-      new GeometryPoint2d(-5, -1),
-      new GeometryPoint2d(-5, 1)
-    )
-
-    const aheadPoints = ray.intersectWith(ahead)
-    expect(aheadPoints).toHaveLength(1)
-    expectPoint(aheadPoints, { x: 5, y: 0 })
-    expect(ray.intersectWith(behind)).toEqual([])
-  })
-
-  it('intersects an xline on both sides of its base point', () => {
-    const xline = new AcDbXline()
-    xline.basePoint = new GeometryPoint2d(0, 0)
-    xline.unitDir = new GeometryPoint2d(1, 0)
-
-    const behind = new AcDbLine(
-      new GeometryPoint2d(-5, -1),
-      new GeometryPoint2d(-5, 1)
-    )
-    const points = xline.intersectWith(behind)
-    expect(points).toHaveLength(1)
-    expectPoint(points, { x: -5, y: 0 })
-  })
-
-  it('intersects a line inside a block reference after insertion transform', () => {
-    const db = createDb()
-    const block = new AcDbBlockTableRecord()
-    block.name = 'LINE_BLOCK'
-    block.appendEntity(
-      new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(10, 0))
-    )
-    db.tables.blockTable.add(block)
-
-    const insert = new AcDbBlockReference('LINE_BLOCK')
-    insert.position = new GeometryPoint2d(0, 10)
-    db.tables.blockTable.modelSpace.appendEntity(insert)
-
-    const cutter = new AcDbLine(
-      new GeometryPoint2d(5, 5),
-      new GeometryPoint2d(5, 15)
-    )
-    const points = insert.intersectWith(cutter)
-    expect(points).toHaveLength(1)
-    expectPoint(points, { x: 5, y: 10 })
-  })
-
-  it('intersects a line inside a dimension anonymous block', () => {
-    const db = createDb()
-    const dimBlock = new AcDbBlockTableRecord()
-    dimBlock.name = '*D_INTERSECT'
-    dimBlock.appendEntity(
-      new AcDbLine(new GeometryPoint2d(1, 2), new GeometryPoint2d(4, 2))
-    )
-    db.tables.blockTable.add(dimBlock)
-
+  it('intersects the dimension line of a dimension', () => {
     const dim = new AcDbAlignedDimension(
       new GeometryPoint2d(0, 0),
       new GeometryPoint2d(5, 0),
       new GeometryPoint2d(5, 1)
     )
-    dim.dimBlockId = '*D_INTERSECT'
-    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
-
     const cutter = new AcDbLine(
-      new GeometryPoint2d(12.5, 20),
-      new GeometryPoint2d(12.5, 24)
+      new GeometryPoint2d(2.5, 0.5),
+      new GeometryPoint2d(2.5, 4)
     )
     const points = dim.intersectWith(cutter)
     expect(points).toHaveLength(1)
-    expectPoint(points, { x: 12.5, y: 22 })
-  })
-
-  it('returns an empty array when a text entity is one operand', () => {
-    const text = new AcDbText()
-    text.position = new GeometryPoint2d(0, 0)
-    text.height = 2
-    text.textString = 'A'
-    const line = new AcDbLine(
-      new GeometryPoint2d(-1, 0),
-      new GeometryPoint2d(1, 0)
-    )
-
-    expect(text.intersectWith(line)).toEqual([])
-    expect(line.intersectWith(text)).toEqual([])
+    expectPoint(points, { x: 2.5, y: 1 })
   })
 
   it('intersects a 2d polyline using its extrusion normal', () => {

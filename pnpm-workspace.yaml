@@ -9,7 +9,6 @@ allowBuilds:
   vue-demi: true
 overrides:
   '@mlightcad/data-model': 'workspace:*'
-  '@mlightcad/mtext-input-box': 'workspace:*'
   '@mlightcad/mtext-parser': 'workspace:*'
   '@mlightcad/mtext-renderer': 'workspace:*'
   '@mlightcad/ribbon': 'workspace:*'

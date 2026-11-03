@@ -3,9 +3,11 @@ import {
   GeometryPoint2d,
   GeometryVector3d
 } from '@mlightcad/geometry-engine'
+import { AcGiRenderer } from '@mlightcad/graphic-interface'
+
 import { acdbHostApplicationServices } from '../src/base'
-import { AcDbBlockTableRecord, AcDbDatabase } from '../src/database'
-import { AcDbAlignedDimension, AcDbLine } from '../src/entity'
+import { AcDbDatabase } from '../src/database'
+import { AcDbAlignedDimension } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
 import { expectDetachedClone } from '../test-utils/cloneTestUtils'
 
@@ -28,165 +30,143 @@ describe('AcDbAlignedDimension', () => {
     )
   })
 
-  it('resolves osnap points through its anonymous dimension block', () => {
-    const db = createDb()
-
-    const dimBlock = new AcDbBlockTableRecord()
-    dimBlock.name = '*D_TEST'
-    const line = new AcDbLine(
-      new GeometryPoint2d(1, 2),
-      new GeometryPoint2d(4, 2)
-    )
-    dimBlock.appendEntity(line)
-    db.tables.blockTable.add(dimBlock)
-
-    const dim = new AcDbAlignedDimension(
+  const createDimension = () =>
+    new AcDbAlignedDimension(
       new GeometryPoint2d(0, 0),
       new GeometryPoint2d(5, 0),
       new GeometryPoint2d(5, 1)
     )
-    dim.dimBlockId = '*D_TEST'
-    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
 
-    const snapsByGsMark: GeometryPoint2d[] = []
+  const createRenderer = () =>
+    ({
+      lines: jest.fn(() => ({})),
+      area: jest.fn(() => ({})),
+      mtext: jest.fn(() => ({})),
+      group: jest.fn(items => items)
+    }) as unknown as AcGiRenderer
+
+  it('draws its lines, arrows and label', () => {
+    createDb()
+    const dim = createDimension()
+    dim.dimensionText = '5.000'
+    const renderer = createRenderer()
+
+    const drawables = dim.subWorldDraw(renderer) as unknown as unknown[]
+
+    expect(renderer.lines).toHaveBeenCalledTimes(3)
+    expect(renderer.area).toHaveBeenCalledTimes(2)
+    expect(renderer.mtext).toHaveBeenCalledTimes(1)
+    expect(jest.mocked(renderer.mtext).mock.calls[0][0]).toMatchObject({
+      text: '5.000',
+      height: 10,
+      position: { x: 2.5, y: 1 }
+    })
+    expect(drawables).toHaveLength(6)
+  })
+
+  it('draws no label without dimension text', () => {
+    createDb()
+    const dim = createDimension()
+    dim.dimensionText = null
+    const renderer = createRenderer()
+
+    dim.subWorldDraw(renderer)
+
+    expect(renderer.lines).toHaveBeenCalledTimes(3)
+    expect(renderer.mtext).not.toHaveBeenCalled()
+  })
+
+  it('points its arrows along the dimension line', () => {
+    createDb()
+    const renderer = createRenderer()
+
+    createDimension().subWorldDraw(renderer)
+
+    const tips = jest
+      .mocked(renderer.area)
+      .mock.calls.map(([area]) => area.loops[0].getPoints(4)[0])
+    expect(tips[0].x).toBeCloseTo(0, 8)
+    expect(tips[0].y).toBeCloseTo(1, 8)
+    expect(tips[1].x).toBeCloseTo(5, 8)
+    expect(tips[1].y).toBeCloseTo(1, 8)
+  })
+
+  it('resolves osnap points through its lines', () => {
+    const dim = createDimension()
+    const snaps: GeometryPoint2d[] = []
+
     dim.subGetOsnapPoints(
       AcDbOsnapMode.EndPoint,
       new GeometryPoint2d(),
       new GeometryPoint2d(),
-      snapsByGsMark,
-      line.objectId
+      snaps
     )
 
-    expect(snapsByGsMark).toHaveLength(2)
-    expect(snapsByGsMark[0]).toMatchObject({ x: 11, y: 22 })
-    expect(snapsByGsMark[1]).toMatchObject({ x: 14, y: 22 })
-
-    const snapsWithoutGsMark: GeometryPoint2d[] = []
-    dim.subGetOsnapPoints(
-      AcDbOsnapMode.EndPoint,
-      new GeometryPoint2d(),
-      new GeometryPoint2d(),
-      snapsWithoutGsMark
-    )
-    expect(snapsWithoutGsMark.length).toBeGreaterThanOrEqual(2)
+    const hasSnap = (x: number, y: number) =>
+      snaps.some(p => Math.abs(p.x - x) < 1e-8 && Math.abs(p.y - y) < 1e-8)
+    expect(hasSnap(0, 1)).toBe(true)
+    expect(hasSnap(5, 1)).toBe(true)
   })
 
-  it('returns transformed geometric extents from dimension block', () => {
-    const db = createDb()
+  it('includes its arrows and label in its geometric extents', () => {
+    const dim = createDimension()
+    dim.dimensionText = null
+    const without = dim.geometricExtents
+    // Arrows are 10 long, so they reach past the 5 long dimension line.
+    expect(without.max.x).toBeCloseTo(10, 8)
+    expect(without.min.x).toBeCloseTo(-5, 8)
 
-    const dimBlock = new AcDbBlockTableRecord()
-    dimBlock.name = '*D_EXTENTS'
-    dimBlock.appendEntity(
-      new AcDbLine(new GeometryPoint2d(1, 2), new GeometryPoint2d(4, 6))
-    )
-    db.tables.blockTable.add(dimBlock)
-
-    const dim = new AcDbAlignedDimension(
-      new GeometryPoint2d(0, 0),
-      new GeometryPoint2d(5, 0),
-      new GeometryPoint2d(5, 1)
-    )
-    dim.dimBlockId = '*D_EXTENTS'
-    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
-
-    const extents = dim.geometricExtents
-    expect(extents.isEmpty()).toBe(false)
-    expect(extents.min).toMatchObject({ x: 11, y: 22 })
-    expect(extents.max).toMatchObject({ x: 14, y: 26 })
+    dim.dimensionText = '5.000'
+    expect(dim.geometricExtents.max.y).toBeGreaterThan(without.max.y)
   })
 
-  it('rotates dimension block geometry with transformBy', () => {
-    const db = createDb()
-
-    const dimBlock = new AcDbBlockTableRecord()
-    dimBlock.name = '*D_ROTATE'
-    dimBlock.appendEntity(
-      new AcDbLine(new GeometryPoint2d(1, 2), new GeometryPoint2d(4, 2))
-    )
-    db.tables.blockTable.add(dimBlock)
-
-    const dim = new AcDbAlignedDimension(
-      new GeometryPoint2d(0, 0),
-      new GeometryPoint2d(5, 0),
-      new GeometryPoint2d(5, 1)
-    )
-    dim.dimBlockId = '*D_ROTATE'
-    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
-
-    const before = dim.geometricExtents
-    expect(before.min).toMatchObject({ x: 11, y: 22 })
-    expect(before.max).toMatchObject({ x: 14, y: 22 })
-
+  it('moves its geometry with transformBy', () => {
+    const dim = createDimension()
     dim.transformBy(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
 
-    const after = dim.geometricExtents
-    expect(after.min.x).toBeCloseTo(-22, 8)
-    expect(after.min.y).toBeCloseTo(11, 8)
-    expect(after.max.x).toBeCloseTo(-22, 8)
-    expect(after.max.y).toBeCloseTo(14, 8)
+    const snaps: GeometryPoint2d[] = []
+    dim.subGetOsnapPoints(
+      AcDbOsnapMode.EndPoint,
+      new GeometryPoint2d(),
+      new GeometryPoint2d(),
+      snaps
+    )
+
+    expect(
+      snaps.some(p => Math.abs(p.x + 1) < 1e-8 && Math.abs(p.y) < 1e-8)
+    ).toBe(true)
+    expect(
+      snaps.some(p => Math.abs(p.x + 1) < 1e-8 && Math.abs(p.y - 5) < 1e-8)
+    ).toBe(true)
   })
 
-  it('updates geometricExtents when dimBlockPosition changes', () => {
-    const db = createDb()
-
-    const dimBlock = new AcDbBlockTableRecord()
-    dimBlock.name = '*D_MOVE'
-    dimBlock.appendEntity(
-      new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(2, 0))
-    )
-    db.tables.blockTable.add(dimBlock)
-
-    const dim = new AcDbAlignedDimension(
-      new GeometryPoint2d(0, 0),
-      new GeometryPoint2d(5, 0),
-      new GeometryPoint2d(5, 1)
-    )
-    dim.dimBlockId = '*D_MOVE'
-    dim.dimBlockPosition = new GeometryPoint2d(0, 0)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
-
-    expect(dim.geometricExtents.max).toMatchObject({ x: 2, y: 0 })
-
-    dim.dimBlockPosition = new GeometryPoint2d(10, 20)
-
-    expect(dim.geometricExtents.min).toMatchObject({ x: 10, y: 20 })
-    expect(dim.geometricExtents.max).toMatchObject({ x: 12, y: 20 })
-  })
-
-  it('returns geometricExtents from definition points when dim block is absent', () => {
-    const db = createDb()
+  it('returns geometricExtents that follow its definition points', () => {
     const dim = new AcDbAlignedDimension(
       new GeometryPoint2d(0, 0),
       new GeometryPoint2d(5, 0),
       new GeometryPoint2d(5, 2)
     )
-    db.tables.blockTable.modelSpace.appendEntity(dim)
+    dim.dimensionText = null
 
     const extents = dim.geometricExtents
     expect(extents.isEmpty()).toBe(false)
-    expect(extents.min).toMatchObject({ x: 0, y: 0 })
-    expect(extents.max).toMatchObject({ x: 5, y: 2 })
+    expect(extents.max.y).toBeGreaterThanOrEqual(2)
 
-    dim.dimLinePoint = new GeometryPoint2d(5, 8)
+    dim.dimLinePoint = new GeometryPoint2d(5, 30)
 
-    expect(dim.geometricExtents.max.y).toBeCloseTo(8)
+    expect(dim.geometricExtents.max.y).toBeGreaterThanOrEqual(30)
   })
 
-  it('includes textPosition in fallback extents when text is placed away from origin', () => {
-    const db = createDb()
+  it('includes textPosition in extents when text is placed away from origin', () => {
     const dim = new AcDbAlignedDimension(
       new GeometryPoint2d(10, 10),
       new GeometryPoint2d(20, 10),
       new GeometryPoint2d(20, 12)
     )
-    dim.textPosition = new GeometryPoint2d(5, 5)
-    db.tables.blockTable.modelSpace.appendEntity(dim)
+    dim.dimensionText = null
+    dim.textPosition = new GeometryPoint2d(-50, -60)
 
-    expect(dim.geometricExtents.min).toMatchObject({ x: 5, y: 5 })
-    expect(dim.geometricExtents.max).toMatchObject({ x: 20, y: 12 })
+    expect(dim.geometricExtents.min).toMatchObject({ x: -50, y: -60 })
   })
 
   it('returns definition and text grip points', () => {

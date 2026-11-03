@@ -14,7 +14,6 @@ import {
 } from '@mlightcad/cad-simple-viewer'
 
 import packageJson from '../package.json'
-import { AcApFindUiCmd } from './command/AcApFindUiCmd'
 import { AcApMeasurementPanelUiCmd } from './command/AcApMeasurementPanelUiCmd'
 import { acuiPrependToolbarLayoutSwitcher } from './config/createToolbarLayoutSwitcher'
 import { acuiMergeToolbarOptionsForLayout } from './config/mergeToolbarOptionsForLayout'
@@ -38,12 +37,10 @@ import {
 import { AcUiI18n, acuiRegisterSimpleUiI18n } from './i18n'
 import { AcUiThemeSync } from './theme/AcUiThemeSync'
 import { AcUiDockPanel, type AcUiDockPanelTab } from './ui/AcUiDockPanel'
-import { AcUiFindPaletteView } from './ui/AcUiFindPaletteView'
 import { AcUiMeasurementPaletteView } from './ui/AcUiMeasurementPaletteView'
 import { acuiRemoveUiStylesIfUnused } from './ui/styles'
 
 const MEASUREMENTS_TAB_ID = 'measurements'
-const FIND_TAB_ID = 'find'
 
 /**
  * CAD viewer plugin that adds a framework-agnostic toolbar and
@@ -69,8 +66,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
 
   /** Measurement list view mounted in the dock panel measurements tab. */
   private measurementPaletteView?: AcUiMeasurementPaletteView
-  /** Text search view mounted in the dock panel find tab. */
-  private findPaletteView?: AcUiFindPaletteView
   /** Chrome DevTools-style dock panel container. */
   private dockPanel?: AcUiDockPanel
   /** Configurable toolbar instance. */
@@ -101,8 +96,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private commandManager?: AcEdCommandStack
   /** Whether the toolbar includes a measurement panel button. */
   private hasMeasurementPanelToolbarItem = false
-  /** Whether the toolbar includes a find (text search) button. */
-  private hasFindToolbarItem = false
   /** Whether {@link dockPanel} was explicitly enabled in options. */
   private dockPanelExplicitlyEnabled = false
   /** Normalized dock panel defaults from plugin options. */
@@ -156,7 +149,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private handleLocaleChanged = () => {
     this.rebuildToolbarItems(this.activeLayoutKind)
     this.measurementPaletteView?.refreshLocale()
-    this.findPaletteView?.refreshLocale()
     this.dockPanel?.refreshLocale()
     if (this.toolbar) {
       this.toolbar.updateItems(this.baseToolbarItems)
@@ -167,9 +159,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private handleDocumentActivatedForDock = () => {
     if (this.hasMeasurementPanelToolbarItem) {
       this.mountMeasurementDockUi()
-    }
-    if (this.hasFindToolbarItem) {
-      this.mountFindDockUi()
     }
     this.tryUpgradeDockMountTarget()
     this.dockPanel?.ensureMounted()
@@ -321,7 +310,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       ? acuiPrependToolbarLayoutSwitcher(resolved, layoutSwitcher)
       : resolved
     this.syncMeasurementToolbarItem()
-    this.syncFindToolbarItem()
     this.renderToolbarItems()
   }
 
@@ -521,11 +509,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
       this.ensureMeasurementPanelCommandRegistered()
     }
 
-    if (this.hasFindToolbarItem) {
-      this.mountFindDockUi()
-      this.ensureFindCommandRegistered()
-    }
-
     this.ensureViewerToolbar(host)
   }
 
@@ -699,7 +682,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.toolbarInCanvasParent = nextInCanvasParent
     this.rebuildToolbarItems(kind, toolbarOpts)
     this.syncMeasurementToolbarItem()
-    this.syncFindToolbarItem()
 
     if (options?.skipToolbarApply || !this.toolbar) {
       return
@@ -812,21 +794,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     }
   }
 
-  /** Mounts or tears down find UI when the find toolbar button is added or removed. */
-  private syncFindToolbarItem() {
-    const hadFind = this.hasFindToolbarItem
-    const hasFind = acuiToolbarItemsIncludeItem(this.baseToolbarItems, 'find')
-    this.hasFindToolbarItem = hasFind
-
-    if (hasFind && !hadFind) {
-      this.ensureFindCommandRegistered()
-      this.mountFindDockUi()
-    } else if (!hasFind && hadFind) {
-      this.teardownFindUi()
-      this.unregisterFindCommand()
-    }
-  }
-
   /** Removes the `measurementpanel` command when the measurement panel button is removed. */
   private unregisterMeasurementPanelCommand() {
     if (!this.commandManager) return
@@ -848,41 +815,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     }
 
     this.registerMeasurementPanelCommand(this.commandManager)
-  }
-
-  /** Removes the `find` command when the find toolbar button is removed. */
-  private unregisterFindCommand() {
-    if (!this.commandManager) return
-    const group = AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME
-    const index = this.registeredCommands.findIndex(cmd => cmd.name === 'find')
-    if (index === -1) return
-
-    this.commandManager.removeCmd(group, 'find')
-    this.registeredCommands.splice(index, 1)
-  }
-
-  /** Registers the `find` command when a find button appears at runtime. */
-  private ensureFindCommandRegistered() {
-    if (!this.commandManager) return
-    if (this.registeredCommands.some(cmd => cmd.name === 'find')) return
-
-    const group = AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME
-    this.commandManager.addCommand(
-      group,
-      'find',
-      'find',
-      new AcApFindUiCmd({
-        prepare: () => {
-          this.mountFindDockUi()
-          this.tryUpgradeDockMountTarget()
-        },
-        toggle: () => {
-          this.dockPanel?.open(FIND_TAB_ID)
-          this.findPaletteView?.focus()
-        }
-      })
-    )
-    this.registeredCommands.push({ group, name: 'find' })
   }
 
   /** Registers the `measurementpanel` command with dock preparation wired in. */
@@ -928,9 +860,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     ) {
       this.mountMeasurementDockUi()
     }
-    if (this.hasFindToolbarItem && !this.dockPanel.hasTab(FIND_TAB_ID)) {
-      this.mountFindDockUi()
-    }
 
     this.tryUpgradeDockMountTarget()
     this.dockPanel.ensureMounted()
@@ -941,9 +870,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
   private prepareDockPanel() {
     if (this.hasMeasurementPanelToolbarItem) {
       this.mountMeasurementDockUi()
-    }
-    if (this.hasFindToolbarItem) {
-      this.mountFindDockUi()
     }
     if (!this.dockPanel) {
       this.ensureDockPanel()
@@ -1055,40 +981,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.destroyDockIfUnused()
   }
 
-  /** Mounts the text search view in the dock panel find tab. */
-  private mountFindDockUi() {
-    if (!this.hostEl || !this.i18n) return
-
-    this.ensureDockPanel()
-    if (!this.dockPanel) return
-
-    if (this.dockPanel.hasTab(FIND_TAB_ID)) {
-      return
-    }
-
-    this.findPaletteView = new AcUiFindPaletteView({
-      editor: AcApDocManager.instance,
-      i18n: this.i18n
-    })
-    const added = this.dockPanel.addTab({
-      id: FIND_TAB_ID,
-      labelKey: 'dockPanel.tab.find',
-      content: this.findPaletteView.element
-    })
-    if (!added) {
-      this.findPaletteView.destroy()
-      this.findPaletteView = undefined
-    }
-  }
-
-  /** Tears down find UI without removing the dock shell when other tabs remain. */
-  private teardownFindUi() {
-    this.dockPanel?.removeTab(FIND_TAB_ID)
-    this.findPaletteView?.destroy()
-    this.findPaletteView = undefined
-    this.destroyDockIfUnused()
-  }
-
   /** Closes and optionally destroys the dock panel when it has no remaining tabs. */
   private destroyDockIfUnused() {
     if (!this.dockPanel) return
@@ -1144,7 +1036,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.registeredCommands = []
 
     this.teardownMeasurementUi()
-    this.teardownFindUi()
     this.toolbarDocUnbind?.()
     this.toolbarDocUnbind = undefined
     this.toolbar?.destroy()
@@ -1161,7 +1052,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
     this.toolbarItemsOverridden = false
     this.toolbarLayoutSwitcher = undefined
     this.hasMeasurementPanelToolbarItem = false
-    this.hasFindToolbarItem = false
     this.commandManager = undefined
     this.i18n = undefined
     this.themeSync?.stop()
@@ -1170,7 +1060,6 @@ export class AcApSimpleUiPlugin implements AcApPlugin {
 
     acuiRemoveUiStylesIfUnused()
   }
-
 }
 
 /**

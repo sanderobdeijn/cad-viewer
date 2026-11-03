@@ -10,10 +10,7 @@
       :top-offset="paletteOffsets.top"
       :bottom-offset="paletteOffsets.bottom"
     >
-      <ml-overflow-tabs
-        v-model="store.dialogs.activePaletteTab"
-        :tabs="tabs"
-      >
+      <ml-overflow-tabs v-model="store.dialogs.activePaletteTab" :tabs="tabs">
         <div
           v-if="store.dialogs.activePaletteTab === 'entityProperties'"
           class="ml-entity-properties-wrapper"
@@ -22,18 +19,6 @@
             :entity-props-list="properties"
             :entity-locked="propertyEntityLocked"
           />
-        </div>
-        <div
-          v-else-if="store.dialogs.activePaletteTab === 'countList'"
-          class="ml-count-list-wrapper"
-        >
-          <ml-count-list />
-        </div>
-        <div
-          v-else-if="store.dialogs.activePaletteTab === 'find'"
-          class="ml-find-palette-wrapper"
-        >
-          <ml-find-palette />
         </div>
         <div
           v-else-if="store.dialogs.activePaletteTab === 'measurements'"
@@ -78,9 +63,7 @@ import { computed, nextTick, watch } from 'vue'
 import { store } from '../../app'
 import { useSelectionSet, useViewerRect } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
-import MlCountList from './MlCountList.vue'
 import MlEntityProperties from './MlEntityProperties.vue'
-import MlFindPalette from './MlFindPalette.vue'
 import MlMeasurementPalette from './MlMeasurementPalette.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
 import MlMissingResources from './MlMissingResources.vue'
@@ -127,8 +110,9 @@ const paletteStyle = computed(() => {
 const syncPaletteToContainer = () => {
   if (!store.dialogs.toolPalette) return
 
-  const paletteElement =
-    document.querySelector<HTMLElement>('.ml-tool-palette-manager')
+  const paletteElement = document.querySelector<HTMLElement>(
+    '.ml-tool-palette-manager'
+  )
   if (!paletteElement) return
 
   const {
@@ -172,8 +156,6 @@ const syncPaletteToContainer = () => {
 
 const baseTabNames = [
   'entityProperties',
-  'countList',
-  'find',
   'measurements',
   'missingResources',
   'memoryProfile'
@@ -261,15 +243,6 @@ const propertyEntityLocked = computed(() => propertyRows.value.locked)
 }
 
 .ml-count-list-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-find-palette-wrapper {
   overflow: hidden;
   width: 100%;
   height: 100%;

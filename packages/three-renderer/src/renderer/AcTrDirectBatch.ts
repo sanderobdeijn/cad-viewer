@@ -1,4 +1,4 @@
-import { AcDbEntity, AcDbRay, AcDbXline } from '@mlightcad/data-model'
+import { AcDbEntity } from '@mlightcad/data-model'
 
 import { resolveAnchorFromBox } from '../draw/AcTrBatchDrawPolicy'
 import type { AcTrEntity } from '../object/AcTrEntity'
@@ -76,11 +76,6 @@ export function tryBuildDirectEntityMeta(
   } finally {
     placeholder?.dispose()
   }
-}
-
-/** RAY / XLINE still use direct batch but must not extend layout extents. */
-export function shouldExtendBboxForDirectEntity(entity: AcDbEntity): boolean {
-  return !(entity instanceof AcDbRay || entity instanceof AcDbXline)
 }
 
 function buildFromCapture(

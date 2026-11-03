@@ -9,7 +9,6 @@ import {
 import { AcDbLayerTableRecord } from '../database/AcDbLayerTableRecord'
 import { AcDbLinetypeTableRecord } from '../database/AcDbLinetypeTableRecord'
 import { AcDbTextStyleTableRecord } from '../database/AcDbTextStyleTableRecord'
-import { AcDbTrace } from '../entity/AcDbTrace'
 import { AcDbLayout } from '../object/layout/AcDbLayout'
 import { DEFAULT_TEXT_STYLE } from './AcDbConstants'
 
@@ -95,7 +94,6 @@ export class AcDbDataGenerator {
       )
     }
     this.db.dimstyle = NEW_DRAWING_DIM_STYLE
-    this.db.cmlscale = 20
 
     this.addNewDrawingLayout('Model', 0, this.db.tables.blockTable.modelSpace)
     ;['Layout1', 'Layout2'].forEach((name, index) => {
@@ -202,23 +200,5 @@ export class AcDbDataGenerator {
     layout.extents.max.copy({ x: 1000000, y: 1000000, z: 0 })
     this.db.objects.layout.setAt(layout.layoutName, layout)
     this.db.tables.blockTable.modelSpace.layoutId = layout.objectId
-  }
-
-  createArrowBlock() {
-    const blockName = '_CAXARROW'
-    if (!this.db.tables.blockTable.getAt(blockName)) {
-      // Create arrow
-      const arrow = new AcDbTrace()
-      arrow.setPointAt(0, { x: 0, y: 0 })
-      arrow.setPointAt(1, { x: 0, y: 0 })
-      arrow.setPointAt(2, { x: -1, y: -0.125 })
-      arrow.setPointAt(3, { x: -1, y: 0.125 })
-
-      // Create block and add the arrow in this block
-      const block = new AcDbBlockTableRecord()
-      block.name = '_CAXARROW'
-      block.appendEntity(arrow)
-      this.db.tables.blockTable.add(block)
-    }
   }
 }

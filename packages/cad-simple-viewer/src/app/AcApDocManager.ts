@@ -24,36 +24,29 @@ import {
   AcApHideObjectsCmd,
   AcApLineCmd,
   AcApLogCmd,
-  AcApMLineCmd,
   AcApMoveCmd,
-  AcApMTextCmd,
   AcApOffsetCmd,
   AcApPanCmd,
   AcApPointCmd,
   AcApPolygonCmd,
   AcApPolylineCmd,
   AcApQNewCmd,
-  AcApRayCmd,
   AcApReadingModeCmd,
   AcApRectCmd,
   AcApRedoCmd,
   AcApRegenCmd,
   AcApRotateCmd,
   AcApSelectCmd,
-  AcApSketchCmd,
   AcApSplineCmd,
   AcApSwitchBgCmd,
   AcApSysVarCmd,
   AcApUndoCmd,
   AcApUnisolateObjectsCmd,
-  AcApXLineCmd,
   AcApZoomCmd,
   resetMeasurementSession,
   resetSessionUndo
 } from '../command'
-import {
-  acapGetDrawStyleSessionAccessory
-} from '../command/AcApDrawStyleSession'
+import { acapGetDrawStyleSessionAccessory } from '../command/AcApDrawStyleSession'
 import { registerMeasureCommands } from '../command/measure/AcApRegisterMeasureCommands'
 import {
   AcEdCalculateSizeCallback,
@@ -70,10 +63,7 @@ import { AcApBusyIndicator } from './AcApBusyIndicator'
 import { acapBindCommandServices } from './AcApCommandServices'
 import { AcApContext } from './AcApContext'
 import { AcApDocSession } from './AcApDocSession'
-import {
-  ACAP_DEFAULT_DOCS_BASE_URL,
-  acapSetDocsBaseUrl
-} from './AcApDocsUrl'
+import { ACAP_DEFAULT_DOCS_BASE_URL, acapSetDocsBaseUrl } from './AcApDocsUrl'
 import { AcApDocument } from './AcApDocument'
 import { AcApFontLoader } from './AcApFontLoader'
 import {
@@ -558,7 +548,6 @@ export class AcApDocManager {
     this.loadPlugins(options.plugins).catch(error => {
       log.error('[AcApDocManager] Error loading plugins:', error)
     })
-
 
     if (options.notificationCenter !== false) {
       const ncOptions =
@@ -1471,8 +1460,6 @@ export class AcApDocManager {
       commandManager: this._commandManager
     })
     addSystemCommand('line', 'line', new AcApLineCmd())
-    addSystemCommand('mline', 'mline', new AcApMLineCmd())
-    addSystemCommand('mtext', 'mtext', new AcApMTextCmd())
     addSystemCommand('copy', 'copy', new AcApCopyCmd())
     addSystemCommand('move', 'move', new AcApMoveCmd())
     addSystemCommand('offset', 'offset', new AcApOffsetCmd())
@@ -1483,11 +1470,9 @@ export class AcApDocManager {
     addSystemCommand('polygon', 'polygon', new AcApPolygonCmd())
     addSystemCommand('pline', 'pline', new AcApPolylineCmd())
     addSystemCommand('qnew', 'qnew', new AcApQNewCmd())
-    addSystemCommand('ray', 'ray', new AcApRayCmd())
     addSystemCommand('rectang', 'rectang', new AcApRectCmd())
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
     addSystemCommand('select', 'select', new AcApSelectCmd())
-    addSystemCommand('sketch', 'sketch', new AcApSketchCmd())
     addSystemCommand('spline', 'spline', new AcApSplineCmd())
     addSystemCommand('switchbg', 'switchbg', new AcApSwitchBgCmd())
     addSystemCommand('readingmode', 'readingmode', new AcApReadingModeCmd())
@@ -1496,7 +1481,6 @@ export class AcApDocManager {
       'unisolateobjects',
       new AcApUnisolateObjectsCmd()
     )
-    addSystemCommand('xline', 'xline', new AcApXLineCmd())
     addSystemCommand('undo', 'undo', new AcApUndoCmd())
     addSystemCommand('redo', 'redo', new AcApRedoCmd())
     addSystemCommand('zoom', 'zoom', new AcApZoomCmd())
@@ -2217,9 +2201,7 @@ export class AcApDocManager {
     mtextRenderer.initialize(
       webworkerFileUrls?.mtextRender ?? DEFAULT_WEBWORKER_FILE_URLS.mtextRender
     )
-    void mtextRenderer.setDefaultFonts([
-      ...FontManager.instance.defaultFonts
-    ])
+    void mtextRenderer.setDefaultFonts([...FontManager.instance.defaultFonts])
   }
 
   /**

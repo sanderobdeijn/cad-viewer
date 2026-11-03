@@ -253,8 +253,8 @@ describe('AcTrGroup wcsBbox', () => {
 
     group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
 
-    // AcDbRenderingCache.draw converts WCS attribute geometry to block-local
-    // space before addChild while the INSERT transform remains on the group.
+    // WCS attribute geometry is converted to block-local space before addChild
+    // while the INSERT transform remains on the group.
     const attribute = createLine(
       'attr-1',
       { x: -180, y: 0 },
@@ -343,7 +343,7 @@ describe('AcTrGroup wcsBbox', () => {
       '0'
     )
     const insertB = new AcTrGroup([entityC], context)
-    // Nested INSERT B lives on DIM (set after worldDraw by AcDbRenderingCache).
+    // Nested INSERT B lives on DIM.
     insertB.layerName = 'DIM'
 
     const insertA = new AcTrGroup([insertB], context)

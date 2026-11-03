@@ -1,4 +1,3 @@
-import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
 import {
   GeometryLine2d,
   GeometryMatrix3d,
@@ -9,12 +8,8 @@ import {
   GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 
-import { AcDbBlockTableRecord } from '../../database'
-import { AcDbBlockReference } from '../AcDbBlockReference'
 import { AcDbEntityProperties } from '../AcDbEntityProperties'
-import { AcDbLine } from '../AcDbLine'
-import { AcDbMText } from '../AcDbMText'
-import { AcDbDimension } from './AcDbDimension'
+import { AcDbDimension, AcDbDimensionGraphics } from './AcDbDimension'
 
 /**
  * Represents an aligned dimension entity in AutoCAD.
@@ -348,7 +343,7 @@ export class AcDbAlignedDimension extends AcDbDimension {
    * @inheritdoc
    */
   get geometricExtents() {
-    return this.getGeometricExtentsFromDimBlockOrPoints([
+    return this.getGeometricExtentsFromPoints([
       this.xLine1Point,
       this.xLine2Point,
       this.dimLinePoint
@@ -362,71 +357,33 @@ export class AcDbAlignedDimension extends AcDbDimension {
     return false
   }
 
-  createDimBlock(blockName: string) {
-    // Create block and add the dimension geometry in this block
-    const block = new AcDbBlockTableRecord()
-    block.name = blockName
+  /**
+   * @inheritdoc
+   */
+  protected override createGraphics(): AcDbDimensionGraphics {
     const lines = this.createLines()
-    lines.forEach(line =>
-      block.appendEntity(new AcDbLine(line.startPoint, line.endPoint))
-    )
-
-    // Create arrows at the end of dimension line
-    const arrows = this.createArrows(lines[0])
-    arrows.forEach(arrow => block.appendEntity(arrow))
-
-    // Create dimension texts above dimension line
-    const textPos = lines[0].midPoint
-    const texts = this.createMText(textPos, this._rotation)
-    if (texts) block.appendEntity(texts)
-
-    return block
-  }
-
-  private createMText(pos: GeometryPoint2dLike, rotation: number) {
-    const angleDegToUnitVector = (angleRad: number) => {
-      return {
-        x: Math.cos(angleRad),
-        y: Math.sin(angleRad),
-        z: 0
-      }
+    const dimensionLine = lines[0]
+    return {
+      lines,
+      // Create arrows at the end of dimension line
+      arrows: [
+        {
+          position: dimensionLine.startPoint,
+          rotation: this.rotation + Math.PI,
+          size: 10
+        },
+        { position: dimensionLine.endPoint, rotation: this.rotation, size: 10 }
+      ],
+      // Create dimension text on the dimension line
+      label: this.dimensionText
+        ? {
+            text: this.dimensionText,
+            position: new GeometryPoint2d(dimensionLine.midPoint),
+            rotation: this._rotation,
+            height: 10
+          }
+        : undefined
     }
-
-    if (this.dimensionText) {
-      const mtext = new AcDbMText()
-      mtext.attachmentPoint = this.attachmentPoint
-      mtext.layer = '0'
-      mtext.color = new AcCmColor(AcCmColorMethod.ByBlock)
-      mtext.location = pos
-      mtext.contents = this.dimensionText ?? ''
-      mtext.height = 10
-      mtext.direction = angleDegToUnitVector(rotation)
-      mtext.styleName = this.dimensionStyle.dimtxsty
-      return mtext
-    }
-    return undefined
-  }
-
-  private createArrows(dimensionLine: GeometryLine2d) {
-    const arrows: AcDbBlockReference[] = []
-    arrows.push(
-      this.createArrow(dimensionLine.startPoint, this.rotation + Math.PI, 10)
-    )
-    arrows.push(this.createArrow(dimensionLine.endPoint, this.rotation, 10))
-    return arrows
-  }
-
-  private createArrow(
-    pos: GeometryPoint2dLike,
-    rotation: number,
-    scaleFactor: number
-  ) {
-    const blockName = '_CAXARROW'
-    const insert = new AcDbBlockReference(blockName)
-    insert.position = pos
-    insert.rotation = rotation
-    insert.scaleFactors = { x: scaleFactor, y: scaleFactor }
-    return insert
   }
 
   /**

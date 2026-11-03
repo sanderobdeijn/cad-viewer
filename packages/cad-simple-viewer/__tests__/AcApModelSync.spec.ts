@@ -5,7 +5,6 @@ import {
   AcDbDatabase,
   acdbHostApplicationServices,
   AcDbLine,
-  AcDbMText,
   AcDbOpenMode,
   AcDbPoint,
   GeometryPoint2d
@@ -218,19 +217,6 @@ describe('AcApModelSync', () => {
 
     setMeasurements([])
     expect(sync.model.dimensions).toHaveLength(1)
-    sync.dispose()
-  })
-
-  it('leaves out entities it does not track', () => {
-    const db = createDatabase()
-    const { sync } = createSync(db)
-    const listener = jest.fn()
-    sync.events.modelChanged.addEventListener(listener)
-
-    db.tables.blockTable.modelSpace.appendEntity(new AcDbMText())
-
-    expect(sync.model.shapes).toHaveLength(0)
-    expect(listener).not.toHaveBeenCalled()
     sync.dispose()
   })
 

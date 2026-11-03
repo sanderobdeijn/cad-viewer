@@ -1,7 +1,5 @@
 import {
   AcDbAlignedDimension,
-  AcDbDatabase,
-  AcDbDataGenerator,
   GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
@@ -17,9 +15,7 @@ import {
 import { AcApI18n } from '../../i18n'
 
 export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
-  private _db: AcDbDatabase
   private _dim: AcDbAlignedDimension
-  private _dimBlockName = '*UDIM'
 
   /**
    * Creates a dimension jig.
@@ -28,15 +24,10 @@ export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
    */
   constructor(
     view: AcEdBaseView,
-    db: AcDbDatabase,
     xline1Point: GeometryPoint2dLike,
     xline2Point: GeometryPoint2dLike
   ) {
     super(view)
-    this._db = db
-    // Gurantee arrow block created because it is used by dimension
-    const generator = new AcDbDataGenerator(db)
-    generator.createArrowBlock()
     this._dim = new AcDbAlignedDimension(xline1Point, xline2Point, xline1Point)
     this._dim.rotation = 0
   }
@@ -54,16 +45,6 @@ export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     this._dim.dimensionText = this._dim.xLine1Point
       .distanceTo(this._dim.xLine2Point)
       .toFixed(3)
-
-    const blockName = this._dimBlockName
-    this._db.tables.blockTable.remove(blockName)
-    this._db.tables.blockTable.add(this._dim.createDimBlock(blockName))
-    this._dim.dimBlockId = blockName
-  }
-
-  end() {
-    super.end()
-    this._db.tables.blockTable.remove(this._dimBlockName)
   }
 
   private calculateAngle(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
@@ -105,7 +86,6 @@ export class AcApDimLinearCmd extends AcEdCommand {
     )
     dimLinePointPrompt.jig = new AcApDimJig(
       context.view,
-      context.doc.database,
       xLine1Point,
       xLine2Point
     )
@@ -120,28 +100,6 @@ export class AcApDimLinearCmd extends AcEdCommand {
       xLine2Point,
       dimLinePoint
     )
-
-    const blockName = this.getAvaiableDimBlockName(db)
-    db.tables.blockTable.add(dimension.createDimBlock(blockName))
-    dimension.dimBlockId = blockName
     db.tables.blockTable.modelSpace.appendEntity(dimension)
-  }
-
-  private getAvaiableDimBlockName(db: AcDbDatabase) {
-    const blocks = db.tables.blockTable.newIterator()
-
-    let maxNum = 0
-
-    for (const block of blocks) {
-      const name = block.name
-      if (!name.startsWith('*D')) continue
-
-      const num = Number(name.slice(2)) // part after "*D"
-      if (Number.isInteger(num) && num > maxNum) {
-        maxNum = num
-      }
-    }
-
-    return `*D${maxNum + 1}`
   }
 }

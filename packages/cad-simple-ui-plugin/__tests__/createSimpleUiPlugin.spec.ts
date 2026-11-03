@@ -201,22 +201,6 @@ describe('AcApSimpleUiPlugin', () => {
     document.getElementById('ml-ex-ui-styles')?.remove()
   })
 
-  it('loads find UI in the dock panel on startup', () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('select'), acuiToolbarPreset('find')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:find')).toBe(true)
-    expect(
-      (plugin as unknown as { dockPanel?: unknown }).dockPanel
-    ).toBeDefined()
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).not.toBeNull()
-  })
-
   it('controls dock panel open state and size', () => {
     const { host } = createHostTree()
     const { plugin } = loadPlugin({
@@ -240,7 +224,7 @@ describe('AcApSimpleUiPlugin', () => {
     expect(plugin.isDockPanelOpen()).toBe(false)
   })
 
-  it('opens the dock panel without clicking the find button first', () => {
+  it('opens the dock panel without clicking a toolbar button first', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
 
@@ -248,7 +232,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -286,51 +270,12 @@ describe('AcApSimpleUiPlugin', () => {
     expect(host.querySelector(':scope > .ml-ex-ui-dock-panel')).toBeNull()
   })
 
-  it('opens the dock panel from the find button and switches to the find tab', () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('find')]
-      }
-    })
-
-    const getActiveTabId = () =>
-      (
-        plugin as unknown as {
-          dockPanel?: { activeTab?: string }
-        }
-      ).dockPanel?.activeTab
-
-    expect(plugin.isDockPanelOpen()).toBe(false)
-
-    const findButton = host.querySelector(
-      '[data-toolbar-item-id="find"]'
-    ) as HTMLButtonElement
-    findButton.click()
-    expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(getActiveTabId()).toBe('find')
-
-    expect(
-      plugin.addDockPanelTab({
-        id: 'demo',
-        label: 'Demo',
-        content: document.createElement('div')
-      })
-    ).toBe(true)
-    expect(getActiveTabId()).toBe('demo')
-
-    findButton.click()
-    expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(getActiveTabId()).toBe('find')
-  })
-
   it('opens an existing dock shell that was never opened before', () => {
     const { host, canvasParent } = createHostTree()
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -353,7 +298,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -376,7 +321,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -396,7 +341,7 @@ describe('AcApSimpleUiPlugin', () => {
     ).toBe(true)
 
     expect(
-      host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="find"]')
+      host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="measurements"]')
     ).not.toBeNull()
     expect(
       host.querySelector('.ml-ex-ui-dock-tab[data-tab-id="demo-1"]')
@@ -411,7 +356,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -445,7 +390,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -477,7 +422,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('select'), acuiToolbarPreset('find')],
+        items: [acuiToolbarPreset('select'), acuiToolbarPreset('measure')],
         collapsible: true
       }
     })
@@ -497,29 +442,6 @@ describe('AcApSimpleUiPlugin', () => {
 
     expect(plugin.setToolbarEdgeOffset(16)).toBe(true)
     expect(plugin.getToolbarEdgeOffset()).toBe(16)
-  })
-
-  it('setToolbarItems dynamically adds the find command when a find button appears', () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('select')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:find')).toBe(false)
-
-    plugin.setToolbarItems([
-      acuiToolbarPreset('select'),
-      acuiToolbarPreset('find')
-    ])
-    expect(mockCommands.has('SYSTEM:find')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).not.toBeNull()
-
-    plugin.setToolbarItems([acuiToolbarPreset('select')])
-    expect(mockCommands.has('SYSTEM:find')).toBe(false)
-    expect(host.querySelector('.ml-ex-ui-dock-panel')).toBeNull()
   })
 
   it('loads measurement UI in the dock panel and opens it from measurementpanel', async () => {
@@ -552,57 +474,6 @@ describe('AcApSimpleUiPlugin', () => {
     expect(plugin.isDockPanelOpen()).toBe(true)
     expect(getActiveTabId()).toBe('measurements')
     expect(host.querySelector('.ml-ex-ui-measure-palette')).not.toBeNull()
-  })
-
-  it('loads find UI in the dock panel and opens it from the find command', async () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('find')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:find')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-find-palette')).not.toBeNull()
-    expect(plugin.isDockPanelOpen()).toBe(false)
-
-    const cmd = mockCommands.get('SYSTEM:find') as {
-      execute: (context: unknown) => Promise<void>
-    }
-    await cmd.execute({})
-
-    expect(plugin.isDockPanelOpen()).toBe(true)
-    expect(
-      (plugin as unknown as { dockPanel?: { activeTab?: string } }).dockPanel
-        ?.activeTab
-    ).toBe('find')
-    expect(
-      document.activeElement?.classList.contains('ml-ex-ui-find-input')
-    ).toBe(true)
-  })
-
-  it('setToolbarItems dynamically adds and removes the find command', () => {
-    const { host } = createHostTree()
-    const { plugin } = loadPlugin({
-      host,
-      toolbar: {
-        items: [acuiToolbarPreset('select')]
-      }
-    })
-
-    expect(mockCommands.has('SYSTEM:find')).toBe(false)
-
-    plugin.setToolbarItems([
-      acuiToolbarPreset('select'),
-      acuiToolbarPreset('find')
-    ])
-    expect(mockCommands.has('SYSTEM:find')).toBe(true)
-    expect(host.querySelector('.ml-ex-ui-find-palette')).not.toBeNull()
-
-    plugin.setToolbarItems([acuiToolbarPreset('select')])
-    expect(mockCommands.has('SYSTEM:find')).toBe(false)
-    expect(host.querySelector('.ml-ex-ui-find-palette')).toBeNull()
   })
 
   it('setToolbarItems dynamically adds the measurementpanel command', () => {
@@ -774,7 +645,7 @@ describe('AcApSimpleUiPlugin', () => {
     const { plugin } = loadPlugin({
       host,
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       }
     })
 
@@ -863,7 +734,7 @@ describe('AcApSimpleUiPlugin', () => {
       host,
       layout: 'phone',
       toolbar: {
-        items: [acuiToolbarPreset('find')],
+        items: [acuiToolbarPreset('measure')],
         inCanvasParent: true
       }
     })
@@ -916,7 +787,7 @@ describe('AcApSimpleUiPlugin', () => {
       host,
       layout: 'phone',
       toolbar: {
-        items: [acuiToolbarPreset('find')]
+        items: [acuiToolbarPreset('measure')]
       },
       layouts: {
         phone: {

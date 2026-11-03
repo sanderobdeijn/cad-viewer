@@ -9,7 +9,6 @@ import {
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
-  ICON_FIND,
   ICON_MARKUP_EXPORT,
   ICON_MARKUP_IMPORT,
   ICON_MEASURE,
@@ -177,16 +176,6 @@ function acuiCreateReadingModeToolbarItem(): AcUiToolbarItem {
         command: 'readingmode'
       }
     }
-  }
-}
-
-/** Builds the text search button bound to the `find` command. */
-function acuiCreateFindToolbarItem(): AcUiToolbarItem {
-  return {
-    id: 'find',
-    label: 'toolbar.find',
-    icon: ICON_FIND,
-    command: 'find'
   }
 }
 
@@ -384,7 +373,6 @@ export function acuiCreateDefaultToolbarItems(
       command: 'pan'
     },
     acuiCreateZoomToolbarItem(),
-    acuiCreateFindToolbarItem(),
     acuiCreateLayoutToolbarItem(),
     acuiCreateMeasureToolbarItem(),
     {
@@ -408,7 +396,6 @@ export function acuiCreatePhoneToolbarItems(
 ): AcUiToolbarItem[] {
   return [
     acuiCreateZoomToolbarItem(),
-    acuiCreateFindToolbarItem(),
     acuiCreateMeasureToolbarItem(),
     acuiCreateLayoutToolbarItem(),
     acuiCreateSettingsToolbarItem(context)

@@ -107,15 +107,6 @@ describe('AcDbSysVarManager', () => {
     manager.setVar(AcDbSystemVariables.CLAYER, '0', db)
     expect(manager.getVar(AcDbSystemVariables.CLAYER, db)).toBe('0')
 
-    manager.setVar(AcDbSystemVariables.CMLSTYLE, 'FILL', db)
-    expect(manager.getVar(AcDbSystemVariables.CMLSTYLE, db)).toBe('FILL')
-    manager.setVar(AcDbSystemVariables.CMLSCALE, 20, db)
-    expect(manager.getVar(AcDbSystemVariables.CMLSCALE, db)).toBe(20)
-
-    manager.setVar(AcDbSystemVariables.CMLEADERSTYLE, 'ANNOTATION', db)
-    expect(manager.getVar(AcDbSystemVariables.CMLEADERSTYLE, db)).toBe(
-      'ANNOTATION'
-    )
     expect(
       manager.getDescriptor(AcDbSystemVariables.CETRANSPARENCY)?.type
     ).toBe('transparency')
@@ -194,13 +185,6 @@ describe('AcDbSysVarManager', () => {
     expect(manager.getDescriptor('__UNIT_BOOL__')?.name).toBe('__unit_bool__')
     expect(manager.getDefaultValue('__UNIT_BOOL__')).toBe(true)
     expect(manager.getVar('__UNIT_BOOL__', db)).toBe(true)
-    expect(manager.getDefaultValue(AcDbSystemVariables.CMLSTYLE)).toBe(
-      'Standard'
-    )
-    expect(manager.getDefaultValue(AcDbSystemVariables.CMLSCALE)).toBe(1)
-    expect(manager.getDefaultValue(AcDbSystemVariables.CMLEADERSTYLE)).toBe(
-      'Standard'
-    )
     expect(
       manager.getDefaultValue(AcDbSystemVariables.CETRANSPARENCY)
     ).toBeInstanceOf(AcCmTransparency)

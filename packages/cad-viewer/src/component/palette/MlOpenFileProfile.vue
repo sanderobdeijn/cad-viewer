@@ -129,93 +129,6 @@
           />
         </el-table>
       </div>
-
-      <div class="ml-open-file-profile-section">
-        <button
-          type="button"
-          class="ml-open-file-profile-section-title"
-          @click="cacheExpanded = !cacheExpanded"
-        >
-          <el-icon
-            class="ml-open-file-profile-caret"
-            :class="{ 'is-expanded': cacheExpanded }"
-          >
-            <ArrowRight />
-          </el-icon>
-          {{ t('main.toolPalette.openFileProfile.cache') }}
-        </button>
-        <el-table
-          v-show="cacheExpanded"
-          :data="cacheRows"
-          size="small"
-          class="ml-open-file-profile-table"
-          table-layout="fixed"
-        >
-          <el-table-column
-            prop="label"
-            :label="t('main.toolPalette.openFileProfile.columns.metric')"
-            min-width="160"
-          />
-          <el-table-column
-            prop="value"
-            :label="t('main.toolPalette.openFileProfile.columns.value')"
-            width="120"
-            align="right"
-            header-align="right"
-          />
-        </el-table>
-      </div>
-
-      <div class="ml-open-file-profile-section">
-        <button
-          type="button"
-          class="ml-open-file-profile-section-title"
-          @click="slowBlocksExpanded = !slowBlocksExpanded"
-        >
-          <el-icon
-            class="ml-open-file-profile-caret"
-            :class="{ 'is-expanded': slowBlocksExpanded }"
-          >
-            <ArrowRight />
-          </el-icon>
-          {{ t('main.toolPalette.openFileProfile.slowBlocks') }}
-        </button>
-        <el-table
-          v-show="slowBlocksExpanded"
-          :data="slowBlocks"
-          size="small"
-          class="ml-open-file-profile-table"
-          table-layout="fixed"
-          :empty-text="t('main.toolPalette.openFileProfile.empty')"
-        >
-          <el-table-column
-            prop="blockName"
-            :label="t('main.toolPalette.openFileProfile.columns.block')"
-            min-width="140"
-            show-overflow-tooltip
-          />
-          <el-table-column
-            :label="t('main.toolPalette.openFileProfile.columns.build')"
-            width="88"
-            align="right"
-            header-align="right"
-          >
-            <template #default="{ row }">
-              {{ formatMs(row.buildMs) }}
-            </template>
-          </el-table-column>
-          <el-table-column
-            :label="t('main.toolPalette.openFileProfile.columns.compact')"
-            width="88"
-            align="right"
-            header-align="right"
-          >
-            <template #default="{ row }">
-              {{ formatMs(row.compactMs) }}
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
     </template>
 
     <el-empty
@@ -247,18 +160,13 @@ const {
   collectedAtLabel,
   timingRows,
   progressiveRows,
-  cacheRows,
-  slowBlocks,
   adoptPublishedSnapshot,
   refreshFromLast,
-  copyText,
-  formatMs
+  copyText
 } = useOpenFileProfile()
 
 const timingExpanded = ref(true)
 const progressiveExpanded = ref(true)
-const cacheExpanded = ref(true)
-const slowBlocksExpanded = ref(true)
 
 async function copyProfile() {
   const text = copyText()

@@ -1,5 +1,4 @@
 import {
-  AcDbBlockReference,
   AcDbBlockTableRecord,
   AcDbEntity,
   AcDbLayerTableRecordAttrs,
@@ -45,12 +44,6 @@ export class AcTrEntityDisplayController {
     const layer = this.getLayerInfo(entity.layer)
     if (!layer) {
       return true
-    }
-
-    if (this.isBlockReference(entity)) {
-      // INSERT: skip only when frozen. Off still converts so multi-layer
-      // contents on other layers can show.
-      return !layer.isFrozen
     }
 
     return AcTrLayer.isLayerVisible(layer)
@@ -117,10 +110,6 @@ export class AcTrEntityDisplayController {
     return this.collectMissingEntities(blockTableRecord, hasEntity, entity =>
       this.shouldConvertForExport(entity, includeInvisibleLayers)
     )
-  }
-
-  private isBlockReference(entity: AcTrEntityDisplayCandidate): boolean {
-    return entity instanceof AcDbBlockReference
   }
 
   private collectMissingEntities(

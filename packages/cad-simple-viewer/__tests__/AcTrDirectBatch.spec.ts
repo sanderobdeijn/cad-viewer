@@ -97,11 +97,10 @@ import {
   AcDbArc,
   AcDbCircle,
   AcDbDatabase,
+  acdbHostApplicationServices,
   AcDbLine,
   AcDbPolyline,
   AcDbSpline,
-  AcDbText,
-  acdbHostApplicationServices,
   GeometryPoint2d
 } from '@mlightcad/data-model'
 import {
@@ -170,7 +169,6 @@ describe('AcTrDirectBatch eligibility', () => {
         )
       )
     ).toBe(true)
-    expect(isDirectBatchCandidate(new AcDbText())).toBe(false)
   })
 
   it('builds meta for LINE via worldDraw tessellation capture', () => {
