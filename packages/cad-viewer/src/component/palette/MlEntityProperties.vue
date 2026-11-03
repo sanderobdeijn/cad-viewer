@@ -105,7 +105,9 @@
               <el-switch
                 v-else-if="row.type === 'boolean'"
                 :model-value="row.accessor.get()"
-                @change="(v: boolean) => onPropertyChange(row, v)"
+                @change="
+                  (v: string | number | boolean) => onPropertyChange(row, v)
+                "
               />
 
               <el-input-number
@@ -117,7 +119,7 @@
                 :step="1"
                 :precision="0"
                 @change="
-                  (v: number) => {
+                  (v: number | undefined) => {
                     if (row.__isArrayIndex) {
                       if (!editsLocked) row.accessor.set?.(v)
                     } else {
@@ -133,7 +135,7 @@
                 :model-value="row.accessor.get()"
                 :step="0.1"
                 :precision="3"
-                @change="(v: number) => onPropertyChange(row, v)"
+                @change="(v: number | undefined) => onPropertyChange(row, v)"
               />
 
               <el-input

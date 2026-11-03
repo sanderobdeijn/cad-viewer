@@ -185,8 +185,8 @@ const statusText = computed(() => {
     : text
 })
 
-const onEnter = (event: KeyboardEvent) => {
-  void find.submit(event.shiftKey)
+const onEnter = (event: Event) => {
+  void find.submit((event as KeyboardEvent).shiftKey)
 }
 
 /** Find button: search and jump to the first hit (same as the first Enter). */
