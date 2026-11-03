@@ -1,4 +1,9 @@
-import type { AcCmColor, AcDbDatabase, AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
+import type {
+  AcCmColor,
+  AcDbDatabase,
+  AcDbEntity,
+  AcDbObjectId
+} from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
@@ -158,7 +163,7 @@ export function subscribeMeasurements(
   }
 }
 
-function notifyMeasurementsChanged(): void {
+export function notifyMeasurementsChanged(): void {
   for (const listener of listListeners) listener()
 }
 
@@ -276,7 +281,10 @@ export function applyMeasurementStyle(
   view: AcTrView2d,
   group: AcTrHtmlGroup,
   patch: Partial<
-    Pick<AcApMeasurementStyle, 'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'>
+    Pick<
+      AcApMeasurementStyle,
+      'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'
+    >
   >
 ): void {
   const prev = stylesById.get(group.id)
@@ -372,7 +380,11 @@ function resolveUpdatedTextHeightWcs(
   ) {
     return prevTextHeightWcs * (nextFontSize / prevFontSize)
   }
-  if (fontSizeChanged || prevTextHeightWcs == null || !(prevTextHeightWcs > 0)) {
+  if (
+    fontSizeChanged ||
+    prevTextHeightWcs == null ||
+    !(prevTextHeightWcs > 0)
+  ) {
     return acapScreenPxToWcs(nextFontSize, view)
   }
   return prevTextHeightWcs
@@ -384,7 +396,10 @@ function resolveUpdatedTextHeightWcs(
 export function applyMeasurementStyleToSelection(
   view: AcTrView2d,
   patch: Partial<
-    Pick<AcApMeasurementStyle, 'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'>
+    Pick<
+      AcApMeasurementStyle,
+      'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'
+    >
   >
 ): void {
   const groups = view.htmlTransientManager
@@ -430,7 +445,9 @@ export function refreshMeasurementValueLabels(
   view: AcTrView2d,
   db: AcDbDatabase
 ): void {
-  for (const group of view.htmlTransientManager.groupsOnLayer(MEASUREMENT_LAYER)) {
+  for (const group of view.htmlTransientManager.groupsOnLayer(
+    MEASUREMENT_LAYER
+  )) {
     const extras = extrasById.get(group.id)
     if (!extras?.value) continue
     const text = formatMeasurementValue(db, extras.value)
@@ -448,7 +465,9 @@ export function collectMeasurementRecords(
   view: AcTrView2d
 ): AcApMeasurementRecord[] {
   const records: AcApMeasurementRecord[] = []
-  for (const group of view.htmlTransientManager.groupsOnLayer(MEASUREMENT_LAYER)) {
+  for (const group of view.htmlTransientManager.groupsOnLayer(
+    MEASUREMENT_LAYER
+  )) {
     const extras = extrasById.get(group.id)
     if (!extras?.snapshot) continue
     const live = extras.style ?? stylesById.get(group.id)

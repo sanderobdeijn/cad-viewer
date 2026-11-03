@@ -58,6 +58,10 @@ export class AcDbEllipse extends AcDbCurve {
     return 'ELLIPSE'
   }
 
+  override get geometry() {
+    return this._geo
+  }
+
   /** Backing for the lazily materialized geometric ellipse arc object. */
   private _geoData: GeometryEllipseArc2d | null = null
 

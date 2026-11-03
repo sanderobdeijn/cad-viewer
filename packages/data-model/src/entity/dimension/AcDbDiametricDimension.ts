@@ -69,6 +69,13 @@ export class AcDbDiametricDimension extends AcDbDimension {
     this.dimensionStyleName = dimStyle
   }
 
+  override get definitionPoints() {
+    return {
+      chordPoint: this.chordPoint,
+      farChordPoint: this.farChordPoint
+    }
+  }
+
   /**
    * Gets or sets the chord point where the dimension line intersects the curve.
    *

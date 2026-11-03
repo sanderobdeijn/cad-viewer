@@ -63,6 +63,15 @@ export class AcDbArcDimension extends AcDbDimension {
     this.dimensionStyleName = dimStyle
   }
 
+  override get definitionPoints() {
+    return {
+      centerPoint: this.centerPoint,
+      xLine1Point: this.xLine1Point,
+      xLine2Point: this.xLine2Point,
+      arcPoint: this.arcPoint
+    }
+  }
+
   /**
    * Gets or sets a point on the arc that helps define the arc segment being measured.
    *

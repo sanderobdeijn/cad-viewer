@@ -3,7 +3,7 @@
     <MlCadViewer
       :base-url="BASE_URL"
       :use-main-thread-draw="useMainThreadDraw"
-      @create="exposeForTests"
+      @create="onCreate"
     >
       <template #side-panel>
         <textarea
@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import {
   AcApDocManager,
+  AcApModelSync,
   AcApSettingManager
 } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
@@ -38,6 +39,32 @@ const useMainThreadDraw = !new URLSearchParams(window.location.search).has(
 )
 
 const editorText = ref('')
+
+let shownModelText = ''
+let updateScheduled = false
+
+const showModel = (model: { toString(): string }) => {
+  updateScheduled = false
+  const text = model.toString()
+  // Leave the editor alone when the shapes did not change its text.
+  if (text !== shownModelText) {
+    shownModelText = text
+    editorText.value = text
+  }
+}
+
+const onCreate = () => {
+  const modelSync = new AcApModelSync(AcApDocManager.instance)
+  showModel(modelSync.model)
+  // A file can change many entities in one go, so write once per frame.
+  modelSync.events.modelChanged.addEventListener(({ model }) => {
+    if (!updateScheduled) {
+      updateScheduled = true
+      requestAnimationFrame(() => showModel(model))
+    }
+  })
+  exposeForTests()
+}
 
 const exposeForTests = () => {
   if (import.meta.env.DEV) {

@@ -47,6 +47,10 @@ export class AcDbArc extends AcDbCurve {
     return 'ARC'
   }
 
+  override get geometry() {
+    return this._geo
+  }
+
   /** Backing for the lazily materialized geometric circular arc object. */
   private _geoData: GeometryCircularArc2d | null = null
 

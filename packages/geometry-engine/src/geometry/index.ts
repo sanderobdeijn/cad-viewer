@@ -1,5 +1,7 @@
 export { GeometryArea2d } from './GeometryArea2d'
 export type { GeometryIndexNode, GeometryLoop2dType } from './GeometryArea2d'
+export type { GeometryDimension } from './GeometryDimension'
+export { GeometryShape } from './GeometryShape'
 export { GeometryShape2d } from './GeometryShape2d'
 export { GeometryCurve2d } from './GeometryCurve2d'
 export { GeometryCircularArc2d } from './GeometryCircularArc2d'

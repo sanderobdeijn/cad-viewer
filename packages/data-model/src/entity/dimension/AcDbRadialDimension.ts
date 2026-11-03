@@ -106,6 +106,13 @@ export class AcDbRadialDimension extends AcDbDimension {
     this.dimensionStyleName = dimStyle
   }
 
+  override get definitionPoints() {
+    return {
+      center: this.center,
+      chordPoint: this.chordPoint
+    }
+  }
+
   /**
    * Gets the center point of the curve being dimensioned.
    *

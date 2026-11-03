@@ -435,6 +435,7 @@ export {
   GeometryPoint2d,
   GeometryPolyline2d,
   GeometryQuaternion,
+  GeometryShape,
   GeometryShape2d,
   GeometrySpline2d,
   GeometryTol,
@@ -487,11 +488,13 @@ export {
   geometrySmootherstep,
   geometrySmoothstep,
   geometryTransformOcsPointToWcs,
-  geometryTransformWcsPointToOcs
+  geometryTransformWcsPointToOcs,
+  Model
 } from '@mlightcad/geometry-engine'
 export type {
   GeometryBoundaryEdgeType,
   GeometryCircumcircle2d,
+  GeometryDimension,
   GeometryIndexNode,
   GeometryKnotParameterizationType,
   GeometryLoop2dType,

@@ -169,3 +169,79 @@ test('moves and undoes a drawn shape through the UI', async ({ page }) => {
 
   expect(errors).toEqual([])
 })
+
+test('shows the shapes of the drawing in the text editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  await expect(editor).toHaveValue('')
+
+  await run(page, 'line', '0,0', '100,0', '')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+
+  await run(page, 'circle', '0,0', '50')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(
+    /^Line start=\(0, 0\) end=\(100, 0\)\nCircularArc center=\(0, 0\) radius=50 /
+  )
+
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('')
+
+  expect(errors).toEqual([])
+})
+
+test('shows points and dimensions in the text editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  await run(page, 'point', '5,5')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue('Point position=(5, 5)')
+
+  await run(page, 'dimlinear', '0,0', '100,0', '50,20')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(
+    /^Point position=\(5, 5\)\nDimension type=\w+ xLine1Point=\(0, 0\) xLine2Point=\(100, 0\) dimLinePoint=\(50, 20\)/
+  )
+
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('Point position=(5, 5)')
+
+  expect(errors).toEqual([])
+})
+
+test('shows measurements in the text editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  await run(page, 'measuredistance', '0,0', '100,0')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(
+    /^Dimension type=MeasureDistance start=\(0, 0\) end=\(100, 0\) text="[^"]*100/
+  )
+
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('')
+
+  await run(page, 'redo')
+  await expect(editor).toHaveValue(/^Dimension type=MeasureDistance /)
+
+  await run(page, 'clearmeasurements')
+  await expect(editor).toHaveValue('')
+
+  expect(errors).toEqual([])
+})

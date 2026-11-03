@@ -4,7 +4,8 @@ import {
   geometryIntersectCurves,
   GeometryIntersectPrimitive,
   GeometryMatrix3d,
-  GeometryPoint2d
+  GeometryPoint2d,
+  GeometryShape
 } from '@mlightcad/geometry-engine'
 import {
   AcGiDirectBatchPrimitive,
@@ -105,6 +106,14 @@ export abstract class AcDbEntity extends AcDbObject {
    * @returns The DXF entity type name used during export
    */
   abstract get dxfTypeName(): string
+
+  /**
+   * The geometric shape backing this entity, or undefined for entities that
+   * are not represented by a shape, such as text and block references.
+   */
+  get geometry(): GeometryShape | undefined {
+    return undefined
+  }
 
   /**
    * Gets the name of the layer referenced by this entity.

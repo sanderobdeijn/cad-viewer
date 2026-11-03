@@ -87,6 +87,10 @@ export class AcDbSpline extends AcDbCurve {
     return 'SPLINE'
   }
 
+  override get geometry() {
+    return this._geo
+  }
+
   /**
    * Creates a spline entity from control points, knots, and optional weights.
    *

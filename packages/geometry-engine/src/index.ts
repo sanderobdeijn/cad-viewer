@@ -8,6 +8,7 @@ export {
   GeometryLoop2d,
   GeometryNurbsCurve,
   GeometryPolyline2d,
+  GeometryShape,
   GeometryShape2d,
   GeometrySpline2d,
   geometryIsBetterDistanceAlign,
@@ -21,6 +22,7 @@ export type {
   GeometryBoundaryEdgeType,
   GeometryCircumcircle2d,
   GeometryCurveExtent,
+  GeometryDimension,
   GeometryIndexNode,
   GeometryIntersectPrimitive,
   GeometryKnotParameterizationType,
@@ -110,3 +112,4 @@ export {
   geometryPolygonArea2d,
   geometrySignedPolygonArea2d
 } from './util'
+export { Model } from './Model'

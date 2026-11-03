@@ -1,5 +1,6 @@
 import {
   GeometryBox3d,
+  GeometryDimension,
   GeometryIntersectPrimitive,
   GeometryLine2d,
   GeometryMatrix3d,
@@ -312,6 +313,27 @@ export abstract class AcDbDimension extends AcDbEntity {
   }
   set dimensionText(value: string | null) {
     this._dimensionText = value
+  }
+
+  /**
+   * The points defining this dimension by name.
+   */
+  abstract get definitionPoints(): Record<string, GeometryPoint2d>
+
+  /**
+   * A copy of the geometric definition of this dimension.
+   */
+  get geometryDimension(): GeometryDimension {
+    const points: Record<string, GeometryPoint2d> = {}
+    for (const [name, point] of Object.entries(this.definitionPoints)) {
+      points[name] = point.clone()
+    }
+    return {
+      type: this.type,
+      points,
+      text: this.dimensionText ?? undefined,
+      measurement: this.measurement
+    }
   }
 
   /**

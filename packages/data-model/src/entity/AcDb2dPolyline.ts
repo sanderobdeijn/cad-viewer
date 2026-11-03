@@ -74,6 +74,10 @@ export class AcDb2dPolyline extends AcDbCurve {
     return 'POLYLINE'
   }
 
+  override get geometry() {
+    return this._geo
+  }
+
   /** The curve/spline-fit type for this 2d polyline */
   private _polyType: AcDbPoly2dType
   /** The elevation (Z-coordinate) of the polyline plane */

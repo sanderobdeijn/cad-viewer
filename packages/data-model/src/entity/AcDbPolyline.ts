@@ -84,6 +84,10 @@ export class AcDbPolyline extends AcDbCurve {
   override get dxfTypeName() {
     return 'LWPOLYLINE'
   }
+
+  override get geometry() {
+    return this._geo
+  }
   /** The underlying geometric polyline object */
   private _geo: GeometryPolyline2d<AcDbPolylineVertex>
 

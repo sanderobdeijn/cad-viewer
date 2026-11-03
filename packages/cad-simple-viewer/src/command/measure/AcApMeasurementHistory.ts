@@ -13,6 +13,7 @@ import {
   applyMeasurementStyle,
   getMeasurementStyle,
   MEASUREMENT_LAYER,
+  notifyMeasurementsChanged,
   resetMeasurementStyleState,
   resetMeasurementVisibility,
   restoreMeasurementGroupExtras
@@ -145,6 +146,7 @@ export class AcApMeasurementHistory {
     this.clearRedo()
     getSessionUndo().recordOverlay()
     acapNotifyUndoStackChanged()
+    notifyMeasurementsChanged()
   }
 
   /**
@@ -193,7 +195,8 @@ export class AcApMeasurementHistory {
         ht.reattach(group)
         restoreMeasurementGroupExtras(group)
       }
-      const styles = direction === 'undo' ? entry.stylesBefore : entry.stylesAfter
+      const styles =
+        direction === 'undo' ? entry.stylesBefore : entry.stylesAfter
       for (const group of snapshotMeasurementGroups(entry.view)) {
         restoreMeasurementGroupExtras(group)
         const style = styles[group.id]
@@ -203,6 +206,7 @@ export class AcApMeasurementHistory {
     } finally {
       this.depth--
     }
+    notifyMeasurementsChanged()
   }
 }
 

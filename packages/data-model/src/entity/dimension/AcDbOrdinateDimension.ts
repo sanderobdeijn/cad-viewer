@@ -55,6 +55,13 @@ export class AcDbOrdinateDimension extends AcDbDimension {
     this.dimensionStyleName = dimStyle
   }
 
+  override get definitionPoints() {
+    return {
+      definingPoint: this.definingPoint,
+      leaderEndPoint: this.leaderEndPoint
+    }
+  }
+
   /**
    * Gets or sets the ordinate point to be measured.
    *

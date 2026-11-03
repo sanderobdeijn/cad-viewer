@@ -43,6 +43,10 @@ export class AcDbLine extends AcDbCurve {
     return 'LINE'
   }
 
+  override get geometry() {
+    return this._geo
+  }
+
   /** Backing for the lazily materialized geometric line object. */
   private _geoData: GeometryLine2d | null = null
 

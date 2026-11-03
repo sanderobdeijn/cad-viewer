@@ -118,6 +118,14 @@ export class AcDbAlignedDimension extends AcDbDimension {
     this.dimensionStyleName = dimStyle
   }
 
+  override get definitionPoints() {
+    return {
+      xLine1Point: this.xLine1Point,
+      xLine2Point: this.xLine2Point,
+      dimLinePoint: this.dimLinePoint
+    }
+  }
+
   /**
    * Gets the definition point that specifies where the dimension line will be.
    *
