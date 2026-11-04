@@ -224,7 +224,6 @@ jest.mock('../src/command', () => {
     'AcApRegenCmd',
     'AcApRotateCmd',
     'AcApSelectCmd',
-    'AcApSplineCmd',
     'AcApSwitchBgCmd',
     'AcApSysVarCmd',
     'AcApUnisolateObjectsCmd',

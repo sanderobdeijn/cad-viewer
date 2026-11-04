@@ -63,7 +63,7 @@ export function acedLineSegmentIntersectsBox2d(
  * Returns whether a curve primitive intersects the selection box in plan view.
  *
  * Line segments are tested precisely. Other primitive kinds fall back to
- * `true` so arc/spline AABB hits stay selectable until dedicated tests exist.
+ * `true` so arc AABB hits stay selectable until dedicated tests exist.
  */
 export function acedPrimitiveIntersectsSelectionBox(
   primitive: { kind: string },

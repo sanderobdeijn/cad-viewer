@@ -21,17 +21,7 @@ export enum AcDb2dVertexType {
    * This type of vertex can go away or change automatically during subsequent editing
    * operations on the polyline.
    */
-  CurveFitVertex = 1,
-  /**
-   * A vertex that was automatically generated as the result of a spline-fit operation.
-   * This type of vertex can go away or change automatically during subsequent editing
-   * operations on the polyline.
-   */
-  SplineFitVertex = 8,
-  /**
-   * A control point for a spline or curve-fit polyline.
-   */
-  SplineCtlVertex
+  CurveFitVertex = 1
 }
 
 /**

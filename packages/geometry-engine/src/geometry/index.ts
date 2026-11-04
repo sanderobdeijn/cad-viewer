@@ -21,11 +21,6 @@ export type { GeometryPolyline2dVertex } from './GeometryPolyline2d'
 export { GeometryLine2d } from './GeometryLine2d'
 export { GeometryLoop2d } from './GeometryLoop2d'
 export type { GeometryBoundaryEdgeType } from './GeometryLoop2d'
-export { GeometrySpline2d } from './GeometrySpline2d'
-export { GeometryNurbsCurve } from './GeometryNurbsCurve'
-export type { GeometryKnotParameterizationType } from './GeometryNurbsCurve'
-export { GeometryCatmullRomCurve2d } from './GeometryCatmullRomCurve2d'
-export type { CatmullRomCurveType } from './GeometryCatmullRomCurve2d'
 export {
   geometryCloneIntersectPrimitive,
   geometryIntersectCurves,

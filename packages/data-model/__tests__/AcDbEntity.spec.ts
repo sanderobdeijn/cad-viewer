@@ -19,7 +19,6 @@ import { AcDbEntity } from '../src/entity/AcDbEntity'
 import { AcDbLine } from '../src/entity/AcDbLine'
 import { AcDbPoint } from '../src/entity/AcDbPoint'
 import { AcDbPolyline } from '../src/entity/AcDbPolyline'
-import { AcDbSpline } from '../src/entity/AcDbSpline'
 import { AcDbViewport } from '../src/entity/AcDbViewport'
 import { AcDb3PointAngularDimension } from '../src/entity/dimension/AcDb3PointAngularDimension'
 import { AcDbAlignedDimension } from '../src/entity/dimension/AcDbAlignedDimension'
@@ -27,7 +26,6 @@ import { AcDbArcDimension } from '../src/entity/dimension/AcDbArcDimension'
 import { AcDbDiametricDimension } from '../src/entity/dimension/AcDbDiametricDimension'
 import { AcDbOrdinateDimension } from '../src/entity/dimension/AcDbOrdinateDimension'
 import { AcDbRadialDimension } from '../src/entity/dimension/AcDbRadialDimension'
-import { AcDbOsnapMode } from '../src/misc'
 
 const expectPoint3dClose = (
   actual: { x: number; y: number; z?: number },
@@ -351,26 +349,7 @@ describe('AcDbEntity.transformBy', () => {
     })
   })
 
-  it('transforms splines, ellipses, leaders and infinite lines', () => {
-    const spline = new AcDbSpline(
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-        { x: 2, y: 0 },
-        { x: 3, y: 1 }
-      ],
-      [0, 0, 0, 0, 1, 1, 1, 1]
-    )
-    const splineSnapPoints: GeometryPoint2d[] = []
-    spline.transformBy(new GeometryMatrix3d().makeTranslation(2, 3, 4))
-    spline.subGetOsnapPoints(
-      AcDbOsnapMode.EndPoint,
-      new GeometryPoint2d(),
-      new GeometryPoint2d(),
-      splineSnapPoints
-    )
-    expect(splineSnapPoints[0]).toMatchObject({ x: 2, y: 3 })
-
+  it('transforms ellipses', () => {
     const ellipse = new AcDbEllipse(
       new GeometryPoint2d(0, 0),
       GeometryVector3d.X_AXIS,

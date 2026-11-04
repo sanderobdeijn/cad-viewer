@@ -413,63 +413,6 @@ export default {
       referencePoints: 'Invalid reference points: points must be different.'
     }
   },
-  spline: {
-    firstPoint: 'Specify the first point',
-    nextPoint: 'Specify the next point (or press Enter to finish)',
-    firstPointWithOptions: 'Specify first point or',
-    nextPointWithFitOptions: 'Specify next point or',
-    nextPointWithCvOptions: 'Specify next control vertex or',
-    methodPrompt: 'Enter spline creation method',
-    knotsPrompt: 'Enter knot parameterization',
-    degreePrompt: 'Specify spline degree',
-    keywords: {
-      method: {
-        display: 'Method(M)',
-        local: 'Method',
-        global: 'Method'
-      },
-      fit: {
-        display: 'Fit(F)',
-        local: 'Fit',
-        global: 'Fit'
-      },
-      cv: {
-        display: 'CV(C)',
-        local: 'CV',
-        global: 'CV'
-      },
-      knots: {
-        display: 'Knots(K)',
-        local: 'Knots',
-        global: 'Knots'
-      },
-      degree: {
-        display: 'Degree(D)',
-        local: 'Degree',
-        global: 'Degree'
-      },
-      close: {
-        display: 'Close(C)',
-        local: 'Close',
-        global: 'Close'
-      },
-      chord: {
-        display: 'Chord(C)',
-        local: 'Chord',
-        global: 'Chord'
-      },
-      sqrtChord: {
-        display: 'Sqrt chord(S)',
-        local: 'Sqrt chord',
-        global: 'SqrtChord'
-      },
-      uniform: {
-        display: 'Uniform(U)',
-        local: 'Uniform',
-        global: 'Uniform'
-      }
-    }
-  },
   sysvar: {
     prompt: 'Please input new value'
   },

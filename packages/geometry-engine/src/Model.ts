@@ -4,8 +4,7 @@ import {
   GeometryEllipseArc2d,
   GeometryLine2d,
   GeometryPolyline2d,
-  GeometryShape,
-  GeometrySpline2d
+  GeometryShape
 } from './geometry'
 import { GeometryPoint2d, type GeometryPoint2dLike } from './math'
 import { TAU } from './util'
@@ -30,9 +29,6 @@ const formatShape = (shape: GeometryShape) => {
   }
   if (shape instanceof GeometryPolyline2d) {
     return `Polyline vertices=${formatPoints(shape.vertices)} closed=${shape.closed}`
-  }
-  if (shape instanceof GeometrySpline2d) {
-    return `Spline degree=${shape.degree} controlPoints=${formatPoints(shape.controlPoints)} closed=${shape.closed}`
   }
   return 'Shape'
 }
@@ -198,33 +194,6 @@ const snapFullTurn = (startAngle: number, endAngle: number) =>
     ? startAngle + TAU
     : endAngle
 
-const clampedKnots = (count: number, degree: number) => {
-  const knots: number[] = []
-  for (let i = 0; i <= count + degree; i++) {
-    knots.push(Math.min(1, Math.max(0, (i - degree) / (count - degree))))
-  }
-  return knots
-}
-
-const parseSpline = (fields: ModelTextFields) => {
-  const degree = fields.number('degree')
-  const controlPoints = fields.points('controlPoints')
-  const closed = fields.boolean('closed')
-  if (!Number.isInteger(degree) || degree < 1) {
-    throw new Error('degree must be a whole number of at least 1')
-  }
-  if (controlPoints.length <= degree) {
-    throw new Error(`controlPoints needs more than ${degree} points`)
-  }
-  return new GeometrySpline2d(
-    controlPoints,
-    clampedKnots(controlPoints.length, degree),
-    undefined,
-    degree,
-    closed
-  )
-}
-
 const parseShape = (kind: string, fields: ModelTextFields) => {
   switch (kind) {
     case 'Line':
@@ -269,8 +238,6 @@ const parseShape = (kind: string, fields: ModelTextFields) => {
         fields.boolean('closed')
       )
     }
-    case 'Spline':
-      return parseSpline(fields)
     default:
       return undefined
   }

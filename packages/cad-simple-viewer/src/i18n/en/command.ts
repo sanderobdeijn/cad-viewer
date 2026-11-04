@@ -265,9 +265,6 @@ export default {
       description:
         'Controls the availability of shortcut menus in the drawing area'
     },
-    spline: {
-      description: 'Creates a smooth spline curve by specifying control points'
-    },
     textstyle: {
       description: 'Sets the name of the current text style'
     },

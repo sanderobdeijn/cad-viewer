@@ -83,7 +83,6 @@ const cases: Array<[string, string[], string]> = [
   ['ellipse', ['ellipse', '-50,0', '50,0', '20'], 'ELLIPSE'],
   ['rectangle', ['rectang', '0,0', '100,50'], 'LWPOLYLINE'],
   ['polygon', ['polygon', '6', '0,0', 'I', '50'], 'LWPOLYLINE'],
-  ['spline', ['spline', '0,0', '30,40', '60,0', '90,40', ''], 'SPLINE'],
   ['point', ['point', '10,10'], 'POINT']
 ]
 
@@ -310,7 +309,6 @@ test('creates every kind of entity from the text editor', async ({ page }) => {
       'CircularArc center=(0, 50) radius=20 startAngle=0 endAngle=6.283185',
       'EllipseArc center=(100, 0) majorRadius=40 minorRadius=10 rotation=0.5 startAngle=0 endAngle=6.283185',
       'Polyline vertices=[(0, 0), (30, 0), (30, 30)] closed=true',
-      'Spline degree=3 controlPoints=[(0, 0), (10, 20), (30, 20), (40, 0)] closed=false',
       'Point position=(5, 5)',
       'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(100, 0) dimLinePoint=(50, -20)'
     ].join('\n')
@@ -325,8 +323,7 @@ test('creates every kind of entity from the text editor', async ({ page }) => {
         'ELLIPSE',
         'LINE',
         'LWPOLYLINE',
-        'POINT',
-        'SPLINE'
+        'POINT'
       ].sort()
     )
   await expect(page.getByRole('alert')).toHaveCount(0)

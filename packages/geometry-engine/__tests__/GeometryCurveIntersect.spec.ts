@@ -6,7 +6,6 @@ import {
   GeometryIntersectPrimitive,
   GeometryLine2d,
   GeometryPoint2d,
-  GeometrySpline2d,
   TAU
 } from '../src'
 
@@ -180,26 +179,6 @@ describe('geometryIntersectCurves', () => {
     expect(points).toHaveLength(2)
     expectPoint(points, { x: 10, y: 0 })
     expectPoint(points, { x: -10, y: 0 })
-  })
-
-  it('intersects a sampled spline with a line', () => {
-    const spline = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 3, y: 0 },
-        { x: 7, y: 0 },
-        { x: 10, y: 0 }
-      ],
-      [0, 0, 0, 0, 1, 1, 1, 1],
-      [1, 1, 1, 1]
-    )
-    const points = geometryIntersectCurves(
-      [{ kind: 'spline', spline, extendable: false }],
-      [linePrim([5, -5], [5, 5])]
-    )
-    expect(points.length).toBeGreaterThanOrEqual(1)
-    expect(points[0].x).toBeCloseTo(5, 5)
-    expect(points[0].y).toBeCloseTo(0, 5)
   })
 
   it('clips to a clockwise arc sweep', () => {

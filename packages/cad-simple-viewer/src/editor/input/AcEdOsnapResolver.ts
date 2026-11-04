@@ -58,8 +58,8 @@ const MAX_INTERSECTION_PAIR_TESTS = 48
 const INTERSECTION_TIME_BUDGET_MS = 8
 
 /**
- * Skip leaf entities whose curve primitive count exceeds this. Fat polylines /
- * splines must not expand into INT snap on every touch move.
+ * Skip leaf entities whose curve primitive count exceeds this. Fat polylines
+ * must not expand into INT snap on every touch move.
  */
 const MAX_PRIMITIVES_PER_SOURCE = 32
 
@@ -171,7 +171,7 @@ function mapIntersectPointsToWcs(
  * Intersects two osnap sources without mutating database entities.
  * Same-frame pairs use local `intersectWith` then map to WCS; cross-frame
  * pairs express one entity in the other's local space via a disposable copy.
- * Tries B→A first, then A→B, so order does not drop polyline/spline partners
+ * Tries B→A first, then A→B, so order does not drop polyline partners
  * when the other side is a transformable Line/Circle/Arc.
  */
 function intersectSources(

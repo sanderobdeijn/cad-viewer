@@ -30,25 +30,17 @@ import {
 import { AcDbPolyline } from './AcDbPolyline'
 
 /**
- * Represents the curve/spline-fit type for one 2d polyline.
+ * Represents the curve-fit type for one 2d polyline.
  */
 export enum AcDbPoly2dType {
   /**
-   * A standard polyline with no curve/spline fitting.
+   * A standard polyline with no curve fitting.
    */
   SimplePoly,
   /**
    * A polyline that has been curve fit.
    */
-  FitCurvePoly,
-  /**
-   * A spline-fit polyline that has a Quadratic B-spline path.
-   */
-  QuadSplinePoly,
-  /**
-   * A spline-fit polyline that has a Cubic B-spline path.
-   */
-  CubicSplinePoly
+  FitCurvePoly
 }
 
 /**
@@ -59,8 +51,8 @@ export enum AcDbPoly2dType {
  * - Represents 2D polyline entities, typically planar (all vertices lie in a single plane).
  * - Each vertex is an instance of AcDb2dVertex.
  * - Supports bulge values (for arcs between vertices).
- * - Can represent fit curves or spline-fit polylines (via the polyline type flag).
- * - Each vertex can have flags like curve-fit vertex, spline vertex, etc.
+ * - Can represent fit curves (via the polyline type flag).
+ * - Each vertex can have flags like curve-fit vertex.
  * - Geometry is stored as a linked list of vertex entities (not a single compact structure).
  *
  * Typical use case
@@ -78,7 +70,7 @@ export class AcDb2dPolyline extends AcDbCurve {
     return this._geo
   }
 
-  /** The curve/spline-fit type for this 2d polyline */
+  /** The curve-fit type for this 2d polyline */
   private _polyType: AcDbPoly2dType
   /** The elevation (Z-coordinate) of the polyline plane */
   private _elevation: number
@@ -114,18 +106,18 @@ export class AcDb2dPolyline extends AcDbCurve {
   }
 
   /**
-   * Gets the curve/spline-fit type for this 2d polyline.
+   * Gets the curve-fit type for this 2d polyline.
    *
-   * @returns The curve/spline-fit type for this 2d polyline.
+   * @returns The curve-fit type for this 2d polyline.
    */
   get polyType(): AcDbPoly2dType {
     return this._polyType
   }
 
   /**
-   * Sets the curve/spline-fit type for this 2d polyline.
+   * Sets the curve-fit type for this 2d polyline.
    *
-   * @param value - The curve/spline-fit type for this 2d polyline.
+   * @param value - The curve-fit type for this 2d polyline.
    */
   set polyType(value: AcDbPoly2dType) {
     this._polyType = value

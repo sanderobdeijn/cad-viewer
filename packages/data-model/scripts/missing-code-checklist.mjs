@@ -14,7 +14,6 @@ const checklist = {
   MTEXT: { file: 'src/entity/AcDbMText.ts', need: [101] },
   INSERT: { file: 'src/entity/AcDbBlockReference.ts', need: [44, 45, 70, 71] },
   LWPOLYLINE: { file: 'src/entity/AcDbPolyline.ts', need: [39, 91, 210] },
-  SPLINE: { file: 'src/entity/AcDbSpline.ts', need: [42, 43, 44, 210] },
   SOLID: { file: 'src/entity/AcDbTrace.ts', need: [210] },
   IMAGE: { file: 'src/entity/AcDbRasterImage.ts', need: [90, 290] },
   VIEWPORT: {

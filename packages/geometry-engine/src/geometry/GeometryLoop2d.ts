@@ -5,17 +5,15 @@ import { GeometryCurve2d } from './GeometryCurve2d'
 import type { GeometryTessellateOptions } from './GeometryCurveTessellate'
 import { GeometryEllipseArc2d } from './GeometryEllipseArc2d'
 import { GeometryLine2d } from './GeometryLine2d'
-import { GeometrySpline2d } from './GeometrySpline2d'
 
 export type GeometryBoundaryEdgeType =
   | GeometryLine2d
   | GeometryCircularArc2d
-  | GeometrySpline2d
   | GeometryEllipseArc2d
 
 /**
  * The class representing one closed loop created by connected edges, which can be line, circular arc,
- * ellipse arc, or spline.
+ * or ellipse arc.
  */
 export class GeometryLoop2d extends GeometryCurve2d {
   private _curves: Array<GeometryBoundaryEdgeType>
@@ -197,8 +195,8 @@ export class GeometryLoop2d extends GeometryCurve2d {
   /**
    * Sample this loop for display using per-edge chord-height tessellation.
    *
-   * Straight edges emit endpoints only. Circular arcs and splines use
-   * {@link GeometryCircularArc2d.tessellate} / {@link GeometrySpline2d.tessellate}.
+   * Straight edges emit endpoints only. Circular arcs use
+   * {@link GeometryCircularArc2d.tessellate}.
    * Elliptical edges choose a segment count from the same chord-height formula.
    *
    * @param options - Chord-height tessellation options
@@ -310,10 +308,6 @@ export class GeometryLoop2d extends GeometryCurve2d {
         edge.rotation
       )
     }
-    if (edge instanceof GeometrySpline2d) {
-      // Reverse spline by reversing control points and knot vector.
-      return GeometryLoop2d.reverseSplineEdge(edge)
-    }
     return edge
   }
 
@@ -354,32 +348,6 @@ export class GeometryLoop2d extends GeometryCurve2d {
       newClockwise
     )
   }
-
-  /**
-   * Reverse a spline edge by mirroring its knots and control points.
-   * @param edge Input spline edge
-   * @returns Reversed spline edge
-   */
-  private static reverseSplineEdge(edge: GeometrySpline2d) {
-    // Mirror knot values around the midpoint and reverse the order.
-    const controlPoints = [...edge.controlPoints].reverse()
-    const knots = edge.knots
-    const knotStart = knots[0]
-    const knotEnd = knots[knots.length - 1]
-    const reversedKnots = knots
-      .map(knot => knotStart + knotEnd - knot)
-      .reverse()
-    const weights = edge.weights
-    const reversedWeights =
-      weights.length > 0 ? [...weights].reverse() : undefined
-    return new GeometrySpline2d(
-      controlPoints,
-      reversedKnots,
-      reversedWeights,
-      edge.degree,
-      edge.closed
-    )
-  }
 }
 
 function tessellateLoopEdge(
@@ -390,9 +358,6 @@ function tessellateLoopEdge(
     return curve.getPoints()
   }
   if (curve instanceof GeometryCircularArc2d) {
-    return curve.tessellate(options)
-  }
-  if (curve instanceof GeometrySpline2d) {
     return curve.tessellate(options)
   }
   const sweep = curve.closed ? TAU : curve.deltaAngle

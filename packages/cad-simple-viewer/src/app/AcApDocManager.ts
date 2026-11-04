@@ -34,7 +34,6 @@ import {
   AcApRegenCmd,
   AcApRotateCmd,
   AcApSelectCmd,
-  AcApSplineCmd,
   AcApSwitchBgCmd,
   AcApSysVarCmd,
   AcApUnisolateObjectsCmd,
@@ -117,7 +116,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   RECTANG: ['REC'],
   REGEN: ['RE'],
   SELECT: ['SE'],
-  SPLINE: ['SPL'],
   XLINE: ['XL'],
   ZOOM: ['Z'],
   READINGMODE: ['RM']
@@ -1463,7 +1461,6 @@ export class AcApDocManager {
     addSystemCommand('rectang', 'rectang', new AcApRectCmd())
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
     addSystemCommand('select', 'select', new AcApSelectCmd())
-    addSystemCommand('spline', 'spline', new AcApSplineCmd())
     addSystemCommand('switchbg', 'switchbg', new AcApSwitchBgCmd())
     addSystemCommand('readingmode', 'readingmode', new AcApReadingModeCmd())
     addSystemCommand(

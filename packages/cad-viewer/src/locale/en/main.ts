@@ -53,7 +53,6 @@ export default {
       line: 'Draw a single straight line segment.',
       polyline:
         'Draw a connected series of line or arc segments as one object.',
-      spline: 'Draw a smooth spline curve through fit or control points.',
       circle: 'Draw a circle with multiple construction methods.',
       arc: 'Draw an arc with multiple construction methods.',
       ellipse: 'Draw an ellipse or elliptical arc.',
@@ -128,7 +127,6 @@ export default {
       circle: 'Circle',
       arc: 'Arc',
       ellipse: 'Ellipse',
-      spline: 'Spline',
       rect: 'Rect',
       rectangle: 'Rectangle',
       polygon: 'Polygon',

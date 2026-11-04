@@ -3,8 +3,7 @@ import {
   GeometryEllipseArc2d,
   GeometryLine2d,
   GeometryLoop2d,
-  GeometryMatrix2d,
-  GeometrySpline2d
+  GeometryMatrix2d
 } from '../src'
 
 describe('GeometryLoop2d', () => {
@@ -50,42 +49,17 @@ describe('GeometryLoop2d', () => {
       false,
       0
     )
-    const splineReverse = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: 0.5 },
-        { x: 0, y: 1 }
-      ],
-      [0, 0, 0, 1, 1, 1],
-      [],
-      2,
-      false
-    )
-
     const built = GeometryLoop2d.buildFromEdges(
-      [lineA, lineBReverse, arcReverse, ellipseReverse, splineReverse],
+      [lineA, lineBReverse, arcReverse, ellipseReverse],
       2
     )
     expect(built.length).toBeGreaterThan(0)
     expect(built[0].numberOfEdges).toBeGreaterThan(0)
 
-    const loopWithSpline = new GeometryLoop2d([
-      lineA,
-      new GeometrySpline2d(
-        [
-          { x: 1, y: 0 },
-          { x: 1, y: 0.5 },
-          { x: 0, y: 1 }
-        ],
-        [0, 0, 0, 1, 1, 1],
-        [],
-        2,
-        false
-      )
-    ])
-    expect(
-      loopWithSpline.transform(new GeometryMatrix2d().makeTranslation(1, 2))
-    ).toBe(loopWithSpline)
+    const loop = new GeometryLoop2d([lineA, lineBReverse])
+    expect(loop.transform(new GeometryMatrix2d().makeTranslation(1, 2))).toBe(
+      loop
+    )
   })
 
   it('throws when accessing start point of empty loop', () => {
@@ -157,38 +131,6 @@ describe('GeometryLoop2d', () => {
     )
     const reversedEllipse = reverseEdge(ellipse) as GeometryEllipseArc2d
     expect(reversedEllipse.startAngle).toBeCloseTo(ellipse.endAngle, 8)
-
-    const splineWithWeights = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 2, y: 0 }
-      ],
-      [0, 0, 0, 1, 1, 1],
-      [1, 2, 3],
-      2,
-      false
-    )
-    const reversedWeighted = reverseEdge(splineWithWeights) as GeometrySpline2d
-    expect(reversedWeighted.controlPoints[0].x).toBeCloseTo(2, 8)
-    expect(reversedWeighted.weights[0]).toBe(3)
-
-    const splineNoWeights = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: 1 },
-        { x: 0, y: 2 }
-      ],
-      [0, 0, 0, 1, 1, 1],
-      [],
-      2,
-      false
-    )
-    Object.defineProperty(splineNoWeights, 'weights', {
-      get: () => []
-    })
-    const reversedNoWeights = reverseEdge(splineNoWeights) as GeometrySpline2d
-    expect(reversedNoWeights.weights.length).toBeGreaterThan(0)
   })
 
   it('reverses circular arcs without reflecting endpoints around the center', () => {

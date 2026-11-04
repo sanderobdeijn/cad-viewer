@@ -37,7 +37,6 @@ const pairs = [
   ['MTEXT', 'src/entity/AcDbMText.ts', 'd:/code/dxf-json/src/parser/entities/mtext/parser.ts'],
   ['INSERT', 'src/entity/AcDbBlockReference.ts', 'd:/code/dxf-json/src/parser/entities/insert/parser.ts'],
   ['LWPOLYLINE', 'src/entity/AcDbPolyline.ts', 'd:/code/dxf-json/src/parser/entities/lwpolyline/parser.ts'],
-  ['SPLINE', 'src/entity/AcDbSpline.ts', 'd:/code/dxf-json/src/parser/entities/spline/parser.ts'],
   ['LEADER', 'src/entity/AcDbLeader.ts', 'd:/code/dxf-json/src/parser/entities/leader/parser.ts'],
   ['SOLID', 'src/entity/AcDbTrace.ts', 'd:/code/dxf-json/src/parser/entities/solid/parser.ts'],
   ['RAY', 'src/entity/AcDbRay.ts', 'd:/code/dxf-json/src/parser/entities/ray/parser.ts'],

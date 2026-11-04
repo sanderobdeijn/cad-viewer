@@ -7,17 +7,9 @@ import {
   AcDbEntity,
   AcDbLine,
   AcDbPoint,
-  AcDbPolyline,
-  AcDbSpline
+  AcDbPolyline
 } from '../src/entity'
 import { AcDbOsnapMode } from '../src/misc'
-
-const fitPoints = [
-  { x: 0, y: 0 },
-  { x: 1, y: 1 },
-  { x: 2, y: 0 },
-  { x: 3, y: 1 }
-]
 
 const polyline = () => {
   const entity = new AcDbPolyline()
@@ -41,7 +33,6 @@ const entities: Array<[string, () => AcDbEntity]> = [
     'ellipse',
     () => new AcDbEllipse({ x: 1, y: 2 }, { x: 1, y: 0 }, 5, 2, 0, Math.PI * 2)
   ],
-  ['spline', () => new AcDbSpline(fitPoints, 'Chord', 3, false)],
   ['polyline', polyline],
   ['point', point]
 ]

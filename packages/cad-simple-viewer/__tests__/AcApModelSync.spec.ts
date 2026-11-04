@@ -336,7 +336,6 @@ describe('AcApModelSync', () => {
         'CircularArc center=(1, 2) radius=3 startAngle=0 endAngle=0',
         'EllipseArc center=(0, 0) majorRadius=5 minorRadius=2 rotation=0.5 startAngle=0 endAngle=6.283185',
         'Polyline vertices=[(0, 0), (1, 0), (1, 1)] closed=true',
-        'Spline degree=3 controlPoints=[(0, 0), (1, 2), (3, 2), (4, 0)] closed=false',
         'Point position=(5, 5)',
         'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(1, 0) dimLinePoint=(1, 1) text="x"'
       ].join('\n')
@@ -351,8 +350,7 @@ describe('AcApModelSync', () => {
           'ELLIPSE',
           'LINE',
           'LWPOLYLINE',
-          'POINT',
-          'SPLINE'
+          'POINT'
         ].sort()
       )
       expect(sync.model.toString()).toBe(text)
@@ -366,7 +364,6 @@ describe('AcApModelSync', () => {
         .replace('radius=3 startAngle=0 ', 'radius=4 startAngle=0 ')
         .replace('majorRadius=5', 'majorRadius=6')
         .replace('(1, 1)] closed=true', '(2, 2), (1, 1)] closed=true')
-        .replace('(4, 0)] closed=false', '(5, 0)] closed=false')
         .replace('position=(5, 5)', 'position=(6, 6)')
         .replace('dimLinePoint=(1, 1) text="x"', 'dimLinePoint=(2, 2) text="y"')
 

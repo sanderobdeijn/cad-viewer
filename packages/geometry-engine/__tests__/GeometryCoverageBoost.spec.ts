@@ -2,7 +2,6 @@ import {
   GeometryArea2d,
   GeometryBox2d,
   GeometryBox3d,
-  GeometryCatmullRomCurve2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryUtil,
@@ -10,7 +9,6 @@ import {
   GeometryLoop2d,
   GeometryMatrix2d,
   GeometryMatrix3d,
-  GeometryNurbsCurve,
   GeometryPlane,
   GeometryPoint2d,
   GeometryPolyline2d,
@@ -685,99 +683,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(
       ellipse3.transform3d(new GeometryMatrix3d().makeScale(1.5, 0.5, 1))
     ).toBeInstanceOf(GeometryEllipseArc2d)
-
-    const catmull = new GeometryCatmullRomCurve2d(
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 2 },
-        { x: 2, y: 0 },
-        { x: 3, y: 2 }
-      ],
-      false,
-      'catmullrom'
-    )
-    expect(catmull.points.length).toBe(4)
-    expect(catmull.closed).toBe(false)
-    expect(catmull.curveType).toBe('catmullrom')
-    expect(catmull.tension).toBeCloseTo(0.5, 6)
-    expect(catmull.startPoint).toBeInstanceOf(GeometryPoint2d)
-    expect(catmull.endPoint).toBeInstanceOf(GeometryPoint2d)
-    expect(catmull.length).toBeGreaterThan(0)
-    expect(catmull.getPoint(0.3)).toBeInstanceOf(GeometryPoint2d)
-    expect(catmull.getPoints(10)).toHaveLength(11)
-    catmull.setPoints([
-      { x: 0, y: 0 },
-      { x: 1, y: 1 },
-      { x: 2, y: 0 },
-      { x: 3, y: 1 }
-    ])
-    catmull.setClosed(true)
-    catmull.setCurveType('centripetal')
-    catmull.setTension(0.3)
-    expect(
-      catmull.transform3d(new GeometryMatrix3d().makeTranslation(1, 0, 0))
-    ).toBeInstanceOf(GeometryCatmullRomCurve2d)
-
-    const nurbs = new GeometryNurbsCurve(
-      2,
-      [0, 0, 0, 1, 1, 1],
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-        { x: 2, y: 0 }
-      ]
-    )
-    expect(nurbs.degree()).toBe(2)
-    expect(nurbs.knots()).toHaveLength(6)
-    expect(nurbs.controlPoints()).toHaveLength(3)
-    expect(nurbs.weights()).toHaveLength(3)
-    expect(nurbs.point(0.5)).toHaveLength(3)
-    expect(nurbs.length()).toBeGreaterThan(0)
-    expect(
-      GeometryNurbsCurve.byKnotsControlPointsWeights(
-        2,
-        [0, 0, 0, 1, 1, 1],
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 2, y: 0 }
-        ]
-      )
-    ).toBeInstanceOf(GeometryNurbsCurve)
-    expect(
-      GeometryNurbsCurve.byPoints(
-        [
-          [0, 0, 0],
-          [1, 1, 0],
-          [2, 0, 0],
-          [3, 1, 0]
-        ],
-        3,
-        'Chord'
-      )
-    ).toBeInstanceOf(GeometryNurbsCurve)
-    expect(nurbs.getParameterRange().start).toBeDefined()
-    expect(nurbs.getPoints(5)).toHaveLength(6)
-    expect(nurbs.isClosed()).toBe(false)
-    expect(
-      GeometryNurbsCurve.createFitPointsForClosedCurve([
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 1, y: 1 },
-        { x: 0, y: 1 }
-      ])
-    ).toBeInstanceOf(Array)
-    expect(
-      GeometryNurbsCurve.createClosedCurve(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 1, y: 1 },
-          { x: 0, y: 1 }
-        ],
-        3
-      )
-    ).toBeInstanceOf(GeometryNurbsCurve)
 
     const circ2 = new GeometryCircularArc2d(
       { x: 0, y: 0 },

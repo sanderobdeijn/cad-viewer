@@ -324,7 +324,8 @@ for (const command of [
   'sketch',
   'undo',
   'redo',
-  'u'
+  'u',
+  'spline'
 ]) {
   test(`has no ${command} command or ribbon button`, async ({ page }) => {
     await page.goto('/')

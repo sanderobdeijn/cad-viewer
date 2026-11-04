@@ -16,7 +16,6 @@ export type {
   AcDbPropertyAccessor
 } from './AcDbEntityProperties'
 export { AcDbLine } from './AcDbLine'
-export { AcDbSpline } from './AcDbSpline'
 export { AcDbPolyline, acdbOffsetVertexPathAsPolyline } from './AcDbPolyline'
 export { AcDbPoint } from './AcDbPoint'
 export { AcDbViewport } from './AcDbViewport'

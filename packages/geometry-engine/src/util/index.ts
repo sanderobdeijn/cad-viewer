@@ -31,20 +31,6 @@ export {
   geometrySmoothstep
 } from './GeometryMathUtil'
 export {
-  geometryBasisFunction,
-  geometryCalculateCurveLength,
-  geometryComputeParameterValues,
-  geometryEvaluateNurbsPoint,
-  geometryEvaluateNurbsDerivatives,
-  geometrySignedPlanarCurvature,
-  geometryGenerateAveragedKnots,
-  geometryGenerateChordKnots,
-  geometryGenerateSqrtChordKnots,
-  geometryGenerateUniformKnots,
-  geometryInterpolateControlPoints,
-  geometryInterpolateNurbsCurve
-} from './GeometryNurbsUtil'
-export {
   geometryGetOcsAngle,
   geometryGetOcsReferenceVector,
   geometryGetOcsReferenceVectorInto,

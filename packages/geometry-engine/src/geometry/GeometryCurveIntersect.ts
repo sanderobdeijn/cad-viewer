@@ -14,7 +14,6 @@ import {
 import { GeometryCircularArc2d } from './GeometryCircularArc2d'
 import { GeometryEllipseArc2d } from './GeometryEllipseArc2d'
 import { GeometryLine2d } from './GeometryLine2d'
-import { GeometrySpline2d } from './GeometrySpline2d'
 
 /** Natural parameter interval of a linear primitive. */
 export type GeometryCurveExtent = 'bounded' | 'ray' | 'unbounded'
@@ -49,15 +48,9 @@ export type GeometryIntersectPrimitive =
       kind: 'ellipseArc'
       arc: GeometryEllipseArc2d
     })
-  | (GeometryIntersectPrimitiveBase & {
-      kind: 'spline'
-      spline: GeometrySpline2d
-    })
 
-const SPLINE_SAMPLE_COUNT = 128
 const PLANAR_SAMPLE_COUNT = 96
 const POINT_TOL = DEFAULT_TOL.equalPointTol
-const REFINE_TOL = POINT_TOL * 8
 
 /**
  * Finds intersection points between two sets of curve primitives.
@@ -108,9 +101,6 @@ export function geometryTransformIntersectPrimitive(
     case 'ellipseArc':
       cloned.arc.transform3d(matrix)
       return cloned
-    case 'spline':
-      cloned.spline.transform3d(matrix)
-      return cloned
   }
 }
 
@@ -140,12 +130,6 @@ export function geometryCloneIntersectPrimitive(
         arc: primitive.arc.clone(),
         extendable: primitive.extendable
       }
-    case 'spline':
-      return {
-        kind: 'spline',
-        spline: primitive.spline.clone(),
-        extendable: primitive.extendable
-      }
   }
 }
 
@@ -170,12 +154,6 @@ type PreparedPrimitive =
       arc: GeometryEllipseArc2d
       full: boolean
       box: GeometryBox2d
-    }
-  | {
-      kind: 'spline'
-      spline: GeometrySpline2d
-      samples: PreparedLine[]
-      box?: GeometryBox2d
     }
 
 function flattenPrimitives(
@@ -217,10 +195,6 @@ function flattenPrimitives(
         })
         break
       }
-      case 'spline': {
-        result.push(prepareSpline(primitive.spline))
-        break
-      }
     }
   }
   return result
@@ -241,30 +215,6 @@ function prepareLine(
       extent === 'bounded'
         ? new GeometryBox2d().setFromPoints([start, end])
         : undefined
-  }
-}
-
-function prepareSpline(spline: GeometrySpline2d): PreparedPrimitive {
-  const samples: PreparedLine[] = []
-  const points = spline.getPoints(SPLINE_SAMPLE_COUNT)
-  if (points.length >= 2) {
-    const count = spline.closed ? points.length : points.length - 1
-    for (let i = 0; i < count; i++) {
-      const start = points[i]
-      const end = points[(i + 1) % points.length]
-      if (start.distanceToSquared(end) < POINT_TOL * POINT_TOL) continue
-      samples.push(prepareLine(start.clone(), end.clone(), 'bounded'))
-    }
-  }
-  const box = new GeometryBox2d()
-  for (const sample of samples) {
-    if (sample.box) box.union(sample.box)
-  }
-  return {
-    kind: 'spline',
-    spline,
-    samples,
-    box: samples.length > 0 ? box : undefined
   }
 }
 
@@ -307,11 +257,6 @@ function intersectPrepared(
   a: PreparedPrimitive,
   b: PreparedPrimitive
 ): GeometryPoint2d[] {
-  if (a.kind === 'spline' && b.kind === 'spline') {
-    return intersectSplineSpline(a, b)
-  }
-  if (a.kind === 'spline') return intersectSplineOther(a, b)
-  if (b.kind === 'spline') return intersectSplineOther(b, a)
   if (a.kind === 'line' && b.kind === 'line') return intersectLineLine(a, b)
   if (a.kind === 'line' && b.kind === 'circularArc') {
     return intersectLineCircularArc(a, b.arc)
@@ -340,81 +285,6 @@ function intersectPrepared(
     return intersectEllipseEllipse(a.arc, b.arc)
   }
   return []
-}
-
-function intersectSplineOther(
-  spline: Extract<PreparedPrimitive, { kind: 'spline' }>,
-  other: PreparedPrimitive
-): GeometryPoint2d[] {
-  const hits: GeometryPoint2d[] = []
-  for (const sample of spline.samples) {
-    if (!boxesMayIntersect(sample, other)) continue
-    appendPoints(hits, intersectPrepared(sample, other))
-  }
-  return refineSplineHits(spline.spline, hits, other)
-}
-
-function intersectSplineSpline(
-  a: Extract<PreparedPrimitive, { kind: 'spline' }>,
-  b: Extract<PreparedPrimitive, { kind: 'spline' }>
-): GeometryPoint2d[] {
-  const hits: GeometryPoint2d[] = []
-  for (const sa of a.samples) {
-    for (const sb of b.samples) {
-      if (!boxesMayIntersect(sa, sb)) continue
-      appendPoints(hits, intersectLineLine(sa, sb))
-    }
-  }
-  const points: GeometryPoint2d[] = []
-  for (const hit of hits) {
-    const pa = a.spline.nearestPoint(hit, SPLINE_SAMPLE_COUNT)
-    const pb = b.spline.nearestPoint(hit, SPLINE_SAMPLE_COUNT)
-    if (pa.distanceTo(pb) <= REFINE_TOL) points.push(pa)
-  }
-  return points
-}
-
-function refineSplineHits(
-  spline: GeometrySpline2d,
-  hits: GeometryPoint2d[],
-  other: PreparedPrimitive
-): GeometryPoint2d[] {
-  const points: GeometryPoint2d[] = []
-  for (const hit of hits) {
-    const refined = spline.nearestPoint(hit, SPLINE_SAMPLE_COUNT)
-    if (distanceToPrepared(other, refined) <= REFINE_TOL) {
-      points.push(refined)
-    }
-  }
-  return points
-}
-
-function distanceToPrepared(
-  primitive: PreparedPrimitive,
-  point: GeometryPoint2d
-): number {
-  if (primitive.kind === 'line') {
-    const dirLenSq = dot(primitive.dir, primitive.dir)
-    if (dirLenSq < POINT_TOL * POINT_TOL) return Number.POSITIVE_INFINITY
-    const t =
-      dot(new GeometryVector2d(point).sub(primitive.start), primitive.dir) /
-      dirLenSq
-    if (!isParamOnExtent(t, primitive.extent)) return Number.POSITIVE_INFINITY
-    return pointOnLine(primitive.start, primitive.dir, t).distanceTo(point)
-  }
-  if (primitive.kind === 'circularArc') {
-    const radial = Math.abs(
-      point.distanceTo(primitive.arc.center) - primitive.arc.radius
-    )
-    if (radial > REFINE_TOL) return radial
-    return isOnCircularArc(primitive.arc, point) ? 0 : Number.POSITIVE_INFINITY
-  }
-  if (primitive.kind === 'ellipseArc') {
-    return isPointOnEllipse(point, primitive.arc)
-      ? 0
-      : Math.abs(ellipseImplicit(primitive.arc, point))
-  }
-  return Number.POSITIVE_INFINITY
 }
 
 function intersectLineLine(

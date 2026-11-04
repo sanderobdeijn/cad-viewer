@@ -4,7 +4,6 @@ import {
   GeometryLine2d,
   GeometryPoint2d,
   GeometryPolyline2d,
-  GeometrySpline2d,
   Model,
   ModelParseError
 } from '../src'
@@ -34,18 +33,6 @@ describe('Model', () => {
           { x: 1, y: 1 }
         ],
         true
-      ),
-      new GeometrySpline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 2, y: 0 },
-          { x: 3, y: 0 }
-        ],
-        [0, 0, 0, 0, 1, 1, 1, 1],
-        undefined,
-        3,
-        false
       )
     ]
 
@@ -53,8 +40,7 @@ describe('Model', () => {
       'Line start=(0, 0) end=(1.5, 2)',
       'CircularArc center=(1, 2) radius=3 startAngle=0 endAngle=3.141593',
       'EllipseArc center=(0, 0) majorRadius=4 minorRadius=2 rotation=0 startAngle=0 endAngle=3.141593',
-      'Polyline vertices=[(0, 0), (1, 1)] closed=true',
-      'Spline degree=3 controlPoints=[(0, 0), (1, 0), (2, 0), (3, 0)] closed=false'
+      'Polyline vertices=[(0, 0), (1, 1)] closed=true'
     ])
   })
 
@@ -96,7 +82,6 @@ describe('Model', () => {
         'CircularArc center=(1, 2) radius=3 startAngle=0 endAngle=0',
         'EllipseArc center=(0, 0) majorRadius=5 minorRadius=2 rotation=0.5 startAngle=0 endAngle=6.283185',
         'Polyline vertices=[(0, 0), (1, 0), (1, 1)] closed=true',
-        'Spline degree=3 controlPoints=[(0, 0), (1, 2), (3, 2), (4, 0)] closed=false',
         'Point position=(5, 5)',
         'Dimension type=AlignedDimension xLine1Point=(0, 0) dimLinePoint=(5, 5) text="a b=c" measurement=10'
       ].join('\n')
@@ -145,14 +130,7 @@ describe('Model', () => {
       ['Polyline vertices=[(0, 0)] closed=false', 'at least 2 points'],
       ['Polyline vertices=[(0, 0), (1, 1)] closed=maybe', 'true or false'],
       ['Polyline vertices=[(0, 0) x (1, 1)] closed=false', 'must be a list'],
-      [
-        'Spline degree=3 controlPoints=[(0, 0), (1, 1)] closed=false',
-        'more than 3'
-      ],
-      [
-        'Spline degree=1.5 controlPoints=[(0, 0), (1, 1)] closed=false',
-        'whole number'
-      ]
+      ['Spline degree=3', 'Unknown item "Spline"']
     ])('rejects %s', (line, message) => {
       expect(() => Model.parse(line)).toThrow(message)
     })

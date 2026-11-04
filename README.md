@@ -199,7 +199,6 @@ Legend:
 
 * [x] Line
 * [x] Polyline
-* [x] Spline
 * [x] Circle
 * [x] Arc
 * [x] Ellipse

@@ -30,10 +30,10 @@ describe('AcDb2dPolyline', () => {
     expect(polyline.getPointAt(1)).toEqual({ x: 2, y: 3 })
     expect(polyline.getBulgeAt(0)).toBe(0)
 
-    polyline.polyType = AcDbPoly2dType.CubicSplinePoly
+    polyline.polyType = AcDbPoly2dType.FitCurvePoly
     polyline.elevation = 9
     polyline.closed = false
-    expect(polyline.polyType).toBe(AcDbPoly2dType.CubicSplinePoly)
+    expect(polyline.polyType).toBe(AcDbPoly2dType.FitCurvePoly)
     expect(polyline.elevation).toBe(9)
     expect(polyline.closed).toBe(false)
   })

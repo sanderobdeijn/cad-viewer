@@ -4,8 +4,6 @@ A Vue 3 + TypeScript Ribbon UI component library aligned with Syncfusion Ribbon 
 
 ![Ribbon](./images/ribbon.jpg)
 
-[Live Demo](https://mlightcad.github.io/ribbon/)
-
 ## What This Project Provides
 
 - Ribbon container/state orchestration (`MlRibbon`)
@@ -63,7 +61,7 @@ A Vue 3 + TypeScript Ribbon UI component library aligned with Syncfusion Ribbon 
 
 ```bash
 pnpm install
-pnpm dev
+pnpm build
 ```
 
 Consumer projects need to install peer dependencies explicitly:
@@ -339,17 +337,12 @@ const fileMenuItems: FileMenuItemModel[] = [
 ## Scripts
 
 ```bash
-pnpm dev
 pnpm build
-pnpm build:demo
 pnpm test
-pnpm test:watch
-pnpm test:e2e
-pnpm preview
+pnpm lint
 ```
 
 - `pnpm build`: library build (`src/ribbon/index.ts`) with `vue` and `element-plus` externalized.
-- `pnpm build:demo`: demo app build from `index.html`.
 
 ## Project Structure
 

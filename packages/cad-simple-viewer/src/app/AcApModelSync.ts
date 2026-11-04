@@ -20,7 +20,6 @@ import {
   AcDbPolyline,
   AcDbRadialDimension,
   AcDbRotatedDimension,
-  AcDbSpline,
   GeometryCircularArc2d,
   GeometryDimension,
   GeometryEllipseArc2d,
@@ -29,7 +28,6 @@ import {
   GeometryPolyline2d,
   GeometryPolyline2dVertex,
   GeometryShape,
-  GeometrySpline2d,
   GeometryVector2d,
   Model
 } from '@mlightcad/data-model'
@@ -218,21 +216,6 @@ const updatePolyline = (entity: AcDbPolyline, shape: GeometryPolyline2d) => {
   entity.closed = shape.closed
 }
 
-const updateSpline = (entity: AcDbSpline, shape: GeometrySpline2d) => {
-  // The text has no knots or weights, so keep them if they still fit.
-  const current = entity.geometry as GeometrySpline2d
-  const keep =
-    current.degree === shape.degree &&
-    current.controlPoints.length === shape.controlPoints.length
-  entity.rebuild(
-    shape.controlPoints,
-    keep ? current.knots : shape.knots,
-    keep ? current.weights : shape.weights,
-    shape.degree,
-    shape.closed
-  )
-}
-
 const updateEllipse = (entity: AcDbEllipse, shape: GeometryEllipseArc2d) => {
   entity.center = shape.center
   entity.majorAxisRadius = shape.majorAxisRadius
@@ -314,21 +297,6 @@ const shapeTarget = (shape: GeometryShape): ModelTextTarget => {
         updatePolyline(entity, shape)
         return entity
       }
-    }
-  }
-  if (shape instanceof GeometrySpline2d) {
-    return {
-      line,
-      canUpdate: entity => entity instanceof AcDbSpline,
-      update: entity => updateSpline(entity as AcDbSpline, shape),
-      create: () =>
-        new AcDbSpline(
-          shape.controlPoints,
-          shape.knots,
-          shape.weights,
-          shape.degree,
-          shape.closed
-        )
     }
   }
   throw new Error(`Cannot edit "${line}"`)

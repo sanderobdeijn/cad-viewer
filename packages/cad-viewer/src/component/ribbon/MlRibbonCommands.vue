@@ -88,8 +88,7 @@ import {
   properties,
   qselect,
   rect,
-  setting,
-  splineFitPoints
+  setting
 } from '../../svg'
 import {
   clearMeasurements,
@@ -729,7 +728,6 @@ const buildBaseTabs = (
   const ribbonTooltips = {
     line: t('main.ribbon.tooltip.line'),
     polyline: t('main.ribbon.tooltip.polyline'),
-    spline: t('main.ribbon.tooltip.spline'),
     circle: t('main.ribbon.tooltip.circle'),
     arc: t('main.ribbon.tooltip.arc'),
     ellipse: t('main.ribbon.tooltip.ellipse'),
@@ -1084,13 +1082,6 @@ const buildBaseTabs = (
           title: t('main.ribbon.group.draw'),
           orientation: 'row',
           footerMenuItems: [
-            {
-              id: 'cmd-spline',
-              type: 'button',
-              label: t('main.ribbon.command.spline'),
-              tooltip: ribbonTooltips.spline,
-              props: { icon: splineFitPoints }
-            },
             {
               id: 'cmd-point',
               type: 'button',
@@ -1508,7 +1499,6 @@ const ribbonData = computed(() => {
   const commandByItemId = new Map<string, string>()
   commandByItemId.set('cmd-line', 'line')
   commandByItemId.set('cmd-polyline', 'pline')
-  commandByItemId.set('cmd-spline', 'spline')
   commandByItemId.set('cmd-circle', 'circle')
   commandByItemId.set('circle-center-radius', 'circle')
   commandByItemId.set('circle-center-diameter', 'circle\\nDiameter')

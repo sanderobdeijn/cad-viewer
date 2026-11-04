@@ -14,8 +14,7 @@ export default {
     Point: 'Point',
     Polyline: 'Polyline',
     RadialDimension: 'Radial Dimension',
-    RotatedDimension: 'Rotated Dimension',
-    Spline: 'Spline'
+    RotatedDimension: 'Rotated Dimension'
   },
   color: {
     aliceblue: 'Alice Blue',

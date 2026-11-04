@@ -18,7 +18,7 @@ Most math classes are adapted from [THREE.js](https://threejs.org/docs/index.htm
 
 - **2D and 3D Geometry**: Support for both 2D and 3D geometric operations
 - **Mathematical Foundation**: Comprehensive vector and matrix operations
-- **Curve and Surface Support**: Advanced geometric entities including splines and NURBS
+- **Curve and Surface Support**: Advanced geometric entities
 - **Transformation Utilities**: Matrix-based transformations for 2D and 3D space
 - **Intersection Calculations**: Tools for computing geometric intersections
 - **Performance Optimized**: Efficient mathematical operations for real-time CAD applications
@@ -56,7 +56,6 @@ npm install @mlightcad/geometry-engine
 
 #### Complex Geometric Entities
 - **GeometryPolyline2d**: 2D polyline with multiple segments
-- **GeometrySpline2d**: Spline curves
 - **GeometryShape2d**: Complex geometric shapes
 - **GeometryArea2d**: 2D area calculations
 - **GeometryLoop2d**: 2D loop representations

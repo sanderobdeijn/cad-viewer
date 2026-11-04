@@ -1,6 +1,5 @@
 import {
   GeometryArea2d,
-  GeometryCatmullRomCurve2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryLine2d,
@@ -8,8 +7,7 @@ import {
   GeometryMatrix2d,
   GeometryMatrix3d,
   GeometryPoint2d,
-  GeometryPolyline2d,
-  GeometrySpline2d
+  GeometryPolyline2d
 } from '../src'
 
 const expectPoint2dClose = (
@@ -293,50 +291,5 @@ describe('Geometry transform regression', () => {
     expect(ellipse.minorAxisRadius).toBeCloseTo(4, 8)
     expectPoint3dClose(ellipse.startPoint, { x: 6, y: 0 })
     expectPoint3dClose(ellipse.endPoint, { x: 0, y: 4 })
-  })
-
-  it('transforms splines built from control points and fit points', () => {
-    const controlSpline = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-        { x: 2, y: 0 },
-        { x: 3, y: 1 }
-      ],
-      [0, 0, 0, 0, 1, 1, 1, 1]
-    )
-    const fitSpline = new GeometrySpline2d(
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-        { x: 2, y: 0 },
-        { x: 3, y: 1 }
-      ],
-      'Uniform'
-    )
-    const matrix = new GeometryMatrix3d().makeTranslation(10, -2, 5)
-
-    controlSpline.transform3d(matrix)
-    fitSpline.transform3d(matrix)
-
-    expectPoint3dClose(controlSpline.startPoint, { x: 10, y: -2 })
-    expectPoint3dClose(controlSpline.endPoint, { x: 13, y: -1 })
-    expectPoint3dClose(fitSpline.startPoint, { x: 10, y: -2 })
-    expectPoint3dClose(fitSpline.endPoint, { x: 13, y: -1 })
-  })
-
-  it('transforms catmull-rom curves by moving their control points', () => {
-    const curve = new GeometryCatmullRomCurve2d([
-      { x: 0, y: 0 },
-      { x: 1, y: 2 },
-      { x: 3, y: 2 },
-      { x: 4, y: 0 }
-    ])
-
-    curve.transform3d(new GeometryMatrix3d().makeTranslation(2, -3, 4))
-
-    expectPoint3dClose(curve.startPoint, { x: 2, y: -3 })
-    expectPoint3dClose(curve.endPoint, { x: 6, y: -3 })
-    expectPoint3dClose(curve.points[1], { x: 3, y: -1 })
   })
 })

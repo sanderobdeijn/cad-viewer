@@ -10,7 +10,6 @@ import {
   GeometryPoint2dLike,
   GeometryPolyline2d,
   GeometryPolyline2dVertex,
-  GeometrySpline2d,
   geometryTransformIntersectPrimitive,
   geometryTransformOcsPointToWcs,
   GeometryVector3d,
@@ -156,12 +155,6 @@ function boundaryEdgeToPrimitive(
   if (edge instanceof GeometryEllipseArc2d) {
     const primitive = ellipseArc2dToPrimitive(edge, normal, false)
     return primitive ? [primitive] : []
-  }
-  if (edge instanceof GeometrySpline2d) {
-    const spline = edge.clone()
-    const matrix = ocsMatrix(normal)
-    if (matrix) spline.transform3d(matrix)
-    return [{ kind: 'spline', spline, extendable: false }]
   }
   return []
 }

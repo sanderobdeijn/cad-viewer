@@ -100,7 +100,6 @@ import {
   acdbHostApplicationServices,
   AcDbLine,
   AcDbPolyline,
-  AcDbSpline,
   GeometryPoint2d
 } from '@mlightcad/data-model'
 import {
@@ -156,19 +155,6 @@ describe('AcTrDirectBatch eligibility', () => {
     expect(
       isDirectBatchCandidate(new AcDbCircle(new GeometryPoint2d(0, 0), 5))
     ).toBe(true)
-    expect(
-      isDirectBatchCandidate(
-        new AcDbSpline(
-          [
-            new GeometryPoint2d(0, 0),
-            new GeometryPoint2d(1, 1),
-            new GeometryPoint2d(2, -1),
-            new GeometryPoint2d(3, 0)
-          ],
-          [0, 0, 0, 0, 1, 1, 1, 1]
-        )
-      )
-    ).toBe(true)
   })
 
   it('builds meta for LINE via worldDraw tessellation capture', () => {
@@ -193,7 +179,7 @@ describe('AcTrDirectBatch eligibility', () => {
     })
   })
 
-  it('builds meta for CIRCLE / ARC / SPLINE via subWorldDraw capture', () => {
+  it('builds meta for CIRCLE / ARC via subWorldDraw capture', () => {
     withWorkingDatabase(db => {
       const renderer = createRenderer()
 
@@ -211,20 +197,6 @@ describe('AcTrDirectBatch eligibility', () => {
       const arcMeta = tryBuildDirectEntityMeta(arc, renderer)
       expect(arcMeta).not.toBeNull()
       arcMeta?.geometry.dispose()
-
-      const spline = new AcDbSpline(
-        [
-          new GeometryPoint2d(0, 0),
-          new GeometryPoint2d(1, 1),
-          new GeometryPoint2d(2, -1),
-          new GeometryPoint2d(3, 0)
-        ],
-        [0, 0, 0, 0, 1, 1, 1, 1]
-      )
-      db.tables.blockTable.modelSpace.appendEntity(spline)
-      const splineMeta = tryBuildDirectEntityMeta(spline, renderer)
-      expect(splineMeta).not.toBeNull()
-      splineMeta?.geometry.dispose()
     })
   })
 

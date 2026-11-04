@@ -5,7 +5,6 @@ import {
   GeometryLine2d,
   GeometryLoop2d,
   GeometryPolyline2d,
-  GeometrySpline2d,
   ORIGIN_POINT_2D,
   TAU
 } from '../src'
@@ -121,41 +120,6 @@ describe('GeometryCurveTessellate', () => {
       const points = ellipse.tessellate({ maxSegments: 40 })
       expect(points.length).toBeGreaterThan(2)
       expect(points.length).toBeLessThanOrEqual(40)
-    })
-  })
-
-  describe('spline tessellate', () => {
-    it('uses fewer than 100 points for a nearly linear spline', () => {
-      const spline = new GeometrySpline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 2, y: 0 },
-          { x: 3, y: 0 }
-        ],
-        [0, 0, 0, 0, 1, 1, 1, 1]
-      )
-      const points = spline.tessellate()
-      expect(points.length).toBeGreaterThan(1)
-      expect(points.length).toBeLessThan(100)
-      expect(spline.getPoints(50)).toHaveLength(50)
-    })
-
-    it('caps output at maxSegments', () => {
-      const spline = new GeometrySpline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 4 },
-          { x: 2, y: -4 },
-          { x: 3, y: 0 }
-        ],
-        [0, 0, 0, 0, 1, 1, 1, 1]
-      )
-      const points = spline.tessellate({
-        deviation: 1e-9,
-        maxSegments: 12
-      })
-      expect(points.length).toBeLessThanOrEqual(12)
     })
   })
 

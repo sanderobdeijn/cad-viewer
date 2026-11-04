@@ -51,7 +51,6 @@ npm install @mlightcad/data-model
 - **AcDbBlockReference**: Block reference entity
 - **AcDbPoint**: Point entity
 - **AcDbEllipse**: Ellipse entity
-- **AcDbSpline**: Spline curve entity
 - **AcDbTable**: Table entity
 - **AcDbLeader**: Leader entity
 - **AcDbRay, AcDbXline**: Construction line entities
