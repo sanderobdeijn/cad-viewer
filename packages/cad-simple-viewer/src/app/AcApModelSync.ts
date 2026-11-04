@@ -1,16 +1,36 @@
 import {
   AcCmEventManager,
+  AcDb3PointAngularDimension,
+  AcDbAlignedDimension,
+  AcDbArc,
+  AcDbArcDimension,
+  AcDbCircle,
   AcDbDatabase,
+  AcDbDiametricDimension,
   AcDbDimension,
+  AcDbEllipse,
   AcDbEntity,
   AcDbEntityEventArgs,
   acdbHostApplicationServices,
   AcDbLayoutEventArgs,
+  AcDbLine,
   AcDbObjectId,
+  AcDbOrdinateDimension,
   AcDbPoint,
+  AcDbPolyline,
+  AcDbRadialDimension,
+  AcDbRotatedDimension,
+  AcDbSpline,
+  GeometryCircularArc2d,
   GeometryDimension,
+  GeometryEllipseArc2d,
+  GeometryLine2d,
   GeometryPoint2d,
+  GeometryPolyline2d,
+  GeometryPolyline2dVertex,
   GeometryShape,
+  GeometrySpline2d,
+  GeometryVector2d,
   Model
 } from '@mlightcad/data-model'
 
@@ -24,6 +44,8 @@ import type {
   AcApMeasurementPoint2d,
   AcApMeasurementRecord
 } from '../command/measure/AcApMeasurementTypes'
+import { AcEdOpenMode } from '../editor/view/AcEdOpenMode'
+import { AcApEntityService } from '../service/AcApEntityService'
 import type { AcTrView2d } from '../view'
 import type { AcApDocManager, AcDbDocumentEventArgs } from './AcApDocManager'
 
@@ -66,6 +88,281 @@ const MEASUREMENT_TYPE_NAMES = {
   point: 'MeasurePoint'
 }
 
+const MEASUREMENT_TYPES = new Set(Object.values(MEASUREMENT_TYPE_NAMES))
+
+type DimensionPoints = Record<string, GeometryPoint2d>
+
+const ALIGNED_POINTS = ['xLine1Point', 'xLine2Point', 'dimLinePoint']
+const ANGULAR_POINTS = ['centerPoint', 'xLine1Point', 'xLine2Point', 'arcPoint']
+
+/** The dimension types that text can create and the points each one needs. */
+const DIMENSION_TYPES: Record<
+  string,
+  {
+    points: string[]
+    create: (points: DimensionPoints, text: string | null) => AcDbDimension
+  }
+> = {
+  AlignedDimension: {
+    points: ALIGNED_POINTS,
+    create: (p, text) =>
+      new AcDbAlignedDimension(
+        p.xLine1Point,
+        p.xLine2Point,
+        p.dimLinePoint,
+        text
+      )
+  },
+  RotatedDimension: {
+    points: ALIGNED_POINTS,
+    create: (p, text) =>
+      new AcDbRotatedDimension(
+        p.xLine1Point,
+        p.xLine2Point,
+        p.dimLinePoint,
+        text
+      )
+  },
+  RadialDimension: {
+    points: ['center', 'chordPoint'],
+    create: (p, text) =>
+      new AcDbRadialDimension(p.center, p.chordPoint, 0, text)
+  },
+  DiametricDimension: {
+    points: ['chordPoint', 'farChordPoint'],
+    create: (p, text) =>
+      new AcDbDiametricDimension(p.chordPoint, p.farChordPoint, 0, text)
+  },
+  OrdinateDimension: {
+    points: ['definingPoint', 'leaderEndPoint'],
+    create: (p, text) =>
+      new AcDbOrdinateDimension(p.definingPoint, p.leaderEndPoint, text)
+  },
+  '3PointAngularDimension': {
+    points: ANGULAR_POINTS,
+    create: (p, text) =>
+      new AcDb3PointAngularDimension(
+        p.centerPoint,
+        p.xLine1Point,
+        p.xLine2Point,
+        p.arcPoint,
+        text
+      )
+  },
+  ArcDimension: {
+    points: ANGULAR_POINTS,
+    create: (p, text) =>
+      new AcDbArcDimension(
+        p.centerPoint,
+        p.xLine1Point,
+        p.xLine2Point,
+        p.arcPoint,
+        text
+      )
+  }
+}
+
+/** The measured value is derived, so editing it does not change an entity. */
+const dimensionLine = (dimension: GeometryDimension) =>
+  Model.formatDimension({ ...dimension, measurement: undefined })
+
+const checkDimension = (dimension: GeometryDimension) => {
+  const definition = DIMENSION_TYPES[dimension.type]
+  if (!definition) {
+    throw new Error(`Unknown dimension type "${dimension.type}"`)
+  }
+  const names = Object.keys(dimension.points)
+  for (const name of definition.points) {
+    if (!names.includes(name)) {
+      throw new Error(`${dimension.type} needs ${name}`)
+    }
+  }
+  for (const name of names) {
+    if (!definition.points.includes(name)) {
+      throw new Error(`${dimension.type} has no ${name}`)
+    }
+  }
+}
+
+/** One line of edited text and how to turn it into an entity. */
+interface ModelTextTarget {
+  line: string
+  /** Applies this line to the entity, or returns false if it cannot */
+  canUpdate: (entity: AcDbEntity) => boolean
+  update: (entity: AcDbEntity) => void
+  create: () => AcDbEntity
+}
+
+type PolylineVertex = GeometryPolyline2dVertex & {
+  startWidth?: number
+  endWidth?: number
+}
+
+const updatePolyline = (entity: AcDbPolyline, shape: GeometryPolyline2d) => {
+  // The text has no arcs or widths, so keep those of each existing vertex.
+  const previous = [
+    ...(entity.geometry as unknown as GeometryPolyline2d<PolylineVertex>)
+      .vertices
+  ]
+  entity.reset(false)
+  shape.vertices.forEach((vertex, index) => {
+    const kept = previous[index]
+    entity.addVertexAt(
+      index,
+      new GeometryPoint2d(vertex.x, vertex.y),
+      kept?.bulge ?? 0,
+      kept?.startWidth ?? -1,
+      kept?.endWidth ?? -1
+    )
+  })
+  entity.closed = shape.closed
+}
+
+const updateSpline = (entity: AcDbSpline, shape: GeometrySpline2d) => {
+  // The text has no knots or weights, so keep them if they still fit.
+  const current = entity.geometry as GeometrySpline2d
+  const keep =
+    current.degree === shape.degree &&
+    current.controlPoints.length === shape.controlPoints.length
+  entity.rebuild(
+    shape.controlPoints,
+    keep ? current.knots : shape.knots,
+    keep ? current.weights : shape.weights,
+    shape.degree,
+    shape.closed
+  )
+}
+
+const updateEllipse = (entity: AcDbEllipse, shape: GeometryEllipseArc2d) => {
+  entity.center = shape.center
+  entity.majorAxisRadius = shape.majorAxisRadius
+  entity.minorAxisRadius = shape.minorAxisRadius
+  entity.majorAxis = new GeometryVector2d(
+    Math.cos(shape.rotation),
+    Math.sin(shape.rotation)
+  )
+  entity.startAngle = shape.startAngle
+  entity.endAngle = shape.endAngle
+}
+
+const shapeTarget = (shape: GeometryShape): ModelTextTarget => {
+  const line = Model.formatShape(shape)
+  if (shape instanceof GeometryLine2d) {
+    return {
+      line,
+      canUpdate: entity => entity instanceof AcDbLine,
+      update: entity => {
+        const target = entity as AcDbLine
+        target.startPoint = shape.startPoint
+        target.endPoint = shape.endPoint
+      },
+      create: () => new AcDbLine(shape.startPoint, shape.endPoint)
+    }
+  }
+  if (shape instanceof GeometryCircularArc2d) {
+    const full = shape.closed
+    return {
+      line,
+      canUpdate: entity =>
+        full ? entity instanceof AcDbCircle : entity instanceof AcDbArc,
+      update: entity => {
+        const target = entity as AcDbCircle | AcDbArc
+        target.center = shape.center
+        target.radius = shape.radius
+        if (target instanceof AcDbArc) {
+          target.startAngle = shape.startAngle
+          target.endAngle = shape.endAngle
+        }
+      },
+      create: () =>
+        full
+          ? new AcDbCircle(shape.center, shape.radius)
+          : new AcDbArc(
+              shape.center,
+              shape.radius,
+              shape.startAngle,
+              shape.endAngle
+            )
+    }
+  }
+  if (shape instanceof GeometryEllipseArc2d) {
+    return {
+      line,
+      canUpdate: entity => entity instanceof AcDbEllipse,
+      update: entity => updateEllipse(entity as AcDbEllipse, shape),
+      create: () =>
+        new AcDbEllipse(
+          shape.center,
+          new GeometryVector2d(
+            Math.cos(shape.rotation),
+            Math.sin(shape.rotation)
+          ),
+          shape.majorAxisRadius,
+          shape.minorAxisRadius,
+          shape.startAngle,
+          shape.endAngle
+        )
+    }
+  }
+  if (shape instanceof GeometryPolyline2d) {
+    return {
+      line,
+      canUpdate: entity => entity instanceof AcDbPolyline,
+      update: entity => updatePolyline(entity as AcDbPolyline, shape),
+      create: () => {
+        const entity = new AcDbPolyline()
+        updatePolyline(entity, shape)
+        return entity
+      }
+    }
+  }
+  if (shape instanceof GeometrySpline2d) {
+    return {
+      line,
+      canUpdate: entity => entity instanceof AcDbSpline,
+      update: entity => updateSpline(entity as AcDbSpline, shape),
+      create: () =>
+        new AcDbSpline(
+          shape.controlPoints,
+          shape.knots,
+          shape.weights,
+          shape.degree,
+          shape.closed
+        )
+    }
+  }
+  throw new Error(`Cannot edit "${line}"`)
+}
+
+const pointTarget = (point: GeometryPoint2d): ModelTextTarget => ({
+  line: Model.formatPoint(point),
+  canUpdate: entity => entity instanceof AcDbPoint,
+  update: entity => {
+    ;(entity as AcDbPoint).position = point
+  },
+  create: () => {
+    const entity = new AcDbPoint()
+    entity.position = point
+    return entity
+  }
+})
+
+const dimensionTarget = (dimension: GeometryDimension): ModelTextTarget => ({
+  line: dimensionLine(dimension),
+  canUpdate: entity =>
+    entity instanceof AcDbDimension && entity.type === dimension.type,
+  update: entity => {
+    const target = entity as AcDbDimension
+    Object.assign(target, dimension.points)
+    target.dimensionText = dimension.text ?? null
+  },
+  create: () =>
+    DIMENSION_TYPES[dimension.type].create(
+      dimension.points,
+      dimension.text ?? null
+    )
+})
+
 /**
  * Keeps a {@link Model} in step with the drawing window.
  *
@@ -76,6 +373,7 @@ const MEASUREMENT_TYPE_NAMES = {
  * Measurements are overlays rather than entities, so they are followed through
  * the measurement store and listed with the dimensions.
  * Other entities, such as text and block references, are left out.
+ * Edited text is written back to the drawing through {@link applyText}.
  *
  * Call {@link dispose} to stop listening.
  */
@@ -122,6 +420,92 @@ export class AcApModelSync {
   }
 
   /**
+   * Changes the drawing to match edited model text, as one undoable step.
+   *
+   * Lines that match an item in the model leave its entity alone. A changed line
+   * updates an entity of the same kind, so it keeps its layer and color. Other
+   * lines create entities in the current space, and items with no line left are
+   * erased. Measurements are overlays rather than entities, so their lines are
+   * ignored.
+   *
+   * Nothing changes if any line is invalid.
+   *
+   * @param text - The text to apply, in the format of {@link Model.toString}
+   * @throws When the text cannot be read or the document is read-only
+   */
+  applyText(text: string) {
+    const parsed = Model.parse(text)
+    const dimensions = parsed.dimensions.filter(
+      dimension => !MEASUREMENT_TYPES.has(dimension.type)
+    )
+    dimensions.forEach(checkDimension)
+    const targets = [
+      ...parsed.shapes.map(shapeTarget),
+      ...parsed.points.map(pointTarget),
+      ...dimensions.map(dimensionTarget)
+    ]
+
+    const database = this._database
+    const blockTable = database?.tables.blockTable
+    const space = this._spaceId ? blockTable?.getIdAt(this._spaceId) : undefined
+    if (!database || !blockTable || !space) {
+      return
+    }
+
+    const remaining = this.currentLines()
+    const changed = targets.filter(target => {
+      const index = remaining.findIndex(item => item.line === target.line)
+      if (index < 0) {
+        return true
+      }
+      remaining.splice(index, 1)
+      return false
+    })
+    if (changed.length === 0 && remaining.length === 0) {
+      return
+    }
+    if (this._docManager.curDocument.openMode < AcEdOpenMode.Write) {
+      throw new Error('This drawing is read-only')
+    }
+
+    const takeEntityFor = (target: ModelTextTarget) => {
+      const index = remaining.findIndex(item => {
+        const entity = blockTable.getEntityById(item.id)
+        return !!entity && target.canUpdate(entity)
+      })
+      return index < 0 ? undefined : remaining.splice(index, 1)[0].id
+    }
+
+    database.transactionManager.runUndoable('Edit model text', () => {
+      const toCreate = changed.filter(target => {
+        const id = takeEntityFor(target)
+        const entity = id ? database.openEntityForWrite(id) : undefined
+        if (entity) {
+          target.update(entity)
+        }
+        return !entity
+      })
+      const created = toCreate.map(target => {
+        const entity = target.create()
+        // A line that changed to another kind keeps the look of what it replaces.
+        const replaced = remaining.shift()
+        const previous = replaced && blockTable.getEntityById(replaced.id)
+        if (previous) {
+          AcApEntityService.copyDisplayTraits(previous, entity)
+          database.openEntityForWrite(previous.objectId)?.erase()
+        }
+        return entity
+      })
+      for (const { id } of remaining) {
+        database.openEntityForWrite(id)?.erase()
+      }
+      if (created.length > 0) {
+        space.appendEntity(created)
+      }
+    })
+  }
+
+  /**
    * Stops following the drawing window.
    */
   dispose() {
@@ -133,6 +517,20 @@ export class AcApModelSync {
     )
     this._unsubscribeMeasurements()
     this.bindDatabase(undefined)
+  }
+
+  private currentLines() {
+    const lines: { id: AcDbObjectId; line: string }[] = []
+    this._shapes.forEach((shape, id) =>
+      lines.push({ id, line: Model.formatShape(shape) })
+    )
+    this._points.forEach((point, id) =>
+      lines.push({ id, line: Model.formatPoint(point) })
+    )
+    this._dimensions.forEach((dimension, id) =>
+      lines.push({ id, line: dimensionLine(dimension) })
+    )
+    return lines
   }
 
   private bindDatabase(database: AcDbDatabase | undefined) {

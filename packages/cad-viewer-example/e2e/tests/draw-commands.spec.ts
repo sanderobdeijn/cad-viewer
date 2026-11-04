@@ -44,6 +44,18 @@ const countDrawnPixels = async (page: Page) => {
   }, screenshot)
 }
 
+/** The drawn pixel count once rendering has stopped changing it. */
+const settledDrawnPixels = async (page: Page) => {
+  let previous = await countDrawnPixels(page)
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(250)
+    const current = await countDrawnPixels(page)
+    if (current === previous) return current
+    previous = current
+  }
+  throw new Error('The drawing did not stop changing')
+}
+
 const openDrawing = async (page: Page) => {
   await page.goto('/')
   await page.waitForFunction(
@@ -239,6 +251,123 @@ test('shows measurements in the text editor', async ({ page }) => {
 
   await run(page, 'clearmeasurements')
   await expect(editor).toHaveValue('')
+
+  expect(errors).toEqual([])
+})
+
+test('updates the drawing when the text in the editor is edited', async ({
+  page
+}) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+  const error = page.getByRole('alert')
+  const applied = async (expected: string[]) => {
+    await expect
+      .poll(() => modelSpaceTypes(page), { timeout: 5000 })
+      .toEqual(expected)
+    await page.waitForTimeout(400)
+  }
+
+  await openDrawing(page)
+  await run(page, 'line', '0,0', '100,0', '')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        AcApDocManager: {
+          instance: { curView: { zoomToFitDrawing: () => void } }
+        }
+      }
+    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+  )
+  await page.waitForTimeout(500)
+  const fullLine = await settledDrawnPixels(page)
+  expect(fullLine).toBeGreaterThan(0)
+
+  // A changed line moves the entity on screen and stays as typed while editing.
+  await editor.fill('Line start=(0,0) end=(50,0)')
+  await expect
+    .poll(() => settledDrawnPixels(page), { timeout: 10000 })
+    .toBeLessThan(fullLine)
+  const halfLine = await settledDrawnPixels(page)
+  await expect(editor).toHaveValue('Line start=(0,0) end=(50,0)')
+
+  // An invalid line reports the problem and leaves the drawing alone.
+  await editor.fill('Line start=(0, 0) end=(50')
+  await expect(error).toHaveText('Line 1: end has an incomplete value')
+  expect(await settledDrawnPixels(page)).toBe(halfLine)
+
+  // Fixing it clears the error, and new lines draw new entities.
+  await editor.fill(
+    'Line start=(0, 0) end=(50, 0)\nLine start=(25, -5) end=(25, 5)'
+  )
+  await applied(['LINE', 'LINE'])
+  await expect(error).toHaveCount(0)
+  expect(await settledDrawnPixels(page)).toBeGreaterThan(halfLine)
+
+  // A removed line erases its entity from the screen.
+  await editor.fill('Line start=(0, 0) end=(50, 0)')
+  await applied(['LINE'])
+  expect(await settledDrawnPixels(page)).toBe(halfLine)
+
+  // Each applied edit is one undo step, and undo restores the text and drawing.
+  await run(page, 'undo')
+  await expect(editor).toHaveValue(
+    'Line start=(0, 0) end=(50, 0)\nLine start=(25, -5) end=(25, 5)'
+  )
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(50, 0)')
+  await run(page, 'undo')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  // Undo messages also cover the canvas, so only check the line grew back.
+  expect(await settledDrawnPixels(page)).toBeGreaterThan(halfLine)
+
+  expect(errors).toEqual([])
+})
+
+test('creates every kind of entity from the text editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  const before = await countDrawnPixels(page)
+  await editor.fill(
+    [
+      'Line start=(0, 0) end=(100, 50)',
+      'CircularArc center=(50, 0) radius=30 startAngle=0.5 endAngle=2',
+      'CircularArc center=(0, 50) radius=20 startAngle=0 endAngle=6.283185',
+      'EllipseArc center=(100, 0) majorRadius=40 minorRadius=10 rotation=0.5 startAngle=0 endAngle=6.283185',
+      'Polyline vertices=[(0, 0), (30, 0), (30, 30)] closed=true',
+      'Spline degree=3 controlPoints=[(0, 0), (10, 20), (30, 20), (40, 0)] closed=false',
+      'Point position=(5, 5)',
+      'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(100, 0) dimLinePoint=(50, -20)'
+    ].join('\n')
+  )
+  await expect
+    .poll(async () => (await modelSpaceTypes(page)).sort(), { timeout: 5000 })
+    .toEqual(
+      [
+        'ARC',
+        'CIRCLE',
+        'DIMENSION',
+        'ELLIPSE',
+        'LINE',
+        'LWPOLYLINE',
+        'POINT',
+        'SPLINE'
+      ].sort()
+    )
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(before)
+
+  // Leaving the editor tidies the text into the order of the model.
+  await editor.blur()
+  await expect(editor).toHaveValue(/^Line start=\(0, 0\) end=\(100, 50\)\n/)
 
   expect(errors).toEqual([])
 })

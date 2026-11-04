@@ -7,10 +7,12 @@ import {
   AcDbLine,
   AcDbOpenMode,
   AcDbPoint,
+  AcDbPolyline,
   GeometryPoint2d
 } from '@mlightcad/data-model'
 
 import { AcApModelSync } from '../src/app/AcApModelSync'
+import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'
 
 let mockMeasurements: unknown[] = []
 const mockListeners = new Set<() => void>()
@@ -263,5 +265,248 @@ describe('AcApModelSync', () => {
     db.tables.blockTable.modelSpace.appendEntity(createLine())
 
     expect(sync.model.shapes).toHaveLength(0)
+  })
+
+  describe('applyText', () => {
+    const lineOf = (db: AcDbDatabase) =>
+      [...db.tables.blockTable.modelSpace.newIterator()].map(
+        entity => entity.dxfTypeName
+      )
+
+    it('updates a changed line in place and keeps its look', () => {
+      const db = createDatabase()
+      const line = createLine()
+      line.layer = '0'
+      line.lineWeight = 30
+      db.tables.blockTable.modelSpace.appendEntity(line)
+      const { sync } = createSync(db)
+
+      sync.applyText('Line start=(1, 2) end=(3, 4)')
+
+      const [entity] = db.tables.blockTable.modelSpace.newIterator()
+      expect(entity.objectId).toBe(line.objectId)
+      expect(entity.lineWeight).toBe(30)
+      expect(sync.model.toString()).toBe('Line start=(1, 2) end=(3, 4)')
+      sync.dispose()
+    })
+
+    it('undoes the whole edit in one step', () => {
+      const db = createDatabase()
+      db.tables.blockTable.modelSpace.appendEntity(createLine(10))
+      db.tables.blockTable.modelSpace.appendEntity(createLine(20))
+      const { sync } = createSync(db)
+      const before = sync.model.toString()
+
+      sync.applyText(
+        'Line start=(0, 0) end=(99, 0)\nCircularArc center=(0, 0) radius=5 startAngle=0 endAngle=1\nPoint position=(7, 7)'
+      )
+      expect(sync.model.shapes).toHaveLength(2)
+      expect(sync.model.points).toHaveLength(1)
+
+      db.transactionManager.undo()
+      expect(sync.model.toString()).toBe(before)
+      sync.dispose()
+    })
+
+    it('leaves the drawing and undo stack alone when nothing changed', () => {
+      const db = createDatabase()
+      db.tables.blockTable.modelSpace.appendEntity(createLine())
+      const { sync } = createSync(db)
+      const listener = jest.fn()
+      sync.events.modelChanged.addEventListener(listener)
+
+      sync.applyText('  Line start=(0,0)   end=(10, 0)\n\n')
+
+      expect(listener).not.toHaveBeenCalled()
+      sync.dispose()
+    })
+
+    it('changes nothing when any line is invalid', () => {
+      const db = createDatabase()
+      db.tables.blockTable.modelSpace.appendEntity(createLine())
+      const { sync } = createSync(db)
+
+      expect(() =>
+        sync.applyText('Line start=(9, 9) end=(9, 0)\nnonsense')
+      ).toThrow('Line 2')
+
+      expect(sync.model.toString()).toBe('Line start=(0, 0) end=(10, 0)')
+      sync.dispose()
+    })
+
+    it('erases entities whose line was removed', () => {
+      const db = createDatabase()
+      db.tables.blockTable.modelSpace.appendEntity(createLine(10))
+      db.tables.blockTable.modelSpace.appendEntity(createLine(20))
+      const { sync } = createSync(db)
+
+      sync.applyText('Line start=(0, 0) end=(20, 0)')
+
+      expect(sync.model.toString()).toBe('Line start=(0, 0) end=(20, 0)')
+      sync.applyText('')
+      expect(lineOf(db)).toEqual([])
+      sync.dispose()
+    })
+
+    it('creates and then edits every kind of entity', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+      const text = [
+        'Line start=(0, 0) end=(10, 5)',
+        'CircularArc center=(1, 2) radius=3 startAngle=0.5 endAngle=2',
+        'CircularArc center=(1, 2) radius=3 startAngle=0 endAngle=0',
+        'EllipseArc center=(0, 0) majorRadius=5 minorRadius=2 rotation=0.5 startAngle=0 endAngle=6.283185',
+        'Polyline vertices=[(0, 0), (1, 0), (1, 1)] closed=true',
+        'Spline degree=3 controlPoints=[(0, 0), (1, 2), (3, 2), (4, 0)] closed=false',
+        'Point position=(5, 5)',
+        'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(1, 0) dimLinePoint=(1, 1) text="x"'
+      ].join('\n')
+
+      sync.applyText(text)
+
+      expect(lineOf(db).sort()).toEqual(
+        [
+          'ARC',
+          'CIRCLE',
+          'DIMENSION',
+          'ELLIPSE',
+          'LINE',
+          'LWPOLYLINE',
+          'POINT',
+          'SPLINE'
+        ].sort()
+      )
+      expect(sync.model.toString()).toBe(text)
+      const ids = [...db.tables.blockTable.modelSpace.newIterator()].map(
+        entity => entity.objectId
+      )
+
+      const edited = text
+        .replace('end=(10, 5)', 'end=(11, 5)')
+        .replace('radius=3 startAngle=0.5', 'radius=4 startAngle=0.5')
+        .replace('radius=3 startAngle=0 ', 'radius=4 startAngle=0 ')
+        .replace('majorRadius=5', 'majorRadius=6')
+        .replace('(1, 1)] closed=true', '(2, 2), (1, 1)] closed=true')
+        .replace('(4, 0)] closed=false', '(5, 0)] closed=false')
+        .replace('position=(5, 5)', 'position=(6, 6)')
+        .replace('dimLinePoint=(1, 1) text="x"', 'dimLinePoint=(2, 2) text="y"')
+
+      sync.applyText(edited)
+
+      expect(sync.model.toString()).toBe(edited)
+      expect(
+        [...db.tables.blockTable.modelSpace.newIterator()].map(
+          entity => entity.objectId
+        )
+      ).toEqual(ids)
+      sync.dispose()
+    })
+
+    it('keeps polyline arcs when only a vertex position changes', () => {
+      const db = createDatabase()
+      const polyline = new AcDbPolyline()
+      polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0.5)
+      polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
+      db.tables.blockTable.modelSpace.appendEntity(polyline)
+      const { sync } = createSync(db)
+
+      sync.applyText('Polyline vertices=[(0, 0), (20, 0)] closed=false')
+
+      const [entity] = db.tables.blockTable.modelSpace.newIterator()
+      expect((entity as AcDbPolyline).getPoint2dAt(1).x).toBe(20)
+      expect(
+        (entity.geometry as unknown as { vertices: { bulge: number }[] })
+          .vertices[0].bulge
+      ).toBe(0.5)
+      sync.dispose()
+    })
+
+    it('replaces an entity that changes kind and keeps its look', () => {
+      const db = createDatabase()
+      const line = createLine()
+      line.lineWeight = 30
+      db.tables.blockTable.modelSpace.appendEntity(line)
+      const { sync } = createSync(db)
+
+      sync.applyText('Point position=(1, 1)')
+
+      const [entity] = db.tables.blockTable.modelSpace.newIterator()
+      expect(lineOf(db)).toEqual(['POINT'])
+      expect(entity.lineWeight).toBe(30)
+      sync.dispose()
+    })
+
+    it('rejects dimensions it cannot create', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+
+      expect(() => sync.applyText('Dimension type=Other a=(0, 0)')).toThrow(
+        'Unknown dimension type'
+      )
+      expect(() =>
+        sync.applyText('Dimension type=RadialDimension center=(0, 0)')
+      ).toThrow('needs chordPoint')
+      expect(() =>
+        sync.applyText(
+          'Dimension type=RadialDimension center=(0, 0) chordPoint=(1, 1) z=(2, 2)'
+        )
+      ).toThrow('has no z')
+      expect(lineOf(db)).toEqual([])
+      sync.dispose()
+    })
+
+    it('ignores measurement lines and a stale measured value', () => {
+      const db = createDatabase()
+      const dimension = new AcDbAlignedDimension(
+        new GeometryPoint2d(0, 0),
+        new GeometryPoint2d(10, 0),
+        new GeometryPoint2d(5, 5)
+      )
+      dimension.measurement = 10
+      db.tables.blockTable.modelSpace.appendEntity(dimension)
+      const { sync } = createSync(db)
+      const listener = jest.fn()
+      sync.events.modelChanged.addEventListener(listener)
+
+      const stale = sync.model
+        .toString()
+        .replace('measurement=10', 'measurement=999')
+      expect(stale).toContain('measurement=999')
+
+      sync.applyText(
+        `${stale}
+Dimension type=MeasureDistance start=(0, 0) end=(1, 1)`
+      )
+
+      expect(listener).not.toHaveBeenCalled()
+      sync.dispose()
+    })
+
+    it('adds new entities to the layout on screen', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+
+      sync.applyText('Point position=(1, 1)')
+
+      const [point] = db.tables.blockTable.modelSpace.newIterator()
+      expect(point.ownerId).toBe(db.currentSpaceId)
+      sync.dispose()
+    })
+
+    it('refuses to change a read-only document', () => {
+      const db = createDatabase()
+      const manager = {
+        curDocument: { database: db, openMode: AcEdOpenMode.Read },
+        curView: {},
+        events: { documentActivated: new AcCmEventManager<{ doc: unknown }>() }
+      }
+      const sync = new AcApModelSync(
+        manager as unknown as ConstructorParameters<typeof AcApModelSync>[0]
+      )
+
+      expect(() => sync.applyText('Point position=(1, 1)')).toThrow('read-only')
+      expect(lineOf(db)).toEqual([])
+      sync.dispose()
+    })
   })
 })

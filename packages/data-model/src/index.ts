@@ -404,7 +404,8 @@ export {
   geometrySmoothstep,
   geometryTransformOcsPointToWcs,
   geometryTransformWcsPointToOcs,
-  Model
+  Model,
+  ModelParseError
 } from '@mlightcad/geometry-engine'
 export type {
   GeometryBoundaryEdgeType,

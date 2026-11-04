@@ -6,13 +6,21 @@
       @create="onCreate"
     >
       <template #side-panel>
-        <textarea
-          v-model="editorText"
-          class="text-editor"
-          aria-label="Text editor"
-          spellcheck="false"
-          wrap="off"
-        />
+        <div class="text-editor-pane">
+          <textarea
+            v-model="editorText"
+            class="text-editor"
+            aria-label="Text editor"
+            :aria-invalid="editorError !== ''"
+            spellcheck="false"
+            wrap="off"
+            @input="scheduleApply"
+            @blur="onEditorBlur"
+          />
+          <div v-if="editorError" class="text-editor-error" role="alert">
+            {{ editorError }}
+          </div>
+        </div>
       </template>
     </MlCadViewer>
   </div>
@@ -38,23 +46,63 @@ const useMainThreadDraw = !new URLSearchParams(window.location.search).has(
   'worker'
 )
 
-const editorText = ref('')
+/** How long typing must pause before the text is applied to the drawing. */
+const APPLY_DELAY_MS = 300
 
+const editorText = ref('')
+const editorError = ref('')
+
+let modelSync: AcApModelSync | undefined
 let shownModelText = ''
 let updateScheduled = false
+let applyTimer: ReturnType<typeof setTimeout> | undefined
+
+const cancelApply = () => {
+  clearTimeout(applyTimer)
+  applyTimer = undefined
+}
 
 const showModel = (model: { toString(): string }) => {
   updateScheduled = false
   const text = model.toString()
   // Leave the editor alone when the shapes did not change its text.
   if (text !== shownModelText) {
+    cancelApply()
     shownModelText = text
     editorText.value = text
+    editorError.value = ''
+  }
+}
+
+const applyEditorText = () => {
+  cancelApply()
+  try {
+    modelSync?.applyText(editorText.value)
+    // The text already matches, so the update this causes must not rewrite it.
+    shownModelText = modelSync?.model.toString() ?? ''
+    editorError.value = ''
+  } catch (error) {
+    editorError.value = error instanceof Error ? error.message : String(error)
+  }
+}
+
+const scheduleApply = () => {
+  cancelApply()
+  applyTimer = setTimeout(applyEditorText, APPLY_DELAY_MS)
+}
+
+const onEditorBlur = () => {
+  if (applyTimer !== undefined) {
+    applyEditorText()
+  }
+  // Tidy spacing and order once the user has finished typing.
+  if (!editorError.value) {
+    editorText.value = shownModelText
   }
 }
 
 const onCreate = () => {
-  const modelSync = new AcApModelSync(AcApDocManager.instance)
+  modelSync = new AcApModelSync(AcApDocManager.instance)
   showModel(modelSync.model)
   // A file can change many entities in one go, so write once per frame.
   modelSync.events.modelChanged.addEventListener(({ model }) => {
@@ -79,6 +127,22 @@ const exposeForTests = () => {
 #app-root {
   height: 100vh;
   position: fixed;
+}
+
+.text-editor-pane {
+  position: relative;
+  height: 100%;
+}
+
+.text-editor-error {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #fff;
+  background: var(--el-color-danger-dark-2);
 }
 
 .text-editor {

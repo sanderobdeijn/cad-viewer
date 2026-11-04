@@ -112,4 +112,4 @@ export {
   geometryPolygonArea2d,
   geometrySignedPolygonArea2d
 } from './util'
-export { Model } from './Model'
+export { Model, ModelParseError } from './Model'
