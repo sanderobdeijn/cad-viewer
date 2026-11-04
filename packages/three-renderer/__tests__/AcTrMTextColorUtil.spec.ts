@@ -5,7 +5,10 @@ import {
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
-import { setMaterialMetadata, getMaterialMetadata } from '../src/style/AcTrMaterialMetadata'
+import {
+  setMaterialMetadata,
+  getMaterialMetadata
+} from '../src/style/AcTrMaterialMetadata'
 import { AcTrStyleManager } from '../src/style/AcTrStyleManager'
 import { AcTrSubEntityTraitsUtil } from '../src/util/AcTrEntityTraitsUtil'
 import { AcTrMaterialUtil } from '../src/util/AcTrMaterialUtil'
@@ -82,7 +85,10 @@ describe('AcTrMTextColorUtil', () => {
     byLayerTraits.layer = 'DIM'
     const byLayerMaterial = styleManager.getMTextFillMaterial(byLayerTraits)
     // Simulate ColorSettings.byLayerColor green applied after material create.
-    AcTrMaterialUtil.setMaterialColor(byLayerMaterial, new THREE.Color(0x00ff00))
+    AcTrMaterialUtil.setMaterialColor(
+      byLayerMaterial,
+      new THREE.Color(0x00ff00)
+    )
     setMaterialMetadata(byLayerMaterial, {
       ...getMaterialMetadata(byLayerMaterial),
       isByLayerColor: true,
@@ -270,9 +276,9 @@ describe('AcTrMTextColorUtil', () => {
 
     expect(mesh.material).toBe(inlineMaterial)
     styleManager.currentBackgroundColor = 0xffffff
-    expect(
-      (mesh.material as THREE.MeshBasicMaterial).color.getHex()
-    ).toBe(0xffffff)
+    expect((mesh.material as THREE.MeshBasicMaterial).color.getHex()).toBe(
+      0xffffff
+    )
   })
 
   it('does not rematerialize bare mtext-renderer meshes when entity is ACI 7', () => {
@@ -343,9 +349,9 @@ describe('AcTrMTextColorUtil', () => {
 
     AcTrMTextColorUtil.rematerializeTextHierarchy(root, traits, styleManager)
 
-    expect(getMaterialMetadata(mesh.material as THREE.Material).isForeground).toBe(
-      true
-    )
+    expect(
+      getMaterialMetadata(mesh.material as THREE.Material).isForeground
+    ).toBe(true)
     expect((mesh.material as THREE.MeshBasicMaterial).color.getHex()).toBe(
       0xffffff
     )
@@ -399,7 +405,7 @@ describe('AcTrMTextColorUtil', () => {
 
     const wrongLayerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
     setMaterialMetadata(wrongLayerMaterial, {
-      layer: 'INSERT',
+      layer: 'MOVED',
       materialKey: 'wrong-layer',
       isForeground: false,
       isByLayerColor: true,

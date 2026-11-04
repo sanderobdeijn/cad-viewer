@@ -1,7 +1,4 @@
-import type { AcTrGroup } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
-
-const WCS_BBOX_TOLERANCE = 1e-5
 
 export interface AcTrGroupWcsBboxLike {
   wcsBbox: THREE.Box3
@@ -56,55 +53,4 @@ export function unionGroupWcsChildBoxes(
     )
   }
   return union
-}
-
-/**
- * Max child boxes checked on the open hot path. Whole-floor INSERTs can have
- * 100k+ children; unioning them in dev-only asserts freezes the main thread
- * after progressive overlay hides (preview/production skips the assert).
- */
-export const AC_TR_GROUP_WCS_BBOX_ASSERT_MAX_CHILDREN = 2048
-
-/**
- * Verifies that a block group's aggregate {@link AcTrGroup.wcsBbox} matches the
- * union of its per-child {@link AcTrGroup.wcsChildBoxes}.
- *
- * Called from {@link AcTrView2d.handleGroup} in non-production builds. After
- * `applyMatrix`, both fields must stay in sync for spatial indexing.
- *
- * Oversized groups are skipped — unit tests still cover the consistency rule
- * with small fixtures.
- */
-export function assertGroupWcsBboxesConsistent(
-  group: AcTrGroupWcsBboxLike
-): void {
-  if (group.wcsChildBoxes.length === 0) {
-    return
-  }
-  if (group.wcsChildBoxes.length > AC_TR_GROUP_WCS_BBOX_ASSERT_MAX_CHILDREN) {
-    return
-  }
-
-  const union = unionGroupWcsChildBoxes(group)
-  const wcs = group.wcsBbox
-  const cornersMatch =
-    Math.abs(wcs.min.x - union.min.x) <= WCS_BBOX_TOLERANCE &&
-    Math.abs(wcs.min.y - union.min.y) <= WCS_BBOX_TOLERANCE &&
-    Math.abs(wcs.min.z - union.min.z) <= WCS_BBOX_TOLERANCE &&
-    Math.abs(wcs.max.x - union.max.x) <= WCS_BBOX_TOLERANCE &&
-    Math.abs(wcs.max.y - union.max.y) <= WCS_BBOX_TOLERANCE &&
-    Math.abs(wcs.max.z - union.max.z) <= WCS_BBOX_TOLERANCE
-
-  if (!cornersMatch) {
-    throw new Error(
-      `[AcTrView2d] Group wcsBbox [${wcs.min.x}, ${wcs.min.y}]–[${wcs.max.x}, ${wcs.max.y}] ` +
-        `does not match wcsChildBoxes union [${union.min.x}, ${union.min.y}]–[${union.max.x}, ${union.max.y}]. ` +
-        'Ensure the group transform was applied before handleGroup.'
-    )
-  }
-}
-
-/** @internal Narrow helper for handleGroup dev checks. */
-export function assertAcTrGroupWcsBboxesConsistent(group: AcTrGroup): void {
-  assertGroupWcsBboxesConsistent(group)
 }

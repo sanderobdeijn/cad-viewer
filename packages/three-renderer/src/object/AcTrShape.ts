@@ -144,25 +144,4 @@ export class AcTrShape extends AcTrGlyphEntity {
       this._shape.name?.trim() || String(this._shape.shapeNumber ?? '')
     return `shape '${label}'`
   }
-
-  /**
-   * Preserves SHAPE payload across INSERT template clones.
-   *
-   * {@link AcTrEntity.fastDeepClone} would otherwise create a plain
-   * {@link AcTrEntity} shell that can no longer {@link asyncDraw} glyphs.
-   */
-  override fastDeepClone(shareGeometry: boolean = false) {
-    const cloned = new AcTrShape(
-      {
-        ...this._shape,
-        position: { ...this._shape.position }
-      },
-      this.traitsForClone(),
-      { ...this._style },
-      this.renderContext
-    )
-    cloned.copyGlyphIdentity(this)
-    this.copyGeometry(this, cloned, shareGeometry)
-    return cloned
-  }
 }

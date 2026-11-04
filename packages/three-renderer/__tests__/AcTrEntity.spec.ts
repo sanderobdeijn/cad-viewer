@@ -26,24 +26,14 @@ describe('AcTrEntity wcsBbox', () => {
     expectWcsBboxCloseTo(entity.wcsBbox, [100, 200, 0], [110, 205, 0])
   })
 
-  it('copies wcsBbox in fastDeepClone', () => {
+  it('copies wcsBbox in copy', () => {
     const context = new AcTrRenderContext(new AcTrStyleManager())
     const entity = new AcTrEntity(context)
     entity.objectId = 'entity-1'
     entity.wcsBbox.set(new THREE.Vector3(3, 4, 0), new THREE.Vector3(8, 9, 0))
 
-    const cloned = entity.fastDeepClone()
+    const cloned = new AcTrEntity(context).copy(entity, false)
 
     expectWcsBboxCloseTo(cloned.wcsBbox, [3, 4, 0], [8, 9, 0])
-  })
-
-  it('exposes childCount from the Object3D children list', () => {
-    const context = new AcTrRenderContext()
-    const parent = new AcTrEntity(context)
-    expect(parent.childCount).toBe(0)
-
-    parent.addChild(new AcTrEntity(context))
-    parent.addChild(new AcTrEntity(context))
-    expect(parent.childCount).toBe(2)
   })
 })

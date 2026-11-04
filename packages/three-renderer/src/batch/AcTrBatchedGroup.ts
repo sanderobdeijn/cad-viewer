@@ -1,7 +1,8 @@
 import {
   acgiForegroundColorForBackground,
   AcGiSubEntityTraits,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
@@ -135,7 +136,7 @@ type AcTrOriginBatch =
   | AcTrBatchedMesh
   | AcTrBatchedPoint
 
-/** Packed batch or a shared block-template batch addressed by the same slot id. */
+/** Packed batch or a shared-geometry batch addressed by the same slot id. */
 type AcTrResolvedBatch = AcTrOriginBatch | AcTrSharedGeometryBatch
 
 /**
@@ -155,7 +156,7 @@ type AcTrOriginBatchMap<T extends AcTrOriginBatch> = Map<number, T[]>
  * Reverse lookup from one logical CAD entity to a single geometry slot inside a
  * batched container.
  *
- * A decomposed entity (for example an INSERT or multi-pass layer bucket) may
+ * A decomposed entity (for example one with drawables on several layers) may
  * occupy several slots; {@link AcTrBatchedGroup} stores an array of these entries
  * per entity object id in `_entitiesMap`.
  */
@@ -180,7 +181,7 @@ export interface AcTrEntityInBatchedObject {
 /**
  * Batched-slot record stored per entity object id.
  *
- * A decomposed entity (for example an INSERT or multi-pass layer bucket) may
+ * A decomposed entity (for example one with drawables on several layers) may
  * occupy several slots. To save one `Array` wrapper per common single-slot
  * entity, the map stores a bare {@link AcTrEntityInBatchedObject} while the
  * entity owns exactly one slot, promotes to an array only from the second
@@ -382,7 +383,7 @@ export class AcTrBatchedGroup extends THREE.Group {
   private _originBatchById: Map<number, AcTrOriginBatch>
   private _sharedBatchById: Map<number, AcTrSharedGeometryBatch>
   /**
-   * Block-template geometries shared across INSERTs, keyed by
+   * Template geometries shared across drawables, keyed by
    * `kind:sourceUuid:materialId`.
    */
   private _sharedGeometryBatches: Map<string, AcTrSharedGeometryBatch[]>
@@ -392,7 +393,7 @@ export class AcTrBatchedGroup extends THREE.Group {
    * Top-most overlay of added/deleted/modified slots.
    *
    * Role tints in the packed batch shader lose z-fights against coplanar
-   * unchanged TABLE/INSERT linework packed into a later draw. These copies
+   * unchanged linework packed into a later draw. These copies
    * use unpatched materials and a high renderOrder so hits stay visible.
    */
   private _compareOverlay: AcTrHighlightOverlayGroup
@@ -1270,7 +1271,7 @@ export class AcTrBatchedGroup extends THREE.Group {
     const objectId = String(entity.objectId ?? '')
     const entityVisible = entity.visible
     // One logical entity (same objectId) can be appended in multiple passes
-    // (e.g. INSERT decomposition by source layer and inherited layer-0 bucket).
+    // (e.g. one render entity per layer).
     // Keep accumulating geometry mappings instead of overwriting previous ones.
     //
     // Collect slots locally and then feed them through appendEntitySlot, which
@@ -1310,8 +1311,8 @@ export class AcTrBatchedGroup extends THREE.Group {
         ) {
           // cloneUnbatchedObject stores the source matrixWorld directly.
           // updateMatrix() recomposes from TRS and drops that transform, so
-          // OLE/raster images inside a scaled INSERT draw at block-local
-          // coordinates (a wide smear beside the drawing).
+          // transformed OLE/raster images draw at local coordinates (a wide
+          // smear beside the drawing).
           const drawOrderZ = activeDrawOrderZAllocator()
           if (drawOrderZ !== 0) {
             cloned.matrix.elements[14] += drawOrderZ
@@ -1337,8 +1338,8 @@ export class AcTrBatchedGroup extends THREE.Group {
           sharedSlot,
           entityVisible && object.visible
         )
-        // The leaf itself is instanced, but complex linetypes and nested
-        // block geometry hang off it as children and still need their own slots.
+        // The leaf itself is instanced, but complex linetypes hang off it as
+        // children and still need their own slots.
       } else if (isThreeLineSegments2(object)) {
         // Duck-type across duplicate three.js copies (mtext-renderer vs app).
         // `instanceof` silently drops glyph LineSegments/Meshes — see
@@ -1893,7 +1894,7 @@ export class AcTrBatchedGroup extends THREE.Group {
       })
     }
 
-    // Shared INSERT instances live outside packed origin maps and have no
+    // Shared instances live outside packed origin maps and have no
     // slot uniforms; they still need the reading-mode / compare base tint.
     this._sharedGeometryBatches.forEach(batches => {
       batches.forEach(batch => batch.setCompareDisplayColors(colorOptions))
@@ -2606,14 +2607,14 @@ export class AcTrBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Places a block-template leaf into a shared-geometry batch.
+   * Places a template leaf into a shared-geometry batch.
    *
    * Returns null when the leaf is not a shared template, when a mirrored mesh
    * must be baked so face winding can flip, or when a dashed linetype is
    * scaled and must be baked so dash length stays in world units.
    *
-   * @param object - Drawable leaf produced by an INSERT clone.
-   * @param objectId - Database id of the owning INSERT.
+   * @param object - Drawable leaf that aliases template geometry.
+   * @param objectId - Database id of the owning entity.
    * @param bboxIntersectionCheck - Ray-test against bounds instead of segments.
    * @returns The new slot, or null to fall through to vertex packing.
    */
@@ -2659,8 +2660,8 @@ export class AcTrBatchedGroup extends THREE.Group {
    *
    * Mirrored meshes reverse triangle winding. Instancing keeps {@link THREE.FrontSide}
    * and the fill disappears; the vertex-batch path swaps in the back-side material.
-   * Dash lengths live in geometry space, so a scaled INSERT must be baked or the
-   * pattern stretches with the block.
+   * Dash lengths live in geometry space, so a scaled instance must be baked or the
+   * pattern stretches with it.
    *
    * @param object - Drawable whose world matrix is current.
    * @param kind - Primitive family selected for this leaf.
@@ -2805,7 +2806,7 @@ export class AcTrBatchedGroup extends THREE.Group {
     )
 
     // Bake rotation/scale into geometry, but keep world translation as offset.
-    // This preserves block reference transforms while avoiding large Float32 coords.
+    // This preserves object transforms while avoiding large Float32 coords.
     const geometry = object.geometry.clone()
     const matrixNoTranslation = object.matrixWorld.clone()
     matrixNoTranslation.setPosition(0, 0, 0)
@@ -2874,7 +2875,7 @@ export class AcTrBatchedGroup extends THREE.Group {
    * Adds one `THREE.Mesh` object into matching mesh batch.
    *
    * When the mesh's world transform has a negative determinant (mirrored
-   * block reference), the triangle winding is reversed and `FrontSide`
+   * transform), the triangle winding is reversed and `FrontSide`
    * culling would discard the fill.  In that case we swap to a
    * `BackSide` variant of the same material — zero fillrate overhead,
    * and the mesh lands in a separate batch keyed by the variant's id.
@@ -3429,9 +3430,9 @@ export class AcTrBatchedGroup extends THREE.Group {
    * Places an unbatched clone in world space using the source's exact
    * {@link THREE.Object3D.matrixWorld}.
    *
-   * Avoids {@link THREE.Matrix4.decompose}: mirrored INSERT scales produce
+   * Avoids {@link THREE.Matrix4.decompose}: mirrored scales produce
    * negative determinants that do not round-trip through TRS, which previously
-   * shoved attribute text (e.g. DOOR_FIRE_TEXT) tens of millions of units away
+   * shoved text tens of millions of units away
    * and blew up zoom-to-extents / layer-fit boxes.
    */
   private copyWorldMatrixOntoClone(
@@ -3502,9 +3503,9 @@ export class AcTrBatchedGroup extends THREE.Group {
   /**
    * Recursively disposes one object subtree owned by this group.
    *
-   * Skips {@link THREE.BufferGeometry} borrowed from an immutable block
-   * template (`sharesTemplateGeometry`); unbatched INSERT clones may alias
-   * those buffers via {@link THREE.Object3D.clone}.
+   * Skips {@link THREE.BufferGeometry} borrowed from a shared
+   * template (`sharesTemplateGeometry`); unbatched clones may alias those
+   * buffers via {@link THREE.Object3D.clone}.
    */
   private disposeObject(object: THREE.Object3D) {
     object.removeFromParent()
@@ -3661,7 +3662,7 @@ export class AcTrBatchedGroup extends THREE.Group {
  * Disposes one preview subset tree created by {@link AcTrBatchedGroup.createPreviewSubset}.
  *
  * Shared batch template buffers are never disposed. Overlay clones (Line2
- * sub-geometry and shared-INSERT previews) are released with the subset.
+ * sub-geometry and shared-instance previews) are released with the subset.
  *
  * @param group - Preview subset root group to dispose
  */

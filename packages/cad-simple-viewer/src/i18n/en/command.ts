@@ -115,7 +115,7 @@ export default {
     },
     insunits: {
       description:
-        'Specifies drawing units for automatic scaling of inserted blocks, images, or xrefs'
+        'Specifies drawing units for automatic scaling of images or xrefs'
     },
     line: {
       description: 'Draws straight line segments between points'

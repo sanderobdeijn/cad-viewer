@@ -71,7 +71,6 @@ import {
   acedNeedsCrossingGeometryRefine
 } from '../editor/view/AcEdSelectionBoxIntersect'
 import { isEffectiveSpatialQueryHit } from '../editor/view/AcEdSpatialQueryResult'
-import type { AcTrLazySpatialChildren } from '../spatialIndex'
 import type { AcTrSpatialSearchOptions } from '../spatialIndex/AcTrSpatialIndex'
 import { AcTrGeometryUtil } from '../util'
 import {
@@ -96,11 +95,7 @@ import {
 } from './AcTrConvertQueue'
 import { tryBuildDirectEntityMeta } from './AcTrDirectBatch'
 import { AcTrEntityDisplayController } from './AcTrEntityDisplayController'
-import {
-  assertAcTrGroupWcsBboxesConsistent,
-  unionGroupWcsChildBoxes
-} from './AcTrGroupWcsBboxAssert'
-import { AcTrInheritedLayerMaterialMapper } from './AcTrInheritedLayerMaterialMapper'
+import { unionGroupWcsChildBoxes } from './AcTrGroupWcsBboxAssert'
 import { computeIntelligentExtentsAsync } from './AcTrIntelligentExtents'
 import { AcTrLayer } from './AcTrLayer'
 import { AcTrLayerAppearanceController } from './AcTrLayerAppearanceController'
@@ -233,8 +228,6 @@ export class AcTrView2d extends AcEdBaseView {
   private readonly _entityDisplay: AcTrEntityDisplayController
   /** Layer appearance sync for style-table changes and text refresh. */
   private _layerAppearance: AcTrLayerAppearanceController
-  /** INSERT layer-0 inheritance material remapping. */
-  private readonly _inheritedLayerMaterialMapper: AcTrInheritedLayerMaterialMapper
   /**
    * Layer names with an in-flight {@link convertMissingEntitiesOnLayer} pass.
    *
@@ -326,7 +319,7 @@ export class AcTrView2d extends AcEdBaseView {
   private _pendingGeometryJobs = 0
   /**
    * Waiting deferred geometry runners. Capped concurrency avoids scheduling
-   * thousands of INSERT/text `asyncDraw` jobs at once (large multi-sheet DWGs
+   * thousands of text `asyncDraw` jobs at once (large multi-sheet DWGs
    * otherwise flood the main thread and freeze on "Rendering drawing ...").
    */
   private _deferredGeometryQueue: Array<{
@@ -404,7 +397,6 @@ export class AcTrView2d extends AcEdBaseView {
   /** Convert-phase wall timers (ms) for OPENPERF diagnostics. */
   private _convertPhaseMs = {
     finishGeometry: 0,
-    handleGroup: 0,
     addEntity: 0,
     awaitFonts: 0
   }
@@ -467,7 +459,6 @@ export class AcTrView2d extends AcEdBaseView {
     }
     this._convertPhaseMs = {
       finishGeometry: 0,
-      handleGroup: 0,
       addEntity: 0,
       awaitFonts: 0
     }
@@ -506,7 +497,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   private static readonly NON_PROGRESSIVE_OPEN_PAINT_INTERVAL_MS = 4000
   /**
-   * Max concurrent deferred glyph/INSERT geometry finalizers. Large drawings
+   * Max concurrent deferred glyph geometry finalizers. Large drawings
    * enqueue thousands of jobs; keep this modest to limit peak JS heap during
    * open while retaining reasonable text throughput after convert finishes.
    */
@@ -523,7 +514,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   private static readonly CONVERT_SLICE_BUDGET_MS = 64
   /**
-   * Upper bound on entities per slice. Heavy block references stay at 1
+   * Upper bound on entities per slice. Heavy entities stay at 1
    * because a slice that overruns the time budget is halved.
    */
   private static readonly CONVERT_SLICE_MAX = 512
@@ -631,10 +622,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._scene = this.createScene()
     this._layerAppearance = new AcTrLayerAppearanceController(
       this._scene,
-      this._renderer
-    )
-    this._inheritedLayerMaterialMapper = new AcTrInheritedLayerMaterialMapper(
-      layerName => this._layerAppearance.getEffectiveLayerTraits(layerName),
       this._renderer
     )
     // Initialize background color through setter to keep renderer/cursor in sync.
@@ -1124,7 +1111,7 @@ export class AcTrView2d extends AcEdBaseView {
 
   /**
    * True while the entity convert queue / {@link batchConvert} is still
-   * draining. Does **not** include deferred glyph/INSERT geometry jobs.
+   * draining. Does **not** include deferred glyph geometry jobs.
    */
   get isConvertingEntities() {
     return this._numOfEntitiesToProcess > 0
@@ -1520,11 +1507,8 @@ export class AcTrView2d extends AcEdBaseView {
    * `visible` property, and tear it down by removing `internalObject` from
    * `cadScene.internalScene` and calling `clear()`.
    *
-   * Scope: draws top-level geometry, text, hatch, and block-reference
-   * (INSERT) entities, including entities that expand to multi-layer groups
-   * (dimensions, tables). A multi-layer group stays bucketed under its
-   * INSERT's layer — overlay layers are display-only, so per-fragment layer
-   * re-parenting (see `handleGroup`) is intentionally not replicated here.
+   * Scope: draws top-level geometry, text and hatch entities, including
+   * entities that expand to groups (dimensions, proxy graphics).
    * Viewports are not supported for overlays and are skipped.
    *
    * @param overlayDb - Input a database parsed independently of the active
@@ -1560,24 +1544,7 @@ export class AcTrView2d extends AcEdBaseView {
           threeEntity.ownerId = entity.ownerId
           threeEntity.layerName = entity.layer
           threeEntity.visible = entity.visibility !== false
-          if (
-            threeEntity instanceof AcTrGroup &&
-            (threeEntity as AcTrGroup).isOnTheSameLayer
-          ) {
-            threeEntity.userData.insertLayerName = threeEntity.layerName
-          }
           await this.finishEntityGeometry(threeEntity, false)
-          if (
-            threeEntity instanceof AcTrGroup &&
-            (threeEntity as AcTrGroup).isOnTheSameLayer
-          ) {
-            // Remap after glyph geometry exists — see same-layer commit path.
-            this._inheritedLayerMaterialMapper.remap(
-              (threeEntity as AcTrGroup).children,
-              '0',
-              threeEntity.layerName
-            )
-          }
           layout.addEntity(threeEntity)
           threeEntity.dispose()
         } catch (error) {
@@ -1683,7 +1650,7 @@ export class AcTrView2d extends AcEdBaseView {
     const pending: AcDbEntity[] = []
 
     // Open streams entities through `drainConvertQueue` and claims each id
-    // before the scene commit (deferred glyphs / INSERT text). Headless
+    // before the scene commit (deferred glyphs). Headless
     // export used to scan here as soon as parse returned, while that drain
     // was still running. Claimed ids are not in the scene yet, so they
     // looked missing and `batchConvert({ forExport: true })` expanded them
@@ -2138,7 +2105,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Drops crossing spatial hits whose curve geometry misses the pick box.
    *
    * Large closed polylines (site boundaries, frames) have AABBs that cover
-   * huge empty interiors. Without this refine, crossing a small INSERT inside
+   * huge empty interiors. Without this refine, crossing a small entity inside
    * that interior also selects those polylines and can stall highlight work.
    */
   protected override refineCrossingSelectionHits(
@@ -2190,9 +2157,7 @@ export class AcTrView2d extends AcEdBaseView {
     layer: AcDbLayerTableRecord,
     changes: Partial<AcDbLayerTableRecordAttrs>
   ) {
-    const { touchedObjectIds } = this._scene.updateLayer(
-      this.toLayerInfo(layer)
-    )
+    this._scene.updateLayer(this.toLayerInfo(layer))
 
     if (this._layerAppearance.layerStyleMayHaveChanged(changes)) {
       this._layerAppearance.syncFromLiveRecord(layer)
@@ -2200,18 +2165,10 @@ export class AcTrView2d extends AcEdBaseView {
 
     if (this._entityDisplay.layerVisibilityMayHaveChanged(changes)) {
       const layerInfo = this.toLayerInfo(layer)
-      // Normal entities convert when the layer is on and thawed. INSERTs also
-      // convert when thawed while still off (Off must not skip multi-layer
-      // block contents).
-      if (AcTrLayer.isLayerVisible(layerInfo) || !layerInfo.isFrozen) {
+      // Entities skipped at open time convert when the layer is on and thawed.
+      if (AcTrLayer.isLayerVisible(layerInfo)) {
         void this.convertMissingEntitiesOnLayer(layer.name)
       }
-    }
-
-    // Thawing an INSERT layer may restore cross-layer fragments that were
-    // session-hidden; reapply that state.
-    for (const objectId of touchedObjectIds) {
-      this.applySessionHiddenObjectState(objectId)
     }
 
     this._isDirty = true
@@ -2554,8 +2511,8 @@ export class AcTrView2d extends AcEdBaseView {
    * 2. **`AcTrLayoutView.viewportsBoundingBox`** — bounding box of all
    *    real user viewports in the layout. In production sheets viewports
    *    typically span 70-90% of the paper, so this is a great proxy for
-   *    the printable area and (crucially) ignores outliers like title
-   *    blocks authored in a different unit/scale.
+   *    the printable area and (crucially) ignores outliers
+   *    authored in a different unit/scale.
    *
    * 3. **`AcDbLayout.extents`** — the layout's own EXTMIN/EXTMAX, if
    *    populated. Many parsers leave this empty (we've seen `(0,0)-(0,0)`),
@@ -2844,7 +2801,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Converts the queued entities in slices, active layout first.
    *
    * `drainConvertQueue` used to hand the whole queue to one
-   * {@link batchConvert}. Model-space block references queued ahead of the
+   * {@link batchConvert}. Model-space entities queued ahead of the
    * sheet then blocked the sheet's frame and viewports for the entire batch,
    * and a layout activated during that batch stayed starved until it
    * finished. Slices return here so a newly active layout is ordered ahead
@@ -3619,7 +3576,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * Finishes geometry for a converted entity.
    *
-   * Glyph entities, complex-linetype lines, and block groups use
+   * Glyph entities, complex-linetype lines, and groups use
    * {@link AcTrEntity.asyncDraw} so {@link FontManager.awaitFontsBeforeDraw}
    * can wait for fonts without relying on a full-scene regen. Other entities
    * keep the sync finalize path.
@@ -3644,7 +3601,7 @@ export class AcTrView2d extends AcEdBaseView {
       }
 
       if (isGroup) {
-        // Linework-only INSERTs (no empty glyph shells) skip asyncDraw; spatial
+        // Linework-only groups (no empty glyph shells) skip asyncDraw; spatial
         // boxes are refreshed by syncGroupSpatialBoundsForIndexing after commit.
         if (!groupPending) {
           return
@@ -3671,8 +3628,8 @@ export class AcTrView2d extends AcEdBaseView {
     if (threeEntity instanceof AcTrGlyphEntity) {
       return !threeEntity.hasDrawableGeometry()
     }
-    // Only defer INSERTs that still have empty glyph shells. Linework-only
-    // blocks should commit on the convert path and not occupy the geometry pool.
+    // Only defer groups that still have empty glyph shells. Linework-only
+    // groups should commit on the convert path and not occupy the geometry pool.
     if (threeEntity instanceof AcTrGroup) {
       return this.groupHasPendingGlyphGeometry(threeEntity)
     }
@@ -3800,7 +3757,7 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   private groupHasPendingGlyphGeometry(group: AcTrGroup): boolean {
-    // Prefer O(block-def shells). A full THREE.traverse over a mega-block
+    // Prefer O(source shells). A full THREE.traverse over a large group
     // (100k+ flattened mesh leaves) was dominating scene-convert wall time.
     for (const entity of group.getSourceEntities()) {
       if (entity instanceof AcTrGlyphEntity && !entity.hasDrawableGeometry()) {
@@ -3814,7 +3771,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Walks only {@link AcTrEntity} containers for empty glyph shells.
    *
    * Skips raw mesh/line leaves under a flattened {@link AcTrGroup} so checking
-   * a whole-floor INSERT is O(glyph shells), not O(all drawable leaves).
+   * a large group is O(glyph shells), not O(all drawable leaves).
    */
   private static directChildrenHavePendingGlyphs(
     root: THREE.Object3D
@@ -3857,7 +3814,7 @@ export class AcTrView2d extends AcEdBaseView {
    * entities keep converting while fonts download.
    *
    * Jobs are queued with bounded concurrency — unbounded parallel
-   * `asyncDraw` on large INSERT/text drawings can freeze the main thread
+   * `asyncDraw` on large text drawings can freeze the main thread
    * during the "Rendering drawing ..." stage.
    */
   private enqueueDeferredGeometry(
@@ -4066,7 +4023,7 @@ export class AcTrView2d extends AcEdBaseView {
     const progressive = this._progressiveRendering && !options.forExport
     // Time-budgeted yields keep the UI (and optional progressive paints) alive
     // during large open chunks. Count-based yields alone stall on expensive
-    // INSERT / hatch batches. Prefer setTimeout(0) over rAF: waiting a full
+    // hatch batches. Prefer setTimeout(0) over rAF: waiting a full
     // frame per yield inflated total open wall time without improving
     // first-paint much.
     //
@@ -4204,88 +4161,45 @@ export class AcTrView2d extends AcEdBaseView {
           threeEntity.ownerId = entity.ownerId
           threeEntity.layerName = entity.layer
           threeEntity.visible = entity.visibility !== false
-          if (
-            threeEntity instanceof AcTrGroup &&
-            (threeEntity as AcTrGroup).isOnTheSameLayer
-          ) {
-            // Layer-0 inheritance must run AFTER finishEntityGeometry so TEXT/
-            // MTEXT glyph materials exist. Remapping earlier (before asyncDraw)
-            // leaves GM/GB-style labels as ACI-7 white while the block frame
-            // remaps correctly (GAS-Meter / GAS-Box, A517B / A517E).
-            threeEntity.userData.insertLayerName = threeEntity.layerName
-          }
-          const isMultiLayerGroup =
-            threeEntity instanceof AcTrGroup &&
-            !(threeEntity as AcTrGroup).isOnTheSameLayer
           const deferGeometry =
             !options.forExport && this.needsDeferredFontGeometry(threeEntity)
 
-          if (isMultiLayerGroup) {
-            if (deferGeometry) {
-              this.enqueueDeferredGeometry(
-                () =>
-                  this.handleGroup(
-                    threeEntity as AcTrGroup,
-                    progressive,
-                    epoch,
-                    convertGen
-                  ),
-                epoch
-              )
-            } else {
-              await this.handleGroup(
-                threeEntity as AcTrGroup,
-                progressive,
-                epoch,
-                convertGen
-              )
-            }
-          } else {
-            const commitEntity = async () => {
-              await this.finishEntityGeometry(threeEntity, progressive)
-              if (epoch !== this._convertEpoch) {
-                threeEntity.dispose()
-                return
-              }
-              if (
-                objectId &&
-                (this._entityConvertGeneration.get(objectId) ?? 0) !==
-                  convertGen
-              ) {
-                threeEntity.dispose()
-                return
-              }
-              if (threeEntity instanceof AcTrGroup) {
-                this.syncGroupSpatialBoundsForIndexing(threeEntity)
-                if ((threeEntity as AcTrGroup).isOnTheSameLayer) {
-                  this._inheritedLayerMaterialMapper.remap(
-                    (threeEntity as AcTrGroup).children,
-                    '0',
-                    threeEntity.layerName
-                  )
-                }
-              }
-              const tAdd = performance.now()
-              this._scene.addEntity(threeEntity, true)
-              this._convertPhaseMs.addEntity += performance.now() - tAdd
-              this.applySessionHiddenObjectState(entity.objectId)
-              // Release memory occupied by this entity
+          const commitEntity = async () => {
+            await this.finishEntityGeometry(threeEntity, progressive)
+            if (epoch !== this._convertEpoch) {
               threeEntity.dispose()
-              if (progressive) {
-                this.markProgressiveDirty()
-                this._progressiveOpenFit.afterGeometryBatch(
-                  () => this.getDrawingExtents(),
-                  i
-                )
-              } else {
-                this.markInteractiveOpenDirty()
-              }
+              return
             }
-            if (deferGeometry) {
-              this.enqueueDeferredGeometry(commitEntity, epoch)
+            if (
+              objectId &&
+              (this._entityConvertGeneration.get(objectId) ?? 0) !== convertGen
+            ) {
+              threeEntity.dispose()
+              return
+            }
+            if (threeEntity instanceof AcTrGroup) {
+              this.syncGroupSpatialBoundsForIndexing(threeEntity)
+            }
+            const tAdd = performance.now()
+            this._scene.addEntity(threeEntity, true)
+            this._convertPhaseMs.addEntity += performance.now() - tAdd
+            this.applySessionHiddenObjectState(entity.objectId)
+            // Release memory occupied by this entity
+            threeEntity.dispose()
+            if (progressive) {
+              this.markProgressiveDirty()
+              this._progressiveOpenFit.afterGeometryBatch(
+                () => this.getDrawingExtents(),
+                i
+              )
             } else {
-              await commitEntity()
+              this.markInteractiveOpenDirty()
             }
+          }
+          if (deferGeometry) {
+            this.enqueueDeferredGeometry(commitEntity, epoch)
+          } else {
+            await commitEntity()
           }
         }
 
@@ -4336,18 +4250,10 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * Rebuilds block-reference child boxes and aligns aggregate {@link AcTrGroup.wcsBbox}
+   * Rebuilds group child boxes and aligns aggregate {@link AcTrGroup.wcsBbox}
    * with their union before spatial-index registration.
    */
   private syncGroupSpatialBoundsForIndexing(group: AcTrGroup) {
-    const lazy = group.peekLazyChildBoxes()
-    if (lazy && lazy.boxes.length > 0) {
-      const userData = group.userData as {
-        lazySpatialChildren?: AcTrLazySpatialChildren
-      }
-      userData.lazySpatialChildren = lazy
-      return
-    }
     group.refreshWcsChildBoxesFromChildren()
     if (group.wcsChildBoxes.length === 0) {
       return
@@ -4368,193 +4274,6 @@ export class AcTrView2d extends AcEdBaseView {
       spatialIndexChildBoxes?: AcEdSpatialQueryResultItem[]
     }
     userData.spatialIndexChildBoxes = childBoxes
-  }
-
-  private async handleGroup(
-    group: AcTrGroup,
-    progressive: boolean,
-    epoch: number = this._convertEpoch,
-    convertGen: number = 0
-  ) {
-    const t0 = performance.now()
-    try {
-      await this.finishEntityGeometry(group, progressive)
-      if (epoch !== this._convertEpoch) {
-        group.dispose()
-        return
-      }
-      const objectId = String(group.objectId ?? '')
-      if (
-        objectId &&
-        (this._entityConvertGeneration.get(objectId) ?? 0) !== convertGen
-      ) {
-        group.dispose()
-        return
-      }
-      this.syncGroupSpatialBoundsForIndexing(group)
-
-      const children = group.children
-      const objectsGroupByLayer: Map<string, THREE.Object3D[]> = new Map()
-      children.forEach(child => {
-        if (child.visible === false) {
-          return
-        }
-        const layerName = child.userData.layerName
-        if (!objectsGroupByLayer.has(layerName)) {
-          objectsGroupByLayer.set(layerName, [])
-        }
-        objectsGroupByLayer.get(layerName)?.push(child)
-      })
-      // Important:
-      // Sometimes one group may contain huge amount of objects (> 100,000). So it is important
-      // to re-parent object with the fast approach. Calling add/remove method in THREE.Object3D
-      // is very slow because it do lots of things
-      // - Remove children from old group
-      // - Insert them into new group
-      // - Reset parent pointer
-      // - Do one updateMatrixWorld() at the end (optional)
-      // So we operate its children directly.
-      group.children = []
-      for (const child of children) {
-        child.parent = null
-      }
-
-      const renderContext = group.renderContext
-      const groupObjectId = group.objectId
-      const groupLayerName = group.layerName
-
-      // applyMatrix on the group already updated wcsBbbox and wcsChildBoxes to WCS.
-      // Do not multiply group.matrix here — that would double-transform spatial bounds.
-      const lazyChildren = (
-        group.userData as { lazySpatialChildren?: AcTrLazySpatialChildren }
-      ).lazySpatialChildren
-      if (process.env.NODE_ENV !== 'production' && !lazyChildren) {
-        assertAcTrGroupWcsBboxesConsistent(group)
-      }
-
-      const groupChildBoxes: AcEdSpatialQueryResultItem[] = lazyChildren
-        ? []
-        : group.wcsChildBoxes.map(box => ({
-            minX: box.minX,
-            minY: box.minY,
-            maxX: box.maxX,
-            maxY: box.maxY,
-            id: box.id
-          }))
-      const aggregateSpatialBbox = lazyChildren
-        ? group.wcsBbox.clone()
-        : groupChildBoxes.length > 0
-          ? unionGroupWcsChildBoxes(group)
-          : group.wcsBbox.clone()
-      if (groupChildBoxes.length > 0) {
-        group.wcsBbox = aggregateSpatialBbox.clone()
-      }
-      // Every layer fragment shares one INSERT object id, and the child spatial
-      // index is keyed by that id. Attaching the full child-box list to each
-      // fragment makes addEntity rebuild the same index once per layer. A
-      // whole-floor block (00-1~4F: 181515 children, 81 layers) spent ~74s
-      // there while "Rendering drawing ..." stayed up.
-      let registeredChildIndex = false
-      const yieldToEventLoop = () =>
-        new Promise<void>(resolve => setTimeout(resolve, 0))
-      let lastGroupYieldAt = progressive ? performance.now() : 0
-      for (const [layerName, objects] of objectsGroupByLayer) {
-        // Nested layer-0 may already be resolved to an inner INSERT layer during
-        // flatten. Remaining "0" buckets inherit this (outermost) INSERT layer.
-        const effectiveLayerName =
-          layerName === '0' ? groupLayerName : layerName
-
-        // Material remap must still treat authored layer-0 drawables as layer-0
-        // ByLayer even when nest resolution already rewrote layerName.
-        const sourceLayerForMaterials = objects.some(object => {
-          const data = object.userData as {
-            authoredLayerName?: string
-            layerName?: string
-          }
-          return (data.authoredLayerName ?? layerName) === '0'
-        })
-          ? '0'
-          : layerName
-
-        // Keep runtime layer metadata/material cache aligned with the inherited layer so
-        // later layer style edits (color, linetype, lineweight, transparency) target this
-        // object set correctly.
-        this._inheritedLayerMaterialMapper.remap(
-          objects,
-          sourceLayerForMaterials,
-          effectiveLayerName
-        )
-
-        // One INSERT can expand to children from multiple layers. Here we create one
-        // render entity per layer bucket but preserve the INSERT object id for all
-        // buckets, so selection/highlight still maps back to the same database object.
-        // Within each layer bucket, the object id remains unique in scene indexing.
-        const entity = new AcTrEntity(renderContext)
-        // Copy the INSERT matrix exactly — applyMatrix4 decomposes and drops
-        // reflections from mirrored block scales.
-        entity.matrix.copy(group.matrix)
-        entity.matrixAutoUpdate = false
-        entity.matrixWorldNeedsUpdate = true
-        entity.objectId = groupObjectId
-        entity.ownerId = group.ownerId
-        // If block-definition entities are on layer "0", this bucket now uses the layer
-        // of the block reference itself (effectiveLayerName).
-        entity.layerName = effectiveLayerName
-        entity.userData.insertLayerName = groupLayerName
-        entity.wcsBbox = aggregateSpatialBbox.clone()
-        const entityUserData = entity.userData as {
-          spatialIndexChildBoxes?: AcEdSpatialQueryResultItem[]
-        }
-        if (!registeredChildIndex && lazyChildren) {
-          ;(
-            entity.userData as { lazySpatialChildren?: AcTrLazySpatialChildren }
-          ).lazySpatialChildren = lazyChildren
-          registeredChildIndex = true
-        } else if (!registeredChildIndex && groupChildBoxes.length > 0) {
-          entityUserData.spatialIndexChildBoxes = groupChildBoxes
-          registeredChildIndex = true
-        }
-
-        // Important:
-        // DO NOT USE spread operator when adding objects because it may be one very large array
-        // and can result in maximum call stack size exceeded
-        for (let i = 0; i < objects.length; i++) {
-          entity.add(objects[i])
-        }
-        entity.updateMatrixWorld(true)
-        this._layerAppearance.refreshTextMaterialsInObjectTree(entity)
-        const tAdd = performance.now()
-        this._scene.addEntity(entity, true)
-        this._convertPhaseMs.addEntity += performance.now() - tAdd
-        this.applySessionHiddenObjectState(groupObjectId)
-        entity.dispose()
-
-        // Progressive open hides the overlay at CONVERSION END while deferred
-        // INSERT finalize may still split many layers — time-budgeted yields
-        // so pan/zoom handlers can run between layer commits.
-        if (
-          progressive &&
-          epoch === this._convertEpoch &&
-          performance.now() - lastGroupYieldAt >=
-            AcTrView2d.PROGRESSIVE_OPEN_YIELD_BUDGET_MS
-        ) {
-          await yieldToEventLoop()
-          lastGroupYieldAt = performance.now()
-        }
-      }
-      group.dispose()
-
-      if (progressive) {
-        this.markProgressiveDirty()
-        this._progressiveOpenFit.afterGeometryBatch(() =>
-          this.getDrawingExtents()
-        )
-      } else {
-        this.markInteractiveOpenDirty()
-      }
-    } finally {
-      this._convertPhaseMs.handleGroup += performance.now() - t0
-    }
   }
 
   private decreaseNumOfEntitiesToProcess() {

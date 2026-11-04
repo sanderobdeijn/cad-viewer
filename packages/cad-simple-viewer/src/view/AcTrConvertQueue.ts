@@ -2,7 +2,7 @@
  * Entity waiting in {@link AcTrView2d}'s convert queue.
  *
  * Only `ownerId` matters for scheduling: paper-space sheets must be converted
- * before the model-space block references queued ahead of them.
+ * before the model-space entities queued ahead of them.
  */
 export interface AcTrConvertQueueEntity {
   ownerId?: string

@@ -9,8 +9,8 @@ import type { AcDbObjectId } from '../base/AcDbObject'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
 
 /**
- * Spatial-index child ids may get a `#n` suffix when the same definition
- * entity appears under more than one nested INSERT (see uniquifySpatialItemIds
+ * Spatial-index child ids may get a `#n` suffix when the same child id
+ * appears more than once (see uniquifySpatialItemIds
  * in cad-simple-viewer). Parse that into the canonical object id and 0-based
  * occurrence index matching depth-first leaf order.
  */

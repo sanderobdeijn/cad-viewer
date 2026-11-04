@@ -1,6 +1,5 @@
 import { AcDbObjectId } from '@mlightcad/data-model'
 import { AcTrGroup } from '@mlightcad/three-renderer'
-import * as THREE from 'three'
 
 import {
   AcEdSpatialQueryResultItem,
@@ -21,7 +20,7 @@ import {
 
 /**
  * A two-level (hierarchical) spatial index designed for complex CAD
- * scene structures such as blocks, groups, layers, or nested entities.
+ * scene structures such as groups, layers, or nested entities.
  *
  * The index consists of:
  *
@@ -30,7 +29,7 @@ import {
  *
  * 2. A second-level map from `id` to another spatial index, which
  *    contains more detailed spatial data for that specific entity,
- *    block, or group.
+ *    or group.
  *
  * Spatial queries are executed in two phases:
  * - First, the query is performed against the root spatial index to
@@ -49,22 +48,10 @@ import {
  * where entities are grouped hierarchically but still require fast
  * spatial queries such as selection, picking, and hit-testing.
  */
-/**
- * Block-local child boxes plus the INSERT matrix that maps them into WCS.
- *
- * Stored once per block reference until a spatial query needs the expanded
- * child index. The box array is shared across instances of one template.
- */
-export interface AcTrLazySpatialChildren {
-  boxes: readonly AcEdSpatialQueryResultItem[]
-  matrix: THREE.Matrix4
-}
-
 export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
   static THRESHOLD = 100
   private readonly rootIndex: AcTrSpatialIndex<AcEdSpatialQueryResultItem>
   private readonly childIndexes = new Map<string, AcTrSpatialIndex>()
-  private readonly lazyChildren = new Map<string, AcTrLazySpatialChildren>()
 
   /**
    * Creates a hierarchical spatial index instance.
@@ -143,7 +130,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
   ): void {
     this.rootIndex.remove(item, equals)
     this.childIndexes.delete(item.id)
-    this.lazyChildren.delete(item.id)
   }
 
   /**
@@ -154,7 +140,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
   removeById(id: AcDbObjectId): void {
     this.rootIndex.removeById(id)
     this.childIndexes.delete(id)
-    this.lazyChildren.delete(id)
   }
 
   /**
@@ -167,7 +152,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
     this.rootIndex.clear()
     this.childIndexes.forEach(i => i.clear())
     this.childIndexes.clear()
-    this.lazyChildren.clear()
   }
 
   /**
@@ -185,7 +169,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    *
    * @param bbox Query bounding box.
    * @param options Optional query semantics. With `selectionMode: 'window'`,
-   *   block references that have a child index must have every indexed child
+   *   groups that have a child index must have every indexed child
    *   fully inside {@link bbox}; other hits must have their root box fully
    *   inside {@link bbox}.
    * @returns Aggregated search results from both levels.
@@ -198,7 +182,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
     const result: AcEdSpatialQueryResultItemEx[] = []
 
     for (const hit of level1) {
-      this.materializeLazyChildren(hit.id)
       const child = this.childIndexes.get(hit.id)
       if (!child) {
         if (
@@ -229,7 +212,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
   /**
    * Window-selection containment for one hierarchical hit.
    *
-   * INSERT entities with a child index are contained only when every finite
+   * Entities with a child index are contained only when every finite
    * indexed child lies inside the pick box, not when a coarse root bbox fits.
    */
   private isWindowSelectionHit(
@@ -254,7 +237,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    *
    * A fast root-level rejection is performed first. If root-level candidates
    * exist, each candidate is checked as follows:
-   * - deferred INSERT children are expanded first, same as {@link search};
    * - without child index: treated as colliding immediately;
    * - with child index: delegated to child-level `collides`.
    *
@@ -266,7 +248,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
 
     const level1 = this.rootIndex.search(bbox)
     return level1.some(hit => {
-      this.materializeLazyChildren(hit.id)
       const child = this.childIndexes.get(hit.id)
       return child ? child.collides(bbox) : true
     })
@@ -339,21 +320,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    * @returns `true` if a child index is registered for `id`.
    */
   hasChildIndex(id: AcDbObjectId) {
-    return this.childIndexes.has(id) || this.lazyChildren.has(id)
-  }
-
-  /**
-   * Remembers block-local child boxes for one INSERT without copying them.
-   *
-   * {@link search} expands the boxes into a child index the first time a query
-   * hits this id. Extents queries that only read {@link all} stay on the root
-   * box.
-   *
-   * @param id - INSERT object id.
-   * @param source - Shared template boxes and this instance's matrix.
-   */
-  setLazyChildSource(id: AcDbObjectId, source: AcTrLazySpatialChildren) {
-    this.lazyChildren.set(id, source)
+    return this.childIndexes.has(id)
   }
 
   /**
@@ -464,33 +431,6 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
     return this.ensureChildIndex(group.objectId, group.wcsChildBoxes)
   }
 
-  /**
-   * Expands a deferred INSERT into a child index.
-   *
-   * No-op when the id was already expanded or has no lazy source. Does not
-   * insert another root box; the caller registered the aggregate bbox.
-   *
-   * @param id - INSERT object id whose query hit needs child boxes.
-   */
-  private materializeLazyChildren(id: string) {
-    if (this.childIndexes.has(id)) return
-    const source = this.lazyChildren.get(id)
-    if (!source) return
-    this.lazyChildren.delete(id)
-    const items: AcEdSpatialQueryResultItem[] = []
-    for (let i = 0; i < source.boxes.length; i++) {
-      const box = source.boxes[i]
-      if (!box || !isFiniteSpatialBBox(box)) continue
-      items.push(transformSpatialBox(box, source.matrix))
-    }
-    const finiteItems = uniquifySpatialItemIds(items)
-    if (finiteItems.length === 0) return
-    const spatialIndex = this.createIndexBySize(finiteItems.length)
-    if (!spatialIndex) return
-    spatialIndex.load(finiteItems)
-    this.setChildIndex(id, spatialIndex)
-  }
-
   private createIndexBySize(size: number) {
     if (size > AcTrHierarchicalSpatialIndex.THRESHOLD) {
       return new AcTrRBushSpatialIndex()
@@ -500,37 +440,4 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
     }
     return undefined
   }
-}
-
-/**
- * Maps one block-local AABB through an INSERT matrix into a WCS AABB.
- *
- * @param box - Axis-aligned box in block space.
- * @param matrix - INSERT transform.
- * @returns The transformed axis-aligned box, with the same id.
- */
-function transformSpatialBox(
-  box: AcEdSpatialQueryResultItem,
-  matrix: THREE.Matrix4
-): AcEdSpatialQueryResultItem {
-  const e = matrix.elements
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  const xs = [box.minX, box.maxX]
-  const ys = [box.minY, box.maxY]
-  for (let i = 0; i < 2; i++) {
-    for (let j = 0; j < 2; j++) {
-      const x = xs[i]
-      const y = ys[j]
-      const wx = e[0] * x + e[4] * y + e[12]
-      const wy = e[1] * x + e[5] * y + e[13]
-      minX = Math.min(minX, wx)
-      minY = Math.min(minY, wy)
-      maxX = Math.max(maxX, wx)
-      maxY = Math.max(maxY, wy)
-    }
-  }
-  return { minX, minY, maxX, maxY, id: box.id }
 }

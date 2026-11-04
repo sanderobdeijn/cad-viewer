@@ -617,8 +617,6 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
 
   /**
    * Returns one cached material bound to an effective layer while preserving symbolic traits.
-   *
-   * This is used for block contents that inherit the layer of the INSERT they belong to.
    */
   getLayerBoundMaterial(
     material: THREE.Material,
@@ -757,9 +755,8 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
    * @inheritdoc
    *
    * Draws the filled offset ring and a centerline stroke. The fill carries
-   * true world-space width; the stroke stays ≥ ~1 device pixel so title-block
-   * frames (small `constantWidth` × large INSERT scale) do not vanish at
-   * fit-zoom.
+   * true world-space width; the stroke stays ≥ ~1 device pixel so frames with a
+   * small `constantWidth` do not vanish at fit-zoom.
    */
   offsetRing(outer: GeometryPoint2dLike[], inner: GeometryPoint2dLike[]) {
     if (this._directCapture !== 'off') {
@@ -847,11 +844,10 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
   }
 
   /**
-   * Renders one or more entities (or a block preview root) to an offscreen canvas.
+   * Renders one or more entities (or a preview root) to an offscreen canvas.
    *
    * Pass a detached preview root such as the group returned by
-   * {@link AcTrBatchedGroup.createPreviewSubset} or an {@link AcTrGroup} built
-   * for a block definition. When the object is already attached to a scene, a
+   * {@link AcTrBatchedGroup.createPreviewSubset} or an {@link AcTrGroup}. When the object is already attached to a scene, a
    * deep clone is rendered internally.
    *
    * @param object - Drawable root to preview

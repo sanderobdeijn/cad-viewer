@@ -4,7 +4,6 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { AcTrBatchedLine2 } from '../src/batch/AcTrBatchedLine2'
-import { AcTrGroupCompactor } from '../src/object/AcTrGroupCompactor'
 import { AcTrLine } from '../src/object/AcTrLine'
 import { AcTrLineSegments } from '../src/object/AcTrLineSegments'
 import { AcTrRenderContext } from '../src/renderer/AcTrRenderContext'
@@ -262,30 +261,6 @@ describe('AcTrBatchedLine2 dash distances', () => {
       [0, 10],
       [0, 2],
       [0, 1]
-    ])
-  })
-
-  it('restarts the dash phase for each compacted LineSegments2', () => {
-    const material = new LineMaterial({
-      color: 0xffffff,
-      dashed: true,
-      dashSize: 5,
-      gapSize: 5
-    })
-    const group = new THREE.Group()
-    group.add(new LineSegments2(segmentGeometry(0, 0, 10, 0), material))
-    group.add(new LineSegments2(segmentGeometry(0, 0, 0, 4), material))
-
-    AcTrGroupCompactor.compact(group)
-
-    const line = group.children.find(
-      child => child instanceof LineSegments2
-    ) as LineSegments2 | undefined
-    expect(line).toBeDefined()
-    const { values } = getDistances(line!.geometry as THREE.BufferGeometry, 2)
-    expect(values).toEqual([
-      [0, 10],
-      [0, 4]
     ])
   })
 

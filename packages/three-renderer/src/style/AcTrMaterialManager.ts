@@ -126,8 +126,7 @@ export abstract class AcTrMaterialManager<T> {
         typeof layerColorRgb === 'number' &&
         getMaterialMetadata(cached).isForeground !== true
       ) {
-        const swatch =
-          layerColor ?? new AcCmColor().setRGBValue(layerColorRgb)
+        const swatch = layerColor ?? new AcCmColor().setRGBValue(layerColorRgb)
         this.refreshMaterialResolvedColor(cached, { color: swatch })
       }
       return cached
@@ -285,8 +284,7 @@ export abstract class AcTrMaterialManager<T> {
   /**
    * Returns a cached material bound to the specified effective layer.
    *
-   * This is primarily used for block contents that are authored on layer `0` but inherit the
-   * layer of the INSERT that owns them. The returned material preserves visual traits and
+   * The returned material preserves visual traits and
    * cache semantics, but future layer updates will target the effective layer instead of the
    * original source layer.
    *
@@ -372,7 +370,7 @@ export abstract class AcTrMaterialManager<T> {
    * Applies target-layer traits only to attributes that are actually ByLayer on this entity.
    *
    * This preserves explicit per-entity settings while resolving inherited values during
-   * block layer-0 remapping.
+   * layer rebinding.
    */
   private applyInheritedLayerTraits(
     traits: AcGiSubEntityTraits & T,

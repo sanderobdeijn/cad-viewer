@@ -27,9 +27,9 @@ import { AcTrEntity } from './AcTrEntity'
 const _raycastBox = /*@__PURE__*/ new THREE.Box3()
 /** Scratch point reused by {@link AcTrGlyphEntity.raycast} during bbox fallback. */
 const _raycastPoint = /*@__PURE__*/ new THREE.Vector3()
-/** Identity matrix for detecting post-inverse attribute transforms. */
+/** Identity matrix for detecting transforms applied before drawing. */
 const _identityMatrix = /*@__PURE__*/ new THREE.Matrix4()
-/** Scratch matrix used when folding an inverse INSERT transform into placement. */
+/** Scratch matrix used when folding a parent transform into placement. */
 const _collapseMatrix = /*@__PURE__*/ new THREE.Matrix4()
 /** Scratch used to convert mtext-renderer logical boxes into parent-local space. */
 const _logicalBox = /*@__PURE__*/ new THREE.Box3()
@@ -261,7 +261,13 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
       this.remove(this.children[0])
     }
     this._rendered = undefined
-    this.copyGeometry(template, this, true)
+    for (const child of template.children) {
+      const clonedChild = child.clone(false)
+      if ('geometry' in clonedChild) {
+        getSceneDrawableUserData(clonedChild).sharesTemplateGeometry = true
+      }
+      this.add(clonedChild)
+    }
     this.traverse(object => {
       getSceneDrawableUserData(object).bboxIntersectionCheck = true
     })
@@ -289,27 +295,6 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
     if (!box.isEmpty()) {
       this.wcsBbox = box
     }
-  }
-
-  /**
-   * Traits snapshot suitable for reconstructing this glyph via its constructor.
-   */
-  protected traitsForClone(): AcGiSubEntityTraits {
-    return {
-      ...AcTrSubEntityTraitsUtil.createDefaultTraits(),
-      color: this._entityTraits.color,
-      layer: this._entityTraits.layer
-    }
-  }
-
-  /**
-   * Copies shared glyph state after a subclass constructs a typed clone shell.
-   */
-  protected copyGlyphIdentity(source: AcTrGlyphEntity) {
-    this.copy(source, false)
-    this._style = { ...source._style }
-    this._entityTraits = { ...source._entityTraits }
-    this._colorSettings = { ...source._colorSettings }
   }
 
   /**
@@ -371,8 +356,8 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    */
   protected attachRendered(rendered: MTextObject) {
     this.add(rendered)
-    // Fold WCS placement under an inverse INSERT matrix into true block-local
-    // space before flatten/unbatch. Must run while the renderer hierarchy is
+    // Fold a transform applied before drawing into placement before
+    // flatten/unbatch. Must run while the renderer hierarchy is
     // still intact so the placement root can absorb this.matrix.
     this.collapseInverseParentTransformIntoPlacement(rendered)
     const renderRoot = resolveMTextRenderRoot(rendered)
@@ -401,19 +386,15 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
   }
 
   /**
-   * Converts WCS-positioned attribute glyphs into block-local placement.
+   * Folds a transform applied before glyphs were built into their placement.
    *
-   * The caller applies the inverse INSERT matrix to
-   * attribute entities before glyphs are built. The mtext-renderer then
-   * places glyphs with a WCS insertion point under that inverse. The product
-   * cancels for rendering, but mirrored INSERT scales make
-   * {@link THREE.Matrix4.decompose} unreliable on the inverse — unbatched
-   * cloning can then land tens of millions of units away and inflate
-   * zoom-to-extents / layer-fit boxes (e.g. DOOR_FIRE_TEXT attributes).
+   * A caller can transform an entity before its deferred glyphs exist, such as
+   * a proxy entity with a world transform. Mirrored scales make
+   * {@link THREE.Matrix4.decompose} unreliable — unbatched cloning can then land
+   * tens of millions of units away and inflate zoom-to-extents / layer-fit boxes.
    *
    * Fold `this.matrix · placementLocal` into the placement root and reset
-   * this entity to identity so attributes sit in true block-local space
-   * under the INSERT transform.
+   * this entity to identity.
    *
    * @param rendered Rendered glyph object returned by the shared mtext-renderer.
    */
@@ -430,8 +411,8 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
     if (renderRoot.matrixAutoUpdate) {
       renderRoot.updateMatrix()
     }
-    // Keep the exact product matrix — do not decompose. Mirrored INSERT
-    // inverses have negative determinants that THREE cannot round-trip via TRS.
+    // Keep the exact product matrix — do not decompose. Mirrored
+    // transforms have negative determinants that THREE cannot round-trip via TRS.
     _collapseMatrix.copy(this.matrix).multiply(renderRoot.matrix)
     renderRoot.matrixAutoUpdate = false
     renderRoot.matrix.copy(_collapseMatrix)
@@ -457,7 +438,7 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    * are ignored.
    *
    * {@link MTextObject.box} is authored in world space at draw time. When this
-   * glyph is parented (INSERT attributes), convert it to parent-local space
+   * glyph is parented, convert it to parent-local space
    * before intersecting or unioning with {@link computeGeometryBox}.
    *
    * @param rendered Rendered glyph object whose logical box is used as fallback.
@@ -491,13 +472,10 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    *
    * The result is expressed in **this entity's parent-local space** (world
    * space when unparented). That matches the {@link wcsBbox} convention used
-   * by {@link AcTrGroup} source entities: block-local for INSERT contents and
-   * attributes (after the cache's inverse transform), WCS for standalone
-   * entities. Using full `matrixWorld` here would bake an already-parented
-   * INSERT transform into `wcsBbox`, and a later
-   * {@link AcTrGroup} spatial refresh would apply that INSERT matrix again —
-   * pushing attribute boxes millions of units away and breaking pick /
-   * window / crossing selection for blocks such as `gc200`.
+   * by {@link AcTrGroup} source entities. Using full `matrixWorld` here would bake
+   * an already-parented transform into `wcsBbox`, and a later
+   * {@link AcTrGroup} spatial refresh would apply it again — pushing boxes far
+   * away and breaking pick / window / crossing selection.
    *
    * @returns Bounding box containing all child meshes, lines, and points.
    */

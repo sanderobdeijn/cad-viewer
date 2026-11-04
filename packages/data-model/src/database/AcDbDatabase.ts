@@ -1148,9 +1148,7 @@ export class AcDbDatabase extends AcDbObject {
     if (oldId && oldId !== handle) {
       this.updateMaxHandle(handle)
       // When a BTR is displaced by a later import claiming its handle, keep
-      // child entity ownerIds in sync. Otherwise ATTDEF.isLooseInDrawingSpace
-      // cannot resolve the owner BTR and may draw attribute tags into the
-      // block render cache (overlapping INSERT ATTRIB values).
+      // child entity ownerIds in sync.
       if (object instanceof AcDbBlockTableRecord) {
         for (const entity of object.newIterator()) {
           if (entity.getAttrWithoutException('ownerId') === oldId) {

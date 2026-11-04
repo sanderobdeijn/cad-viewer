@@ -47,7 +47,7 @@ const DEFAULT_HIT_RADIUS_PX = 20
 
 /**
  * Max nearby geometry sources considered per intersection query.
- * Prefer pick-hit subentities (INSERT children) over whole block refs.
+ * Prefer pick-hit subentities (group children) over whole groups.
  */
 const MAX_INTERSECTION_SOURCES = 16
 

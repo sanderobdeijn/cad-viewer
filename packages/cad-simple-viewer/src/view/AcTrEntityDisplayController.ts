@@ -18,11 +18,6 @@ type AcTrEntityDisplayCandidate = Pick<AcDbEntity, 'visibility' | 'layer'>
  * so off-layer content can be skipped at open time and converted later when the
  * layer becomes visible again.
  *
- * Block references (INSERTs) are special: freezing the INSERT layer hides the
- * entire reference, but turning the INSERT layer **off** must still convert the
- * block so nested geometry on other layers can remain visible (AutoCAD Off vs
- * Freeze semantics).
- *
  * The host view ({@link AcTrView2d}) supplies layer metadata and performs batch
  * conversion through its existing entity pipeline.
  */
@@ -82,9 +77,6 @@ export class AcTrEntityDisplayController {
   /**
    * Collects entities on the given layer that were skipped while the layer was
    * off/frozen and therefore are not yet present in the scene.
-   *
-   * For INSERTs, entities are collected when the INSERT layer is no longer
-   * frozen (Off alone does not skip conversion).
    */
   collectMissingEntitiesOnLayer(
     layerName: string,

@@ -241,7 +241,7 @@ describe('AcTrStyleManager', () => {
     expect(remapped.color.getHex()).toBe(0xff0000)
   })
 
-  it('remaps layer-0 foreground ByLayer materials to inherited INSERT layer color', () => {
+  it('remaps layer-0 foreground ByLayer materials to the bound layer color', () => {
     const styleManager = new AcTrStyleManager()
     styleManager.currentBackgroundColor = 0x000000
     const traits = AcTrSubEntityTraitsUtil.createDefaultTraits()

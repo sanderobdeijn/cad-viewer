@@ -31,7 +31,7 @@ function createLine(
 }
 
 describe('AcTrTransientManager.applyTransforms', () => {
-  it('composes preview deltas with the transient baseline INSERT matrix', () => {
+  it('composes preview deltas with the transient baseline matrix', () => {
     const scene = new THREE.Scene()
     const manager = new AcTrTransientManager(scene)
     const context = new AcTrRenderContext()
@@ -43,7 +43,7 @@ describe('AcTrTransientManager.applyTransforms', () => {
     )
     const group = new AcTrGroup([line], context)
     group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
-    group.objectId = 'INSERT-7B33'
+    group.objectId = 'GROUP-7B33'
 
     manager.add(group)
     const baseline = group.matrix.clone()

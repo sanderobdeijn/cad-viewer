@@ -92,7 +92,7 @@ export class AcTrTransientManager {
    * them or replacing GPU resources.
    *
    * Preview jigs pass a delta transform (move, rotate, copy). When the transient
-   * already carries a block-reference INSERT matrix, compose
+   * already carries its own matrix, compose
    * `delta * baseline` instead of replacing the baseline so preview geometry
    * stays in WCS.
    */

@@ -569,10 +569,7 @@ export class AcTrBatchedLine2 extends AcTrBatchedLine2Base {
    * @param target - Reusable {@link THREE.Box3} that receives the result.
    * @returns `target` when the id is valid, otherwise `null`.
    */
-  override computeBoundingBoxAt(
-    geometryId: number,
-    target: THREE.Box3
-  ) {
+  override computeBoundingBoxAt(geometryId: number, target: THREE.Box3) {
     if (geometryId >= this._geometryCount) {
       return null
     }
@@ -921,7 +918,7 @@ export class AcTrBatchedLine2 extends AcTrBatchedLine2Base {
     // params.Line2.threshold in px), not params.Line.threshold in WCS. When the
     // screen-space pick misses, test distance to each segment against the WCS
     // Line threshold. Do not fall back to the geometry AABB — that would make
-    // hollow rectangles / compacted INSERT linework selectable anywhere inside.
+    // hollow rectangles selectable anywhere inside.
     if (_batchIntersects.length === 0) {
       this._intersectSegmentsWithLineThreshold(
         geometry,

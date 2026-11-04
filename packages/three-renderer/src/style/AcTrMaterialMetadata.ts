@@ -4,8 +4,7 @@ import * as THREE from 'three'
  * Immutable ByLayer binding semantics carried with a cached material.
  *
  * These flags answer a specific question for each visual trait:
- * "Should this trait be inherited from the owning layer when the layer changes
- * or when a layer-0 block entity is remapped to an INSERT layer?"
+ * "Should this trait be inherited from the owning layer when the layer changes?"
  */
 export interface AcTrByLayerBindingFlags {
   /** True when color is layer-bound and must follow layer color updates. */
@@ -95,13 +94,13 @@ export function hasByLayerBinding(
 /**
  * Returns whether a drawable material should follow live layer-table style updates.
  *
- * When {@link objectLayerName} is supplied, drawables remapped to another layer
- * (for example layer-0 INSERT inheritance) still participate in layer sync even
+ * When {@link objectLayerName} is supplied, drawables moved to another layer
+ * still participate in layer sync even
  * if cached metadata still references the source layer name.
  *
  * @param material - Drawable material whose metadata drives the decision.
  * @param layerName - Layer name targeted by the current sync pass.
- * @param objectLayerName - Optional runtime layer name on the drawable after INSERT remapping.
+ * @param objectLayerName - Optional runtime layer name on the drawable.
  * @returns True when the material should receive live layer-table style updates.
  */
 export function followsLayerStyle(

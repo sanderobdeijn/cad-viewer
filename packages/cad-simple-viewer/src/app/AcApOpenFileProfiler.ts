@@ -33,7 +33,6 @@ export interface AcApOpenFileProfileSnapshot {
   }
   convertPhase?: {
     finishGeometryMs: number
-    handleGroupMs: number
     addEntityMs: number
     awaitFontsMs: number
     fontPreload?: {
@@ -236,7 +235,6 @@ export class AcApOpenFileProfiler {
     const convertPhase = convertPhaseRaw
       ? {
           finishGeometryMs: convertPhaseRaw.finishGeometry,
-          handleGroupMs: convertPhaseRaw.handleGroup,
           addEntityMs: convertPhaseRaw.addEntity,
           awaitFontsMs: convertPhaseRaw.awaitFonts,
           fontPreload: convertPhaseRaw.fontPreload
@@ -289,7 +287,6 @@ export class AcApOpenFileProfiler {
     if (convertPhase) {
       lines.push(
         `    finishGeometry:   ${convertPhase.finishGeometryMs.toFixed(0)} ms (cumulative)`,
-        `    handleGroup:      ${convertPhase.handleGroupMs.toFixed(0)} ms (cumulative)`,
         `    addEntity:        ${convertPhase.addEntityMs.toFixed(0)} ms`,
         // Wall time of preset + STYLE font preload awaited before glyph draw.
         `    awaitFonts:       ${convertPhase.awaitFontsMs.toFixed(0)} ms (preset+style preload wall)`

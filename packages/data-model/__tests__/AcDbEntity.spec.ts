@@ -138,7 +138,7 @@ describe('AcDbEntity.color resolution', () => {
     acdbHostApplicationServices().workingDatabase = db
   })
 
-  it('resolves ByBlock without INSERT owner to ACI 7 foreground, not CECOLOR', () => {
+  it('resolves ByBlock to ACI 7 foreground, not CECOLOR', () => {
     addLayerWithColor('0', 0x101010)
     db.clayer = '0'
     db.cecolor = new AcCmColor().setRGBValue(0x336699)

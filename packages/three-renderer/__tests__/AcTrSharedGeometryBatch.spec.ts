@@ -43,14 +43,11 @@ function findSharedBatch(group: AcTrBatchedGroup) {
   return result
 }
 
-describe('AcTrBatchedGroup shared block geometry', () => {
-  it('instances repeated block leaves instead of copying vertices', () => {
+describe('AcTrBatchedGroup shared template geometry', () => {
+  it('instances repeated leaves instead of copying vertices', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const firstLine = createSharedLine(0, material)
-    const secondLine = new THREE.LineSegments(
-      firstLine.geometry,
-      material
-    )
+    const secondLine = new THREE.LineSegments(firstLine.geometry, material)
     secondLine.position.set(0, 100, 0)
     secondLine.updateMatrixWorld(true)
     getSceneDrawableUserData(secondLine).sharesTemplateGeometry = true
@@ -100,7 +97,7 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     expect(group.isIntersectWith('insert-a', rayAt(0))).toBe(false)
   })
 
-  it('highlights one shared INSERT without aliasing the instanced geometry', () => {
+  it('highlights one shared instance without aliasing the instanced geometry', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const firstLine = createSharedLine(0, material)
     const secondLine = new THREE.LineSegments(firstLine.geometry, material)
@@ -127,12 +124,15 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     group.select('insert-a')
 
     const overlays = batch?.children.filter(
-      child => child !== instanced && (child as THREE.LineSegments).isLineSegments
+      child =>
+        child !== instanced && (child as THREE.LineSegments).isLineSegments
     ) as THREE.LineSegments[]
     expect(overlays).toHaveLength(1)
     expect(overlays[0].geometry).not.toBe(sharedGeometry)
     expect(overlays[0].material).not.toBe(instanced.material)
-    expect(sharedGeometry.getAttribute('position').array).toEqual(position.array)
+    expect(sharedGeometry.getAttribute('position').array).toEqual(
+      position.array
+    )
     expect(
       (
         instanced as THREE.LineSegments & {
@@ -143,10 +143,10 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     expect(instanced.count).toBe(2)
 
     group.unselect('insert-a')
-    expect(
-      batch?.children.filter(child => child !== instanced)
-    ).toHaveLength(0)
-    expect(sharedGeometry.getAttribute('position').array).toEqual(position.array)
+    expect(batch?.children.filter(child => child !== instanced)).toHaveLength(0)
+    expect(sharedGeometry.getAttribute('position').array).toEqual(
+      position.array
+    )
 
     group.select('insert-b')
     const nextOverlays = batch?.children.filter(
@@ -155,10 +155,12 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     expect(nextOverlays).toHaveLength(1)
     expect(nextOverlays[0].geometry).not.toBe(sharedGeometry)
     expect(instanced.count).toBe(2)
-    expect(sharedGeometry.getAttribute('position').array).toEqual(position.array)
+    expect(sharedGeometry.getAttribute('position').array).toEqual(
+      position.array
+    )
   })
 
-  it('previews one shared INSERT without aliasing the instanced geometry', () => {
+  it('previews one shared instance without aliasing the instanced geometry', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const firstLine = createSharedLine(0, material)
     const secondLine = new THREE.LineSegments(firstLine.geometry, material)
@@ -196,11 +198,13 @@ describe('AcTrBatchedGroup shared block geometry', () => {
 
     disposePreviewSubset(preview!)
     group.setCompareDisplay({ enabled: false, overrides: [] })
-    expect(sharedGeometry.getAttribute('position').array.length).toBeGreaterThan(0)
+    expect(
+      sharedGeometry.getAttribute('position').array.length
+    ).toBeGreaterThan(0)
     expect(() => sharedGeometry.getAttribute('position').getX(0)).not.toThrow()
   })
 
-  it('keeps the world pick threshold when an INSERT is scaled', () => {
+  it('keeps the world pick threshold when an instance is scaled', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const line = createSharedLine(0, material)
     line.scale.set(0.01, 0.01, 0.01)
@@ -224,7 +228,7 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     expect(group.isIntersectWith('insert-a', far)).toBe(false)
   })
 
-  it('keeps the world pick threshold when an INSERT is mirrored', () => {
+  it('keeps the world pick threshold when an instance is mirrored', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const line = createSharedLine(0, material)
     line.scale.set(-1, 1, 1)
@@ -287,7 +291,7 @@ describe('AcTrBatchedGroup shared block geometry', () => {
     expect(findSharedBatch(group)).toBeUndefined()
   })
 
-  it('tints shared INSERT instances for reading-mode / compare base color', () => {
+  it('tints shared instance instances for reading-mode / compare base color', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xff0000 })
     const firstLine = createSharedLine(0, material)
     const secondLine = new THREE.LineSegments(firstLine.geometry, material)

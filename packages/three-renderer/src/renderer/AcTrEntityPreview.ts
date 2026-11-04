@@ -67,7 +67,7 @@ interface AcTrEntityPreviewRendererState {
 }
 
 /**
- * Offscreen renderer for entity and block preview thumbnails.
+ * Offscreen renderer for entity preview thumbnails.
  *
  * Stateless helpers are exposed as static methods. Capture requires one
  * instance bound to an {@link AcTrRenderer}.
@@ -92,7 +92,7 @@ export class AcTrEntityPreview {
    * graph that is safe to reparent temporarily. When `object` already belongs to
    * another scene, a deep clone is rendered and disposed afterward.
    *
-   * @param object - Entity, block, or preview subset root to render
+   * @param object - Entity or preview subset root to render
    * @param options - Output size and optional framing overrides
    * @returns Rendered canvas and framing bounds, or `null` when bounds cannot be resolved
    */

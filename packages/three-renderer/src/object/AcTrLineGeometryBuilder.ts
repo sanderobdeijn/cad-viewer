@@ -3,7 +3,8 @@ import {
   AcGiSubEntityTraits,
   GeometryArea2d,
   GeometryIndexNode,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
@@ -648,10 +649,10 @@ export function buildOffsetRingDirectGeometry(
  * Midpoint loop between index-aligned outer/inner offset rings.
  *
  * Wide polylines are filled in world units. At fit-zoom a small
- * `constantWidth` under a large INSERT scale often projects to ≪ 1 device
+ * `constantWidth` often projects to ≪ 1 device
  * pixel and disappears. Stroking this centerline (hairline / lineweight)
  * keeps the frame visible while the fill still shows true width when zoomed
- * in — typical for title-block frames.
+ * in.
  *
  * @returns Closed centerline (≥ 3 points), or `null` when the rings are not
  *   aligned.

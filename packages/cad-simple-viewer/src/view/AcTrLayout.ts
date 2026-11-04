@@ -14,10 +14,7 @@ import * as THREE from 'three'
 
 import { AcEdLayerInfo, AcEdSpatialQueryResultItem } from '../editor'
 import { unionSpatialQueryItems } from '../editor/view/AcEdSpatialQueryResult'
-import {
-  AcTrHierarchicalSpatialIndex,
-  type AcTrLazySpatialChildren
-} from '../spatialIndex'
+import { AcTrHierarchicalSpatialIndex } from '../spatialIndex'
 import type { AcTrSpatialSearchOptions } from '../spatialIndex/AcTrSpatialIndex'
 import { isFiniteSpatialBBox } from './AcTrGroupWcsBboxAssert'
 import { AcTrLayer, AcTrLayerStats } from './AcTrLayer'
@@ -117,11 +114,6 @@ export class AcTrLayout {
   private _extentExcludedObjectIds: Set<AcDbObjectId>
   /** Map of layers indexed by layer name */
   private _layers: Map<string, AcTrLayer>
-  /**
-   * INSERT object id → INSERT's own layer name. Used when freezing an INSERT
-   * layer to hide fragments that were bucketed onto other layers.
-   */
-  private _insertLayerByObjectId: Map<AcDbObjectId, string>
   /** The flag indicating whether the layout is loaded/activated */
   private _isLoaded: boolean
   /**
@@ -154,7 +146,6 @@ export class AcTrLayout {
     this._boxDirty = true
     this._extentExcludedObjectIds = new Set()
     this._layers = new Map()
-    this._insertLayerByObjectId = new Map()
     this._isLoaded = false
   }
 
@@ -338,7 +329,6 @@ export class AcTrLayout {
     this.clearSmartExtentsCache()
     this._boxDirty = true
     this._extentExcludedObjectIds.clear()
-    this._insertLayerByObjectId.clear()
     this._spatialIndex.clear()
     return this
   }
@@ -362,8 +352,8 @@ export class AcTrLayout {
    * Syncs root spatial-index boxes with point / point-symbol batch AABBs after
    * a `PDMODE` / `PDSIZE` refresh.
    *
-   * Pure point entities replace their root box. Block references that own a
-   * child index only expand so coarse INSERT bounds are never shrunk to the
+   * Pure point entities replace their root box. Groups that own a
+   * child index only expand so coarse bounds are never shrunk to the
    * point-symbol subset.
    */
   private refreshPointSpatialIndexes() {
@@ -445,11 +435,6 @@ export class AcTrLayout {
 
     layer.addEntity(entity)
 
-    const insertLayerName = entity.userData.insertLayerName
-    if (insertLayerName) {
-      this._insertLayerByObjectId.set(entity.objectId, insertLayerName)
-    }
-
     if (!extendBbox) {
       this._extentExcludedObjectIds.add(entity.objectId)
     } else {
@@ -514,7 +499,6 @@ export class AcTrLayout {
     if (result) {
       this._spatialIndex.removeById(objectId)
       this._extentExcludedObjectIds.delete(objectId)
-      this._insertLayerByObjectId.delete(objectId)
       this.invalidateBox()
     }
     return result
@@ -529,10 +513,6 @@ export class AcTrLayout {
   updateEntity(entity: AcTrEntity) {
     for (const [_, layer] of this._layers) {
       if (layer.updateEntity(entity)) {
-        const insertLayerName = entity.userData.insertLayerName
-        if (insertLayerName) {
-          this._insertLayerByObjectId.set(entity.objectId, insertLayerName)
-        }
         this._spatialIndex.removeById(entity.objectId)
         this.registerEntitySpatialIndex(entity)
         this.invalidateBox()
@@ -734,7 +714,7 @@ export class AcTrLayout {
     for (const [layer, ids] of idsByLayer) {
       const idList = [...ids]
       const subset = layer.createPreviewSubset(idList, {
-        // Complex blocks/hatches may need several drawable slots per entity.
+        // Complex hatches may need several drawable slots per entity.
         maxSlots: Math.max(10000, idList.length * 8),
         missingEntity
       })
@@ -800,48 +780,6 @@ export class AcTrLayout {
       }
     }
     return layer
-  }
-
-  /**
-   * Applies AutoCAD INSERT-layer freeze semantics across decomposed fragments.
-   *
-   * Freezing the INSERT's own layer hides every scene bucket that shares that
-   * INSERT object id, including geometry bucketed onto other layers — even when
-   * the INSERT has no fragment on its own layer (only other-layer buckets).
-   * Thawing restores those other-layer buckets (the INSERT layer group
-   * visibility is handled separately by {@link updateLayer}).
-   *
-   * @param insertLayerName - Layer being frozen or thawed.
-   * @param frozen - True when the layer is now frozen.
-   * @returns Object ids whose cross-layer visibility was changed.
-   */
-  applyInsertLayerFreeze(
-    insertLayerName: string,
-    frozen: boolean
-  ): AcDbObjectId[] {
-    const touched: AcDbObjectId[] = []
-    for (const [objectId, layerName] of this._insertLayerByObjectId) {
-      if (layerName !== insertLayerName) {
-        continue
-      }
-      let changed = false
-      for (const layer of this.getLayersByObjectId(objectId)) {
-        // INSERT-layer bucket visibility comes from the layer group itself.
-        if (layer.name === insertLayerName) {
-          continue
-        }
-        if (layer.setEntityVisible(objectId, !frozen)) {
-          changed = true
-        }
-      }
-      if (changed) {
-        touched.push(objectId)
-      }
-    }
-    if (touched.length > 0) {
-      this.invalidateBox()
-    }
-    return touched
   }
 
   /**
@@ -952,7 +890,7 @@ export class AcTrLayout {
   /**
    * Collects finite spatial-index AABBs for intelligent zoom-to-fit.
    *
-   * Prefers child-level boxes when present so INSERT/hatch islands contribute
+   * Prefers child-level boxes when present so group/hatch islands contribute
    * separately rather than one oversized root union.
    *
    * @returns Flat list of finite world XY boxes.
@@ -1012,14 +950,9 @@ export class AcTrLayout {
    * Returns all layers that contain renderable entities associated with
    * the specified AutoCAD object ID.
    *
-   * In AutoCAD, an INSERT entity may reference multiple child entities that
-   * reside on different layers. During rendering, this engine groups entities
-   * by layer and assigns each group the INSERT entity's object ID.
+   * This method returns every layer holding an entity with that object ID.
    *
-   * As a result, a single object ID (typically from an INSERT entity) may
-   * correspond to multiple layers, and this method returns all such layers.
-   *
-   * @param objectId - The AutoCAD object ID to search for (e.g. an INSERT entity ID)
+   * @param objectId - The AutoCAD object ID to search for
    * @returns An array of layers containing entities associated with the given object ID;
    *          returns an empty array if no matching layers are found
    */
@@ -1037,9 +970,7 @@ export class AcTrLayout {
    * Gets optional child bounding boxes used to build a child-level spatial index
    * for one render entity.
    *
-   * Some rendering paths (for example INSERT decomposition across layers) cannot
-   * provide a single `AcTrGroup` hierarchy for child indexing. In these cases,
-   * precomputed child query items are attached to `entity.userData` and consumed
+   * Groups attach precomputed child query items to `entity.userData`; they are consumed
    * here so snapping and fine-grained spatial queries can still resolve
    * sub-entities correctly.
    *
@@ -1067,16 +998,15 @@ export class AcTrLayout {
    *
    * Inserts a root bounding box for coarse queries and, when child geometry is
    * available, builds a child-level index so snapping and fine-grained spatial
-   * queries can resolve sub-entities (for example block references).
+   * queries can resolve sub-entities (for example group children).
    *
    * Root bounds are chosen in this order:
    * 1. Union of {@link getSpatialIndexChildBoxes} when precomputed child boxes
    *    are attached to `entity.userData`.
-   * 2. Union of `AcTrGroup.wcsChildBoxes` when the entity is a block group.
+   * 2. Union of `AcTrGroup.wcsChildBoxes` when the entity is a group.
    * 3. The entity's own `wcsBbox` as a fallback.
    *
-   * Child indexing uses `ensureChildIndex` for userData child boxes (typical of
-   * INSERT paths split across layers) or `createChildIndex` for a single
+   * Child indexing uses `ensureChildIndex` for userData child boxes or `createChildIndex` for a single
    * `AcTrGroup` hierarchy.
    *
    * @param entity - The render entity to index. Called from
@@ -1085,23 +1015,6 @@ export class AcTrLayout {
    */
   private registerEntitySpatialIndex(entity: AcTrEntity) {
     if (this.skipSpatialIndex) {
-      return
-    }
-    const lazyChildren = (
-      entity.userData as { lazySpatialChildren?: AcTrLazySpatialChildren }
-    ).lazySpatialChildren
-    if (lazyChildren && lazyChildren.boxes.length > 0) {
-      const rootBox = {
-        minX: entity.wcsBbox.min.x,
-        minY: entity.wcsBbox.min.y,
-        maxX: entity.wcsBbox.max.x,
-        maxY: entity.wcsBbox.max.y,
-        id: entity.objectId
-      }
-      if (isFiniteSpatialBBox(rootBox)) {
-        this._spatialIndex.insert(rootBox)
-      }
-      this._spatialIndex.setLazyChildSource(entity.objectId, lazyChildren)
       return
     }
     const spatialIndexChildBoxes = this.getSpatialIndexChildBoxes(entity)
@@ -1167,9 +1080,7 @@ export class AcTrLayout {
       }
     }
 
-    // Some INSERT rendering paths split one block reference into multiple layer
-    // groups (AcTrEntity instead of AcTrGroup). Keep child-box index via userData
-    // so object snap can still resolve gsMark to sub-entities.
+    // Keep the child-box index via userData so object snap can still resolve gsMark to sub-entities.
     // ensureChildIndex may still register a finite root from child unions when
     // the coarse root above was skipped.
     if (spatialIndexChildBoxes) {
@@ -1178,7 +1089,7 @@ export class AcTrLayout {
         spatialIndexChildBoxes
       )
     } else if (entity instanceof AcTrGroup) {
-      // If it is one block group, build spatial index for entities in this block.
+      // If it is one group, build spatial index for entities in this group.
       this._spatialIndex.createChildIndex(entity)
     }
   }

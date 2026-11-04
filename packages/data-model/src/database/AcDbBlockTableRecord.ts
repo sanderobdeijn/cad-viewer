@@ -421,13 +421,6 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
       item.ownerId = this.objectId
       item.resolveEffectiveProperties()
       this._entities.push(item)
-      if (
-        item.dxfTypeName === 'INSERT' &&
-        'syncAttributeDatabases' in item &&
-        typeof item.syncAttributeDatabases === 'function'
-      ) {
-        item.syncAttributeDatabases()
-      }
     }
 
     const entitiesToAppend = Array.isArray(entity) ? entity : [entity]

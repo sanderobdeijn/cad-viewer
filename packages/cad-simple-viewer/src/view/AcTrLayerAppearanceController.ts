@@ -70,7 +70,7 @@ export class AcTrLayerAppearanceController {
   }
 
   /**
-   * Rebinds text materials after INSERT groups are split/reparented or when the
+   * Rebinds text materials after groups are split/reparented or when the
    * canvas background changes (ACI-7 foreground inversion).
    *
    * @param root - Object subtree to traverse for text refresh hooks.
@@ -95,7 +95,7 @@ export class AcTrLayerAppearanceController {
   }
 
   /**
-   * Builds resolved layer traits used when syncing appearance or remapping INSERT layers.
+   * Builds resolved layer traits used when syncing appearance.
    *
    * Reads the active draw database from {@link AcTrRenderer.context} unless a custom
    * resolver was supplied to the constructor.

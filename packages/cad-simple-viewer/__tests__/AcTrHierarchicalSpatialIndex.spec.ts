@@ -61,9 +61,9 @@ import { AcTrHierarchicalSpatialIndex } from '../src/spatialIndex/AcTrHierarchic
 describe('AcTrHierarchicalSpatialIndex', () => {
   test('does not pollute child index with root item when objectId is reused', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT_ID'
+    const groupId = 'GROUP_ID'
 
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       {
         minX: 1,
         minY: 1,
@@ -78,7 +78,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
       minY: 0,
       maxX: 10,
       maxY: 10,
-      id: insertId
+      id: groupId
     })
 
     const hits = spatialIndex.search({
@@ -89,7 +89,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
     })
 
     expect(hits).toHaveLength(1)
-    expect(hits[0].id).toBe(insertId)
+    expect(hits[0].id).toBe(groupId)
     expect(hits[0].children?.map((item: { id: string }) => item.id)).toEqual([
       'SUB_ENTITY_ID'
     ])
@@ -97,16 +97,16 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('passes through the registered root bbox and attaches child hits', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-7B33'
+    const groupId = 'GROUP-7B33'
 
     spatialIndex.insert({
       minX: 394,
       minY: 0,
       maxX: 574,
       maxY: 56,
-      id: insertId
+      id: groupId
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 394, minY: 0, maxX: 574, maxY: 56, id: 'line-1' }
     ])
 
@@ -125,16 +125,16 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('syncs root bbox when ensureChildIndex loads after stale insert', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-stale'
+    const groupId = 'GROUP-stale'
 
     spatialIndex.insert({
       minX: -180,
       minY: 0,
       maxX: 574,
       maxY: 56,
-      id: insertId
+      id: groupId
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 394, minY: 0, maxX: 574, maxY: 56, id: 'line-1' }
     ])
 
@@ -150,9 +150,9 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('surfaces stale root via empty children when insert overwrites synced root', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-stale-after'
+    const groupId = 'GROUP-stale-after'
 
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 394, minY: 0, maxX: 574, maxY: 56, id: 'line-1' }
     ])
     spatialIndex.insert({
@@ -160,7 +160,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
       minY: 0,
       maxX: 574,
       maxY: 56,
-      id: insertId
+      id: groupId
     })
 
     const hits = spatialIndex.search({
@@ -184,7 +184,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
         minY: 0,
         maxX: 10,
         maxY: 10,
-        id: 'INSERT-1',
+        id: 'GROUP-1',
         children: []
       })
     ).toBe(false)
@@ -201,19 +201,19 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('syncs root bbox when ensureChildIndex reloads child items', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-reload-root'
+    const groupId = 'GROUP-reload-root'
 
     spatialIndex.insert({
       minX: 0,
       minY: 0,
       maxX: 100,
       maxY: 10,
-      id: insertId
+      id: groupId
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 0, minY: 0, maxX: 50, maxY: 10, id: 'old-line' }
     ])
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 50, minY: 0, maxX: 100, maxY: 10, id: 'new-line' }
     ])
 
@@ -238,19 +238,19 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('reloads child items when ensureChildIndex is called again for the same id', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-reload'
+    const groupId = 'GROUP-reload'
 
     spatialIndex.insert({
       minX: 0,
       minY: 0,
       maxX: 100,
       maxY: 10,
-      id: insertId
+      id: groupId
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 0, minY: 0, maxX: 50, maxY: 10, id: 'old-line' }
     ])
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 50, minY: 0, maxX: 100, maxY: 10, id: 'new-line' }
     ])
 
@@ -267,16 +267,16 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('window search requires every indexed child to fit inside the pick box', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-window'
+    const groupId = 'GROUP-window'
 
     spatialIndex.insert({
       minX: 0,
       minY: 0,
       maxX: 300,
       maxY: 10,
-      id: insertId
+      id: groupId
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 0, minY: 0, maxX: 100, maxY: 10, id: 'line-left' },
       { minX: 200, minY: 0, maxX: 300, maxY: 10, id: 'line-right' }
     ])
@@ -295,7 +295,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
       { selectionMode: 'window' }
     )
     expect(windowAllInside).toHaveLength(1)
-    expect(windowAllInside[0].id).toBe(insertId)
+    expect(windowAllInside[0].id).toBe(groupId)
   })
 
   test('keeps every multi-region hatch island pickable when child boxes share empty ids', () => {
@@ -347,14 +347,14 @@ describe('AcTrHierarchicalSpatialIndex', () => {
 
   test('getStats aggregates root and child item counts with estimated bytes', () => {
     const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const insertId = 'INSERT-stats'
+    const groupId = 'GROUP-stats'
 
     spatialIndex.insert({
       minX: 0,
       minY: 0,
       maxX: 100,
       maxY: 100,
-      id: insertId
+      id: groupId
     })
     spatialIndex.insert({
       minX: 200,
@@ -363,7 +363,7 @@ describe('AcTrHierarchicalSpatialIndex', () => {
       maxY: 220,
       id: 'SIMPLE'
     })
-    spatialIndex.ensureChildIndex(insertId, [
+    spatialIndex.ensureChildIndex(groupId, [
       { minX: 0, minY: 0, maxX: 10, maxY: 10, id: 'c1' },
       { minX: 20, minY: 20, maxX: 30, maxY: 30, id: 'c2' }
     ])
@@ -375,71 +375,6 @@ describe('AcTrHierarchicalSpatialIndex', () => {
     expect(stats.childIndexCount).toBe(1)
     expect(stats.childItemCount).toBe(2)
     expect(stats.estimatedBytes).toBeGreaterThan(0)
-    expect(
-      (stats.rbushChildCount ?? 0) + (stats.linearChildCount ?? 0)
-    ).toBe(1)
-  })
-
-  it('expands shared block child boxes on search, not at registration', () => {
-    const spatialIndex = new AcTrHierarchicalSpatialIndex()
-    const boxes = [{ minX: 0, minY: 0, maxX: 10, maxY: 10, id: 'part' }]
-    spatialIndex.insert({
-      minX: 100,
-      minY: 0,
-      maxX: 200,
-      maxY: 100,
-      id: 'insert-1'
-    })
-    spatialIndex.setLazyChildSource('insert-1', {
-      boxes,
-      matrix: new THREE.Matrix4().makeTranslation(100, 0, 0)
-    })
-
-    expect(spatialIndex.hasChildIndex('insert-1')).toBe(true)
-    expect(spatialIndex.all().map(item => item.id)).toEqual(['insert-1'])
-
-    expect(
-      spatialIndex.collides({
-        minX: 150,
-        minY: 50,
-        maxX: 151,
-        maxY: 51
-      })
-    ).toBe(false)
-    expect(
-      spatialIndex.collides({
-        minX: 101,
-        minY: 1,
-        maxX: 102,
-        maxY: 2
-      })
-    ).toBe(true)
-
-    const gap = spatialIndex.search({
-      minX: 150,
-      minY: 50,
-      maxX: 151,
-      maxY: 51
-    })
-    expect(gap).toHaveLength(1)
-    expect(gap[0]?.children).toEqual([])
-    expect(isEffectiveSpatialQueryHit(gap[0]!)).toBe(false)
-
-    const hit = spatialIndex.search({
-      minX: 101,
-      minY: 1,
-      maxX: 102,
-      maxY: 2
-    })
-    expect(hit).toHaveLength(1)
-    expect(hit[0]?.children).toHaveLength(1)
-    expect(hit[0]?.children?.[0]).toMatchObject({
-      id: 'part',
-      minX: 100,
-      minY: 0,
-      maxX: 110,
-      maxY: 10
-    })
-    expect(boxes).toEqual([{ minX: 0, minY: 0, maxX: 10, maxY: 10, id: 'part' }])
+    expect((stats.rbushChildCount ?? 0) + (stats.linearChildCount ?? 0)).toBe(1)
   })
 })

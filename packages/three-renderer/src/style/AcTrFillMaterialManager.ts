@@ -11,7 +11,7 @@ export interface AcTrFillMaterialOptions {
   /**
    * Which face the rasteriser keeps.  Defaults to `'front'`.
    *
-   * Mirrored block references (negative-determinant transforms) reverse
+   * Mirrored transforms (negative-determinant transforms) reverse
    * triangle winding, causing `FrontSide` fills to be culled.  The
    * batching layer requests `'back'` for those meshes so the culler
    * keeps the (now CW-wound) triangles — with zero fillrate overhead.

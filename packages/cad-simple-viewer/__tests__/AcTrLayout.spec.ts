@@ -326,11 +326,11 @@ describe('AcTrLayout spatial index', () => {
     return ids
   }
 
-  it('indexes INSERT root bbox from child-box union when aggregate wcsBbox is stale', () => {
+  it('indexes group root bbox from child-box union when aggregate wcsBbox is stale', () => {
     const layout = new AcTrLayout()
     layout.addLayer(createLayerInfo())
 
-    const entity = createEntity('INSERT-1')
+    const entity = createEntity('GROUP-1')
     entity.wcsBbox = new THREE.Box3(
       new THREE.Vector3(-180, 0, 0),
       new THREE.Vector3(574, 56, 0)
@@ -357,16 +357,16 @@ describe('AcTrLayout spatial index', () => {
     } as unknown as import('@mlightcad/data-model').GeometryBox2d)
 
     expect(hits).toHaveLength(1)
-    expect(hits[0].id).toBe('INSERT-1')
+    expect(hits[0].id).toBe('GROUP-1')
     expect(hits[0].minX).toBeCloseTo(394)
     expect(hits[0].maxX).toBeCloseTo(574)
   })
 
-  it('does not window-select INSERT when only part of its geometry fits the pick box', () => {
+  it('does not window-select a group when only part of its geometry fits the pick box', () => {
     const layout = new AcTrLayout()
     layout.addLayer(createLayerInfo())
 
-    const entity = createEntity('INSERT-2')
+    const entity = createEntity('GROUP-2')
     entity.wcsBbox = new THREE.Box3(
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(300, 10, 0)
@@ -406,11 +406,11 @@ describe('AcTrLayout spatial index', () => {
     expect(windowContained).toBe(false)
   })
 
-  it('crossing-selects INSERT when child geometry intersects the pick box', () => {
+  it('crossing-selects a group when child geometry intersects the pick box', () => {
     const layout = new AcTrLayout()
     layout.addLayer(createLayerInfo())
 
-    const entity = createEntity('INSERT-cross')
+    const entity = createEntity('GROUP-cross')
     entity.wcsBbox = new THREE.Box3(
       new THREE.Vector3(-180, 0, 0),
       new THREE.Vector3(574, 56, 0)
@@ -437,15 +437,15 @@ describe('AcTrLayout spatial index', () => {
     } as unknown as import('@mlightcad/data-model').GeometryBox2d
 
     expect(collectBoxSelectionIds(layout, pickBox, 'crossing')).toEqual([
-      'INSERT-cross'
+      'GROUP-cross'
     ])
   })
 
-  it('window-selects INSERT when the child union fits entirely inside the pick box', () => {
+  it('window-selects a group when the child union fits entirely inside the pick box', () => {
     const layout = new AcTrLayout()
     layout.addLayer(createLayerInfo())
 
-    const entity = createEntity('INSERT-window')
+    const entity = createEntity('GROUP-window')
     entity.wcsBbox = new THREE.Box3(
       new THREE.Vector3(-180, 0, 0),
       new THREE.Vector3(574, 56, 0)
@@ -472,7 +472,7 @@ describe('AcTrLayout spatial index', () => {
     } as unknown as import('@mlightcad/data-model').GeometryBox2d
 
     expect(collectBoxSelectionIds(layout, pickBox, 'window')).toEqual([
-      'INSERT-window'
+      'GROUP-window'
     ])
   })
 
@@ -590,108 +590,10 @@ describe('AcTrLayout entity preview helpers', () => {
   })
 })
 
-describe('AcTrLayout insert layer freeze', () => {
+describe('AcTrLayout compare display', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockRemoveEntity.mockReturnValue(false)
-  })
-
-  it('hides other-layer INSERT fragments when the INSERT layer is frozen', () => {
-    const layout = new AcTrLayout()
-    layout.addLayer(createLayerInfo('Wall'))
-    layout.addLayer(createLayerInfo('DIM'))
-
-    const onWall = createEntity('insert-a', 'Wall')
-    onWall.userData.insertLayerName = 'Wall'
-    const onDim = createEntity('insert-a', 'DIM')
-    onDim.userData.insertLayerName = 'Wall'
-    layout.addEntity(onWall)
-    layout.addEntity(onDim)
-
-    const wall = layout.getLayer('Wall')!
-    const dim = layout.getLayer('DIM')!
-    jest.spyOn(wall, 'hasEntity').mockReturnValue(true)
-    jest.spyOn(dim, 'hasEntity').mockReturnValue(true)
-    const dimSetVisible = jest
-      .spyOn(dim, 'setEntityVisible')
-      .mockReturnValue(true)
-    const wallSetVisible = jest
-      .spyOn(wall, 'setEntityVisible')
-      .mockReturnValue(true)
-
-    expect(layout.applyInsertLayerFreeze('Wall', true)).toEqual(['insert-a'])
-    expect(dimSetVisible).toHaveBeenCalledWith('insert-a', false)
-    expect(wallSetVisible).not.toHaveBeenCalled()
-
-    dimSetVisible.mockClear()
-    expect(layout.applyInsertLayerFreeze('Wall', false)).toEqual(['insert-a'])
-    expect(dimSetVisible).toHaveBeenCalledWith('insert-a', true)
-  })
-
-  it('does not hide fragments when freezing a content layer that is not the INSERT layer', () => {
-    const layout = new AcTrLayout()
-    layout.addLayer(createLayerInfo('Wall'))
-    layout.addLayer(createLayerInfo('DIM'))
-
-    const onWall = createEntity('insert-a', 'Wall')
-    onWall.userData.insertLayerName = 'Wall'
-    const onDim = createEntity('insert-a', 'DIM')
-    onDim.userData.insertLayerName = 'Wall'
-    layout.addEntity(onWall)
-    layout.addEntity(onDim)
-
-    const wall = layout.getLayer('Wall')!
-    const dim = layout.getLayer('DIM')!
-    jest.spyOn(wall, 'hasEntity').mockReturnValue(true)
-    jest.spyOn(dim, 'hasEntity').mockReturnValue(true)
-    const wallSetVisible = jest
-      .spyOn(wall, 'setEntityVisible')
-      .mockReturnValue(true)
-
-    expect(layout.applyInsertLayerFreeze('DIM', true)).toEqual([])
-    expect(wallSetVisible).not.toHaveBeenCalled()
-  })
-
-  it('hides a sole other-layer INSERT fragment when the INSERT layer is frozen', () => {
-    // INSERT on Wall with nested content only on DIM (no Wall bucket).
-    const layout = new AcTrLayout()
-    layout.addLayer(createLayerInfo('Wall'))
-    layout.addLayer(createLayerInfo('DIM'))
-
-    const onDim = createEntity('insert-a', 'DIM')
-    onDim.userData.insertLayerName = 'Wall'
-    layout.addEntity(onDim)
-
-    const dim = layout.getLayer('DIM')!
-    jest.spyOn(dim, 'hasEntity').mockReturnValue(true)
-    const dimSetVisible = jest
-      .spyOn(dim, 'setEntityVisible')
-      .mockReturnValue(true)
-
-    expect(layout.applyInsertLayerFreeze('Wall', true)).toEqual(['insert-a'])
-    expect(dimSetVisible).toHaveBeenCalledWith('insert-a', false)
-
-    dimSetVisible.mockClear()
-    expect(layout.applyInsertLayerFreeze('Wall', false)).toEqual(['insert-a'])
-    expect(dimSetVisible).toHaveBeenCalledWith('insert-a', true)
-  })
-
-  it('no-ops when the INSERT only has a fragment on its own layer', () => {
-    const layout = new AcTrLayout()
-    layout.addLayer(createLayerInfo('Wall'))
-
-    const onWall = createEntity('insert-a', 'Wall')
-    onWall.userData.insertLayerName = 'Wall'
-    layout.addEntity(onWall)
-
-    const wall = layout.getLayer('Wall')!
-    jest.spyOn(wall, 'hasEntity').mockReturnValue(true)
-    const wallSetVisible = jest
-      .spyOn(wall, 'setEntityVisible')
-      .mockReturnValue(true)
-
-    expect(layout.applyInsertLayerFreeze('Wall', true)).toEqual([])
-    expect(wallSetVisible).not.toHaveBeenCalled()
   })
 
   it('replays compare-display options onto layers created after setCompareDisplay', () => {

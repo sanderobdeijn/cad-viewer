@@ -73,7 +73,7 @@ describe('AcTrMText wcsBbox', () => {
     const box = host.computeGeometryBox()
 
     // Geometry is at local (10,20); parent translation must not be baked into
-    // wcsBbox or INSERT spatial refresh would apply that transform twice.
+    // wcsBbox or a group spatial refresh would apply that transform twice.
     expect(box.min.x).toBeCloseTo(10)
     expect(box.min.y).toBeCloseTo(20)
     expect(box.max.x).toBeCloseTo(14)
@@ -216,7 +216,7 @@ describe('AcTrMText', () => {
     expect(placementRoot.children).toHaveLength(2)
   })
 
-  it('folds inverse INSERT matrix into WCS placement so mirrored scales stay local', () => {
+  it('folds a pre-draw matrix into placement so mirrored scales stay local', () => {
     const context = new AcTrRenderContext(new AcTrStyleManager(), unbatchPolicy)
     const insert = new THREE.Object3D()
     // Thin mirrored Y — THREE.Matrix4.decompose cannot represent this inverse.
@@ -280,7 +280,7 @@ describe('AcTrMText', () => {
     )
   })
 
-  it('keeps mirrored INSERT glyph world positions after batch flatten', () => {
+  it('keeps mirrored glyph world positions after batch flatten', () => {
     const context = new AcTrRenderContext(new AcTrStyleManager(), batchPolicy)
     const insert = new THREE.Object3D()
     insert.position.set(592909.8248335773, 3124651.1516687754, 0)
@@ -328,23 +328,6 @@ describe('AcTrMText', () => {
       expect(world.x).toBeCloseTo(expectedGlyphWorld[i].x, 1)
       expect(world.y).toBeCloseTo(expectedGlyphWorld[i].y, 1)
     }
-  })
-
-  it('fastDeepClone keeps AcTrMText so INSERT clones can still asyncDraw', () => {
-    const context = new AcTrRenderContext(new AcTrStyleManager(), batchPolicy)
-    const entity = new AcTrMText(
-      { text: 'Hello', position: { x: 1, y: 2, z: 3 } } as never,
-      { layer: '0', color: 7 } as never,
-      { font: 'simsun' } as never,
-      context
-    )
-    entity.objectId = 'mtext-1'
-
-    const cloned = entity.fastDeepClone()
-
-    expect(cloned).toBeInstanceOf(AcTrMText)
-    expect(cloned.objectId).toBe('mtext-1')
-    expect(cloned.hasDrawableGeometry()).toBe(false)
   })
 })
 

@@ -57,10 +57,7 @@ import { AcCmColor, GeometryBox2d } from '@mlightcad/data-model'
 import type { AcTrEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
-import {
-  assertGroupWcsBboxesConsistent,
-  unionGroupWcsChildBoxes
-} from '../src/view/AcTrGroupWcsBboxAssert'
+import { unionGroupWcsChildBoxes } from '../src/view/AcTrGroupWcsBboxAssert'
 import { AcTrLayout } from '../src/view/AcTrLayout'
 
 function createLayerInfo(name: string) {
@@ -72,7 +69,7 @@ function createLayerInfo(name: string) {
   }
 }
 
-function createHandleGroupEntity(
+function createGroupEntity(
   objectId: string,
   layerName: string,
   wcsBbox: THREE.Box3,
@@ -100,22 +97,6 @@ function createHandleGroupEntity(
 }
 
 describe('AcTrGroupWcsBboxAssert', () => {
-  it('passes when wcsBbox equals the union of wcsChildBoxes', () => {
-    const group = {
-      wcsBbox: new THREE.Box3(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(10, 15, 0)
-      ),
-      wcsChildBoxes: [
-        { minX: 0, minY: 0, maxX: 10, maxY: 0, id: 'line-a' },
-        { minX: 2, minY: 5, maxX: 8, maxY: 15, id: 'line-b' }
-      ]
-    }
-
-    expect(() => assertGroupWcsBboxesConsistent(group)).not.toThrow()
-    expect(unionGroupWcsChildBoxes(group).min).toMatchObject({ x: 0, y: 0 })
-  })
-
   it('skips non-finite child boxes when unioning wcsChildBoxes', () => {
     const group = {
       wcsBbox: new THREE.Box3(
@@ -137,44 +118,11 @@ describe('AcTrGroupWcsBboxAssert', () => {
     expect(unionGroupWcsChildBoxes(group).min).toMatchObject({ x: 0, y: 0 })
     expect(unionGroupWcsChildBoxes(group).max).toMatchObject({ x: 10, y: 5 })
   })
-
-  it('throws when wcsBbox diverges from wcsChildBoxes', () => {
-    const group = {
-      wcsBbox: new THREE.Box3(
-        new THREE.Vector3(999, 999, 0),
-        new THREE.Vector3(10, 5, 0)
-      ),
-      wcsChildBoxes: [{ minX: 0, minY: 0, maxX: 10, maxY: 5, id: 'line-a' }]
-    }
-
-    expect(() => assertGroupWcsBboxesConsistent(group)).toThrow(
-      /does not match wcsChildBoxes union/
-    )
-  })
-
-  it('skips oversized groups on the open hot path', () => {
-    const wcsChildBoxes = Array.from({ length: 3000 }, (_, i) => ({
-      minX: i,
-      minY: 0,
-      maxX: i + 1,
-      maxY: 1,
-      id: `child-${i}`
-    }))
-    const group = {
-      wcsBbox: new THREE.Box3(
-        new THREE.Vector3(999, 999, 0),
-        new THREE.Vector3(1000, 1000, 0)
-      ),
-      wcsChildBoxes
-    }
-
-    expect(() => assertGroupWcsBboxesConsistent(group)).not.toThrow()
-  })
 })
 
-describe('handleGroup WCS spatial index registration', () => {
+describe('group WCS spatial index registration', () => {
   it('indexes pre-transformed WCS bounds without applying group.matrix again', () => {
-    const insertWcsBbox = new THREE.Box3(
+    const groupWcsBbox = new THREE.Box3(
       new THREE.Vector3(100, 200, 0),
       new THREE.Vector3(115, 210, 0)
     )
@@ -183,15 +131,10 @@ describe('handleGroup WCS spatial index registration', () => {
       { minX: 105, minY: 205, maxX: 115, maxY: 210, id: 'line-l2' }
     ]
 
-    assertGroupWcsBboxesConsistent({
-      wcsBbox: insertWcsBbox,
-      wcsChildBoxes: spatialIndexChildBoxes
-    })
-
-    const entity = createHandleGroupEntity(
-      'INSERT-1',
+    const entity = createGroupEntity(
+      'GROUP-1',
       'L2',
-      insertWcsBbox,
+      groupWcsBbox,
       spatialIndexChildBoxes
     )
 
@@ -206,7 +149,7 @@ describe('handleGroup WCS spatial index registration', () => {
     const hits = layout.search(queryBox)
 
     expect(hits).toHaveLength(1)
-    expect(hits[0].id).toBe('INSERT-1')
+    expect(hits[0].id).toBe('GROUP-1')
     expect(hits[0].children?.map(item => item.id)).toEqual(['line-l2'])
   })
 
@@ -215,10 +158,10 @@ describe('handleGroup WCS spatial index registration', () => {
       new THREE.Vector3(100, 200, 0),
       new THREE.Vector3(110, 205, 0)
     )
-    const insertMatrix = new THREE.Matrix4().makeTranslation(100, 200, 0)
+    const groupMatrix = new THREE.Matrix4().makeTranslation(100, 200, 0)
 
     const wronglyTransformed = wcsBbox.clone()
-    wronglyTransformed.applyMatrix4(insertMatrix)
+    wronglyTransformed.applyMatrix4(groupMatrix)
 
     expect(wronglyTransformed.min.x).toBeCloseTo(200)
     expect(wcsBbox.min.x).toBeCloseTo(100)

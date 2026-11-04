@@ -185,18 +185,13 @@ export class AcTrStyleManager {
     layerColor?: AcCmColor,
     layerColorRgb?: number
   ): THREE.Material {
-    return this.fillMgr.getMaterial(
-      traits,
-      {},
-      layerColorRgb,
-      layerColor
-    )
+    return this.fillMgr.getMaterial(traits, {}, layerColorRgb, layerColor)
   }
 
   /**
    * Returns a `BackSide` variant of the given fill material.
    *
-   * Mirrored block references (transforms with negative determinant)
+   * Mirrored transforms (negative determinant)
    * reverse triangle winding.  Instead of paying `DoubleSide` for every
    * fill in the scene, the batching layer calls this method only for
    * meshes that actually need it.  The variant is cached so repeated
@@ -231,8 +226,7 @@ export class AcTrStyleManager {
   /**
    * Returns a cached material bound to an effective layer without changing symbolic traits.
    *
-   * This is used when block contents authored on layer `0` inherit the layer of the INSERT that
-   * owns them. The returned material keeps the same appearance now, but future layer updates
+   * The returned material keeps the same appearance now, but future layer updates
    * will target the effective layer instead of the source layer.
    *
    * @param material - Existing material used by a rendered object.
@@ -293,4 +287,3 @@ export class AcTrStyleManager {
     this.lineMgr.updateResolution()
   }
 }
-

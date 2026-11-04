@@ -1,7 +1,6 @@
 export * from './AcTrEntity'
 export * from './AcTrGlyphEntity'
 export * from './AcTrGroup'
-export * from './AcTrGroupCompactor'
 export * from './AcTrLine'
 export * from './AcTrLineGeometryBuilder'
 export * from './AcTrLineSegments'

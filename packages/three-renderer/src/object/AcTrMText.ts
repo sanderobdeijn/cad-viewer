@@ -157,25 +157,4 @@ export class AcTrMText extends AcTrGlyphEntity {
   protected override describeRenderFailure() {
     return `mtext '${this._text.text}'`
   }
-
-  /**
-   * Preserves MTEXT payload across INSERT template clones.
-   *
-   * {@link AcTrEntity.fastDeepClone} would otherwise create a plain
-   * {@link AcTrEntity} shell that can no longer {@link asyncDraw} glyphs.
-   */
-  override fastDeepClone(shareGeometry: boolean = false) {
-    const cloned = new AcTrMText(
-      {
-        ...this._text,
-        position: { ...this._text.position }
-      },
-      this.traitsForClone(),
-      { ...this._style },
-      this.renderContext
-    )
-    cloned.copyGlyphIdentity(this)
-    this.copyGeometry(this, cloned, shareGeometry)
-    return cloned
-  }
 }

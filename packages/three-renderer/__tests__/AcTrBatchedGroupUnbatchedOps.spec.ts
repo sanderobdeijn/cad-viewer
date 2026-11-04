@@ -182,7 +182,7 @@ describe('AcTrBatchedGroup unbatched operations', () => {
     expect(group.isIntersectWith('mtext-1', raycaster)).toBe(true)
   })
 
-  it('keeps a scaled INSERT matrix on an unbatched image mesh', () => {
+  it('keeps a scaled matrix on an unbatched image mesh', () => {
     const group = new AcTrBatchedGroup()
     const mesh = createGlyphMesh(2728, 14861, 1630)
     getSceneDrawableUserData(mesh).noBatch = true

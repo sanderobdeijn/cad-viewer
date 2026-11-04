@@ -23,10 +23,11 @@ export * from './renderer'
 export * from './viewport'
 export * from './style/AcTrMaterialMetadata'
 export { AcTrLinePatternShaders } from './style/AcTrLinePatternShaders'
-export { AcTrStyleManager, type AcTrStyleManagerStats } from './style/AcTrStyleManager'
 export {
-  type AcTrMaterialCacheStats
-} from './style/AcTrMaterialManager'
+  AcTrStyleManager,
+  type AcTrStyleManagerStats
+} from './style/AcTrStyleManager'
+export { type AcTrMaterialCacheStats } from './style/AcTrMaterialManager'
 export * from './util/AcTrMTextColorUtil'
 export { AcTrMatrixUtil } from './util/AcTrMatrixUtil'
 export {
@@ -42,4 +43,3 @@ export {
   type AcTrHighlightOverlayGroupUserData
 } from './util/AcTrObjectUserData'
 export { isObjectHierarchyVisible } from './util/AcTrVisibility'
-export { effectiveLayer } from './util/AcTrEffectiveLayer'

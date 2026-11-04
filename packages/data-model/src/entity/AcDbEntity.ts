@@ -182,7 +182,7 @@ export abstract class AcDbEntity extends AcDbObject {
   }
 
   /**
-   * Default ByLayer / ByBlock colour resolution for entities without an INSERT owner.
+   * Default ByLayer / ByBlock colour resolution.
    */
   protected resolveStandardColor() {
     let color = this.color
@@ -192,11 +192,9 @@ export abstract class AcDbEntity extends AcDbObject {
         color = layerColor
       }
     } else if (color.isByBlock) {
-      // AutoCAD / ODA: ByBlock without an INSERT owner displays as ACI 7
+      // AutoCAD / ODA: ByBlock outside a block displays as ACI 7
       // (foreground / black-white), not CECOLOR. CECOLOR only seeds newly
-      // created entities. Nested block ByBlock colours are applied during
-      // block rendering; attributes override this method to resolve against
-      // their owning INSERT.
+      // created entities.
       color = new AcCmColor().setForeground()
     }
     return color
@@ -572,13 +570,10 @@ export abstract class AcDbEntity extends AcDbObject {
    * @param pickPoint - The pick point
    * @param lastPoint - The last point
    * @param snapPoints - Array to populate with snap points
-   * @param gsMark - The object id of subentity. For now, it is used by INSERT
-   * entity only. In AutoCAD, it uses AcGiSubEntityTraits::setSelectionMarkerInput
+   * @param gsMark - The object id of subentity. In AutoCAD, it uses AcGiSubEntityTraits::setSelectionMarkerInput
    * to set GS marker of the subentity involved in the object snap operation. For
    * now, we don't provide such a GS marker mechanism yet. So passed id of subentity
    * as GS marker. Maybe this behavior will change in the future.
-   * @param insertionMat - Cumulative insertion transform matrix from nested block
-   * references. This parameter is primarily used by INSERT entities.
    *
    * @example
    * ```typescript
@@ -596,9 +591,7 @@ export abstract class AcDbEntity extends AcDbObject {
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
     snapPoints: GeometryPoint2dLike[],
     // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    gsMark?: AcDbObjectId,
-    // @ts-expect-error not use '_' prefix so that typedoc can the correct parameter to generate doc
-    insertionMat?: GeometryMatrix3d
+    gsMark?: AcDbObjectId
   ) {}
 
   /**

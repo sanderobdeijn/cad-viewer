@@ -20,7 +20,7 @@ function createEntity(
 }
 
 describe('AcTrBatchedGroup layer style rebind', () => {
-  it('rebindMaterialsForLayer respects runtime objectLayerName for INSERT inheritance', () => {
+  it('rebindMaterialsForLayer respects runtime objectLayerName for moved drawables', () => {
     const group = new AcTrBatchedGroup()
     const sourceMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff })
     setMaterialMetadata(sourceMaterial, {
@@ -30,7 +30,7 @@ describe('AcTrBatchedGroup layer style rebind', () => {
     })
 
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), sourceMaterial)
-    mesh.userData.layerName = 'INSERT'
+    mesh.userData.layerName = 'MOVED'
     getSceneDrawableUserData(mesh).noBatch = true
 
     group.addEntity(createEntity('insert-mesh', mesh))
@@ -48,7 +48,7 @@ describe('AcTrBatchedGroup layer style rebind', () => {
 
     const reboundMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 })
     setMaterialMetadata(reboundMaterial, {
-      layer: 'INSERT',
+      layer: 'MOVED',
       materialKey: 'insert',
       isByLayerColor: true
     })
@@ -56,8 +56,8 @@ describe('AcTrBatchedGroup layer style rebind', () => {
     const getLayerBoundMaterial = jest.fn(() => reboundMaterial)
 
     group.rebindMaterialsForLayer(
-      'INSERT',
-      { layer: 'INSERT' },
+      'MOVED',
+      { layer: 'MOVED' },
       getLayerBoundMaterial
     )
 
@@ -92,11 +92,7 @@ describe('AcTrBatchedGroup layer style rebind', () => {
 
     let targetMesh: THREE.Mesh | undefined
     group.traverse(child => {
-      if (
-        targetMesh ||
-        !(child instanceof THREE.Mesh) ||
-        child === mesh
-      ) {
+      if (targetMesh || !(child instanceof THREE.Mesh) || child === mesh) {
         return
       }
       if (child.geometry instanceof THREE.PlaneGeometry) {
@@ -138,7 +134,7 @@ describe('AcTrBatchedGroup layer style rebind', () => {
     })
 
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), sourceMaterial)
-    mesh.userData.layerName = 'INSERT'
+    mesh.userData.layerName = 'MOVED'
     getSceneDrawableUserData(mesh).noBatch = true
 
     group.addEntity(createEntity('insert-mesh', mesh))
@@ -152,8 +148,8 @@ describe('AcTrBatchedGroup layer style rebind', () => {
     const fullTraverse = jest.spyOn(group, 'traverse')
 
     group.syncAppearanceFromRecord(
-      'INSERT',
-      { layer: 'INSERT' },
+      'MOVED',
+      { layer: 'MOVED' },
       {},
       false,
       getLayerBoundMaterial,

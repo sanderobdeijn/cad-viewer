@@ -51,7 +51,7 @@ describe('layer material remap fan-out', () => {
     expect(updateMaterial).toHaveBeenCalledWith(oldMaterial.id, newMaterial)
   })
 
-  it('rebinds unbatched drawables via objectLayerName after INSERT inheritance', () => {
+  it('rebinds unbatched drawables via objectLayerName when the drawable moved layer', () => {
     const oldMaterial = new THREE.LineBasicMaterial({ color: 0xffffff })
     setMaterialMetadata(oldMaterial, {
       layer: '0',
@@ -62,14 +62,14 @@ describe('layer material remap fan-out', () => {
     const materials: Record<number, THREE.Material> = {}
 
     const wallLayer = new AcTrLayer({
-      name: 'INSERT',
+      name: 'MOVED',
       isFrozen: false,
       isOff: false,
       color: new AcCmColor()
     })
 
     const line = new THREE.Line(new THREE.BufferGeometry(), oldMaterial)
-    line.userData.layerName = 'INSERT'
+    line.userData.layerName = 'MOVED'
     getSceneDrawableUserData(line).noBatch = true
 
     const entity = new AcTrEntity(new AcTrRenderContext())
@@ -100,8 +100,8 @@ describe('layer material remap fan-out', () => {
     } as unknown as AcTrRenderer
 
     wallLayer.syncAppearanceFromRecord(
-      'INSERT',
-      { layer: 'INSERT' },
+      'MOVED',
+      { layer: 'MOVED' },
       materials,
       renderer
     )

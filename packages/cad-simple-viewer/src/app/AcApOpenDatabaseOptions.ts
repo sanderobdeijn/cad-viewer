@@ -1,7 +1,4 @@
-import {
-  AcCmColor,
-  AcDbOpenDatabaseOptions
-} from '@mlightcad/data-model'
+import { AcCmColor, AcDbOpenDatabaseOptions } from '@mlightcad/data-model'
 
 import { AcEdOpenMode } from '../editor/view'
 
@@ -83,7 +80,7 @@ export interface AcApOpenDatabaseOptions extends Omit<
    *
    * - `false` (default): conversion still runs asynchronously, but the canvas
    *   is not redrawn until every entity is converted. The open-file overlay
-   *   stays up until deferred text / INSERT glyph jobs finish
+   *   stays up until deferred text glyph jobs finish
    *   ({@link AcTrView2d.isProcessingEntities}).
    * - `true`: entity conversion yields across event-loop turns so geometry
    *   paints as batches land and the camera can reframe. The canvas overlay
@@ -101,7 +98,7 @@ export interface AcApOpenDatabaseOptions extends Omit<
   /**
    * @deprecated Ignored. Both stages of progressive rendering — mid-open
    * paints during entity convert, and whether the open overlay waits for
-   * deferred text / INSERT glyph geometry — are controlled by
+   * deferred text glyph geometry — are controlled by
    * {@link progressiveRendering}.
    *
    * This option used to control only the text stage (`true` kept

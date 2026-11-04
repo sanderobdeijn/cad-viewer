@@ -16,15 +16,15 @@ describe('followsLayerStyle', () => {
     expect(followsLayerStyle(material, 'WALL')).toBe(true)
   })
 
-  it('returns true when objectLayerName matches after INSERT inheritance', () => {
+  it('returns true when objectLayerName matches after moving layer', () => {
     const material = new THREE.LineBasicMaterial()
     setMaterialMetadata(material, {
       layer: '0',
       isByLayerColor: true
     })
 
-    expect(followsLayerStyle(material, 'INSERT', 'INSERT')).toBe(true)
-    expect(followsLayerStyle(material, 'INSERT')).toBe(false)
+    expect(followsLayerStyle(material, 'MOVED', 'MOVED')).toBe(true)
+    expect(followsLayerStyle(material, 'MOVED')).toBe(false)
   })
 
   it('returns false for explicit foreground materials', () => {

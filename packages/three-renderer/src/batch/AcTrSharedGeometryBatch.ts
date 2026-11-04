@@ -12,10 +12,10 @@ import { getSceneDrawableUserData } from '../util/AcTrObjectUserData'
 import type { AcTrBatchHighlightKind } from './highlight'
 
 /**
- * Drawable families that can share one block-template geometry across INSERTs.
+ * Drawable families that can share one template geometry across instances.
  *
  * Hairlines, meshes, and points are GPU-instanced. Fat lines (`LineSegments2`)
- * already use segment instancing, so each INSERT keeps its own object and only
+ * already use segment instancing, so each instance keeps its own object and only
  * the geometry buffer is shared.
  */
 export type AcTrSharedGeometryKind = 'line' | 'mesh' | 'points' | 'line2'
@@ -41,14 +41,14 @@ interface InstancedDrawable extends THREE.Object3D {
 }
 
 /**
- * One shared block-template geometry drawn at many INSERT transforms.
+ * One shared template geometry drawn at many transforms.
  *
- * Vertex data is stored once. Each INSERT contributes a matrix (and, for fat
+ * Vertex data is stored once. Each instance contributes a matrix (and, for fat
  * lines, an object that references that buffer) instead of a deep copy.
  */
 export class AcTrSharedGeometryBatch extends THREE.Object3D {
   readonly kind: AcTrSharedGeometryKind
-  /** Template geometry id used to group later INSERTs onto this batch. */
+  /** Template geometry id used to group later instances onto this batch. */
   readonly sourceUuid: string
   private readonly _geometry: THREE.BufferGeometry
   private _material: THREE.Material
@@ -80,7 +80,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
    * @param material - Layer material shared with the style cache.
    * @param origin - World translation used to keep instance matrices small.
    * @param kind - Primitive family of `geometry`.
-   * @param sourceUuid - UUID of the block-template geometry this batch serves.
+   * @param sourceUuid - UUID of the template geometry this batch serves.
    */
   constructor(
     geometry: THREE.BufferGeometry,
@@ -143,7 +143,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
     this.applyMaterialToDrawables(material)
   }
 
-  /** Number of live INSERT slots, including ones hidden but not deleted. */
+  /** Number of live slots, including ones hidden but not deleted. */
   get instanceCount() {
     let count = 0
     for (let i = 0; i < this._count; i++) {
@@ -153,18 +153,14 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   }
 
   /**
-   * Appends one INSERT of this geometry.
+   * Appends one instance of this geometry.
    *
    * @param matrixWorld - World matrix of the drawable leaf.
-   * @param objectId - Database id of the owning INSERT.
+   * @param objectId - Database id of the owning entity.
    * @param bboxOnly - When true, ray tests use the transformed bounds only.
    * @returns Stable slot index.
    */
-  addInstance(
-    matrixWorld: THREE.Matrix4,
-    objectId: string,
-    bboxOnly: boolean
-  ) {
+  addInstance(matrixWorld: THREE.Matrix4, objectId: string, bboxOnly: boolean) {
     const index = this._count
     this.ensureCapacity(index + 1)
     this._count++
@@ -257,11 +253,11 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   optimize() {}
 
   /**
-   * Tints one INSERT by adding a small overlay.
+   * Tints one instance by adding a small overlay.
    *
    * The overlay gets its own geometry clone. A non-instanced mesh that shares
-   * the live instanced buffer makes later draws of every other INSERT of that
-   * template drop out, and each newly selected block loses another template.
+   * the live instanced buffer makes later draws of every other instance of that
+   * template drop out, and each new selection loses another template.
    *
    * @returns `true` when the highlight state changed.
    */
@@ -295,7 +291,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   }
 
   /**
-   * Tints every INSERT slot to the compare / reading-mode base color.
+   * Tints every slot to the compare / reading-mode base color.
    *
    * Shared template geometry has no packed slot uniforms, so the whole
    * drawable (and fat-line objects) swap to a cloned material. Role-specific
@@ -327,7 +323,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   }
 
   /**
-   * Ray-tests one INSERT slot against the shared geometry.
+   * Ray-tests one slot against the shared geometry.
    *
    * @param geometryId - Slot index to test.
    * @param raycaster - World-space ray.
@@ -361,7 +357,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
     }
     const scratch = this._raycastScratch
     // Line/Points raycast divides the world threshold by `object.scale`.
-    // Column lengths stay positive under a mirrored INSERT; Matrix4.decompose
+    // Column lengths stay positive under a mirrored transform; Matrix4.decompose
     // negates one axis and inflates the tolerance by about 3×.
     assignPositiveColumnScale(_full, scratch.scale)
     scratch.matrixWorld.copy(_full)
@@ -375,10 +371,10 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
    *
    * The returned object owns a geometry clone. Sharing the live instanced
    * buffer with a non-instanced overlay makes later draws of every other
-   * INSERT of that template drop out. Callers must dispose the clone.
+   * instance of that template drop out. Callers must dispose the clone.
    *
    * @param batchId - Slot index.
-   * @returns A drawable placed at the INSERT transform, relative to this batch.
+   * @returns A drawable placed at the instance transform, relative to this batch.
    */
   getObjectAt(batchId: number) {
     this.composeLocalMatrix(batchId, _full)
@@ -590,7 +586,8 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   private readRelative(index: number, target: THREE.Matrix4) {
     const saved = this._hiddenMatrices.get(index)
     if (saved) return target.fromArray(saved)
-    if (this._cpuRelative) return target.fromArray(this._cpuRelative, index * 16)
+    if (this._cpuRelative)
+      return target.fromArray(this._cpuRelative, index * 16)
     const attribute = this._drawable?.instanceMatrix
     if (attribute) {
       target.fromArray(attribute.array as Float32Array, index * 16)
@@ -613,7 +610,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
    * World matrix of one slot.
    *
    * Instance matrices are relative to the origin. The instanced drawable's
-   * world matrix already applies that origin, so the product is the INSERT
+   * world matrix already applies that origin, so the product is the instance
    * transform captured at add time.
    */
   private composeFullMatrix(index: number, target: THREE.Matrix4) {
@@ -731,7 +728,10 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
     if (this.kind === 'mesh') return new THREE.Mesh(geometry, material)
     if (this.kind === 'points') return new THREE.Points(geometry, material)
     if (this.kind === 'line2') {
-      return new LineSegments2(geometry as LineSegmentsGeometry, material as never)
+      return new LineSegments2(
+        geometry as LineSegmentsGeometry,
+        material as never
+      )
     }
     return new THREE.LineSegments(geometry, material)
   }
@@ -743,14 +743,17 @@ const _hitPoint = /*@__PURE__*/ new THREE.Vector3()
  * Writes the absolute length of each matrix column into `target`.
  *
  * Line and point raycasts divide the world pick threshold by the average of
- * `object.scale`. A mirrored INSERT has a negative determinant; using the
+ * `object.scale`. A mirrored transform has a negative determinant; using the
  * signed scale from {@link THREE.Matrix4.decompose} makes that average too
  * small and the pick sloppy.
  *
- * @param matrix - World matrix of one INSERT slot.
+ * @param matrix - World matrix of one slot.
  * @param target - Scale vector consumed by the raycast scratch object.
  */
-function assignPositiveColumnScale(matrix: THREE.Matrix4, target: THREE.Vector3) {
+function assignPositiveColumnScale(
+  matrix: THREE.Matrix4,
+  target: THREE.Vector3
+) {
   const e = matrix.elements
   const sx = Math.hypot(e[0], e[1], e[2])
   const sy = Math.hypot(e[4], e[5], e[6])

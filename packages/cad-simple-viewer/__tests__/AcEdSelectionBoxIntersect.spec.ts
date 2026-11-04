@@ -48,7 +48,7 @@ describe('acedLineSegmentIntersectsBox2d', () => {
 })
 
 describe('acedNeedsCrossingGeometryRefine', () => {
-  it('skips INSERT hits that already have child boxes', () => {
+  it('skips group hits that already have child boxes', () => {
     expect(acedNeedsCrossingGeometryRefine({ children: [{ id: 'a' }] })).toBe(
       false
     )

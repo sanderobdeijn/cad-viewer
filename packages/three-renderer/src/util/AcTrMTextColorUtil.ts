@@ -85,7 +85,7 @@ export class AcTrMTextColorUtil {
 
   /**
    * Rebinds only text materials that lost CAD colour semantics (ACI-7 foreground
-   * tracking, INSERT layer inherit). Inline `\C` segments keep their own materials.
+   * tracking). Inline `\C` segments keep their own materials.
    */
   static rematerializeTextHierarchy(
     root: THREE.Object3D,
@@ -217,11 +217,7 @@ export class AcTrMTextColorUtil {
       if (glyphAci === 256) {
         return false
       }
-      if (
-        typeof glyphAci === 'number' &&
-        glyphAci !== 7 &&
-        glyphAci !== 0
-      ) {
+      if (typeof glyphAci === 'number' && glyphAci !== 7 && glyphAci !== 0) {
         return false
       }
       if (glyphColor?.isRgb && typeof glyphColor.rgbValue === 'number') {
