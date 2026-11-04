@@ -40,7 +40,7 @@ export interface AcApSettings {
   isShowRibbon: boolean
   /** Whether the toolbar is visible */
   isShowToolbar: boolean
-  /** Whether the floating shortcut toolbar (undo/redo/erase) is visible */
+  /** Whether the floating shortcut toolbar (erase) is visible */
   isShowShortCutToolbar: boolean
   /** Whether performance statistics are displayed */
   isShowStats: boolean
@@ -128,9 +128,10 @@ const DEFAULT_SETTINGS_LS_KEY = 'settings'
  * @param stored - Parsed localStorage object; not mutated.
  * @returns A copy with `isShowRibbon` filled in and obsolete keys removed.
  */
-export function migrateStoredSettings(
-  stored: Record<string, unknown>
-): { settings: Record<string, unknown>; migrated: boolean } {
+export function migrateStoredSettings(stored: Record<string, unknown>): {
+  settings: Record<string, unknown>
+  migrated: boolean
+} {
   const next = { ...stored }
   let migrated = false
   if (!('isShowRibbon' in next) && typeof next.isShowMainMenu === 'boolean') {

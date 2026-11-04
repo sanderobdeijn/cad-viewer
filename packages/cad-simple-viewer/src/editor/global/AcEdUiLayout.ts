@@ -51,7 +51,7 @@ export const ML_UI_Z_CANVAS_HTML_OVERLAY = 2
 export const ML_UI_Z_DRAW_STYLE_TOOLBAR = 45
 
 /**
- * Z-index for the floating shortcut toolbar (undo/redo/erase + selection extensions).
+ * Z-index for the floating shortcut toolbar (erase + selection extensions).
  *
  * Above draw-style session chrome; below modal dialogs.
  */

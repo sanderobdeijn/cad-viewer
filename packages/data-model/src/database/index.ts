@@ -78,7 +78,6 @@ export {
   AcDbDatabaseTransactionManager,
   AcDbTransaction,
   AcDbTransactionManager,
-  AcDbUndoStack,
   acdbAreChangeContainersEqual,
   acdbCollectChangeEntities,
   acdbCollectDictionaryChanges
@@ -86,8 +85,7 @@ export {
 export type {
   AcDbChangeContainer,
   AcDbDatabaseChange,
-  AcDbDictionaryChangeEntry,
-  AcDbUndoRecord
+  AcDbDictionaryChangeEntry
 } from './transaction'
 export { AcDbTextStyleTable } from './AcDbTextStyleTable'
 export { AcDbTextStyleTableRecord } from './AcDbTextStyleTableRecord'

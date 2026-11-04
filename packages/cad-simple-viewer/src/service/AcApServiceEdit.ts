@@ -1,26 +1,16 @@
 import { AcDbDatabase } from '@mlightcad/data-model'
 
-import { acapRunDatabaseEdit } from '../util/AcApDatabaseEdit'
-
-/** Default undo label for entity edits outside commands. */
-export const ENTITY_EDIT_LABEL = 'Entity'
-
 /**
- * Runs a database mutation with undo support when not already inside a command transaction.
+ * Runs a database mutation in a transaction unless one is already active.
  *
- * When a command has started an undo transaction via {@link AcEdCommand.trigger},
- * the callback runs directly to avoid nested undo marks.
+ * When a command has started a transaction via {@link AcEdCommand.trigger},
+ * the callback runs directly inside it.
  *
  * @param db - Database to mutate.
- * @param label - Undo group label shown in the undo stack.
  * @param fn - Mutation callback.
  * @returns The value returned by `fn`.
  */
-export function acapRunServiceEdit<T>(
-  db: AcDbDatabase,
-  label: string,
-  fn: () => T
-): T {
+export function acapRunServiceEdit<T>(db: AcDbDatabase, fn: () => T): T {
   if (db.transactionManager?.hasTransaction()) {
     return fn()
   }
@@ -28,14 +18,14 @@ export function acapRunServiceEdit<T>(
   if (typeof db.runDatabaseEdit !== 'function') {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
-        `[cad-simple-viewer] acapRunServiceEdit("${label}"): database.runDatabaseEdit is unavailable; mutation ran without undo support.`
+        '[cad-simple-viewer] acapRunServiceEdit: database.runDatabaseEdit is unavailable; running without a transaction.'
       )
     }
     return fn()
   }
 
   let result!: T
-  acapRunDatabaseEdit(db, label, () => {
+  db.runDatabaseEdit(() => {
     result = fn()
   })
   return result

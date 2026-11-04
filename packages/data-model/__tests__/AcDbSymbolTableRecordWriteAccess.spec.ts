@@ -61,7 +61,7 @@ describe('AcDbSymbolTableRecord write access', () => {
       modifiedCount++
     })
 
-    db.transactionManager.runUndoable('Layer Off', () => {
+    db.transactionManager.runInTransaction(() => {
       const opened = db.openObjectForWrite<AcDbLayerTableRecord>(layer.objectId)
       opened!.isOff = true
       expect(modifiedCount).toBe(0)
@@ -85,7 +85,7 @@ describe('AcDbSymbolTableRecord write access', () => {
       payload = args
     })
 
-    db.transactionManager.runUndoable('Layer Color', () => {
+    db.transactionManager.runInTransaction(() => {
       const opened = db.openObjectForWrite<AcDbLayerTableRecord>(layer.objectId)
       opened!.color = nextColor
     })
@@ -185,7 +185,7 @@ describe('AcDbSymbolTableRecord write access', () => {
     expect(layer.isOff).toBe(true)
   })
 
-  it('dispatches layerModified with inverse changes on undo and redo', () => {
+  it('dispatches layerModified with the changed attributes on commit', () => {
     const db = new AcDbDatabase()
     db.createDefaultData()
     const layer = db.tables.layerTable.getAt('0')!
@@ -196,21 +196,11 @@ describe('AcDbSymbolTableRecord write access', () => {
       payloads.push(args)
     })
 
-    db.transactionManager.runUndoable('Layer Off', () => {
+    db.transactionManager.runInTransaction(() => {
       const opened = db.openObjectForWrite<AcDbLayerTableRecord>(layer.objectId)
       opened!.isOff = !wasOff
     })
 
-    expect(payloads).toHaveLength(1)
-    expect(payloads[0].changes.isOff).toBe(!wasOff)
-
-    payloads.length = 0
-    db.transactionManager.undo()
-    expect(payloads).toHaveLength(1)
-    expect(payloads[0].changes.isOff).toBe(wasOff)
-
-    payloads.length = 0
-    db.transactionManager.redo()
     expect(payloads).toHaveLength(1)
     expect(payloads[0].changes.isOff).toBe(!wasOff)
   })

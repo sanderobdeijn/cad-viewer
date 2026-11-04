@@ -112,7 +112,7 @@ Custom Centers should drive their own show/hide from `subscribe` / reactive `not
 
 - Styles use `--ml-ui-*` via `acedApplyUiTheme` / `resolveUiTheme` (same tokens as the shortcut toolbar and command line).
 - **Desktop / pad:** bell at the **canvas** bottom-right by default. Pad opens a **top sheet** (with backdrop) whose width matches the pad session input panel (`ML_UI_SESSION_PANEL_WIDTH`, capped to the canvas host via `calc(100% - ML_UI_SESSION_PANEL_INSET)`).
-- **Phone:** bell is placed **below** the measured shortcut toolbar (so it does not cover undo/redo/erase). The panel is a full-width top sheet + dimmed backdrop, both clipped to the canvas host.
+- **Phone:** bell is placed **below** the measured shortcut toolbar (so it does not cover erase). The panel is a full-width top sheet + dimmed backdrop, both clipped to the canvas host.
 - Override the bell corner with `notificationCenter.placement` or `acapSetNotificationUiPlacement` (`bottom-right` | `bottom-left` | `top-right` | `top-left`).
 - The bell is **not** merged into the shortcut toolbar: notifications are system alerts, not drawing shortcuts; toggling visibility would shift toolbar buttons, and the toolbar can be hidden in settings.
 

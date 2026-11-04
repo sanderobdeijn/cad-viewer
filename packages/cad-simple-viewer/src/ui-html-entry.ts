@@ -91,7 +91,5 @@ export {
   createIconElement,
   ICON_CLOSE,
   ICON_ERASE,
-  ICON_REDO,
-  ICON_TEXT_HEIGHT,
-  ICON_UNDO
+  ICON_TEXT_HEIGHT
 } from './ui/icons'

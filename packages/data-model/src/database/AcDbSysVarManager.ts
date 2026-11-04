@@ -720,7 +720,7 @@ export class AcDbSysVarManager {
    * setters or {@link setVar}. Non-database variables mutate through the cache.
    *
    * @param name - System variable name (normalized internally)
-   * @param oldVal - Value before mutation; recorded for undo when a transaction is active
+   * @param oldVal - Value before mutation; recorded when a transaction is active
    * @param newVal - Value after mutation; used for change detection and event dispatch
    * @param db - Database whose transaction manager governs recording and strict mode
    * @param mutate - Callback that performs the actual value write
@@ -743,7 +743,7 @@ export class AcDbSysVarManager {
       db.transactionManager.recordSysvar(normalizedName, oldVal)
     } else if (
       db.transactionManager.strictMode &&
-      !db.transactionManager.isApplyingUndoRedo()
+      !db.transactionManager.isRollingBack()
     ) {
       throw new Error(
         `Cannot change system variable ${normalizedName} outside an active transaction.`
@@ -753,7 +753,7 @@ export class AcDbSysVarManager {
     mutate()
 
     if (
-      !db.transactionManager.isApplyingUndoRedo() &&
+      !db.transactionManager.isRollingBack() &&
       !db.transactionManager.isRecording()
     ) {
       this.events.sysVarChanged.dispatch({

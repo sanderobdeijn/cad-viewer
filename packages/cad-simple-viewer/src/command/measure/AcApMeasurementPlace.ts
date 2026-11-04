@@ -35,8 +35,8 @@ export function placeMeasurementRecord(
 }
 
 /**
- * Detach any existing measurement with `record.id` and commit a fresh visual.
- * Used by grip edits; wrap with {@link runMeasurementEdit} for undo.
+ * Remove any existing measurement with `record.id` and commit a fresh visual.
+ * Used by grip edits.
  */
 function publishMeasurementRecord(
   view: AcTrView2d,
@@ -46,7 +46,7 @@ function publishMeasurementRecord(
   const ht = view.htmlTransientManager
   const restoreSelection = getSelectedMeasurementId() === record.id
   if (ht.has(record.id)) {
-    ht.detach(record.id)
+    ht.remove(record.id)
   }
   createMeasureEntityFromRecord(record).commit(view, db)
   if (restoreSelection) {

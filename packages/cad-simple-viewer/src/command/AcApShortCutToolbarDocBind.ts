@@ -1,5 +1,5 @@
 /**
- * Wires {@link AcUiShortCutToolbar} to DocManager undo/selection state.
+ * Wires {@link AcUiShortCutToolbar} to DocManager selection state.
  *
  * Kept separate from the UI module so the offline HTML viewer-runtime can
  * import {@link AcUiShortCutToolbar} without pulling DocManager / measure
@@ -10,21 +10,19 @@
  */
 
 import { AcApDocManager } from '../app/AcApDocManager'
-import { eventBus } from '../editor/global/eventBus'
 import type { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import type {
   AcUiShortCutToolbar,
   AcUiShortCutToolbarActionState
 } from '../ui/AcUiShortCutToolbar'
-import { getSessionUndo } from './AcApSessionUndo'
-import { runMeasurementEdit } from './measure/AcApMeasurementHistory'
 import {
   MEASUREMENT_LAYER,
+  runMeasurementEdit,
   subscribeMeasurementSelection
 } from './measure/AcApMeasurementStore'
 
 /**
- * Binds document undo stack, selection, and default command actions to a
+ * Binds document selection and default command actions to a
  * shortcut toolbar. Safe to call after DocManager construction completes.
  *
  * @param toolbar - Toolbar created for a view container.
@@ -38,19 +36,14 @@ export function acapBindShortCutToolbarDocState(
   const resolveActionState = (): AcUiShortCutToolbarActionState => {
     const dm = AcApDocManager.tryGetInstance()
     if (!dm) {
-      return { undo: false, redo: false, erase: false }
+      return { erase: false }
     }
-    const doc = dm.curDocument
     const view = dm.curView
-    const db = doc?.database
-    const canUndo = db != null ? getSessionUndo().canUndo(db) : false
-    const canRedo = db != null ? getSessionUndo().canRedo(db) : false
     const canErase = Boolean(
       view &&
-        (view.selectionSet.count > 0 ||
-          view.htmlTransientManager.hasSelection())
+      (view.selectionSet.count > 0 || view.htmlTransientManager.hasSelection())
     )
-    return { undo: canUndo, redo: canRedo, erase: canErase }
+    return { erase: canErase }
   }
 
   const runErase = () => {
@@ -66,11 +59,12 @@ export function acapBindShortCutToolbarDocState(
           group => group.layer === MEASUREMENT_LAYER
         )
         if (measurements.length > 0) {
-          runMeasurementEdit(view, 'Delete Measurement', () => {
+          runMeasurementEdit(() => {
             for (const group of measurements) {
-              if (ht.detach(group.id)) removed = true
+              ht.remove(group.id)
             }
           })
+          removed = true
         }
       }
       if (removed) {
@@ -98,7 +92,6 @@ export function acapBindShortCutToolbarDocState(
     }
   }
 
-  const onUndoStackChanged = () => toolbar.syncActionState()
   const onDocumentActivated = () => {
     const dm = AcApDocManager.tryGetInstance()
     if (!dm) return
@@ -108,8 +101,6 @@ export function acapBindShortCutToolbarDocState(
   const onSelectionChanged = () => toolbar.syncActionState()
 
   toolbar.setActions({
-    undo: () => AcApDocManager.instance.sendStringToExecute('undo'),
-    redo: () => AcApDocManager.instance.sendStringToExecute('redo'),
     erase: runErase
   })
   toolbar.setActionStateProvider(resolveActionState)
@@ -127,12 +118,10 @@ export function acapBindShortCutToolbarDocState(
     toolbar.syncActionState()
   }
 
-  eventBus.on('undo-stack-changed', onUndoStackChanged)
   const offMeasure = subscribeMeasurementSelection(onSelectionChanged)
   attachDocManager()
 
   return () => {
-    eventBus.off('undo-stack-changed', onUndoStackChanged)
     offMeasure()
     unbindViewSelection?.()
     const dm = AcApDocManager.tryGetInstance()

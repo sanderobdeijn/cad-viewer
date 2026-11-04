@@ -19,12 +19,12 @@ import {
   acapScreenPxToWcs,
   acapSeedOverlaySizesFromWcs
 } from '../../overlay'
-import { runMeasurementEdit } from '../AcApMeasurementHistory'
 import { republishMeasurement } from '../AcApMeasurementRepublish'
 import {
   getMeasurementSnapshot,
   getMeasurementStyle,
-  MEASUREMENT_LAYER
+  MEASUREMENT_LAYER,
+  runMeasurementEdit
 } from '../AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../AcApMeasurementTypes'
 import {
@@ -269,7 +269,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
             style: this.serializeStyle(view),
             geometry
           }
-      runMeasurementEdit(view, 'Move Area', () => {
+      runMeasurementEdit(() => {
         republishMeasurement(view, db, record)
       })
     }

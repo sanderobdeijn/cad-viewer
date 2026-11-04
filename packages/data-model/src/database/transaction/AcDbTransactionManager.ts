@@ -4,8 +4,8 @@ import { AcDbTransaction } from './AcDbTransaction'
  * Manages database transactions.
  *
  * @deprecated Use {@link AcDbDatabaseTransactionManager} via
- * {@link AcDbDatabase.transactionManager} for database-bound transactions,
- * undo/redo, and change recording.
+ * {@link AcDbDatabase.transactionManager} for database-bound transactions
+ * and change recording.
  */
 export class AcDbTransactionManager {
   /** Stack of active transactions */

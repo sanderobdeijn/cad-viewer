@@ -548,12 +548,6 @@ export class AcApPolylineCmd extends AcEdCommand {
       points.push(new GeometryPoint2d(point))
       bulges.push(undefined)
     }
-    const undoLast = () => {
-      if (points.length <= 1) return
-      points.pop()
-      bulges.pop()
-      bulges[bulges.length - 1] = undefined
-    }
     const shouldFinish = (status: AcEdPromptStatus) =>
       status !== AcEdPromptStatus.OK && status !== AcEdPromptStatus.Keyword
 
@@ -580,11 +574,6 @@ export class AcApPolylineCmd extends AcEdCommand {
           AcApI18n.t('jig.polyline.keywords.arc.local')
         )
         prompt.keywords.add(
-          AcApI18n.t('jig.polyline.keywords.undo.display'),
-          AcApI18n.t('jig.polyline.keywords.undo.global'),
-          AcApI18n.t('jig.polyline.keywords.undo.local')
-        )
-        prompt.keywords.add(
           AcApI18n.t('jig.polyline.keywords.close.display'),
           AcApI18n.t('jig.polyline.keywords.close.global'),
           AcApI18n.t('jig.polyline.keywords.close.local')
@@ -606,8 +595,6 @@ export class AcApPolylineCmd extends AcEdCommand {
           const keyword = result.stringResult ?? ''
           if (keyword === 'Arc') {
             this.machine.setState(new ArcState(this.machine))
-          } else if (keyword === 'Undo') {
-            undoLast()
           } else if (keyword === 'Close' && points.length > 1) {
             closed = true
             setSegmentBulge(undefined)
@@ -659,11 +646,6 @@ export class AcApPolylineCmd extends AcEdCommand {
           AcApI18n.t('jig.polyline.keywords.line.local')
         )
         prompt.keywords.add(
-          AcApI18n.t('jig.polyline.keywords.undo.display'),
-          AcApI18n.t('jig.polyline.keywords.undo.global'),
-          AcApI18n.t('jig.polyline.keywords.undo.local')
-        )
-        prompt.keywords.add(
           AcApI18n.t('jig.polyline.keywords.close.display'),
           AcApI18n.t('jig.polyline.keywords.close.global'),
           AcApI18n.t('jig.polyline.keywords.close.local')
@@ -695,10 +677,6 @@ export class AcApPolylineCmd extends AcEdCommand {
         const keyword = result.stringResult ?? ''
         if (keyword === 'Line') {
           this.machine.setState(new LineState(this.machine))
-          return 'continue'
-        }
-        if (keyword === 'Undo') {
-          undoLast()
           return 'continue'
         }
         if (keyword === 'Close' && points.length > 1) {

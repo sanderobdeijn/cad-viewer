@@ -15,10 +15,6 @@ After selecting a command, click the required points in order as prompted. A rea
 - **Click** a measurement object to select it; grip points are shown
 - **Drag a grip point** to adjust the measurement; the value updates in real time
 
-## Undo / Redo
-
-Measurement operations support undo and redo.
-
 ## Units and Precision
 
 The display unit and precision of measurement values can be adjusted in Settings, supporting millimeters / centimeters / meters / feet / inches, etc. These settings do not affect the original DWG/DXF file, only the measurement display.

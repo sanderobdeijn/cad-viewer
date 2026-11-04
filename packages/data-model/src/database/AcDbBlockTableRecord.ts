@@ -408,7 +408,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error('Cannot append entities outside an active transaction.')
     }
@@ -442,7 +442,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
     if (
       (this.isModelSapce || this.isPaperSapce) &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       this.database.notifyEntityAppended(entity)
     }
@@ -469,7 +469,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error('Cannot remove entities outside an active transaction.')
     }
@@ -501,7 +501,7 @@ export class AcDbBlockTableRecord extends AcDbSymbolTableRecord<AcDbBlockTableRe
     if (
       entities.length > 0 &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       this.database.notifyEntityErased(entities)
     }

@@ -56,68 +56,46 @@ describe('AcDbDatabaseTransactionManager', () => {
     db.transactionManager.abortTransaction()
   })
 
-  it('dispatches entity events once on commit and undo', () => {
+  it('dispatches entity events once on commit', () => {
     const db = new AcDbDatabase()
     const line = createLine()
     let appendCount = 0
-    let eraseCount = 0
 
     db.events.entityAppended.addEventListener(() => {
       appendCount++
     })
-    db.events.entityErased.addEventListener(() => {
-      eraseCount++
-    })
 
-    db.transactionManager.runUndoable('Add Line', () => {
+    db.transactionManager.runInTransaction(() => {
       db.tables.blockTable.modelSpace.appendEntity(line)
     })
     expect(appendCount).toBe(1)
-
-    db.transactionManager.undo()
-    expect(eraseCount).toBe(1)
   })
 
-  it('supports undo and redo for entity append and remove', () => {
-    const db = new AcDbDatabase()
-    const line = createLine(
-      new GeometryPoint2d(1, 2),
-      new GeometryPoint2d(4, 5)
-    )
-
-    db.transactionManager.runUndoable('Add Line', () => {
-      db.tables.blockTable.modelSpace.appendEntity(line)
-    })
-
-    expect(db.tables.blockTable.getEntityById(line.objectId)).toBe(line)
-    expect(db.transactionManager.canUndo()).toBe(true)
-
-    db.transactionManager.undo()
-    expect(db.tables.blockTable.getEntityById(line.objectId)).toBeUndefined()
-    expect(db.transactionManager.canRedo()).toBe(true)
-
-    db.transactionManager.redo()
-    expect(db.tables.blockTable.getEntityById(line.objectId)).toBeDefined()
-  })
-
-  it('supports undo and redo for entity modification', () => {
+  it('rolls back entity removal on abort', () => {
     const db = new AcDbDatabase()
     const line = createLine()
     db.tables.blockTable.modelSpace.appendEntity(line)
 
-    db.transactionManager.runUndoable('Move', tr => {
-      const opened = tr.getObject<AcDbLine>(
-        line.objectId,
-        AcDbOpenMode.kForWrite
-      )
-      opened!.endPoint = new GeometryPoint2d(30, 0)
-    })
+    db.transactionManager.startTransaction()
+    db.tables.blockTable.modelSpace.removeEntity(line.objectId)
+    db.transactionManager.abortTransaction()
 
-    expect(line.endPoint.x).toBe(30)
-    db.transactionManager.undo()
-    expect(line.endPoint.x).toBe(10)
-    db.transactionManager.redo()
-    expect(line.endPoint.x).toBe(30)
+    expect(db.tables.blockTable.getEntityById(line.objectId)).toBeDefined()
+  })
+
+  it('rolls back the whole transaction when the callback throws', () => {
+    const db = new AcDbDatabase()
+    const line = createLine()
+
+    expect(() =>
+      db.transactionManager.runInTransaction(() => {
+        db.tables.blockTable.modelSpace.appendEntity(line)
+        throw new Error('failed')
+      })
+    ).toThrow('failed')
+
+    expect(db.tables.blockTable.getEntityById(line.objectId)).toBeUndefined()
+    expect(db.transactionManager.hasTransaction()).toBe(false)
   })
 
   it('dispatches entityModified on commit without manual event notification', () => {
@@ -131,7 +109,7 @@ describe('AcDbDatabaseTransactionManager', () => {
       expect(args.entity).toBe(line)
     })
 
-    db.transactionManager.runUndoable('Move', tr => {
+    db.transactionManager.runInTransaction(tr => {
       const opened = tr.getObject<AcDbLine>(
         line.objectId,
         AcDbOpenMode.kForWrite
@@ -140,33 +118,6 @@ describe('AcDbDatabaseTransactionManager', () => {
     })
 
     expect(modifiedCount).toBe(1)
-  })
-
-  it('dispatches entityModified on undo and redo for entity modification', () => {
-    const db = new AcDbDatabase()
-    const line = createLine()
-    db.tables.blockTable.modelSpace.appendEntity(line)
-
-    let modifiedCount = 0
-    db.events.entityModified.addEventListener(args => {
-      modifiedCount++
-      expect(args.entity).toBe(line)
-    })
-
-    db.transactionManager.runUndoable('Move', tr => {
-      const opened = tr.getObject<AcDbLine>(
-        line.objectId,
-        AcDbOpenMode.kForWrite
-      )
-      opened!.endPoint = new GeometryPoint2d(30, 0)
-    })
-    expect(modifiedCount).toBe(1)
-
-    db.transactionManager.undo()
-    expect(modifiedCount).toBe(2)
-
-    db.transactionManager.redo()
-    expect(modifiedCount).toBe(3)
   })
 
   it('does not dispatch entityModified when entity is mutated outside a transaction', () => {
@@ -182,28 +133,6 @@ describe('AcDbDatabaseTransactionManager', () => {
     line.endPoint = new GeometryPoint2d(25, 0)
 
     expect(modifiedCount).toBe(0)
-  })
-
-  it('merges nested transaction changes into one undo record', () => {
-    const db = new AcDbDatabase()
-    const line = createLine()
-    db.tables.blockTable.modelSpace.appendEntity(line)
-
-    db.transactionManager.startUndoMark('Nested')
-    db.transactionManager.startTransaction()
-    const inner = db.transactionManager.startTransaction()
-    const opened = inner.getObject<AcDbLine>(
-      line.objectId,
-      AcDbOpenMode.kForWrite
-    )
-    opened!.endPoint = new GeometryPoint2d(40, 0)
-    db.transactionManager.commitTransaction()
-    db.transactionManager.commitTransaction()
-    db.transactionManager.endUndoMark()
-
-    expect(line.endPoint.x).toBe(40)
-    db.transactionManager.undo()
-    expect(line.endPoint.x).toBe(10)
   })
 
   it('rolls back committed nested transaction changes on outer abort', () => {
@@ -235,46 +164,28 @@ describe('AcDbDatabaseTransactionManager', () => {
     expect(db.orthomode).toBe(original)
   })
 
-  it('records symbol table additions and removals', () => {
+  it('rolls back symbol table additions on abort', () => {
     const db = new AcDbDatabase()
-    const layer = new AcDbLayerTableRecord({ name: 'UndoLayer' })
+    const layer = new AcDbLayerTableRecord({ name: 'RolledBack' })
 
-    db.transactionManager.runUndoable('Add Layer', () => {
-      db.tables.layerTable.add(layer)
-    })
+    db.transactionManager.startTransaction()
+    db.tables.layerTable.add(layer)
+    expect(db.tables.layerTable.getAt('RolledBack')).toBe(layer)
 
-    expect(db.tables.layerTable.getAt('UndoLayer')).toBe(layer)
-    db.transactionManager.undo()
-    expect(db.tables.layerTable.getAt('UndoLayer')).toBeUndefined()
-    db.transactionManager.redo()
-    expect(db.tables.layerTable.has('UndoLayer')).toBe(true)
+    db.transactionManager.abortTransaction()
+    expect(db.tables.layerTable.getAt('RolledBack')).toBeUndefined()
   })
 
-  it('records system variable changes through updateSysVar', () => {
+  it('rolls back system variable changes made through updateSysVar', () => {
     const db = new AcDbDatabase()
     const original = db.orthomode
 
-    db.transactionManager.runUndoable('Ortho', () => {
-      db.orthomode = 1
-    })
-
+    db.transactionManager.startTransaction()
+    db.orthomode = 1
     expect(db.orthomode).toBe(1)
-    db.transactionManager.undo()
+
+    db.transactionManager.abortTransaction()
     expect(db.orthomode).toBe(original)
-    db.transactionManager.redo()
-    expect(db.orthomode).toBe(1)
-  })
-
-  it('clears undo stack when clearUndoStack is called', () => {
-    const db = new AcDbDatabase()
-    const line = createLine()
-    db.transactionManager.runUndoable('Add', () => {
-      db.tables.blockTable.modelSpace.appendEntity(line)
-    })
-    expect(db.transactionManager.canUndo()).toBe(true)
-
-    db.transactionManager.clearUndoStack()
-    expect(db.transactionManager.canUndo()).toBe(false)
   })
 
   it('deduplicates modify records for the same object', () => {
@@ -282,15 +193,12 @@ describe('AcDbDatabaseTransactionManager', () => {
     const line = createLine()
     db.tables.blockTable.modelSpace.appendEntity(line)
 
-    db.transactionManager.startUndoMark()
     const tr = db.transactionManager.startTransaction()
     const opened = tr.getObject<AcDbLine>(line.objectId, AcDbOpenMode.kForWrite)
     opened!.endPoint = new GeometryPoint2d(20, 0)
     opened!.endPoint = new GeometryPoint2d(30, 0)
-    db.transactionManager.commitTransaction()
-    db.transactionManager.endUndoMark()
+    db.transactionManager.abortTransaction()
 
-    db.transactionManager.undo()
     expect(line.endPoint.x).toBe(10)
   })
 
@@ -302,102 +210,78 @@ describe('AcDbDatabaseTransactionManager', () => {
     expect(db.getObjectById(layer!.objectId)).toBe(layer)
   })
 
-  it('does not create undo records for commit without undo mark', () => {
-    const db = new AcDbDatabase()
-    const line = createLine()
-
-    db.transactionManager.startTransaction()
-    db.tables.blockTable.modelSpace.appendEntity(line)
-    db.transactionManager.commitTransaction()
-
-    expect(db.tables.blockTable.getEntityById(line.objectId)).toBe(line)
-    expect(db.transactionManager.canUndo()).toBe(false)
-  })
-
-  it('cancels append/remove pairs within one undo mark', () => {
+  it('cancels append/remove pairs within one transaction', () => {
     const db = new AcDbDatabase()
     db.createDefaultData()
     const line = createLine()
+    let eventCount = 0
+    const onEvent = () => {
+      eventCount++
+    }
+    db.events.entityAppended.addEventListener(onEvent)
+    db.events.entityErased.addEventListener(onEvent)
 
-    db.transactionManager.startUndoMark('Transient')
     db.transactionManager.startTransaction()
     db.tables.blockTable.modelSpace.appendEntity(line)
     db.tables.blockTable.modelSpace.removeEntity(line.objectId)
     db.transactionManager.commitTransaction()
-    db.transactionManager.endUndoMark()
 
-    expect(db.transactionManager.canUndo()).toBe(false)
+    expect(eventCount).toBe(0)
   })
 
-  it('supports undo and redo for dictionary setAt', () => {
+  it('rolls back dictionary setAt on abort', () => {
     const db = new AcDbDatabase()
     const layout = new AcDbLayout()
 
-    db.transactionManager.runUndoable('Add Layout', () => {
-      db.objects.layout.setAt('TestLayout', layout)
-    })
-
+    db.transactionManager.startTransaction()
+    db.objects.layout.setAt('TestLayout', layout)
     expect(db.objects.layout.getAt('TestLayout')).toBe(layout)
-    db.transactionManager.undo()
+
+    db.transactionManager.abortTransaction()
     expect(db.objects.layout.getAt('TestLayout')).toBeUndefined()
-    db.transactionManager.redo()
-    expect(db.objects.layout.getAt('TestLayout')).toBeDefined()
   })
 
-  it('dispatches dictionary events once on commit and undo', () => {
+  it('dispatches dictionary events once on commit', () => {
     const db = new AcDbDatabase()
     const layout = new AcDbLayout()
     let setCount = 0
-    let eraseCount = 0
 
     db.events.dictObjetSet.addEventListener(() => {
       setCount++
     })
-    db.events.dictObjectErased.addEventListener(() => {
-      eraseCount++
-    })
 
-    db.transactionManager.runUndoable('Add Layout', () => {
+    db.transactionManager.runInTransaction(() => {
       db.objects.layout.setAt('L1', layout)
     })
     expect(setCount).toBe(1)
-
-    db.transactionManager.undo()
-    expect(eraseCount).toBe(1)
   })
 
-  it('records system variable changes through setVar', () => {
+  it('rolls back system variable changes made through setVar', () => {
     const db = new AcDbDatabase()
     const manager = AcDbSysVarManager.instance()
     const original = manager.getVar('dynmode', db) ?? 3
     const next = original === 1 ? 2 : 1
 
-    db.transactionManager.runUndoable('Dynmode', () => {
-      manager.setVar('dynmode', next, db)
-    })
+    db.transactionManager.startTransaction()
+    manager.setVar('dynmode', next, db)
+    expect(manager.getVar('dynmode', db)).toBe(next)
 
-    expect(manager.getVar('dynmode', db)).toBe(next)
-    db.transactionManager.undo()
+    db.transactionManager.abortTransaction()
     expect(manager.getVar('dynmode', db)).toBe(original)
-    db.transactionManager.redo()
-    expect(manager.getVar('dynmode', db)).toBe(next)
   })
 
-  it('records isDbVar system variable changes through setVar', () => {
+  it('rolls back isDbVar system variable changes made through setVar', () => {
     const db = new AcDbDatabase()
     const manager = AcDbSysVarManager.instance()
     const original = manager.getVar('orthomode', db) ?? 0
     const next = original === 1 ? 0 : 1
 
-    db.transactionManager.runUndoable('Ortho', () => {
-      manager.setVar('orthomode', next, db)
-    })
+    db.transactionManager.startTransaction()
+    manager.setVar('orthomode', next, db)
+    expect(manager.getVar('orthomode', db)).toBe(next)
 
-    expect(manager.getVar('orthomode', db)).toBe(next)
-    db.transactionManager.undo()
+    db.transactionManager.abortTransaction()
     expect(manager.getVar('orthomode', db)).toBe(original)
-    db.transactionManager.redo()
-    expect(manager.getVar('orthomode', db)).toBe(next)
   })
 
   it('resolves objects in nested dictionaries through getObjectById', () => {

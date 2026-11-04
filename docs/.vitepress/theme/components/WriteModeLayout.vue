@@ -11,11 +11,6 @@
             <span class="wml-ribbon__tab">Measurement</span>
             <!-- Minimizer / chevron (▼) -->
             <span class="wml-ribbon__chev" title="Collapse ribbon">▼</span>
-            <!-- Tabs after: undo / redo -->
-            <div class="wml-ribbon__tabsAfter">
-              <button class="wml-ico-btn" title="Undo"><span class="wml-ico" v-html="I.undo" aria-hidden="true"></span></button>
-              <button class="wml-ico-btn" title="Redo"><span class="wml-ico" v-html="I.redo" aria-hidden="true"></span></button>
-            </div>
           </div>
 
           <!-- Center: file name area -->
@@ -173,10 +168,6 @@ const I = {
   rotate: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 10a7 7 0 0 1 12.12-4.5M17 10a7 7 0 0 0-12.12 4.5"/><path fill="currentColor" d="M14.5 3.5 17 2v3.5H13.5V2l3.5 1.5ZM2 18l3.5-1.5v3.5H2V16.5Z"/></svg>',
   offset: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M4 14h10v-8"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="M6 12h8v-8H6z"/></svg>',
   copy: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="5" y="6" width="10.5" height="11.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="2.5" width="10.5" height="11.5" rx="1" fill="#fff" stroke="currentColor" stroke-width="1.3"/></svg>',
-  // Element Plus @element-plus/icons-vue RefreshLeft (undo) — SVG inlined to avoid a dependency.
-  undo: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024"><path fill="currentColor" d="M289.088 296.704h92.992a32 32 0 0 1 0 64H232.96a32 32 0 0 1-32-32V179.712a32 32 0 0 1 64 0v50.56a384 384 0 0 1 643.84 282.88 384 384 0 0 1-383.936 384 384 384 0 0 1-384-384h64a320 320 0 1 0 640 0 320 320 0 0 0-555.712-216.448z"/></svg>',
-  // Element Plus @element-plus/icons-vue RefreshRight (redo) — SVG inlined to avoid a dependency.
-  redo: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024"><path fill="currentColor" d="M784.512 230.272v-50.56a32 32 0 1 1 64 0v149.056a32 32 0 0 1-32 32H667.52a32 32 0 1 1 0-64h92.992A320 320 0 1 0 524.8 833.152a320 320 0 0 0 320-320h64a384 384 0 0 1-384 384 384 384 0 0 1-384-384 384 384 0 0 1 643.712-282.88"/></svg>',
   // Right toolbar icons (matching screenshot: select, pan, entity info, properties, layers, measurements, review, annotate, measure, hide toggle, agent-like? we use the 11 in the screenshot order)
   // Screenshot right bar, top to bottom:
   //   1. Select (white arrow on dark button background)
@@ -321,32 +312,6 @@ const statusBar = [
   font-size: 9px;
   opacity: .75;
 }
-.wml-ribbon__tabsAfter {
-  display: inline-flex;
-  gap: 2px;
-  margin-left: 4px;
-  padding-left: 6px;
-  border-left: 1px solid rgba(148,163,184,.2);
-}
-.wml-ico-btn {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: inherit;
-  cursor: default;
-}
-.wml-ico-btn:hover {
-  background: rgba(124, 183, 255, .12);
-  border-color: rgba(124, 183, 255, .35);
-}
-.wml-ico-btn .wml-ico { font-size: 14px; }
-
 .wml-ribbon__fileName {
   flex: 0 1 auto;
   text-align: center;

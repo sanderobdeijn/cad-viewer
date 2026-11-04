@@ -102,7 +102,7 @@ export class AcApCopyCmd extends AcEdCommand {
    * Database edits during an active command transaction may not reach the view
    * until the command ends. Explicit {@link AcEdBaseView.addEntity} keeps each
    * placement visible while the COPY loop continues. All placements still share
-   * one undo mark from {@link AcEdCommand.trigger}.
+   * one transaction from {@link AcEdCommand.trigger}.
    *
    * @param context - Active command context with database and view access
    * @param copies - Cloned entities to append and display

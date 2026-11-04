@@ -15,72 +15,48 @@ import { AcDbSysVarManager } from '../AcDbSysVarManager'
 import { AcDbChangeContainer, AcDbDatabaseChange } from './AcDbDatabaseChange'
 
 /**
- * Applies forward or inverse database changes for undo/redo operations.
+ * Rolls back recorded database changes when a transaction is aborted.
  *
  * Structural changes (append/remove) and property snapshots (modify/sysvar)
- * are replayed against a live {@link AcDbDatabase} instance.
+ * are reversed against a live {@link AcDbDatabase} instance.
  */
 export class AcDbChangeApplier {
   /**
    * Creates an applier bound to one database.
    *
-   * @param database - Database whose containers and objects receive replayed changes
+   * @param database - Database whose containers and objects are restored
    */
   constructor(private readonly database: AcDbDatabase) {}
 
   /**
-   * Replays changes in commit order.
-   *
-   * Used by redo and by applying the forward direction of an undo record.
-   *
-   * @param changes - Ordered list of changes recorded by {@link AcDbChangeRecorder}
-   */
-  applyForward(changes: AcDbDatabaseChange[]): void {
-    for (const change of changes) {
-      this.applyChange(change, true)
-    }
-  }
-
-  /**
-   * Replays the inverse of each change in reverse order.
-   *
-   * Used by undo and transaction abort to restore the prior database state.
+   * Reverses each change, newest first, to restore the prior database state.
    *
    * @param changes - Ordered list of changes recorded by {@link AcDbChangeRecorder}
    */
   applyInverse(changes: AcDbDatabaseChange[]): void {
     for (let i = changes.length - 1; i >= 0; i--) {
-      this.applyChange(changes[i], false)
+      this.reverseChange(changes[i])
     }
   }
 
   /**
-   * Dispatches one recorded change in the requested direction.
+   * Reverses one recorded change.
    *
-   * @param change - Single entry from a transaction or undo record
-   * @param forward - When true, replay the original mutation; when false, apply its inverse
+   * @param change - Single entry from a transaction
    */
-  private applyChange(change: AcDbDatabaseChange, forward: boolean): void {
+  private reverseChange(change: AcDbDatabaseChange): void {
     switch (change.kind) {
       case 'modify':
-        this.applyModify(change, forward)
+        this.restoreModify(change)
         break
       case 'append':
-        if (forward) {
-          this.applyAppend(change.container, change.object)
-        } else {
-          this.applyRemove(change.container, change.object)
-        }
+        this.applyRemove(change.container, change.object)
         break
       case 'remove':
-        if (forward) {
-          this.applyRemove(change.container, change.object)
-        } else {
-          this.applyAppend(change.container, change.object)
-        }
+        this.applyAppend(change.container, change.object)
         break
       case 'sysvar':
-        this.applySysvar(change, forward)
+        this.restoreSysvar(change)
         break
     }
   }
@@ -88,41 +64,27 @@ export class AcDbChangeApplier {
   /**
    * Restores object property state from a modify snapshot.
    *
-   * @param change - Modify entry with before/after clones
-   * @param forward - When true, apply `after`; when false, apply `before`
+   * @param change - Modify entry with the state before the transaction
    */
-  private applyModify(
-    change: AcDbDatabaseChange & { kind: 'modify' },
-    forward: boolean
-  ): void {
+  private restoreModify(change: AcDbDatabaseChange & { kind: 'modify' }): void {
     const object = this.database.getObjectById(change.objectId)
-    if (!object) {
-      return
-    }
-
-    const snapshot = forward ? change.after : change.before
-    if (snapshot) {
-      object.restoreFrom(snapshot)
+    if (object && change.before) {
+      object.restoreFrom(change.before)
     }
   }
 
   /**
    * Restores a system variable from a sysvar snapshot.
    *
-   * @param change - Sysvar entry with before/after values
-   * @param forward - When true, apply `after`; when false, apply `before`
+   * @param change - Sysvar entry with the value before the transaction
    */
-  private applySysvar(
-    change: AcDbDatabaseChange & { kind: 'sysvar' },
-    forward: boolean
-  ): void {
-    const value = forward ? change.after : change.before
-    if (value === undefined) {
+  private restoreSysvar(change: AcDbDatabaseChange & { kind: 'sysvar' }): void {
+    if (change.before === undefined) {
       return
     }
     AcDbSysVarManager.instance().setVar(
       change.name,
-      value as Parameters<typeof AcDbSysVarManager.prototype.setVar>[1],
+      change.before as Parameters<typeof AcDbSysVarManager.prototype.setVar>[1],
       this.database
     )
   }
@@ -168,7 +130,7 @@ export class AcDbChangeApplier {
    * Removes an object from the container described by `container`.
    *
    * @param container - Source block table record, symbol table, or dictionary entry
-   * @param object - Object whose {@link AcDbObject.objectId} identifies the removal target
+   * @param object - Object whose {@link AcDbObject.objectId} identifies the removal
    */
   private applyRemove(
     container: AcDbChangeContainer,
@@ -202,7 +164,7 @@ export class AcDbChangeApplier {
   }
 
   /**
-   * Resolves a symbol table instance from the stable name stored in undo records.
+   * Resolves a symbol table instance from the stable name stored in change records.
    *
    * @param tableName - Logical table name (for example, `"layerTable"`) or unknown fallback ID
    * @returns Matching table on this applier's database, or undefined when unrecognized
@@ -233,13 +195,13 @@ export class AcDbChangeApplier {
 }
 
 /**
- * Collects entities affected by changes for post-commit/undo/redo event dispatch.
+ * Collects entities affected by changes for post-commit event dispatch.
  *
  * Only block-table-record append/remove operations contribute to the
  * appended and erased lists; modify entries always resolve through object IDs.
  *
  * @param database - Database used to resolve live entity references
- * @param changes - Changes produced by a transaction or undo record
+ * @param changes - Changes produced by a transaction
  * @returns Entity buckets keyed by the kind of structural or property change
  */
 export function acdbCollectChangeEntities(
@@ -295,10 +257,10 @@ export interface AcDbDictionaryChangeEntry {
 }
 
 /**
- * Collects dictionary entries affected by changes for post-commit/undo/redo dispatch.
+ * Collects dictionary entries affected by changes for post-commit dispatch.
  *
  * @param database - Database used to resolve live object references after replay
- * @param changes - Changes produced by a transaction or undo record
+ * @param changes - Changes produced by a transaction
  * @returns Dictionary entries grouped by set and erase operations
  */
 export function acdbCollectDictionaryChanges(
@@ -363,17 +325,15 @@ export function acdbDiffLayerTableRecordAttrs(
 }
 
 /**
- * Collects layer modification events from transaction or undo record changes.
+ * Collects layer modification events from transaction changes.
  *
  * @param database - Database used to resolve live layer references
- * @param changes - Changes produced by a transaction or undo record
- * @param inverse - When true, compute diffs for undo replay
+ * @param changes - Changes produced by a transaction
  * @returns Layer-modified event payloads for dispatch
  */
 export function acdbCollectLayerModifications(
   database: AcDbDatabase,
-  changes: AcDbDatabaseChange[],
-  inverse = false
+  changes: AcDbDatabaseChange[]
 ): AcDbLayerModifiedEventArgs[] {
   const results: AcDbLayerModifiedEventArgs[] = []
 
@@ -393,9 +353,7 @@ export function acdbCollectLayerModifications(
       continue
     }
 
-    const attrChanges = inverse
-      ? acdbDiffLayerTableRecordAttrs(after, before)
-      : acdbDiffLayerTableRecordAttrs(before, after)
+    const attrChanges = acdbDiffLayerTableRecordAttrs(before, after)
     if (Object.keys(attrChanges).length === 0) {
       continue
     }

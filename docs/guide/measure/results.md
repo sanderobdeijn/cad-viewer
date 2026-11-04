@@ -37,4 +37,3 @@ Each entry shows:
 
 - Clear a single item: select it and press **Delete**
 - Clear all: "Clear All" button at the bottom of the panel
-- Clearing can be undone

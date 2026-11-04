@@ -37,9 +37,8 @@ export function registerMeasurementPublish(fn: MeasurementPublishFn): void {
 /**
  * Replace one measurement visual after a geometry edit.
  *
- * Detaches the previous HTML group (kept alive for undo) and commits a fresh
- * entity from `record`. Callers that need undo should wrap this in
- * {@link runMeasurementEdit}. No-ops when {@link registerMeasurementPublish}
+ * Removes the previous HTML group and commits a fresh entity from `record`.
+ * No-ops when {@link registerMeasurementPublish}
  * has not been called yet.
  *
  * @param view - Host view for the measurement overlays.

@@ -1,13 +1,13 @@
 import { AcCmColor } from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
-import { resetMeasurementSession } from '../src/command/measure/AcApMeasurementHistory'
 import { stringifyMeasurementSidecar } from '../src/command/measure/AcApMeasurementSidecar'
 import {
   applyMeasurementStyle,
   collectMeasurementRecords,
   commitMeasurementGroup,
-  MEASUREMENT_LAYER
+  MEASUREMENT_LAYER,
+  resetMeasurementSession
 } from '../src/command/measure/AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../src/command/measure/AcApMeasurementTypes'
 import {

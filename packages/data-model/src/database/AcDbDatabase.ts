@@ -399,7 +399,7 @@ export class AcDbDatabase extends AcDbObject {
    */
   private _layerFilters: AcLyLayerFilterTree
 
-  /** Manages transactions and undo/redo for this database. */
+  /** Manages transactions for this database. */
   readonly transactionManager: AcDbDatabaseTransactionManager
 
   private _eventBatchDepth = 0
@@ -621,19 +621,10 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * Returns true when the transaction manager is actively recording changes.
-   *
-   * Shortcut for {@link AcDbDatabaseTransactionManager.isRecording}.
-   */
-  isUndoRecording(): boolean {
-    return this.transactionManager.isRecording()
-  }
-
-  /**
    * Opens a database object, preferring the active transaction when present.
    *
    * Editor shortcut: when a transaction is active, objects are opened through it
-   * so mutations are tracked for undo. Otherwise falls back to {@link getObjectById}.
+   * so mutations are tracked. Otherwise falls back to {@link getObjectById}.
    */
   private openObject<T extends AcDbObject>(
     objectId: AcDbObjectId,
@@ -698,19 +689,19 @@ export class AcDbDatabase extends AcDbObject {
   }
 
   /**
-   * Runs a database mutation as one undoable operation.
+   * Runs a database mutation in a transaction.
    *
-   * Editor shortcut: skips creating a new undo mark when the transaction manager
-   * is already recording (nested editor operations). Otherwise wraps `fn` in
-   * {@link AcDbDatabaseTransactionManager.runUndoable}.
+   * Editor shortcut: joins the active transaction when one is recording
+   * (nested editor operations). Otherwise wraps `fn` in
+   * {@link AcDbDatabaseTransactionManager.runInTransaction}.
    */
-  runDatabaseEdit(label: string, fn: () => void): void {
-    if (this.isUndoRecording()) {
+  runDatabaseEdit(fn: () => void): void {
+    if (this.transactionManager.isRecording()) {
       fn()
       return
     }
 
-    this.transactionManager.runUndoable(label, fn)
+    this.transactionManager.runInTransaction(fn)
   }
 
   /**
@@ -2427,7 +2418,6 @@ export class AcDbDatabase extends AcDbObject {
    * ```
    */
   private clear() {
-    this.transactionManager.clearUndoStack()
     // Clear all tables and dictionaries
     this._classes = []
     this._tables.blockTable.removeAll()

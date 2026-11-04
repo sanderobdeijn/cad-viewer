@@ -185,11 +185,6 @@ export default {
         local: 'Continue',
         global: 'Continue'
       },
-      undo: {
-        display: 'Undo(U)',
-        local: 'Undo',
-        global: 'Undo'
-      },
       close: {
         display: 'Close(C)',
         local: 'Close',
@@ -291,11 +286,6 @@ export default {
         display: 'Arc(A)',
         local: 'Arc',
         global: 'Arc'
-      },
-      undo: {
-        display: 'Undo(U)',
-        local: 'Undo',
-        global: 'Undo'
       },
       close: {
         display: 'Close(C)',
@@ -457,11 +447,6 @@ export default {
         display: 'Degree(D)',
         local: 'Degree',
         global: 'Degree'
-      },
-      undo: {
-        display: 'Undo(U)',
-        local: 'Undo',
-        global: 'Undo'
       },
       close: {
         display: 'Close(C)',

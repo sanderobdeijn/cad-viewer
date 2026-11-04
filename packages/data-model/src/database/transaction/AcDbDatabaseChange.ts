@@ -1,7 +1,7 @@
 import { AcDbObject } from '../../base'
 
 /**
- * Identifies the container that holds a database object for undo/redo recording.
+ * Identifies the container that holds a database object for change recording.
  *
  * - `blockTableRecord` — entity membership in a block table record
  * - `symbolTable` — symbol table record membership
@@ -13,7 +13,7 @@ export type AcDbChangeContainer =
   | { type: 'dictionary'; dictionaryId: string; key: string }
 
 /**
- * A single recorded change within a transaction or undo record.
+ * A single recorded change within a transaction.
  *
  * Each variant stores enough information for {@link AcDbChangeApplier} to
  * replay the change forward or in reverse.
@@ -24,7 +24,7 @@ export type AcDbDatabaseChange =
       kind: 'modify'
       /** Object whose properties changed */
       objectId: string
-      /** State before the transaction or undoable operation */
+      /** State before the transaction */
       before: AcDbObject
       /** State after commit; populated by {@link AcDbChangeRecorder.finalize} */
       after?: AcDbObject

@@ -90,7 +90,7 @@ export class AcDbSymbolTableRecord<
   /**
    * Ensures this record may be modified.
    *
-   * Temporary records and undo/redo replay are exempt from the open-for-write check.
+   * Temporary records and rollback are exempt from the open-for-write check.
    *
    * @throws Error when an existing record is modified without being opened for write
    */
@@ -105,7 +105,7 @@ export class AcDbSymbolTableRecord<
     }
 
     const manager = db.transactionManager
-    if (manager.isApplyingUndoRedo()) {
+    if (manager.isRollingBack()) {
       return
     }
 

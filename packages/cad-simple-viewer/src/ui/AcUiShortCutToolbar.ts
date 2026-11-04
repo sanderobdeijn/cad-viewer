@@ -1,5 +1,5 @@
 /**
- * Floating shortcut toolbar (undo / redo / erase) with an extension slot for
+ * Floating shortcut toolbar (erase) with an extension slot for
  * selection accessories.
  *
  * Keep this module free of {@link AcApDocManager} / measure imports so
@@ -29,9 +29,7 @@ import {
   createIconElement,
   ICON_CHEVRON_LEFT,
   ICON_CHEVRON_RIGHT,
-  ICON_ERASE,
-  ICON_REDO,
-  ICON_UNDO
+  ICON_ERASE
 } from './icons'
 
 const STYLE_ID = 'ml-ui-shortcut-toolbar-styles'
@@ -177,8 +175,6 @@ export const ACED_SHORTCUT_TOOLBAR_PROVIDER_ID = 'shortcut-toolbar'
 
 /** Enabled flags for core shortcut actions. */
 export interface AcUiShortCutToolbarActionState {
-  undo: boolean
-  redo: boolean
   erase: boolean
 }
 
@@ -207,8 +203,6 @@ export interface AcUiShortCutToolbarOptions {
    * When omitted, clicks are no-ops until {@link setActions} is called.
    */
   actions?: {
-    undo?: () => void
-    redo?: () => void
     erase?: () => void
   }
   /**
@@ -219,8 +213,6 @@ export interface AcUiShortCutToolbarOptions {
   /** Optional i18n labels (HTML offline viewer). */
   labels?: {
     more?: string
-    undo?: string
-    redo?: string
     erase?: string
     collapse?: string
     expand?: string
@@ -250,9 +242,7 @@ export class AcUiShortCutToolbar {
   ) => void
   private readonly onLocaleChanged = () => this.relabel()
   private actions: NonNullable<AcUiShortCutToolbarOptions['actions']>
-  private getActionState:
-    | (() => AcUiShortCutToolbarActionState)
-    | undefined
+  private getActionState: (() => AcUiShortCutToolbarActionState) | undefined
   private offTheme: (() => void) | null = null
   private disposed = false
 
@@ -347,7 +337,9 @@ export class AcUiShortCutToolbar {
    *
    * @param actions - Partial action map.
    */
-  setActions(actions: NonNullable<AcUiShortCutToolbarOptions['actions']>): void {
+  setActions(
+    actions: NonNullable<AcUiShortCutToolbarOptions['actions']>
+  ): void {
     this.actions = { ...this.actions, ...actions }
     this.toolbar.setItems(this.buildCoreItems())
     this.syncActionState()
@@ -419,13 +411,11 @@ export class AcUiShortCutToolbar {
   }
 
   /**
-   * Applies enabled/disabled state for undo / redo / erase.
+   * Applies enabled/disabled state for erase.
    *
    * @param state - Per-action enabled flags.
    */
   setActionState(state: AcUiShortCutToolbarActionState): void {
-    this.toolbar.updateItem('shortcut-undo', { disabled: !state.undo })
-    this.toolbar.updateItem('shortcut-redo', { disabled: !state.redo })
     this.toolbar.updateItem('shortcut-erase', { disabled: !state.erase })
   }
 
@@ -437,7 +427,7 @@ export class AcUiShortCutToolbar {
       return
     }
     // No provider yet (DocManager bind pending): keep controls usable.
-    this.setActionState({ undo: true, redo: true, erase: true })
+    this.setActionState({ erase: true })
   }
 
   /** Reloads core button labels from i18n. */
@@ -505,31 +495,14 @@ export class AcUiShortCutToolbar {
   }
 
   private buildCoreItems(): AcUiSimpleToolbarItem[] {
-    const run = (name: 'undo' | 'redo' | 'erase') => {
-      this.actions[name]?.()
-    }
     return [
-      {
-        id: 'shortcut-undo',
-        icon: ICON_UNDO,
-        label:
-          this.options.labels?.undo ?? AcApI18n.t('main.shortCutToolbar.undo'),
-        onClick: () => run('undo')
-      },
-      {
-        id: 'shortcut-redo',
-        icon: ICON_REDO,
-        label:
-          this.options.labels?.redo ?? AcApI18n.t('main.shortCutToolbar.redo'),
-        onClick: () => run('redo')
-      },
       {
         id: 'shortcut-erase',
         icon: ICON_ERASE,
         label:
           this.options.labels?.erase ??
           AcApI18n.t('main.shortCutToolbar.erase'),
-        onClick: () => run('erase')
+        onClick: () => this.actions.erase?.()
       }
     ]
   }

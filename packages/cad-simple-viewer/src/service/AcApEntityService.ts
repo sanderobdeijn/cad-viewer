@@ -7,7 +7,7 @@ import {
 } from '@mlightcad/data-model'
 
 import { createRotationMatrix } from '../util/AcApGeTransform'
-import { acapRunServiceEdit, ENTITY_EDIT_LABEL } from './AcApServiceEdit'
+import { acapRunServiceEdit } from './AcApServiceEdit'
 
 /**
  * Options for {@link AcApEntityService.cloneAndTransform}.
@@ -21,7 +21,7 @@ export interface AcApCloneAndTransformOptions {
  * Centralizes entity mutations for modify commands and non-command callers.
  *
  * Provides geometric transforms, cloning, erasure,
- * and undo-wrapped edit helpers against a single {@link AcDbDatabase}.
+ * and transactional edit helpers against a single {@link AcDbDatabase}.
  */
 export class AcApEntityService {
   private readonly db: AcDbDatabase
@@ -167,23 +167,12 @@ export class AcApEntityService {
   }
 
   /**
-   * Runs an entity edit with undo when outside a command transaction.
-   *
-   * @param label - Undo group label.
-   * @param fn - Mutation callback.
-   * @returns The value returned by `fn`.
-   */
-  runEdit<T>(label: string, fn: () => T): T {
-    return acapRunServiceEdit(this.db, label, fn)
-  }
-
-  /**
-   * Runs an entity edit with the default entity undo label.
+   * Runs an entity edit in a transaction when outside a command transaction.
    *
    * @param fn - Mutation callback.
    * @returns The value returned by `fn`.
    */
   runEntityEdit<T>(fn: () => T): T {
-    return acapRunServiceEdit(this.db, ENTITY_EDIT_LABEL, fn)
+    return acapRunServiceEdit(this.db, fn)
   }
 }

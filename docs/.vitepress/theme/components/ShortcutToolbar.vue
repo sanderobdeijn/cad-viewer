@@ -33,16 +33,6 @@
 
       <!-- Shortcut actions -->
       <div class="st-actions">
-        <button class="st-btn" type="button" :title="labels.undo" :aria-label="labels.undo">
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <path fill="currentColor" d="M12.5 8c-2.7 0-5.2 1-7 2.8L2 7v9h9l-3.6-3.6c1.3-1.3 3.1-2.1 5.1-2.1 3.5 0 6.5 2.2 7.6 5.3l1.9-.6A9 9 0 0 0 12.5 8z"/>
-          </svg>
-        </button>
-        <button class="st-btn" type="button" :title="labels.redo" :aria-label="labels.redo">
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <path fill="currentColor" d="M10.5 8c2.7 0 5.2 1 7 2.8L21 7v9h-9l3.6-3.6c-1.3-1.3-3.1-2.1-5.1-2.1-3.5 0-6.5 2.2-7.6 5.3l-1.9-.6A9 9 0 0 1 10.5 8z"/>
-          </svg>
-        </button>
         <button class="st-btn" type="button" :title="labels.delete" :aria-label="labels.delete">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7zm4-4h4l1 2h5v2H4V5h5l1-2z"/>
@@ -65,8 +55,6 @@ import { computed } from 'vue'
 interface Labels {
   color: string
   fontSize: string
-  undo: string
-  redo: string
   delete: string
   more: string
   expand: string
@@ -77,8 +65,6 @@ interface Labels {
 const labels: Labels = {
   color: 'Color',
   fontSize: 'Text height',
-  undo: 'Undo',
-  redo: 'Redo',
   delete: 'Delete',
   more: 'More',
   expand: 'Expand',

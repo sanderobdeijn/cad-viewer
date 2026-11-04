@@ -41,7 +41,7 @@ function createMockView(
       deleteSelected: jest.fn(() => htmlSelection.deleted ?? false),
       deselectAll: jest.fn(),
       getSelectedGroups: jest.fn(() => htmlSelection.groups ?? []),
-      detach: jest.fn((id: string) => ({ id })),
+      remove: jest.fn((id: string) => ({ id })),
       groupsOnLayer: jest.fn(() => []),
       has: jest.fn(() => false)
     },
@@ -55,53 +55,20 @@ describe('AcEdViewKeyHandler', () => {
     jest.clearAllMocks()
   })
 
-  test('handleKeyDown maps platform undo/redo keys to commands', () => {
+  test('handleKeyDown leaves Ctrl+Z and Ctrl+Y to the browser', () => {
     const handler = new AcEdViewKeyHandler(createMockView())
     const sendCommand = AcApDocManager.instance.sendStringToExecute as jest.Mock
 
-    handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyZ', ctrlKey: true, shiftKey: false })
-    )
-    expect(sendCommand).toHaveBeenLastCalledWith('undo')
-
-    handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyZ', metaKey: true, shiftKey: false })
-    )
-    expect(sendCommand).toHaveBeenLastCalledWith('undo')
-
-    handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyY', ctrlKey: true, shiftKey: false })
-    )
-    expect(sendCommand).toHaveBeenLastCalledWith('redo')
-
-    handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyZ', metaKey: true, shiftKey: true })
-    )
-    expect(sendCommand).toHaveBeenLastCalledWith('redo')
-
-    handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyZ', ctrlKey: true, shiftKey: true })
-    )
-    expect(sendCommand).toHaveBeenLastCalledWith('redo')
-
-    sendCommand.mockClear()
-    handler.handleKeyDown(keyboardEvent({ code: 'KeyA', ctrlKey: true }))
+    expect(
+      handler.handleKeyDown(keyboardEvent({ code: 'KeyZ', ctrlKey: true }))
+    ).toBe(false)
+    expect(
+      handler.handleKeyDown(keyboardEvent({ code: 'KeyY', ctrlKey: true }))
+    ).toBe(false)
     expect(sendCommand).not.toHaveBeenCalled()
   })
 
-  test('handleKeyDown skips undo/redo while editor input is active', () => {
-    const handler = new AcEdViewKeyHandler(createMockView(true))
-    const sendCommand = AcApDocManager.instance.sendStringToExecute as jest.Mock
-
-    const handled = handler.handleKeyDown(
-      keyboardEvent({ code: 'KeyZ', ctrlKey: true })
-    )
-
-    expect(handled).toBe(false)
-    expect(sendCommand).not.toHaveBeenCalled()
-  })
-
-  test('Delete detaches a selected measurement overlay without dispatching erase', () => {
+  test('Delete removes a selected measurement overlay without dispatching erase', () => {
     const view = createMockView(false, {
       hasSelection: true,
       groups: [{ id: 'm1', layer: 'measurement' }]
@@ -111,13 +78,13 @@ describe('AcEdViewKeyHandler', () => {
     const event = keyboardEvent({ code: 'Delete' })
 
     expect(handler.handleKeyDown(event)).toBe(true)
-    expect(view.htmlTransientManager.detach).toHaveBeenCalledWith('m1')
+    expect(view.htmlTransientManager.remove).toHaveBeenCalledWith('m1')
     expect(view.htmlTransientManager.deleteSelected).not.toHaveBeenCalled()
     expect(sendCommand).not.toHaveBeenCalled()
     expect(event.preventDefault).toHaveBeenCalled()
   })
 
-  test('Backspace detaches a selected measurement overlay (macOS delete key)', () => {
+  test('Backspace removes a selected measurement overlay (macOS delete key)', () => {
     const view = createMockView(false, {
       hasSelection: true,
       groups: [{ id: 'm1', layer: 'measurement' }]
@@ -127,7 +94,7 @@ describe('AcEdViewKeyHandler', () => {
     const event = keyboardEvent({ code: 'Backspace' })
 
     expect(handler.handleKeyDown(event)).toBe(true)
-    expect(view.htmlTransientManager.detach).toHaveBeenCalledWith('m1')
+    expect(view.htmlTransientManager.remove).toHaveBeenCalledWith('m1')
     expect(view.htmlTransientManager.deleteSelected).not.toHaveBeenCalled()
     expect(sendCommand).not.toHaveBeenCalled()
     expect(event.preventDefault).toHaveBeenCalled()
@@ -166,7 +133,7 @@ describe('AcEdViewKeyHandler', () => {
     const event = keyboardEvent({ code: 'Delete' })
 
     expect(handler.handleKeyDown(event)).toBe(true)
-    expect(view.htmlTransientManager.detach).toHaveBeenCalledWith('m1')
+    expect(view.htmlTransientManager.remove).toHaveBeenCalledWith('m1')
     expect(sendCommand).not.toHaveBeenCalled()
     expect(lookup).not.toHaveBeenCalled()
     expect(event.preventDefault).toHaveBeenCalled()

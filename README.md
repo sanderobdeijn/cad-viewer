@@ -143,7 +143,6 @@ Legend:
 * [x] Zoom (wheel / box zoom)
 * [x] Fit to view / extents
 * [ ] Named views
-* [ ] View history (undo / redo view changes)
 
 #### Display Controls
 
@@ -183,7 +182,6 @@ Legend:
 * [x] Rotate
 * [ ] Scale
 * [x] Delete
-* [x] Undo / redo
 
 #### Geometry Editing
 

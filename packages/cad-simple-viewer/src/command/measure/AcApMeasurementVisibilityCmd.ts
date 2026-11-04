@@ -13,7 +13,7 @@ export class AcApMeasurementVisibilityCmd extends AcEdCommand {
   constructor() {
     super()
     this.mode = AcEdOpenMode.Read
-    this.recordsUndoStack = false
+    this.usesTransaction = false
   }
 
   async execute(context: AcApContext) {

@@ -47,7 +47,6 @@ export interface AcDbEntityProperty {
    * This is used internally to:
    * - map UI fields to entity fields,
    * - identify properties when diffing or merging,
-   * - implement undo/redo tracking.
    */
   name: string
 
@@ -119,7 +118,6 @@ export interface AcDbEntityArrayItemSchema {
  * A typical implementation simply forwards `get()` / `set()` to internal
  * fields of the entity. More advanced use cases may wrap the setter with:
  * - validation,
- * - undo/redo recording,
  * - transaction systems,
  * - type conversion,
  * - event dispatch.
@@ -163,7 +161,6 @@ export interface AcDbPropertyAccessor<T = unknown> {
    * Implementers may:
    * - perform validation,
    * - trigger change notifications,
-   * - record undo/redo commands,
    * - clamp or normalize input values.
    *
    * @param value - The new value assigned to this property.
@@ -203,8 +200,9 @@ export interface AcDbPropertyAccessor<T = unknown> {
  * }
  * ```
  */
-export interface AcDbEntityRuntimeProperty<T = unknown>
-  extends AcDbEntityProperty {
+export interface AcDbEntityRuntimeProperty<
+  T = unknown
+> extends AcDbEntityProperty {
   /**
    * Accessor providing read/write access to the underlying entity data.
    *

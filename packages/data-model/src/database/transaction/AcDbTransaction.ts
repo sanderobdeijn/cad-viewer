@@ -16,7 +16,7 @@ export class AcDbTransaction {
   /** Snapshots of objects before modification */
   private readonly originalStates = new Map<AcDbObjectId, AcDbObject>()
 
-  /** Structured changes recorded during this transaction for commit/undo integration */
+  /** Structured changes recorded during this transaction for commit and rollback */
   readonly recorder = new AcDbChangeRecorder()
 
   /**

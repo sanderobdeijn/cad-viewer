@@ -22,12 +22,12 @@ import {
   acapScreenPxToWcs,
   acapSeedOverlaySizesFromWcs
 } from '../../overlay'
-import { runMeasurementEdit } from '../AcApMeasurementHistory'
 import { republishMeasurement } from '../AcApMeasurementRepublish'
 import {
   getMeasurementSnapshot,
   getMeasurementStyle,
-  MEASUREMENT_LAYER
+  MEASUREMENT_LAYER,
+  runMeasurementEdit
 } from '../AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../AcApMeasurementTypes'
 import {
@@ -316,7 +316,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
             style: this.serializeStyle(view),
             geometry
           }
-      runMeasurementEdit(view, 'Move Angle', () => {
+      runMeasurementEdit(() => {
         republishMeasurement(view, db, record)
       })
     }

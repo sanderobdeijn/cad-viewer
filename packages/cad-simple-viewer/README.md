@@ -9,7 +9,7 @@ This module doesn't depend on any UI framework and doesn't provide any UI except
 
 ## Key Features
 - Document management optimized for large files
-- Efficient command stack and undo/redo operations
+- Efficient command stack
 - Optimized integration with rendering engines
 - Performance-focused settings and context management
 - Framework-agnostic design for maximum flexibility
@@ -56,7 +56,6 @@ For the plain-DOM toolbar engine (`AcUiToolbar`, shortcut bar, and host customiz
 When you modify entities, you're working directly with the underlying drawing database. The viewer automatically detects these changes and updates the display accordingly. This real-time synchronization ensures that:
 
 - All modifications are immediately visible
-- The command stack properly tracks changes for undo/redo operations. This will be implemented soon.
 
 This capability makes `cad-simple-viewer` suitable for applications that need to not only display CAD files but also allow users to interact with and modify the drawing content.
 
@@ -80,7 +79,7 @@ The viewer ships one MTEXT layout worker. Deploy it next to your app and pass it
 ### Services
 
 - `AcApEntityService` - Entity selection, transform, and edit helpers
-- `acapRunServiceEdit` - Undo-wrapped edits outside command transactions
+- `acapRunServiceEdit` - Transactional edits outside command transactions
 
 ### Commands
 

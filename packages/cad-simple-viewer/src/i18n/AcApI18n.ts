@@ -176,7 +176,7 @@ export class AcApI18n {
    * @param groupName - Command group name (e.g. `"ACAD"`, `"USER"`)
    * @param cmdName - Global command name
    * @param key - Message key under the command entry
-   * @returns dotted path, e.g. `"command.ACAD.undo.nothingToUndo"`
+   * @returns dotted path, e.g. `"command.ACAD.zoom.description"`
    */
   public static cmdKey(
     groupName: string,

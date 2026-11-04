@@ -13,9 +13,7 @@
  * @param pathDs - Path `d` attributes from `@element-plus/icons-vue`.
  */
 function elementPlusIcon(...pathDs: string[]): string {
-  const paths = pathDs
-    .map(d => `<path fill="currentColor" d="${d}"/>`)
-    .join('')
+  const paths = pathDs.map(d => `<path fill="currentColor" d="${d}"/>`).join('')
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1024 1024">${paths}</svg>`
 }
 
@@ -32,8 +30,7 @@ const ZOOM_EXTENT_GLYPH =
   '<path fill="currentColor" d="M9.3333 14.125 5.875 10.6667V14.125H9.3333Zm4.7917-3.4583-3.4583 3.4583H14.125V10.6667ZM10.6667 5.875 14.125 9.3333V5.875H10.6667ZM5.875 9.3333 9.3333 5.875H5.875V9.3333Zm9.2083 5.475c1.2333-1.3 1.9083-3.0333 1.9083-4.825-.0083-3.325-2.35-6.1833-5.6083-6.8417C8.125 2.4833 4.85 4.2 3.55 7.2583c-1.3 3.0583-.275 6.6083 2.4583 8.5 2.725 1.8917 6.4167 1.6 8.8167-.6917.0917-.0833.175-.175.2583-.2583Zm1.2583.5917 2.575 2.575c-.3167.3167-.625.625-.9417.9417-.8583-.8583-1.7167-1.7167-2.575-2.575-3.4083 2.9-8.4917 2.5917-11.525-.6917S.9417 7.275 4.1083 4.1083C7.2667.9417 12.3667.8417 15.65 3.875s3.5917 8.1167.6917 11.525Z"/>'
 
 /** Zoom extents icon. */
-export const ICON_ZOOM_EXTENT =
-  `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${ZOOM_EXTENT_GLYPH}</svg>`
+export const ICON_ZOOM_EXTENT = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${ZOOM_EXTENT_GLYPH}</svg>`
 
 /** Zoom window icon. */
 export const ICON_ZOOM_WINDOW =
@@ -60,8 +57,7 @@ const MEASURE_ICON_RULER =
  * `--el-color-primary` is set by Element Plus in cad-viewer. cad-simple-viewer
  * maps it through `--ml-ui-accent`. Exported HTML aliases both to `--mlcad-accent`.
  */
-const TOOL_ICON_ACCENT =
-  'var(--el-color-primary, var(--ml-ui-accent, #409eff))'
+const TOOL_ICON_ACCENT = 'var(--el-color-primary, var(--ml-ui-accent, #409eff))'
 
 /** Composes a measure-tool icon: unique glyph on top, shared ruler on the bottom. */
 function measureToolIcon(glyph: string): string {
@@ -122,8 +118,7 @@ export const ICON_READING_MODE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><g fill="none" stroke="#000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h4.5M5.5 10h7M5.5 13.5h9"/><path d="M13.25 6.5v4.25h-3.25"/></g></svg>'
 
 /** List panel icon (list page with a search loupe). */
-export const ICON_MARKUP_PANEL =
-  `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="3" width="13" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3.5 6.5h13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6.5 9.5h7M6.5 12h7M6.5 14.5h3.2"/><g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.7" stroke-linecap="round"><circle cx="14.5" cy="14.7" r="4.2"/><path d="M17.5 17.7 19.5 19.7"/></g></svg>`
+export const ICON_MARKUP_PANEL = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="3" width="13" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3.5 6.5h13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6.5 9.5h7M6.5 12h7M6.5 14.5h3.2"/><g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.7" stroke-linecap="round"><circle cx="14.5" cy="14.7" r="4.2"/><path d="M17.5 17.7 19.5 19.7"/></g></svg>`
 
 /** Measurement list panel icon. */
 export const ICON_MEASUREMENT_PANEL = ICON_MARKUP_PANEL
@@ -210,8 +205,7 @@ export const ICON_ZOOM_ORIGINAL =
  * Material-style AutoAwesome sparkle pair (common “smart / AI” cue) overlaid at
  * top-right so the badge stays readable at toolbar size.
  */
-export const ICON_ZOOM_SMART =
-  `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${ZOOM_EXTENT_GLYPH}<path fill="${TOOL_ICON_ACCENT}" d="M14.85 0.85 15.95 4.05 19.15 5.15 15.95 6.25 14.85 9.45 13.75 6.25 10.55 5.15 13.75 4.05Z"/><path fill="${TOOL_ICON_ACCENT}" d="M17.55 8.35 18.15 10.15 19.95 10.75 18.15 11.35 17.55 13.15 16.95 11.35 15.15 10.75 16.95 10.15Z"/></svg>`
+export const ICON_ZOOM_SMART = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${ZOOM_EXTENT_GLYPH}<path fill="${TOOL_ICON_ACCENT}" d="M14.85 0.85 15.95 4.05 19.15 5.15 15.95 6.25 14.85 9.45 13.75 6.25 10.55 5.15 13.75 4.05Z"/><path fill="${TOOL_ICON_ACCENT}" d="M17.55 8.35 18.15 10.15 19.95 10.75 18.15 11.35 17.55 13.15 16.95 11.35 15.15 10.75 16.95 10.15Z"/></svg>`
 
 /** Settings / gear parent icon for compact toolbars. */
 export const ICON_SETTINGS =
@@ -249,14 +243,6 @@ export const ICON_MEASURE_COORDINATE = ICON_MEASURE_POINT
 /** Overflow / more menu icon (horizontal ellipsis). */
 export const ICON_MORE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><circle cx="4" cy="10" r="1.6" fill="currentColor"/><circle cx="10" cy="10" r="1.6" fill="currentColor"/><circle cx="16" cy="10" r="1.6" fill="currentColor"/></svg>'
-
-/** Undo (curved arrow counter-clockwise). */
-export const ICON_UNDO =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>'
-
-/** Redo (curved arrow clockwise). */
-export const ICON_REDO =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>'
 
 /** Erase / delete (trash can). */
 export const ICON_ERASE =

@@ -1,6 +1,4 @@
-import {
-  AcDbProgressdEventArgs
-} from '@mlightcad/data-model'
+import { AcDbProgressdEventArgs } from '@mlightcad/data-model'
 import mitt, { type Emitter } from 'mitt'
 
 import { AcEdMessageType } from '../input/ui/AcEdMessageType'
@@ -70,13 +68,6 @@ export type AcEdEvents = {
   }
   /** Emitted after missing resource caches change and UI state should refresh */
   'missed-data-changed': {}
-  /** Emitted after the active document undo/redo stack changes */
-  'undo-stack-changed': {}
-  /**
-   * Emitted when an outermost database undo mark is committed so session
-   * undo can interleave DB edits with measurement history.
-   */
-  'session-db-edit-committed': {}
   /** Emitted when the application busy indicator is shown or hidden */
   'busy-indicator': AcEdBusyIndicatorEventArgs
 }

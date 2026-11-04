@@ -48,7 +48,7 @@ describe('AcDbDatabase.createNewDrawing', () => {
     ])
   })
 
-  it('discards earlier content and undo history', () => {
+  it('discards earlier content', () => {
     const db = new AcDbDatabase()
     db.createNewDrawing()
     db.tables.blockTable.modelSpace.appendEntity(new AcDbLine())

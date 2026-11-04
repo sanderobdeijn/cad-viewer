@@ -15,8 +15,6 @@ title: Operations
 | Right-click | Outside a command: show the context menu; inside a command: acts as Enter to confirm |
 | Esc | Cancel the current command |
 | Enter / Space | Confirm the current step or repeat the last command |
-| Ctrl + Z | Undo |
-| Ctrl + Y | Redo |
 
 ## Mobile (Touch)
 

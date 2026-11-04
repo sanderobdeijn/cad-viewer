@@ -8,7 +8,8 @@ import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
   type AcApMeasurementValue,
-  formatMeasurementValue
+  formatMeasurementValue,
+  resetMeasurementUnitOverride
 } from '../../util/AcApMeasurementUnits'
 import {
   acapCloneMeasurementStyle,
@@ -28,7 +29,6 @@ import {
   hitTestMeasurementGeometry,
   measurementFocusBox
 } from './AcApMeasurementGeometry'
-import { runMeasurementEdit } from './AcApMeasurementHistory'
 import { serializeMeasurementStyle } from './AcApMeasurementSidecar'
 import type {
   AcApMeasurementRecord,
@@ -108,12 +108,6 @@ type MeasurementSelectionListener = () => void
 type MeasurementListListener = () => void
 
 const extrasById = new Map<string, AcApMeasurementGroupExtras>()
-/**
- * Per-group extras retained across {@link AcTrHtmlTransientManager.detach} so
- * undo/redo can restore geometry snapshots when groups with the same id are
- * swapped during grip edits.
- */
-const extrasByGroup = new WeakMap<AcTrHtmlGroup, AcApMeasurementGroupExtras>()
 const stylesById = new Map<string, AcApMeasurementStyle>()
 const selectionListeners = new Set<MeasurementSelectionListener>()
 const listListeners = new Set<MeasurementListListener>()
@@ -255,12 +249,12 @@ function collectMeasurementOverlayRects(
 }
 
 /**
- * Detach one committed measurement (undoable).
+ * Remove one committed measurement.
  */
 export function removeMeasurement(view: AcTrView2d, id: string): void {
   if (!view.htmlTransientManager.getGroup(id)) return
-  runMeasurementEdit(view, 'Delete Measurement', () => {
-    view.htmlTransientManager.detach(id)
+  runMeasurementEdit(() => {
+    view.htmlTransientManager.remove(id)
   })
   view.isHtmlDirty = true
 }
@@ -271,7 +265,7 @@ function rememberStyle(id: string, style: AcApMeasurementStyle): void {
 
 /**
  * Apply a style patch to one measurement group (HTML badges/dots and canvases).
- * Does not record undo; wrap with {@link runMeasurementEdit} from UI.
+ * Wrap with {@link runMeasurementEdit} from UI.
  *
  * Color and font size are independent: changing one does not rewrite the
  * other's world-space size from the current camera zoom. Overlay strokes stay
@@ -391,7 +385,7 @@ function resolveUpdatedTextHeightWcs(
 }
 
 /**
- * Apply a style patch to every selected measurement group (undoable).
+ * Apply a style patch to every selected measurement group.
  */
 export function applyMeasurementStyleToSelection(
   view: AcTrView2d,
@@ -406,7 +400,7 @@ export function applyMeasurementStyleToSelection(
     .getSelectedGroups()
     .filter(group => group.layer === MEASUREMENT_LAYER)
   if (groups.length === 0) return
-  runMeasurementEdit(view, 'Measurement Style', () => {
+  runMeasurementEdit(() => {
     for (const group of groups) {
       applyMeasurementStyle(view, group, patch)
     }
@@ -515,17 +509,22 @@ export function resetMeasurementStyleState(): void {
 }
 
 /**
- * Re-bind extras for a group reattached by measurement undo/redo.
- * Call after {@link AcTrHtmlTransientManager.reattach}.
+ * Run a measurement mutation, then tell listeners the list may have changed.
+ *
+ * @param mutate - Mutation that adds, removes or restyles measurement groups.
  */
-export function restoreMeasurementGroupExtras(group: AcTrHtmlGroup): void {
-  const extras = extrasByGroup.get(group)
-  if (!extras) return
-  extrasById.set(group.id, extras)
-  if (extras.style) {
-    rememberStyle(group.id, extras.style)
-  }
+export function runMeasurementEdit(mutate: () => void): void {
+  mutate()
   notifyMeasurementsChanged()
+}
+
+/**
+ * Reset measurement state when a document opens or closes.
+ */
+export function resetMeasurementSession(): void {
+  resetMeasurementStyleState()
+  resetMeasurementUnitOverride()
+  resetMeasurementVisibility()
 }
 
 /**
@@ -543,7 +542,6 @@ export function commitMeasurementGroup(
   const entityIds = extras?.entityIds ?? []
   const payload = extras ?? {}
   extrasById.set(group.id, payload)
-  extrasByGroup.set(group, payload)
   if (extras?.style) {
     rememberStyle(group.id, extras.style)
   }
@@ -592,7 +590,7 @@ export function commitMeasurementGroup(
     notifyMeasurementsChanged()
   }
 
-  runMeasurementEdit(view, 'Create Measurement', () => {
+  runMeasurementEdit(() => {
     view.htmlTransientManager.add(group)
   })
   if (

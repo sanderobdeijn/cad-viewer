@@ -5,7 +5,7 @@
 | Component | Role |
 |---|---|
 | **`AcUiToolbar`** | Full floating viewer toolbar: placement, overflow, sub-toolbars, menus, collapse, open-mode gating |
-| **`AcUiShortCutToolbar`** | Top-right undo / redo / erase bar with an accessory slot and optional collapse |
+| **`AcUiShortCutToolbar`** | Top-right erase bar with an accessory slot and optional collapse |
 | **`AcUiSimpleToolbar`** | Low-level icon strip with overflow “⋯” menu (building block for the shortcut bar) |
 
 Hosts can compose **preset buttons** and layout defaults on top of `AcUiToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
@@ -268,7 +268,7 @@ Getters: `placement`, `isCollapsed`, `isVisible`, `replaceOnNested`.
 
 ## 7. Shortcut toolbar (`AcUiShortCutToolbar`)
 
-Floating **undo / redo / erase** chrome at the top-right of the view container. Created automatically when draw-style / selection accessories need it (`acapGetShortCutToolbar` / install helpers), or mount it yourself:
+Floating **erase** chrome at the top-right of the view container. Created automatically when draw-style / selection accessories need it (`acapGetShortCutToolbar` / install helpers), or mount it yourself:
 
 ```ts
 import {
@@ -282,13 +282,9 @@ const shortcut = new AcUiShortCutToolbar({
   defaultCollapsed: false,
   topOffsetPx: 12,
   actions: {
-    undo: () => run('U'),
-    redo: () => run('REDO'),
     erase: () => run('ERASE')
   },
   getActionState: () => ({
-    undo: canUndo,
-    redo: canRedo,
     erase: hasSelection
   })
 })
@@ -301,7 +297,7 @@ AcApSettingManager.instance.isShowShortCutToolbar = false
 
 | API | Purpose |
 |---|---|
-| `setActions` / `setActionState` / `setActionStateProvider` | Wire or refresh undo / redo / erase |
+| `setActions` / `setActionState` / `setActionStateProvider` | Wire or refresh erase |
 | `setExtensionItems(items)` | Prepend icon buttons before core actions (`AcUiSimpleToolbarItem[]`) |
 | `accessoryHost` | Mount draw-style / selection controls (color, text height) |
 | `setAccessoryActive(true)` | Show the divider between accessory and core |
@@ -329,5 +325,5 @@ AcApSettingManager.instance.isShowShortCutToolbar = false
 3. Provide `i18n.t` and `onCommand`.
 4. Call `acapBindToolbarDocState` (or `setDocState`) so open-mode gating works.
 5. Optionally enable `collapsible`, tune `overflow` / `size` / `subToolbar`.
-6. Keep the shortcut bar for undo/redo if you hide or omit those commands from the main toolbar.
+6. Keep the shortcut bar for erase if you hide or omit that command from the main toolbar.
 7. On teardown: unbind doc state and `toolbar.destroy()`.

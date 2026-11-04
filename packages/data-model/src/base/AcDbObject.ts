@@ -120,7 +120,7 @@ export class AcDbObject<ATTRS extends AcDbObjectAttrs = AcDbObjectAttrs> {
     // object is already bound to a database (`_database`). Falling back to the
     // global working database here would mint a non-TEMP handle for a detached
     // object, which then fails assertOpenForWrite during secondary-database
-    // imports (e.g. XATTACH) while the host document is recording undo.
+    // imports (e.g. XATTACH) while the host document is recording a transaction.
     if (!this._attrs.get('objectId')) {
       if (this._database) {
         this._attrs.set('objectId', this._database.generateHandle())
@@ -798,7 +798,7 @@ export class AcDbObject<ATTRS extends AcDbObjectAttrs = AcDbObjectAttrs> {
   /**
    * Creates a deep clone that preserves database identity fields.
    *
-   * Used for undo/redo snapshots where {@link objectId}, {@link ownerId},
+   * Used for rollback snapshots where {@link objectId}, {@link ownerId},
    * and {@link database} must match the live object after restore.
    */
   clonePreservingIdentity(): this {

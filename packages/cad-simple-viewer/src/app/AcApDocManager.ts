@@ -12,13 +12,11 @@ import { AcTrMTextRenderer } from '@mlightcad/three-renderer'
 import {
   AcApAboutCmd,
   AcApArcCmd,
-  acapBindSessionUndo,
   AcApCacheFontCmd,
   AcApCircleCmd,
   AcApCloseCmd,
   AcApCopyCmd,
   AcApDimLinearCmd,
-  acapDisposeSessionUndo,
   AcApEllipseCmd,
   AcApEraseCmd,
   AcApHideObjectsCmd,
@@ -33,18 +31,15 @@ import {
   AcApQNewCmd,
   AcApReadingModeCmd,
   AcApRectCmd,
-  AcApRedoCmd,
   AcApRegenCmd,
   AcApRotateCmd,
   AcApSelectCmd,
   AcApSplineCmd,
   AcApSwitchBgCmd,
   AcApSysVarCmd,
-  AcApUndoCmd,
   AcApUnisolateObjectsCmd,
   AcApZoomCmd,
-  resetMeasurementSession,
-  resetSessionUndo
+  resetMeasurementSession
 } from '../command'
 import { acapGetDrawStyleSessionAccessory } from '../command/AcApDrawStyleSession'
 import { registerMeasureCommands } from '../command/measure/AcApRegisterMeasureCommands'
@@ -125,8 +120,6 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
   SPLINE: ['SPL'],
   XLINE: ['XL'],
   ZOOM: ['Z'],
-  UNDO: ['U'],
-  REDO: ['REDO'],
   READINGMODE: ['RM']
 }
 
@@ -485,7 +478,6 @@ export class AcApDocManager {
       context
     )
     this._sessions = [this._activeSession]
-    acapBindSessionUndo(this._activeSession.id)
 
     this._fontLoader = new AcApFontLoader()
     // Share one DefaultFontLoader cache between UI catalog and on-demand draws.
@@ -793,7 +785,6 @@ export class AcApDocManager {
       this._activeSession = session
       session.context.resume()
     }
-    acapBindSessionUndo(session.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(session.context)
     this.curView.bindDrawDatabase(doc.database)
@@ -925,7 +916,6 @@ export class AcApDocManager {
 
     session.context.dispose()
     target.destroy()
-    acapDisposeSessionUndo(session.id)
     const closedView = session.context.view as AcTrView2d
     if (session.viewState) {
       closedView.disposeSessionState(session.viewState)
@@ -1481,8 +1471,6 @@ export class AcApDocManager {
       'unisolateobjects',
       new AcApUnisolateObjectsCmd()
     )
-    addSystemCommand('undo', 'undo', new AcApUndoCmd())
-    addSystemCommand('redo', 'redo', new AcApRedoCmd())
     addSystemCommand('zoom', 'zoom', new AcApZoomCmd())
 
     // Register system variables as commands
@@ -1782,7 +1770,6 @@ export class AcApDocManager {
     if (replaceCurrent) {
       // Drop overlay history before view.clear() disposes HTML.
       resetMeasurementSession()
-      resetSessionUndo()
       AcApZoomCmd.clearOriginalViews()
       this.openProgressView.clear()
     }
@@ -2355,7 +2342,6 @@ export class AcApDocManager {
     const session = new AcApDocSession(`doc-${this._nextSessionId++}`, context)
     this._sessions.push(session)
     this._activeSession = session
-    acapBindSessionUndo(session.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
     this.bindOpenProgress(doc)
@@ -2383,13 +2369,10 @@ export class AcApDocManager {
    */
   private resetActiveSessionToUntitled(session: AcApDocSession) {
     const oldDoc = session.doc
-    const oldId = session.id
     resetMeasurementSession()
-    resetSessionUndo()
     this.curView.clear()
     session.context.dispose()
     oldDoc.destroy()
-    acapDisposeSessionUndo(oldId)
     const doc = new AcApDocument()
     const context = new AcApContext(this.curView, doc)
     const replacement = new AcApDocSession(
@@ -2398,7 +2381,6 @@ export class AcApDocManager {
     )
     this._sessions = [replacement]
     this._activeSession = replacement
-    acapBindSessionUndo(replacement.id)
     acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
     this.bindOpenProgress(doc)

@@ -4,7 +4,8 @@ import { AcDbSysVarManager } from '../AcDbSysVarManager'
 import {
   acdbAreChangeContainersEqual,
   AcDbChangeContainer,
-  AcDbDatabaseChange} from './AcDbDatabaseChange'
+  AcDbDatabaseChange
+} from './AcDbDatabaseChange'
 
 /**
  * Accumulates structured database changes during an active transaction.
@@ -34,8 +35,7 @@ export class AcDbChangeRecorder {
   /**
    * Merges changes from a nested transaction into this recorder.
    *
-   * Used when an inner transaction commits into its parent without touching
-   * the undo stack.
+   * Used when an inner transaction commits into its parent.
    *
    * @param other - Recorder from a child transaction being committed
    */
@@ -50,7 +50,7 @@ export class AcDbChangeRecorder {
    *
    * Only the first modify entry per {@link AcDbObject.objectId} is kept.
    *
-   * @param object - Object whose state should be restorable on abort/undo
+   * @param object - Object whose state should be restorable on abort
    */
   recordModify(object: AcDbObject): void {
     const objectId = object.objectId

@@ -38,8 +38,10 @@ import {
 } from '../overlay/AcApOverlayDrawUtil'
 import { placeDistanceMeasurement } from './AcApMeasureDistanceCmd'
 import { AcApMeasureDrawCmd } from './AcApMeasureDrawCmd'
-import { runMeasurementEdit } from './AcApMeasurementHistory'
-import { MEASUREMENT_LIVE_LAYER } from './AcApMeasurementStore'
+import {
+  MEASUREMENT_LIVE_LAYER,
+  runMeasurementEdit
+} from './AcApMeasurementStore'
 import { newMeasureOverlayId } from './entity/AcApMeasureEntity'
 
 /** Returns the 2D Euclidean distance between two world points. */
@@ -257,7 +259,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
 
     const view = context.view as AcTrView2d
     const style = acapGetCurrentMeasurementStyle(db)
-    runMeasurementEdit(view, 'Create Measurement', () => {
+    runMeasurementEdit(() => {
       for (let i = 0; i < points.length - 1; i++) {
         const a = points[i]!
         const b = points[i + 1]!

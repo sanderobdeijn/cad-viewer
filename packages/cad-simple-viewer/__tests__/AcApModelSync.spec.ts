@@ -109,20 +109,17 @@ describe('AcApModelSync', () => {
     sync.dispose()
   })
 
-  it('removes the shape when an entity is erased and restores it on undo', () => {
+  it('removes the shape when an entity is erased', () => {
     const db = createDatabase()
     const line = createLine()
     db.tables.blockTable.modelSpace.appendEntity(line)
     const { sync } = createSync(db)
 
     const manager = db.transactionManager
-    manager.runUndoable('Erase Line', () => {
+    manager.runInTransaction(() => {
       db.tables.blockTable.modelSpace.removeEntity(line.objectId)
     })
     expect(sync.model.shapes).toHaveLength(0)
-
-    manager.undo()
-    expect(sync.model.shapes).toHaveLength(1)
     sync.dispose()
   })
 
@@ -290,25 +287,7 @@ describe('AcApModelSync', () => {
       sync.dispose()
     })
 
-    it('undoes the whole edit in one step', () => {
-      const db = createDatabase()
-      db.tables.blockTable.modelSpace.appendEntity(createLine(10))
-      db.tables.blockTable.modelSpace.appendEntity(createLine(20))
-      const { sync } = createSync(db)
-      const before = sync.model.toString()
-
-      sync.applyText(
-        'Line start=(0, 0) end=(99, 0)\nCircularArc center=(0, 0) radius=5 startAngle=0 endAngle=1\nPoint position=(7, 7)'
-      )
-      expect(sync.model.shapes).toHaveLength(2)
-      expect(sync.model.points).toHaveLength(1)
-
-      db.transactionManager.undo()
-      expect(sync.model.toString()).toBe(before)
-      sync.dispose()
-    })
-
-    it('leaves the drawing and undo stack alone when nothing changed', () => {
+    it('leaves the drawing alone when nothing changed', () => {
       const db = createDatabase()
       db.tables.blockTable.modelSpace.appendEntity(createLine())
       const { sync } = createSync(db)

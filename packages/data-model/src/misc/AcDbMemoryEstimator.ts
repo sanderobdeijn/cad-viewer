@@ -58,7 +58,7 @@ export interface AcDbMemoryEstimate {
  */
 export interface AcDbMemoryEstimateOptions {
   /**
-   * When `true`, include `transactionManager` and undo stacks.
+   * When `true`, include `transactionManager`.
    * Default: `false` (model body only).
    */
   includeTransactionManager?: boolean
@@ -188,7 +188,7 @@ interface WalkState {
   byCategory: Map<string, AcDbMemoryEstimateBucket>
   /** Entity type name → accumulated bytes/counts. */
   byEntityType: Map<string, AcDbMemoryEstimateBucket>
-  /** Whether transaction / undo graphs are included. */
+  /** Whether transaction graphs are included. */
   includeTransactionManager: boolean
   /** Whether event managers / listeners are included. */
   includeEventManagers: boolean

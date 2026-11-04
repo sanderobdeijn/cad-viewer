@@ -7,11 +7,11 @@ import {
 } from '../../../util'
 import type { AcTrView2d } from '../../../view'
 import { acapBindOverlayPointerDrag, acapPlaceOverlayHtml } from '../../overlay'
-import { runMeasurementEdit } from '../AcApMeasurementHistory'
 import { republishMeasurement } from '../AcApMeasurementRepublish'
 import {
   getMeasurementSnapshot,
-  MEASUREMENT_LAYER
+  MEASUREMENT_LAYER,
+  runMeasurementEdit
 } from '../AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../AcApMeasurementTypes'
 import {
@@ -179,7 +179,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
                   style: this.serializeStyle(view),
                   geometry
                 }
-            runMeasurementEdit(view, 'Move Point', () => {
+            runMeasurementEdit(() => {
               republishMeasurement(view, db, record)
             })
           }

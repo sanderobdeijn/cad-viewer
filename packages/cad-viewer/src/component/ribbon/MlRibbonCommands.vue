@@ -5,7 +5,6 @@ import {
   Delete,
   DocumentCopy,
   Hide,
-  RefreshLeft,
   RefreshRight,
   View
 } from '@element-plus/icons-vue'
@@ -18,7 +17,6 @@ import {
   acapGetMeasurementFontSize,
   acapGetMeasurementTextHeightMode,
   AcApQNewCmd,
-  acapRunDatabaseEdit,
   acapScreenPxToWcs,
   acapSetMeasurementDrawColor,
   acapSetMeasurementTextHeight,
@@ -57,11 +55,10 @@ import {
   RibbonLocaleTexts,
   RibbonTabModel
 } from '@mlightcad/ribbon'
-import { ElButton, ElTooltip } from 'element-plus'
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { useDocument, useUndoRedo } from '../../composable'
+import { useDocument } from '../../composable'
 import { markComponentConfigRaw } from '../../composable/markComponentConfigRaw'
 import {
   arcCenterStartAngle,
@@ -132,7 +129,6 @@ interface RibbonSysVarChangeEvent {
 
 const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
-const { canUndo, canRedo } = useUndoRedo()
 const { t, locale } = useI18n()
 const isMeasurementOverlayVisible = ref(true)
 const measurementDrawColor = shallowRef(new AcCmColor())
@@ -518,7 +514,7 @@ const handleRibbonColorChange = (value?: AcCmColor) => {
   const db = getCurrentDatabase()
   if (!db || !value) return
 
-  acapRunDatabaseEdit(db, 'Color', () => {
+  db.runDatabaseEdit(() => {
     db.cecolor = value
     applyToSelectedEntities(entity => {
       entity.color = value
@@ -536,7 +532,7 @@ const handleRibbonLineWeightChange = (value: AcGiLineWeight) => {
   const db = getCurrentDatabase()
   if (!db) return
 
-  acapRunDatabaseEdit(db, 'Line Weight', () => {
+  db.runDatabaseEdit(() => {
     db.celweight = value
     applyToSelectedEntities(entity => {
       entity.lineWeight = value
@@ -701,7 +697,7 @@ const handleRibbonLineTypeChange = (value: string) => {
   const db = getCurrentDatabase()
   if (!db) return
 
-  acapRunDatabaseEdit(db, 'Line Type', () => {
+  db.runDatabaseEdit(() => {
     db.celtype = value
     applyToSelectedEntities(entity => {
       entity.lineType = value
@@ -745,8 +741,6 @@ const buildBaseTabs = (
     copy: t('main.ribbon.tooltip.copy'),
     erase: t('main.ribbon.tooltip.erase'),
     offset: t('main.ribbon.tooltip.offset'),
-    undo: t('main.ribbon.tooltip.undo'),
-    redo: t('main.ribbon.tooltip.redo'),
     properties: t('main.ribbon.tooltip.properties'),
     quickSelect: t('main.ribbon.tooltip.quickSelect'),
     drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
@@ -1625,16 +1619,6 @@ const handleRibbonItemClick = (payload: {
   AcApDocManager.instance.sendStringToExecute(command)
 }
 
-const handleHeaderUndo = () => {
-  if (isRibbonDisabled.value || !canUndo.value) return
-  AcApDocManager.instance.sendStringToExecute('undo')
-}
-
-const handleHeaderRedo = () => {
-  if (isRibbonDisabled.value || !canRedo.value) return
-  AcApDocManager.instance.sendStringToExecute('redo')
-}
-
 const handleFileMenuSelect = async (command: string) => {
   if (isRibbonDisabled.value) return
   if (command === 'QNew') {
@@ -1668,34 +1652,6 @@ const handleFileMenuSelect = async (command: string) => {
       @file-menu-select="handleFileMenuSelect"
       @item-click="handleRibbonItemClick"
     >
-      <template #tabs-after="{ disabled }">
-        <div class="ml-ribbon-tabs-after">
-          <el-tooltip
-            :content="t('main.ribbon.tooltip.undo')"
-            :hide-after="0"
-            :show-after="1000"
-          >
-            <el-button
-              class="ml-ribbon-tabs-after__button"
-              :disabled="disabled || !canUndo"
-              :icon="RefreshLeft"
-              @click="handleHeaderUndo"
-            />
-          </el-tooltip>
-          <el-tooltip
-            :content="t('main.ribbon.tooltip.redo')"
-            :hide-after="0"
-            :show-after="1000"
-          >
-            <el-button
-              class="ml-ribbon-tabs-after__button"
-              :disabled="disabled || !canRedo"
-              :icon="RefreshRight"
-              @click="handleHeaderRedo"
-            />
-          </el-tooltip>
-        </div>
-      </template>
     </ml-ribbon>
     <ml-ribbon-file-name :container-el="ribbonContainerRef" />
   </div>
@@ -1707,20 +1663,6 @@ const handleFileMenuSelect = async (command: string) => {
   width: 100%;
   box-sizing: border-box;
   z-index: 6;
-}
-
-.ml-ribbon-tabs-after {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.ml-ribbon-tabs-after__button {
-  min-height: 24px;
-  height: 24px;
-  width: 24px;
-  min-width: 24px;
-  padding: 0;
 }
 
 .ml-ribbon-toolbar-container

@@ -1,7 +1,6 @@
 export * from './AcApAciPalette'
 export * from './AcApCommandUtil'
 export * from './AcApCssColor'
-export * from './AcApDatabaseEdit'
 export * from './AcApDrawingExtents'
 export * from './AcApGeTransform'
 export * from './AcApFontUtil'

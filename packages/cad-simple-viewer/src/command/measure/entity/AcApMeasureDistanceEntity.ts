@@ -24,12 +24,12 @@ import {
   acapScreenPxToWcs,
   acapSeedOverlaySizesFromWcs
 } from '../../overlay'
-import { runMeasurementEdit } from '../AcApMeasurementHistory'
 import { republishMeasurement } from '../AcApMeasurementRepublish'
 import {
   getMeasurementSnapshot,
   getMeasurementStyle,
-  MEASUREMENT_LAYER
+  MEASUREMENT_LAYER,
+  runMeasurementEdit
 } from '../AcApMeasurementStore'
 import type { AcApMeasurementRecord } from '../AcApMeasurementTypes'
 import { drawMeasureSegmentOnCanvas } from './AcApMeasureDrawUtil'
@@ -343,7 +343,7 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
               end: { ...live.end }
             }
           }
-      runMeasurementEdit(view, 'Move Distance', () => {
+      runMeasurementEdit(() => {
         republishMeasurement(view, db, record)
       })
     }

@@ -60,7 +60,6 @@ export class AcApLineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
  *
  * Behavior is aligned with AutoCAD LINE:
  * - After the first point, each confirmed next point immediately creates one segment.
- * - `Undo` removes the last created segment.
  * - `Close` creates the closing segment to the first point and ends command.
  */
 export class AcApLineCmd extends AcEdCommand {
@@ -82,14 +81,13 @@ export class AcApLineCmd extends AcEdCommand {
   /**
    * Command entry point.
    *
-   * Supports chained point input with `Undo` and `Close` options.
+   * Supports chained point input with a `Close` option.
    *
    * @param context - Current application/document context.
    */
   async execute(context: AcApContext) {
     const db = context.doc.database
     const points: GeometryPoint2d[] = []
-    const createdSegments: AcDbLine[] = []
     const hasContinuePoint = () => !!AcApLineCmd._lastEndpoint
     const getContinuePoint = () =>
       AcApLineCmd._lastEndpoint
@@ -110,18 +108,8 @@ export class AcApLineCmd extends AcEdCommand {
       if (!startPoint) return
       const segment = new AcDbLine(new GeometryPoint2d(startPoint), endPoint)
       db.tables.blockTable.modelSpace.appendEntity(segment)
-      createdSegments.push(segment)
       context.view.addEntity(segment)
       appendPoint(endPoint)
-    }
-    const undoLastSegment = () => {
-      if (createdSegments.length <= 0 || points.length <= 1) return
-      const segment = createdSegments.pop()
-      segment?.erase()
-      if (segment) {
-        context.view.removeEntity(segment)
-      }
-      points.pop()
     }
     const closeSegment = () => {
       if (points.length <= 1) return
@@ -178,11 +166,6 @@ export class AcApLineCmd extends AcEdCommand {
         const prompt = new AcEdPromptPointOptions(
           AcApI18n.t('jig.line.nextPointWithOptions')
         )
-        prompt.keywords.add(
-          AcApI18n.t('jig.line.keywords.undo.display'),
-          AcApI18n.t('jig.line.keywords.undo.global'),
-          AcApI18n.t('jig.line.keywords.undo.local')
-        )
         if (points.length > 1) {
           prompt.keywords.add(
             AcApI18n.t('jig.line.keywords.close.display'),
@@ -215,10 +198,6 @@ export class AcApLineCmd extends AcEdCommand {
         }
         if (result.status === AcEdPromptStatus.Keyword) {
           const keyword = result.stringResult ?? ''
-          if (keyword === 'Undo') {
-            undoLastSegment()
-            return 'continue'
-          }
           if (keyword === 'Close' && points.length > 1) {
             closeSegment()
             return 'finish'

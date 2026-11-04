@@ -285,14 +285,6 @@ export default {
     unisolateobjects: {
       description: 'Redisplay all objects hidden by HIDEOBJECTS'
     },
-    undo: {
-      description: 'Undoes the last database editing operation',
-      nothingToUndo: 'Nothing to undo.'
-    },
-    redo: {
-      description: 'Redoes the last undone database editing operation',
-      nothingToRedo: 'Nothing to redo.'
-    },
     zoom: {
       description: 'Zooms to display the maximum extents of all entities'
     }

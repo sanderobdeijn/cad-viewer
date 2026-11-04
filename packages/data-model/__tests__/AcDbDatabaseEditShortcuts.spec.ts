@@ -26,11 +26,9 @@ function createDatabase(options?: {
   db.transactionManager.currentTransaction = jest.fn(() =>
     options?.transactionEntity || options?.isRecording ? transaction : null
   ) as never
-  db.transactionManager.runUndoable = jest.fn(
-    (_label: string, fn: () => void) => {
-      fn()
-    }
-  ) as never
+  db.transactionManager.runInTransaction = jest.fn((fn: () => void) => {
+    fn()
+  }) as never
 
   return { db, transaction }
 }
@@ -67,24 +65,23 @@ describe('AcDbDatabase edit shortcuts', () => {
     expect(db.getObjectById).toHaveBeenCalled()
   })
 
-  test('runDatabaseEdit skips nested undo marks while recording', () => {
+  test('runDatabaseEdit joins the active transaction while recording', () => {
     const { db } = createDatabase({ isRecording: true })
     const fn = jest.fn()
 
-    db.runDatabaseEdit('Color', fn)
+    db.runDatabaseEdit(fn)
 
     expect(fn).toHaveBeenCalledTimes(1)
-    expect(db.transactionManager.runUndoable).not.toHaveBeenCalled()
+    expect(db.transactionManager.runInTransaction).not.toHaveBeenCalled()
   })
 
-  test('runDatabaseEdit creates an undo mark', () => {
+  test('runDatabaseEdit starts a transaction', () => {
     const { db } = createDatabase({ isRecording: false })
     const fn = jest.fn()
 
-    db.runDatabaseEdit('Color', fn)
+    db.runDatabaseEdit(fn)
 
-    expect(db.transactionManager.runUndoable).toHaveBeenCalledWith(
-      'Color',
+    expect(db.transactionManager.runInTransaction).toHaveBeenCalledWith(
       expect.any(Function)
     )
     expect(fn).toHaveBeenCalledTimes(1)

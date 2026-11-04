@@ -38,7 +38,7 @@ On the right side of the row there are two circular icon buttons:
 
 ### Prompt Row
 
-The second row appears **only when the active command has mounted a session accessory**. It shows the command **prompt text** (e.g. "Specify first point") and, if the command exposes optional arguments, the corresponding **keyword chips** (e.g. `[Undo(U)/Continue(C)]`). The prompt is left-aligned and localised automatically.
+The second row appears **only when the active command has mounted a session accessory**. It shows the command **prompt text** (e.g. "Specify first point") and, if the command exposes optional arguments, the corresponding **keyword chips** (e.g. `[Close(C)/Continue(C)]`). The prompt is left-aligned and localised automatically.
 
 If the active command mounts no session accessory, the prompt text goes straight to the left side of the first row (taking the accessory's place) and no separate second row is shown.
 

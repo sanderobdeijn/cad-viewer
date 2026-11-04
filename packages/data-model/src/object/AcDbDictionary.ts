@@ -1,4 +1,3 @@
-
 import { AcDbObject, AcDbObjectId } from '../base/AcDbObject'
 import { AcDbDatabase } from '../database/AcDbDatabase'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
@@ -84,7 +83,7 @@ export class AcDbDictionary<
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error(
         'Cannot modify dictionary entries outside an active transaction.'
@@ -126,7 +125,7 @@ export class AcDbDictionary<
       )
     }
 
-    if (!manager.isRecording() && !manager.isApplyingUndoRedo()) {
+    if (!manager.isRecording() && !manager.isRollingBack()) {
       this.database.notifyDictObjectSet(value, key)
     }
   }
@@ -185,7 +184,7 @@ export class AcDbDictionary<
    *
    * Shared by {@link remove} and {@link removeId}. Enforces strict-mode transaction
    * requirements and defers {@link AcDbDatabase.notifyDictObjectErased} while
-   * recording or applying undo/redo.
+   * recording or rolling back.
    *
    * @param object - Stored dictionary object to remove
    * @param key - Dictionary key associated with the object (may be empty when resolved by ID)
@@ -195,7 +194,7 @@ export class AcDbDictionary<
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error(
         'Cannot remove dictionary entries outside an active transaction.'
@@ -219,7 +218,7 @@ export class AcDbDictionary<
       }
     })
     this.database.releaseObjectHandle(object)
-    if (key && !manager.isRecording() && !manager.isApplyingUndoRedo()) {
+    if (key && !manager.isRecording() && !manager.isRollingBack()) {
       this.database.notifyDictObjectErased(object, key)
     }
   }

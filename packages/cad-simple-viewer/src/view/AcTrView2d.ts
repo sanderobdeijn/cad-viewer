@@ -352,7 +352,7 @@ export class AcTrView2d extends AcEdBaseView {
   private _textStyleFontPreloadPromise: Promise<void> | null = null
   /** Grip point display and drag editing (Write mode only). */
   private _gripManager: AcEdGripManager
-  /** Global keyboard shortcuts for the view (undo/redo, erase, etc.). */
+  /** Global keyboard shortcuts for the view (erase, etc.). */
   private _keyHandler: AcEdViewKeyHandler
   /** Removes iOS canvas long-press callout listeners registered in the constructor. */
   private _disposeCanvasTouchCallout: (() => void) | undefined
@@ -560,7 +560,7 @@ export class AcTrView2d extends AcEdBaseView {
     super(renderer.domElement, container)
     this._disposeCanvasTouchCallout = disposeCanvasTouchCallout
     const onProgressiveInput = () => this.noteProgressiveUserInput()
-    // Pointer and wheel both claim shortcut focus so undo/erase still work
+    // Pointer and wheel both claim shortcut focus so erase still works
     // after zooming without a prior click, without stealing focus from host
     // inputs/textareas/contenteditable fields.
     const onCanvasPointerDown = () => {
@@ -1502,8 +1502,8 @@ export class AcTrView2d extends AcEdBaseView {
    *
    * The returned layout is intentionally **not** registered in
    * {@link AcTrScene}'s owner-id-keyed layout map, so it never participates in
-   * layout-tab switching, the primary document's layer table/panel, undo
-   * stack, or selection set. Toggle visibility via the returned layout's
+   * layout-tab switching, the primary document's layer table/panel, or
+   * selection set. Toggle visibility via the returned layout's
    * `visible` property, and tear it down by removing `internalObject` from
    * `cadScene.internalScene` and calling `clear()`.
    *

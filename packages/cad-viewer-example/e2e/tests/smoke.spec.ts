@@ -321,7 +321,10 @@ for (const command of [
   'countlist',
   'style',
   'find',
-  'sketch'
+  'sketch',
+  'undo',
+  'redo',
+  'u'
 ]) {
   test(`has no ${command} command or ribbon button`, async ({ page }) => {
     await page.goto('/')

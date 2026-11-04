@@ -12,7 +12,7 @@ import { AcUiAboutDialog } from '../ui/AcUiAboutDialog'
  */
 export class AcApAboutCmd extends AcEdCommand {
   /** About does not mutate the drawing database. */
-  recordsUndoStack = false
+  usesTransaction = false
 
   /**
    * Shows the About dialog on the current view host (or `document.body`).

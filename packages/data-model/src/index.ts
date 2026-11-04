@@ -45,7 +45,6 @@ export {
   AcDbDatabaseTransactionManager,
   AcDbTransaction,
   AcDbTransactionManager,
-  AcDbUndoStack,
   acdbCollectChangeEntities,
   AcDbTextStyleTable,
   AcDbTextStyleTableRecord,
@@ -91,8 +90,7 @@ export type {
   AcDbViewTableRecordAttrs,
   AcDbViewportTableRecordAttrs,
   AcDbChangeContainer,
-  AcDbDatabaseChange,
-  AcDbUndoRecord
+  AcDbDatabaseChange
 } from './database'
 export {
   AcDb2dPolyline,

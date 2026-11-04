@@ -6,14 +6,16 @@ import {
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
 import { AcTrView2d } from '../../view'
-import { runMeasurementEdit } from './AcApMeasurementHistory'
 import { placeMeasurementRecord } from './AcApMeasurementPlace'
 import {
   measurementSidecarFileName,
   parseMeasurementSidecar,
   stringifyMeasurementSidecar
 } from './AcApMeasurementSidecar'
-import { collectMeasurementRecords } from './AcApMeasurementStore'
+import {
+  collectMeasurementRecords,
+  runMeasurementEdit
+} from './AcApMeasurementStore'
 
 function downloadText(filename: string, text: string): void {
   if (typeof document === 'undefined') return
@@ -61,7 +63,7 @@ export class AcApMeasurementExportCmd extends AcEdCommand {
   constructor() {
     super()
     this.mode = AcEdOpenMode.Read
-    this.recordsUndoStack = false
+    this.usesTransaction = false
   }
 
   async execute(context: AcApContext) {
@@ -83,7 +85,7 @@ export class AcApMeasurementImportCmd extends AcEdCommand {
   constructor() {
     super()
     this.mode = AcEdOpenMode.Read
-    this.recordsUndoStack = false
+    this.usesTransaction = false
   }
 
   async execute(context: AcApContext) {
@@ -102,7 +104,7 @@ export class AcApMeasurementImportCmd extends AcEdCommand {
     }
     const view = context.view as AcTrView2d
     const db = context.doc.database
-    runMeasurementEdit(view, 'Import Measurements', () => {
+    runMeasurementEdit(() => {
       for (const record of sidecar.measurements) {
         placeMeasurementRecord(view, db, record)
       }

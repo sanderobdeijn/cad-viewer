@@ -2,7 +2,8 @@ import {
   AcDbSpline,
   DEFAULT_TOL,
   GeometryPoint2d,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -174,7 +175,7 @@ export class AcApSplineCmd extends AcEdCommand {
    * Command entry point.
    *
    * Uses a point-prompt state machine to support Fit/CV workflows, dynamic
-   * method switching, undo, close, and option prompts.
+   * method switching, close, and option prompts.
    *
    * @param context - Current application/document context.
    */
@@ -199,10 +200,6 @@ export class AcApSplineCmd extends AcEdCommand {
 
     const appendPoint = (point: GeometryPoint2dLike) => {
       points.push(new GeometryPoint2d(point))
-    }
-    const undoLast = () => {
-      if (points.length <= 1) return
-      points.pop()
     }
     const getCurrentPoint = () => points[points.length - 1]
     const canClose = () => points.length >= 3
@@ -333,11 +330,6 @@ export class AcApSplineCmd extends AcEdCommand {
           AcApI18n.t('jig.spline.keywords.knots.local')
         )
         prompt.keywords.add(
-          AcApI18n.t('jig.spline.keywords.undo.display'),
-          AcApI18n.t('jig.spline.keywords.undo.global'),
-          AcApI18n.t('jig.spline.keywords.undo.local')
-        )
-        prompt.keywords.add(
           AcApI18n.t('jig.spline.keywords.close.display'),
           AcApI18n.t('jig.spline.keywords.close.global'),
           AcApI18n.t('jig.spline.keywords.close.local')
@@ -372,10 +364,6 @@ export class AcApSplineCmd extends AcEdCommand {
         if (keyword === 'Knots') {
           const changed = await promptKnotsType()
           return changed ? 'continue' : 'finish'
-        }
-        if (keyword === 'Undo') {
-          undoLast()
-          return 'continue'
         }
         if (keyword === 'Close' && canClose()) {
           closed = true
@@ -417,11 +405,6 @@ export class AcApSplineCmd extends AcEdCommand {
           AcApI18n.t('jig.spline.keywords.degree.local')
         )
         prompt.keywords.add(
-          AcApI18n.t('jig.spline.keywords.undo.display'),
-          AcApI18n.t('jig.spline.keywords.undo.global'),
-          AcApI18n.t('jig.spline.keywords.undo.local')
-        )
-        prompt.keywords.add(
           AcApI18n.t('jig.spline.keywords.close.display'),
           AcApI18n.t('jig.spline.keywords.close.global'),
           AcApI18n.t('jig.spline.keywords.close.local')
@@ -456,10 +439,6 @@ export class AcApSplineCmd extends AcEdCommand {
         if (keyword === 'Degree') {
           const changed = await promptDegree()
           return changed ? 'continue' : 'finish'
-        }
-        if (keyword === 'Undo') {
-          undoLast()
-          return 'continue'
         }
         if (keyword === 'Close' && canClose()) {
           closed = true

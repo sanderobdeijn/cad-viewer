@@ -65,8 +65,6 @@ export default {
       copy: 'Copy selected objects to a new location.',
       erase: 'Delete selected objects from the drawing.',
       offset: 'Create a parallel copy of an object at a specified distance.',
-      undo: 'Undo the last editing operation.',
-      redo: 'Redo the last undone editing operation.',
       properties: 'Open the Properties palette for the current selection.',
       quickSelect:
         'Open Quick Select to filter and select entities by criteria.',
@@ -143,8 +141,6 @@ export default {
       copy: 'Copy',
       erase: 'Erase',
       offset: 'Offset',
-      undo: 'Undo',
-      redo: 'Redo',
       properties: 'Properties',
       quickSelect: 'Quick\nSelect',
       drawingUnits: 'Drawing\nUnits'

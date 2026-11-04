@@ -225,8 +225,7 @@ export class AcTrHtmlTransientManager {
   /**
    * Remove a leaf HTML overlay, a group, or a standalone canvas overlay.
    *
-   * Groups are disposed. Use {@link detach} to take a group off the scene
-   * without destroying it (undo / redo).
+   * Groups are disposed.
    *
    * @param id - Leaf, group, or canvas id
    */
@@ -241,53 +240,6 @@ export class AcTrHtmlTransientManager {
       return
     }
     this.removeElement(id)
-  }
-
-  /**
-   * Take a group off the scene without disposing it or its children.
-   * CAD / canvas extras stay on the group and are hidden via `setVisible(false)`.
-   *
-   * @param id - Group id
-   * @returns The detached group, or `undefined` when `id` is not a group
-   */
-  detach(id: string): AcTrHtmlGroup | undefined {
-    const group = this.groups.get(id)
-    if (!group) return undefined
-    this.detachGroup(group)
-    return group
-  }
-
-  /**
-   * Detach every group on `layer` without disposing them.
-   * Loose leaf elements / canvases on that layer are not touched.
-   *
-   * @param layer - Layer name whose groups should be unpublished
-   * @returns Groups that were detached
-   */
-  detachLayer(layer: string): AcTrHtmlGroup[] {
-    const detached: AcTrHtmlGroup[] = []
-    for (const group of [...this.groups.values()]) {
-      if (group.layer !== layer) continue
-      this.detachGroup(group)
-      detached.push(group)
-    }
-    return detached
-  }
-
-  /**
-   * Publish a previously {@link detach}ed group back onto the scene.
-   *
-   * @param group - Group previously returned by {@link detach} or {@link detachLayer}
-   */
-  reattach(group: AcTrHtmlGroup): void {
-    this.add(group)
-    if (!group.visible) {
-      const visible =
-        group.layoutId == null ||
-        this._activeLayoutId == null ||
-        group.layoutId === this._activeLayoutId
-      group.setVisible(visible)
-    }
   }
 
   /**
@@ -361,9 +313,7 @@ export class AcTrHtmlTransientManager {
    * @returns `true` when the id is currently published
    */
   has(id: string): boolean {
-    return (
-      this.entries.has(id) || this.groups.has(id) || this.canvases.has(id)
-    )
+    return this.entries.has(id) || this.groups.has(id) || this.canvases.has(id)
   }
 
   /**
@@ -615,25 +565,6 @@ export class AcTrHtmlTransientManager {
   }
 
   /**
-   * Unpublish a group without disposing HTML children, canvases, or `onDispose`.
-   *
-   * @param group - Group currently registered in {@link groups}
-   */
-  private detachGroup(group: AcTrHtmlGroup): void {
-    if (this.selectedGroupIds.has(group.id)) {
-      group.setSelected(false)
-      this.selectedGroupIds.delete(group.id)
-    }
-    this.groups.delete(group.id)
-    group.unbindSelection()
-    group.setVisible(false)
-    for (const child of [...group.children]) {
-      this.groupChildIds.delete(child.id)
-      this.unpublishElement(child.id)
-    }
-  }
-
-  /**
    * Publish a leaf CSS2D overlay, replacing any leaf with the same id.
    *
    * @param element - Leaf overlay to attach to {@link htmlGroup}
@@ -663,19 +594,6 @@ export class AcTrHtmlTransientManager {
 
     this.htmlGroup.remove(entry.object)
     entry.dispose()
-    this.entries.delete(id)
-    this._baselineMatrices.delete(id)
-  }
-
-  /**
-   * Remove a leaf from the CSS2D scene without disposing the DOM node.
-   *
-   * @param id - Leaf element id
-   */
-  private unpublishElement(id: string): void {
-    const entry = this.entries.get(id)
-    if (!entry) return
-    this.htmlGroup.remove(entry.object)
     this.entries.delete(id)
     this._baselineMatrices.delete(id)
   }

@@ -1,17 +1,9 @@
 import { AcApDocManager } from '../app'
-import { runMeasurementEdit } from '../command/measure/AcApMeasurementHistory'
-import { MEASUREMENT_LAYER } from '../command/measure/AcApMeasurementStore'
+import {
+  MEASUREMENT_LAYER,
+  runMeasurementEdit
+} from '../command/measure/AcApMeasurementStore'
 import type { AcTrView2d } from './AcTrView2d'
-
-/**
- * Document-level undo/redo shortcut resolved from a keyboard event.
- *
- * - Windows: Ctrl+Z (undo), Ctrl+Y (redo)
- * - macOS: Cmd+Z (undo), Shift+Cmd+Z (redo)
- *
- * Ctrl/Cmd+Shift+Z is also accepted as redo on Windows for convenience.
- */
-export type AcEdUndoRedoShortcut = 'undo' | 'redo'
 
 /**
  * Handles global keyboard shortcuts for a CAD view.
@@ -21,8 +13,6 @@ export type AcEdUndoRedoShortcut = 'undo' | 'redo'
  * edited inline.
  */
 export class AcEdViewKeyHandler {
-  private static readonly COMMAND_LINE_INPUT_CLASS = 'ml-cli-text'
-
   constructor(private readonly view: AcTrView2d) {}
 
   /**
@@ -31,21 +21,8 @@ export class AcEdViewKeyHandler {
    * @returns `true` when the event was consumed and default action prevented.
    */
   handleKeyDown(e: KeyboardEvent): boolean {
-    const undoRedoShortcut = this.resolveUndoRedoShortcut(e)
-    const ignoreEditableTarget = this.shouldIgnoreEditableTargetShortcut(e)
-
-    if (ignoreEditableTarget && !undoRedoShortcut) {
+    if (this.shouldIgnoreEditableTargetShortcut(e)) {
       return false
-    }
-
-    if (undoRedoShortcut) {
-      if (!this.shouldHandleUndoRedoShortcut(e) || this.view.editor.isActive) {
-        return false
-      }
-
-      AcApDocManager.instance.sendStringToExecute(undoRedoShortcut)
-      e.preventDefault()
-      return true
     }
 
     switch (e.code) {
@@ -70,11 +47,12 @@ export class AcEdViewKeyHandler {
               group => group.layer === MEASUREMENT_LAYER
             )
             if (measurements.length > 0) {
-              runMeasurementEdit(this.view, 'Delete Measurement', () => {
+              runMeasurementEdit(() => {
                 for (const group of measurements) {
-                  if (ht.detach(group.id)) removed = true
+                  ht.remove(group.id)
                 }
               })
+              removed = true
             }
           }
           if (removed) {
@@ -95,24 +73,6 @@ export class AcEdViewKeyHandler {
     return false
   }
 
-  private resolveUndoRedoShortcut(
-    e: Pick<KeyboardEvent, 'code' | 'ctrlKey' | 'metaKey' | 'shiftKey'>
-  ): AcEdUndoRedoShortcut | null {
-    if (!e.ctrlKey && !e.metaKey) {
-      return null
-    }
-
-    if (e.code === 'KeyY') {
-      return 'redo'
-    }
-
-    if (e.code === 'KeyZ') {
-      return e.shiftKey ? 'redo' : 'undo'
-    }
-
-    return null
-  }
-
   private shouldIgnoreEditableTargetShortcut(
     e: Pick<KeyboardEvent, 'target' | 'isComposing' | 'keyCode'>
   ): boolean {
@@ -130,34 +90,5 @@ export class AcEdViewKeyHandler {
     }
 
     return target?.tagName === 'INPUT'
-  }
-
-  private shouldHandleUndoRedoShortcut(
-    e: Pick<KeyboardEvent, 'target' | 'isComposing' | 'keyCode'>
-  ): boolean {
-    if (e.isComposing || e.keyCode === 229) {
-      return false
-    }
-
-    const target = e.target as HTMLElement | null
-    if (target?.tagName === 'TEXTAREA') {
-      return false
-    }
-
-    if (target?.isContentEditable) {
-      return false
-    }
-
-    if (target?.tagName === 'INPUT') {
-      const input = target as HTMLInputElement
-      if (
-        input.classList.contains(AcEdViewKeyHandler.COMMAND_LINE_INPUT_CLASS)
-      ) {
-        return input.value.trim() === '' && !input.readOnly
-      }
-      return false
-    }
-
-    return true
   }
 }

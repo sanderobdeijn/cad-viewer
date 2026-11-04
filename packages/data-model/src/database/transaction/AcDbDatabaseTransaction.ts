@@ -6,7 +6,7 @@ import { AcDbTransaction } from './AcDbTransaction'
  * Database-bound transaction with object lookup through {@link AcDbDatabase}.
  *
  * Created by {@link AcDbDatabaseTransactionManager.startTransaction} and
- * returned from {@link AcDbDatabaseTransactionManager.runUndoable}.
+ * returned from {@link AcDbDatabaseTransactionManager.runInTransaction}.
  */
 export class AcDbDatabaseTransaction extends AcDbTransaction {
   /**

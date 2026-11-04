@@ -108,8 +108,6 @@ export default {
   },
   shortCutToolbar: {
     more: 'More',
-    undo: 'Undo',
-    redo: 'Redo',
     erase: 'Delete',
     collapse: 'Collapse toolbar',
     expand: 'Expand toolbar'

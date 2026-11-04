@@ -222,13 +222,11 @@ jest.mock('../src/command', () => {
     'AcApReadingModeCmd',
     'AcApRectCmd',
     'AcApRegenCmd',
-    'AcApRedoCmd',
     'AcApRotateCmd',
     'AcApSelectCmd',
     'AcApSplineCmd',
     'AcApSwitchBgCmd',
     'AcApSysVarCmd',
-    'AcApUndoCmd',
     'AcApUnisolateObjectsCmd',
     'AcApXLineCmd',
     'AcApZoomCmd'
@@ -240,9 +238,6 @@ jest.mock('../src/command', () => {
         jest.fn().mockImplementation(() => ({ trigger: jest.fn() }))
       ])
     ),
-    acapBindSessionUndo: jest.fn(),
-    acapDisposeSessionUndo: jest.fn(),
-    resetSessionUndo: jest.fn(),
     resetMeasurementSession: jest.fn()
   }
 })

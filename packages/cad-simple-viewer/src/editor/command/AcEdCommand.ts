@@ -7,13 +7,10 @@
 // create a circular init cycle with concrete command classes.
 import { acapCommandServices } from '../../app/AcApCommandServices'
 import type { AcApContext } from '../../app/AcApContext'
-import { acapNotifyUndoStackChanged } from '../../util/AcApDatabaseEdit'
 import { eventBus } from '../global/eventBus'
 import { AcEdMessageType } from '../input/ui/AcEdMessageType'
 import { AcEdOpenMode } from '../view/AcEdOpenMode'
-import {
-  type AcEdSessionAccessory
-} from './AcEdSessionAccessory'
+import { type AcEdSessionAccessory } from './AcEdSessionAccessory'
 
 /**
  * Thrown from {@link AcEdSessionAccessory.mount} when the accessory declines to
@@ -27,7 +24,6 @@ export class AcEdSessionAccessoryMountSkippedError extends Error {
     this.name = 'AcEdSessionAccessoryMountSkippedError'
   }
 }
-
 
 /**
  * Abstract base class for all CAD commands.
@@ -191,9 +187,9 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
   }
 
   /**
-   * When false, this command does not create its own undo record.
+   * When false, this command does not run in its own transaction.
    */
-  recordsUndoStack = true
+  usesTransaction = true
 
   /**
    * Called right before the command starts executing.
@@ -251,15 +247,12 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
   async trigger(context: AcApContext) {
     const db = context.doc.database
     const tm = db.transactionManager
-    const recordUndo = this.shouldRecordUndoStack(context)
-    let undoTransactionActive = false
+    let transactionActive = this.shouldUseTransaction(context)
     let sessionAccessoryMounted = false
     const accessory = this.sessionAccessory
 
-    if (recordUndo) {
-      tm.startUndoMark(this.globalName || this.localName)
+    if (transactionActive) {
       tm.startTransaction()
-      undoTransactionActive = true
     }
 
     try {
@@ -295,13 +288,10 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
       }
       await this.execute(context)
     } catch (error) {
-      if (undoTransactionActive && tm.hasTransaction()) {
+      if (transactionActive && tm.hasTransaction()) {
         tm.abortTransaction()
       }
-      if (undoTransactionActive) {
-        tm.cancelUndoMark()
-        undoTransactionActive = false
-      }
+      transactionActive = false
       throw error
     } finally {
       if (sessionAccessoryMounted && accessory) {
@@ -322,12 +312,9 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
           // Unmount failures must not mask command completion.
         }
       }
-      if (undoTransactionActive && tm.hasTransaction()) {
+      if (transactionActive && tm.hasTransaction()) {
         tm.commitTransaction()
-        tm.endUndoMark()
-        undoTransactionActive = false
-        eventBus.emit('session-db-edit-committed', {})
-        acapNotifyUndoStackChanged()
+        transactionActive = false
       }
       context.view.editor.events.commandEnded.dispatch({ command: this })
       this.onCommandEnded(context)
@@ -335,10 +322,10 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
   }
 
   /**
-   * Returns true when this command should be wrapped in an undo mark.
+   * Returns true when this command should run in its own transaction.
    */
-  protected shouldRecordUndoStack(context: AcApContext): boolean {
-    if (!this.recordsUndoStack) {
+  protected shouldUseTransaction(context: AcApContext): boolean {
+    if (!this.usesTransaction) {
       return false
     }
     return (

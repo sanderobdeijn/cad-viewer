@@ -47,7 +47,7 @@ describe('AcApEntityService', () => {
     expect(db.openEntityForWrite).toHaveBeenCalledTimes(3)
   })
 
-  test('eraseEntities records an undoable database change', () => {
+  test('eraseEntities removes the entity from the database', () => {
     const db = new AcDbDatabase()
     const line = new AcDbLine(
       new GeometryPoint2d(0, 0),
@@ -58,13 +58,6 @@ describe('AcApEntityService', () => {
     const service = new AcApEntityService(db)
 
     expect(service.eraseEntities([objectId])).toBe(1)
-    expect(db.tables.blockTable.getEntityById(objectId)).toBeUndefined()
-    expect(db.transactionManager.canUndo()).toBe(true)
-
-    expect(db.transactionManager.undo()).toBe(true)
-    expect(db.tables.blockTable.getEntityById(objectId)).toBeDefined()
-
-    expect(db.transactionManager.redo()).toBe(true)
     expect(db.tables.blockTable.getEntityById(objectId)).toBeUndefined()
   })
 })

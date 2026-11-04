@@ -420,7 +420,7 @@ export class AcApModelSync {
   }
 
   /**
-   * Changes the drawing to match edited model text, as one undoable step.
+   * Changes the drawing to match edited model text, in one transaction.
    *
    * Lines that match an item in the model leave its entity alone. A changed line
    * updates an entity of the same kind, so it keeps its layer and color. Other
@@ -476,7 +476,7 @@ export class AcApModelSync {
       return index < 0 ? undefined : remaining.splice(index, 1)[0].id
     }
 
-    database.transactionManager.runUndoable('Edit model text', () => {
+    database.transactionManager.runInTransaction(() => {
       const toCreate = changed.filter(target => {
         const id = takeEntityFor(target)
         const entity = id ? database.openEntityForWrite(id) : undefined

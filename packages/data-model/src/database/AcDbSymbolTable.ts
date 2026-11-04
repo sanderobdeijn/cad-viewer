@@ -1,4 +1,3 @@
-
 import { AcDbObject, AcDbObjectId } from '../base/AcDbObject'
 import { AcDbObjectIterator } from '../misc/AcDbObjectIterator'
 import { AcDbDatabase } from './AcDbDatabase'
@@ -84,7 +83,7 @@ export class AcDbSymbolTable<
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error(
         'Cannot add symbol table records outside an active transaction.'
@@ -173,7 +172,7 @@ export class AcDbSymbolTable<
     if (
       manager.strictMode &&
       !manager.isRecording() &&
-      !manager.isApplyingUndoRedo()
+      !manager.isRollingBack()
     ) {
       throw new Error(
         'Cannot remove symbol table records outside an active transaction.'

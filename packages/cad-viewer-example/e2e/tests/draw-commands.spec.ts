@@ -136,7 +136,7 @@ const lineStart = (page: Page) =>
     return { ...line.startPoint }
   })
 
-test('moves and undoes a drawn shape through the UI', async ({ page }) => {
+test('moves a drawn shape through the UI', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await page.setViewportSize({ width: 1280, height: 800 })
@@ -170,12 +170,6 @@ test('moves and undoes a drawn shape through the UI', async ({ page }) => {
   expect(moved.y).toBeCloseTo(20, 6)
   expect(moved.z).toBeUndefined()
 
-  await run(page, 'undo')
-  await page.waitForTimeout(300)
-  const restored = await lineStart(page)
-  expect(restored.x).toBeCloseTo(0, 6)
-  expect(restored.y).toBeCloseTo(0, 6)
-
   expect(errors).toEqual([])
 })
 
@@ -198,12 +192,6 @@ test('shows the shapes of the drawing in the text editor', async ({ page }) => {
     /^Line start=\(0, 0\) end=\(100, 0\)\nCircularArc center=\(0, 0\) radius=50 /
   )
 
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
-
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('')
-
   expect(errors).toEqual([])
 })
 
@@ -224,9 +212,6 @@ test('shows points and dimensions in the text editor', async ({ page }) => {
     /^Point position=\(5, 5\)\nDimension type=\w+ xLine1Point=\(0, 0\) xLine2Point=\(100, 0\) dimLinePoint=\(50, 20\)/
   )
 
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('Point position=(5, 5)')
-
   expect(errors).toEqual([])
 })
 
@@ -242,12 +227,6 @@ test('shows measurements in the text editor', async ({ page }) => {
   await expect(editor).toHaveValue(
     /^Dimension type=MeasureDistance start=\(0, 0\) end=\(100, 0\) text="[^"]*100/
   )
-
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('')
-
-  await run(page, 'redo')
-  await expect(editor).toHaveValue(/^Dimension type=MeasureDistance /)
 
   await run(page, 'clearmeasurements')
   await expect(editor).toHaveValue('')
@@ -313,18 +292,6 @@ test('updates the drawing when the text in the editor is edited', async ({
   await applied(['LINE'])
   expect(await settledDrawnPixels(page)).toBe(halfLine)
 
-  // Each applied edit is one undo step, and undo restores the text and drawing.
-  await run(page, 'undo')
-  await expect(editor).toHaveValue(
-    'Line start=(0, 0) end=(50, 0)\nLine start=(25, -5) end=(25, 5)'
-  )
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(50, 0)')
-  await run(page, 'undo')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
-  // Undo messages also cover the canvas, so only check the line grew back.
-  expect(await settledDrawnPixels(page)).toBeGreaterThan(halfLine)
-
   expect(errors).toEqual([])
 })
 
@@ -368,6 +335,123 @@ test('creates every kind of entity from the text editor', async ({ page }) => {
   // Leaving the editor tidies the text into the order of the model.
   await editor.blur()
   await expect(editor).toHaveValue(/^Line start=\(0, 0\) end=\(100, 50\)\n/)
+
+  expect(errors).toEqual([])
+})
+
+test('has no undo buttons or undo keyboard shortcuts', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  await run(page, 'line', '0,0', '100,0', '')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+
+  await expect(page.locator('[data-item-id="cmd-undo"]')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: /^(undo|redo)$/i })
+  ).toHaveCount(0)
+  await expect(page.locator('.ml-ribbon-tabs-after')).toHaveCount(0)
+
+  await page.locator('.ml-cad-container canvas').first().click()
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Control+z')
+  await page.waitForTimeout(300)
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+})
+
+test('moves and deletes a measurement through the UI', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  type Manager = {
+    instance: {
+      curView: {
+        zoomToFitDrawing: () => void
+        htmlTransientManager: {
+          groupsOnLayer: (layer: string) => Array<{
+            id: string
+            children: Array<{ element: HTMLElement }>
+          }>
+          selectGroup: (id: string) => void
+          getSelectedGroups: () => unknown[]
+        }
+      }
+    }
+  }
+  const measurementGroups = () =>
+    page.evaluate(() => {
+      const manager = (window as unknown as { AcApDocManager: Manager })
+        .AcApDocManager.instance
+      return manager.curView.htmlTransientManager
+        .groupsOnLayer('measurement')
+        .map(group => group.id)
+    })
+
+  await openDrawing(page)
+  await run(page, 'line', '0,0', '100,0', '')
+  await page.keyboard.press('Escape')
+  await page.evaluate(() =>
+    (
+      window as unknown as { AcApDocManager: Manager }
+    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+  )
+  await page.waitForTimeout(500)
+  await run(page, 'measuredistance', '0,0', '100,0')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(
+    /Dimension type=MeasureDistance start=.0, 0. end=.100, 0./
+  )
+  const [id] = await measurementGroups()
+  expect(id).toBeTruthy()
+
+  // Dragging a grip replaces the measurement under the same id.
+  await page.evaluate(id => {
+    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+      .instance.curView.htmlTransientManager
+    ht.selectGroup(id)
+  }, id)
+  await page.waitForTimeout(200)
+  const grip = await page.evaluate(id => {
+    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+      .instance.curView.htmlTransientManager
+    const group = ht.groupsOnLayer('measurement').find(g => g.id === id)!
+    return group.children
+      .map(child => {
+        const rect = child.element.getBoundingClientRect()
+        return {
+          x: rect.x + rect.width / 2,
+          y: rect.y + rect.height / 2,
+          width: rect.width,
+          name: child.element.className
+        }
+      })
+      .filter(child => /dot|grip/i.test(child.name))
+      .sort((a, b) => a.x - b.x)[0]
+  }, id)
+  expect(grip).toBeTruthy()
+  await page.mouse.move(grip.x, grip.y)
+  await page.mouse.down()
+  await page.mouse.move(grip.x + 100, grip.y + 60, { steps: 5 })
+  await page.mouse.up()
+  await expect(editor).not.toHaveValue(/MeasureDistance start=.0, 0./)
+  await expect(editor).toHaveValue(
+    /Dimension type=MeasureDistance start=.*end=.100, 0./
+  )
+  expect(await measurementGroups()).toEqual([id])
+
+  // Delete removes it for good.
+  await page.evaluate(id => {
+    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+      .instance.curView.htmlTransientManager
+    ht.selectGroup(id)
+  }, id)
+  await page.keyboard.press('Delete')
+  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  expect(await measurementGroups()).toEqual([])
 
   expect(errors).toEqual([])
 })
