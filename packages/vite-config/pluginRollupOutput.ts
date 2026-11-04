@@ -68,9 +68,6 @@ export function examplePeerPackageAliases(fromPackageDir: string): Alias[] {
   return aliases
 }
 
-/** Export plugins with a separate lazy `/register` entry. */
-export const PLUGIN_PACKAGE_IDS = ['cad-simple-ui-plugin'] as const
-
 /** Core viewer libraries shipped from this monorepo. */
 export const VIEWER_PACKAGE_IDS = [
   'cad-simple-viewer',
@@ -99,16 +96,6 @@ export const THREE_RENDERER_STACK_IDS = [
   'mtext-parser',
   'shx-parser'
 ] as const
-
-function isPluginRegisterModule(id: string, pluginId: string): boolean {
-  return (
-    id.includes(`${pluginId}/register`) ||
-    id.includes(`${pluginId}\\register`) ||
-    id.includes(`${pluginId}/dist/register.`) ||
-    id.includes(`${pluginId}\\dist\\register.`) ||
-    id.includes(`${pluginId}-register`)
-  )
-}
 
 function matchMonorepoPackage(id: string, packageId: string): boolean {
   const normalized = id.replace(/\\/g, '/')
@@ -140,18 +127,6 @@ function matchThreePackage(id: string): boolean {
  * Groups monorepo packages into predictable Rollup chunks for example app builds.
  */
 export const exampleManualChunks: ManualChunksOption = (id: string) => {
-  for (const pluginId of PLUGIN_PACKAGE_IDS) {
-    if (!matchMonorepoPackage(id, pluginId)) {
-      continue
-    }
-    // Register stubs are tiny; keep them in the app entry to avoid circular chunks
-    // with cad-simple-viewer (register imports plugin manager types from it).
-    if (isPluginRegisterModule(id, pluginId)) {
-      return undefined
-    }
-    return pluginId
-  }
-
   if (matchThreePackage(id)) {
     return 'three'
   }

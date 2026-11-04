@@ -81,8 +81,8 @@ jobs:
       - name: Build user guide
         run: DOCS_BASE=/cad-viewer/docs/ pnpm docs:build
 
-      - name: Pre-serve
-        run: pnpm pre-serve
+      - name: Build pages site
+        run: pnpm build:pages
 
       # Keep release/pages-only actions out of this job so PR builds do not
       # download softprops/action-gh-release or upload-pages-artifact (GitHub
@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: pages-source
-          path: packages/examples/public/
+          path: pages/
           retention-days: 1
 
   # Authenticates via npm Trusted Publishing (OIDC); no NPM_TOKEN needed.
@@ -166,12 +166,12 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: pages-source
-          path: packages/examples/public/
+          path: pages/
 
       - name: Upload github pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: './packages/examples/public/'
+          path: './pages/'
 
   deploy-pages:
     needs: upload-pages

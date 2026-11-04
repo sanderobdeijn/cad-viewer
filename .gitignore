@@ -5,6 +5,7 @@ docs/.vitepress/dist/
 docs/.vitepress/cache/
 dist
 dist-runner
+/pages/
 lib
 tmp
 tmp-*/

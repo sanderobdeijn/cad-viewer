@@ -50,7 +50,7 @@ export function acuiResolveDrawStyleKind(
  *
  * The accessory is only needed when the host ribbon is turned off;
  * cad-viewer already exposes color / lineweight / font-size on the ribbon.
- * Shells without a ribbon (simple-ui) should set `isShowRibbon` to `false`
+ * Shells without a ribbon should set `isShowRibbon` to `false`
  * with `{ persist: false }` instead of a separate host flag.
  *
  * @param kind - Active drawing or selection session, or `undefined` when none.

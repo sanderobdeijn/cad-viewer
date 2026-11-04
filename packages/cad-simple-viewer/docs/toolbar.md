@@ -8,7 +8,7 @@
 | **`AcUiShortCutToolbar`** | Top-right undo / redo / erase bar with an accessory slot and optional collapse |
 | **`AcUiSimpleToolbar`** | Low-level icon strip with overflow “⋯” menu (building block for the shortcut bar) |
 
-Hosts such as `@mlightcad/cad-simple-ui-plugin` compose **preset buttons** and layout defaults on top of `AcUiToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
+Hosts can compose **preset buttons** and layout defaults on top of `AcUiToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
 
 ---
 
@@ -211,7 +211,7 @@ When the submenu depends on the active document (e.g. layouts), attach a **gette
 
 ### 4.6 Config composition helpers
 
-When building lists from presets / append / exclude (as the simple-ui plugin does), use:
+When building lists from presets / append / exclude, use:
 
 | Helper | Purpose |
 |---|---|
@@ -220,7 +220,7 @@ When building lists from presets / append / exclude (as the simple-ui plugin doe
 | `acuiCreateToolbarSeparator()` | Separator factory |
 | `acuiFilterVisibleToolbarItems(items, openMode)` | Apply open-mode / visibility rules |
 
-Preset **catalogs** (concrete button definitions for `'select'`, `'measure'`, …) live in host packages such as `@mlightcad/cad-simple-ui-plugin`, not in the engine.
+Preset **catalogs** (concrete button definitions for `'select'`, `'measure'`, …) live in host packages, not in the engine.
 
 ---
 
@@ -313,47 +313,7 @@ AcApSettingManager.instance.isShowShortCutToolbar = false
 
 ---
 
-## 8. Using `@mlightcad/cad-simple-ui-plugin`
-
-For a batteries-included toolbar (measure, layer, layout, theme, …), register the plugin and pass `toolbar` / `layouts` options. The plugin builds items, mounts `AcUiToolbar`, and binds DocManager for you:
-
-```ts
-import { acuiRegisterSimpleUiPlugin } from '@mlightcad/cad-simple-ui-plugin'
-
-acuiRegisterSimpleUiPlugin({
-  toolbar: {
-    placement: 'right',
-    collapsible: true,
-    overflow: 'menu',
-    appendItems: [
-      {
-        id: 'my-tool',
-        label: 'toolbar.myTool',
-        icon: MY_ICON,
-        command: 'MYCMD'
-      }
-    ],
-    excludeItems: ['reading-mode']
-  },
-  layouts: {
-    phone: {
-      toolbar: { placement: 'bottom', showLabels: true, size: 'stretch' }
-    }
-  }
-})
-```
-
-Runtime (plugin instance):
-
-- `setToolbarItems(items | 'default')`
-- `setToolbarPlacement(placement)`
-- `setToolbarCollapsed(collapsed)`
-
-Prefer the plugin when you want the default CAD chrome; drop to `AcUiToolbar` directly when you need a minimal or fully custom button set.
-
----
-
-## 9. Styling and z-index
+## 8. Styling and z-index
 
 - Styles are injected by `acuiEnsureToolbarStyles()` (called from `AcUiToolbar`). Classes use the `ml-ex-ui-toolbar*` prefix.
 - Shortcut shell styles use `ml-ui-shortcut-toolbar-shell` / `ml-ui-simple-toolbar*`.
@@ -362,7 +322,7 @@ Prefer the plugin when you want the default CAD chrome; drop to `AcUiToolbar` di
 
 ---
 
-## 10. Checklist for a custom toolbar
+## 9. Checklist for a custom toolbar
 
 1. Decide mount `host` and `placement`.
 2. Build `AcUiToolbarItem[]` (commands, actions, children, toggles).

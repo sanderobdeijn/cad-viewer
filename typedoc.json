@@ -1,7 +1,7 @@
 {
     "entryPoints": ["packages/cad-viewer", "packages/cad-simple-viewer"],
     "name": "MLightCAD",
-    "out": "packages/examples/public/docs/api",
+    "out": "pages/docs/api",
     "entryPointStrategy": "packages",
     "includeVersion": false,
     "exclude": [

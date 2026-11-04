@@ -281,8 +281,8 @@ export class AcUiToolbar {
   /**
    * Applies layout-driven view options (placement, chrome flags, items).
    *
-   * Used by {@link AcApSimpleUiPlugin} when switching phone / pad / desktop
-   * layouts without recreating the toolbar instance.
+   * Used when switching phone / pad / desktop layouts without recreating the
+   * toolbar instance.
    *
    * @param view - Partial toolbar view state to merge.
    */

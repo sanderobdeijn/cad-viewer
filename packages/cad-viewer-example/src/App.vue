@@ -27,7 +27,7 @@ import {
 import { MlCadViewer } from '@mlightcad/cad-viewer'
 import { ref } from 'vue'
 
-// Isolate this example's prefs from cad-simple-viewer-example on localhost.
+// Keep this example's prefs under its own storage key on localhost.
 AcApSettingManager.configure({
   storageKey: 'mlightcad.settings.cad-viewer'
 })

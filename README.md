@@ -48,11 +48,7 @@ pnpm install
 ### Development
 
 ```bash
-# Start the full-featured viewer (cad-viewer)
 pnpm dev
-
-# Or start the simple viewer
-pnpm dev:simple
 ```
 
 ### Build
@@ -64,11 +60,7 @@ pnpm build
 ### Preview
 
 ```bash
-# Preview the full-featured viewer
 pnpm preview
-
-# Preview the simple viewer
-pnpm preview:simple
 ```
 
 ## How to Use
@@ -91,28 +83,6 @@ New to CAD Viewer? The **[User Guide](https://mlightcad.com/cad-viewer/docs/)** 
 CAD-Viewer is built around a modular **plugin system** in [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Plugins implement the `AcApPlugin` interface and hook into viewer lifecycle via `onLoad` / `onUnload`—typically to register commands, add UI, or wire export/import pipelines.
 
 Load plugins through `AcApDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command.
-
-The monorepo ships several first-party plugins. Each focuses on one concern; combine them as needed. **Installation, registration, and API details live in each package’s README**—see the links below.
-
-### Official plugins
-
-| Package | Role | Commands / capabilities |
-|---------|------|-------------------------|
-| [`@mlightcad/cad-simple-ui-plugin`](packages/cad-simple-ui-plugin) | **Toolbar & measurement palette UI** for `cad-simple-viewer` (plain DOM, no Vue/React) | `measurementpanel`, default toolbar (view, measure, theme, locale) |
-
-### `@mlightcad/cad-simple-ui-plugin` — UI chrome for the simple viewer
-
-[`cad-simple-viewer`](packages/cad-simple-viewer) deliberately ships **no application UI**—only the canvas and CAD core. If you embed the simple viewer in your own web app and want ready-made chrome without adopting the full Vue-based [`cad-viewer`](packages/cad-viewer) shell, **`cad-simple-ui-plugin` is the intended UI layer**.
-
-It provides:
-
-- A **configurable toolbar** (placement on any edge, default CAD commands, nested menus, custom items)
-- A **dock panel** with a **measurements** tab
-- **Theme sync** with the `COLORTHEME` sysvar and `--ml-ui-*` CSS tokens on your host element
-
-All widgets are framework-agnostic (plain DOM). The full Vue [`cad-viewer`](packages/cad-viewer) app has its own Element Plus UI and does not require this plugin; use `cad-simple-ui-plugin` when you build on `cad-simple-viewer` directly.
-
-→ **Quick start, toolbar customization, and options:** [packages/cad-simple-ui-plugin/README.md](packages/cad-simple-ui-plugin/README.md)
 
 ## Performance
 

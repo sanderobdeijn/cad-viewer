@@ -50,9 +50,9 @@ deploy:
     - pnpm install --frozen-lockfile
     - pnpm build
     - pnpm docs:build
-    - pnpm pre-serve
+    - pnpm build:pages
     - mkdir -p public
-    - cp -r ./packages/examples/public/* public/
+    - cp -r ./pages/* public/
   artifacts:
     paths:
       - public
