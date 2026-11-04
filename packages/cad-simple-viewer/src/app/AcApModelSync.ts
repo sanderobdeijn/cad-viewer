@@ -197,7 +197,7 @@ type PolylineVertex = GeometryPolyline2dVertex & {
 }
 
 const updatePolyline = (entity: AcDbPolyline, shape: GeometryPolyline2d) => {
-  // The text has no arcs or widths, so keep those of each existing vertex.
+  // The text has no widths, so keep those of each existing vertex.
   const previous = [
     ...(entity.geometry as unknown as GeometryPolyline2d<PolylineVertex>)
       .vertices
@@ -208,7 +208,7 @@ const updatePolyline = (entity: AcDbPolyline, shape: GeometryPolyline2d) => {
     entity.addVertexAt(
       index,
       new GeometryPoint2d(vertex.x, vertex.y),
-      kept?.bulge ?? 0,
+      vertex.bulge ?? 0,
       kept?.startWidth ?? -1,
       kept?.endWidth ?? -1
     )

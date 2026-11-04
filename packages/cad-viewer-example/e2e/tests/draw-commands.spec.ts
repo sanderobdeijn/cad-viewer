@@ -294,6 +294,53 @@ test('updates the drawing when the text in the editor is edited', async ({
   expect(errors).toEqual([])
 })
 
+test('edits the arcs of a polyline in the text editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+
+  await openDrawing(page)
+  await run(page, 'pline', '0,0', '100,0', 'A', '100,100', '')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(
+    /^Polyline vertices=\[\(0, 0\), \(100, 0, bulge=[-\d.]+\), \(100, 100\)\] closed=false$/
+  )
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        AcApDocManager: {
+          instance: { curView: { zoomToFitDrawing: () => void } }
+        }
+      }
+    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+  )
+  await page.waitForTimeout(500)
+  const withArc = await settledDrawnPixels(page)
+
+  // Removing the arc straightens that segment on screen.
+  const straight =
+    'Polyline vertices=[(0, 0), (100, 0), (100, 100)] closed=false'
+  await editor.fill(straight)
+  await expect
+    .poll(() => settledDrawnPixels(page), { timeout: 10000 })
+    .not.toBe(withArc)
+  const withoutArc = await settledDrawnPixels(page)
+
+  // Adding one back bends it again, and it stays in the text after leaving.
+  const bent =
+    'Polyline vertices=[(0, 0), (100, 0, bulge=1), (100, 100)] closed=false'
+  await editor.fill(bent)
+  await expect
+    .poll(() => settledDrawnPixels(page), { timeout: 10000 })
+    .not.toBe(withoutArc)
+  await editor.blur()
+  await expect(editor).toHaveValue(bent)
+  await expect(page.getByRole('alert')).toHaveCount(0)
+
+  expect(errors).toEqual([])
+})
+
 test('creates every kind of entity from the text editor', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))

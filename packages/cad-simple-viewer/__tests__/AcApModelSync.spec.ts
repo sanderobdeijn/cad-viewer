@@ -378,23 +378,112 @@ describe('AcApModelSync', () => {
       sync.dispose()
     })
 
-    it('keeps polyline arcs when only a vertex position changes', () => {
-      const db = createDatabase()
-      const polyline = new AcDbPolyline()
-      polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0.5)
-      polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
-      db.tables.blockTable.modelSpace.appendEntity(polyline)
-      const { sync } = createSync(db)
+    describe('polyline arcs', () => {
+      const createArcPolyline = (db: AcDbDatabase) => {
+        const polyline = new AcDbPolyline()
+        polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0.5, 2, 3)
+        polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
+        db.tables.blockTable.modelSpace.appendEntity(polyline)
+        return polyline
+      }
+      const bulges = (db: AcDbDatabase) => {
+        const [entity] = db.tables.blockTable.modelSpace.newIterator()
+        const geometry = entity.geometry as unknown as {
+          vertices: { bulge: number; startWidth?: number }[]
+        }
+        return geometry.vertices.map(vertex => vertex.bulge)
+      }
 
-      sync.applyText('Polyline vertices=[(0, 0), (20, 0)] closed=false')
+      it('shows the arc of each vertex', () => {
+        const db = createDatabase()
+        createArcPolyline(db)
+        const { sync } = createSync(db)
 
-      const [entity] = db.tables.blockTable.modelSpace.newIterator()
-      expect((entity as AcDbPolyline).getPoint2dAt(1).x).toBe(20)
-      expect(
-        (entity.geometry as unknown as { vertices: { bulge: number }[] })
-          .vertices[0].bulge
-      ).toBe(0.5)
-      sync.dispose()
+        expect(sync.model.toString()).toBe(
+          'Polyline vertices=[(0, 0, bulge=0.5), (10, 0)] closed=false'
+        )
+        sync.dispose()
+      })
+
+      it('keeps an arc when only a vertex position changes', () => {
+        const db = createDatabase()
+        const polyline = createArcPolyline(db)
+        const { sync } = createSync(db)
+
+        sync.applyText(
+          'Polyline vertices=[(0, 0, bulge=0.5), (20, 0)] closed=false'
+        )
+
+        expect(polyline.getPoint2dAt(1).x).toBe(20)
+        expect(bulges(db)).toEqual([0.5, 0])
+        sync.dispose()
+      })
+
+      it('changes, adds and removes arcs in place', () => {
+        const db = createDatabase()
+        const polyline = createArcPolyline(db)
+        const { sync } = createSync(db)
+
+        sync.applyText(
+          'Polyline vertices=[(0, 0, bulge=-1), (10, 0)] closed=false'
+        )
+        expect(bulges(db)).toEqual([-1, 0])
+
+        sync.applyText(
+          'Polyline vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false'
+        )
+        expect(bulges(db)).toEqual([0, 1, 0])
+
+        const [entity] = db.tables.blockTable.modelSpace.newIterator()
+        expect(entity.objectId).toBe(polyline.objectId)
+        expect(sync.model.toString()).toBe(
+          'Polyline vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false'
+        )
+        sync.dispose()
+      })
+
+      it('keeps an arc on its segment when a vertex is inserted before it', () => {
+        const db = createDatabase()
+        createArcPolyline(db)
+        const { sync } = createSync(db)
+
+        sync.applyText(
+          'Polyline vertices=[(-5, 0), (0, 0, bulge=0.5), (10, 0)] closed=false'
+        )
+
+        expect(bulges(db)).toEqual([0, 0.5, 0])
+        sync.dispose()
+      })
+
+      it('keeps vertex widths when an arc changes', () => {
+        const db = createDatabase()
+        createArcPolyline(db)
+        const { sync } = createSync(db)
+
+        sync.applyText(
+          'Polyline vertices=[(0, 0, bulge=1), (10, 0)] closed=false'
+        )
+
+        const [entity] = db.tables.blockTable.modelSpace.newIterator()
+        const geometry = entity.geometry as unknown as {
+          vertices: { startWidth?: number; endWidth?: number }[]
+        }
+        expect(geometry.vertices[0].startWidth).toBe(2)
+        expect(geometry.vertices[0].endWidth).toBe(3)
+        sync.dispose()
+      })
+
+      it('creates a new polyline with arcs', () => {
+        const db = createDatabase()
+        const { sync } = createSync(db)
+
+        sync.applyText(
+          'Polyline vertices=[(0, 0, bulge=0.5), (10, 0)] closed=false'
+        )
+
+        expect(bulges(db)).toEqual([0.5, 0])
+        sync.dispose()
+      })
     })
 
     it('replaces an entity that changes kind and keeps its look', () => {

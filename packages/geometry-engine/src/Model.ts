@@ -4,6 +4,7 @@ import {
   GeometryEllipseArc2d,
   GeometryLine2d,
   GeometryPolyline2d,
+  GeometryPolyline2dVertex,
   GeometryShape
 } from './geometry'
 import { GeometryPoint2d, type GeometryPoint2dLike } from './math'
@@ -14,8 +15,16 @@ const formatNumber = (value: number) => String(Number(value.toFixed(6)))
 const formatPoint = (point: GeometryPoint2dLike) =>
   `(${formatNumber(point.x)}, ${formatNumber(point.y)})`
 
-const formatPoints = (points: GeometryPoint2dLike[]) =>
-  `[${points.map(formatPoint).join(', ')}]`
+/** The bulge is left out for a straight segment. */
+const formatPolylineVertex = (vertex: GeometryPolyline2dVertex) => {
+  const bulge = formatNumber(vertex.bulge ?? 0)
+  return bulge === '0'
+    ? formatPoint(vertex)
+    : `(${formatNumber(vertex.x)}, ${formatNumber(vertex.y)}, bulge=${bulge})`
+}
+
+const formatPolylineVertices = (vertices: GeometryPolyline2dVertex[]) =>
+  `[${vertices.map(formatPolylineVertex).join(', ')}]`
 
 const formatShape = (shape: GeometryShape) => {
   if (shape instanceof GeometryLine2d) {
@@ -28,7 +37,7 @@ const formatShape = (shape: GeometryShape) => {
     return `EllipseArc center=${formatPoint(shape.center)} majorRadius=${formatNumber(shape.majorAxisRadius)} minorRadius=${formatNumber(shape.minorAxisRadius)} rotation=${formatNumber(shape.rotation)} startAngle=${formatNumber(shape.startAngle)} endAngle=${formatNumber(shape.endAngle)}`
   }
   if (shape instanceof GeometryPolyline2d) {
-    return `Polyline vertices=${formatPoints(shape.vertices)} closed=${shape.closed}`
+    return `Polyline vertices=${formatPolylineVertices(shape.vertices)} closed=${shape.closed}`
   }
   return 'Shape'
 }
@@ -68,7 +77,9 @@ export class ModelParseError extends Error {
 
 const NUMBER_PATTERN = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/
 const POINT_PATTERN = /^\(\s*([^\s,()]+)\s*,\s*([^\s,()]+)\s*\)$/
-const POINT_IN_LIST_PATTERN = /\([^()]*\)/g
+const VERTEX_IN_LIST_PATTERN = /\([^()]*\)/g
+const VERTEX_PATTERN =
+  /^\(\s*([^\s,()]+)\s*,\s*([^\s,()]+)\s*(?:,\s*bulge\s*=\s*([^\s,()]+)\s*)?\)$/
 const FIELD_NAME_PATTERN = /^\s*([A-Za-z_]\w*)=/
 const FIELD_VALUE_PATTERNS: Record<string, RegExp> = {
   '"': /^"(.*?)"(?=\s+[A-Za-z_]\w*=|\s*$)/,
@@ -84,6 +95,21 @@ const parseNumber = (name: string, raw: string) => {
     throw new Error(`${name} must be a number`)
   }
   return Number(raw)
+}
+
+const parsePolylineVertex = (
+  name: string,
+  raw: string
+): GeometryPolyline2dVertex => {
+  const match = VERTEX_PATTERN.exec(raw)
+  if (!match) {
+    throw new Error(`${name} must list points such as (1, 2, bulge=0.5)`)
+  }
+  return {
+    x: parseNumber(name, match[1]),
+    y: parseNumber(name, match[2]),
+    bulge: match[3] === undefined ? 0 : parseNumber('bulge', match[3])
+  }
 }
 
 const parsePoint = (name: string, raw: string) => {
@@ -152,17 +178,17 @@ class ModelTextFields {
     return parsePoint(name, this.required(name))
   }
 
-  points(name: string) {
+  polylineVertices(name: string) {
     const raw = this.required(name)
     const inner = /^\[(.*)\]$/.exec(raw)?.[1]
     if (
       inner === undefined ||
-      inner.replace(POINT_IN_LIST_PATTERN, '').replace(/[\s,]/g, '') !== ''
+      inner.replace(VERTEX_IN_LIST_PATTERN, '').replace(/[\s,]/g, '') !== ''
     ) {
       throw new Error(`${name} must be a list such as [(1, 2), (3, 4)]`)
     }
-    return (inner.match(POINT_IN_LIST_PATTERN) ?? []).map(point =>
-      parsePoint(name, point)
+    return (inner.match(VERTEX_IN_LIST_PATTERN) ?? []).map(vertex =>
+      parsePolylineVertex(name, vertex)
     )
   }
 
@@ -229,14 +255,11 @@ const parseShape = (kind: string, fields: ModelTextFields) => {
       )
     }
     case 'Polyline': {
-      const vertices = fields.points('vertices')
+      const vertices = fields.polylineVertices('vertices')
       if (vertices.length < 2) {
         throw new Error('vertices needs at least 2 points')
       }
-      return new GeometryPolyline2d(
-        vertices.map(({ x, y }) => ({ x, y, bulge: 0 })),
-        fields.boolean('closed')
-      )
+      return new GeometryPolyline2d(vertices, fields.boolean('closed'))
     }
     default:
       return undefined

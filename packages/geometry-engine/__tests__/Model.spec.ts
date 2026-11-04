@@ -82,6 +82,7 @@ describe('Model', () => {
         'CircularArc center=(1, 2) radius=3 startAngle=0 endAngle=0',
         'EllipseArc center=(0, 0) majorRadius=5 minorRadius=2 rotation=0.5 startAngle=0 endAngle=6.283185',
         'Polyline vertices=[(0, 0), (1, 0), (1, 1)] closed=true',
+        'Polyline vertices=[(0, 0, bulge=0.5), (1, 0), (1, 1, bulge=-1)] closed=false',
         'Point position=(5, 5)',
         'Dimension type=AlignedDimension xLine1Point=(0, 0) dimLinePoint=(5, 5) text="a b=c" measurement=10'
       ].join('\n')
@@ -97,6 +98,18 @@ describe('Model', () => {
       expect((model.shapes[0] as GeometryCircularArc2d).closed).toBe(true)
       expect(model.toString()).toBe(
         'CircularArc center=(0, 0) radius=1 startAngle=0 endAngle=0'
+      )
+    })
+
+    it('reads polyline arcs into the bulge of each vertex', () => {
+      const model = Model.parse(
+        'Polyline vertices=[( 0,0 , bulge = 0.25 ), (1, 0)] closed=false'
+      )
+
+      const { vertices } = model.shapes[0] as GeometryPolyline2d
+      expect(vertices.map(vertex => vertex.bulge)).toEqual([0.25, 0])
+      expect(model.toString()).toBe(
+        'Polyline vertices=[(0, 0, bulge=0.25), (1, 0)] closed=false'
       )
     })
 
@@ -130,6 +143,14 @@ describe('Model', () => {
       ['Polyline vertices=[(0, 0)] closed=false', 'at least 2 points'],
       ['Polyline vertices=[(0, 0), (1, 1)] closed=maybe', 'true or false'],
       ['Polyline vertices=[(0, 0) x (1, 1)] closed=false', 'must be a list'],
+      [
+        'Polyline vertices=[(0, 0, 1), (1, 1)] closed=false',
+        'must list points'
+      ],
+      [
+        'Polyline vertices=[(0, 0, bulge=x), (1, 1)] closed=false',
+        'bulge must be a number'
+      ],
       ['Spline degree=3', 'Unknown item "Spline"']
     ])('rejects %s', (line, message) => {
       expect(() => Model.parse(line)).toThrow(message)
