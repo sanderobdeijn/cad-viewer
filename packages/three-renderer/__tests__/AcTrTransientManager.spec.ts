@@ -42,7 +42,9 @@ describe('AcTrTransientManager.applyTransforms', () => {
       context
     )
     const group = new AcTrGroup([line], context)
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
+    group.matrix.makeTranslation(574, 0, 0)
+    group.matrixAutoUpdate = false
+    group.updateMatrixWorld(true)
     group.objectId = 'GROUP-7B33'
 
     manager.add(group)

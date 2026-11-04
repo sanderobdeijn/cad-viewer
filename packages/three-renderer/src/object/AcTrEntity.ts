@@ -1,6 +1,5 @@
 import {
   AcGiEntity,
-  GeometryMatrix3d,
   GeometryPoint2d
 } from '@mlightcad/data-model'
 import * as THREE from 'three'
@@ -10,7 +9,6 @@ import type { AcTrDrawMode } from '../draw/AcTrDrawMode'
 import { AcTrRenderContext } from '../renderer/AcTrRenderContext'
 import {
   AcTrMaterialUtil,
-  AcTrMatrixUtil,
   isObjectHierarchyVisible
 } from '../util'
 import {
@@ -53,8 +51,7 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
    * Axis-aligned bounding box in world (WCS) coordinates.
    *
    * Used for spatial indexing, selection, and raycast fallback. Subclasses must
-   * populate this in WCS when geometry is built; {@link applyMatrix} updates it
-   * when a transform is applied.
+   * populate this in WCS when geometry is built.
    */
   get wcsBbox() {
     return this._wcsBbox
@@ -151,8 +148,7 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
 
     // Restore the relative transform onto the leaf itself (not baked into geometry).
     // Copy the exact 4×4 — Matrix4.decompose cannot round-trip mirrored
-    // scales (negative determinants), which previously corrupted batched glyph
-    // placement after collapseInverseParentTransformIntoPlacement.
+    // scales (negative determinants).
     function applyRelativeMatrix(
       object: THREE.Object3D,
       relativeMatrix: THREE.Matrix4
@@ -354,42 +350,6 @@ export class AcTrEntity extends AcTrObject implements AcGiEntity {
    */
   addChild(entity: AcTrEntity) {
     this.add(entity)
-  }
-
-  /**
-   * Applies a world transform to this entity's local matrix.
-   *
-   * Intentionally avoids {@link THREE.Object3D.applyMatrix4}, which decomposes
-   * into position/quaternion/scale and cannot represent mirrored scales
-   * (`scale.y < 0`, etc.). Those decompositions push labels tens of millions of
-   * units away.
-   *
-   * After this call {@link matrixAutoUpdate} is `false` so the exact 4×4 matrix
-   * (including reflection) is what {@link updateMatrixWorld} propagates.
-   */
-  applyMatrix(matrix: GeometryMatrix3d) {
-    const threeMatrix = AcTrMatrixUtil.createMatrix4(matrix)
-    this.applyFullMatrix4(threeMatrix)
-    if (!this._wcsBbox.isEmpty()) {
-      this._wcsBbox.applyMatrix4(threeMatrix)
-    }
-  }
-
-  /**
-   * Left-multiplies {@link matrix} by `threeMatrix` without TRS decomposition.
-   *
-   * @param threeMatrix - Transform to apply in parent-local space.
-   */
-  protected applyFullMatrix4(threeMatrix: THREE.Matrix4) {
-    // When matrixAutoUpdate is already false, `matrix` is authoritative —
-    // updateMatrix() would wipe reflections by recomposing from TRS.
-    if (this.matrixAutoUpdate) {
-      this.updateMatrix()
-    }
-    this.matrix.multiplyMatrices(threeMatrix, this.matrix)
-    this.matrixAutoUpdate = false
-    this.matrixWorldNeedsUpdate = true
-    this.updateMatrixWorld(true)
   }
 
   /**

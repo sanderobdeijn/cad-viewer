@@ -1,9 +1,6 @@
 /**
  * One class definition from a drawing's CLASSES section (DXF) or class table (DWG).
  *
- * Proxy entities (group code **91**) reference classes by 0-based order in this
- * list, with class IDs starting at 500.
- *
  * @see https://help.autodesk.com/view/OARX/2024/ENU/?guid=GUID-A1B647CC-CA99-4AAC-891C-BD138BA425A6
  */
 export interface AcDbClass {

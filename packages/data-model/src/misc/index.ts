@@ -74,14 +74,6 @@ export {
 export { AcDbDataGenerator } from './AcDbDataGenerator'
 export { AcDbDimArrowType } from './AcDbDimArrowType'
 export {
-  RAW_COLOR_TYPE_ACI,
-  RAW_COLOR_TYPE_BY_BLOCK,
-  RAW_COLOR_TYPE_BY_LAYER,
-  RAW_COLOR_TYPE_RGB,
-  RAW_COLOR_TYPE_WINDOW_BG,
-  acdbDecodeMLeaderStyleRawColor
-} from './AcDbMLeaderStyleColorCodec'
-export {
   ACDB_DRAW_CIRCLE_SIDES_DRAFT,
   ACDB_DRAW_CIRCLE_SIDES_HIGH,
   ACDB_DRAW_CIRCLE_SIDES_STANDARD,
@@ -108,19 +100,6 @@ export {
   acdbToggleOsnapMode
 } from './AcDbOsnapMode'
 export { AcDbUnitsValue } from './AcDbUnitsValue'
-export {
-  AcDbProxyGraphic,
-  AcDbProxyGraphicType,
-  ACDB_PROXY_GRAPHIC_CHUNK_SIZE
-} from './proxyGraphic'
-export {
-  AcDbProxyGraphicBitStream,
-  AcDbProxyGraphicByteStream,
-  AcDbProxyGraphicEndOfBufferError,
-  acdbBytesToHexString,
-  acdbCombineDxfBinaryChunks,
-  acdbHexStringsToBytes
-} from './proxyGraphic'
 export {
   acdbPreviewIconToDataUrl,
   acdbThumbnailImageToDataUrl

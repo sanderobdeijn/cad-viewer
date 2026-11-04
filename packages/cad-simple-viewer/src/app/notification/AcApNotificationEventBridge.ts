@@ -214,7 +214,7 @@ export class AcApNotificationEventBridge {
     this.syncActiveSession()
     const sessionId = this._docManager.activeSessionId
     // Tab switch / re-activate: keep the existing unsupported warning and skip
-    // another full-database proxy scan.
+    // another analysis.
     if (sessionId && this._unsupportedNotifiedSessions.has(sessionId)) {
       return
     }
@@ -322,15 +322,7 @@ export class AcApNotificationEventBridge {
       ? (this._pendingUnknownBySession.get(sessionId) ?? 0)
       : 0
 
-    const classOnly = acapAnalyzeUnsupportedDrawing(doc.database, unknownCount, {
-      scanProxies: false
-    })
-    const analysis =
-      classOnly.isTianzhengDrawing || classOnly.unknownEntityCount > 0
-        ? classOnly
-        : acapAnalyzeUnsupportedDrawing(doc.database, unknownCount, {
-            scanProxies: true
-          })
+    const analysis = acapAnalyzeUnsupportedDrawing(doc.database, unknownCount)
 
     if (sessionId) {
       this._unsupportedNotifiedSessions.add(sessionId)

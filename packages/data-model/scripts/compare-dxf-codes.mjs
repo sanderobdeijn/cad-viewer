@@ -51,8 +51,7 @@ const pairs = [
   ['VIEWPORT', 'src/entity/AcDbViewport.ts', 'd:/code/dxf-json/src/parser/entities/viewport/parser.ts'],
   ['DIMENSION', 'src/entity/dimension/AcDbDimension.ts', 'd:/code/dxf-json/src/parser/entities/dimension/parser.ts'],
   ['ALIGNED_DIM', 'src/entity/dimension/AcDbAlignedDimension.ts', 'd:/code/dxf-json/src/parser/entities/dimension/parser.ts'],
-  ['OLE2FRAME', 'src/entity/AcDbOle2Frame.ts', 'd:/code/dxf-json/src/parser/entities/ole2frame/parser.ts'],
-  ['PROXY', 'src/entity/AcDbProxyEntity.ts', 'd:/code/dxf-json/src/parser/entities/acadProxyEntity/parser.ts']
+  ['OLE2FRAME', 'src/entity/AcDbOle2Frame.ts', 'd:/code/dxf-json/src/parser/entities/ole2frame/parser.ts']
 ]
 
 // Codes handled by AcDbEntity / AcDbObject common paths.

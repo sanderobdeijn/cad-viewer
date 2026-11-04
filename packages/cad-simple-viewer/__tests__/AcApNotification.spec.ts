@@ -173,8 +173,7 @@ describe('acapAnalyzeUnsupportedDrawing', () => {
           }
         }
       } as never,
-      0,
-      { scanProxies: false }
+      0
     )
 
     expect(analysis.isTianzhengDrawing).toBe(true)
@@ -192,8 +191,7 @@ describe('acapAnalyzeUnsupportedDrawing', () => {
           }
         }
       } as never,
-      5,
-      { scanProxies: false }
+      5
     )
 
     expect(analysis.unknownEntityCount).toBe(5)
@@ -210,9 +208,6 @@ describe('acapResolveUnsupportedEntitiesMessage', () => {
     if (key === 'main.message.unknownEntities') {
       return `UNK:${params?.count}`
     }
-    if (key === 'main.message.emptyProxyEntities') {
-      return `PROXY:${params?.count}`
-    }
     return key
   }
 
@@ -221,23 +216,9 @@ describe('acapResolveUnsupportedEntitiesMessage', () => {
       acapResolveUnsupportedEntitiesMessage(t, {
         unknownEntityCount: 2,
         tianzhengEntityCount: 10,
-        emptyProxyEntityCount: 10,
         isTianzhengDrawing: true,
         shouldWarn: true
       })
     ).toBe('TZ:10 UNK:2')
   })
-
-  it('uses empty-proxy wording when no 天正 / unknown counts', () => {
-    expect(
-      acapResolveUnsupportedEntitiesMessage(t, {
-        unknownEntityCount: 0,
-        tianzhengEntityCount: 0,
-        emptyProxyEntityCount: 4,
-        isTianzhengDrawing: false,
-        shouldWarn: true
-      })
-    ).toBe('PROXY:4')
-  })
 })
-

@@ -47,9 +47,7 @@ export default {
     unknownEntities:
       'This drawing contains {count} unknown or unsupported entities! Those entities will not be shown.',
     tianzhengEntities:
-      'This drawing contains TArch / Tianzheng (or similar third-party) custom entities (about {count}). They cannot be fully parsed in this environment, so some content may not display.',
-    emptyProxyEntities:
-      'This drawing contains {count} custom entities without proxy graphics! Those entities will not be shown.'
+      'This drawing contains TArch / Tianzheng (or similar third-party) custom entities (about {count}). They cannot be fully parsed in this environment, so some content may not display.'
   },
   notification: {
     center: {

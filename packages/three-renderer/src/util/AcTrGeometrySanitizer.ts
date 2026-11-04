@@ -170,7 +170,7 @@ export class AcTrGeometrySanitizer {
       ? `${entityTypeName(entity)} ${entity.objectId} (layer ${entity.layer})`
       : 'unknown entity'
     console.warn(
-      `[AcTrGeometrySanitizer] ${label} ${source}: ${detail}. Upstream DWG/proxy-graphic data is likely invalid.`
+      `[AcTrGeometrySanitizer] ${label} ${source}: ${detail}. Upstream entity data is likely invalid.`
     )
   }
 

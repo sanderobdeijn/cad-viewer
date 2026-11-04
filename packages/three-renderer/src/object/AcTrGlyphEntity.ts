@@ -27,10 +27,6 @@ import { AcTrEntity } from './AcTrEntity'
 const _raycastBox = /*@__PURE__*/ new THREE.Box3()
 /** Scratch point reused by {@link AcTrGlyphEntity.raycast} during bbox fallback. */
 const _raycastPoint = /*@__PURE__*/ new THREE.Vector3()
-/** Identity matrix for detecting transforms applied before drawing. */
-const _identityMatrix = /*@__PURE__*/ new THREE.Matrix4()
-/** Scratch matrix used when folding a parent transform into placement. */
-const _collapseMatrix = /*@__PURE__*/ new THREE.Matrix4()
 /** Scratch used to convert mtext-renderer logical boxes into parent-local space. */
 const _logicalBox = /*@__PURE__*/ new THREE.Box3()
 /** Scratch inverse of the parent world matrix for logical-box conversion. */
@@ -356,10 +352,6 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
    */
   protected attachRendered(rendered: MTextObject) {
     this.add(rendered)
-    // Fold a transform applied before drawing into placement before
-    // flatten/unbatch. Must run while the renderer hierarchy is
-    // still intact so the placement root can absorb this.matrix.
-    this.collapseInverseParentTransformIntoPlacement(rendered)
     const renderRoot = resolveMTextRenderRoot(rendered)
     if (this.resolveDrawMode() === 'unbatch') {
       this.markDrawableUnbatched(renderRoot)
@@ -383,48 +375,6 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
       getSceneDrawableUserData(object).bboxIntersectionCheck = true
     })
     this.updateSelectionBox(rendered)
-  }
-
-  /**
-   * Folds a transform applied before glyphs were built into their placement.
-   *
-   * A caller can transform an entity before its deferred glyphs exist, such as
-   * a proxy entity with a world transform. Mirrored scales make
-   * {@link THREE.Matrix4.decompose} unreliable — unbatched cloning can then land
-   * tens of millions of units away and inflate zoom-to-extents / layer-fit boxes.
-   *
-   * Fold `this.matrix · placementLocal` into the placement root and reset
-   * this entity to identity.
-   *
-   * @param rendered Rendered glyph object returned by the shared mtext-renderer.
-   */
-  private collapseInverseParentTransformIntoPlacement(rendered: MTextObject) {
-    // `matrix` is authoritative after applyFullMatrix4 (matrixAutoUpdate false).
-    if (this.matrixAutoUpdate) {
-      this.updateMatrix()
-    }
-    if (this.matrix.equals(_identityMatrix)) {
-      return
-    }
-
-    const renderRoot = resolveMTextRenderRoot(rendered)
-    if (renderRoot.matrixAutoUpdate) {
-      renderRoot.updateMatrix()
-    }
-    // Keep the exact product matrix — do not decompose. Mirrored
-    // transforms have negative determinants that THREE cannot round-trip via TRS.
-    _collapseMatrix.copy(this.matrix).multiply(renderRoot.matrix)
-    renderRoot.matrixAutoUpdate = false
-    renderRoot.matrix.copy(_collapseMatrix)
-    renderRoot.matrixWorldNeedsUpdate = true
-
-    this.position.set(0, 0, 0)
-    this.quaternion.identity()
-    this.scale.set(1, 1, 1)
-    this.matrix.identity()
-    this.matrixAutoUpdate = true
-    this.matrixWorldNeedsUpdate = true
-    this.updateMatrixWorld(true)
   }
 
   /**

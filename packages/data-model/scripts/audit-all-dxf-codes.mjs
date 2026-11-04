@@ -91,7 +91,6 @@ const pairs = [
   ['ALIGNED_DIM', ['src/entity/dimension/AcDbAlignedDimension.ts', dim, entity], `${DXF_JSON}/entities/dimension/parser.ts`],
   ['OLE2FRAME', ['src/entity/AcDbOle2Frame.ts', entity], `${DXF_JSON}/entities/ole2frame/parser.ts`],
   ['OLEFRAME', ['src/entity/AcDbOleFrame.ts', entity], `${DXF_JSON}/entities/oleframe/parser.ts`],
-  ['PROXY', ['src/entity/AcDbProxyEntity.ts', entity], `${DXF_JSON}/entities/acadProxyEntity/parser.ts`],
   ['WIPEOUT', ['src/entity/AcDbRasterImage.ts', entity], `${DXF_JSON}/entities/wipeout/parser.ts`],
   ['MESH', null, `${DXF_JSON}/entities/mesh/parser.ts`],
   ['LIGHT', null, `${DXF_JSON}/entities/light/parser.ts`],

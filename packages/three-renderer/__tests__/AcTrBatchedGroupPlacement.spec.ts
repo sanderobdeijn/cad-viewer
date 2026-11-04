@@ -1,4 +1,3 @@
-import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import {
@@ -67,7 +66,9 @@ describe('AcTrBatchedGroup preview subset', () => {
       context
     )
     const group = new AcTrGroup([titleLine], context)
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
+    group.matrix.makeTranslation(574, 0, 0)
+    group.matrixAutoUpdate = false
+    group.updateMatrixWorld(true)
     group.objectId = GROUP_ID
     group.layerName = '图框层'
     group.visible = true

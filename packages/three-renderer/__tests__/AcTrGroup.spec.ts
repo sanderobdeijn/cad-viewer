@@ -1,4 +1,3 @@
-import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { expectWcsBboxCloseTo } from './helpers/expectWcsBbox'
@@ -57,90 +56,6 @@ describe('AcTrGroup wcsBbox', () => {
     ])
   })
 
-  it('transforms group and child WCS boxes together via applyMatrix', () => {
-    const context = new AcTrRenderContext()
-    const line = createLine('line-a', { x: 0, y: 0 }, { x: 10, y: 5 }, context)
-    const group = new AcTrGroup([line], context)
-
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(50, 25, 0))
-
-    expectWcsBboxCloseTo(group.wcsBbox, [50, 25, 0], [60, 30, 0])
-    expect(group.wcsChildBoxes[0]).toMatchObject({
-      minX: 50,
-      minY: 25,
-      maxX: 60,
-      maxY: 30,
-      id: 'line-a'
-    })
-  })
-
-  it('keeps wcsBbbox aligned with wcsChildBoxes union after insert transform', () => {
-    const context = new AcTrRenderContext()
-    const line0 = createLine(
-      'line-0',
-      { x: 0, y: 0 },
-      { x: 10, y: 0 },
-      context,
-      '0'
-    )
-    const lineL2 = createLine(
-      'line-l2',
-      { x: 5, y: 5 },
-      { x: 15, y: 10 },
-      context,
-      'L2'
-    )
-
-    const group = new AcTrGroup([line0, lineL2], context)
-
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
-
-    expectWcsBboxCloseTo(group.wcsBbox, [100, 200, 0], [115, 210, 0])
-    expect(group.wcsChildBoxes).toEqual([
-      { minX: 100, minY: 200, maxX: 110, maxY: 200, id: 'line-0' },
-      { minX: 105, minY: 205, maxX: 115, maxY: 210, id: 'line-l2' }
-    ])
-
-    const union = new THREE.Box3()
-    for (const box of group.wcsChildBoxes) {
-      union.union(
-        new THREE.Box3(
-          new THREE.Vector3(box.minX, box.minY, 0),
-          new THREE.Vector3(box.maxX, box.maxY, 0)
-        )
-      )
-    }
-    expectWcsBboxCloseTo(
-      group.wcsBbox,
-      [union.min.x, union.min.y, 0],
-      [union.max.x, union.max.y, 0]
-    )
-  })
-
-  it('keeps wcsBbox aligned with child-box union after rotated insert transform', () => {
-    const context = new AcTrRenderContext()
-    const lineA = createLine('line-a', { x: 0, y: 0 }, { x: 10, y: 0 }, context)
-    const lineB = createLine('line-b', { x: 0, y: 0 }, { x: 0, y: 10 }, context)
-    const group = new AcTrGroup([lineA, lineB], context)
-
-    group.applyMatrix(new GeometryMatrix3d().makeRotationZ(Math.PI / 4))
-
-    const union = new THREE.Box3()
-    for (const box of group.wcsChildBoxes) {
-      union.union(
-        new THREE.Box3(
-          new THREE.Vector3(box.minX, box.minY, 0),
-          new THREE.Vector3(box.maxX, box.maxY, 0)
-        )
-      )
-    }
-    expectWcsBboxCloseTo(
-      group.wcsBbox,
-      [union.min.x, union.min.y, 0],
-      [union.max.x, union.max.y, 0]
-    )
-  })
-
   it('rebuilds WCS child boxes after deferred geometry is attached', () => {
     const context = new AcTrRenderContext()
     const line = createLine(
@@ -160,7 +75,6 @@ describe('AcTrGroup wcsBbox', () => {
     deferred.wcsBbox.makeEmpty()
 
     const group = new AcTrGroup([line, deferred], context)
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     expect(group.wcsChildBoxes).toHaveLength(1)
 
@@ -172,43 +86,19 @@ describe('AcTrGroup wcsBbox', () => {
 
     expect(group.wcsChildBoxes).toHaveLength(2)
     expect(group.wcsChildBoxes[1]).toMatchObject({
-      minX: 105,
-      minY: 205,
-      maxX: 115,
-      maxY: 210,
+      minX: 5,
+      minY: 5,
+      maxX: 15,
+      maxY: 10,
       id: 'line-deferred'
     })
-    expectWcsBboxCloseTo(group.wcsBbox, [100, 200, 0], [115, 210, 0])
+    expectWcsBboxCloseTo(group.wcsBbox, [0, 0, 0], [15, 10, 0])
   })
 
-  it('keeps WCS child boxes after applyMatrix and refreshWcsChildBoxesFromChildren', () => {
-    const context = new AcTrRenderContext()
-    const line = createLine(
-      'line-title',
-      { x: -180, y: 28 },
-      { x: 0, y: 28 },
-      context
-    )
-    const group = new AcTrGroup([line], context)
-
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(574, 0, 0))
-    group.refreshWcsChildBoxesFromChildren()
-
-    expect(group.wcsChildBoxes[0]).toMatchObject({
-      minX: 394,
-      minY: 28,
-      maxX: 574,
-      maxY: 28,
-      id: 'line-title'
-    })
-    expectWcsBboxCloseTo(group.wcsBbox, [394, 28, 0], [574, 28, 0])
-  })
-
-  it('preserves applyMatrix child boxes when refresh runs after deferred syncDraw', () => {
+  it('preserves existing child boxes when refresh runs after deferred syncDraw', () => {
     const context = new AcTrRenderContext()
     const line = createLine('line-a', { x: 0, y: 0 }, { x: 10, y: 5 }, context)
     const group = new AcTrGroup([line], context)
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
 
     // A local wcsBbbox can remain far from WCS.
     // A full refresh from source entities would inflate spatial bounds again.
@@ -220,44 +110,13 @@ describe('AcTrGroup wcsBbox', () => {
     group.refreshWcsChildBoxesFromChildren()
 
     expect(group.wcsChildBoxes[0]).toMatchObject({
-      minX: 100,
-      minY: 200,
-      maxX: 110,
-      maxY: 205,
+      minX: 0,
+      minY: 0,
+      maxX: 10,
+      maxY: 5,
       id: 'line-a'
     })
-    expectWcsBboxCloseTo(group.wcsBbox, [100, 200, 0], [110, 205, 0])
-  })
-
-  it('skips invalid child boxes when applying insert transform', () => {
-    const context = new AcTrRenderContext()
-    const line = createLine(
-      'line-a',
-      { x: 0, y: 0 },
-      { x: 10, y: 0 },
-      context,
-      'L2'
-    )
-    const group = new AcTrGroup([line], context)
-    group.wcsChildBoxes.push({
-      minX: Number.POSITIVE_INFINITY,
-      minY: Number.POSITIVE_INFINITY,
-      maxX: Number.NEGATIVE_INFINITY,
-      maxY: Number.NEGATIVE_INFINITY,
-      id: 'deferred-text'
-    })
-
-    group.applyMatrix(new GeometryMatrix3d().makeTranslation(50, 25, 0))
-
-    expect(group.wcsChildBoxes[0]).toMatchObject({
-      minX: 50,
-      minY: 25,
-      maxX: 60,
-      maxY: 25,
-      id: 'line-a'
-    })
-    expect(Number.isFinite(group.wcsChildBoxes[1].minX)).toBe(false)
-    expectWcsBboxCloseTo(group.wcsBbox, [50, 25, 0], [60, 25, 0])
+    expectWcsBboxCloseTo(group.wcsBbox, [0, 0, 0], [10, 5, 0])
   })
 })
 

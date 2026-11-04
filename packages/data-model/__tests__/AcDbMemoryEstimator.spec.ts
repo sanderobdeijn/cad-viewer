@@ -1,7 +1,6 @@
 import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcDbLine } from '../src/entity/AcDbLine'
-import { AcDbProxyEntity } from '../src/entity/AcDbProxyEntity'
 import {
   acdbEstimateDatabaseMemory,
   acdbFormatMemoryBytes,
@@ -48,18 +47,20 @@ describe('AcDbMemoryEstimator', () => {
     expect(after.objectCount).toBeGreaterThan(before.objectCount)
   })
 
-  it('accounts for TypedArray proxy graphic payloads', () => {
+  it('accounts for TypedArray payloads', () => {
     const db = setupWorkingDatabase()
+    const line = new AcDbLine(
+      new GeometryPoint2d(0, 0),
+      new GeometryPoint2d(1, 1)
+    )
+    appendEntityToModelSpace(db, line)
     const before = acdbEstimateDatabaseMemory(db)
 
-    const proxy = new AcDbProxyEntity()
-    proxy.setProxyGraphic(new Uint8Array(20_000))
-    appendEntityToModelSpace(db, proxy)
+    Object.assign(line, { payload: new Uint8Array(20_000) })
 
     const after = acdbEstimateDatabaseMemory(db)
     expect(after.totalBytes - before.totalBytes).toBeGreaterThan(15_000)
-    expect(after.byEntityType.ProxyEntity?.count).toBe(1)
-    expect(after.byEntityType.ProxyEntity?.bytes).toBeGreaterThan(15_000)
+    expect(after.byEntityType.Line?.bytes).toBeGreaterThan(15_000)
   })
 
   it('formats estimates for display', () => {

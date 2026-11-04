@@ -883,7 +883,7 @@ export class GeometrySpline2d extends GeometryCurve2d {
   /**
    * Creates a 3D spline geometry from parsed DWG/DXF spline-edge data.
    *
-   * Used for hatch boundary paths, proxy-graphics edges, and similar structures where
+   * Used for hatch boundary paths and similar structures where
    * spline data is embedded as a lightweight edge record rather than a full SPLINE
    * entity. Control-point data is preferred; fit data is used when control points are
    * absent. Fit-point edges always use `'Uniform'` knot parameterization and are

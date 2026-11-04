@@ -76,15 +76,6 @@ export function acapResolveUnsupportedEntitiesMessage(
         count: analysis.unknownEntityCount
       })
     )
-  } else if (
-    !analysis.isTianzhengDrawing &&
-    analysis.emptyProxyEntityCount > 0
-  ) {
-    parts.push(
-      t('main.message.emptyProxyEntities', {
-        count: analysis.emptyProxyEntityCount
-      })
-    )
   }
 
   return parts.join(' ')

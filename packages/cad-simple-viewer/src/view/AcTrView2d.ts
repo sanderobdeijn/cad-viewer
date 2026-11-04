@@ -1508,7 +1508,7 @@ export class AcTrView2d extends AcEdBaseView {
    * `cadScene.internalScene` and calling `clear()`.
    *
    * Scope: draws top-level geometry, text and hatch entities, including
-   * entities that expand to groups (dimensions, proxy graphics).
+   * entities that expand to groups (dimensions).
    * Viewports are not supported for overlays and are skipped.
    *
    * @param overlayDb - Input a database parsed independently of the active

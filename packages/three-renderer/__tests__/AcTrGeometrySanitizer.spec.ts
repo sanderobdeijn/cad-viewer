@@ -45,7 +45,7 @@ describe('AcTrGeometrySanitizer', () => {
   it('logs entity context when non-finite points are dropped', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
     const entity = {
-      constructor: { typeName: 'ProxyEntity' },
+      constructor: { typeName: 'Line' },
       objectId: 'ABC123',
       layer: '0'
     } as unknown as AcDbEntity
@@ -59,7 +59,7 @@ describe('AcTrGeometrySanitizer', () => {
     )
 
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('ProxyEntity ABC123')
+      expect.stringContaining('Line ABC123')
     )
     warn.mockRestore()
   })

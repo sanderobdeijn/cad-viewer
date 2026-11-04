@@ -1,4 +1,4 @@
-import { AcDbObjectId, GeometryMatrix3d } from '@mlightcad/data-model'
+import { AcDbObjectId } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import {
@@ -6,7 +6,6 @@ import {
   syncDrawSharedGlyphGroup
 } from '../linetype/AcTrComplexLineBuilder'
 import { AcTrRenderContext } from '../renderer/AcTrRenderContext'
-import { AcTrMatrixUtil } from '../util'
 import { AcTrEntity } from './AcTrEntity'
 import { AcTrGlyphEntity } from './AcTrGlyphEntity'
 
@@ -94,10 +93,9 @@ export class AcTrGroup extends AcTrEntity {
    * Rebuilds {@link wcsChildBoxes} and the aggregate {@link wcsBbox} from
    * current entity geometry.
    *
-   * Callers may call {@link applyMatrix} while MText/Shape bounds are still
-   * empty. An empty
-   * {@link THREE.Box3} contains `±Infinity` corners; transforming those values
-   * yields `NaN` and breaks spatial indexing.
+   * MText/Shape bounds can still be empty when a group is built. An empty
+   * {@link THREE.Box3} contains `±Infinity` corners, which must not reach
+   * spatial indexing.
    *
    * This method is intended to run **after** deferred geometry is finished
    * (see {@link syncDraw}). It:
@@ -145,7 +143,7 @@ export class AcTrGroup extends AcTrEntity {
 
   /**
    * Fills in child boxes for deferred geometry without recomputing boxes that
-   * were already populated by {@link storeBoxes} and {@link applyMatrix}.
+   * were already populated by {@link storeBoxes}.
    */
   private reconcileDeferredChildBoxes() {
     this.updateMatrixWorld(true)
@@ -365,22 +363,6 @@ export class AcTrGroup extends AcTrEntity {
   }
 
   /**
-   * Applies a transform to this group and its spatial-index boxes.
-   *
-   * @param matrix - Transform in drawing coordinates.
-   */
-  applyMatrix(matrix: GeometryMatrix3d) {
-    const threeMatrix = AcTrMatrixUtil.createMatrix4(matrix)
-    this._wcsChildBoxes.forEach(box => {
-      if (AcTrGroup.isFiniteEntityBox(box)) {
-        this.applyMatrixToEntityBox(box, threeMatrix)
-      }
-    })
-    this.applyFullMatrix4(threeMatrix)
-    this.syncWcsBboxFromChildBoxes()
-  }
-
-  /**
    * Releases render resources owned by this group and its tracked source entities.
    *
    * {@link flatten} reparents drawable leaves onto {@link children} and detaches
@@ -445,8 +427,7 @@ export class AcTrGroup extends AcTrEntity {
    *   {@link appendSourceEntityWcsChildBox} or
    *   {@link appendTreeEntityWcsChildBox}.
    * - **Empty or non-finite boxes**: skipped via {@link isFiniteEntityBox} so
-   *   deferred MText/Shape geometry cannot seed `±Infinity` values that later
-   *   become `NaN` during {@link applyMatrix}.
+   *   deferred MText/Shape geometry cannot seed `±Infinity` values.
    *
    * @param object - Entity or nested group whose bounds should be recorded.
    */
@@ -500,8 +481,8 @@ export class AcTrGroup extends AcTrEntity {
    * Appends one WCS child box derived from a {@link _sourceEntities} entry.
    *
    * Used for entities detached from the scene graph by {@link flatten}.
-   * Tracked source entities keep local `wcsBbbox` values even after
-   * {@link applyMatrix}; the active transform lives on this group's
+   * Tracked source entities keep local `wcsBbbox` values; the active transform
+   * lives on this group's
    * `matrixWorld`. When the group is at identity, each source entity's local
    * `matrix` is applied instead.
    *
@@ -625,13 +606,10 @@ export class AcTrGroup extends AcTrEntity {
    * Tests whether a spatial-index child box contains only finite coordinates.
    *
    * Empty or deferred geometry snapshots produce `±Infinity` corners in
-   * {@link THREE.Box3}. {@link applyMatrix} and
-   * {@link applyMatrixToEntityBox} must ignore those entries; otherwise
-   * transforms propagate `NaN` into {@link _wcsChildBoxes} and the
-   * aggregate {@link wcsBbox}.
+   * {@link THREE.Box3}. Those entries must not reach the aggregate
+   * {@link wcsBbox}.
    *
-   * Also used by {@link storeBoxes} and {@link applyMatrix} to filter invalid
-   * boxes at ingestion time.
+   * Also used by {@link storeBoxes} to filter invalid boxes at ingestion time.
    *
    * @param box - Axis-aligned 2D bounds candidate in WCS or local space.
    * @returns `true` when all four corners are finite numbers.
@@ -648,53 +626,5 @@ export class AcTrGroup extends AcTrEntity {
       Number.isFinite(box.maxX) &&
       Number.isFinite(box.maxY)
     )
-  }
-
-  /**
-   * Transforms one {@link _wcsChildBoxes} entry by a 3×3 matrix and
-   * writes back a new axis-aligned rectangle.
-   *
-   * Unlike {@link THREE.Box3.applyMatrix4}, which can expand an AABB after
-   * rotation, this helper transforms all four XY corners explicitly and
-   * recomputes the tight axis-aligned bounds.
-   *
-   * The input box is mutated in place. Callers must guard with
-   * {@link isFiniteEntityBox} before invoking so invalid snapshots are not
-   * propagated.
-   *
-   * @param box - Child spatial-index rectangle to transform; updated in place.
-   * @param matrix - Transform as a {@link THREE.Matrix4}, typically
-   *   derived from {@link GeometryMatrix3d} via {@link AcTrMatrixUtil.createMatrix4}.
-   */
-  private applyMatrixToEntityBox(box: AcTrEntityBox, matrix: THREE.Matrix4) {
-    const points = [
-      new THREE.Vector3(box.minX, box.minY, 0),
-      new THREE.Vector3(box.maxX, box.minY, 0),
-      new THREE.Vector3(box.maxX, box.maxY, 0),
-      new THREE.Vector3(box.minX, box.maxY, 0)
-    ]
-
-    // Apply matrix to all corners
-    for (const p of points) {
-      p.applyMatrix4(matrix)
-    }
-
-    // Recompute AABB
-    let minX = Infinity,
-      minY = Infinity
-    let maxX = -Infinity,
-      maxY = -Infinity
-
-    for (const p of points) {
-      minX = Math.min(minX, p.x)
-      minY = Math.min(minY, p.y)
-      maxX = Math.max(maxX, p.x)
-      maxY = Math.max(maxY, p.y)
-    }
-
-    box.minX = minX
-    box.minY = minY
-    box.maxX = maxX
-    box.maxY = maxY
   }
 }

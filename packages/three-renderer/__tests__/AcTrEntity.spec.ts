@@ -1,4 +1,3 @@
-import { GeometryMatrix3d } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import { expectWcsBboxCloseTo } from './helpers/expectWcsBbox'
@@ -15,15 +14,6 @@ describe('AcTrEntity wcsBbox', () => {
     entity.wcsBbox.set(new THREE.Vector3(1, 2, 3), new THREE.Vector3(4, 5, 6))
 
     expectWcsBboxCloseTo(entity.wcsBbox, [1, 2, 3], [4, 5, 6])
-  })
-
-  it('updates wcsBbox when applyMatrix is called', () => {
-    const entity = new AcTrEntity(new AcTrRenderContext())
-    entity.wcsBbox.set(new THREE.Vector3(0, 0, 0), new THREE.Vector3(10, 5, 0))
-
-    entity.applyMatrix(new GeometryMatrix3d().makeTranslation(100, 200, 0))
-
-    expectWcsBboxCloseTo(entity.wcsBbox, [100, 200, 0], [110, 205, 0])
   })
 
   it('copies wcsBbox in copy', () => {

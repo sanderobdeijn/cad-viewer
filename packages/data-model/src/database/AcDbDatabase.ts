@@ -340,7 +340,7 @@ export class AcDbDatabase extends AcDbObject {
   private _comparetolerance: number
   /** Tables in the database */
   private _tables: AcDbTables
-  /** Class definitions from DXF CLASSES / DWG class table (needed for proxy entities). */
+  /** Class definitions from DXF CLASSES / DWG class table. */
   private _classes: AcDbClass[] = []
   /** Nongraphical objects in the database */
   private _objects: {
@@ -524,9 +524,6 @@ export class AcDbDatabase extends AcDbObject {
 
   /**
    * Gets or sets class definitions from the drawing (DXF CLASSES / DWG class table).
-   *
-   * Proxy entities resolve their application class ID (group code **91**)
-   * against this list (IDs start at 500 for the first entry).
    */
   get classes(): readonly AcDbClass[] {
     return this._classes
