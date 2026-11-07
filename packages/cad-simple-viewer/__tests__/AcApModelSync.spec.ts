@@ -14,6 +14,8 @@ import {
 import { AcApModelSync } from '../src/app/AcApModelSync'
 import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'
 
+const withoutIds = (text: string) => text.replace(/ id=\S+/g, '')
+
 let mockMeasurements: unknown[] = []
 const mockListeners = new Set<() => void>()
 
@@ -61,7 +63,9 @@ describe('AcApModelSync', () => {
 
     const { sync } = createSync(db)
 
-    expect(sync.model.toString()).toBe('Line start=(0, 0) end=(10, 0)')
+    expect(withoutIds(sync.model.toString())).toBe(
+      'Line start=(0, 0) end=(10, 0)'
+    )
     sync.dispose()
   })
 
@@ -91,7 +95,7 @@ describe('AcApModelSync', () => {
     opened!.endPoint = new GeometryPoint2d(20, 0)
     manager.commitTransaction()
 
-    expect(sync.model.toString().split('\n')).toEqual([
+    expect(withoutIds(sync.model.toString()).split('\n')).toEqual([
       'Line start=(0, 0) end=(20, 0)',
       'Line start=(0, 0) end=(30, 0)'
     ])
@@ -131,7 +135,7 @@ describe('AcApModelSync', () => {
 
     const modelSpace = db.tables.blockTable.modelSpace
     modelSpace.appendEntity(point)
-    expect(sync.model.toString()).toBe('Point position=(1, 2)')
+    expect(withoutIds(sync.model.toString())).toBe('Point position=(1, 2)')
     expect(sync.model.points[0]).not.toBe(point.position)
     expect(sync.model.shapes).toHaveLength(0)
 
@@ -143,7 +147,7 @@ describe('AcApModelSync', () => {
     )
     opened!.position = new GeometryPoint2d(3, 4)
     manager.commitTransaction()
-    expect(sync.model.toString()).toBe('Point position=(3, 4)')
+    expect(withoutIds(sync.model.toString())).toBe('Point position=(3, 4)')
 
     modelSpace.removeEntity(point.objectId)
     expect(sync.model.points).toHaveLength(0)
@@ -161,7 +165,7 @@ describe('AcApModelSync', () => {
 
     const modelSpace = db.tables.blockTable.modelSpace
     modelSpace.appendEntity(dimension)
-    expect(sync.model.toString()).toBe(
+    expect(withoutIds(sync.model.toString())).toBe(
       'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(10, 0) dimLinePoint=(5, 5) text="10.000"'
     )
     expect(sync.model.dimensions[0].points.xLine1Point).not.toBe(
@@ -209,7 +213,7 @@ describe('AcApModelSync', () => {
     ])
 
     expect(listener).toHaveBeenCalledTimes(1)
-    expect(sync.model.toString().split('\n').slice(1)).toEqual([
+    expect(withoutIds(sync.model.toString()).split('\n').slice(1)).toEqual([
       'Dimension type=MeasureDistance start=(0, 0) end=(100, 0) text="100 mm"',
       'Dimension type=MeasureArea point1=(0, 0) point2=(1, 0) point3=(1, 1) text="100 mm"'
     ])
@@ -283,7 +287,9 @@ describe('AcApModelSync', () => {
       const [entity] = db.tables.blockTable.modelSpace.newIterator()
       expect(entity.objectId).toBe(line.objectId)
       expect(entity.lineWeight).toBe(30)
-      expect(sync.model.toString()).toBe('Line start=(1, 2) end=(3, 4)')
+      expect(withoutIds(sync.model.toString())).toBe(
+        'Line start=(1, 2) end=(3, 4)'
+      )
       sync.dispose()
     })
 
@@ -309,7 +315,9 @@ describe('AcApModelSync', () => {
         sync.applyText('Line start=(9, 9) end=(9, 0)\nnonsense')
       ).toThrow('Line 2')
 
-      expect(sync.model.toString()).toBe('Line start=(0, 0) end=(10, 0)')
+      expect(withoutIds(sync.model.toString())).toBe(
+        'Line start=(0, 0) end=(10, 0)'
+      )
       sync.dispose()
     })
 
@@ -321,7 +329,9 @@ describe('AcApModelSync', () => {
 
       sync.applyText('Line start=(0, 0) end=(20, 0)')
 
-      expect(sync.model.toString()).toBe('Line start=(0, 0) end=(20, 0)')
+      expect(withoutIds(sync.model.toString())).toBe(
+        'Line start=(0, 0) end=(20, 0)'
+      )
       sync.applyText('')
       expect(lineOf(db)).toEqual([])
       sync.dispose()
@@ -353,7 +363,7 @@ describe('AcApModelSync', () => {
           'POINT'
         ].sort()
       )
-      expect(sync.model.toString()).toBe(text)
+      expect(withoutIds(sync.model.toString())).toBe(text)
       const ids = [...db.tables.blockTable.modelSpace.newIterator()].map(
         entity => entity.objectId
       )
@@ -369,7 +379,7 @@ describe('AcApModelSync', () => {
 
       sync.applyText(edited)
 
-      expect(sync.model.toString()).toBe(edited)
+      expect(withoutIds(sync.model.toString())).toBe(edited)
       expect(
         [...db.tables.blockTable.modelSpace.newIterator()].map(
           entity => entity.objectId
@@ -399,7 +409,7 @@ describe('AcApModelSync', () => {
         createArcPolyline(db)
         const { sync } = createSync(db)
 
-        expect(sync.model.toString()).toBe(
+        expect(withoutIds(sync.model.toString())).toBe(
           'Polyline vertices=[(0, 0, bulge=0.5), (10, 0)] closed=false'
         )
         sync.dispose()
@@ -436,7 +446,7 @@ describe('AcApModelSync', () => {
 
         const [entity] = db.tables.blockTable.modelSpace.newIterator()
         expect(entity.objectId).toBe(polyline.objectId)
-        expect(sync.model.toString()).toBe(
+        expect(withoutIds(sync.model.toString())).toBe(
           'Polyline vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false'
         )
         sync.dispose()
@@ -544,6 +554,100 @@ Dimension type=MeasureDistance start=(0, 0) end=(1, 1)`
       )
 
       expect(listener).not.toHaveBeenCalled()
+      sync.dispose()
+    })
+
+    it('uses the object id of each entity as its item id', () => {
+      const db = createDatabase()
+      const line = createLine()
+      db.tables.blockTable.modelSpace.appendEntity(line)
+      const { sync } = createSync(db)
+
+      expect(sync.model.toString()).toBe(
+        `Line id=${line.objectId} start=(0, 0) end=(10, 0)`
+      )
+      sync.dispose()
+    })
+
+    it('applies a line to the entity its id names', () => {
+      const db = createDatabase()
+      const a = createLine(10)
+      const b = createLine(10)
+      db.tables.blockTable.modelSpace.appendEntity([a, b])
+      const { sync } = createSync(db)
+
+      // Both lines read the same, so only the id says which one changed.
+      sync.applyText(
+        `Line id=${a.objectId} start=(0, 0) end=(10, 0)\nLine id=${b.objectId} start=(0, 0) end=(30, 0)`
+      )
+
+      expect(a.endPoint.x).toBe(10)
+      expect(b.endPoint.x).toBe(30)
+      sync.dispose()
+    })
+
+    it('erases the item whose line is removed, by id', () => {
+      const db = createDatabase()
+      const a = createLine(10)
+      const b = createLine(10)
+      db.tables.blockTable.modelSpace.appendEntity([a, b])
+      const { sync } = createSync(db)
+
+      sync.applyText(`Line id=${b.objectId} start=(0, 0) end=(10, 0)`)
+
+      const ids = [...db.tables.blockTable.modelSpace.newIterator()].map(
+        entity => entity.objectId
+      )
+      expect(ids).toEqual([b.objectId])
+      sync.dispose()
+    })
+
+    it('replaces an item whose line changes kind, by id', () => {
+      const db = createDatabase()
+      const a = createLine()
+      a.lineWeight = 30
+      db.tables.blockTable.modelSpace.appendEntity(a)
+      const { sync } = createSync(db)
+
+      sync.applyText(`Point id=${a.objectId} position=(1, 1)`)
+
+      const [entity] = db.tables.blockTable.modelSpace.newIterator()
+      expect(entity.dxfTypeName).toBe('POINT')
+      expect(entity.lineWeight).toBe(30)
+      sync.dispose()
+    })
+
+    it('treats a line with an unknown id as new', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+
+      sync.applyText('Point id=missing position=(1, 1)')
+
+      expect(withoutIds(sync.model.toString())).toBe('Point position=(1, 1)')
+      sync.dispose()
+    })
+
+    it('does not create a new line again while it is still being typed', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+
+      sync.applyText('Line start=(0, 0) end=(1, 0)')
+      sync.applyText('Line start=(0, 0) end=(12, 0)')
+      sync.applyText('Line start=(0, 0) end=(12, 0)')
+
+      expect(withoutIds(sync.model.toString())).toBe(
+        'Line start=(0, 0) end=(12, 0)'
+      )
+      sync.dispose()
+    })
+
+    it('rejects text that uses an id twice', () => {
+      const db = createDatabase()
+      const { sync } = createSync(db)
+
+      expect(() =>
+        sync.applyText('Point id=1 position=(0, 0)\nPoint id=1 position=(1, 1)')
+      ).toThrow('id 1 is repeated')
       sync.dispose()
     })
 

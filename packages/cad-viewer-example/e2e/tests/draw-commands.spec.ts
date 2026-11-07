@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
 
 test.describe.configure({ timeout: 40000 })
 
@@ -54,6 +54,19 @@ const settledDrawnPixels = async (page: Page) => {
     previous = current
   }
   throw new Error('The drawing did not stop changing')
+}
+
+/**
+ * Expects the editor text, ignoring the `id=` field of each line, which holds
+ * object ids that depend on what was drawn before.
+ */
+const expectEditorValue = (editor: Locator, expected: string | RegExp) => {
+  const value = expect.poll(async () =>
+    (await editor.inputValue()).replace(/ id=\S+/g, '')
+  )
+  return typeof expected === 'string'
+    ? value.toBe(expected)
+    : value.toMatch(expected)
 }
 
 const openDrawing = async (page: Page) => {
@@ -179,15 +192,16 @@ test('shows the shapes of the drawing in the text editor', async ({ page }) => {
   const editor = page.getByRole('textbox', { name: 'Text editor' })
 
   await openDrawing(page)
-  await expect(editor).toHaveValue('')
+  await expectEditorValue(editor, '')
 
   await run(page, 'line', '0,0', '100,0', '')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  await expectEditorValue(editor, 'Line start=(0, 0) end=(100, 0)')
 
   await run(page, 'circle', '0,0', '50')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue(
+  await expectEditorValue(
+    editor,
     /^Line start=\(0, 0\) end=\(100, 0\)\nCircularArc center=\(0, 0\) radius=50 /
   )
 
@@ -203,11 +217,12 @@ test('shows points and dimensions in the text editor', async ({ page }) => {
   await openDrawing(page)
   await run(page, 'point', '5,5')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue('Point position=(5, 5)')
+  await expectEditorValue(editor, 'Point position=(5, 5)')
 
   await run(page, 'dimlinear', '0,0', '100,0', '50,20')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue(
+  await expectEditorValue(
+    editor,
     /^Point position=\(5, 5\)\nDimension type=\w+ xLine1Point=\(0, 0\) xLine2Point=\(100, 0\) dimLinePoint=\(50, 20\)/
   )
 
@@ -223,12 +238,13 @@ test('shows measurements in the text editor', async ({ page }) => {
   await openDrawing(page)
   await run(page, 'measuredistance', '0,0', '100,0')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue(
+  await expectEditorValue(
+    editor,
     /^Dimension type=MeasureDistance start=\(0, 0\) end=\(100, 0\) text="[^"]*100/
   )
 
   await run(page, 'clearmeasurements')
-  await expect(editor).toHaveValue('')
+  await expectEditorValue(editor, '')
 
   expect(errors).toEqual([])
 })
@@ -271,7 +287,7 @@ test('updates the drawing when the text in the editor is edited', async ({
     .poll(() => settledDrawnPixels(page), { timeout: 10000 })
     .toBeLessThan(fullLine)
   const halfLine = await settledDrawnPixels(page)
-  await expect(editor).toHaveValue('Line start=(0,0) end=(50,0)')
+  await expectEditorValue(editor, 'Line start=(0,0) end=(50,0)')
 
   // An invalid line reports the problem and leaves the drawing alone.
   await editor.fill('Line start=(0, 0) end=(50')
@@ -303,7 +319,8 @@ test('edits the arcs of a polyline in the text editor', async ({ page }) => {
   await openDrawing(page)
   await run(page, 'pline', '0,0', '100,0', 'A', '100,100', '')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue(
+  await expectEditorValue(
+    editor,
     /^Polyline vertices=\[\(0, 0\), \(100, 0, bulge=[-\d.]+\), \(100, 100\)\] closed=false$/
   )
   await page.evaluate(() =>
@@ -335,7 +352,7 @@ test('edits the arcs of a polyline in the text editor', async ({ page }) => {
     .poll(() => settledDrawnPixels(page), { timeout: 10000 })
     .not.toBe(withoutArc)
   await editor.blur()
-  await expect(editor).toHaveValue(bent)
+  await expectEditorValue(editor, bent)
   await expect(page.getByRole('alert')).toHaveCount(0)
 
   expect(errors).toEqual([])
@@ -378,7 +395,7 @@ test('creates every kind of entity from the text editor', async ({ page }) => {
 
   // Leaving the editor tidies the text into the order of the model.
   await editor.blur()
-  await expect(editor).toHaveValue(/^Line start=\(0, 0\) end=\(100, 50\)\n/)
+  await expectEditorValue(editor, /^Line start=\(0, 0\) end=\(100, 50\)\n/)
 
   expect(errors).toEqual([])
 })
@@ -390,7 +407,7 @@ test('has no undo buttons or undo keyboard shortcuts', async ({ page }) => {
   await openDrawing(page)
   await run(page, 'line', '0,0', '100,0', '')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  await expectEditorValue(editor, 'Line start=(0, 0) end=(100, 0)')
 
   await expect(page.locator('[data-item-id="cmd-undo"]')).toHaveCount(0)
   await expect(
@@ -402,7 +419,7 @@ test('has no undo buttons or undo keyboard shortcuts', async ({ page }) => {
   await page.keyboard.press('Escape')
   await page.keyboard.press('Control+z')
   await page.waitForTimeout(300)
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  await expectEditorValue(editor, 'Line start=(0, 0) end=(100, 0)')
 })
 
 test('moves and deletes a measurement through the UI', async ({ page }) => {
@@ -446,7 +463,8 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
   await page.waitForTimeout(500)
   await run(page, 'measuredistance', '0,0', '100,0')
   await page.keyboard.press('Escape')
-  await expect(editor).toHaveValue(
+  await expectEditorValue(
+    editor,
     /Dimension type=MeasureDistance start=.0, 0. end=.100, 0./
   )
   const [id] = await measurementGroups()
@@ -481,8 +499,11 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
   await page.mouse.down()
   await page.mouse.move(grip.x + 100, grip.y + 60, { steps: 5 })
   await page.mouse.up()
-  await expect(editor).not.toHaveValue(/MeasureDistance start=.0, 0./)
-  await expect(editor).toHaveValue(
+  await expect
+    .poll(async () => (await editor.inputValue()).replace(/ id=\S+/g, ''))
+    .not.toMatch(/MeasureDistance start=.0, 0./)
+  await expectEditorValue(
+    editor,
     /Dimension type=MeasureDistance start=.*end=.100, 0./
   )
   expect(await measurementGroups()).toEqual([id])
@@ -494,7 +515,7 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
     ht.selectGroup(id)
   }, id)
   await page.keyboard.press('Delete')
-  await expect(editor).toHaveValue('Line start=(0, 0) end=(100, 0)')
+  await expectEditorValue(editor, 'Line start=(0, 0) end=(100, 0)')
   expect(await measurementGroups()).toEqual([])
 
   expect(errors).toEqual([])

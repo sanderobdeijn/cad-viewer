@@ -29,7 +29,9 @@ import {
   GeometryPolyline2dVertex,
   GeometryShape,
   GeometryVector2d,
-  Model
+  Model,
+  ModelItem,
+  ModelTextItem
 } from '@mlightcad/data-model'
 
 import {
@@ -302,6 +304,20 @@ const shapeTarget = (shape: GeometryShape): ModelTextTarget => {
   throw new Error(`Cannot edit "${line}"`)
 }
 
+const targetFor = (item: ModelTextItem): ModelTextTarget => {
+  switch (item.kind) {
+    case 'shape':
+      return shapeTarget(item.geometry)
+    case 'point':
+      return pointTarget(item.geometry)
+    case 'dimension':
+      return dimensionTarget(item.geometry)
+  }
+}
+
+const isMeasurementItem = (item: ModelTextItem) =>
+  item.kind === 'dimension' && MEASUREMENT_TYPES.has(item.geometry.type)
+
 const pointTarget = (point: GeometryPoint2d): ModelTextTarget => ({
   line: Model.formatPoint(point),
   canUpdate: entity => entity instanceof AcDbPoint,
@@ -335,11 +351,11 @@ const dimensionTarget = (dimension: GeometryDimension): ModelTextTarget => ({
  * Keeps a {@link Model} in step with the drawing window.
  *
  * The model holds a copy of the shape, point or dimension of each entity in the
- * space on screen.
+ * space on screen, using the entity's object id as the item id.
  * It listens to the same database events that update the view, and rebuilds
  * when another document becomes active or another layout is selected.
  * Measurements are overlays rather than entities, so they are followed through
- * the measurement store and listed with the dimensions.
+ * the measurement store and listed with the dimensions under their own ids.
  * Other entities, such as text and block references, are left out.
  * Edited text is written back to the drawing through {@link applyText}.
  *
@@ -354,10 +370,8 @@ export class AcApModelSync {
     modelChanged: new AcCmEventManager<{ model: Model }>()
   }
 
-  private readonly _shapes = new Map<AcDbObjectId, GeometryShape>()
-  private readonly _points = new Map<AcDbObjectId, GeometryPoint2d>()
-  private readonly _dimensions = new Map<AcDbObjectId, GeometryDimension>()
-  private _measurements: GeometryDimension[] = []
+  /** Ids of the measurement items currently in {@link model} */
+  private _measurementIds = new Set<string>()
   private readonly _unsubscribeMeasurements: () => void
   private _database?: AcDbDatabase
   private _spaceId?: AcDbObjectId
@@ -390,11 +404,12 @@ export class AcApModelSync {
   /**
    * Changes the drawing to match edited model text, in one transaction.
    *
-   * Lines that match an item in the model leave its entity alone. A changed line
-   * updates an entity of the same kind, so it keeps its layer and color. Other
-   * lines create entities in the current space, and items with no line left are
-   * erased. Measurements are overlays rather than entities, so their lines are
-   * ignored.
+   * A line whose `id` names an item in the model is applied to that item: it is
+   * left alone when unchanged, updated in place when it is still the same kind,
+   * and otherwise replaced. Lines without a known id are new: each is matched to
+   * an unchanged or same-kind item that no line names, or creates an entity in
+   * the current space. Items that no line describes are erased. Measurements
+   * are overlays rather than entities, so their lines are ignored.
    *
    * Nothing changes if any line is invalid.
    *
@@ -402,16 +417,14 @@ export class AcApModelSync {
    * @throws When the text cannot be read or the document is read-only
    */
   applyText(text: string) {
-    const parsed = Model.parse(text)
-    const dimensions = parsed.dimensions.filter(
-      dimension => !MEASUREMENT_TYPES.has(dimension.type)
+    const parsed = Model.parseItems(text).filter(
+      item =>
+        !isMeasurementItem(item) &&
+        !(item.id !== undefined && this._measurementIds.has(item.id))
     )
-    dimensions.forEach(checkDimension)
-    const targets = [
-      ...parsed.shapes.map(shapeTarget),
-      ...parsed.points.map(pointTarget),
-      ...dimensions.map(dimensionTarget)
-    ]
+    parsed.forEach(item => {
+      if (item.kind === 'dimension') checkDimension(item.geometry)
+    })
 
     const database = this._database
     const blockTable = database?.tables.blockTable
@@ -420,8 +433,25 @@ export class AcApModelSync {
       return
     }
 
-    const remaining = this.currentLines()
-    const changed = targets.filter(target => {
+    const current = new Map(this.currentLines().map(item => [item.id, item]))
+    const named: { id: AcDbObjectId; target: ModelTextTarget }[] = []
+    const unnamed: ModelTextTarget[] = []
+    for (const item of parsed) {
+      const target = targetFor(item)
+      if (item.id !== undefined && current.has(item.id)) {
+        if (current.get(item.id)!.line !== target.line) {
+          named.push({ id: item.id, target })
+        }
+        current.delete(item.id)
+      } else {
+        unnamed.push(target)
+      }
+    }
+
+    // Lines without an id keep matching the items no line names, so typing
+    // a new line without its id does not create it again on every edit.
+    const remaining = [...current.values()]
+    const changed = unnamed.filter(target => {
       const index = remaining.findIndex(item => item.line === target.line)
       if (index < 0) {
         return true
@@ -429,7 +459,7 @@ export class AcApModelSync {
       remaining.splice(index, 1)
       return false
     })
-    if (changed.length === 0 && remaining.length === 0) {
+    if (named.length === 0 && changed.length === 0 && remaining.length === 0) {
       return
     }
     if (this._docManager.curDocument.openMode < AcEdOpenMode.Write) {
@@ -445,6 +475,28 @@ export class AcApModelSync {
     }
 
     database.transactionManager.runInTransaction(() => {
+      const created: AcDbEntity[] = []
+      const replace = (
+        target: ModelTextTarget,
+        id: AcDbObjectId | undefined
+      ) => {
+        const entity = target.create()
+        const previous = id ? blockTable.getEntityById(id) : undefined
+        if (previous) {
+          // A line that changed to another kind keeps the look of what it replaces.
+          AcApEntityService.copyDisplayTraits(previous, entity)
+          database.openEntityForWrite(previous.objectId)?.erase()
+        }
+        created.push(entity)
+      }
+      for (const { id, target } of named) {
+        const entity = blockTable.getEntityById(id)
+        if (entity && target.canUpdate(entity)) {
+          target.update(database.openEntityForWrite(id)!)
+        } else {
+          replace(target, id)
+        }
+      }
       const toCreate = changed.filter(target => {
         const id = takeEntityFor(target)
         const entity = id ? database.openEntityForWrite(id) : undefined
@@ -453,17 +505,9 @@ export class AcApModelSync {
         }
         return !entity
       })
-      const created = toCreate.map(target => {
-        const entity = target.create()
-        // A line that changed to another kind keeps the look of what it replaces.
-        const replaced = remaining.shift()
-        const previous = replaced && blockTable.getEntityById(replaced.id)
-        if (previous) {
-          AcApEntityService.copyDisplayTraits(previous, entity)
-          database.openEntityForWrite(previous.objectId)?.erase()
-        }
-        return entity
-      })
+      for (const target of toCreate) {
+        replace(target, remaining.shift()?.id)
+      }
       for (const { id } of remaining) {
         database.openEntityForWrite(id)?.erase()
       }
@@ -487,18 +531,14 @@ export class AcApModelSync {
     this.bindDatabase(undefined)
   }
 
+  /** The entity items of the model, each with the line that describes it. */
   private currentLines() {
-    const lines: { id: AcDbObjectId; line: string }[] = []
-    this._shapes.forEach((shape, id) =>
-      lines.push({ id, line: Model.formatShape(shape) })
-    )
-    this._points.forEach((point, id) =>
-      lines.push({ id, line: Model.formatPoint(point) })
-    )
-    this._dimensions.forEach((dimension, id) =>
-      lines.push({ id, line: dimensionLine(dimension) })
-    )
-    return lines
+    return this.model.items
+      .filter(item => !this._measurementIds.has(item.id))
+      .map(item => ({
+        id: item.id as AcDbObjectId,
+        line: targetFor(item).line
+      }))
   }
 
   private bindDatabase(database: AcDbDatabase | undefined) {
@@ -519,9 +559,8 @@ export class AcApModelSync {
 
   private rebuild(spaceId: AcDbObjectId) {
     this._spaceId = spaceId
-    this._shapes.clear()
-    this._points.clear()
-    this._dimensions.clear()
+    this.model.clear()
+    this._measurementIds.clear()
     const space = this._database?.tables.blockTable.getIdAt(spaceId)
     if (space) {
       for (const entity of space.newIterator()) {
@@ -532,31 +571,46 @@ export class AcApModelSync {
     this.publish()
   }
 
+  /** Copies an entity into the model, returning whether it is shown there. */
   private storeEntity(entity: AcDbEntity) {
-    if (entity.ownerId !== this._spaceId) {
+    const item = this.itemFor(entity)
+    if (!item) {
       return false
     }
+    this.model.set(item)
+    return true
+  }
+
+  private itemFor(entity: AcDbEntity): ModelItem | undefined {
+    if (entity.ownerId !== this._spaceId) {
+      return undefined
+    }
+    const id = entity.objectId
     if (entity instanceof AcDbPoint) {
-      this._points.set(entity.objectId, entity.position.clone())
-      return true
+      return { id, kind: 'point', geometry: entity.position.clone() }
     }
     if (entity instanceof AcDbDimension) {
-      this._dimensions.set(entity.objectId, entity.geometryDimension)
-      return true
+      return { id, kind: 'dimension', geometry: entity.geometryDimension }
     }
     const shape = entity.geometry
-    if (shape) {
-      this._shapes.set(entity.objectId, shape.clone())
-      return true
-    }
-    return false
+    return shape ? { id, kind: 'shape', geometry: shape.clone() } : undefined
   }
 
   private updateMeasurements() {
     const view = this._docManager.curView as AcTrView2d
-    this._measurements = listLayoutMeasurements(view).map(record =>
-      this.measurementToDimension(record)
-    )
+    const records = listLayoutMeasurements(view)
+    const ids = new Set(records.map(record => record.id))
+    for (const id of this._measurementIds) {
+      if (!ids.has(id)) this.model.remove(id)
+    }
+    for (const record of records) {
+      this.model.set({
+        id: record.id,
+        kind: 'dimension',
+        geometry: this.measurementToDimension(record)
+      })
+    }
+    this._measurementIds = ids
   }
 
   private measurementToDimension(
@@ -576,12 +630,6 @@ export class AcApModelSync {
   }
 
   private publish() {
-    this.model.shapes = [...this._shapes.values()]
-    this.model.points = [...this._points.values()]
-    this.model.dimensions = [
-      ...this._dimensions.values(),
-      ...this._measurements
-    ]
     this.events.modelChanged.dispatch({ model: this.model })
   }
 
@@ -613,11 +661,7 @@ export class AcApModelSync {
   private readonly onEntityErased = (args: AcDbEntityEventArgs) => {
     let changed = false
     for (const entity of asEntityList(args.entity)) {
-      const id = entity.objectId
-      const erased = [this._shapes, this._points, this._dimensions].map(map =>
-        map.delete(id)
-      )
-      changed = erased.includes(true) || changed
+      changed = this.model.remove(entity.objectId) || changed
     }
     if (changed) {
       this.publish()

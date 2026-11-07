@@ -94,3 +94,9 @@ export {
   geometrySignedPolygonArea2d
 } from './util'
 export { Model, ModelParseError } from './Model'
+export type {
+  ModelItem,
+  ModelItemEventArgs,
+  ModelItemKind,
+  ModelTextItem
+} from './Model'
