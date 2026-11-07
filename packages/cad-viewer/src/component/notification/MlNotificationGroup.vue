@@ -71,8 +71,7 @@ import MlNotificationItem from './MlNotificationItem.vue'
 /**
  * Collapsible notification group for the Vue notification center panel.
  *
- * Used when multiple entries share a groupable source (`font-missed`,
- * `unsupported-entities`).
+ * Used when multiple entries share a groupable source (`font-missed`).
  */
 interface Props {
   /** Group produced by {@link groupNotifications}. */
@@ -132,9 +131,6 @@ const title = computed(() => {
   if (source === 'font-missed') {
     return t('main.notification.group.fontMissed')
   }
-  if (source === 'unsupported-entities') {
-    return t('main.notification.group.unsupportedEntities')
-  }
   return props.group.items[0]?.title ?? ''
 })
 
@@ -146,9 +142,6 @@ const summary = computed(() => {
   const source = props.group.source
   if (source === 'font-missed') {
     return t('main.notification.group.fontMissedSummary', { count })
-  }
-  if (source === 'unsupported-entities') {
-    return t('main.notification.group.unsupportedEntitiesSummary', { count })
   }
   return t('main.notification.group.genericSummary', { count })
 })

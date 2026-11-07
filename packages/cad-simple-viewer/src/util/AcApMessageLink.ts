@@ -92,13 +92,3 @@ export function acapAppendLinkedText(
     container.appendChild(document.createTextNode(text.slice(lastIndex)))
   }
 }
-
-/**
- * Opens a URL in a new tab when `window` is available.
- *
- * @param url - Absolute URL to open.
- */
-export function acapOpenUrl(url: string): void {
-  if (typeof window === 'undefined') return
-  window.open(url, '_blank', 'noopener,noreferrer')
-}

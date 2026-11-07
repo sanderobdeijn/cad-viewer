@@ -1,15 +1,8 @@
 import { eventBus } from '../../editor/global/eventBus'
-import { acapAnalyzeUnsupportedDrawing } from '../../util/AcApAnalyzeUnsupportedDrawing'
 import { AcApFontUtil } from '../../util/AcApFontUtil'
 import { acapFormatFontsMissedReplacement } from '../../util/AcApFormatFontMissedMessage'
-import {
-  acapFormatUnsupportedEntitiesMessage,
-  acapI18nTranslate
-} from '../../util/AcApFormatUnsupportedEntitiesMessage'
-import type {
-  AcApDocManager,
-  AcDbDocumentEventArgs
-} from '../AcApDocManager'
+import { acapI18nTranslate } from '../../util/AcApI18nTranslate'
+import type { AcApDocManager, AcDbDocumentEventArgs } from '../AcApDocManager'
 import type { AcApNotificationCenter } from './AcApNotificationTypes'
 
 /**
@@ -24,14 +17,6 @@ export class AcApNotificationEventBridge {
   private readonly _docManager: AcApDocManager
   /** Lazily resolves the active center (built-in or host override). */
   private _getCenter: () => AcApNotificationCenter
-  /** Parser unknown-entity counts keyed by {@link AcApDocSession.id}. */
-  private readonly _pendingUnknownBySession = new Map<string, number>()
-  /**
-   * Sessions that already received an unsupported-entity pass for the current
-   * open. Prevents tab switches from clearing and re-scanning (and from
-   * dropping warnings that depended solely on the one-shot PARSE stats).
-   */
-  private readonly _unsupportedNotifiedSessions = new Set<string>()
   /** Whether {@link install} has attached listeners. */
   private _installed = false
 
@@ -50,16 +35,6 @@ export class AcApNotificationEventBridge {
    */
   private syncActiveSession() {
     this._getCenter().setActiveSession(this._docManager.activeSessionId)
-  }
-
-  /**
-   * Drops per-session PARSE / analysis bookkeeping for a closed or reopened session.
-   *
-   * @param sessionId - Session to forget.
-   */
-  private forgetSession(sessionId: string) {
-    this._pendingUnknownBySession.delete(sessionId)
-    this._unsupportedNotifiedSessions.delete(sessionId)
   }
 
   /**
@@ -111,7 +86,12 @@ export class AcApNotificationEventBridge {
       acapI18nTranslate('main.message.fontsNotLoaded', {
         fonts: acapFormatFontsMissedReplacement(fontNames)
       }),
-      { source: 'font-missed', fontNames, persistent: true, ...this.sessionOptions() }
+      {
+        source: 'font-missed',
+        fontNames,
+        persistent: true,
+        ...this.sessionOptions()
+      }
     )
   }
 
@@ -126,7 +106,11 @@ export class AcApNotificationEventBridge {
       acapI18nTranslate('main.message.fontsNotFound', {
         fonts: acapFormatFontsMissedReplacement(params.fonts)
       }),
-      { source: 'font-missed', fontNames: params.fonts, ...this.sessionOptions() }
+      {
+        source: 'font-missed',
+        fontNames: params.fonts,
+        ...this.sessionOptions()
+      }
     )
   }
 
@@ -164,9 +148,7 @@ export class AcApNotificationEventBridge {
    * Prunes resolved `font-missed` notifications when missed-data changes.
    */
   private readonly _onMissedDataChanged = () => {
-    const missedFonts = Object.keys(
-      this._docManager.curView.missedData.fonts
-    )
+    const missedFonts = Object.keys(this._docManager.curView.missedData.fonts)
     this._getCenter().removeResolvedFontMissedNotifications(missedFonts)
   }
 
@@ -186,16 +168,10 @@ export class AcApNotificationEventBridge {
   }
 
   /**
-   * Resets unsupported-entity bookkeeping before a new open starts.
+   * Syncs the active session before a new document opens.
    */
   private readonly _onDocumentToBeOpened = () => {
     this.syncActiveSession()
-    const sessionId = this._docManager.activeSessionId
-    if (sessionId) {
-      this.forgetSession(sessionId)
-      this._pendingUnknownBySession.set(sessionId, 0)
-    }
-    this._getCenter().removeBySource('unsupported-entities')
   }
 
   /**
@@ -206,30 +182,20 @@ export class AcApNotificationEventBridge {
   }
 
   /**
-   * Syncs the session and runs unsupported-entity analysis on first activation.
-   *
-   * Subsequent activations for the same open skip re-analysis.
+   * Syncs the active session when a document is activated.
    */
   private readonly _onDocumentActivated = () => {
     this.syncActiveSession()
-    const sessionId = this._docManager.activeSessionId
-    // Tab switch / re-activate: keep the existing unsupported warning and skip
-    // another analysis.
-    if (sessionId && this._unsupportedNotifiedSessions.has(sessionId)) {
-      return
-    }
-    this.notifyUnsupportedEntities()
   }
 
   /**
-   * Clears the closed session's notifications and local analysis state.
+   * Clears the closed session's notifications.
    *
    * @param args - Document about to be destroyed.
    */
   private readonly _onDocumentToBeDestroyed = (args: AcDbDocumentEventArgs) => {
     const session = this._docManager.sessionFor(args.doc)
     if (session) {
-      this.forgetSession(session.id)
       this._getCenter().clearSession(session.id)
     }
   }
@@ -277,7 +243,7 @@ export class AcApNotificationEventBridge {
   }
 
   /**
-   * Detaches all listeners and clears per-session analysis bookkeeping. Idempotent.
+   * Detaches all listeners. Idempotent.
    */
   uninstall() {
     if (!this._installed) return
@@ -301,45 +267,6 @@ export class AcApNotificationEventBridge {
     )
     this._docManager.events.documentToBeDestroyed.removeEventListener(
       this._onDocumentToBeDestroyed
-    )
-
-    this._pendingUnknownBySession.clear()
-    this._unsupportedNotifiedSessions.clear()
-  }
-
-  /**
-   * Analyzes the current document for unsupported entities and writes a warning
-   * when {@link AcApUnsupportedDrawingAnalysis.shouldWarn} is true.
-   *
-   * Marks the active session as notified so later tab switches do not rescan.
-   */
-  private notifyUnsupportedEntities() {
-    const doc = this._docManager.curDocument
-    if (!doc) return
-
-    const sessionId = this._docManager.activeSessionId
-    const unknownCount = sessionId
-      ? (this._pendingUnknownBySession.get(sessionId) ?? 0)
-      : 0
-
-    const analysis = acapAnalyzeUnsupportedDrawing(doc.database, unknownCount)
-
-    if (sessionId) {
-      this._unsupportedNotifiedSessions.add(sessionId)
-    }
-
-    const center = this._getCenter()
-    center.removeBySource('unsupported-entities')
-    if (!analysis.shouldWarn) return
-
-    center.warning(
-      acapI18nTranslate('main.notification.title.parsingWarning'),
-      acapFormatUnsupportedEntitiesMessage(analysis),
-      {
-        source: 'unsupported-entities',
-        persistent: true,
-        ...this.sessionOptions()
-      }
     )
   }
 }

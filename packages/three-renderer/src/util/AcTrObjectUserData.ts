@@ -201,10 +201,6 @@ export function getObjectUserData(
   return asAcTrObject(object).userData
 }
 
-export function getRteUserData(object: THREE.Object3D): AcTrRteObjectUserData {
-  return getObjectUserData(object)
-}
-
 export function getMaterialRuntimeUserData(
   material: THREE.Material
 ): AcTrMaterialRuntimeUserData {
@@ -322,74 +318,6 @@ export function markHighlightOverlayGroup(
   overlay.userData.highlightOverlayGroup = true
   return overlay
 }
-
-/**
- * Returns whether `object` or any ancestor is a highlight overlay container.
- */
-export function isHighlightOverlayDescendant(object: THREE.Object3D): boolean {
-  let node: THREE.Object3D | null = object
-  while (node) {
-    if (getHighlightOverlayGroupUserData(node).highlightOverlayGroup) {
-      return true
-    }
-    node = node.parent
-  }
-  return false
-}
-
-/**
- * Returns whether `object` is a transient selection/hover highlight clone rather
- * than source drawing geometry.
- *
- * Highlight clones receive `userData.objectId` in
- * {@link AcTrBatchedGroup.highlight}; leaf drawables in the normal scene graph do
- * not. Entity containers also carry `objectId`, but they are excluded here.
- */
-export function isHighlightCloneDrawable(object: THREE.Object3D): boolean {
-  if (getHighlightUserData(object).objectId == null) {
-    return false
-  }
-
-  const userData = getObjectUserData(object)
-  if (userData.layerName != null && object.children.length > 0) {
-    return false
-  }
-
-  return true
-}
-
-/**
- * Returns the drawable material to use for HTML/export snapshots.
- *
- * Unbatched selection and hover tinting swaps materials in place while
- * preserving the source material on {@link AcTrObjectUserDataFields.originalMaterial}.
- */
-export function resolveDrawableExportMaterial(
-  object: THREE.Object3D
-): THREE.Material | THREE.Material[] | undefined {
-  if (!('material' in object)) {
-    return undefined
-  }
-
-  const originalMaterial = getObjectUserData(object).originalMaterial
-  if (originalMaterial != null) {
-    return originalMaterial
-  }
-
-  return object.material as THREE.Material | THREE.Material[]
-}
-
-export function getBatchedContainerUserData(
-  object: THREE.Object3D
-): AcTrBatchedContainerUserData {
-  return getObjectUserData(object) as AcTrBatchedContainerUserData
-}
-
-/**
- * Sets {@link AcTrRteObjectUserData.useSplitTranslation} when the object's world
- * origin is large enough to require the RTE shader path.
- */
-export function markSplitTranslationFlag(_object: THREE.Object3D): void {}
 
 /**
  * Resolves the Object3D that carries MTEXT insertion/rotation from the renderer.

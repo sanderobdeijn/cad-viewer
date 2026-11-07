@@ -1,13 +1,13 @@
 /**
  * Identifies the subsystem that produced a notification for grouping / cleanup.
  */
-export type AcApNotificationSource = 'font-missed' | 'unsupported-entities'
+export type AcApNotificationSource = 'font-missed'
 
 /**
  * Sources the default / Vue UIs collapse into expandable groups.
  */
 export const ACAP_GROUPABLE_NOTIFICATION_SOURCES: readonly AcApNotificationSource[] =
-  ['font-missed', 'unsupported-entities'] as const
+  ['font-missed'] as const
 
 /**
  * Visual severity category for a notification entry.
@@ -165,9 +165,7 @@ export interface AcApNotificationCenter {
    *   `fontNames` no longer intersect this set are removed. An empty set removes
    *   every `font-missed` entry in the active session.
    */
-  removeResolvedFontMissedNotifications(
-    missedFontNames: Iterable<string>
-  ): void
+  removeResolvedFontMissedNotifications(missedFontNames: Iterable<string>): void
   /**
    * Switches which document's list is exposed via {@link notifications}.
    * Called by the event bridge on document activate.
@@ -197,7 +195,7 @@ export interface AcApNotificationCenter {
  * One visual group produced by {@link acapGroupNotifications} for panel UIs.
  */
 export interface AcApNotificationGroup {
-  /** Stable key (`font-missed`, `unsupported-entities`, or `single:<id>`). */
+  /** Stable key (`font-missed` or `single:<id>`). */
   key: string
   /** Present when the group collapses a groupable {@link AcApNotificationSource}. */
   source?: AcApNotificationSource
@@ -222,7 +220,7 @@ const TYPE_RANK: Record<AcApNotificationType, number> = {
 }
 
 /**
- * Groups notifications for UI panels (`font-missed` / `unsupported-entities` collapse).
+ * Groups notifications for UI panels (`font-missed` collapses).
  *
  * @param notifications - Flat list for the active session (newest first).
  * @returns Groups in first-seen order; collapsible only when a groupable source

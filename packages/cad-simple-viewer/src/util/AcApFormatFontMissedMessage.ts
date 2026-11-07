@@ -1,8 +1,5 @@
 import { AcApFontUtil } from './AcApFontUtil'
-import {
-  acapI18nTranslate,
-  type AcApTranslateFn
-} from './AcApFormatUnsupportedEntitiesMessage'
+import { acapI18nTranslate, type AcApTranslateFn } from './AcApI18nTranslate'
 
 /**
  * Formats one missing font with its replacement name for notification text.
@@ -35,16 +32,6 @@ export function acapResolveFontsMissedReplacement(
   return fontNames
     .map(fontName => acapResolveFontMissedReplacement(t, fontName))
     .join(', ')
-}
-
-/**
- * Formats one missing font with replacement using {@link AcApI18n}.
- *
- * @param fontName - Missing font face name.
- * @returns Localized string naming the font and its replacement.
- */
-export function acapFormatFontMissedReplacement(fontName: string): string {
-  return acapResolveFontMissedReplacement(acapI18nTranslate, fontName)
 }
 
 /**

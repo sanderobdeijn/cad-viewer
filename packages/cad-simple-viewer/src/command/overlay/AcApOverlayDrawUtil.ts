@@ -423,50 +423,6 @@ export function acapDrawOverlayArrowHead(
 }
 
 /**
- * Draw a leader segment, optionally with an arrow head at the tip.
- *
- * @param ctx - Canvas 2D context (CSS pixel space).
- * @param tip - Leader tip (arrow end when `withArrow` is true).
- * @param anchor - Bubble / opposite end of the leader.
- * @param color - CSS stroke / fill color.
- * @param withArrow - When `true`, draws an arrow head at `tip`.
- * @param lineWidth - Stroke width in CSS pixels.
- */
-export function acapDrawOverlayLeader(
-  ctx: CanvasRenderingContext2D,
-  tip: { x: number; y: number },
-  anchor: { x: number; y: number },
-  color: string,
-  withArrow = true,
-  lineWidth = 2,
-  view: AcEdBaseView,
-  strokeWidthWcs?: number,
-  arrowSizeWcs?: number
-): void {
-  const strokeWidth = acapScaledOverlayLineWidth(
-    lineWidth,
-    ctx.canvas,
-    view,
-    strokeWidthWcs
-  )
-  ctx.strokeStyle = color
-  ctx.lineWidth = strokeWidth
-  ctx.beginPath()
-  ctx.moveTo(tip.x, tip.y)
-  ctx.lineTo(anchor.x, anchor.y)
-  ctx.stroke()
-  if (withArrow) {
-    acapDrawOverlayArrowHead(
-      ctx,
-      anchor,
-      tip,
-      color,
-      acapScaledOverlayArrowSize(ctx.canvas, view, arrowSizeWcs)
-    )
-  }
-}
-
-/**
  * Draw a translucent highlight rectangle with stroke.
  *
  * @param ctx - Canvas 2D context (CSS pixel space).

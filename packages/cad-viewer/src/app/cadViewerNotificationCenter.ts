@@ -13,7 +13,7 @@ import { useNotificationCenter } from '../composable/useNotificationCenter'
  * {@link AcApNotificationCenter} contract used by cad-simple-viewer.
  *
  * Calling {@link registerCadViewerNotificationCenter} replaces the built-in DOM
- * notification UI so font / unsupported-entity alerts appear in the Vue panel.
+ * notification UI so font alerts appear in the Vue panel.
  *
  * @returns A center adapter that forwards into the Vue notification store.
  */

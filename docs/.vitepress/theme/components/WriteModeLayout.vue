@@ -194,7 +194,7 @@ const I = {
 
   // Status bar buttons (screenshot far right, left to right):
   //   1. Notification bell
-  //   2. Clean screen (sun? / focus / reading mode: sun icon)
+  //   2. Clean screen (sun? / focus: sun icon)
   //   3. Layout switch (Model / Layout: ↕↔ like 4 arrows center)
   //   4. Status bars / toggle status bar visibility
   //   5. Palettes toggle (panels: layered icon)

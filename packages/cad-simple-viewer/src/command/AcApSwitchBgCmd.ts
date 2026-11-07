@@ -22,12 +22,6 @@ export class AcApSwitchBgCmd extends AcEdCommand {
    */
   async execute(context: AcApContext) {
     const view = context.view as AcTrView2d
-    // Reading mode owns the clear colour (white) and linework; switching the
-    // layout background would not be visible until reading mode is disabled.
-    if (view.readingModeEnabled) {
-      return
-    }
-
     const db = context.doc.database
     const isModelSpace = view.activeLayoutBtrId === view.modelSpaceBtrId
     const variableName = layoutBackgroundSysVar(isModelSpace)

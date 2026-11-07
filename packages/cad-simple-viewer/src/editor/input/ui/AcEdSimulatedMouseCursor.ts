@@ -101,15 +101,3 @@ export function acedHideSimulatedMouseCursor(view: AcEdBaseView): void {
   if (!root) return
   root.style.display = 'none'
 }
-
-/**
- * Disposes the simulated-mouse cursor HUD for `view` (tests / view teardown).
- *
- * @param view - View whose cursor should be destroyed.
- */
-export function acedDisposeSimulatedMouseCursor(view: AcEdBaseView): void {
-  const root = cursors.get(view)
-  if (!root) return
-  root.remove()
-  cursors.delete(view)
-}

@@ -5,31 +5,7 @@ import {
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
-import type { AcDbObjectId } from '../base/AcDbObject'
 import { AcDbOsnapMode } from '../misc/AcDbOsnapMode'
-
-/**
- * Spatial-index child ids may get a `#n` suffix when the same child id
- * appears more than once (see uniquifySpatialItemIds
- * in cad-simple-viewer). Parse that into the canonical object id and 0-based
- * occurrence index matching depth-first leaf order.
- */
-export function acdbParseGsMark(gsMark: AcDbObjectId): {
-  objectId: AcDbObjectId
-  occurrence: number
-} {
-  if (typeof gsMark !== 'string') {
-    return { objectId: gsMark, occurrence: 0 }
-  }
-  const match = /^(.*)#(\d+)$/.exec(gsMark)
-  if (!match) {
-    return { objectId: gsMark, occurrence: 0 }
-  }
-  return {
-    objectId: match[1] as AcDbObjectId,
-    occurrence: Number(match[2])
-  }
-}
 
 function distSq2d(a: GeometryPoint2dLike, b: GeometryPoint2dLike): number {
   const dx = a.x - b.x
@@ -153,51 +129,4 @@ export function acdbCollectPolyline2dSegmentOsnapPoints(
     pickPoint,
     snapPoints
   )
-}
-
-/**
- * Collects object snap points along a 3D vertex path.
- */
-export function acdbCollectVertexPathOsnapPoints(
-  vertices: readonly GeometryPoint2dLike[],
-  closed: boolean,
-  osnapMode: AcDbOsnapMode,
-  pickPoint: GeometryPoint2dLike,
-  snapPoints: GeometryPoint2dLike[]
-) {
-  if (vertices.length === 0) return
-
-  switch (osnapMode) {
-    case AcDbOsnapMode.EndPoint:
-      vertices.forEach(vertex =>
-        snapPoints.push(new GeometryPoint2d(vertex.x, vertex.y))
-      )
-      break
-    case AcDbOsnapMode.MidPoint:
-    case AcDbOsnapMode.Nearest:
-    case AcDbOsnapMode.Perpendicular: {
-      const segmentCount = closed ? vertices.length : vertices.length - 1
-      const candidates: GeometryPoint2d[] = []
-      for (let index = 0; index < segmentCount; index++) {
-        const segmentSnaps: GeometryPoint2d[] = []
-        acdbCollectLineSegmentOsnapPoints(
-          vertices[index],
-          vertices[(index + 1) % vertices.length],
-          osnapMode,
-          pickPoint,
-          segmentSnaps
-        )
-        candidates.push(...segmentSnaps)
-      }
-      if (osnapMode === AcDbOsnapMode.MidPoint) {
-        snapPoints.push(...candidates)
-      } else {
-        const nearest = acdbPickNearestOsnapPoint(pickPoint, candidates)
-        if (nearest) snapPoints.push(nearest)
-      }
-      break
-    }
-    default:
-      break
-  }
 }

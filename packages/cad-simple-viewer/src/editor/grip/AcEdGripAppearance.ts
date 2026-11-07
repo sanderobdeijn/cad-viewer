@@ -15,10 +15,6 @@ export const ML_UI_GRIP_HOT_VAR = '--ml-ui-grip-hot'
 
 /** Fallback grip size in CSS pixels when `GRIPSIZE` is unavailable. */
 export const DEFAULT_GRIP_SIZE_PX = 8
-/** Fallback idle grip color when `GRIPCOLOR` is unavailable. */
-export const DEFAULT_GRIP_COLOR_CSS = '#0080ff'
-/** Fallback hover / hot grip color when `GRIPHOT` is unavailable. */
-export const DEFAULT_GRIP_HOT_COLOR_CSS = '#ff0000'
 
 /** Visual appearance of grip handles derived from grip system variables. */
 export interface AcEdGripAppearance {

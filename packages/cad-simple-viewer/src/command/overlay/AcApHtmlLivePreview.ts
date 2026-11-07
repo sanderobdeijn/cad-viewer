@@ -13,7 +13,6 @@ import { acapCssColor } from '../../util'
 import type { AcTrView2d } from '../../view'
 import {
   acapDrawOverlayArrowHead,
-  acapDrawOverlayHighlight,
   acapFitOverlayCanvas,
   acapFitOverlayCanvasToView,
   acapOverlayArrowSize,
@@ -240,81 +239,4 @@ export function acapStrokeLivePolyline(
       }
     }
   }
-}
-
-/**
- * Stroke a world-space circle as a screen-space arc.
- *
- * @param ctx - Canvas context in CSS pixels.
- * @param view - View for world → screen.
- * @param center - Circle center (world).
- * @param radius - Circle radius (world).
- * @param color - CSS or AcCmColor stroke color.
- * @param lineWidth - Stroke width in CSS pixels.
- */
-export function acapStrokeLiveCircle(
-  ctx: CanvasRenderingContext2D,
-  view: AcTrView2d,
-  center: AcApHtmlLivePoint,
-  radius: number,
-  color: string | AcCmColor,
-  lineWidth: number
-): void {
-  if (radius <= 0) return
-  const css = typeof color === 'string' ? color : acapCssColor(color)
-  const sc = view.worldToScreen(center)
-  const rim = view.worldToScreen({ x: center.x + radius, y: center.y })
-  const screenR = Math.hypot(rim.x - sc.x, rim.y - sc.y)
-  ctx.strokeStyle = css
-  ctx.lineWidth = acapScaledOverlayLineWidth(lineWidth, ctx.canvas, view)
-  ctx.beginPath()
-  ctx.arc(sc.x, sc.y, screenR, 0, Math.PI * 2)
-  ctx.stroke()
-}
-
-/**
- * Draw a highlight rectangle preview (matches committed highlight look).
- *
- * @param ctx - Canvas context in CSS pixels.
- * @param view - View for world → screen.
- * @param corner1 - One corner (world).
- * @param corner2 - Opposite corner (world).
- * @param color - CSS color string.
- * @param lineWidth - Outline width in CSS pixels.
- */
-export function acapFillLiveHighlight(
-  ctx: CanvasRenderingContext2D,
-  view: AcTrView2d,
-  corner1: AcApHtmlLivePoint,
-  corner2: AcApHtmlLivePoint,
-  color: string,
-  lineWidth: number
-): void {
-  acapDrawOverlayHighlight(
-    ctx,
-    view.worldToScreen(corner1),
-    view.worldToScreen(corner2),
-    color,
-    lineWidth,
-    view
-  )
-}
-
-/**
- * Axis-aligned rectangle corners as a closed polyline (world).
- *
- * @param first - One corner.
- * @param second - Opposite corner.
- * @returns Four corners in clockwise order from `first`'s x/y mix.
- */
-export function acapLiveRectCorners(
-  first: AcApHtmlLivePoint,
-  second: AcApHtmlLivePoint
-): AcApHtmlLivePoint[] {
-  return [
-    { x: first.x, y: first.y },
-    { x: second.x, y: first.y },
-    { x: second.x, y: second.y },
-    { x: first.x, y: second.y }
-  ]
 }

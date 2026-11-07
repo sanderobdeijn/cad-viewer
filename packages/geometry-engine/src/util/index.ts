@@ -39,10 +39,7 @@ export {
   geometryTransformWcsPointToOcs
 } from './GeometryOcsUtil'
 export { GeometryTol, DEFAULT_TOL } from './GeometryTol'
-export {
-  geometryOffsetPointByDirectionInXY,
-  geometryOffsetVertexPath
-} from './GeometryCurveOffsetUtil'
+export { geometryOffsetVertexPath } from './GeometryCurveOffsetUtil'
 export { geometryOffsetSmoothedSampledPath } from './GeometrySampledCurveOffsetUtil'
 export {
   geometryClosedPolygonArea2d,

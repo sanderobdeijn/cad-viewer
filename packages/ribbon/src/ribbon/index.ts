@@ -119,7 +119,6 @@ export type {
   RibbonItemType,
   RibbonCollectionLayout,
   RibbonGroupOrientation,
-  RibbonComponentSize,
   RibbonTabModel,
   RibbonGroupModel,
   RibbonCollectionModel,
@@ -130,9 +129,7 @@ export type {
   RibbonGalleryItemModel,
   RibbonGalleryCategoryModel,
   RibbonDynamicApi,
-  RibbonCustomItemBindings,
   KeyTipModel,
   FileMenuItemModel,
-  RibbonLocaleTexts,
-  RibbonTooltipSettings
+  RibbonLocaleTexts
 } from './types'

@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
@@ -68,12 +67,6 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   private _hovered = new Set<number>()
   private readonly _highlights = new Map<number, THREE.Object3D>()
   private readonly _raycastScratch: THREE.Object3D
-  /** Whether compare / reading-mode base tint is active on this batch. */
-  private _compareEnabled = false
-  /** Unchanged / reading-mode base color while compare display is on. */
-  private _compareBaseColor = 0x9ca3af
-  /** Owned clone tinted to {@link _compareBaseColor}; null when compare is off. */
-  private _compareMaterial: THREE.Material | null = null
 
   /**
    * @param geometry - Owned geometry clone. Not disposed by this batch.
@@ -135,11 +128,6 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
 
   set material(material: THREE.Material) {
     this._material = material
-    if (this._compareEnabled) {
-      // Rebuild the tinted clone from the new style-cache material.
-      this.syncCompareMaterial()
-      return
-    }
     this.applyMaterialToDrawables(material)
   }
 
@@ -282,47 +270,6 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
   flushHighlightMask() {}
 
   /**
-   * Compare tint is applied by the overlay path via {@link getObjectAt}.
-   *
-   * @returns `false` so the packed-slot compare mask is left unused.
-   */
-  setCompareRoleAt(_geometryId: number, _role: unknown) {
-    return false
-  }
-
-  /**
-   * Tints every slot to the compare / reading-mode base color.
-   *
-   * Shared template geometry has no packed slot uniforms, so the whole
-   * drawable (and fat-line objects) swap to a cloned material. Role-specific
-   * colors still come from compare overlays built via {@link getObjectAt}.
-   *
-   * @param options.enabled - Whether compare / reading-mode tinting is active.
-   * @param options.baseColor - Unchanged-entity / reading-mode color.
-   */
-  setCompareDisplayColors(options: {
-    enabled: boolean
-    baseColor?: number
-    deletedColor?: number
-    addedColor?: number
-    modifiedColor?: number
-  }) {
-    this._compareEnabled = options.enabled
-    if (options.baseColor != null) {
-      this._compareBaseColor = options.baseColor
-    }
-    this.syncCompareMaterial()
-  }
-
-  /**
-   * @param _roles - Compare roles keyed by entity id. Unused.
-   * @returns This batch.
-   */
-  applyPackedCompareRoles(_roles: ReadonlyMap<string, unknown>) {
-    return this
-  }
-
-  /**
    * Ray-tests one slot against the shared geometry.
    *
    * @param geometryId - Slot index to test.
@@ -446,76 +393,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
       else drawable.dispatchEvent({ type: 'dispose' })
       this._drawable = null
     }
-    this.disposeCompareMaterial()
     this.removeFromParent()
-  }
-
-  /**
-   * Material currently drawn for instances (tinted clone while compare is on).
-   */
-  private get displayMaterial() {
-    return this._compareMaterial ?? this._material
-  }
-
-  /**
-   * Builds or clears the owned compare tint clone and pushes it to drawables.
-   *
-   * The previous clone is disposed only after drawables have been rebound so a
-   * mid-frame render never samples a disposed material.
-   */
-  private syncCompareMaterial() {
-    const previous = this._compareMaterial
-    this._compareMaterial = null
-    if (!this._compareEnabled) {
-      this.applyMaterialToDrawables(this._material)
-      previous?.dispose()
-      return
-    }
-    const tinted = this.createCompareMaterial(
-      this._material,
-      this._compareBaseColor
-    )
-    this._compareMaterial = tinted
-    this.applyMaterialToDrawables(tinted)
-    previous?.dispose()
-  }
-
-  /**
-   * Builds an owned material tinted to `colorHex`.
-   *
-   * Fat {@link LineMaterial} instances are reconstructed (same approach as
-   * compare overlays) so diffuse/linewidth stay consistent, and they share the
-   * style-cache {@link LineMaterial.resolution} vector so viewport resize via
-   * {@link AcTrLineMaterialManager.updateResolution} keeps line width correct.
-   *
-   * @param source - Style-cache material for this batch.
-   * @param colorHex - Compare / reading-mode base color.
-   */
-  private createCompareMaterial(source: THREE.Material, colorHex: number) {
-    if (source instanceof LineMaterial) {
-      const tinted = new LineMaterial({
-        color: colorHex,
-        linewidth: source.linewidth,
-        worldUnits: source.worldUnits,
-        dashed: source.dashed,
-        dashSize: source.dashSize,
-        gapSize: source.gapSize
-      })
-      tinted.resolution = source.resolution
-      tinted.depthTest = source.depthTest
-      tinted.transparent = source.transparent
-      tinted.opacity = source.opacity
-      return tinted
-    }
-    const tinted = AcTrMaterialUtil.cloneMaterial(source) as THREE.Material
-    AcTrMaterialUtil.setMaterialColor(tinted, new THREE.Color(colorHex))
-    return tinted
-  }
-
-  private disposeCompareMaterial() {
-    if (!this._compareMaterial) return
-    this._compareMaterial.dispose()
-    this._compareMaterial = null
   }
 
   private applyMaterialToDrawables(material: THREE.Material) {
@@ -628,7 +506,7 @@ export class AcTrSharedGeometryBatch extends THREE.Object3D {
     this.composeLocalMatrix(index, _full)
     const line = new LineSegments2(
       this._geometry as LineSegmentsGeometry,
-      this.displayMaterial as never
+      this._material as never
     )
     line.matrix.copy(_full)
     line.matrixAutoUpdate = false

@@ -88,24 +88,6 @@ export function acuiPreserveDynamicToolbarChildren(
   return true
 }
 
-/**
- * Creates a toolbar separator entry.
- *
- * @param id - Optional stable id for debugging.
- */
-export function acuiCreateToolbarSeparator(id?: string): AcUiToolbarSeparator {
-  return { type: 'separator', id }
-}
-
-/**
- * References a built-in toolbar button by id when composing a custom layout.
- *
- * @param preset - Preset id such as `'pan'` or `'measure'`.
- */
-export function acuiToolbarPreset(preset: string): AcUiToolbarPresetRef {
-  return { preset }
-}
-
 /** Returns whether a resolved toolbar item list includes the given button id. */
 export function acuiToolbarItemsIncludeItem(
   items: AcUiToolbarItem[],
@@ -202,4 +184,3 @@ function acuiCloneToolbarItem(item: AcUiToolbarItem): AcUiToolbarItem {
     children: item.children.map(child => acuiCloneToolbarItem(child))
   }
 }
-

@@ -7,7 +7,10 @@ import {
   ACED_DRAW_STYLE_SESSION_PROVIDER_ID,
   type AcEdSessionAccessory
 } from '../editor/command/AcEdSessionAccessory'
-import { acedIsMobileOrPadUi, acedSubscribeUiLayout } from '../editor/global/AcEdUiLayout'
+import {
+  acedIsMobileOrPadUi,
+  acedSubscribeUiLayout
+} from '../editor/global/AcEdUiLayout'
 import {
   type AcUiDrawStyleKind,
   acuiResolveDrawStyleKind,
@@ -67,17 +70,6 @@ export function acapGetDrawStyleSessionAccessory(
 ): AcUiDrawStyleSessionAccessory | undefined {
   return view.sessionProviders.get<AcUiDrawStyleSessionAccessory>(
     ACED_DRAW_STYLE_SESSION_PROVIDER_ID
-  )
-}
-
-/**
- * Returns the shortcut toolbar installed for a view, if any.
- */
-export function acapGetShortCutToolbar(
-  view: AcTrView2d
-): AcUiShortCutToolbar | undefined {
-  return view.sessionProviders.get<AcUiShortCutToolbar>(
-    ACED_SHORTCUT_TOOLBAR_PROVIDER_ID
   )
 }
 

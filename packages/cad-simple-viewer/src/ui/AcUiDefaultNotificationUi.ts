@@ -27,7 +27,7 @@ import {
   acedSubscribeUiTheme,
   resolveUiTheme
 } from '../editor/global/AcEdUiTheme'
-import { acapI18nTranslate } from '../util/AcApFormatUnsupportedEntitiesMessage'
+import { acapI18nTranslate } from '../util/AcApI18nTranslate'
 import { acapAppendLinkedText } from '../util/AcApMessageLink'
 
 /** DOM id for the injected stylesheet. */
@@ -608,9 +608,6 @@ function groupTitle(group: AcApNotificationGroup): string {
   if (source === 'font-missed') {
     return acapI18nTranslate('main.notification.group.fontMissed')
   }
-  if (source === 'unsupported-entities') {
-    return acapI18nTranslate('main.notification.group.unsupportedEntities')
-  }
   return group.items[0]?.title ?? ''
 }
 
@@ -626,12 +623,6 @@ function groupSummary(group: AcApNotificationGroup): string {
     return acapI18nTranslate('main.notification.group.fontMissedSummary', {
       count
     })
-  }
-  if (group.source === 'unsupported-entities') {
-    return acapI18nTranslate(
-      'main.notification.group.unsupportedEntitiesSummary',
-      { count }
-    )
   }
   return acapI18nTranslate('main.notification.group.genericSummary', { count })
 }

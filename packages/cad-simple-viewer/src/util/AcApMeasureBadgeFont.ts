@@ -15,13 +15,6 @@ export const ACAP_MEASURE_BADGE_PAD_X_PX = 14
 /** Border width at {@link ACAP_MEASURE_BADGE_REF_FONT_PX} (each side). */
 export const ACAP_MEASURE_BADGE_BORDER_PX = 1
 
-/**
- * Horizontal pad+border at the reference font size (legacy constant).
- * Prefer {@link acapMeasureBadgeChromePx} when font size varies.
- */
-export const ACAP_MEASURE_BADGE_H_CHROME_PX =
-  ACAP_MEASURE_BADGE_PAD_X_PX * 2 + ACAP_MEASURE_BADGE_BORDER_PX * 2
-
 /** Max fraction of the measured segment a mid-line badge may occupy. */
 export const ACAP_MEASURE_BADGE_MAX_LINE_FRACTION = 0.5
 
@@ -250,10 +243,7 @@ export function acapScreenAreaBadgeRefLengthPx(
   for (let i = 0; i < n; i++) {
     const a = points[i]!
     const b = points[(i + 1) % n]!
-    minEdge = Math.min(
-      minEdge,
-      acapScreenSegmentLengthPx(worldToScreen, a, b)
-    )
+    minEdge = Math.min(minEdge, acapScreenSegmentLengthPx(worldToScreen, a, b))
   }
   let cx = 0
   let cy = 0

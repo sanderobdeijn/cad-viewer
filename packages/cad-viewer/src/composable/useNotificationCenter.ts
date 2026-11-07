@@ -1,5 +1,4 @@
 import {
-  ACAP_GROUPABLE_NOTIFICATION_SOURCES,
   acapGroupNotifications,
   type AcApNotification,
   type AcApNotificationAction,
@@ -12,10 +11,6 @@ import { computed, ref } from 'vue'
  * @deprecated Prefer {@link AcApNotificationSource} from cad-simple-viewer.
  */
 export type NotificationSource = AcApNotificationSource
-
-/** @deprecated Prefer {@link ACAP_GROUPABLE_NOTIFICATION_SOURCES}. */
-export const GROUPABLE_NOTIFICATION_SOURCES =
-  ACAP_GROUPABLE_NOTIFICATION_SOURCES
 
 /**
  * Vue notification entry. Structurally compatible with {@link AcApNotification}.

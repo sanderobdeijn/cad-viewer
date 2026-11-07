@@ -40,27 +40,12 @@ describe('AcApSwitchBgCmd', () => {
     getDescriptor.mockClear()
   })
 
-  it('no-ops when reading mode is enabled', async () => {
-    const cmd = new AcApSwitchBgCmd()
-    await cmd.execute({
-      doc: { database: {} },
-      view: {
-        readingModeEnabled: true,
-        activeLayoutBtrId: 'model',
-        modelSpaceBtrId: 'model'
-      }
-    } as never)
-
-    expect(setVar).not.toHaveBeenCalled()
-  })
-
-  it('toggles the layout background sysvar when reading mode is off', async () => {
+  it('toggles the layout background sysvar', async () => {
     const cmd = new AcApSwitchBgCmd()
     const database = {}
     await cmd.execute({
       doc: { database },
       view: {
-        readingModeEnabled: false,
         activeLayoutBtrId: 'model',
         modelSpaceBtrId: 'model'
       }

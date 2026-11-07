@@ -43,7 +43,7 @@ npm install @mlightcad/cad-simple-viewer
 
 Please refer to [cad-simple-viewer-example](https://github.com/mlight-lee/cad-simple-viewer-example) on basic usage and advanced usage.
 
-To learn about the built-in notification center (and how to replace the default bell UI while still receiving font-missing and unsupported-entity alerts), see [docs/notification-center.md](./docs/notification-center.md).
+To learn about the built-in notification center (and how to replace the default bell UI while still receiving font-missing alerts), see [docs/notification-center.md](./docs/notification-center.md).
 
 For the plain-DOM toolbar engine (`AcUiToolbar`, shortcut bar, and host customization), see [docs/toolbar.md](./docs/toolbar.md).
 

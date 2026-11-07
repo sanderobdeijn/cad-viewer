@@ -73,7 +73,10 @@ class AcApNotificationService {
    * @param docManager - Manager whose sessions and events are observed.
    * @param options - Bridge / UI install flags.
    */
-  install(docManager: AcApDocManager, options: AcApNotificationServiceOptions = {}) {
+  install(
+    docManager: AcApDocManager,
+    options: AcApNotificationServiceOptions = {}
+  ) {
     this._docManager = docManager
     this._host = options.host
     this._showDefaultUi = options.showDefaultUi !== false
@@ -81,8 +84,9 @@ class AcApNotificationService {
 
     if (options.enableBridge !== false) {
       this._bridge?.uninstall()
-      this._bridge = new AcApNotificationEventBridge(docManager, () =>
-        this.center
+      this._bridge = new AcApNotificationEventBridge(
+        docManager,
+        () => this.center
       )
       this._bridge.install()
     } else {
@@ -235,15 +239,6 @@ class AcApNotificationService {
 const notificationService = new AcApNotificationService()
 
 /**
- * Returns the active notification center (built-in or host override).
- *
- * @returns The center currently owned by the service.
- */
-export function acapNotificationCenter(): AcApNotificationCenter {
-  return notificationService.center
-}
-
-/**
  * Installs / replaces the host notification center.
  *
  * Pass `null` to restore the built-in DOM notification center.
@@ -263,17 +258,6 @@ export function acapSetNotificationCenter(
   center: AcApNotificationCenter | null
 ) {
   notificationService.setCenter(center)
-}
-
-/**
- * Returns the explicit built-in notification bell placement, if any.
- *
- * @returns Placement override, or `undefined` when using layout defaults.
- */
-export function acapGetNotificationUiPlacement():
-  | AcUiNotificationBellPlacement
-  | undefined {
-  return notificationService.placement
 }
 
 /**

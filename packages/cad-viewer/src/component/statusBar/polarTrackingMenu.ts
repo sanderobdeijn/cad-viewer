@@ -3,8 +3,6 @@ export const POLAR_TRACKING_INCREMENTS = [
   90, 45, 30, 22.5, 18, 15, 10, 5
 ] as const
 
-export type PolarTrackingIncrement = (typeof POLAR_TRACKING_INCREMENTS)[number]
-
 /**
  * Formats the preview label for a polar angle increment (e.g. `45, 90, 135, 180...`).
  * Matches AutoCAD status bar polar tracking menu text.

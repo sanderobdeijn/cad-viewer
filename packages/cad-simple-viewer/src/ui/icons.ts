@@ -6,7 +6,6 @@
  * pull in the full viewer. Each `ICON_*` constant is
  * an SVG snippet using `currentColor` for theming.
  */
-
 /**
  * Builds an Element Plus icon SVG so toolbar buttons match cad-viewer.
  *
@@ -35,10 +34,6 @@ export const ICON_ZOOM_EXTENT = `<svg xmlns="http://www.w3.org/2000/svg" width="
 /** Zoom window icon. */
 export const ICON_ZOOM_WINDOW =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M15.0833 14.8083c1.2333-1.3 1.9083-3.0333 1.9083-4.825-.0083-3.325-2.35-6.1833-5.6083-6.8417C8.125 2.4833 4.85 4.2 3.55 7.2583c-1.3 3.0583-.275 6.6083 2.4583 8.5 2.725 1.8917 6.4167 1.6 8.8167-.6917.0917-.0833.175-.175.2583-.2583Zm1.2583.5917 2.575 2.575c-.3167.3167-.625.625-.9417.9417-.8583-.8583-1.7167-1.7167-2.575-2.575-3.4083 2.9-8.4917 2.5917-11.525-.6917C.8417 12.3667.9417 7.275 4.1083 4.1083 7.2667.9417 12.3667.8417 15.65 3.875s3.5917 8.1167.6917 11.525Zm-3.55-2.6083V7.2083H7.2083v5.5833h5.5833ZM5.875 5.875h8.25v8.25H5.875V5.875Z"/></svg>'
-
-/** Drawing layout switcher icon (staggered bento-box panels). */
-export const ICON_LAYOUT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="2" y="2" width="8.2" height="5" rx="1.2" fill="currentColor"/><rect x="2" y="8.5" width="8.2" height="9.5" rx="1.2" fill="currentColor"/><rect x="11.7" y="2" width="6.3" height="10" rx="1.2" fill="currentColor"/><rect x="11.7" y="13.5" width="6.3" height="4.5" rx="1.2" fill="currentColor"/></svg>'
 
 /** Measure tools parent menu icon. */
 export const ICON_MEASURE =
@@ -89,11 +84,6 @@ export const ICON_MEASURE_ARC = measureToolIcon(
   `<g fill="none" stroke-linejoin="miter"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" d="M4.9 11.6A8.3 8.3 0 0 1 13.2 3.3"/><path stroke="currentColor" stroke-width="1.35" stroke-linecap="square" d="M10.4 11.6H13.2V8.8"/><path stroke="currentColor" stroke-width="1.35" stroke-linecap="butt" d="M13.2 11.6v1.7"/><rect stroke="${TOOL_ICON_ACCENT}" stroke-width="1.15" x="3.65" y="10.35" width="2.5" height="2.5"/><rect stroke="${TOOL_ICON_ACCENT}" stroke-width="1.15" x="11.95" y="2.05" width="2.5" height="2.5"/></g>`
 )
 
-/** Measure radius icon (circle with a radial dimension line over a ruler). */
-export const ICON_MEASURE_RADIUS = measureToolIcon(
-  `<circle fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.4" cx="9.1" cy="7.3" r="4.7"/><circle fill="${TOOL_ICON_ACCENT}" cx="9.1" cy="7.3" r="1.05"/><path fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.35" stroke-linecap="round" d="M9.1 7.3 13.35 3.7"/><path fill="${TOOL_ICON_ACCENT}" d="M13.35 3.7 11.15 4.2 12.55 5.7Z"/>`
-)
-
 /** Measure point / coordinates icon (axes, dashed projections, and a point over a ruler). */
 export const ICON_MEASURE_POINT = measureToolIcon(
   `<g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="1.4" d="M4 4.8v7.4h7.6"/><path stroke-width="1.2" stroke-dasharray="1.7 1.2" d="M4 6.9h7M11 12.2V6.9"/></g><path fill="${TOOL_ICON_ACCENT}" d="M4 2.5 2.45 4.8h3.1ZM13.8 12.2 11.5 10.7v3Z"/><circle fill="${TOOL_ICON_ACCENT}" cx="11" cy="6.9" r="1.3"/>`
@@ -112,10 +102,6 @@ export const ICON_CLEAR_MEASUREMENTS = ICON_CLEAR
 /** Switch background icon. */
 export const ICON_SWITCH_BG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" fill="currentColor"/><rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M12 4a8 8 0 0 1 7.25 7.25" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M20.75 10 L17.25 10 L19 12.5 Z" fill="currentColor"/><path d="M12 20a8 8 0 0 1-8-8" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 14 L2.5 14 L4 11 Z" fill="currentColor"/></svg>'
-
-/** Reading mode icon (black linework on white page; explicit #000/#fff for toolbar contrast). */
-export const ICON_READING_MODE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><g fill="none" stroke="#000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 6.5h4.5M5.5 10h7M5.5 13.5h9"/><path d="M13.25 6.5v4.25h-3.25"/></g></svg>'
 
 /** List panel icon (list page with a search loupe). */
 export const ICON_MARKUP_PANEL = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3.5" y="3" width="13" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M3.5 6.5h13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M6.5 9.5h7M6.5 12h7M6.5 14.5h3.2"/><g fill="none" stroke="${TOOL_ICON_ACCENT}" stroke-width="1.7" stroke-linecap="round"><circle cx="14.5" cy="14.7" r="4.2"/><path d="M17.5 17.7 19.5 19.7"/></g></svg>`
@@ -148,38 +134,6 @@ export const ICON_ANNOTATION_HIDE = elementPlusIcon(
   'M511.998 672c-12.8 0-25.6-3.2-38.4-6.4l-51.2 51.2c28.8 12.8 57.6 19.2 89.6 19.2 64 0 115.2-22.4 160-64 41.6-41.6 64-96 64-160 0-32-6.4-64-19.2-89.6l-51.2 51.2c3.2 12.8 6.4 25.6 6.4 38.4 0 44.8-16 83.2-48 112s-67.2 48-112 48'
 )
 
-/** Light theme toggle icon (shown when light theme is active). */
-export const ICON_THEME_LIGHT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>'
-
-/** Dark theme toggle icon (shown when dark theme is active). */
-export const ICON_THEME_DARK =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M10 3a7 7 0 1 0 0 14 9 9 0 0 1 0-14Z"/></svg>'
-
-/** Toolbar dock / placement parent button. */
-export const ICON_TOOLBAR_PLACEMENT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="15" y="5" width="1.5" height="10" rx=".5" fill="currentColor"/></svg>'
-
-export const ICON_PLACEMENT_TOP =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="3" rx=".5" fill="currentColor"/><rect x="5" y="8" width="10" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-
-export const ICON_PLACEMENT_BOTTOM =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="5" y="3" width="10" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="14" height="3" rx=".5" fill="currentColor"/></svg>'
-
-export const ICON_PLACEMENT_LEFT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="3" y="3" width="3" height="14" rx=".5" fill="currentColor"/><rect x="8" y="5" width="9" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-
-export const ICON_PLACEMENT_RIGHT =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><rect x="5" y="5" width="9" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="3" height="14" rx=".5" fill="currentColor"/></svg>'
-
-/** Dock panel close button icon. */
-export const ICON_DOCK_CLOSE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5 5l10 10M15 5 5 15"/></svg>'
-
-/** Dock panel side menu button icon. */
-export const ICON_DOCK_SIDE_MENU =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><circle cx="10" cy="4" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>'
-
 /** Collapse toolbar (chevron toward compact edge). */
 export const ICON_CHEVRON_UP =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M10 6.5 5.5 11h9L10 6.5Z"/></svg>'
@@ -206,39 +160,6 @@ export const ICON_ZOOM_ORIGINAL =
  * top-right so the badge stays readable at toolbar size.
  */
 export const ICON_ZOOM_SMART = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20">${ZOOM_EXTENT_GLYPH}<path fill="${TOOL_ICON_ACCENT}" d="M14.85 0.85 15.95 4.05 19.15 5.15 15.95 6.25 14.85 9.45 13.75 6.25 10.55 5.15 13.75 4.05Z"/><path fill="${TOOL_ICON_ACCENT}" d="M17.55 8.35 18.15 10.15 19.95 10.75 18.15 11.35 17.55 13.15 16.95 11.35 15.15 10.75 16.95 10.15Z"/></svg>`
-
-/** Settings / gear parent icon for compact toolbars. */
-export const ICON_SETTINGS =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" d="M8.08 2.1h3.84l.32 1.52a6.4 6.4 0 0 1 1.36.78l1.48-.64 1.92 1.92-.64 1.48c.3.42.54.88.78 1.36l1.52.32v3.84l-1.52.32a6.4 6.4 0 0 1-.78 1.36l.64 1.48-1.92 1.92-1.48-.64a6.4 6.4 0 0 1-1.36.78l-.32 1.52H8.08l-.32-1.52a6.4 6.4 0 0 1-1.36-.78l-1.48.64-1.92-1.92.64-1.48a6.4 6.4 0 0 1-.78-1.36L1.34 11.92V8.08l1.52-.32c.24-.48.48-.94.78-1.36l-.64-1.48 1.92-1.92 1.48.64c.42-.3.88-.54 1.36-.78L8.08 2.1ZM10 7.2A2.8 2.8 0 1 0 10 12.8 2.8 2.8 0 0 0 10 7.2Z"/></svg>'
-
-/**
- * Simulated-mouse touch pick toggle: crosshair above a touch contact so the
- * fingertip does not obscure the sample point.
- */
-export const ICON_SIMULATED_MOUSE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M10 2.5v6M7 5.5h6"/><circle cx="10" cy="14.5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="14.5" r="1.1" fill="currentColor"/></svg>'
-
-/** Object snap parent icon (copied from cad-viewer status-bar `osnap.svg`). */
-export const ICON_OSNAP =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M2.25 2.25h4.878v4.878H2.25V2.25Zm.978.978v2.924h2.924V3.228H3.228Z"/><path fill="currentColor" d="M5.175 20.773V7.128H4.204V21.75H21.75V4.204H7.128v.971H20.773v15.598H5.175Z"/></svg>'
-
-/** Orthogonal mode toggle icon. */
-export const ICON_ORTHO_MODE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" fill-rule="evenodd" d="M3 2H2v16h16v-1H8v-5H3V2zm0 11v4h4v-4H3z"/></svg>'
-
-/** Polar tracking toggle icon. */
-export const ICON_POLAR_TRACKING =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20"><path fill="currentColor" fill-rule="evenodd" d="M16.98 11L18.5 11L18.5 10L16.98 10C16.86 8.13 16.05 6.44 14.8 5.2L16.88 2.83L16.12 2.17L14.05 4.54C12.79 3.57 11.21 3 9.5 3C5.36 3 2 6.36 2 10.5C2 14.64 5.36 18 9.5 18C13.47 18 16.73 14.91 16.98 11ZM15.98 10C15.86 8.43 15.18 7.01 14.14 5.95L10.6 10L15.98 10ZM13.39 5.29L8.4 11L15.98 11C15.73 14.36 12.92 17 9.5 17C5.91 17 3 14.09 3 10.5C3 6.91 5.91 4 9.5 4C10.96 4 12.31 4.48 13.39 5.29Z"/></svg>'
-
-/** Color picker / color wheel icon. */
-export const ICON_COLOR =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="#e75958" d="M22 12H12l5 8.66A10 10 0 0 0 22 12Z"/><path fill="#814dff" d="M17 20.66 12 12 7 20.66A10 10 0 0 0 17 20.66Z"/><path fill="#13b0ce" d="M7 20.66 12 12H2A10 10 0 0 0 7 20.66Z"/><path fill="#4ecd83" d="M2 12H12L7 3.34A10 10 0 0 0 2 12Z"/><path fill="#ffc33f" d="M7 3.34 12 12l5-8.66A10 10 0 0 0 7 3.34Z"/><path fill="#ff9543" d="M17 3.34 12 12H22A10 10 0 0 0 17 3.34Z"/></svg>'
-
-/** Alias for {@link ICON_ZOOM_WINDOW}. */
-export const ICON_ZOOM_BOX = ICON_ZOOM_WINDOW
-
-/** Alias for {@link ICON_MEASURE_POINT}. */
-export const ICON_MEASURE_COORDINATE = ICON_MEASURE_POINT
 
 /** Overflow / more menu icon (horizontal ellipsis). */
 export const ICON_MORE =

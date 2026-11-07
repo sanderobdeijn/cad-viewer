@@ -248,17 +248,6 @@ function collectMeasurementOverlayRects(
   return rects
 }
 
-/**
- * Remove one committed measurement.
- */
-export function removeMeasurement(view: AcTrView2d, id: string): void {
-  if (!view.htmlTransientManager.getGroup(id)) return
-  runMeasurementEdit(() => {
-    view.htmlTransientManager.remove(id)
-  })
-  view.isHtmlDirty = true
-}
-
 function rememberStyle(id: string, style: AcApMeasurementStyle): void {
   stylesById.set(id, acapCloneMeasurementStyle(style))
 }

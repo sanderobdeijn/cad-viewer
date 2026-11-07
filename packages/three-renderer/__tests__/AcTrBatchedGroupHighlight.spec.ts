@@ -9,9 +9,7 @@ import { AcTrBatchedLine } from '../src/batch/AcTrBatchedLine'
 import { AcTrBatchedLine2 } from '../src/batch/AcTrBatchedLine2'
 import {
   AcTrBatchHighlightState,
-  BATCH_SLOT_ID_ATTRIBUTE,
-  COMPARE_ROLE_ADDED,
-  COMPARE_ROLE_DELETED
+  BATCH_SLOT_ID_ATTRIBUTE
 } from '../src/batch/highlight'
 import { RTE_REBASE_THRESHOLD } from '../src/draw/AcTrBatchDrawPolicy'
 import { buildLineGeometry } from '../src/object/AcTrLineGeometryBuilder'
@@ -292,63 +290,6 @@ describe('AcTrBatchedGroup slot-mask highlight', () => {
     expect(getObjectUserData(clonedLine).originalMaterial).toBeUndefined()
   })
 
-  it('clears u_compareEnabled uniform when compare display is disabled', () => {
-    const group = new AcTrBatchedGroup()
-    group.addEntity(createBatchedLineEntity('line-1'))
-
-    group.setCompareDisplay({ enabled: true, baseColor: 0x000000 })
-    const batchedLine = findBatchedLine(group)!
-    const material = batchedLine.material as THREE.Material
-    const uniforms =
-      getMaterialRuntimeUserData(material).batchHighlightUniforms!
-    expect(uniforms.u_compareEnabled.value).toBe(1)
-
-    group.setCompareDisplay({ enabled: false, overrides: [] })
-
-    expect(batchedLine._highlightState.compareEnabled).toBe(false)
-    expect(uniforms.u_compareEnabled.value).toBe(0)
-  })
-
-  it('replaces compare roles so leftover deleted masks do not linger', () => {
-    const group = new AcTrBatchedGroup()
-    group.addEntity(createBatchedLineEntity('old-deleted'))
-    group.addEntity(createBatchedLineEntity('kept'))
-
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [{ objectId: 'old-deleted', role: 'deleted' }]
-    })
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [{ objectId: 'kept', role: 'added' }]
-    })
-
-    const roles: number[] = []
-    group.traverse(child => {
-      if (!(child instanceof AcTrBatchedLine)) return
-      const state = (
-        child as AcTrBatchedLine & { _highlightState: AcTrBatchHighlightState }
-      )._highlightState
-      roles.push(...state.compareRoleMask)
-    })
-    expect(roles).not.toContain(COMPARE_ROLE_DELETED)
-    expect(roles).toContain(COMPARE_ROLE_ADDED)
-  })
-
-  it('applies compare roles to entities batched after setCompareDisplay', () => {
-    const group = new AcTrBatchedGroup()
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [{ objectId: '926', role: 'added' }]
-    })
-    group.addEntity(createBatchedLineEntity('926'))
-
-    const batchedLine = findBatchedLine(group)!
-    expect(batchedLine._highlightState.compareRoleMask[0]).toBe(
-      COMPARE_ROLE_ADDED
-    )
-  })
-
   it('stores Line2 slotId as an instanced attribute per segment', () => {
     const group = new AcTrBatchedGroup()
     const geometry = new LineSegmentsGeometry()
@@ -378,15 +319,9 @@ describe('AcTrBatchedGroup slot-mask highlight', () => {
     expect(slotId).toBeInstanceOf(THREE.InstancedBufferAttribute)
     expect(slotId.getX(0)).toBe(0)
     expect(slotId.getX(1)).toBe(0)
-
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [{ objectId: '927', role: 'added' }]
-    })
-    expect(batched!._highlightState.compareRoleMask[0]).toBe(COMPARE_ROLE_ADDED)
   })
 
-  it('keeps slotIds and added roles after indexed-line batch growth', () => {
+  it('keeps slotIds after indexed-line batch growth', () => {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff })
     const group = new AcTrBatchedGroup()
     const ids: string[] = []
@@ -421,88 +356,6 @@ describe('AcTrBatchedGroup slot-mask highlight', () => {
     expect(slotId.getX(100)).toBe(50)
     expect(slotId.getX(896)).toBe(448)
     expect(slotId.getX(898)).toBe(449)
-
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [
-        { objectId: '926', role: 'added' },
-        { objectId: '927', role: 'added' }
-      ]
-    })
-
-    const state = batchedLine._highlightState
-    expect(state.compareRoleMask[448]).toBe(COMPARE_ROLE_ADDED)
-    expect(state.compareRoleMask[449]).toBe(COMPARE_ROLE_ADDED)
-    expect(state.compareRoleMask[50]).toBe(0)
-
-    const texture = state.uploadMaskTexture(true)
-    const data = texture.image.data as Uint8Array
-    expect(data[448 * 4 + 2]).toBe(170)
-    expect(data[449 * 4 + 2]).toBe(170)
-    expect(texture.colorSpace).toBe(THREE.NoColorSpace)
-
-    const overlay = group.getObjectByName('CompareOverlay') as THREE.Group
-    expect(overlay.children).toHaveLength(2)
-    const overlayLine = overlay.children[0] as THREE.LineSegments
-    expect(
-      (overlayLine.material as THREE.LineBasicMaterial).color.getHex()
-    ).toBe(0x22c55e)
-  })
-
-  it('rebinds compare overlay geometry after a later batch growth', () => {
-    const material = new THREE.LineBasicMaterial({ color: 0xffffff })
-    const group = new AcTrBatchedGroup()
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [{ objectId: 'hit', role: 'added' }]
-    })
-
-    appendIndexedLine(group, material, 'hit', 0)
-    const overlay = group.getObjectByName('CompareOverlay') as THREE.Group
-    expect(overlay.children).toHaveLength(1)
-    const overlayLine = overlay.children[0] as THREE.LineSegments
-    const attributesBefore = overlayLine.geometry.attributes
-    expect(attributesBefore).toBe(findBatchedLine(group)!.geometry.attributes)
-
-    // INITIAL_LINE_VERTEX_CAPACITY is 128 (2 verts/segment → 64 lines).
-    for (let i = 1; i <= 70; i++) {
-      appendIndexedLine(group, material, `filler-${i}`, i)
-    }
-
-    const batchedLine = findBatchedLine(group)!
-    expect(overlay.children).toHaveLength(1)
-    expect(overlay.children[0]).toBe(overlayLine)
-    expect(overlayLine.geometry.attributes).toBe(
-      batchedLine.geometry.attributes
-    )
-    expect(overlayLine.geometry.attributes).not.toBe(attributesBefore)
-    expect(
-      (overlayLine.material as THREE.LineBasicMaterial).color.getHex()
-    ).toBe(0x22c55e)
-  })
-
-  it('drops compare overlay children when the entity is removed', () => {
-    const material = new THREE.LineBasicMaterial({ color: 0xffffff })
-    const group = new AcTrBatchedGroup()
-    appendIndexedLine(group, material, 'drop', 0)
-    appendIndexedLine(group, material, 'keep', 1)
-    group.setCompareDisplay({
-      enabled: true,
-      overrides: [
-        { objectId: 'keep', role: 'added' },
-        { objectId: 'drop', role: 'deleted' }
-      ]
-    })
-
-    const overlay = group.getObjectByName('CompareOverlay') as THREE.Group
-    expect(overlay.children).toHaveLength(2)
-    expect(group.removeEntity('drop')).toBe(true)
-    expect(overlay.children).toHaveLength(1)
-    expect(getObjectUserData(overlay.children[0]).objectId).toBe('keep')
-    const overlayLine = overlay.children[0] as THREE.LineSegments
-    expect(overlayLine.geometry.attributes).toBe(
-      findBatchedLine(group)!.geometry.attributes
-    )
   })
 
   it('copies typed-array views with a non-zero byteOffset', () => {

@@ -1,9 +1,3 @@
-import {
-  acapAnalyzeUnsupportedDrawing,
-  acapIsTianzhengClass,
-  acapIsTianzhengClassName
-} from '../src/util/AcApAnalyzeUnsupportedDrawing'
-import { acapResolveUnsupportedEntitiesMessage } from '../src/util/AcApFormatUnsupportedEntitiesMessage'
 import { AcApNotificationStore } from '../src/app/notification/AcApNotificationStore'
 import {
   acapGroupNotifications,
@@ -26,10 +20,10 @@ describe('AcApNotificationStore (per-session)', () => {
     store.setActiveSession('doc-1')
     store.warning('A fonts', undefined, { source: 'font-missed' })
     store.setActiveSession('doc-2')
-    store.warning('B unsupported', undefined, { source: 'unsupported-entities' })
+    store.warning('B fonts', undefined, { source: 'font-missed' })
 
     expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('B unsupported')
+    expect(store.notifications[0].title).toBe('B fonts')
     expect(store.notifications[0].sessionId).toBe('doc-2')
 
     store.setActiveSession('doc-1')
@@ -115,110 +109,13 @@ describe('acapGroupNotifications', () => {
     const groups = acapGroupNotifications([
       makeNotification({
         id: '1',
-        title: 'Unsupported',
-        source: 'unsupported-entities'
+        title: 'Fonts',
+        source: 'font-missed'
       })
     ])
 
     expect(groups).toHaveLength(1)
     expect(groups[0].collapsible).toBe(false)
-    expect(groups[0].source).toBe('unsupported-entities')
-  })
-})
-
-describe('acapIsTianzhengClassName', () => {
-  it('detects TCH_ and TH_ prefixes', () => {
-    expect(acapIsTianzhengClassName('TCH_Door')).toBe(true)
-    expect(acapIsTianzhengClassName('TH_TOLERANCEENT')).toBe(true)
-    expect(acapIsTianzhengClassName('th_wall')).toBe(true)
-    expect(acapIsTianzhengClassName('ACAD_PROXY_ENTITY')).toBe(false)
-    expect(acapIsTianzhengClassName('')).toBe(false)
-  })
-})
-
-describe('acapIsTianzhengClass', () => {
-  it('matches app names containing 天正', () => {
-    expect(
-      acapIsTianzhengClass({
-        name: 'CUSTOM_ENT',
-        cppClassName: 'CustomEnt',
-        appName: '天正建筑',
-        proxyFlag: 0,
-        instanceCount: 3,
-        wasProxy: true,
-        isEntity: true
-      })
-    ).toBe(true)
-  })
-})
-
-describe('acapAnalyzeUnsupportedDrawing', () => {
-  it('flags 天正 drawings from CLASSES even when unknownEntityCount is 0', () => {
-    const analysis = acapAnalyzeUnsupportedDrawing(
-      {
-        classes: [
-          {
-            name: 'TH_TOLERANCEENT',
-            cppClassName: 'TH_ToleranceEnt',
-            appName: 'ObjectDBX Classes',
-            proxyFlag: 0,
-            instanceCount: 12,
-            wasProxy: true,
-            isEntity: true
-          }
-        ],
-        tables: {
-          blockTable: {
-            newIterator: () => [] as Iterable<never>
-          }
-        }
-      } as never,
-      0
-    )
-
-    expect(analysis.isTianzhengDrawing).toBe(true)
-    expect(analysis.tianzhengEntityCount).toBe(12)
-    expect(analysis.shouldWarn).toBe(true)
-  })
-
-  it('warns for unknownEntityCount alone', () => {
-    const analysis = acapAnalyzeUnsupportedDrawing(
-      {
-        classes: [],
-        tables: {
-          blockTable: {
-            newIterator: () => [] as Iterable<never>
-          }
-        }
-      } as never,
-      5
-    )
-
-    expect(analysis.unknownEntityCount).toBe(5)
-    expect(analysis.shouldWarn).toBe(true)
-    expect(analysis.isTianzhengDrawing).toBe(false)
-  })
-})
-
-describe('acapResolveUnsupportedEntitiesMessage', () => {
-  const t = (key: string, params?: Record<string, string | number>) => {
-    if (key === 'main.message.tianzhengEntities') {
-      return `TZ:${params?.count}`
-    }
-    if (key === 'main.message.unknownEntities') {
-      return `UNK:${params?.count}`
-    }
-    return key
-  }
-
-  it('prefers the 天正 message and can append unknown counts', () => {
-    expect(
-      acapResolveUnsupportedEntitiesMessage(t, {
-        unknownEntityCount: 2,
-        tianzhengEntityCount: 10,
-        isTianzhengDrawing: true,
-        shouldWarn: true
-      })
-    ).toBe('TZ:10 UNK:2')
+    expect(groups[0].source).toBe('font-missed')
   })
 })

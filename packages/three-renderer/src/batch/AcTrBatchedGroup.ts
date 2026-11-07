@@ -56,7 +56,6 @@ import {
   AcTrSharedGeometryBatch,
   type AcTrSharedGeometryKind
 } from './AcTrSharedGeometryBatch'
-import type { AcTrBatchCompareRole } from './highlight'
 import {
   type AcTrBatchHighlightKind,
   type AcTrBatchHighlightState,
@@ -79,11 +78,6 @@ export function setAcTrDrawOrderZAllocator(
   allocator: AcTrDrawOrderZAllocator
 ): void {
   activeDrawOrderZAllocator = allocator
-}
-
-/** Restores the no-op allocator (Z stays 0). */
-export function clearAcTrDrawOrderZAllocator(): void {
-  activeDrawOrderZAllocator = () => 0
 }
 
 /**
@@ -362,22 +356,10 @@ export class AcTrBatchedGroup extends THREE.Group {
   private _unbatchedSelectedIds = new Set<string>()
   /** Entity ids whose unbatched drawables are currently hover-highlighted. */
   private _unbatchedHoveredIds = new Set<string>()
-  /** Compare-display role overrides keyed by entity object id. */
-  private _compareRoles = new Map<string, AcTrBatchCompareRole>()
-  /** Whether compare display mode is active for this group. */
-  private _compareEnabled = false
-  /** Unchanged-entity color while compare display is enabled. */
-  private _compareBaseColor = 0x9ca3af
-  /** Deleted-entity color while compare display is enabled. */
-  private _compareDeletedColor = 0xe11d48
-  /** Added-entity color while compare display is enabled. */
-  private _compareAddedColor = 0x22c55e
-  /** Modified-entity color while compare display is enabled. */
-  private _compareModifiedColor = 0xf59e0b
   /**
    * Origin batches keyed by Three.js `Object3D.id`.
    *
-   * Compare/highlight lookups use this instead of `getObjectById`, which can
+   * Highlight lookups use this instead of `getObjectById`, which can
    * miss containers after buffer growth or when overlay children share the tree.
    */
   private _originBatchById: Map<number, AcTrOriginBatch>
@@ -396,7 +378,6 @@ export class AcTrBatchedGroup extends THREE.Group {
    * unchanged linework packed into a later draw. These copies
    * use unpatched materials and a high renderOrder so hits stay visible.
    */
-  private _compareOverlay: AcTrHighlightOverlayGroup
   /**
    * Non-batched objects (for render paths that cannot be merged, e.g. fat lines).
    */
@@ -431,13 +412,9 @@ export class AcTrBatchedGroup extends THREE.Group {
     this._unbatchedObjects = new THREE.Group()
     this._selectedObjects = markHighlightOverlayGroup(new THREE.Group())
     this._hoverObjects = markHighlightOverlayGroup(new THREE.Group())
-    this._compareOverlay = markHighlightOverlayGroup(new THREE.Group())
-    this._compareOverlay.name = 'CompareOverlay'
-    this._compareOverlay.renderOrder = 10000
     this.add(this._unbatchedObjects)
     this.add(this._selectedObjects)
     this.add(this._hoverObjects)
-    this.add(this._compareOverlay)
   }
 
   /**
@@ -672,7 +649,6 @@ export class AcTrBatchedGroup extends THREE.Group {
     })
     this.clearHighlightGroup(this._selectedObjects)
     this.clearHighlightGroup(this._hoverObjects)
-    this.clearHighlightGroup(this._compareOverlay)
     this._sharedGeometryBatches.forEach(batches => {
       batches.forEach(batch => batch.disposeSharedInstances())
     })
@@ -1408,24 +1384,6 @@ export class AcTrBatchedGroup extends THREE.Group {
     if (hasUnbatched) {
       this._unbatchedEntities.set(objectId, unbatchedObjects)
     }
-    this.syncCompareRoleForEntity(objectId)
-  }
-
-  /**
-   * If compare display is on, tints a newly packed entity with its role
-   * (or the unchanged base color).
-   *
-   * @param objectId - Entity just added to this group.
-   */
-  private syncCompareRoleForEntity(objectId: string) {
-    if (!this._compareEnabled) return
-    const role = this._compareRoles.get(objectId) ?? null
-    this.applyCompareRoleToEntity(objectId, role)
-    this.refreshUnbatchedCompareMaterial(objectId)
-    // Growth replaces packed attributes; overlay wrappers keep the old ones
-    // until rebound. Draw ranges stay valid across capacity increases.
-    this.rebindCompareOverlaySharedBuffers()
-    this.syncCompareOverlayForEntity(objectId)
   }
 
   /**
@@ -1628,7 +1586,6 @@ export class AcTrBatchedGroup extends THREE.Group {
     objectId = String(objectId)
     this.appendEntitySlot(objectId, item)
     this.applyBatchSlotVisibility(item, visible)
-    this.syncCompareRoleForEntity(objectId)
   }
 
   /**
@@ -1636,7 +1593,6 @@ export class AcTrBatchedGroup extends THREE.Group {
    */
   removeEntity(objectId: string) {
     let result = false
-    let compactedBatches = false
     if (this._entitiesMap.has(objectId)) {
       const batchedObjects = new Map<number, AcTrResolvedBatch>()
       this.forEachEntitySlot(objectId, item => {
@@ -1648,7 +1604,6 @@ export class AcTrBatchedGroup extends THREE.Group {
         }
       })
       batchedObjects.forEach(batchedObject => batchedObject.optimize())
-      compactedBatches = batchedObjects.size > 0
       this.unselect(objectId)
       this.unhover(objectId)
       this._entitiesMap.delete(objectId)
@@ -1663,15 +1618,6 @@ export class AcTrBatchedGroup extends THREE.Group {
       })
       this._unbatchedEntities.delete(objectId)
       result = true
-    }
-    if (this._compareEnabled) {
-      // Compact moves remaining slot ranges, so shared overlay draw ranges
-      // must be rebuilt. Unbatched-only deletes only drop this entity's copy.
-      if (compactedBatches) {
-        this.refreshCompareOverlay()
-      } else {
-        this.removeCompareOverlayForEntity(objectId)
-      }
     }
     return result
   }
@@ -1784,267 +1730,6 @@ export class AcTrBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Enables or updates compare-display coloring for this group.
-   *
-   * When enabled, all entities render in `baseColor` unless they have a
-   * role override (deleted / added / modified). Selection and hover still win.
-   *
-   * @param options.enabled - Whether compare coloring is active.
-   * @param options.baseColor - Color for unchanged entities.
-   * @param options.colors - Optional role color overrides.
-   * @param options.overrides - Full per-entity role set; replaces any previous
-   *   roles. Omit to keep the current set (color-only updates).
-   */
-  setCompareDisplay(options: {
-    /** Whether compare coloring is active. */
-    enabled: boolean
-    /** Color for unchanged entities. */
-    baseColor?: number
-    /** Role colors applied after the unchanged base color. */
-    colors?: {
-      /** Added-entity color. */
-      added?: number
-      /** Deleted-entity color. */
-      deleted?: number
-      /** Modified-entity color. */
-      modified?: number
-    }
-    /** Full per-entity role set; replaces any previous roles. */
-    overrides?: Iterable<{
-      /** Entity object id. */
-      objectId: string
-      /** Compare role, or `null` to skip (same as omitting the id). */
-      role: AcTrBatchCompareRole | null
-    }>
-  }) {
-    this._compareEnabled = options.enabled
-    if (options.baseColor != null) {
-      this._compareBaseColor = options.baseColor
-    }
-    if (options.colors?.deleted != null) {
-      this._compareDeletedColor = options.colors.deleted
-    }
-    if (options.colors?.added != null) {
-      this._compareAddedColor = options.colors.added
-    }
-    if (options.colors?.modified != null) {
-      this._compareModifiedColor = options.colors.modified
-    }
-
-    // A new override list replaces the previous one. Merging would leave
-    // deleted roles on a pane that should only show added/modified hits
-    // (DWG handles collide across files).
-    if (options.overrides) {
-      this._compareRoles.clear()
-      for (const entry of options.overrides) {
-        if (entry.role != null) {
-          this._compareRoles.set(String(entry.objectId), entry.role)
-        }
-      }
-    }
-
-    if (!options.enabled) {
-      this._compareRoles.clear()
-    }
-
-    this.applyCompareDisplayToBatches()
-    this.refreshCompareOverlay()
-    this.refreshAllUnbatchedCompareMaterials()
-  }
-
-  /** Clears all compare role overrides and disables compare display. */
-  clearCompareDisplay() {
-    this.setCompareDisplay({ enabled: false, overrides: [] })
-  }
-
-  /**
-   * Applies or clears the compare role for one entity id.
-   *
-   * @param objectId - Entity object id.
-   * @param role - Compare role, or `null` to clear.
-   */
-  setEntityCompareRole(objectId: string, role: AcTrBatchCompareRole | null) {
-    const id = String(objectId)
-    if (role == null) {
-      this._compareRoles.delete(id)
-    } else {
-      this._compareRoles.set(id, role)
-    }
-    this.applyCompareRoleToEntity(id, role)
-    this.refreshUnbatchedCompareMaterial(id)
-    this.syncCompareOverlayForEntity(id)
-  }
-
-  /** Pushes compare colors and role masks onto every origin batch in this group. */
-  private applyCompareDisplayToBatches() {
-    const colorOptions = {
-      enabled: this._compareEnabled,
-      baseColor: this._compareBaseColor,
-      deletedColor: this._compareDeletedColor,
-      addedColor: this._compareAddedColor,
-      modifiedColor: this._compareModifiedColor
-    }
-
-    for (const map of this.groups) {
-      map.forEach(batches => {
-        batches.forEach(batch => {
-          batch.setCompareDisplayColors(colorOptions)
-          batch.applyPackedCompareRoles(this._compareRoles)
-        })
-      })
-    }
-
-    // Shared instances live outside packed origin maps and have no
-    // slot uniforms; they still need the reading-mode / compare base tint.
-    this._sharedGeometryBatches.forEach(batches => {
-      batches.forEach(batch => batch.setCompareDisplayColors(colorOptions))
-    })
-  }
-
-  /**
-   * Writes `role` into every packed slot owned by `objectId`.
-   *
-   * @param objectId - Entity object id.
-   * @param role - Compare role, or `null` to clear.
-   */
-  private applyCompareRoleToEntity(
-    objectId: string,
-    role: AcTrBatchCompareRole | null
-  ) {
-    const dirtyBatches = new Set<AcTrResolvedBatch>()
-    this.forEachEntitySlot(objectId, item => {
-      const batchedObject = this.getOriginBatch(item.batchedObjectId)
-      if (batchedObject?.setCompareRoleAt(item.batchId, role)) {
-        dirtyBatches.add(batchedObject)
-      }
-    })
-    dirtyBatches.forEach(batch => batch.flushHighlightMask())
-  }
-
-  /** Reapplies compare tints to every unbatched drawable. */
-  private refreshAllUnbatchedCompareMaterials() {
-    this._unbatchedEntities.forEach((_objects, objectId) => {
-      this.refreshUnbatchedCompareMaterial(objectId)
-    })
-  }
-
-  /**
-   * Reapplies compare tint (or restores highlight) for one unbatched entity.
-   *
-   * @param objectId - Entity object id.
-   */
-  private refreshUnbatchedCompareMaterial(objectId: string) {
-    const unbatchedObjects = this._unbatchedEntities.get(objectId)
-    if (!unbatchedObjects) {
-      return
-    }
-    // Selection/hover still take precedence
-    if (
-      this._unbatchedSelectedIds.has(objectId) ||
-      this._unbatchedHoveredIds.has(objectId)
-    ) {
-      this.refreshUnbatchedHighlight(unbatchedObjects[0]!, objectId)
-      // refreshUnbatchedHighlight only handles one root; apply to all
-      for (const object of unbatchedObjects) {
-        this.refreshUnbatchedHighlight(object, objectId)
-      }
-      return
-    }
-
-    for (const object of unbatchedObjects) {
-      if (!this._compareEnabled) {
-        this.unhighlightUnbatchedObject(object)
-        continue
-      }
-      const role = this._compareRoles.get(objectId)
-      const color = this.resolveCompareColor(role)
-      this.applyUnbatchedCompareMaterial(object, color)
-    }
-  }
-
-  /**
-   * Resolves the compare color for `role`, falling back to the unchanged base.
-   *
-   * @param role - Compare role, or `undefined` for unchanged.
-   */
-  private resolveCompareColor(role: AcTrBatchCompareRole | undefined): number {
-    if (role === 'deleted') return this._compareDeletedColor
-    if (role === 'added') return this._compareAddedColor
-    if (role === 'modified') return this._compareModifiedColor
-    return this._compareBaseColor
-  }
-
-  /**
-   * Tints an unbatched drawable (and its children) with a shared compare material.
-   *
-   * @param object - Root drawable.
-   * @param colorHex - 24-bit RGB color.
-   */
-  private applyUnbatchedCompareMaterial(
-    object: THREE.Object3D,
-    colorHex: number
-  ) {
-    if ('material' in object) {
-      const material = object.material as THREE.Material | THREE.Material[]
-      const objectData = getObjectUserData(object)
-      if (objectData.originalMaterial == null) {
-        objectData.originalMaterial = material
-      }
-      const source = objectData.originalMaterial ?? material
-      object.material = this.getSharedCompareMaterial(source, colorHex)
-      return
-    }
-    for (const child of object.children) {
-      this.applyUnbatchedCompareMaterial(child, colorHex)
-    }
-  }
-
-  /**
-   * Returns a cached clone of `material` tinted to `colorHex`.
-   *
-   * @param material - Source material or material array.
-   * @param colorHex - 24-bit RGB color used as the cache key.
-   */
-  private getSharedCompareMaterial(
-    material: THREE.Material | THREE.Material[],
-    colorHex: number
-  ): THREE.Material | THREE.Material[] {
-    if (Array.isArray(material)) {
-      return material.map(
-        entry =>
-          this.getSharedCompareMaterial(entry, colorHex) as THREE.Material
-      )
-    }
-
-    const kind = `compare-${colorHex}`
-    let cache = AcTrBatchedGroup.sharedHighlightMaterialsBySource.get(material)
-    if (!cache) {
-      cache = new Map()
-      AcTrBatchedGroup.sharedHighlightMaterialsBySource.set(material, cache)
-      material.addEventListener(
-        'dispose',
-        AcTrBatchedGroup.onSourceMaterialDisposed
-      )
-    }
-
-    const cached = cache.get(kind)
-    if (cached) {
-      return cached
-    }
-
-    const compareMaterial = AcTrMaterialUtil.cloneMaterial(material)
-    if (!Array.isArray(compareMaterial)) {
-      AcTrMaterialUtil.setMaterialColor(
-        compareMaterial,
-        new THREE.Color(colorHex)
-      )
-      cache.set(kind, compareMaterial)
-      return compareMaterial
-    }
-    return compareMaterial
-  }
-
-  /**
    * Applies or clears batched/unbatched highlight state for entity ids.
    *
    * @param objectIds - Database object ids whose highlight state should change.
@@ -2088,10 +1773,6 @@ export class AcTrBatchedGroup extends THREE.Group {
 
         for (const object of unbatchedObjects) {
           this.refreshUnbatchedHighlight(object, objectId)
-        }
-        // Restore compare tint when highlight is cleared
-        if (!enabled) {
-          this.refreshUnbatchedCompareMaterial(objectId)
         }
       }
     }
@@ -2315,22 +1996,14 @@ export class AcTrBatchedGroup extends THREE.Group {
     containerGroup: THREE.Group,
     options: {
       maxSlots: number
-      mode: 'highlight' | 'preview' | 'compare'
+      mode: 'highlight' | 'preview'
       previewStyle?: 'normal' | 'dashed'
-      compareColor?: number
     }
   ): number {
     let added = 0
     const applyOverlayStyle = (object: THREE.Object3D) => {
       if (options.mode === 'highlight') {
         this.applyHighlightMaterial(object)
-        return
-      }
-      if (options.mode === 'compare') {
-        this.applyCompareOverlayMaterial(
-          object,
-          options.compareColor ?? 0x22c55e
-        )
         return
       }
       this.applyPreviewMaterial(object, options.previewStyle ?? 'normal')
@@ -2425,143 +2098,6 @@ export class AcTrBatchedGroup extends THREE.Group {
     }
 
     object.children.forEach(child => this.applyHighlightMaterial(child))
-  }
-
-  /**
-   * Assigns a fresh, unpatched material in the compare role color.
-   *
-   * Cloning the batch material would keep the highlight shader, which tints
-   * everything to the unchanged base color when the packed slot mask misses.
-   */
-  private applyCompareOverlayMaterial(object: THREE.Object3D, color: number) {
-    const replace = (node: THREE.Object3D) => {
-      if (node instanceof LineSegments2) {
-        const src = node.material as LineMaterial
-        const material = new LineMaterial({
-          color,
-          linewidth: src.linewidth,
-          worldUnits: src.worldUnits,
-          dashed: false
-        })
-        material.resolution.copy(src.resolution)
-        material.depthTest = true
-        material.polygonOffset = true
-        material.polygonOffsetFactor = -2
-        material.polygonOffsetUnits = -2
-        node.material = material
-      } else if (
-        node instanceof THREE.LineSegments ||
-        node instanceof THREE.Line
-      ) {
-        node.material = new THREE.LineBasicMaterial({
-          color,
-          depthTest: true,
-          polygonOffset: true,
-          polygonOffsetFactor: -2,
-          polygonOffsetUnits: -2
-        })
-      } else if (node instanceof THREE.Mesh) {
-        node.material = new THREE.MeshBasicMaterial({
-          color,
-          side: THREE.DoubleSide,
-          depthTest: true,
-          polygonOffset: true,
-          polygonOffsetFactor: -2,
-          polygonOffsetUnits: -2
-        })
-      } else if (node instanceof THREE.Points) {
-        const src = node.material as THREE.PointsMaterial
-        node.material = new THREE.PointsMaterial({
-          color,
-          size: src.size,
-          sizeAttenuation: src.sizeAttenuation,
-          depthTest: true
-        })
-      }
-
-      node.children.forEach(child => replace(child))
-    }
-    replace(object)
-  }
-
-  /**
-   * Rebinds compare-overlay wrappers onto the live packed attribute arrays.
-   *
-   * {@link AcTrBatchedLine.getObjectAt} shares `attributes`/`index` with the
-   * batch, not the `BufferGeometry` object. `setGeometrySize` disposes those
-   * arrays and allocates new ones; overlay meshes would otherwise keep the
-   * disposed buffers. Line2 overlays own cloned sub-geometry and are skipped.
-   */
-  private rebindCompareOverlaySharedBuffers() {
-    if (this._compareOverlay.children.length === 0) {
-      return
-    }
-    for (const child of this._compareOverlay.children) {
-      const data = getHighlightUserData(child)
-      if (data.batchedObjectId == null || data.disposeGeometryOnRemove) {
-        continue
-      }
-      const batch = this.getOriginBatch(data.batchedObjectId)
-      const childGeometry = this.getDrawableGeometry(child)
-      if (
-        batch == null ||
-        childGeometry == null ||
-        batch instanceof AcTrSharedGeometryBatch
-      ) {
-        continue
-      }
-      if (childGeometry.attributes !== batch.geometry.attributes) {
-        childGeometry.index = batch.geometry.index
-        childGeometry.attributes = batch.geometry.attributes
-      }
-    }
-  }
-
-  /**
-   * Rebuilds the compare overlay for every current role override.
-   */
-  private refreshCompareOverlay() {
-    this.clearHighlightGroup(this._compareOverlay)
-    if (!this._compareEnabled) {
-      return
-    }
-    this._compareRoles.forEach((role, objectId) => {
-      this.appendEntityOverlayDrawables(objectId, this._compareOverlay, {
-        maxSlots: 10000,
-        mode: 'compare',
-        compareColor: this.resolveCompareColor(role)
-      })
-    })
-  }
-
-  /**
-   * Updates the compare overlay for one entity after a late batch append.
-   */
-  private syncCompareOverlayForEntity(objectId: string) {
-    this.removeCompareOverlayForEntity(objectId)
-    if (!this._compareEnabled) {
-      return
-    }
-    const role = this._compareRoles.get(objectId)
-    if (role == null) {
-      return
-    }
-    this.appendEntityOverlayDrawables(objectId, this._compareOverlay, {
-      maxSlots: 10000,
-      mode: 'compare',
-      compareColor: this.resolveCompareColor(role)
-    })
-  }
-
-  /**
-   * Removes compare-overlay drawables owned by `objectId`.
-   */
-  private removeCompareOverlayForEntity(objectId: string) {
-    const stale = this._compareOverlay.children.filter(
-      child => getHighlightUserData(child).objectId === objectId
-    )
-    stale.forEach(child => this.disposeHighlightObject(child))
-    stale.forEach(child => child.removeFromParent())
   }
 
   /**
@@ -2731,15 +2267,6 @@ export class AcTrBatchedGroup extends THREE.Group {
       kind,
       geometry.uuid
     )
-    if (this._compareEnabled) {
-      batch.setCompareDisplayColors({
-        enabled: true,
-        baseColor: this._compareBaseColor,
-        deletedColor: this._compareDeletedColor,
-        addedColor: this._compareAddedColor,
-        modifiedColor: this._compareModifiedColor
-      })
-    }
     list.push(batch)
     this._sharedBatchById.set(batch.id, batch)
     this.add(batch)
@@ -3038,15 +2565,6 @@ export class AcTrBatchedGroup extends THREE.Group {
     }
 
     const batch = create()
-    if (this._compareEnabled) {
-      batch.setCompareDisplayColors({
-        enabled: true,
-        baseColor: this._compareBaseColor,
-        deletedColor: this._compareDeletedColor,
-        addedColor: this._compareAddedColor,
-        modifiedColor: this._compareModifiedColor
-      })
-    }
     list.push(batch)
     this._originBatchById.set(batch.id, batch)
     this.add(batch)

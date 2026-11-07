@@ -1,6 +1,6 @@
 # Notification Center
 
-`@mlightcad/cad-simple-viewer` writes user-visible alerts — **missing fonts**, **unsupported entities** (including Tianzheng heuristics), **open failures**, and similar — into a **Notification Center** when a drawing opens. A lightweight DOM bell UI is installed by default. Hosts (for example `@mlightcad/cad-viewer`, or your own shell) can implement the same interface and **replace** that UI while still reusing the engine-side event bridge and message formatters.
+`@mlightcad/cad-simple-viewer` writes user-visible alerts — **missing fonts**, **open failures**, and similar — into a **Notification Center** when a drawing opens. A lightweight DOM bell UI is installed by default. Hosts (for example `@mlightcad/cad-viewer`, or your own shell) can implement the same interface and **replace** that UI while still reusing the engine-side event bridge and message formatters.
 
 This guide covers architecture, visibility, default behavior, how to override the center, and the contract custom centers must honor.
 
@@ -388,7 +388,6 @@ The bridge stamps some alerts with `source` for grouping and cleanup:
 | `source` | Meaning |
 |---|---|
 | `font-missed` | Font missing / load failure; use `fontNames` + `removeResolvedFontMissedNotifications` |
-| `unsupported-entities` | Unknown entities, empty proxies, Tianzheng-class heuristics; cleared per session on re-open |
 
 Use `acapGroupNotifications(notifications)` to collapse same-`source` rows (built-in bell and cad-viewer panel both use this helper).
 
@@ -404,23 +403,8 @@ When the bridge is enabled (`notificationCenter !== false`):
 | `fonts-not-loaded` / `fonts-not-found` / `font-not-found` | `font-missed` |
 | `missed-data-changed` | prune resolved font-missed rows |
 | `failed-to-open-file` / `failed-to-get-avaiable-fonts` | error |
-| PARSE END `unknownEntityCount` + `documentActivated` analysis | `unsupported-entities` |
 | `documentActivated` / `documentCreated` | `setActiveSession(activeSessionId)` |
 | `documentToBeDestroyed` | `clearSession(sessionId)` |
-
-Analysis and formatting are also usable without the Center:
-
-```ts
-import {
-  acapAnalyzeUnsupportedDrawing,
-  acapFormatUnsupportedEntitiesMessage
-} from '@mlightcad/cad-simple-viewer'
-
-const analysis = acapAnalyzeUnsupportedDrawing(db, unknownEntityCount)
-if (analysis.shouldWarn) {
-  console.warn(acapFormatUnsupportedEntitiesMessage(analysis))
-}
-```
 
 ---
 

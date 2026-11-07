@@ -32,9 +32,6 @@ export * from './util/AcTrMTextColorUtil'
 export { AcTrMatrixUtil } from './util/AcTrMatrixUtil'
 export {
   getSceneDrawableUserData,
-  isHighlightCloneDrawable,
-  isHighlightOverlayDescendant,
-  resolveDrawableExportMaterial,
   markHighlightOverlayGroup,
   patchDrawableMaterialFromCache,
   resolveCachedMaterialRemap,

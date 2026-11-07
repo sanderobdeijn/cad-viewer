@@ -1,11 +1,9 @@
-import type { ComponentSize } from 'element-plus'
 import type { Component } from 'vue'
 
 export type RibbonLayout = 'classic' | 'simplified'
 export type RibbonItemSize = 'large' | 'medium' | 'small'
 export type RibbonCollectionLayout = 'row' | 'column'
 export type RibbonGroupOrientation = 'row' | 'column'
-export type RibbonComponentSize = ComponentSize
 export type RibbonContextualMode = 'exclusive' | 'selection'
 
 export type RibbonItemType =
@@ -57,11 +55,6 @@ export interface RibbonLocaleTexts {
   keyTipsSequencePrefix?: string
   keyTipsEmptySequence?: string
   galleryPreviewFallback?: string
-}
-
-export interface RibbonTooltipSettings {
-  showAfter?: number
-  hideAfter?: number
 }
 
 export interface RibbonItemModel {
@@ -116,13 +109,6 @@ export interface RibbonGalleryCategoryModel {
   id: string
   title: string
   items: RibbonGalleryItemModel[]
-}
-
-export interface RibbonCustomItemBindings {
-  item: RibbonItemModel
-  groupId: string
-  disabled: boolean
-  emitItemClick: (payload?: string | number | boolean) => void
 }
 
 export interface RibbonCollectionModel {

@@ -56,14 +56,8 @@ export type { AcDbRegAppTableRecordAttrs } from './AcDbRegAppTableRecord'
 export { AcDbSymbolTable } from './AcDbSymbolTable'
 export { AcDbSymbolTableRecord } from './AcDbSymbolTableRecord'
 export type { AcDbSymbolTableRecordAttrs } from './AcDbSymbolTableRecord'
-export {
-  AC_DB_SYSTEM_VARIABLE_NAMES,
-  AcDbSystemVariables
-} from './AcDbSystemVariables'
-export type {
-  AcDbColorTheme,
-  AcDbSystemVariableName
-} from './AcDbSystemVariables'
+export { AcDbSystemVariables } from './AcDbSystemVariables'
+export type { AcDbColorTheme } from './AcDbSystemVariables'
 export { AcDbSysVarManager } from './AcDbSysVarManager'
 export type {
   AcDbSysVarDescriptor,

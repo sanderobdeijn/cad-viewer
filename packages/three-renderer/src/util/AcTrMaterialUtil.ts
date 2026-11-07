@@ -17,11 +17,6 @@ export const HIGHLIGHT_SELECT_COLOR = new THREE.Color(0x08e8de)
 export const HIGHLIGHT_HOVER_COLOR = new THREE.Color(0x66fff8)
 
 /**
- * @deprecated Use {@link HIGHLIGHT_SELECT_COLOR} instead.
- */
-export const HIGHLIGHT_COLOR = HIGHLIGHT_SELECT_COLOR
-
-/**
  * Type for materials that have color property
  */
 type MaterialWithColor =

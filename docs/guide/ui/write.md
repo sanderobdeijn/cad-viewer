@@ -40,7 +40,6 @@ The toolbar also has a **Select / Edit tool group**:
 - Zoom to Extents
 - Window Zoom
 - Measure tool group
-- Reading Mode
 - Toggle Light/Dark Background
 
 ### Docked Panels

@@ -2,10 +2,7 @@ import { AcCmColor } from '@mlightcad/data-model'
 
 import { AC_TR_HTML_BADGE_REF_FONT_PX } from './AcTrHtmlBadge'
 import { acTrHtmlCssColor } from './AcTrHtmlColorUtil'
-import {
-  AC_TR_HTML_DOT_BORDER_EM,
-  AC_TR_HTML_DOT_SIZE_EM
-} from './AcTrHtmlDot'
+import { AC_TR_HTML_DOT_BORDER_EM, AC_TR_HTML_DOT_SIZE_EM } from './AcTrHtmlDot'
 import {
   AC_TR_HTML_SELECTED_CLASS,
   AcTrHtmlElement,
@@ -86,19 +83,6 @@ function injectHtmlGripCss(): void {
 /** True when `el` is an overlay HTML endpoint grip. */
 export function acTrIsHtmlGrip(el: Element | null | undefined): boolean {
   return !!el?.classList.contains(AC_TR_HTML_GRIP_CLASS)
-}
-
-/**
- * Hide or restore every overlay endpoint grip (matches entity grip drag:
- * all handles disappear until the drag finishes).
- */
-export function acTrSetHtmlGripsDragging(
-  dragging: boolean,
-  root: ParentNode = document
-): void {
-  root.querySelectorAll(`.${AC_TR_HTML_GRIP_CLASS}`).forEach(node => {
-    node.classList.toggle(AC_TR_HTML_GRIP_DRAGGING_CLASS, dragging)
-  })
 }
 
 /**

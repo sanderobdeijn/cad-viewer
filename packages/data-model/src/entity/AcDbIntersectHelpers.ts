@@ -1,18 +1,10 @@
 import {
-  GeometryBoundaryEdgeType,
   GeometryCircularArc2d,
-  GeometryEllipseArc2d,
   GeometryIntersectPrimitive,
   GeometryLine2d,
-  GeometryLoop2d,
-  GeometryLoop2dType,
-  GeometryMatrix3d,
   GeometryPoint2dLike,
-  GeometryPolyline2d,
   GeometryPolyline2dVertex,
-  geometryTransformIntersectPrimitive,
   geometryTransformOcsPointToWcs,
-  GeometryVector3d,
   GeometryVector3dLike,
   TAU
 } from '@mlightcad/geometry-engine'
@@ -90,75 +82,6 @@ export function acdbIntersectPrimitivesFromPolyline2d(
   return primitives
 }
 
-/**
- * Converts hatch / area loops into WCS intersection primitives.
- */
-export function acdbIntersectPrimitivesFromAreaLoops(
-  loops: readonly GeometryLoop2dType[],
-  normal: GeometryVector3dLike
-): GeometryIntersectPrimitive[] {
-  const primitives: GeometryIntersectPrimitive[] = []
-  for (const loop of loops) {
-    if (loop instanceof GeometryPolyline2d) {
-      primitives.push(
-        ...acdbIntersectPrimitivesFromPolyline2d(
-          loop.vertices,
-          loop.closed,
-          normal
-        )
-      )
-      continue
-    }
-    if (loop instanceof GeometryLoop2d) {
-      for (const edge of loop.curves) {
-        const converted = boundaryEdgeToPrimitive(edge, normal)
-        if (converted) primitives.push(...converted)
-      }
-    }
-  }
-  return primitives
-}
-
-/**
- * Transforms a list of intersection primitives by a WCS matrix.
- */
-export function acdbTransformIntersectPrimitives(
-  primitives: readonly GeometryIntersectPrimitive[],
-  matrix: GeometryMatrix3d
-): GeometryIntersectPrimitive[] {
-  return primitives.map(primitive =>
-    geometryTransformIntersectPrimitive(primitive, matrix)
-  )
-}
-
-function boundaryEdgeToPrimitive(
-  edge: GeometryBoundaryEdgeType,
-  normal: GeometryVector3dLike
-): GeometryIntersectPrimitive[] {
-  if (edge instanceof GeometryLine2d) {
-    const start = toWcs(edge.startPoint.x, edge.startPoint.y, normal)
-    const end = toWcs(edge.endPoint.x, edge.endPoint.y, normal)
-    if (isDegenerateSegment(start, end)) return []
-    return [
-      {
-        kind: 'line',
-        line: new GeometryLine2d(start, end),
-        extent: 'bounded',
-        extendable: false
-      }
-    ]
-  }
-  if (edge instanceof GeometryCircularArc2d) {
-    const primitive = circularArc2dToPrimitive(edge, normal, false)
-    return primitive ? [primitive] : []
-  }
-  if (edge instanceof GeometryEllipseArc2d) {
-    const primitive = ellipseArc2dToPrimitive(edge, normal, false)
-    return primitive ? [primitive] : []
-  }
-  return []
-}
-
 function circularArc2dToPrimitive(
   arc: GeometryCircularArc2d,
   normal: GeometryVector3dLike,
@@ -199,37 +122,8 @@ function circularArc2dToPrimitive(
   }
 }
 
-function ellipseArc2dToPrimitive(
-  arc: GeometryEllipseArc2d,
-  normal: GeometryVector3dLike,
-  extendable: boolean
-): GeometryIntersectPrimitive | null {
-  const ellipse = arc.clone()
-  const matrix = ocsMatrix(normal)
-  if (matrix) ellipse.transform3d(matrix)
-  return {
-    kind: 'ellipseArc',
-    arc: ellipse,
-    extendable:
-      extendable &&
-      !ellipse.closed &&
-      Math.abs(ellipse.deltaAngle - TAU) > 1e-10
-  }
-}
-
 function toWcs(x: number, y: number, normal: GeometryVector3dLike) {
   return geometryTransformOcsPointToWcs({ x, y }, normal)
-}
-
-function ocsMatrix(normal: GeometryVector3dLike) {
-  const isDefaultNormal =
-    Math.abs(normal.x) < 1e-10 &&
-    Math.abs(normal.y) < 1e-10 &&
-    Math.abs(normal.z - 1) < 1e-10
-  if (isDefaultNormal) return null
-  return new GeometryMatrix3d().setFromExtrusionDirection(
-    new GeometryVector3d(normal.x, normal.y, normal.z)
-  )
 }
 
 function isDegenerateSegment(

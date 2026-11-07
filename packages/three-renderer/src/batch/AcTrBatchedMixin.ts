@@ -18,7 +18,6 @@ import {
   applyBatchSlotDrawVisibility
 } from './drawVisibility'
 import {
-  type AcTrBatchCompareRole,
   type AcTrBatchHighlightKind,
   AcTrBatchHighlightState,
   BATCH_SLOT_ID_ATTRIBUTE,
@@ -28,7 +27,7 @@ import {
   writeSlotIdRange
 } from './highlight'
 
-/** Whether any material in the batch was patched for highlight/compare shaders. */
+/** Whether any material in the batch was patched for highlight shaders. */
 function hasBatchHighlightMaterial(
   material: THREE.Material | THREE.Material[]
 ): boolean {
@@ -977,9 +976,7 @@ export function createAcTrBatchedMixin<
      * @returns `target`, or `null` when no aggregate could be computed.
      * @internal
      */
-    computeAggregateBoundingSphere(
-      target: THREE.Sphere
-    ): THREE.Sphere | null {
+    computeAggregateBoundingSphere(target: THREE.Sphere): THREE.Sphere | null {
       return computeBoundingSphere(
         target,
         this._geometryInfo,
@@ -1079,96 +1076,6 @@ export function createAcTrBatchedMixin<
     }
 
     /**
-     * Sets the compare-display role for one geometry slot.
-     *
-     * @param geometryId - Slot index within the batch container.
-     * @param role - Compare role, or `null` to clear.
-     * @returns `true` when the slot mask changed.
-     */
-    setCompareRoleAt(geometryId: number, role: AcTrBatchCompareRole | null) {
-      try {
-        this.validateGeometryId(geometryId)
-      } catch {
-        return false
-      }
-
-      const changed = this._highlightState.setCompareRole(geometryId, role)
-      if (changed || this._highlightState.compareEnabled) {
-        installBatchHighlightRenderer(this, this._highlightState)
-      }
-      return changed
-    }
-
-    /**
-     * Writes compare roles for every packed slot from `objectId` metadata.
-     *
-     * This is the source of truth for GPU tinting: it does not depend on
-     * `Object3D.getObjectById` or the group-level entity map, so late-appended
-     * handles (and slots whose Three.js container id lookup fails) still
-     * receive added/deleted/modified colors.
-     *
-     * @param roles - Compare roles keyed by entity object id.
-     * @returns This instance for chaining.
-     */
-    applyPackedCompareRoles(roles: ReadonlyMap<string, AcTrBatchCompareRole>) {
-      for (let slotId = 0; slotId < this._geometryInfo.length; slotId++) {
-        const info = this._geometryInfo[slotId]
-        if (!isBatchGeometryActive(info.flags)) {
-          continue
-        }
-        const objectId = info.objectId
-        const role =
-          objectId != null && objectId !== ''
-            ? (roles.get(String(objectId)) ?? null)
-            : null
-        this.setCompareRoleAt(slotId, role)
-      }
-      this.flushHighlightMask()
-      return this
-    }
-
-    /**
-     * Applies compare-display colors to the batch highlight state.
-     *
-     * @param options.enabled - Whether compare coloring is active.
-     * @param options.baseColor - Unchanged-entity color.
-     * @param options.deletedColor - Deleted-entity color.
-     * @param options.addedColor - Added-entity color.
-     * @param options.modifiedColor - Modified-entity color.
-     * @returns This instance for chaining.
-     */
-    setCompareDisplayColors(options: {
-      /** Whether compare coloring is active. */
-      enabled: boolean
-      /** Unchanged-entity color. */
-      baseColor?: number
-      /** Deleted-entity color. */
-      deletedColor?: number
-      /** Added-entity color. */
-      addedColor?: number
-      /** Modified-entity color. */
-      modifiedColor?: number
-    }) {
-      this._highlightState.compareEnabled = options.enabled
-      if (options.baseColor != null) {
-        this._highlightState.compareBaseColor.setHex(options.baseColor)
-      }
-      if (options.deletedColor != null) {
-        this._highlightState.compareDeletedColor.setHex(options.deletedColor)
-      }
-      if (options.addedColor != null) {
-        this._highlightState.compareAddedColor.setHex(options.addedColor)
-      }
-      if (options.modifiedColor != null) {
-        this._highlightState.compareModifiedColor.setHex(options.modifiedColor)
-      }
-      this._highlightState.dirty = true
-      installBatchHighlightRenderer(this, this._highlightState)
-      this.flushHighlightMask()
-      return this
-    }
-
-    /**
      * Uploads the batch highlight mask texture after bulk selection updates.
      *
      * @returns This instance for chaining.
@@ -1182,7 +1089,6 @@ export function createAcTrBatchedMixin<
       const shouldSyncHighlightUniforms =
         !!this.material &&
         (this._highlightState.hasAnyHighlight() ||
-          this._highlightState.needsCompareUniforms() ||
           (wasDirty && hasBatchHighlightMaterial(this.material)))
       if (shouldSyncHighlightUniforms) {
         bindBatchHighlightUniforms(this.material, this._highlightState)

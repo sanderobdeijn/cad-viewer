@@ -222,14 +222,7 @@ export default {
     },
     switchBg: {
       text: 'Switch',
-      description: 'Switches the drawing background between white and black',
-      disabledInReadingMode:
-        'Unavailable while reading mode is on (white canvas is fixed)'
-    },
-    readingMode: {
-      text: 'Reading',
-      description:
-        'Toggles reading mode: black linework on a white canvas for easier review'
+      description: 'Switches the drawing background between white and black'
     },
     zoom: {
       text: 'Zoom',
@@ -470,11 +463,7 @@ export default {
     fontCached: 'Font "{font}" cached successfully.',
     fontCacheFailed: 'Failed to cache font "{fileName}".',
     failedToGetAvaiableFonts: 'Failed to get avaiable fonts from "{url}"!',
-    fetchingDrawingFile: 'Fetching file ...',
-    unknownEntities:
-      'This drawing contains {count} unknown or unsupported entities! Those entities will not be shown.',
-    tianzhengEntities:
-      'This drawing contains TArch / Tianzheng (or similar third-party) custom entities (about {count}). They cannot be fully parsed in this environment, so some content may not display.'
+    fetchingDrawingFile: 'Fetching file ...'
   },
   notification: {
     center: {
@@ -486,9 +475,6 @@ export default {
       fontMissed: 'Missing Fonts',
       fontMissedSummary:
         '{count} font-related messages. Click to expand details.',
-      unsupportedEntities: 'Unsupported Entities',
-      unsupportedEntitiesSummary:
-        '{count} parsing-related messages. Click to expand details.',
       genericSummary: '{count} messages. Click to expand details.'
     },
     time: {
@@ -500,7 +486,6 @@ export default {
     title: {
       fontNotFound: 'Font Not Found',
       fontNotLoaded: 'Font Not Loaded',
-      parsingWarning: 'Issues on Parsing Drawing',
       systemMessage: 'System Message',
       systemWarning: 'System Warning',
       systemError: 'System Error',

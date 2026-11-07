@@ -45,19 +45,3 @@ export function acdbMovePolyline2dVertexAt(
   vertex.x += offset.x
   vertex.y += offset.y
 }
-
-/**
- * Moves indexed points in a mutable point array.
- */
-export function acdbMovePointArrayGripAt(
-  indices: readonly number[],
-  offset: GeometryVector2dLike,
-  points: readonly GeometryMovablePoint[]
-) {
-  acdbForEachGripIndex(indices, index => {
-    const point = points[index]
-    if (point) {
-      point.add(offset)
-    }
-  })
-}

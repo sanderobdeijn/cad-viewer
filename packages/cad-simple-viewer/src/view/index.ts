@@ -1,5 +1,3 @@
-export * from './AcApCompareDisplay'
-export * from './AcApReadingMode'
 export * from './AcEdReviewOverlayPick'
 export * from './AcEdViewKeyHandler'
 export * from './AcTrDirectBatch'

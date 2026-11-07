@@ -1,4 +1,2 @@
-import { GeometryVector, GeometryVectorLike } from './GeometryVector'
-
-export type GeometryPoint = GeometryVector
+import { GeometryVectorLike } from './GeometryVector'
 export type GeometryPointLike = GeometryVectorLike

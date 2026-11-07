@@ -29,7 +29,6 @@ import {
   AcApPolygonCmd,
   AcApPolylineCmd,
   AcApQNewCmd,
-  AcApReadingModeCmd,
   AcApRectCmd,
   AcApRegenCmd,
   AcApRotateCmd,
@@ -52,7 +51,6 @@ import {
 import { AcApPluginManager } from '../plugin/AcApPluginManager'
 import { isScriptQuitCommand, parseScriptLines } from '../util/AcApScriptParser'
 import { AcTrView2d } from '../view'
-import type { AcApCompareDisplayOptions } from '../view/AcApCompareDisplay'
 import { AcApBusyIndicator } from './AcApBusyIndicator'
 import { acapBindCommandServices } from './AcApCommandServices'
 import { AcApContext } from './AcApContext'
@@ -292,7 +290,7 @@ export interface AcApDocManagerOptions {
   commandAliases?: Record<string, string | string[]>
 
   /**
-   * Built-in notification center (font missing, unsupported entities, etc.).
+   * Built-in notification center (font missing, etc.).
    *
    * Notifications are scoped per document session (MDI). The default DOM UI is
    * positioned relative to the canvas host, not the browser window.
@@ -1185,59 +1183,6 @@ export class AcApDocManager {
   get lastPresetFontsForOpen(): readonly string[] {
     return this._lastPresetFontsForOpen
   }
-
-  /**
-   * Enables compare-display mode on a view (default: current view).
-   * Does not automatically color overlay layouts — use
-   * {@link setOverlayCompareDisplay} for those.
-   *
-   * @param options - Compare colors and per-entity role overrides.
-   * @param view - Target canvas; defaults to {@link curView}.
-   */
-  setCompareDisplay(
-    options: AcApCompareDisplayOptions,
-    view?: AcTrView2d
-  ): void {
-    const target = view ?? (this.curView as AcTrView2d)
-    target.setCompareDisplay(options)
-  }
-
-  /**
-   * Whether transient reading mode is active on a view (default: current view).
-   *
-   * @param view - Target canvas; defaults to {@link curView}.
-   */
-  isReadingModeEnabled(view?: AcTrView2d): boolean {
-    const target = view ?? (this.curView as AcTrView2d)
-    return target.readingModeEnabled
-  }
-
-  /**
-   * Enables or disables transient reading mode on a view (default: current view).
-   *
-   * Reading mode forces black linework on a white canvas without modifying the
-   * drawing database. It shares the compare-display colour path, so it is
-   * mutually exclusive with active compare display on that view.
-   *
-   * @param enabled - When true, enables reading mode; when false, restores the
-   *   previous canvas background and entity colours.
-   * @param view - Target canvas; defaults to {@link curView}.
-   */
-  setReadingMode(enabled: boolean, view?: AcTrView2d): void {
-    const target = view ?? (this.curView as AcTrView2d)
-    target.setReadingMode(enabled)
-  }
-
-  /**
-   * Toggles transient reading mode on a view (default: current view).
-   *
-   * @param view - Target canvas; defaults to {@link curView}.
-   */
-  toggleReadingMode(view?: AcTrView2d): void {
-    const target = view ?? (this.curView as AcTrView2d)
-    target.toggleReadingMode()
-  }
-
   /**
    * Creates a blank drawing in a new document session (or reuses the current
    * unused Untitled). The new drawing is presented as unsaved.
@@ -1462,7 +1407,6 @@ export class AcApDocManager {
     addSystemCommand('regen', 'regen', new AcApRegenCmd())
     addSystemCommand('select', 'select', new AcApSelectCmd())
     addSystemCommand('switchbg', 'switchbg', new AcApSwitchBgCmd())
-    addSystemCommand('readingmode', 'readingmode', new AcApReadingModeCmd())
     addSystemCommand(
       'unisolateobjects',
       'unisolateobjects',

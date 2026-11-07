@@ -46,48 +46,6 @@ export function distPointToPolylinePx(
 }
 
 /**
- * Distance from a point to a rectangle outline (not the interior).
- */
-export function distPointToRectOutlinePx(
-  px: number,
-  py: number,
-  a: AcApScreenPoint,
-  b: AcApScreenPoint
-): number {
-  const minX = Math.min(a.x, b.x)
-  const maxX = Math.max(a.x, b.x)
-  const minY = Math.min(a.y, b.y)
-  const maxY = Math.max(a.y, b.y)
-  return distPointToPolylinePx(
-    px,
-    py,
-    [
-      { x: minX, y: minY },
-      { x: maxX, y: minY },
-      { x: maxX, y: maxY },
-      { x: minX, y: maxY }
-    ],
-    true
-  )
-}
-
-/**
- * Whether a point lies inside an axis-aligned rectangle (inclusive).
- */
-export function pointInRectPx(
-  px: number,
-  py: number,
-  a: AcApScreenPoint,
-  b: AcApScreenPoint
-): boolean {
-  const minX = Math.min(a.x, b.x)
-  const maxX = Math.max(a.x, b.x)
-  const minY = Math.min(a.y, b.y)
-  const maxY = Math.max(a.y, b.y)
-  return px >= minX && px <= maxX && py >= minY && py <= maxY
-}
-
-/**
  * Absolute difference between a point's distance to `center` and `radius`.
  * Zero means the point is on the circumference.
  */

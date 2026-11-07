@@ -2,14 +2,8 @@ export { AcDbAngleUnits } from './AcDbAngleUnits'
 export {
   ACDB_ANNOTATIVE_XDATA_APP,
   ACDB_VIEWPORT_ANNOTATION_SCALE_XREC,
-  acdbAnnotativeModelHeight,
-  acdbAnnotativePaperHeight,
-  acdbBuildAnnotationScaleDrawInfo,
   acdbFindScale,
-  acdbGetAnnotationScaleContexts,
-  acdbGetViewportAnnotationScale,
-  acdbIsAnnotativeObject,
-  acdbMatchAnnotationScaleContext
+  acdbGetViewportAnnotationScale
 } from './AcDbAnnotationScale'
 export type {
   AcDbAnnotationScaleContext,
@@ -19,14 +13,8 @@ export { AcDbFormatter } from './AcDbFormatter'
 export type { AcDbFormatterOptions } from './AcDbFormatter'
 export { AcDbLinearUnits } from './AcDbLinearUnits'
 export {
-  AcDbCodePage,
-  acdbDwgCodePageToEncoding,
-  acdbNormalizeTextEncoding
-} from './AcDbCodePage'
-export {
   ACAD_APPID,
   acdbCoerceIntegerSysVar,
-  acdbIntegerSysVarIfInRange,
   ACDB_COMPAREPROPS_COLOR,
   ACDB_COMPAREPROPS_DEFAULT,
   ACDB_COMPAREPROPS_LAYER,
@@ -52,27 +40,17 @@ export {
   ACDB_GRIPHOT_DEFAULT,
   ACDB_GRIPHOT_MAX,
   ACDB_GRIPHOT_MIN,
-  ACDB_GRIPS_MAX,
-  ACDB_GRIPS_MIN,
   ACDB_GRIPSIZE_DEFAULT,
   ACDB_GRIPSIZE_MAX,
   ACDB_GRIPSIZE_MIN,
-  ACDB_GRIPOBJLIMIT_MAX,
-  ACDB_GRIPOBJLIMIT_MIN,
   ACTIVE_VPORT_NAME,
   ByBlock,
   ByLayer,
   DEFAULT_LINE_TYPE,
   DEFAULT_TEXT_STYLE,
-  MLIGHTCAD_APPID,
-  VPORT_FALLBACK_CENTER_2D,
-  VPORT_FALLBACK_LLC,
-  VPORT_FALLBACK_URC,
-  VPORT_FALLBACK_VIEW_DIR,
-  VPORT_FALLBACK_VIEW_TARGET
+  MLIGHTCAD_APPID
 } from './AcDbConstants'
 export { AcDbDataGenerator } from './AcDbDataGenerator'
-export { AcDbDimArrowType } from './AcDbDimArrowType'
 export {
   ACDB_DRAW_CIRCLE_SIDES_DRAFT,
   ACDB_DRAW_CIRCLE_SIDES_HIGH,
@@ -100,7 +78,3 @@ export {
   acdbToggleOsnapMode
 } from './AcDbOsnapMode'
 export { AcDbUnitsValue } from './AcDbUnitsValue'
-export {
-  acdbPreviewIconToDataUrl,
-  acdbThumbnailImageToDataUrl
-} from './AcDbPreviewIcon'

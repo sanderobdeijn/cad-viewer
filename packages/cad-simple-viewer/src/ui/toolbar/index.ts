@@ -5,9 +5,7 @@
  * @packageDocumentation
  */
 
-export type {
-  AcUiResolvedToolbarChrome
-} from './resolveToolbarChrome'
+export type { AcUiResolvedToolbarChrome } from './resolveToolbarChrome'
 export { acuiResolveToolbarChrome } from './resolveToolbarChrome'
 export {
   acuiFilterVisibleToolbarItems,
@@ -20,7 +18,6 @@ export {
 } from './resolveToolbarItemState'
 export {
   acuiCopyDynamicToolbarChildren,
-  acuiCreateToolbarSeparator,
   acuiExpandToolbarItemConfigs,
   acuiIndexToolbarItems,
   acuiIsDynamicToolbarChildren,
@@ -29,8 +26,7 @@ export {
   acuiIsToolbarSeparatorItem,
   acuiPreserveDynamicToolbarChildren,
   acuiResolveToolbarChildrenUi,
-  acuiToolbarItemsIncludeItem,
-  acuiToolbarPreset
+  acuiToolbarItemsIncludeItem
 } from './toolbarItemUtils'
 export type {
   AcUiSubToolbarOptions,

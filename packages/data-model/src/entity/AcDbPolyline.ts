@@ -4,7 +4,6 @@ import {
   GeometryCircularArc2d,
   GeometryIntersectPrimitive,
   GeometryMatrix3d,
-  geometryOffsetVertexPath,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryPolyline2d,
@@ -819,25 +818,6 @@ export class AcDbPolyline extends AcDbCurve {
     if (results.length === 0) return null
     return AcDbPolyline.fromGePolyline(results[0])
   }
-}
-
-/**
- * Offsets a planar vertex path using {@link geometryOffsetVertexPath} and wraps the
- * result as an {@link AcDbPolyline}.
- *
- * @param points - Sampled or vertex-derived 2D path in WCS (XY)
- * @param closed - Whether the path is treated as a closed polygon for offsetting
- * @param offsetDist - Signed offset distance in drawing units (see {@link AcDbCurve#getOffsetCurves})
- * @returns The first offset polyline, or `null` when the path has fewer than two points
- * or offsetting fails
- */
-export function acdbOffsetVertexPathAsPolyline(
-  points: GeometryPoint2d[],
-  closed: boolean,
-  offsetDist: number
-): AcDbPolyline | null {
-  const geo = geometryOffsetVertexPath(points, closed, offsetDist)
-  return geo ? AcDbPolyline.fromGePolyline(geo) : null
 }
 
 const WIDTH_EPSILON = 1e-6

@@ -77,11 +77,6 @@ import {
   collectTextStyleFontNames,
   planTextStyleFontPreload
 } from '../util/AcApTextStyleFontPreload'
-import type { AcApCompareDisplayOptions } from './AcApCompareDisplay'
-import {
-  ACAP_READING_MODE_BACKGROUND,
-  AcApReadingModeState
-} from './AcApReadingMode'
 import {
   trySelectReviewOverlay,
   trySelectReviewOverlaysByBox
@@ -377,16 +372,6 @@ export class AcTrView2d extends AcEdBaseView {
   }) => void
   private _onCommandWillStartHitTest?: () => void
   private _onCommandEndedHitTest?: () => void
-  /** Transient reading mode forces black linework on a white canvas. */
-  private readonly _readingMode = new AcApReadingModeState({
-    getCurrentBackgroundColor: () => this._renderer.currentBackgroundColor,
-    applyViewClearColor: value => this.applyViewClearColor(value),
-    setCompareDisplay: options => this.setCompareDisplay(options),
-    markDirty: () => {
-      this._isDirty = true
-    }
-  })
-
   /**
    * Promise that resolves when text-style fonts needed by deferred glyph jobs
    * are ready. Shared so concurrent deferred jobs do not each await a long
@@ -1399,19 +1384,11 @@ export class AcTrView2d extends AcEdBaseView {
       acgiForegroundColorForBackground(value)
     )
     this.resyncForegroundLayersForBackground()
-    if (this._readingMode.isEnabled) {
-      this._readingMode.noteLayoutBackground(value)
-      this.applyViewClearColor(ACAP_READING_MODE_BACKGROUND)
-      return
-    }
     this.applyViewClearColor(value)
   }
 
   /**
    * Updates only the WebGL clear colour and cursor chrome.
-   *
-   * Reading mode uses this so the white canvas is visual-only and does not
-   * repaint cached entity materials via the style manager.
    */
   private applyViewClearColor(value: number) {
     this._renderer.setClearColor(value)
@@ -1471,28 +1448,6 @@ export class AcTrView2d extends AcEdBaseView {
     this.applyCanvasBackground(
       readLayoutBackgroundColor(database, this.isModelSpaceLayout(database))
     )
-    this._readingMode.reapplyIfEnabled()
-  }
-
-  /** Whether transient reading mode is active on this view. */
-  get readingModeEnabled() {
-    return this._readingMode.isEnabled
-  }
-
-  /** Toggles transient reading mode on or off. */
-  toggleReadingMode() {
-    this._readingMode.toggle()
-  }
-
-  /**
-   * Enables or disables transient reading mode (black linework, white canvas).
-   *
-   * @param enabled - When true, snapshots the current canvas background and
-   *   forces monochrome display; when false, restores the snapshot and
-   *   original entity colors.
-   */
-  setReadingMode(enabled: boolean) {
-    this._readingMode.setEnabled(enabled)
   }
 
   /**
@@ -3014,36 +2969,6 @@ export class AcTrView2d extends AcEdBaseView {
    */
   unhighlight(ids: AcDbObjectId[]) {
     this._isDirty = this._scene.unselect(ids)
-  }
-
-  /**
-   * Enables compare-display coloring on non-overlay layouts of this view.
-   * Pass an overlay {@link AcTrLayout} to color a reference overlay separately.
-   *
-   * @param options - Compare colors and per-entity role overrides.
-   * @param targetLayout - Overlay layout to color; omit for the main scene.
-   */
-  setCompareDisplay(
-    options: AcApCompareDisplayOptions,
-    targetLayout?: AcTrLayout
-  ) {
-    const baseColor = options.baseColor ?? options.colors?.unchanged ?? 0x9ca3af
-    const mapped = {
-      enabled: options.enabled,
-      baseColor,
-      colors: {
-        deleted: options.colors?.deleted,
-        added: options.colors?.added,
-        modified: options.colors?.modified
-      },
-      overrides: options.overrides
-    }
-    if (targetLayout) {
-      targetLayout.setCompareDisplay(mapped)
-    } else {
-      this._scene.setCompareDisplay(mapped)
-    }
-    this._isDirty = true
   }
 
   stopAnimationLoop() {

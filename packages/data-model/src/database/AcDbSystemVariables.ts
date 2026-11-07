@@ -202,20 +202,3 @@ export const AcDbSystemVariables = {
    */
   UNITMODE: 'UNITMODE'
 } as const
-
-/**
- * Union of all supported system variable names.
- *
- * Example: `'CLAYER' | 'LTSCALE' | ...`
- */
-export type AcDbSystemVariableName =
-  (typeof AcDbSystemVariables)[keyof typeof AcDbSystemVariables]
-
-/**
- * Frozen list of all registered system variable names.
- *
- * This is primarily useful for validation, iteration, and building UI selectors.
- */
-export const AC_DB_SYSTEM_VARIABLE_NAMES = Object.freeze(
-  Object.values(AcDbSystemVariables)
-)

@@ -39,7 +39,6 @@ export {
   GeometryVector3d
 } from './math'
 export type {
-  GeometryPoint,
   GeometryPoint2dLike,
   GeometryPointLike,
   GeometryVector,
@@ -88,7 +87,6 @@ export {
   geometryTransformOcsPointToWcs,
   geometryTransformOcsPointToWcsInto,
   geometryTransformWcsPointToOcs,
-  geometryOffsetPointByDirectionInXY,
   geometryOffsetSmoothedSampledPath,
   geometryOffsetVertexPath,
   geometryClosedPolygonArea2d,

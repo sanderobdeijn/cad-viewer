@@ -14,7 +14,6 @@ export {
 export type { AcDbObjectAttrs, AcDbObjectId, AcDbTypedValue } from './base/'
 export { AcDbBatchProcessing, AcDbRegenerator } from './converter'
 export {
-  AC_DB_SYSTEM_VARIABLE_NAMES,
   AcDbAbstractViewTableRecord,
   AcDbBlockScaling,
   AcDbBlockTable,
@@ -83,7 +82,6 @@ export type {
   AcDbSysVarEventArgs,
   AcDbSysVarType,
   AcDbSysVarTypeName,
-  AcDbSystemVariableName,
   AcDbTables,
   AcDbTextStyleTableRecordAttrs,
   AcDbUcsTableRecordAttrs,
@@ -153,18 +151,12 @@ export {
   ACDB_GRIPHOT_DEFAULT,
   ACDB_GRIPHOT_MAX,
   ACDB_GRIPHOT_MIN,
-  ACDB_GRIPS_MAX,
-  ACDB_GRIPS_MIN,
   ACDB_GRIPSIZE_DEFAULT,
   ACDB_GRIPSIZE_MAX,
   ACDB_GRIPSIZE_MIN,
-  ACDB_GRIPOBJLIMIT_MAX,
-  ACDB_GRIPOBJLIMIT_MIN,
   ACTIVE_VPORT_NAME,
   AcDbAngleUnits,
-  AcDbCodePage,
   AcDbDataGenerator,
-  AcDbDimArrowType,
   AcDbFormatter,
   AcDbLinearUnits,
   AcDbObjectIterator,
@@ -184,31 +176,15 @@ export {
   DEFAULT_LINE_TYPE,
   DEFAULT_TEXT_STYLE,
   MLIGHTCAD_APPID,
-  VPORT_FALLBACK_CENTER_2D,
-  VPORT_FALLBACK_LLC,
-  VPORT_FALLBACK_URC,
-  VPORT_FALLBACK_VIEW_DIR,
-  VPORT_FALLBACK_VIEW_TARGET,
-  acdbPreviewIconToDataUrl,
-  acdbThumbnailImageToDataUrl,
   acdbCoerceIntegerSysVar,
-  acdbIntegerSysVarIfInRange,
   acdbHasOsnapMode,
   acdbMaskToOsnapModes,
   acdbOsnapModesToMask,
   acdbToggleOsnapMode,
-  acdbDwgCodePageToEncoding,
-  acdbNormalizeTextEncoding,
   ACDB_ANNOTATIVE_XDATA_APP,
   ACDB_VIEWPORT_ANNOTATION_SCALE_XREC,
-  acdbAnnotativeModelHeight,
-  acdbAnnotativePaperHeight,
-  acdbBuildAnnotationScaleDrawInfo,
   acdbFindScale,
-  acdbGetAnnotationScaleContexts,
-  acdbGetViewportAnnotationScale,
-  acdbIsAnnotativeObject,
-  acdbMatchAnnotationScaleContext
+  acdbGetViewportAnnotationScale
 } from './misc'
 export type {
   AcDbAnnotationScaleContext,
@@ -254,28 +230,10 @@ export type {
 } from './object'
 export {
   AcLyBoolExpr,
-  ACAD_LAYERFILTERS_NAME,
-  ACLY_DICTIONARY_NAME,
   AcLyLayerFilter,
   AcLyLayerFilterDialogResult,
   AcLyLayerFilterTree,
-  AcLyLayerGroup,
-  acdbLayerGroupsToResultBuffer,
-  acdbParseFilterXRecordData,
-  acdbReadLayerFilterTree,
-  acdbResultBufferToLayerGroups,
-  acdbSerializeLayerFilterTree,
-  acdbWriteFilterXRecordData
-} from './ly'
-export type {
-  AcDbLayerFilterGroup,
-  AcDbLayerFilterPersistSource,
-  AcDbParsedFilterXRecord,
-  AcDbPersistDictionary,
-  AcDbPersistXRecord,
-  AcDbSerializedFilterNode,
-  AcDbSerializedFilterTree,
-  AcLyLayerId
+  AcLyLayerGroup
 } from './ly'
 export {
   AcCmColor,
@@ -397,7 +355,6 @@ export type {
   GeometryDimension,
   GeometryIndexNode,
   GeometryLoop2dType,
-  GeometryPoint,
   GeometryPoint2dLike,
   GeometryPointLike,
   GeometryPolyline2dVertex,

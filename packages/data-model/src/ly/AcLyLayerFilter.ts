@@ -1,4 +1,3 @@
-import type { AcDbObjectId } from '../base/AcDbObject'
 import type { AcDbLayerTableRecord } from '../database/AcDbLayerTableRecord'
 import { AcLyBoolExpr } from './AcLyBoolExpr'
 
@@ -482,9 +481,7 @@ function evaluateRelationalClause(
   clause: string,
   layer: AcDbLayerTableRecord
 ): boolean {
-  const match = clause
-    .trim()
-    .match(/^([A-Za-z_]+)\s*(==|=)\s*"?(.*?)"?\s*$/)
+  const match = clause.trim().match(/^([A-Za-z_]+)\s*(==|=)\s*"?(.*?)"?\s*$/)
   if (!match) {
     return false
   }
@@ -564,8 +561,3 @@ function parseBooleanLiteral(value: string): boolean | null {
   }
   return null
 }
-
-/**
- * Type alias used by group filters for layer object IDs.
- */
-export type AcLyLayerId = AcDbObjectId

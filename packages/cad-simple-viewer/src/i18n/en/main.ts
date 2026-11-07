@@ -43,11 +43,7 @@ export default {
     fontMissedInDrawing:
       'Font "{font}" is required by {count} text object(s) but is not available. Displaying with "{replacementFont}".',
     fontMissedReplacement: '"{font}" (displaying with "{replacement}")',
-    failedToGetAvaiableFonts: 'Failed to get available fonts from "{url}"!',
-    unknownEntities:
-      'This drawing contains {count} unknown or unsupported entities! Those entities will not be shown.',
-    tianzhengEntities:
-      'This drawing contains TArch / Tianzheng (or similar third-party) custom entities (about {count}). They cannot be fully parsed in this environment, so some content may not display.'
+    failedToGetAvaiableFonts: 'Failed to get available fonts from "{url}"!'
   },
   notification: {
     center: {
@@ -59,15 +55,11 @@ export default {
       fontMissed: 'Missing Fonts',
       fontMissedSummary:
         '{count} font-related messages. Click to expand details.',
-      unsupportedEntities: 'Unsupported Entities',
-      unsupportedEntitiesSummary:
-        '{count} parsing-related messages. Click to expand details.',
       genericSummary: '{count} messages. Click to expand details.'
     },
     title: {
       fontNotFound: 'Font Not Found',
       fontNotLoaded: 'Font Not Loaded',
-      parsingWarning: 'Issues on Parsing Drawing',
       systemMessage: 'System Message',
       systemWarning: 'System Warning',
       systemError: 'System Error',
