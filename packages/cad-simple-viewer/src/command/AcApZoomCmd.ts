@@ -1,9 +1,9 @@
 import {
-  acdbHostApplicationServices,
   FLOAT_TOL,
   GeometryBox2d,
   GeometryPoint2d,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/data-model'
 
 import { AcApContext, AcApDocManager } from '../app'
 import {
@@ -336,27 +336,15 @@ export class AcApZoomCmd extends AcEdCommand {
   }
 
   /**
-   * Resolves AutoCAD saved-view extents for the active layout.
+   * Resolves the saved view (VPORT `*ACTIVE`) of model space.
    *
    * @param context - Current command context.
    * @returns Saved view box, or `undefined` when missing / empty.
    */
   private resolveSavedViewBox(context: AcApContext): GeometryBox2d | undefined {
-    const db = context.doc.database
-    const modelSpaceId = db.tables.blockTable.modelSpace.objectId
-    const isModelSpace = db.currentSpaceId === modelSpaceId
-    if (isModelSpace) {
-      const aspect = context.view.width / Math.max(context.view.height, 1)
-      const box = db.tables.viewportTable.getActiveVportBox(aspect)
-      return box ?? undefined
-    }
-    const layout =
-      acdbHostApplicationServices().layoutManager.getActiveLayout(db)
-    const limits = layout?.limits
-    if (limits && !limits.isEmpty()) {
-      return limits
-    }
-    return undefined
+    const aspect = context.view.width / Math.max(context.view.height, 1)
+    const box = context.doc.database.tables.viewportTable.getActiveVportBox(aspect)
+    return box ?? undefined
   }
 
   /**

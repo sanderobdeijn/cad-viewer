@@ -74,7 +74,6 @@ import {
   acapInstallNotificationService,
   type AcUiNotificationBellPlacement
 } from './notification'
-import { syncCurrentSpaceFromTileMode } from './syncCurrentSpaceFromTileMode'
 
 const DEFAULT_BASE_URL = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data'
 /**
@@ -1768,11 +1767,6 @@ export class AcApDocManager {
       session.doc.destroy()
       const doc = session.doc
       const db = doc.database
-      // Header parsing stores `$TILEMODE` but leaves currentSpaceId on model.
-      // Sync once at open (not in setActiveLayout) so later Model-tab visits
-      // survive session reactivation. Do this before documentActivated so
-      // layout tabs snapshot the correct active layout.
-      syncCurrentSpaceFromTileMode(db)
       this.setActiveLayout(view, db)
       view.syncDisplaySysVars(db)
       this.events.documentActivated.dispatch({
@@ -1780,77 +1774,18 @@ export class AcApDocManager {
         mode: this.getDocumentEventMode(options)
       })
 
-      // View framing at document open time (see `openViewMode`):
-      //
-      // 1. **Paper space + has LIMMIN/LIMMAX**: frame the authoritative
-      //    paper sheet rectangle (`AcDbLayout.limits`). Real-world DWGs
-      //    frequently mix scales inside paper space (e.g. a title block
-      //    authored in mm alongside viewport rectangles authored in m),
-      //    so the entity bounding box is unreliable here 鈥?it gets
-      //    dominated by the largest-scale outliers and shrinks the
-      //    actual paper to a grain.
-      //
-      // 2. **Extents** (Read default): poll `zoomToFitDrawing`
-      //    and frame batch-derived geometry bounds once entities land.
-      //
-      // 3. **Saved** (Write default) in model space: restore VPORT
-      //    `*ACTIVE` via `getActiveVportBox(aspect)` (structural / max-span
-      //    checks only — not vs header EXTMIN/EXTMAX, which often span
-      //    outliers and reject a valid tight saved view). When missing or
-      //    implausible, poll `zoomToFitDrawing`.
-      //
-      // 4. **Fallback** (paper without limits, or model with empty
-      //    extents 鈥?typically DXF): poll `zoomToFitDrawing` and frame
-      //    the populated layout bounding box once entities land.
-      //
-      // The pre-fix code used `db.extmin/db.extmax` (always model-space
-      // EXTMIN/EXTMAX sysvars) even when opening into paper, landing on
-      // coordinates that don't exist in paper WCS. Paper layout would
-      // render zoomed into a random quadrant 鈥?title block looking
-      // giant, viewport collapsed to pixels. See
-      // `next_14_viewports_full.md` Bug C-open.
-      const modelSpaceId = db.tables.blockTable.modelSpace.objectId
-      const isPaperSpaceActive = db.currentSpaceId !== modelSpaceId
-      const activeLayout =
-        acdbHostApplicationServices().layoutManager.getActiveLayout(db)
-      const layoutLimits = activeLayout?.limits
+      // Frame the saved view (VPORT `*ACTIVE`) when the open view mode asks
+      // for it and the drawing has one; otherwise frame the drawing once its
+      // entities are converted.
       const openViewMode = this.resolveOpenViewMode(options)
-
       const progressiveRendering = options?.progressiveRendering ?? false
-      let framedSynchronously = false
-      if (isPaperSpaceActive && layoutLimits && !layoutLimits.isEmpty()) {
-        view.zoomTo(layoutLimits)
-        framedSynchronously = true
-      } else if (openViewMode === AcApOpenViewMode.Extents) {
-        if (progressiveRendering) {
-          view.beginProgressiveOpenFit()
-        }
-        view.zoomToFitDrawing()
-        view.requestOpenLineworkFrame()
-      } else if (!isPaperSpaceActive) {
-        const canvasAspect = view.width / Math.max(view.height, 1)
-        // Restore *ACTIVE without comparing to header EXTMIN/EXTMAX.
-        // Extents-relative heuristics reject valid saved views that sit in a
-        // dense island while $EXTMAX still spans a mirrored/outlier wing
-        // (center offset fails). Raw `modelViewBox` alone still accepts
-        // stale zoomed-out saves; `getActiveVportBox` without extents keeps
-        // structural checks + a max-span guard for those.
-        const activeModelViewBox =
-          db.tables.viewportTable.getActiveVportBox(canvasAspect)
-
-        if (activeModelViewBox) {
-          view.zoomTo(activeModelViewBox)
-          framedSynchronously = true
-        } else {
-          // No plausible saved view (missing VPORT or zoomed absurdly far).
-          // Frame converted scene bounds — do not trust header extents alone
-          // (often a title-block island while model content sits far away).
-          if (progressiveRendering) {
-            view.beginProgressiveOpenFit()
-          }
-          view.zoomToFitDrawing()
-          view.requestOpenLineworkFrame()
-        }
+      const canvasAspect = view.width / Math.max(view.height, 1)
+      const savedViewBox =
+        openViewMode === AcApOpenViewMode.Saved
+          ? db.tables.viewportTable.getActiveVportBox(canvasAspect)
+          : undefined
+      if (savedViewBox) {
+        view.zoomTo(savedViewBox)
       } else {
         if (progressiveRendering) {
           view.beginProgressiveOpenFit()
@@ -1858,37 +1793,11 @@ export class AcApDocManager {
         view.zoomToFitDrawing()
         view.requestOpenLineworkFrame()
       }
-
-      // Tell the view we've already framed the startup layout, so that
-      // when the user later switches to a different tab and back, the
-      // `layoutSwitched` handler doesn't re-zoom and trash their pan/zoom
-      // state on this layout. Cast is intentional: `setActiveLayout`
-      // above relies on `curView` being an `AcTrView2d`, and the
-      // markLayoutAsInitialized method is part of that contract.
       view.markLayoutAsInitialized(db.currentSpaceId)
       // `zoomToFitDrawing` frames asynchronously; capture original view in
       // its completion callback instead of here (pre-fit camera is wrong).
-      if (framedSynchronously) {
+      if (savedViewBox) {
         AcApZoomCmd.rememberOriginalView(view, db.currentSpaceId)
-      }
-      // Headless multi-layout export: convert paper tabs the open stream did
-      // not already claim. `ensureEntitiesConvertedForExport` waits for the
-      // open drain first, so this must not be a second full pass over
-      // in-flight model-space entities (that pass is serial and duplicates
-      // geometry). Fire-and-forget: onAfterOpenDocument is sync;
-      // waitUntilIdle / CLI waitForSceneIdle observe the work this starts.
-      if (options?.convertAllLayouts) {
-        void view
-          .ensureEntitiesConvertedForExport({
-            includeInvisibleLayers: options.convertInvisibleLayers !== false,
-            includeLayouts: true
-          })
-          .catch(error => {
-            log.error(
-              '[AcApDocManager] convertAllLayouts export convert failed',
-              error
-            )
-          })
       }
       // OPENPROF: db.read is done; wait for batchConvert to drain, then print.
       this._openFileProfiler.markReadCompleteAndScheduleReport(view)

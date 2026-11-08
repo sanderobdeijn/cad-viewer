@@ -42,12 +42,7 @@ import {
 import {
   AcCmColor,
   AcDbAngleUnits,
-  AcDbDatabase,
-  AcDbEntity,
-  AcDbLinearUnits,
-  AcDbObjectId,
-  AcDbSysVarManager,
-  AcGiLineWeight
+  AcDbLinearUnits
 } from '@mlightcad/data-model'
 import {
   FileMenuItemModel,
@@ -87,8 +82,6 @@ import {
   offset,
   polygon,
   polyline,
-  properties,
-  qselect,
   rect,
   setting
 } from '../../svg'
@@ -107,8 +100,6 @@ import {
 import MlRibbonFileName from './MlRibbonFileName.vue'
 import MlRibbonMeasurementUnitsPanel from './MlRibbonMeasurementUnitsPanel.vue'
 import MlRibbonPropertyColorDropdown from './MlRibbonPropertyColorDropdown.vue'
-import MlRibbonPropertyLineTypeSelect from './MlRibbonPropertyLineTypeSelect.vue'
-import MlRibbonPropertyLineWeightSelect from './MlRibbonPropertyLineWeightSelect.vue'
 import MlRibbonTextHeightButton from './MlRibbonTextHeightButton.vue'
 import { classifyOverlaySelection } from './overlaySelectionKind'
 
@@ -139,138 +130,17 @@ const measurementLengthUnit = ref<number>(
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
 )
 const isRibbonDisabled = computed(() => isDocumentOpening.value)
-const ribbonColor = ref<AcCmColor | undefined>(new AcCmColor())
-const ribbonColorDisplay = ref('#7b8794')
-const ribbonLineType = ref<string | undefined>('ByLayer')
-const ribbonLineWeight = ref<AcGiLineWeight | undefined>(AcGiLineWeight.ByLayer)
 const activeRibbonTabId = ref('home')
-let observedDatabase: AcDbDatabase | undefined
-
-/**
- * Returns the selection set attached to the active view, if any.
- */
-const getCurrentSelectionSet = () =>
-  AcApDocManager.instance?.curView?.selectionSet
-
-let observedSelectionSet: ReturnType<typeof getCurrentSelectionSet> | undefined
-const selectedEntityIds = ref<AcDbObjectId[]>([])
 
 /**
  * Returns the database currently attached to the active document, if any.
  */
 const getCurrentDatabase = () => AcApDocManager.instance?.curDocument?.database
 
-function createByLayerColor() {
-  const color = new AcCmColor()
-  color.setByLayer()
-  return color
-}
-
-function syncSelectedEntityIds() {
-  selectedEntityIds.value = [...(getCurrentSelectionSet()?.ids ?? [])]
-}
-
-function getSelectedEntities(db: AcDbDatabase) {
-  return selectedEntityIds.value
-    .map(id => db.tables.blockTable.getEntityById(id))
-    .filter((entity): entity is AcDbEntity => entity != null)
-}
-
-function getCommonValue<T>(
-  entities: AcDbEntity[],
-  resolve: (entity: AcDbEntity) => T
-) {
-  if (!entities.length) return undefined
-  const first = resolve(entities[0])
-  return entities.every(entity => resolve(entity) === first) ? first : undefined
-}
-
-function resolveRibbonColorDisplay(
-  color: AcCmColor | undefined,
-  db: AcDbDatabase,
-  layerName?: string
-) {
-  if (!color) return ''
-  if (color.isByLayer) {
-    if (!layerName) return '#7b8794'
-    return db.tables.layerTable.getAt(layerName)?.color.cssColor || '#7b8794'
-  }
-  if (color.isByBlock) return '#a0a8b8'
-  return color.cssColor || '#7b8794'
-}
-
-/**
- * Mirrors the active drawing's current property defaults into ribbon-local refs.
- *
- * @param db Database whose `CECOLOR`, `CELTYPE`, and `CELWEIGHT` values should be reflected.
- */
-const syncRibbonProperties = (db = getCurrentDatabase()) => {
-  if (!db) {
-    ribbonColor.value = new AcCmColor()
-    ribbonColorDisplay.value = '#7b8794'
-    ribbonLineWeight.value = AcGiLineWeight.ByLayer
-    ribbonLineType.value = 'ByLayer'
-    return
-  }
-
-  const selectedEntities = getSelectedEntities(db)
-  const commonLineType = getCommonValue(
-    selectedEntities,
-    entity => entity.lineType || 'ByLayer'
-  )
-  const commonLineWeight = getCommonValue(
-    selectedEntities,
-    entity => entity.lineWeight ?? AcGiLineWeight.ByLayer
-  )
-  const commonColorKey = getCommonValue(
-    selectedEntities,
-    entity => entity.color?.toString() ?? createByLayerColor().toString()
-  )
-  const commonColor =
-    commonColorKey != null
-      ? (AcCmColor.fromString(commonColorKey) ?? createByLayerColor())
-      : undefined
-
-  ribbonColor.value =
-    selectedEntities.length > 0 ? commonColor : db.cecolor.clone()
-  ribbonLineType.value =
-    selectedEntities.length > 0 ? commonLineType : db.celtype || 'ByLayer'
-  ribbonLineWeight.value =
-    selectedEntities.length > 0 ? commonLineWeight : db.celweight
-  ribbonColorDisplay.value =
-    selectedEntities.length > 0
-      ? resolveRibbonColorDisplay(commonColor, db, db.clayer)
-      : resolveRibbonColorDisplay(db.cecolor, db, db.clayer)
-}
-
 const syncMeasurementVisibility = () => {
   isMeasurementOverlayVisible.value = isMeasurementVisible()
 }
 
-const handleSelectionChanged = () => {
-  syncSelectedEntityIds()
-  syncRibbonProperties(observedDatabase)
-}
-
-const handleObservedEntityChange = (args: {
-  entity?: AcDbEntity | AcDbEntity[]
-}) => {
-  const entities = Array.isArray(args.entity) ? args.entity : [args.entity]
-  const hasSelectedEntityChanged = entities.some(
-    entity =>
-      entity?.objectId != null &&
-      selectedEntityIds.value.includes(entity.objectId)
-  )
-
-  if (!hasSelectedEntityChanged) return
-  syncRibbonProperties(observedDatabase)
-}
-
-/**
- * Updates ribbon property controls when document default drawing properties change.
- *
- * @param args System variable change payload raised by the CAD runtime.
- */
 /** Updates the measurement unit controls when the unit settings change. */
 const handleSettingChange = (args: AcApSettingManagerEventArgs) => {
   switch (args.key) {
@@ -287,97 +157,11 @@ const handleSettingChange = (args: AcApSettingManagerEventArgs) => {
   }
 }
 
-const handleSysVarChange = (args: { database: AcDbDatabase; name: string }) => {
-  if (args.database !== observedDatabase) return
-
-  switch (args.name.toUpperCase()) {
-    case 'CECOLOR':
-    case 'CELTYPE':
-    case 'CELWEIGHT':
-      syncRibbonProperties(args.database)
-      break
-    case 'CLAYER':
-      syncRibbonProperties(args.database)
-      break
-    default:
-      break
-  }
-}
-
-const bindSelectionEvents = (selectionSet = getCurrentSelectionSet()) => {
-  if (observedSelectionSet === selectionSet) return
-
-  if (observedSelectionSet) {
-    observedSelectionSet.events.selectionAdded.removeEventListener(
-      handleSelectionChanged
-    )
-    observedSelectionSet.events.selectionRemoved.removeEventListener(
-      handleSelectionChanged
-    )
-  }
-
-  observedSelectionSet = selectionSet
-  syncSelectedEntityIds()
-
-  if (!observedSelectionSet) return
-
-  observedSelectionSet.events.selectionAdded.addEventListener(
-    handleSelectionChanged
-  )
-  observedSelectionSet.events.selectionRemoved.addEventListener(
-    handleSelectionChanged
-  )
-}
-
-const bindAnnotationVisibilityEvents = (db?: AcDbDatabase) => {
-  if (observedDatabase === db) return
-
-  if (observedDatabase) {
-    observedDatabase.events.entityModified.removeEventListener(
-      handleObservedEntityChange
-    )
-    observedDatabase.events.entityErased.removeEventListener(
-      handleObservedEntityChange
-    )
-  }
-
-  observedDatabase = db
-
-  if (!observedDatabase) return
-
-  observedDatabase.events.entityModified.addEventListener(
-    handleObservedEntityChange
-  )
-  observedDatabase.events.entityErased.addEventListener(
-    handleObservedEntityChange
-  )
-}
-
 const handleDocumentActivated = () => {
-  bindSelectionEvents(getCurrentSelectionSet())
-  bindAnnotationVisibilityEvents(AcApDocManager.instance?.curDocument?.database)
   lastActivatedMeasurementId = undefined
   syncMeasurementVisibility()
   syncMeasurementStyleControls()
   syncMeasurementUnitControls()
-  syncRibbonProperties(AcApDocManager.instance?.curDocument?.database)
-}
-
-/**
- * Applies one mutation callback to all currently selected entities.
- *
- * @param mutator Mutation logic executed for each selected entity.
- */
-const applyToSelectedEntities = (mutator: (entity: AcDbEntity) => void) => {
-  const db = getCurrentDatabase()
-  const ids = AcApDocManager.instance?.curView?.selectionSet?.ids
-  if (!db || !ids?.length) return
-
-  ids.forEach(id => {
-    const entity = db.openEntityForWrite(id)
-    if (!entity) return
-    mutator(entity)
-  })
 }
 
 let unsubscribeMeasurementSelection: (() => void) | undefined
@@ -458,9 +242,6 @@ const activateRibbonTabAfterDrawCommand = (args: AcEdCommandEventArgs) => {
 }
 
 onMounted(() => {
-  AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(
-    handleSysVarChange
-  )
   AcApSettingManager.instance.events.modified.addEventListener(
     handleSettingChange
   )
@@ -487,9 +268,6 @@ onUnmounted(() => {
   overlayTabActivationDisposed = true
   unsubscribeMeasurementSelection?.()
   unsubscribeMeasurementSelection = undefined
-  AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
-    handleSysVarChange
-  )
   AcApSettingManager.instance.events.modified.removeEventListener(
     handleSettingChange
   )
@@ -505,45 +283,7 @@ onUnmounted(() => {
   AcApDocManager.instance.events.documentActivated.removeEventListener(
     handleDocumentActivated
   )
-  bindSelectionEvents(undefined)
-  bindAnnotationVisibilityEvents(undefined)
 })
-
-/**
- * Applies a newly selected ribbon color to the active database defaults.
- *
- * @param value Color chosen from the ribbon property dropdown.
- */
-const handleRibbonColorChange = (value?: AcCmColor) => {
-  const db = getCurrentDatabase()
-  if (!db || !value) return
-
-  db.runDatabaseEdit(() => {
-    db.cecolor = value
-    applyToSelectedEntities(entity => {
-      entity.color = value
-    })
-  })
-  syncRibbonProperties(db)
-}
-
-/**
- * Applies a newly selected ribbon line weight to the active database defaults.
- *
- * @param value Line weight chosen from the ribbon property dropdown.
- */
-const handleRibbonLineWeightChange = (value: AcGiLineWeight) => {
-  const db = getCurrentDatabase()
-  if (!db) return
-
-  db.runDatabaseEdit(() => {
-    db.celweight = value
-    applyToSelectedEntities(entity => {
-      entity.lineWeight = value
-    })
-  })
-  syncRibbonProperties(db)
-}
 
 const syncMeasurementStyleControls = () => {
   const selected = getActiveMeasurementStyle()
@@ -691,24 +431,6 @@ const handleMeasurementLengthUnitChange = (value: number) => {
 }
 
 /**
- * Applies a newly selected ribbon line type to the active database defaults.
- *
- * @param value Line type chosen from the ribbon property dropdown.
- */
-const handleRibbonLineTypeChange = (value: string) => {
-  const db = getCurrentDatabase()
-  if (!db) return
-
-  db.runDatabaseEdit(() => {
-    db.celtype = value
-    applyToSelectedEntities(entity => {
-      entity.lineType = value
-    })
-  })
-  syncRibbonProperties(db)
-}
-
-/**
  * Read: measurement only. Write: all tabs.
  * Contextual tabs keep the visibility their builders already set.
  */
@@ -742,12 +464,7 @@ const buildBaseTabs = (
     copy: t('main.ribbon.tooltip.copy'),
     erase: t('main.ribbon.tooltip.erase'),
     offset: t('main.ribbon.tooltip.offset'),
-    properties: t('main.ribbon.tooltip.properties'),
-    quickSelect: t('main.ribbon.tooltip.quickSelect'),
-    drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
-    propertyColor: t('main.ribbon.tooltip.propertyColor'),
-    propertyLineType: t('main.ribbon.tooltip.propertyLineType'),
-    propertyLineWeight: t('main.ribbon.tooltip.propertyLineWeight')
+    drawingUnits: t('main.ribbon.tooltip.drawingUnits')
   }
   const ribbonDropdownOptionTooltips = {
     circleCenterRadius: t('main.ribbon.tooltip.circleOption.centerRadius'),
@@ -1365,77 +1082,6 @@ const buildBaseTabs = (
           ]
         },
         {
-          id: 'home-properties',
-          title: t('main.ribbon.group.properties'),
-          orientation: 'row',
-          collections: [
-            {
-              id: 'home-properties-button',
-              layout: 'row',
-              items: [
-                {
-                  id: 'cmd-properties',
-                  type: 'button',
-                  label: t('main.ribbon.command.properties'),
-                  tooltip: ribbonTooltips.properties,
-                  size: 'large',
-                  props: { icon: properties }
-                }
-              ]
-            },
-            {
-              id: 'home-properties-main',
-              layout: 'column',
-              rows: 3,
-              items: [
-                {
-                  id: 'entity-color',
-                  type: 'custom',
-                  size: 'small',
-                  tooltip: ribbonTooltips.propertyColor,
-                  props: {
-                    component: MlRibbonPropertyColorDropdown,
-                    componentProps: {
-                      modelValue: ribbonColor.value,
-                      displayColor: ribbonColorDisplay.value,
-                      placeholder: t('main.ribbon.property.color'),
-                      'onUpdate:modelValue': handleRibbonColorChange
-                    }
-                  }
-                },
-                {
-                  id: 'entity-line-weight',
-                  type: 'custom',
-                  size: 'small',
-                  tooltip: ribbonTooltips.propertyLineWeight,
-                  props: {
-                    component: MlRibbonPropertyLineWeightSelect,
-                    componentProps: {
-                      modelValue: ribbonLineWeight.value,
-                      placeholder: t('main.ribbon.property.lineWeight'),
-                      'onUpdate:modelValue': handleRibbonLineWeightChange
-                    }
-                  }
-                },
-                {
-                  id: 'entity-line-type',
-                  type: 'custom',
-                  size: 'small',
-                  tooltip: ribbonTooltips.propertyLineType,
-                  props: {
-                    component: MlRibbonPropertyLineTypeSelect,
-                    componentProps: {
-                      modelValue: ribbonLineType.value,
-                      placeholder: t('main.lineTypeSelect.placeholder'),
-                      'onUpdate:modelValue': handleRibbonLineTypeChange
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
           id: 'home-utilities',
           title: t('main.ribbon.group.utilities'),
           orientation: 'row',
@@ -1444,18 +1090,6 @@ const buildBaseTabs = (
               id: 'home-utilities-main',
               layout: 'row',
               items: [
-                {
-                  id: 'cmd-qselect',
-                  type: 'button',
-                  label: t('main.ribbon.command.quickSelect'),
-                  tooltip: ribbonTooltips.quickSelect,
-                  size: 'large',
-                  props: {
-                    icon: qselect,
-                    labelWrapLines: 2,
-                    labelWrapWidth: 'max-content'
-                  }
-                },
                 {
                   id: 'cmd-drawing-units',
                   type: 'button',
@@ -1538,8 +1172,6 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-copy', 'copy')
   commandByItemId.set('cmd-erase', 'erase')
   commandByItemId.set('cmd-offset', 'offset')
-  commandByItemId.set('cmd-properties', 'properties')
-  commandByItemId.set('cmd-qselect', 'qselect')
   commandByItemId.set('cmd-drawing-units', 'units')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-continuous', 'measurecontinuous')

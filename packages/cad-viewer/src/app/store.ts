@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 export const store = reactive({
   dialogs: {
     toolPalette: false,
-    activePaletteTab: 'entityProperties',
+    activePaletteTab: 'measurements',
     /** Sub-tab inside Missing / External Resources palette */
     /**
      * Dev-oriented Open Performance tab. Hidden until OPENPERF runs so it

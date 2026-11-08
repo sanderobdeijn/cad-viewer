@@ -4,14 +4,6 @@
     :aria-disabled="isStatusBarDisabled"
     class="ml-status-bar"
   >
-    <!-- Left Slot Content -->
-    <template #left>
-      <ml-layout-tabs
-        :disabled="isStatusBarDisabled"
-        :reserved-width="layoutTabsReservedWidth"
-      />
-    </template>
-
     <!-- Right Slot Content -->
     <template #right>
       <ml-progress />
@@ -82,7 +74,6 @@ import {
 import { dynamicInput, lineWidth, orthoMode } from '../../svg'
 import { MlSettingToggleButton } from '../common'
 import MlFullScreenButton from './MlFullScreenButton.vue'
-import MlLayoutTabs from './MlLayoutTabs.vue'
 import MlNotificationButton from './MlNotificationButton.vue'
 import MlOsnapButton from './MlOsnapButton.vue'
 import MlPointStyleButton from './MlPointStyleButton.vue'
@@ -91,9 +82,6 @@ import MlProgress from './MlProgress.vue'
 import MlSettingButton from './MlSettingButton.vue'
 import MlThemeButton from './MlThemeButton.vue'
 import MlWarningButton from './MlWarningButton.vue'
-
-/** Room kept free for longer coordinates while the mouse moves. */
-const COORDINATE_RESERVED_WIDTH = 220
 
 const props = defineProps<{
   isDark: boolean
@@ -106,10 +94,6 @@ const { isDocumentOpening } = useDocument()
 const { isMobile, isMobileOrPad } = useIsMobile()
 const { t } = useI18n()
 const isStatusBarDisabled = computed(() => isDocumentOpening.value)
-
-const layoutTabsReservedWidth = computed(() =>
-  features.isShowCoordinate && !isMobile.value ? COORDINATE_RESERVED_WIDTH : 0
-)
 
 const emit = defineEmits<{
   toggleNotificationCenter: []
@@ -152,8 +136,8 @@ const toggleNotificationCenter = () => {
   border: none;
   height: 100%;
   /*
-   * Hold a baseline slot for coordinates. Layout tabs reserve up to 220px;
-   * min-width covers the common short-value case so that slot is not released.
+   * Hold a baseline slot for coordinates so the buttons do not move while the
+   * mouse moves.
    */
   min-width: 180px;
   box-sizing: border-box;

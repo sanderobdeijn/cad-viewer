@@ -106,7 +106,7 @@ test('has no Open command', async ({ page }) => {
   expect(hasOpen).toBe(false)
 })
 
-test('switches between the model and paper layouts of a new drawing', async ({
+test('shows model space only, without layout, property or Quick Select controls', async ({
   page
 }) => {
   const pageErrors: string[] = []
@@ -115,15 +115,27 @@ test('switches between the model and paper layouts of a new drawing', async ({
   })
 
   await page.goto('/')
-  const tabs = page.locator('.ml-layout-tabs-button')
-  await expect(tabs.filter({ hasText: 'Layout1' })).toBeVisible()
-
-  await tabs.filter({ hasText: 'Layout1' }).click()
-  await page.waitForTimeout(500)
-  await tabs.filter({ hasText: 'Model' }).click()
-  await page.waitForTimeout(500)
-
+  await page.waitForFunction(
+    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+  )
   await expect(page.locator('.ml-cad-container canvas').first()).toBeVisible()
+  await expect(page.locator('.ml-layout-tabs')).toHaveCount(0)
+  await expect(page.getByText('Quick Select', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Properties', { exact: true })).toHaveCount(0)
+
+  const commands = await page.evaluate(() => {
+    const mgr = (
+      window as unknown as {
+        AcApDocManager: {
+          instance: { lookupGlobalCmd: (name: string) => unknown }
+        }
+      }
+    ).AcApDocManager.instance
+    return ['properties', 'qselect'].map(
+      name => mgr.lookupGlobalCmd(name) != null
+    )
+  })
+  expect(commands).toEqual([false, false])
   expect(pageErrors).toEqual([])
 })
 

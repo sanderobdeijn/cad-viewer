@@ -9,9 +9,7 @@ import { type AcTrCssRect, acTrCssTopLeftRectToGl } from './AcTrCssRect'
  * Screen-fixed overlay viewport: a CSS-pixel rectangle on the canvas that
  * shows an independent orthographic view of a world-space box.
  *
- * Used for paper-space CAD viewports (after mapping paper WCS → screen) and
- * for transient magnifiers. Unlike {@link AcTrViewportView}, the screen
- * rectangle is not derived from a paper-space entity.
+ * Used for transient magnifiers such as the snap loupe.
  */
 export class AcTrOverlayViewport {
   /** Shared WebGL renderer (same canvas as the main layout view). */
@@ -117,34 +115,6 @@ export class AcTrOverlayViewport {
         clearColor: true
       }
     )
-  }
-
-  /**
-   * Draws `scene` with a camera fitted to `viewBox` filling `viewportRect`,
-   * clipped to `scissorRect`. Does not clear color (for nested paper-space
-   * model passes). Restores the overlay's own {@link viewBox} camera afterward.
-   *
-   * @param scene - Geometry to draw.
-   * @param viewBox - World box mapped onto `viewportRect`.
-   * @param viewportRect - CSS rectangle the view box fills.
-   * @param scissorRect - CSS clip rectangle (usually intersection with loupe).
-   * @param canvasCssHeight - Canvas CSS height.
-   * @param twist - Optional DVIEW twist in radians (camera up / rotation).
-   */
-  renderNested(
-    scene: THREE.Object3D,
-    viewBox: GeometryBox2d,
-    viewportRect: AcTrCssRect,
-    scissorRect: AcTrCssRect,
-    canvasCssHeight: number,
-    twist?: number
-  ) {
-    if (scissorRect.width < 1 || scissorRect.height < 1) return
-    this.fitCamera(viewBox, viewportRect.width, viewportRect.height, twist)
-    this.renderRect(scene, viewportRect, scissorRect, canvasCssHeight, {
-      clearColor: false
-    })
-    this.applyViewBox()
   }
 
   /**

@@ -61,7 +61,6 @@ function createMockView(
     minY?: number
     maxX?: number
     maxY?: number
-    viewportId?: string
     children?: Array<{
       id: string
       minX?: number
@@ -69,21 +68,7 @@ function createMockView(
       maxX?: number
       maxY?: number
     }>
-  }>,
-  viewportMappers?: Record<
-    string,
-    {
-      paperToModel: (point: { x: number; y: number }) => {
-        x: number
-        y: number
-      }
-      modelToPaper: (point: { x: number; y: number }) => {
-        x: number
-        y: number
-      }
-      containsPaperPoint?: (point: { x: number; y: number }) => boolean
-    }
-  >
+  }>
 ): AcEdBaseView {
   return {
     pick: jest.fn().mockReturnValue(pickResults),
@@ -95,16 +80,7 @@ function createMockView(
       x,
       y,
       z: 0
-    })),
-    getViewportCoordinateMapper: jest.fn((viewportId: string) => {
-      const mapper = viewportMappers?.[viewportId]
-      if (!mapper) return undefined
-      return {
-        paperToModel: mapper.paperToModel,
-        modelToPaper: mapper.modelToPaper,
-        containsPaperPoint: mapper.containsPaperPoint ?? (() => true)
-      }
-    })
+    }))
   } as unknown as AcEdBaseView
 }
 
@@ -534,77 +510,6 @@ describe('AcEdOsnapResolver', () => {
         y: 0,
         type: AcDbOsnapMode.EndPoint
       })
-    })
-  })
-
-  it('maps a viewport drill-through hit from model space back to paper space (#746)', () => {
-    withWorkingDatabase(db => {
-      const line = new AcDbLine(
-        new GeometryPoint2d(100, 100),
-        new GeometryPoint2d(110, 100)
-      )
-      db.tables.blockTable.modelSpace.appendEntity(line)
-
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.EndPoint
-      ])
-
-      // Viewport maps paper (0,0..20,20) onto model (100,100..120,120):
-      // a 2x paper-to-model scale, offset by (100,100).
-      const viewportId = 'VP_746'
-      const paperToModel = (p: { x: number; y: number }) => ({
-        x: p.x * 2 + 100,
-        y: p.y * 2 + 100
-      })
-      const modelToPaper = (p: { x: number; y: number }) => ({
-        x: (p.x - 100) / 2,
-        y: (p.y - 100) / 2
-      })
-
-      const view = createMockView([{ id: line.objectId, viewportId }], {
-        [viewportId]: { paperToModel, modelToPaper }
-      })
-      const resolver = new AcEdOsnapResolver(view)
-
-      // Paper-space cursor near the line's first endpoint once mapped
-      // through the viewport (model (100,100) -> paper (0,0)).
-      const snap = resolver.resolve({
-        cursorWcs: { x: 0.3, y: 0.2 },
-        hitRadiusPx: 20
-      })
-
-      expect(snap).toEqual({
-        x: 0,
-        y: 0,
-        type: AcDbOsnapMode.EndPoint
-      })
-    })
-  })
-
-  it('skips a viewport drill-through hit when no coordinate mapper is available', () => {
-    withWorkingDatabase(db => {
-      const line = new AcDbLine(
-        new GeometryPoint2d(100, 100),
-        new GeometryPoint2d(110, 100)
-      )
-      db.tables.blockTable.modelSpace.appendEntity(line)
-
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.EndPoint
-      ])
-
-      // Tagged as a drill-through hit, but the view has no mapper for that
-      // viewport id — must not fall back to treating model WCS as paper.
-      const view = createMockView([
-        { id: line.objectId, viewportId: 'VP_GONE' }
-      ])
-      const resolver = new AcEdOsnapResolver(view)
-      const snap = resolver.resolve({
-        cursorWcs: { x: 100.2, y: 100.1 },
-        hitRadiusPx: 20
-      })
-
-      expect(snap).toBeUndefined()
     })
   })
 })

@@ -1,16 +1,12 @@
 import {
   AcCmUiYieldGate,
-  AcDbBlockTableRecord,
   AcDbDatabase,
   AcDbEntity,
-  acdbHostApplicationServices,
   AcDbLayerTableRecord,
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
   AcDbObjectId,
-  AcDbViewport,
   acgiForegroundColorForBackground,
-  AcGiViewport,
   GeometryBox2d,
   GeometryBox3d,
   GeometryMatrix3d,
@@ -26,7 +22,6 @@ import {
   AcTrHtmlTransientManager,
   AcTrMTextRenderer,
   AcTrRenderer,
-  AcTrViewportView,
   hasPendingComplexLineTypeGlyphs,
   setAcTrDrawOrderZAllocator
 } from '@mlightcad/three-renderer'
@@ -54,14 +49,12 @@ import {
   AcEdSpatialQueryResultItem,
   AcEdSpatialQueryResultItemEx,
   AcEdViewMode,
-  AcEdViewportCoordinateMapper,
   eventBus,
   resolvePointerSelectionAction
 } from '../editor'
 import {
   ACGI_MODEL_SPACE_BACKGROUND,
-  isModelSpaceDatabase,
-  readLayoutBackgroundColor
+  readBackgroundColor
 } from '../editor/global/AcEdUiColor'
 import { ML_UI_Z_CANVAS_HTML_OVERLAY } from '../editor/global/AcEdUiLayout'
 import {
@@ -92,7 +85,6 @@ import { unionGroupWcsChildBoxes } from './AcTrGroupWcsBboxAssert'
 import { computeIntelligentExtentsAsync } from './AcTrIntelligentExtents'
 import { AcTrLayer } from './AcTrLayer'
 import { AcTrLayerAppearanceController } from './AcTrLayerAppearanceController'
-import { AcTrLayout } from './AcTrLayout'
 import { AcTrLayoutView } from './AcTrLayoutView'
 import { AcTrLayoutViewManager } from './AcTrLayoutViewManager'
 import { sortPickResults } from './AcTrPickResultUtil'
@@ -268,13 +260,6 @@ export class AcTrView2d extends AcEdBaseView {
    * `setTimeout` storm after the loading overlay hides.
    */
   private _convertQueue: AcDbEntity[] = []
-  /**
-   * Paper-space block table record ids whose viewport entities were converted
-   * before an {@link AcTrLayoutView} existed, so {@link batchConvert} could
-   * not create the {@link AcTrViewportView}. Repaired when that layout view
-   * is created.
-   */
-  private readonly _viewportRepairOwnerIds = new Set<string>()
   /** In-flight progressive convert drain; shared so awaiters wait for the queue. */
   private _convertDrainPromise: Promise<void> | null = null
   /**
@@ -361,9 +346,6 @@ export class AcTrView2d extends AcEdBaseView {
   private _onFontNotFound?: (args: { fontName: string; count?: number }) => void
   private _onFontLoaded?: (args?: { fontName?: string }) => void
   private _onSettingsModified?: (args: { key: string; value: unknown }) => void
-  private _onLayoutSwitched?: (args: {
-    layout: AcDbLayout & { database?: object }
-  }) => void
   private _onCommandWillStartHitTest?: () => void
   private _onCommandEndedHitTest?: () => void
   /**
@@ -613,22 +595,14 @@ export class AcTrView2d extends AcEdBaseView {
         (AcApDocManager.tryGetInstance() == null || this.isActiveManagedView())
     )
 
-    // The background settings drive the canvas clear colour and ACI-7
-    // inversion (`modelBackgroundColor` for model space,
-    // `paperBackgroundColor` for the active layout). `colorTheme` only
-    // affects UI chrome — see `useDark` / `AcEdUiTheme`, not the renderer
-    // foreground.
+    // The background setting drives the canvas clear colour and ACI-7
+    // inversion. `colorTheme` only affects UI chrome — see `useDark` /
+    // `AcEdUiTheme`, not the renderer foreground.
     this._onSettingsModified = args => {
       if (args.key == 'isShowStats') {
         this.toggleStatsVisibility(this._stats, args.value as boolean)
-      } else if (
-        args.key === 'modelBackgroundColor' ||
-        args.key === 'paperBackgroundColor'
-      ) {
-        const isModelSpace = this.isModelSpaceLayout()
-        if ((args.key === 'modelBackgroundColor') === isModelSpace) {
-          this.applyCanvasBackground(readLayoutBackgroundColor(isModelSpace))
-        }
+      } else if (args.key === 'modelBackgroundColor') {
+        this.applyCanvasBackground(readBackgroundColor())
       }
     }
     AcApSettingManager.instance.events.modified.addEventListener(
@@ -867,55 +841,6 @@ export class AcTrView2d extends AcEdBaseView {
       },
       { signal: viewDomSignal }
     )
-    this._onLayoutSwitched = args => {
-      if (!this.isActiveManagedView()) return
-      const layoutDb = (args.layout as { database?: { objectId?: string } })
-        .database
-      const currentDb = (
-        AcApDocManager as unknown as {
-          _instance?: { curDocument?: { database?: object } }
-        }
-      )._instance?.curDocument?.database
-      if (layoutDb && currentDb && layoutDb !== currentDb) {
-        return
-      }
-      const btrId = args.layout.blockTableRecordId
-      // "First visit" is tracked separately from view existence because
-      // `addLayout` pre-creates an `AcTrLayoutView` for every layout in
-      // the DWG at load time — `_layoutViewManager.has(btrId)` is
-      // therefore `true` even for layouts the user has never focused
-      // on, and "first visit" computed from it would always be false.
-      // We use a dedicated set instead, marked here on first switch and
-      // also from `markLayoutAsInitialized` when the document opens
-      // straight into a layout (AcApDocManager has already framed it).
-      // Each AcTrLayoutView owns its own camera, so on subsequent
-      // visits the previous camera state is naturally restored and we
-      // must NOT zoom-to-fit again — that would be jarring and
-      // diverges from how AutoCAD preserves per-tab view state.
-      const isFirstVisit = !this._initializedLayouts.has(btrId)
-      this._initializedLayouts.add(btrId)
-
-      // Measurement HTML overlays are layout-scoped via `layoutId`.
-      // Switching layouts only updates visibility (see
-      // {@link AcTrHtmlTransientManager.setActiveLayoutId} from the
-      // `activeLayoutBtrId` setter below) — overlays are not deleted, so
-      // returning to a layout restores its measurements. Entity selection
-      // is intentionally **not** cleared here: it is entity-id-based and
-      // the same entity stays selected wherever it is rendered.
-      this.activeLayoutBtrId = btrId
-      this.createLayoutViewIfNeeded(btrId)
-      this.loadLayoutEntitiesIfNeeded(btrId)
-      this.refreshCanvasBackgroundForActiveLayout()
-      this._isDirty = true
-
-      if (isFirstVisit) {
-        this.applyInitialZoom(btrId, args.layout)
-      }
-    }
-    acdbHostApplicationServices().layoutManager.events.layoutSwitched.addEventListener(
-      this._onLayoutSwitched
-    )
-
     this._css2dRenderer = new CSS2DRenderer()
     this._css2dRenderer.setSize(this.width, this.height)
     this._css2dRenderer.domElement.style.position = 'absolute'
@@ -1403,13 +1328,6 @@ export class AcTrView2d extends AcEdBaseView {
     }
   }
 
-  private isModelSpaceLayout(database?: AcDbDatabase): boolean {
-    if (!database) {
-      return this.activeLayoutBtrId === this.modelSpaceBtrId
-    }
-    return isModelSpaceDatabase(database)
-  }
-
   /**
    * Binds the active drawing database on the renderer draw context.
    *
@@ -1427,84 +1345,8 @@ export class AcTrView2d extends AcEdBaseView {
   syncDisplaySysVars(database: AcDbDatabase) {
     this.bindDrawDatabase(database)
     this.applyCanvasBackground(
-      readLayoutBackgroundColor(this.isModelSpaceLayout(database))
+      readBackgroundColor()
     )
-  }
-
-  /**
-   * Converts and renders model-space entities from a standalone, independently
-   * parsed database (an overlay/reference drawing) into a dedicated
-   * {@link AcTrLayout} added directly to the THREE scene.
-   *
-   * The returned layout is intentionally **not** registered in
-   * {@link AcTrScene}'s owner-id-keyed layout map, so it never participates in
-   * layout-tab switching, the primary document's layer table/panel, or
-   * selection set. Toggle visibility via the returned layout's
-   * `visible` property, and tear it down by removing `internalObject` from
-   * `cadScene.internalScene` and calling `clear()`.
-   *
-   * Scope: draws top-level geometry, text and hatch entities, including
-   * entities that expand to groups (dimensions).
-   * Viewports are not supported for overlays and are skipped.
-   *
-   * @param overlayDb - Input a database parsed independently of the active
-   * document (e.g. via `new AcDbDatabase().read(...)`).
-   * @returns The layout containing the converted overlay entities.
-   */
-  async addOverlayEntities(overlayDb: AcDbDatabase): Promise<AcTrLayout> {
-    const layout = new AcTrLayout()
-    layout.isReference = true
-    layout.internalObject.userData.isReference = true
-    this._scene.internalScene.add(layout.internalObject)
-
-    for (const layer of overlayDb.tables.layerTable.newIterator()) {
-      layout.addLayer({
-        name: layer.name,
-        isOff: layer.isOff,
-        isFrozen: layer.isFrozen,
-        color: layer.color
-      })
-    }
-
-    const previousDatabase = this._renderer.context.database
-    this._renderer.context.database = overlayDb
-    try {
-      const modelSpace = overlayDb.tables.blockTable.modelSpace
-      for (const entity of modelSpace.newIterator()) {
-        if (entity instanceof AcDbViewport) continue
-        try {
-          const threeEntity = this.drawEntity(entity, false)
-          if (!threeEntity) continue
-
-          threeEntity.objectId = entity.objectId
-          threeEntity.ownerId = entity.ownerId
-          threeEntity.layerName = entity.layer
-          threeEntity.visible = entity.visibility !== false
-          await this.finishEntityGeometry(threeEntity, false)
-          layout.addEntity(threeEntity)
-          threeEntity.dispose()
-        } catch (error) {
-          // One unconvertible entity must not abort the whole overlay.
-          log.error(
-            `[AcTrView2d] Failed to convert overlay entity ${entity.objectId} (${entity.type}):`,
-            error
-          )
-        }
-      }
-    } finally {
-      this._renderer.context.database = previousDatabase
-    }
-
-    return layout
-  }
-
-  /**
-   * Re-apply canvas background after a layout tab switch using the sysvar for
-   * the newly active layout (model or paper space).
-   */
-  private refreshCanvasBackgroundForActiveLayout() {
-    const isModelSpace = this.activeLayoutBtrId === this.modelSpaceBtrId
-    this.applyCanvasBackground(readLayoutBackgroundColor(isModelSpace))
   }
 
   /**
@@ -1553,85 +1395,6 @@ export class AcTrView2d extends AcEdBaseView {
    */
   get cadScene() {
     return this._scene
-  }
-
-  /**
-   * Converts drawable entities into the scene before offline export.
-   *
-   * Interactive viewing skips off/frozen layers for performance; HTML snapshots
-   * store layer visibility separately and need full geometry so the exported
-   * layer panel can toggle layers on later.
-   *
-   * When `includeLayouts` is `true` (the default), paper-space tabs the user
-   * never visited are registered and converted. When `false`, only model space
-   * is converted.
-   *
-   * Converted geometry remains in the live scene after this call completes.
-   */
-  async ensureEntitiesConvertedForExport(options?: {
-    includeInvisibleLayers?: boolean
-    includeLayouts?: boolean
-  }) {
-    const includeInvisibleLayers = options?.includeInvisibleLayers !== false
-    const includeLayouts = options?.includeLayouts !== false
-    const db = AcApDocManager.instance.curDocument.database
-    const pending: AcDbEntity[] = []
-
-    // Open streams entities through `drainConvertQueue` and claims each id
-    // before the scene commit (deferred glyphs). Headless
-    // export used to scan here as soon as parse returned, while that drain
-    // was still running. Claimed ids are not in the scene yet, so they
-    // looked missing and `batchConvert({ forExport: true })` expanded them
-    // again — serially, because export convert does not defer glyph work.
-    // On a text-heavy drawing that second pass dominates wall time and
-    // leaves duplicate geometry in the snapshot. Wait until the open drain
-    // has claimed or committed every streamed entity, then skip those ids.
-    await this.drainConvertQueue()
-
-    // Paper-space tabs the user never visited exist in the layout table but
-    // may be missing from the scene until first switch. HTML export needs
-    // every layout's geometry, so register those BTRs before collecting.
-    const layoutTable = db.objects?.layout
-    if (includeLayouts && layoutTable?.newIterator) {
-      for (const layout of layoutTable.newIterator()) {
-        const btrId = layout.blockTableRecordId
-        if (btrId) {
-          this._scene.addEmptyLayout(btrId)
-        }
-      }
-    }
-
-    for (const [layoutBtrId] of this._scene.layouts) {
-      if (!includeLayouts && layoutBtrId !== this._scene.modelSpaceBtrId) {
-        continue
-      }
-      const blockTableRecord = db.tables.blockTable.getIdAt(layoutBtrId)
-      if (!blockTableRecord) {
-        continue
-      }
-      pending.push(
-        ...this._entityDisplay.collectMissingEntitiesForExport(
-          blockTableRecord,
-          objectId => this.isEntityConvertScheduled(objectId),
-          includeInvisibleLayers
-        )
-      )
-    }
-
-    if (pending.length > 0) {
-      this._numOfEntitiesToProcess += pending.length
-      await this.batchConvert(pending, { forExport: true })
-    }
-
-    // Open-time deferred glyph jobs may still be draining even when every
-    // entity id is already present (or when nothing was missing for export).
-    // Large drawings exceed the 60s default; match the CLI open-idle budget.
-    const idle = await this.waitUntilIdle(120_000)
-    if (!idle) {
-      log.warn(
-        '[AcTrView2d] Timed out waiting for deferred geometry before export'
-      )
-    }
   }
 
   /**
@@ -1847,26 +1610,6 @@ export class AcTrView2d extends AcEdBaseView {
 
   /**
    * @inheritdoc
-   *
-   * In **paper space** layouts the selection pipeline supports
-   * "drill-through": clicks inside a viewport rectangle resolve against
-   * the model-space entities that are visually rendered through that
-   * viewport, rather than picking the viewport's border. Clicks **near**
-   * the border still pick the `AcDbViewport` entity itself so the user
-   * can grip, move, lock or delete the viewport.
-   *
-   * This mirrors AutoCAD **web** behaviour (single-click selection of
-   * model content through the viewport). The desktop ARX behaviour
-   * (explicit MSPACE/PSPACE modes, CVPORT system variable, double-click
-   * to enter mspace) is a separate, larger feature — tracked in
-   * `.claude/plans/next_14_viewports_full.md` PR-γ Option A. We
-   * intentionally do **not** implement it here.
-   *
-   * The border vs interior decision uses a tolerance derived from
-   * `selectionBoxSize` (the same pixel-sized hit radius used elsewhere
-   * in pick) converted to paper-space WCS via `pointToBox`. This keeps
-   * the gesture consistent with how other entity edges behave — you
-   * don't have to land pixel-perfect on the viewport line to grab it.
    */
   pick(point?: GeometryPoint2dLike, hitRadius?: number, pickOneOnly?: boolean) {
     if (point == null) point = this.curPos
@@ -1882,124 +1625,18 @@ export class AcTrView2d extends AcEdBaseView {
       paperBox.size.height / 2
     )
 
-    // Identify drill-through viewports (paper space only): viewports whose
-    // paper rectangle contains the click AND whose border is NOT within
-    // tolerance of the click. The border tolerance is the average of the
-    // hit-box width/height — a robust, scale-aware proxy for "user is
-    // trying to grab the frame, not click inside".
-    const isPaperSpace =
-      activeLayoutView.layoutBtrId !== this._scene.modelSpaceBtrId
-    const borderTolerance = (paperBox.size.width + paperBox.size.height) / 2
-    const drillThroughViewports: AcTrViewportView[] = []
-    const drillThroughViewportIds = new Set<AcDbObjectId>()
-    if (isPaperSpace) {
-      for (const vpView of activeLayoutView.viewportViews) {
-        if (
-          vpView.containsPaperPoint(point) &&
-          !vpView.isNearPaperBorder(point, borderTolerance)
-        ) {
-          drillThroughViewports.push(vpView)
-          drillThroughViewportIds.add(vpView.viewport.id)
-        }
-      }
-    }
-
-    // 1) Resolve hits in the active layout. Skip the `AcDbViewport`
-    //    entity for any viewport we're drilling through — otherwise the
-    //    rectangle's bounding box always wins (it covers the whole click
-    //    region) and selection feels "stuck on the frame".
+    // Resolve hits in the active layout.
     const firstQueryResults = this._scene.search(paperBox)
     const raycaster = activeLayoutView.resetRaycaster(point, threshold)
     firstQueryResults.forEach(item => {
-      if (drillThroughViewportIds.has(item.id)) return
       if (!isEffectiveSpatialQueryHit(item)) return
       if (activeLayout.isIntersectWith(item.id, raycaster)) {
         results.push(item)
       }
     })
 
-    // 2) For each drill-through viewport, resolve hits against the
-    //    model-space layout using the viewport's own camera/raycaster.
-    if (drillThroughViewports.length > 0) {
-      this.pickThroughViewports(point, paperBox, drillThroughViewports, results)
-    }
-
     const sortedResults = sortPickResults(results, point)
     return pickOneOnly ? sortedResults.slice(0, 1) : sortedResults
-  }
-
-  /**
-   * @inheritdoc
-   */
-  getViewportCoordinateMapper(
-    viewportId: AcDbObjectId
-  ): AcEdViewportCoordinateMapper | undefined {
-    let vpView: AcTrViewportView | undefined
-    for (const candidate of this.activeLayoutView?.viewportViews ?? []) {
-      if (candidate.viewport.id === viewportId) {
-        vpView = candidate
-        break
-      }
-    }
-    if (!vpView) return undefined
-    return {
-      paperToModel: point => vpView.paperPointToModel(point),
-      modelToPaper: point => vpView.modelPointToPaper(point),
-      containsPaperPoint: point => vpView.containsPaperPoint(point)
-    }
-  }
-
-  /**
-   * Resolves hits against the model-space layout for each viewport the
-   * click drills through. Appends the matches into `results` (caller
-   * sorts/dedups). Kept private and separate from `pick` so the main
-   * pick path stays a single straight read.
-   *
-   * Each viewport gets its own raycaster shot (using the viewport view's
-   * own camera, which is zoomed to `viewport.viewBox` in model WCS), so
-   * a click that lands in overlapping viewports correctly resolves
-   * against each viewport's particular model framing.
-   *
-   * `pickThroughViewports` does NOT consult the active (paper) layout's
-   * spatial index — that work is already done by the caller. It only
-   * adds model-space results that would otherwise be invisible to the
-   * paper-space pick.
-   */
-  private pickThroughViewports(
-    paperPoint: GeometryPoint2dLike,
-    paperBox: GeometryBox2d,
-    viewports: AcTrViewportView[],
-    results: AcEdSpatialQueryResultItemEx[]
-  ) {
-    const modelLayout = this._scene.modelSpaceLayout
-    if (!modelLayout) return
-
-    // Half-extent of the paper-space hit box (== "radius" in paper WCS).
-    // Multiplied per viewport by its paper→model scale, this becomes a
-    // model-WCS radius that the per-viewport raycaster threshold and the
-    // spatial-index probe both use. This keeps the hit area visually
-    // consistent across viewports at different zoom levels.
-    const paperHalfRadius = (paperBox.size.width + paperBox.size.height) / 4
-
-    for (const vpView of viewports) {
-      const modelPt = vpView.paperPointToModel(paperPoint)
-      const modelRadius = paperHalfRadius * vpView.paperToModelScale
-      if (modelRadius <= 0) continue
-
-      const modelBox = new GeometryBox2d().setFromPoints([
-        new GeometryPoint2d(modelPt.x - modelRadius, modelPt.y - modelRadius),
-        new GeometryPoint2d(modelPt.x + modelRadius, modelPt.y + modelRadius)
-      ])
-
-      const vpRaycaster = vpView.resetRaycaster(modelPt, modelRadius)
-      const modelHits = modelLayout.search(modelBox)
-      modelHits.forEach(item => {
-        if (!isEffectiveSpatialQueryHit(item)) return
-        if (modelLayout.isIntersectWith(item.id, vpRaycaster)) {
-          results.push({ ...item, viewportId: vpView.viewport.id })
-        }
-      })
-    }
   }
 
   /**
@@ -2268,17 +1905,6 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * True when an entity is already in the scene or claimed by an in-flight
-   * convert (including deferred glyph commits that have not called
-   * `addEntity` yet).
-   */
-  private isEntityConvertScheduled(objectId: AcDbObjectId): boolean {
-    const id = String(objectId ?? '')
-    if (!id) return false
-    return this.hasEntity(objectId) || this._claimedConvertObjectIds.has(id)
-  }
-
-  /**
    * @inheritdoc
    */
   getEntityVisible(objectId: AcDbObjectId) {
@@ -2426,93 +2052,6 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * Applies the initial zoom-to-fit for a layout the user just switched
-   * into for the first time. Picks the best available "what should the
-   * camera frame?" signal in this order:
-   *
-   * 1. **`AcDbLayout.limits`** (LIMMIN/LIMMAX) — only when it actually
-   *    contains the layout's viewports. Many real DWGs ship with garbage
-   *    limits (e.g. `(0,0)-(12,9)` from a legacy template setup) that
-   *    don't reflect the actual paper sheet. We reject those by
-   *    checking containment against `viewportsBoundingBox`.
-   *
-   * 2. **`AcTrLayoutView.viewportsBoundingBox`** — bounding box of all
-   *    real user viewports in the layout. In production sheets viewports
-   *    typically span 70-90% of the paper, so this is a great proxy for
-   *    the printable area and (crucially) ignores outliers
-   *    authored in a different unit/scale.
-   *
-   * 3. **`AcDbLayout.extents`** — the layout's own EXTMIN/EXTMAX, if
-   *    populated. Many parsers leave this empty (we've seen `(0,0)-(0,0)`),
-   *    so it sits below the viewport-based heuristic.
-   *
-   * 4. **`getDrawingExtents`** (entity extents from batch geometry) —
-   *    last-resort fallback for layouts with no viewports and no
-   *    sensible limits/extents (e.g. a freshly created empty paper).
-   *    Vulnerable to scale-mismatch outliers, but better than no zoom.
-   *
-   * **Critically, this runs through `AcEdConditionWaiter`**: at the
-   * moment `layoutSwitched` fires, the layout's entities (including its
-   * `AcDbViewport`s) have not yet been batch-converted into the scene
-   * — `loadLayoutEntitiesIfNeeded` chunked-converts via the progressive
-   * convert queue (or direct `batchConvert`).
-   * Without the waiter, `viewportsBoundingBox` returns undefined and
-   * the strategy degrades into (1) zooming to garbage `limits`, or
-   * (4) zooming to an empty scene box. The waiter polls
-   * {@link isProcessingEntities} (convert queue + deferred glyph jobs)
-   * and only fires the heuristic once conversion and text geometry finish.
-   */
-  private applyInitialZoom(btrId: AcDbObjectId, layout: AcDbLayout) {
-    const waiter = new AcEdConditionWaiter(
-      () => !this.isProcessingEntities,
-      () => {
-        if (this._externallyFramedLayouts.delete(btrId)) {
-          return
-        }
-
-        const limits = layout.limits
-        const layoutView = this._layoutViewManager.getAt(btrId)
-        const vpsBox = layoutView?.viewportsBoundingBox
-
-        const limitsContainsViewports = (() => {
-          if (!limits || limits.isEmpty()) return false
-          if (!vpsBox) return true
-          return (
-            limits.min.x <= vpsBox.min.x &&
-            limits.min.y <= vpsBox.min.y &&
-            limits.max.x >= vpsBox.max.x &&
-            limits.max.y >= vpsBox.max.y
-          )
-        })()
-
-        if (limits && !limits.isEmpty() && limitsContainsViewports) {
-          this.zoomTo(limits)
-        } else if (vpsBox) {
-          this.zoomTo(vpsBox)
-        } else if (layout.extents && !layout.extents.isEmpty()) {
-          const extents = layout.extents
-          this.zoomTo(
-            new GeometryBox2d(
-              { x: extents.min.x, y: extents.min.y },
-              { x: extents.max.x, y: extents.max.y }
-            )
-          )
-        } else {
-          const box = this.getDrawingExtents()
-          if (box) {
-            this.zoomTo(box)
-          }
-        }
-        this._isDirty = true
-        AcApZoomCmd.rememberOriginalView(this, btrId)
-      },
-      300,
-      0
-    )
-    waiter.start()
-  }
-
-  /**
    * Invalidates in-flight progressive convert and empties convert / deferred
    * queues without tearing down the renderer or DOM.
    *
@@ -2525,7 +2064,6 @@ export class AcTrView2d extends AcEdBaseView {
     this._convertEpoch++
     this.clearFontLoadedRedrawTimer()
     this._convertQueue.length = 0
-    this._viewportRepairOwnerIds.clear()
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
@@ -2576,7 +2114,6 @@ export class AcTrView2d extends AcEdBaseView {
     this.clearFontLoadedRedrawTimer()
     this.cancelOpenLineworkFrame()
     this._convertQueue.length = 0
-    this._viewportRepairOwnerIds.clear()
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
@@ -2609,7 +2146,6 @@ export class AcTrView2d extends AcEdBaseView {
     this.clearFontLoadedRedrawTimer()
     this.cancelOpenLineworkFrame()
     this._convertQueue.length = 0
-    this._viewportRepairOwnerIds.clear()
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
@@ -2756,7 +2292,6 @@ export class AcTrView2d extends AcEdBaseView {
       this._convertQueue.splice(0, this._convertQueue.length),
       this.activeLayoutBtrId
     )
-    this.repairViewportViewsFor(state.activeOwnerId)
 
     while (
       state.cursor < state.pending.length ||
@@ -2769,12 +2304,10 @@ export class AcTrView2d extends AcEdBaseView {
       const activeChanged = activeNow !== state.activeOwnerId
       state = absorbConvertQueue(state, queued, activeNow)
       if (activeChanged) {
-        this.repairViewportViewsFor(activeNow)
         // Drop back to a small slice so the newly active layout's own
         // entities are not buried inside a leftover large model-space bite.
         if (interactive) slice = 1
       }
-      this.flushViewportViewRepairs()
 
       if (state.cursor >= state.pending.length) break
 
@@ -2830,56 +2363,6 @@ export class AcTrView2d extends AcEdBaseView {
       }
     }
 
-    this.repairViewportViewsFor(this.activeLayoutBtrId)
-    this.flushViewportViewRepairs()
-  }
-
-  /**
-   * Creates missing {@link AcTrViewportView}s for one paper layout.
-   *
-   * Safe to call before the layout's entities have been committed to the
-   * scene: the database block table record already holds the viewports.
-   * Model space is skipped so a large model is not walked on every slice.
-   *
-   * @param layoutBtrId - Block table record id of the layout to repair.
-   */
-  private repairViewportViewsFor(layoutBtrId: string) {
-    if (!layoutBtrId || layoutBtrId === this.modelSpaceBtrId) return
-    const layoutView = this._layoutViewManager.getAt(layoutBtrId)
-    if (!layoutView || layoutView.viewportCount > 0) {
-      if (layoutView && layoutView.viewportCount > 0) {
-        this._viewportRepairOwnerIds.delete(layoutBtrId)
-      }
-      return
-    }
-    try {
-      const db = AcApDocManager.instance.curDocument?.database
-      const blockTableRecord = db?.tables.blockTable.getIdAt(layoutBtrId)
-      if (!blockTableRecord) return
-      const before = layoutView.viewportCount
-      this.ensureViewportViews(blockTableRecord, layoutView)
-      if (layoutView.viewportCount > before) {
-        this._isDirty = true
-      }
-      // The block table record was readable. Drop the id even when every
-      // viewport was the default paper-space one, so a model-sized record
-      // is not walked again on the next slice.
-      this._viewportRepairOwnerIds.delete(layoutBtrId)
-    } catch (error) {
-      log.error('[AcTrView2d] Error repairing viewport views:', error)
-    }
-  }
-
-  /**
-   * Retries viewport-view creation for owners recorded while their layout
-   * view did not exist yet.
-   */
-  private flushViewportViewRepairs() {
-    if (this._viewportRepairOwnerIds.size === 0) return
-    const ownerIds = Array.from(this._viewportRepairOwnerIds)
-    for (let i = 0; i < ownerIds.length; i++) {
-      this.repairViewportViewsFor(ownerIds[i])
-    }
   }
 
   /**
@@ -2983,11 +2466,6 @@ export class AcTrView2d extends AcEdBaseView {
     if (this._onSettingsModified) {
       AcApSettingManager.instance.events.modified.removeEventListener(
         this._onSettingsModified
-      )
-    }
-    if (this._onLayoutSwitched) {
-      acdbHostApplicationServices().layoutManager.events.layoutSwitched.removeEventListener(
-        this._onLayoutSwitched
       )
     }
     if (this._onCommandWillStartHitTest) {
@@ -3170,132 +2648,7 @@ export class AcTrView2d extends AcEdBaseView {
       })
       this._layoutViewManager.add(layoutView)
     }
-    // Viewport entities may already have been converted while this view was
-    // missing. Creating it is the moment those AcTrViewportViews can exist.
-    this.flushViewportViewRepairs()
     return layoutView
-  }
-
-  /**
-   * Load entities from the specified layout if they haven't been loaded yet.
-   * This ensures that when switching to a layout, all its entities are available for rendering.
-   *
-   * Two non-obvious invariants are enforced here:
-   *
-   * 1. The layout is looked up by `layoutBtrId` (the argument), not by
-   *    `this._scene.activeLayout`. The active layout reference happens to
-   *    match in the current `layoutSwitched` handler call site, but relying
-   *    on it would silently miss layouts that are pre-loaded ahead of
-   *    becoming active (e.g. background prefetch).
-   * 2. The `_loadingLayouts` guard prevents re-entrance while the
-   *    convert drain is still in flight. Without it,
-   *    clicking the same layout tab twice in quick succession (or
-   *    `layoutSwitched` firing twice during the async window) would iterate
-   *    the block table record again and duplicate every entity in the
-   *    layout — visible as ghosted overdraw and double the spatial-index
-   *    weight.
-   *
-   * @param layoutBtrId Input the block table record id of the layout
-   */
-  private loadLayoutEntitiesIfNeeded(layoutBtrId: AcDbObjectId) {
-    try {
-      const db = AcApDocManager.instance.curDocument.database
-      const blockTableRecord = db.tables.blockTable.getIdAt(layoutBtrId)
-      if (!blockTableRecord) {
-        return
-      }
-
-      const existingLayout = this._scene.layouts.get(layoutBtrId)
-      if (existingLayout && existingLayout.isLoaded) {
-        // Streamed layouts flip `isLoaded` from `addEntity` before scene
-        // commits finish (`entityCount` still 0). Viewport views are read
-        // from the block table record, so repair them even while the sheet's
-        // own entities are still queued behind model space.
-        this.repairViewportViewsFor(layoutBtrId)
-        return
-      }
-      if (this._loadingLayouts.has(layoutBtrId)) {
-        return
-      }
-
-      // Same repair as the isLoaded path: the layout view can exist before
-      // any of its entities have been committed to the scene. Viewport
-      // entities converted before `addLayout` created that view are recorded
-      // in `_viewportRepairOwnerIds` and attached here.
-      this.repairViewportViewsFor(layoutBtrId)
-
-      // Model space (and any other layout pre-populated by the document
-      // parser at open time) lands here without `isLoaded` ever having
-      // been flipped — the initial entity stream goes through
-      // `addEntity()` directly, bypassing this method. Without this
-      // guard, switching back to model space from a paper layout would
-      // re-iterate the full block table record and re-batch-convert
-      // every entity (5759+ on real DWGs), freezing the UI for several
-      // seconds AND duplicating entities (every entity ends up in the
-      // layout twice, doubling the spatial-index weight and render
-      // cost).
-      //
-      // If the layout already has entities, the parser has finished
-      // loading them — flip the flag and bail. The reload path below
-      // is only for layouts whose entities were never streamed in
-      // (typically non-active paper-space layouts loaded on first user
-      // visit).
-      //
-      // Note: `addEntity` now sets `isLoaded` when the open stream
-      // enqueues work, so the common progressive-open race (entityCount
-      // still 0 at `onAfterOpenDocument` while the convert queue is full)
-      // is handled by the `isLoaded` early return above.
-      if (existingLayout && existingLayout.entityCount > 0) {
-        existingLayout.isLoaded = true
-        return
-      }
-
-      // Ensure layout exists in scene. `addEmptyLayout` is idempotent, but
-      // guarding the call avoids an unnecessary Map probe + log noise.
-      if (!existingLayout) {
-        this._scene.addEmptyLayout(layoutBtrId)
-      }
-
-      // Collect all entities from this layout
-      const entities: AcDbEntity[] = []
-      const iterator = blockTableRecord.newIterator()
-      for (const entity of iterator) {
-        entities.push(entity)
-      }
-
-      if (entities.length === 0) {
-        // Empty layout (e.g. a freshly-created paper space tab). Mark as
-        // loaded immediately so subsequent visits short-circuit.
-        const layout = this._scene.layouts.get(layoutBtrId)
-        if (layout) {
-          layout.isLoaded = true
-        }
-        return
-      }
-
-      // Load entities asynchronously when progressive rendering is enabled.
-      this._loadingLayouts.add(layoutBtrId)
-      this._numOfEntitiesToProcess += entities.length
-      const convert = async () => {
-        try {
-          if (this._progressiveRendering) {
-            this._convertQueue.push(...entities)
-            await this.drainConvertQueue()
-          } else {
-            await this.batchConvert(entities)
-          }
-          const layout = this._scene.layouts.get(layoutBtrId)
-          if (layout) {
-            layout.isLoaded = true
-          }
-        } finally {
-          this._loadingLayouts.delete(layoutBtrId)
-        }
-      }
-      void convert()
-    } catch (error) {
-      log.error('[AcTrView2d] Error loading layout entities:', error)
-    }
   }
 
   /**
@@ -3801,100 +3154,6 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * Adds an {@link AcTrViewportView} for a real paper-space viewport.
-   *
-   * When the layout view does not exist yet, the owner id is remembered and
-   * {@link flushViewportViewRepairs} creates the view once the layout view
-   * does. Adding twice for the same viewport id replaces the previous view.
-   *
-   * @param entity - Viewport entity, already past the default-viewport filter
-   *   at the caller's discretion. Checked again here.
-   */
-  private attachViewportView(entity: AcDbViewport) {
-    if (AcTrViewportView.isDefaultPaperSpaceViewport(entity)) return
-    const ownerId = entity.ownerId
-    const layoutView = ownerId
-      ? this._layoutViewManager.getAt(ownerId)
-      : undefined
-    if (!layoutView) {
-      if (ownerId) this._viewportRepairOwnerIds.add(ownerId)
-      return
-    }
-    layoutView.addViewport(
-      new AcTrViewportView(
-        layoutView,
-        this.toGiViewportWithFrozenLayers(entity),
-        this._renderer
-      )
-    )
-    this._isDirty = true
-  }
-
-  /**
-   * Walks the given block table record once and creates one
-   * `AcTrViewportView` for every real `AcDbViewport` entity it finds
-   * (skipping the default paper-space viewport that is filtered
-   * everywhere else by `AcTrViewportView.isDefaultPaperSpaceViewport`).
-   *
-   * This is the recovery pass for paper-space layouts whose viewport
-   * entities reached `batchConvert` before the `AcTrLayoutView` was
-   * created — those entities were drawn and added to the scene, but
-   * the viewport-view creation step silently no-oped (lookup returned
-   * undefined). Without this recovery, paper-space viewports would not
-   * get scissors and the layout would render incorrectly. See the
-   * call site in `loadLayoutEntitiesIfNeeded` for the full context.
-   *
-   * Cheap operation: only AcDbViewport entities are inspected; for a
-   * typical sheet that's a handful of entities even on 5000-entity
-   * paper layouts.
-   */
-  private ensureViewportViews(
-    blockTableRecord: AcDbBlockTableRecord,
-    layoutView: AcTrLayoutView
-  ) {
-    const iterator = blockTableRecord.newIterator()
-    for (const entity of iterator) {
-      if (!(entity instanceof AcDbViewport)) continue
-      if (AcTrViewportView.isDefaultPaperSpaceViewport(entity)) continue
-      const viewportView = new AcTrViewportView(
-        layoutView,
-        this.toGiViewportWithFrozenLayers(entity),
-        this._renderer
-      )
-      layoutView.addViewport(viewportView)
-    }
-  }
-
-  /**
-   * Builds an {@link AcGiViewport} and ensures VPLAYER frozen layers are
-   * present as resolved names. Older data-model builds read group 331 into
-   * {@link AcDbViewport.frozenLayerIds} but omit them from `toGiViewport()`.
-   */
-  private toGiViewportWithFrozenLayers(entity: AcDbViewport): AcGiViewport {
-    const gi = entity.toGiViewport() as AcGiViewport & {
-      frozenLayers?: string[]
-      frozenLayerIds?: string[]
-    }
-    if (gi.frozenLayers && gi.frozenLayers.length > 0) {
-      return gi
-    }
-    const ids = entity.frozenLayerIds
-    if (!ids?.length) return gi
-
-    const names: string[] = []
-    const layerTable = entity.database?.tables.layerTable
-    if (layerTable) {
-      for (const id of ids) {
-        const layer = layerTable.getIdAt(id)
-        if (layer) names.push(layer.name)
-      }
-    }
-    gi.frozenLayerIds = [...ids]
-    gi.frozenLayers = names
-    return gi
-  }
-
-  /**
    * Converts the specified database entities to three entities
    * @param entities - The database entities
    * @returns The converted three entities
@@ -3946,24 +3205,6 @@ export class AcTrView2d extends AcEdBaseView {
         if (epoch !== this._convertEpoch) {
           continue
         }
-        // Skip the default paper-space viewport (`*Paper_Space`) entirely:
-        // it is an AutoCAD-internal viewport that exists in every paper
-        // layout and must not be drawn (would render a giant rectangle in
-        // the paper coordinate system), nor added to the spatial index
-        // (would stretch the layout's bounding box and break
-        // zoomToFitDrawing), nor turned into an AcTrViewportView (would
-        // setScissor over most of the canvas and squeeze the real user
-        // viewports into a corner). See
-        // `AcTrViewportView.isDefaultPaperSpaceViewport` for the criterion
-        // and the rationale (legacy `number === 1` is unreliable across
-        // parsers).
-        if (
-          entity instanceof AcDbViewport &&
-          AcTrViewportView.isDefaultPaperSpaceViewport(entity)
-        ) {
-          continue
-        }
-
         const shouldConvert =
           options.forExport || this._convertInvisibleLayers
             ? this._entityDisplay.shouldConvertForExport(entity)
@@ -3985,12 +3226,6 @@ export class AcTrView2d extends AcEdBaseView {
           (this.hasEntity(objectId) ||
             this._claimedConvertObjectIds.has(objectId))
         ) {
-          // The border may already be in the scene from a pass that ran
-          // before the layout view existed. Still attach the viewport
-          // view; a second border is not drawn because we continue below.
-          if (entity instanceof AcDbViewport) {
-            this.attachViewportView(entity)
-          }
           continue
         }
         if (objectId) {
@@ -4038,9 +3273,7 @@ export class AcTrView2d extends AcEdBaseView {
         // asyncDraw (awaits fonts when awaitFontsBeforeDraw is on). Text/group
         // finalize runs in a side pool so linework convert is not blocked.
         const threeEntity: AcTrEntity | null = this.drawEntity(entity, false)
-        // Viewports may produce no border geometry (e.g. on a no-plot layer) while
-        // still needing an AcTrViewportView for model content below.
-        if (!threeEntity && !(entity instanceof AcDbViewport)) {
+        if (!threeEntity) {
           // Release the claim so a later export pass can retry; otherwise
           // `forExport` claim checks would skip this id forever.
           if (objectId) {
@@ -4096,18 +3329,6 @@ export class AcTrView2d extends AcEdBaseView {
           }
         }
 
-        if (epoch !== this._convertEpoch) {
-          continue
-        }
-
-        if (entity instanceof AcDbViewport) {
-          // Default paper-space viewport was already filtered out at the
-          // top of the loop, so anything that reaches here is a real
-          // user-created viewport. The redundant check below is kept as
-          // a defensive guard in case a future refactor reorders the
-          // early-skip — it costs ~nothing and prevents a regression.
-          this.attachViewportView(entity)
-        }
       } catch (error) {
         const failedId = String(entity.objectId ?? '')
         if (failedId) {

@@ -4,9 +4,8 @@
  * `AcEdUiTheme` and the `colorTheme` setting drive chrome tokens (CSS
  * variables). This module holds helpers for the CAD viewport:
  *
- * - **Layout background** — the `modelBackgroundColor` and
- *   `paperBackgroundColor` settings control the canvas clear colour and
- *   ACI-7 foreground inversion.
+ * - **Background** — the `modelBackgroundColor` setting controls the canvas
+ *   clear colour and ACI-7 foreground inversion.
  * - **UI colour theme** — `colorTheme` only affects viewer chrome, not
  *   canvas or ACI-7 rendering.
  *
@@ -25,7 +24,6 @@ export {
 } from '@mlightcad/data-model'
 
 import {
-  AcDbDatabase,
   ACGI_MODEL_SPACE_BACKGROUND,
   acgiIsLightBackground
 } from '@mlightcad/data-model'
@@ -33,40 +31,12 @@ import {
 import { AcApSettingManager } from '../../app/AcApSettingManager'
 
 /**
- * Reports whether the given database's current space is model space.
+ * Reads the canvas background colour from the settings.
  *
- * @param database - Active drawing database whose current space is inspected.
- * @returns `true` when the database is in model space; `false` when it is in
- *   a paper-space layout.
- */
-export function isModelSpaceDatabase(database: AcDbDatabase): boolean {
-  return (
-    database.currentSpaceId === database.tables.blockTable.modelSpace.objectId
-  )
-}
-
-/**
- * Returns the setting that holds the background colour of a space.
- *
- * @param isModelSpace - `true` for model space; `false` for paper space.
- */
-export function layoutBackgroundSetting(
-  isModelSpace: boolean
-): 'modelBackgroundColor' | 'paperBackgroundColor' {
-  return isModelSpace ? 'modelBackgroundColor' : 'paperBackgroundColor'
-}
-
-/**
- * Reads the canvas background colour of a space from the settings.
- *
- * @param isModelSpace - `true` for model space; `false` for paper space.
  * @returns Packed 24-bit RGB suitable for the renderer clear colour.
  */
-export function readLayoutBackgroundColor(isModelSpace: boolean): number {
-  return (
-    AcApSettingManager.instance.get(layoutBackgroundSetting(isModelSpace)) &
-    0xffffff
-  )
+export function readBackgroundColor(): number {
+  return AcApSettingManager.instance.get('modelBackgroundColor') & 0xffffff
 }
 
 /**

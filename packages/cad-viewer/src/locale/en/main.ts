@@ -12,7 +12,6 @@ export default {
     group: {
       draw: 'Draw',
       modify: 'Modify',
-      properties: 'Properties',
       utilities: 'Utilities',
       annotation: 'Annotation',
       measurement: 'Measurement',
@@ -21,9 +20,7 @@ export default {
       angleUnits: 'Angle Units'
     },
     property: {
-      color: 'Color',
-      lineType: 'Linetype',
-      lineWeight: 'Lineweight'
+      color: 'Color'
     },
     arc: {
       threePoint: '3-Point',
@@ -64,19 +61,10 @@ export default {
       copy: 'Copy selected objects to a new location.',
       erase: 'Delete selected objects from the drawing.',
       offset: 'Create a parallel copy of an object at a specified distance.',
-      properties: 'Open the Properties palette for the current selection.',
-      quickSelect:
-        'Open Quick Select to filter and select entities by criteria.',
       missingResources:
         'Open the Missing / External Resources palette for fonts, images, and xrefs.',
       drawingUnits:
         'Open Drawing Units to set coordinate formats, precision, and insertion scale.',
-      propertyColor:
-        'Set the color for newly created objects or selected entities.',
-      propertyLineType:
-        'Set the line type for newly created objects or selected entities.',
-      propertyLineWeight:
-        'Set the line weight for newly created objects or selected entities.',
       circleOption: {
         centerRadius:
           'Create a circle by specifying a center point and a radius.',
@@ -139,8 +127,6 @@ export default {
       copy: 'Copy',
       erase: 'Erase',
       offset: 'Offset',
-      properties: 'Properties',
-      quickSelect: 'Quick\nSelect',
       drawingUnits: 'Drawing\nUnits'
     }
   },
@@ -303,20 +289,9 @@ export default {
     },
     export: {
       tooltip: 'Export image as PNG'
-    },
-    moreLayouts: 'More layouts'
+    }
   },
   toolPalette: {
-    entityProperties: {
-      tab: 'Properties',
-      title: 'Entity Properties',
-      propertyPanel: {
-        noEntitySelected: 'No entity selected!',
-        multipleEntitySelected: '{count} entities selected',
-        propValCopied: 'Property value copied',
-        failedToCopyPropVal: 'Failed to copy property value!'
-      }
-    },
     measurements: {
       tab: 'Measure',
       title: 'Measurements',
@@ -433,9 +408,6 @@ export default {
   },
   colorDropdown: {
     custom: 'Custom'
-  },
-  lineTypeSelect: {
-    placeholder: 'Linetype'
   },
   colorIndexPicker: {
     color: 'Color: ',

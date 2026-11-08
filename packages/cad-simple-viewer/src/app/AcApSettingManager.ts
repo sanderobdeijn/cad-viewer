@@ -112,8 +112,6 @@ export interface AcApSettings {
   colorTheme: AcApColorTheme
   /** Model space background as `0xRRGGBB`, as `MODELBKCOLOR` */
   modelBackgroundColor: number
-  /** Paper space background as `0xRRGGBB`, as `PAPERBKCOLOR` */
-  paperBackgroundColor: number
   /** Colour of measurements as `0xRRGGBB`, as `MEASUREMENTCOLOR` */
   measurementColor: number
   /** Whether line weights are drawn, as `LWDISPLAY` */
@@ -226,7 +224,6 @@ const DEFAULT_VALUES: AcApSettings = {
   shortcutMenu: 0,
   colorTheme: 'dark',
   modelBackgroundColor: 0x000000,
-  paperBackgroundColor: 0xffffff,
   measurementColor: 0x60a5fa,
   lineWeightDisplay: false,
   openProfile: false

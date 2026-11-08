@@ -7,15 +7,9 @@ import {
   AcApMemCmd,
   AcApMissedDataCmd,
   AcApOpenPerfCmd,
-  AcApPointStyleCmd,
-  AcApPropertiesCmd,
-  AcApQSelectCmd
+  AcApPointStyleCmd
 } from '../command'
-import {
-  MlDrawingUnitsDlg,
-  MlPointStyleDlg,
-  MlQuickSelectDlg
-} from '../component'
+import { MlDrawingUnitsDlg, MlPointStyleDlg } from '../component'
 import { useDialogManager } from '../composable'
 
 let isCommandRegistered = false
@@ -36,21 +30,9 @@ export const registerCmds = () => {
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'qselect',
-      'qselect',
-      new AcApQSelectCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'units',
       'units',
       new AcApDrawingUnitsCmd()
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'properties',
-      'properties',
-      new AcApPropertiesCmd()
     )
     register.addCommand(
       AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
@@ -83,11 +65,6 @@ export const registerDialogs = () => {
     registerDialog({
       name: 'PointStyleDlg',
       component: markRaw(MlPointStyleDlg),
-      props: {}
-    })
-    registerDialog({
-      name: 'QuickSelectDlg',
-      component: markRaw(MlQuickSelectDlg),
       props: {}
     })
     registerDialog({

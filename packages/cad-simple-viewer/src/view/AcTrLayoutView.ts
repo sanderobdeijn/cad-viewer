@@ -1,12 +1,7 @@
-import { GeometryBox2d } from '@mlightcad/data-model'
 import {
   AcTrBaseView,
-  acTrCssRectToWcsBox,
-  acTrIntersectCssRects,
   AcTrOverlayViewport,
-  AcTrRenderer,
-  AcTrViewportView,
-  acTrWcsBoxToCssRect
+  AcTrRenderer
 } from '@mlightcad/three-renderer'
 import { AxesGizmo, ObjectPosition } from '@mlightcad/three-viewcube'
 import * as THREE from 'three'
@@ -29,14 +24,9 @@ export interface AcDbEntityEventArgs {
  * A layout view manages the visual representation and interaction for a specific AutoCAD layout.
  * It provides:
  * - Camera and view controls specific to the layout
- * - Viewport management for paper space layouts
  * - View mode switching (selection, pan, etc.)
  * - Axes gizmo for orientation feedback
- * - Rendering coordination with viewports
- *
- * The layout view coordinates between the layout's data (entities, layers) and the visual
- * presentation, handling camera positioning, user interaction modes, and multi-viewport
- * rendering for paper space layouts.
+ * - The screen-fixed overlay viewport used by the snap loupe
  *
  * @example
  * ```typescript
@@ -52,8 +42,6 @@ export class AcTrLayoutView extends AcTrBaseView {
   private _axesGizmo: AxesGizmo
   /** The current view mode (selection, pan, etc.) */
   private _mode: AcEdViewMode
-  /** Map of viewport views indexed by viewport ID */
-  private _viewportViews: Map<string, AcTrViewportView>
   /** Screen-fixed overlay viewport (snap loupe, etc.). */
   private readonly _overlayViewport: AcTrOverlayViewport
 
@@ -75,7 +63,6 @@ export class AcTrLayoutView extends AcTrBaseView {
     this._layoutBtrId = layoutBtrId
     this._mode = AcEdViewMode.SELECTION
     this._axesGizmo = this.createAxesGizmo()
-    this._viewportViews = new Map()
     this._overlayViewport = new AcTrOverlayViewport(renderer)
   }
 
@@ -110,30 +97,7 @@ export class AcTrLayoutView extends AcTrBaseView {
   }
 
   /**
-   * The number of viewports in this layout view.
-   * Paper space layouts can contain multiple viewports showing different views of model space.
-   */
-  get viewportCount() {
-    return this._viewportViews.size
-  }
-
-  /**
-   * All viewport views in this layout. Exposed so the editor's pick pipeline
-   * can iterate viewports to implement paper-space → model-space
-   * drill-through selection without having to know how this view stores its
-   * viewports internally.
-   *
-   * Returns an iterable over `AcTrViewportView` instances (the value side
-   * of the underlying `Map`); the order is insertion order, which matches
-   * the order viewports were emitted by the converter. Callers that need a
-   * specific viewport should resolve it via `viewportView.viewport.id`.
-   */
-  get viewportViews(): Iterable<AcTrViewportView> {
-    return this._viewportViews.values()
-  }
-
-  /**
-   * Screen-fixed overlay viewport drawn after the layout and paper viewports.
+   * Screen-fixed overlay viewport drawn after the layout.
    *
    * @returns The overlay used for the snap loupe and similar HUD viewports.
    */
@@ -149,42 +113,8 @@ export class AcTrLayoutView extends AcTrBaseView {
   }
 
   /**
-   * Paper-space bounding box enclosing all viewport borders in this layout.
-   * Returns undefined when the layout has no viewports.
-   */
-  get viewportsBoundingBox(): GeometryBox2d | undefined {
-    if (this._viewportViews.size === 0) return undefined
-    const box = new GeometryBox2d()
-    this._viewportViews.forEach(vp => {
-      const vpBox = vp.viewport.box
-      box.expandByPoint(vpBox.min)
-      box.expandByPoint(vpBox.max)
-    })
-    return box.isEmpty() ? undefined : box
-  }
-
-  /**
-   * Add one viewport view instance to this layout view.
-   * Viewports are used in paper space layouts to show different views of the model.
-   *
-   * @param viewportView - Input one viewport instance to add
-   */
-  addViewport(viewportView: AcTrViewportView) {
-    this._viewportViews.set(viewportView.viewport.id, viewportView)
-  }
-
-  /**
-   * Remove the specified viewport view by its id from this layout view.
-   *
-   * @param id - Input the id of one viewport instance to remove
-   */
-  removeViewport(id: string) {
-    this._viewportViews.delete(id)
-  }
-
-  /**
    * Resize this layout view.
-   * Updates the view dimensions and notifies all viewports of the size change.
+   * Updates the view dimensions and the camera frustum.
    *
    * @param width - Input new width of the layout view in pixels
    * @param height - Input new height of the layout view in pixels
@@ -194,14 +124,11 @@ export class AcTrLayoutView extends AcTrBaseView {
     this._width = width
     this._frustum = height / 2
     this.updateCameraFrustum()
-    this._viewportViews.forEach(viewportView => {
-      viewportView.update()
-    })
   }
 
   /**
    * Renders the scene in this layout view.
-   * Performs the main rendering pass and then renders any viewports if present.
+   * Performs the main rendering pass and then draws the overlay viewport.
    * Updates the axes gizmo to reflect the current camera orientation.
    *
    * @param scene - The scene containing the layout data to render
@@ -209,10 +136,6 @@ export class AcTrLayoutView extends AcTrBaseView {
   render(scene: AcTrScene) {
     this._renderer.clear()
     const needsRedraw = this._renderer.render(scene.internalScene, this._camera)
-    const modelSpaceLayout = scene.modelSpaceLayout
-    if (modelSpaceLayout) {
-      this.drawViewports(modelSpaceLayout.internalObject)
-    }
     this.drawOverlay(scene)
     this._axesGizmo?.update()
     return needsRedraw
@@ -238,106 +161,14 @@ export class AcTrLayoutView extends AcTrBaseView {
   }
 
   /**
-   * Draw viewports into the current rendering context.
-   * Handles the complex rendering process for paper space layouts that contain
-   * multiple viewports, each with their own view of model space.
-   *
-   * @param scene - Input the scene object to draw in each viewport
-   */
-  private drawViewports(scene: THREE.Object3D) {
-    if (this._viewportViews.size > 0) {
-      // Store autoClear flag value
-      const autoClear = this._renderer.autoClear
-      this._renderer.autoClear = false
-
-      const oldViewport = new THREE.Vector4()
-      this._renderer.getViewport(oldViewport)
-      this._renderer.clearDepth()
-
-      const visibility = scene.visible
-      scene.visible = true
-      this._viewportViews.forEach(viewportView => {
-        viewportView.render(scene)
-      })
-      scene.visible = visibility
-
-      this._renderer.setViewport(
-        oldViewport.x,
-        oldViewport.y,
-        oldViewport.z,
-        oldViewport.w
-      )
-
-      // Restore autoClear flag vlaue
-      this._renderer.autoClear = autoClear
-    }
-  }
-
-  /**
    * Draws the screen-fixed overlay viewport (magnified snap loupe) on top of
-   * the main layout. Nested paper-space viewports that intersect the overlay
-   * are scissor-clipped so model content stays visible inside the loupe.
+   * the main layout.
    *
-   * @param scene - Scene containing the active layout and model-space layout.
+   * @param scene - Scene containing the layout.
    */
   private drawOverlay(scene: AcTrScene) {
     const overlay = this._overlayViewport
     if (!overlay.visible) return
     overlay.render(scene.internalScene, this._height)
-    const modelSpaceLayout = scene.modelSpaceLayout
-    if (!modelSpaceLayout || this._viewportViews.size === 0) return
-    this.drawOverlayViewports(modelSpaceLayout.internalObject, overlay)
-  }
-
-  /**
-   * For each paper-space viewport that intersects the overlay, draws the
-   * corresponding model-space content into the overlap with a nested scissor.
-   *
-   * @param modelScene - Model-space scene graph to draw inside nested viewports.
-   * @param overlay - Overlay whose screen rect and view box define the loupe.
-   */
-  private drawOverlayViewports(
-    modelScene: THREE.Object3D,
-    overlay: AcTrOverlayViewport
-  ) {
-    const loupe = overlay.screenRect
-    const viewBox = overlay.viewBox
-    const visibility = modelScene.visible
-    modelScene.visible = true
-    this._viewportViews.forEach(viewportView => {
-      const magRect = acTrWcsBoxToCssRect(
-        viewportView.viewport.box,
-        viewBox,
-        loupe
-      )
-      const hit = acTrIntersectCssRects(magRect, loupe)
-      if (!hit) return
-      const paperHit = acTrCssRectToWcsBox(hit, viewBox, loupe)
-      const modelBox = new GeometryBox2d()
-      modelBox.expandByPoint(
-        viewportView.paperPointToModel({ x: paperHit.minX, y: paperHit.minY })
-      )
-      modelBox.expandByPoint(
-        viewportView.paperPointToModel({ x: paperHit.maxX, y: paperHit.minY })
-      )
-      modelBox.expandByPoint(
-        viewportView.paperPointToModel({ x: paperHit.maxX, y: paperHit.maxY })
-      )
-      modelBox.expandByPoint(
-        viewportView.paperPointToModel({ x: paperHit.minX, y: paperHit.maxY })
-      )
-      if (modelBox.isEmpty()) return
-      viewportView.withFrozenLayersHidden(modelScene, () => {
-        overlay.renderNested(
-          modelScene,
-          modelBox,
-          hit,
-          hit,
-          this._height,
-          viewportView.viewport.viewTwistAngle
-        )
-      })
-    })
-    modelScene.visible = visibility
   }
 }

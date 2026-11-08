@@ -107,13 +107,6 @@ export interface AcApOpenDatabaseOptions extends Omit<
   convertInvisibleLayers?: boolean
 
   /**
-   * When `true`, register and convert every paper-space layout during /
-   * immediately after open so export does not wait for the user to visit each
-   * tab. Default `false`.
-   */
-  convertAllLayouts?: boolean
-
-  /**
    * When `true`, skip building the hierarchical spatial index while converting
    * entities. Headless HTML/JPEG export only needs scene batch geometry and
    * layout boxes; the spatial index is for interactive pick / smart extents.

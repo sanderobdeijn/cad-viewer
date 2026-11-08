@@ -133,10 +133,15 @@ export class AcApContext {
       }
     })
 
+    // The drawing is model space only, so paper layouts are not shown.
     bind(doc.database.events.dictObjetSet, args => {
       if (!this._active) return
-      if (args.object instanceof AcDbLayout) {
-        this._view.addLayout(args.object as AcDbLayout)
+      if (
+        args.object instanceof AcDbLayout &&
+        args.object.blockTableRecordId ===
+          doc.database.tables.blockTable.modelSpace.objectId
+      ) {
+        this._view.addLayout(args.object)
       }
     })
 

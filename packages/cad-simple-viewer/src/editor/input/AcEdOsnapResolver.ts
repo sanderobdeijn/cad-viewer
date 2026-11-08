@@ -68,15 +68,6 @@ type IntersectionSource = {
   entity: AcDbEntity
   /** Maps entity-local geometry into WCS. Identity for model-space entities. */
   transform: GeometryMatrix3d
-  /**
-   * Set when this source came from a paper-space viewport drill-through:
-   * `box`/`entity` geometry is in that viewport's model-space WCS, not the
-   * active layout's paper-space WCS (#746). Only sources with the same
-   * `viewportId` (including two `undefined`s, i.e. both from the active
-   * layout itself) are ever paired — intersecting across unrelated spaces
-   * is meaningless.
-   */
-  viewportId?: AcDbObjectId
 }
 
 function boxesOverlapXY(a: GeometryBox3d, b: GeometryBox3d): boolean {
@@ -398,15 +389,6 @@ export class AcEdOsnapResolver {
       if (!isEffectiveSpatialQueryHit(item)) continue
       const entity = this._view.entityLookup(item.id)
       if (!entity) continue
-      const viewportId = item.viewportId
-      // Drill-through hits without a live mapper must not be treated as
-      // paper-space geometry — their boxes are still in model WCS.
-      if (
-        viewportId != null &&
-        !this._view.getViewportCoordinateMapper(viewportId)
-      ) {
-        continue
-      }
 
       if (item.children && item.children.length > 0) {
         // Hierarchical hits: only the aperture-hit children.
@@ -419,8 +401,7 @@ export class AcEdOsnapResolver {
             key,
             box: boxFromSpatialItem(child),
             entity,
-            transform: new GeometryMatrix3d(),
-            viewportId
+            transform: new GeometryMatrix3d()
           })
         }
         continue
@@ -430,8 +411,7 @@ export class AcEdOsnapResolver {
         key: item.id,
         box: entity.geometricExtents,
         entity,
-        transform: new GeometryMatrix3d(),
-        viewportId
+        transform: new GeometryMatrix3d()
       })
     }
 
@@ -445,28 +425,17 @@ export class AcEdOsnapResolver {
       for (let j = i + 1; j < sources.length; j++) {
         if (pairTests >= MAX_INTERSECTION_PAIR_TESTS) return
         if (performance.now() - started > INTERSECTION_TIME_BUDGET_MS) return
-        if (sources[i].viewportId !== sources[j].viewportId) continue
         if (!boxesOverlapXY(sources[i].box, sources[j].box)) continue
 
         pairTests++
-        const viewportId = sources[i].viewportId
-        const mapper =
-          viewportId != null
-            ? this._view.getViewportCoordinateMapper(viewportId)
-            : undefined
-        // Sources with a viewportId were only added when a mapper existed;
-        // if it disappeared mid-resolve, skip rather than emit model WCS.
-        if (viewportId != null && !mapper) continue
         const points = intersectSources(sources[i], sources[j])
         for (const point of points) {
-          const paperPoint = mapper ? mapper.modelToPaper(point) : point
-          if (mapper && !mapper.containsPaperPoint(paperPoint)) continue
-          const dx = paperPoint.x - cursorWcs.x
-          const dy = paperPoint.y - cursorWcs.y
+          const dx = point.x - cursorWcs.x
+          const dy = point.y - cursorWcs.y
           if (dx * dx + dy * dy > threshSq) continue
           osnapPoints.push({
-            x: paperPoint.x,
-            y: paperPoint.y,
+            x: point.x,
+            y: point.y,
             type: AcDbOsnapMode.Intersection
           })
         }
@@ -489,29 +458,14 @@ export class AcEdOsnapResolver {
       const entity = this._view.entityLookup(item.id)
       if (!entity) return
 
-      // A viewport drill-through hit's geometry is in model-space WCS: the
-      // pick/last points must be converted into that space before the
-      // query, and whatever comes back converted to paper space before it
-      // can be compared with the paper-space cursor (#746).
-      const mapper =
-        item.viewportId != null
-          ? this._view.getViewportCoordinateMapper(item.viewportId)
-          : undefined
-      // Never fall back to treating a tagged drill-through hit as paper
-      // space — that reintroduces the wrong-space snap from #746.
-      if (item.viewportId != null && !mapper) return
-
-      const queryPickPoint = mapper ? mapper.paperToModel(cursorWcs) : pickPoint
-      const queryLastPoint = mapper ? mapper.paperToModel(lastPoint) : last
-
       const localPoints: AcEdOsnapPoint[] = []
       if (item.children && item.children.length > 0) {
         item.children.forEach(child => {
           this.collectOsnapPointsInAvailableModes(
             entity,
             localPoints,
-            queryPickPoint,
-            queryLastPoint,
+            pickPoint,
+            last,
             child.id
           )
         })
@@ -519,24 +473,11 @@ export class AcEdOsnapResolver {
         this.collectOsnapPointsInAvailableModes(
           entity,
           localPoints,
-          queryPickPoint,
-          queryLastPoint
+          pickPoint,
+          last
         )
       }
-
-      if (!mapper) {
-        osnapPoints.push(...localPoints)
-        return
-      }
-      for (const point of localPoints) {
-        const paperPoint = mapper.modelToPaper(point)
-        if (!mapper.containsPaperPoint(paperPoint)) continue
-        osnapPoints.push({
-          x: paperPoint.x,
-          y: paperPoint.y,
-          type: point.type
-        })
-      }
+      osnapPoints.push(...localPoints)
     })
 
     if (
@@ -577,34 +518,17 @@ export class AcEdOsnapResolver {
       const entity = this._view.entityLookup(item.id)
       if (!entity) return
 
-      const mapper =
-        item.viewportId != null
-          ? this._view.getViewportCoordinateMapper(item.viewportId)
-          : undefined
-      if (item.viewportId != null && !mapper) return
-
-      const queryPickPoint = mapper ? mapper.paperToModel(pickPoint) : pickPoint
-
       const localMarks: AcEdOsnapCenterMark[] = []
       if (item.children && item.children.length > 0) {
         item.children.forEach(child => {
           localMarks.push(
-            ...collectCenterMarksFromEntity(entity, queryPickPoint, child.id)
+            ...collectCenterMarksFromEntity(entity, pickPoint, child.id)
           )
         })
       } else {
-        localMarks.push(...collectCenterMarksFromEntity(entity, queryPickPoint))
+        localMarks.push(...collectCenterMarksFromEntity(entity, pickPoint))
       }
-
-      if (!mapper) {
-        hovered.push(...localMarks)
-        return
-      }
-      for (const mark of localMarks) {
-        const paperPoint = mapper.modelToPaper(mark)
-        if (!mapper.containsPaperPoint(paperPoint)) continue
-        hovered.push({ ...mark, x: paperPoint.x, y: paperPoint.y })
-      }
+      hovered.push(...localMarks)
     })
 
     this._acquiredCenters = mergeAcquiredCenterMarks(

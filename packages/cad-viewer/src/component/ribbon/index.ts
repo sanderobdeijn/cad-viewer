@@ -1,5 +1,3 @@
 export { default as MlRibbonCommands } from './MlRibbonCommands.vue'
 export { default as MlRibbonPropertyColorDropdown } from './MlRibbonPropertyColorDropdown.vue'
 export { default as MlRibbonPropertyField } from './MlRibbonPropertyField.vue'
-export { default as MlRibbonPropertyLineTypeSelect } from './MlRibbonPropertyLineTypeSelect.vue'
-export { default as MlRibbonPropertyLineWeightSelect } from './MlRibbonPropertyLineWeightSelect.vue'
