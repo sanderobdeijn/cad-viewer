@@ -8,50 +8,29 @@ jest.mock('../src/editor', () => {
   }
 })
 
-const setVar = jest.fn()
-const getVar = jest.fn(() => ({ red: 0, green: 0, blue: 0 }))
-const getDescriptor = jest.fn(() => ({}))
-
-jest.mock('@mlightcad/data-model', () => ({
-  AcCmColor: class {},
-  AcDbSysVarManager: {
-    instance: () => ({
-      getDescriptor,
-      getVar,
-      setVar
-    })
-  }
-}))
-
-jest.mock('../src/editor/global/AcEdUiColor', () => ({
-  layoutBackgroundSysVar: jest.fn(() => 'MODELBKCOLOR'),
-  toggleBlackWhiteBackgroundColor: jest.fn(color => ({
-    ...color,
-    toggled: true
-  }))
-}))
-
 import { AcApSwitchBgCmd } from '../src/command/AcApSwitchBgCmd'
+import { useTestSettings } from './helpers/settings'
+
+const run = (activeLayoutBtrId: string) =>
+  new AcApSwitchBgCmd().execute({
+    view: { activeLayoutBtrId, modelSpaceBtrId: 'model' }
+  } as never)
 
 describe('AcApSwitchBgCmd', () => {
-  beforeEach(() => {
-    setVar.mockClear()
-    getVar.mockClear()
-    getDescriptor.mockClear()
+  it('toggles the model space background between black and white', async () => {
+    const settings = useTestSettings({ modelBackgroundColor: 0x000000 })
+
+    await run('model')
+    expect(settings.get('modelBackgroundColor')).toBe(0xffffff)
+    await run('model')
+    expect(settings.get('modelBackgroundColor')).toBe(0x000000)
   })
 
-  it('toggles the layout background sysvar', async () => {
-    const cmd = new AcApSwitchBgCmd()
-    const database = {}
-    await cmd.execute({
-      doc: { database },
-      view: {
-        activeLayoutBtrId: 'model',
-        modelSpaceBtrId: 'model'
-      }
-    } as never)
+  it('toggles the paper space background in a layout', async () => {
+    const settings = useTestSettings({ paperBackgroundColor: 0xffffff })
 
-    expect(getDescriptor).toHaveBeenCalledWith('MODELBKCOLOR')
-    expect(setVar).toHaveBeenCalledTimes(1)
+    await run('layout')
+    expect(settings.get('paperBackgroundColor')).toBe(0x000000)
+    expect(settings.get('modelBackgroundColor')).toBe(0x000000)
   })
 })

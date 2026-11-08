@@ -3,7 +3,6 @@ import {
   AcCmEventManager,
   AcDbDatabase,
   acdbHostApplicationServices,
-  AcDbSysVarManager,
   log
 } from '@mlightcad/data-model'
 import { FontManager } from '@mlightcad/mtext-renderer'
@@ -64,6 +63,7 @@ import {
 } from './AcApOpenDatabaseOptions'
 import { AcApOpenFileProfiler } from './AcApOpenFileProfiler'
 import { AcApOpenFileProgressController } from './AcApOpenFileProgressController'
+import { ACAP_SETTING_COMMANDS, AcApSettingManager } from './AcApSettingManager'
 import {
   checkWebworkerReadiness,
   DEFAULT_WEBWORKER_FILE_URLS,
@@ -1217,8 +1217,7 @@ export class AcApDocManager {
    * for missed fonts so that the drawing can apply new fonts.
    */
   regen() {
-    this.curView.clear()
-    this.context.doc.database.regen()
+    return this.context.regen()
   }
 
   /**
@@ -1414,15 +1413,14 @@ export class AcApDocManager {
     )
     addSystemCommand('zoom', 'zoom', new AcApZoomCmd())
 
-    // Register system variables as commands
-    const sysVars = AcDbSysVarManager.instance().getAllDescriptors()
-    sysVars.forEach(sysVar => {
+    // Settings can be changed by the name of the system variable they replace
+    Object.keys(ACAP_SETTING_COMMANDS).forEach(name => {
       register.addCommand(
         AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-        sysVar.name,
-        sysVar.name,
+        name,
+        name,
         new AcApSysVarCmd(),
-        this.resolveCommandAliases(sysVar.name, [])
+        this.resolveCommandAliases(name, [])
       )
     })
   }
@@ -2233,7 +2231,8 @@ export class AcApDocManager {
       const view = (session?.context.view as AcTrView2d) ?? this.curView
       view.ltscale = doc.database.ltscale
       view.celtscale = doc.database.celtscale
-      view.renderer.showLineWeight = doc.database.lwdisplay
+      view.renderer.showLineWeight =
+        AcApSettingManager.instance.get('lineWeightDisplay')
     })
   }
 

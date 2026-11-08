@@ -47,7 +47,7 @@ export class AcApMeasurePointCmd extends AcApMeasureDrawCmd {
         context.view as AcTrView2d,
         db,
         point,
-        acapGetCurrentMeasurementStyle(db)
+        acapGetCurrentMeasurementStyle()
       )
     })
   }

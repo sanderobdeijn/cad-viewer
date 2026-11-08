@@ -1,8 +1,5 @@
 import {
   AcDbEntity,
-  acdbHostApplicationServices,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
   GeometryBox2d,
   GeometryPoint2dLike
 } from '@mlightcad/data-model'
@@ -2506,16 +2503,12 @@ export class AcEdInputManager {
   }
 
   /**
-   * Reads SHORTCUTMENU value from current working database.
+   * Reads the right-click setting (SHORTCUTMENU).
    *
    * @returns Normalized 0..3 shortcut-menu mode
    */
   private getShortcutMenuMode(): number {
-    const db = acdbHostApplicationServices().workingDatabase
-    const raw = AcDbSysVarManager.instance().getVar(
-      AcDbSystemVariables.SHORTCUTMENU,
-      db
-    )
+    const raw = AcApSettingManager.instance.get('shortcutMenu')
     const value = Math.trunc(Number(raw))
     if (Number.isNaN(value)) return 0
     const normalized = value & 0x3

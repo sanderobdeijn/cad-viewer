@@ -1,5 +1,4 @@
-import { AcDbSystemVariables, AcDbSysVarManager } from '@mlightcad/data-model'
-
+import { AcApSettingManager } from '../../app/AcApSettingManager'
 import {
   ACGI_MODEL_SPACE_BACKGROUND,
   cursorColorForBackground
@@ -91,9 +90,9 @@ export class AcEdCursorManager {
     this._view = view
     this._cursorMap = new Map()
     this.setCursorColor(cursorColorForBackground(this._backgroundColor))
-    AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(args => {
-      if (args.name === AcDbSystemVariables.PICKBOX.toLowerCase()) {
-        let size = args.newVal as number
+    AcApSettingManager.instance.events.modified.addEventListener(args => {
+      if (args.key === 'pickBox') {
+        let size = args.value as number
         size = size >= 0 ? size : 0
         this._cursorMap.set(
           AcEdCorsorType.Crosshair,

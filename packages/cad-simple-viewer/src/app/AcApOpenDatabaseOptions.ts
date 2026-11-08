@@ -1,4 +1,4 @@
-import { AcCmColor, AcDbOpenDatabaseOptions } from '@mlightcad/data-model'
+import { AcDbOpenDatabaseOptions } from '@mlightcad/data-model'
 
 import { AcEdOpenMode } from '../editor/view'
 
@@ -13,18 +13,6 @@ export enum AcApOpenViewMode {
 }
 
 /**
- * Open-time system-variable overrides.
- *
- * Extends {@link AcDbOpenDatabaseOptions.sysVars} so colour sysvars such as
- * `PAPERBKCOLOR` / `MODELBKCOLOR` can take an {@link AcCmColor} (for example
- * from {@link layoutBackgroundColorFromRgb}), not only number/boolean/string.
- */
-export type AcApOpenSysVars = Record<
-  string,
-  number | boolean | string | AcCmColor
->
-
-/**
  * Options for opening a CAD database.
  *
  * This interface extends the base options from the data model but replaces
@@ -37,9 +25,8 @@ export type AcApOpenSysVars = Record<
  * (web viewer semantics) when omitted. When `circleSides` is omitted,
  * the data model uses draft quality (50).
  *
- * Use {@link sysVars} to override session/database system variables at open
- * time (for example `paperbkcolor` for the paper-space canvas background, or
- * `lwdisplay: false` to hide lineweights).
+ * Display options such as the paper-space background or line weight display
+ * are settings on {@link AcApSettingManager}, not open options.
  *
  * Fonts are not loaded during database open. They are fetched on demand by
  * `@mlightcad/mtext-renderer` (`FontManager.lazyFontLoading`) while text is
@@ -49,14 +36,8 @@ export type AcApOpenSysVars = Record<
  *
  * @example
  * ```typescript
- * import { layoutBackgroundColorFromRgb } from '@mlightcad/cad-simple-viewer'
- *
  * const options: AcApOpenDatabaseOptions = {
- *   mode: AcEdOpenMode.Write,
- *   sysVars: {
- *     lwdisplay: false,
- *     paperbkcolor: layoutBackgroundColorFromRgb(0x000000)
- *   }
+ *   mode: AcEdOpenMode.Write
  * }
  * ```
  */
@@ -115,14 +96,6 @@ export interface AcApOpenDatabaseOptions extends Omit<
    * Write mode uses {@link AcApOpenViewMode.Saved} (AutoCAD VPORT behavior).
    */
   openViewMode?: AcApOpenViewMode
-
-  /**
-   * System variables to override when the database opens.
-   *
-   * Keys are system variable names (case-insensitive). Colour sysvars such as
-   * `PAPERBKCOLOR` accept {@link AcCmColor}; see {@link AcApOpenSysVars}.
-   */
-  sysVars?: AcApOpenSysVars
 
   /**
    * When `true`, convert entities on off/frozen layers during open so offline

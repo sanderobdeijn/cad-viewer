@@ -27,12 +27,11 @@
 </template>
 
 <script lang="ts" setup>
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
+import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import { ElButton, ElCol, ElRow } from 'element-plus'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { useSystemVars } from '../../composable'
 import {
   pointstyle1,
   pointstyle2,
@@ -58,7 +57,6 @@ import {
 import MlBaseDialog from '../common/MlBaseDialog.vue'
 
 const { t } = useI18n()
-const systemVars = useSystemVars(AcApDocManager.instance)
 const dialogVisible = ref(true)
 const currentPointStyleIndex = ref(0)
 const icons = [
@@ -93,7 +91,8 @@ const icons = [
 ]
 
 const reset = () => {
-  if (systemVars.pdmode) currentPointStyleIndex.value = systemVars.pdmode
+  currentPointStyleIndex.value =
+    AcApSettingManager.instance.get('pointDisplayMode')
 }
 reset()
 
@@ -109,8 +108,10 @@ const handleSelectPointStyle = (rowIndex: number, colIndex: number) => {
 }
 
 const handleConfirm = () => {
-  AcApDocManager.instance.curDocument.database.pdmode =
+  AcApSettingManager.instance.set(
+    'pointDisplayMode',
     currentPointStyleIndex.value
+  )
 }
 
 const handleClose = () => {

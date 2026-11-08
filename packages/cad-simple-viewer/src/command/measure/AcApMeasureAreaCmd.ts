@@ -135,8 +135,8 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
     const db = context.doc.database
-    const color = acapGetMeasurementColor(db)
-    const style = acapGetCurrentMeasurementStyle(db)
+    const color = acapGetMeasurementColor()
+    const style = acapGetCurrentMeasurementStyle()
     const canvasLineWidth = acapMeasurementCanvasLineWidth(style.lineWeight)
 
     const points: GeometryPoint2dLike[] = []
@@ -278,7 +278,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
               }
               const tempPts = [...points, cursor]
               const area = shoelaceArea(tempPts)
-              const liveStyle = acapGetCurrentMeasurementStyle(db)
+              const liveStyle = acapGetCurrentMeasurementStyle()
               const label = formatMeasurementArea(db, area)
               const fontSize = acapAdaptiveMeasureBadgeFontSize(
                 label,
@@ -351,7 +351,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
       context.view as AcTrView2d,
       db,
       points,
-      acapGetCurrentMeasurementStyle(db)
+      acapGetCurrentMeasurementStyle()
     )
   }
 }

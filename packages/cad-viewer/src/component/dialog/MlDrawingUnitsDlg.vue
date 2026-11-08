@@ -109,12 +109,10 @@
 </template>
 
 <script setup lang="ts">
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
+import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import {
   AcDbAngleUnits,
   AcDbLinearUnits,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
   AcDbUnitsValue
 } from '@mlightcad/data-model'
 import {
@@ -336,32 +334,26 @@ function normalizeAunits(raw: number) {
   return clampInt(raw, 0, 4)
 }
 
-function readFormFromDatabase() {
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db) return
-
-  form.lunits = normalizeLunits(db.lunits)
-  form.luprec = clampInt(db.luprec, 0, 8)
-  form.aunits = normalizeAunits(db.aunits)
-  form.auprec = clampInt(db.auprec, 0, 8)
-  form.angdir = db.angdir === 1 ? 1 : 0
-  const ins = clampInt(db.insunits, 0, AcDbUnitsValue.Max)
+function readFormFromSettings() {
+  const settings = AcApSettingManager.instance
+  form.lunits = normalizeLunits(settings.get('linearUnits'))
+  form.luprec = clampInt(settings.get('linearPrecision'), 0, 8)
+  form.aunits = normalizeAunits(settings.get('angularUnits'))
+  form.auprec = clampInt(settings.get('angularPrecision'), 0, 8)
+  form.angdir = settings.get('angleDirection') === 1 ? 1 : 0
+  const ins = clampInt(settings.get('insertionUnits'), 0, AcDbUnitsValue.Max)
   form.insunits = ins as AcDbUnitsValue
 }
 
 function handleOpen() {
-  readFormFromDatabase()
+  readFormFromSettings()
 }
 
 function handleCancel() {
-  readFormFromDatabase()
+  readFormFromSettings()
 }
 
 function handleOk() {
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db) return
-
-  const svm = AcDbSysVarManager.instance()
   const lunits = normalizeLunits(form.lunits)
   const luprec = clampInt(form.luprec, 0, 8)
   const aunits = normalizeAunits(form.aunits)
@@ -369,12 +361,14 @@ function handleOk() {
   const angdir = form.angdir === 1 ? 1 : 0
   const insunits = clampInt(form.insunits, 0, AcDbUnitsValue.Max)
 
-  svm.setVar(AcDbSystemVariables.LUNITS, lunits, db)
-  svm.setVar(AcDbSystemVariables.LUPREC, luprec, db)
-  svm.setVar(AcDbSystemVariables.AUNITS, aunits, db)
-  svm.setVar(AcDbSystemVariables.AUPREC, auprec, db)
-  svm.setVar(AcDbSystemVariables.ANGDIR, angdir, db)
-  svm.setVar(AcDbSystemVariables.INSUNITS, insunits, db)
+  AcApSettingManager.instance.apply({
+    linearUnits: lunits,
+    linearPrecision: luprec,
+    angularUnits: aunits,
+    angularPrecision: auprec,
+    angleDirection: angdir,
+    insertionUnits: insunits
+  })
 }
 </script>
 

@@ -2,13 +2,12 @@ import {
   AcCmPerformanceCollector,
   AcDbDatabase,
   AcDbProgressdEventArgs,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
   log
 } from '@mlightcad/data-model'
 
 import type { AcTrView2d } from '../view/AcTrView2d'
 import { getLastFontLoadStats } from './AcApFontLoader'
+import { AcApSettingManager } from './AcApSettingManager'
 
 type StageStats = {
   durationMs: number
@@ -52,7 +51,7 @@ export interface AcApOpenFileProfileSnapshot {
  * Always records PARSE/ENTITY (and other `openProgress` sub-stages),
  * and wall-clock read vs scene convert time for the last open. Console output
  * remains gated by the
- * {@link AcDbSystemVariables.OPENPROF} system variable.
+ * `openProfile` setting (the old `OPENPROF` system variable).
  *
  * Stage durations use **active-stage wall time**: from the first event of a
  * sub-stage until the first event of a different sub-stage.
@@ -83,16 +82,11 @@ export class AcApOpenFileProfiler {
   }
 
   /**
-   * Returns whether OPENPROF console logging is enabled for `database`.
+   * Returns whether OPENPROF console logging is enabled.
    */
-  static isEnabled(database: AcDbDatabase): boolean {
+  static isEnabled(): boolean {
     try {
-      return (
-        AcDbSysVarManager.instance().getVar(
-          AcDbSystemVariables.OPENPROF,
-          database
-        ) === true
-      )
+      return AcApSettingManager.instance.get('openProfile') === true
     } catch {
       return false
     }
@@ -110,7 +104,7 @@ export class AcApOpenFileProfiler {
     this.cancel()
 
     this._active = true
-    this._printToConsole = AcApOpenFileProfiler.isEnabled(database)
+    this._printToConsole = AcApOpenFileProfiler.isEnabled()
     this._finishScheduled = false
     this._t0 = performance.now()
     this._readEndMs = 0

@@ -30,8 +30,8 @@
         <ml-full-screen-button />
         <ml-point-style-button />
         <ml-osnap-button />
-        <ml-sys-var-toggle-button
-          :sys-var-name="AcDbSystemVariables.ORTHOMODE"
+        <ml-setting-toggle-button
+          setting="orthoMode"
           :on-icon="orthoMode"
           :off-icon="orthoMode"
           :on-tooltip="t('main.statusBar.orthoMode.on')"
@@ -40,8 +40,8 @@
           off-color="var(--el-text-color-regular)"
         />
         <ml-polar-tracking-button />
-        <ml-sys-var-toggle-button
-          :sys-var-name="AcDbSystemVariables.LWDISPLAY"
+        <ml-setting-toggle-button
+          setting="lineWeightDisplay"
           :on-icon="lineWidth"
           :off-icon="lineWidth"
           :on-tooltip="t('main.statusBar.lineWidth.on')"
@@ -49,9 +49,9 @@
           on-color="var(--el-color-primary)"
           off-color="var(--el-text-color-regular)"
         />
-        <ml-sys-var-toggle-button
+        <ml-setting-toggle-button
           v-if="!isMobileOrPad"
-          :sys-var-name="AcDbSystemVariables.DYNMODE"
+          setting="dynamicInputMode"
           :on-icon="dynamicInput"
           :off-icon="dynamicInput"
           :on-tooltip="t('main.statusBar.dynamicInput.on')"
@@ -68,15 +68,19 @@
 
 <script setup lang="ts">
 import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
-import { AcDbSystemVariables } from '@mlightcad/data-model'
 import { MlStatusBar } from '@mlightcad/ui-components'
 import { ElButton, ElButtonGroup } from 'element-plus'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { useCurrentPos, useDocument, useIsMobile, useSettings } from '../../composable'
+import {
+  useCurrentPos,
+  useDocument,
+  useIsMobile,
+  useSettings
+} from '../../composable'
 import { dynamicInput, lineWidth, orthoMode } from '../../svg'
-import { MlSysVarToggleButton } from '../common'
+import { MlSettingToggleButton } from '../common'
 import MlFullScreenButton from './MlFullScreenButton.vue'
 import MlLayoutTabs from './MlLayoutTabs.vue'
 import MlNotificationButton from './MlNotificationButton.vue'

@@ -71,9 +71,9 @@
 import {
   AcApDocManager,
   AcApOpenDatabaseOptions,
+  AcApSettingManager,
   AcEdOpenMode,
-  eventBus,
-  layoutBackgroundColorFromRgb
+  eventBus
 } from '@mlightcad/cad-simple-viewer'
 import {
   ACDB_DRAW_CIRCLE_SIDES_DRAFT,
@@ -163,7 +163,7 @@ interface Props {
   /**
    * Paper-space (layout) canvas background as packed 24-bit RGB
    * (e.g. `0xffffff` white, `0x000000` black). Defaults to white.
-   * Mapped to open options as `sysVars.paperbkcolor`.
+   * Applied as the `paperBackgroundColor` setting for this session.
    */
   paperSpaceBackground?: number
 }
@@ -179,14 +179,18 @@ const props = withDefaults(defineProps<Props>(), {
   paperSpaceBackground: ACGI_PAPER_SPACE_BACKGROUND
 })
 
-const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
-  minimumChunkSize: 1000,
-  progressiveRendering: props.progressiveRendering,
-  circleSides: props.circleSides,
-  sysVars: {
-    paperbkcolor: layoutBackgroundColorFromRgb(props.paperSpaceBackground)
+const buildOpenOptions = (): AcApOpenDatabaseOptions => {
+  AcApSettingManager.instance.set(
+    'paperBackgroundColor',
+    props.paperSpaceBackground,
+    { persist: false }
+  )
+  return {
+    minimumChunkSize: 1000,
+    progressiveRendering: props.progressiveRendering,
+    circleSides: props.circleSides
   }
-})
+}
 
 const { t } = useI18n()
 // Canvas element reference

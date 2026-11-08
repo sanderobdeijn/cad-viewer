@@ -1,7 +1,4 @@
-import {
-  AcCmColor,
-  acdbHostApplicationServices
-} from '@mlightcad/data-model'
+import { AcCmColor, acdbHostApplicationServices } from '@mlightcad/data-model'
 
 import {
   applyMeasurementStyleToSelection,
@@ -32,9 +29,7 @@ import {
   acuiCreateAciPaletteStacks,
   acuiEnsureAciPaletteStyles
 } from './AcUiAciPaletteUi'
-import {
-  type AcUiDrawStyleKind
-} from './AcUiDrawStyle'
+import { type AcUiDrawStyleKind } from './AcUiDrawStyle'
 import {
   acuiOpenTextHeightDialog,
   acuiResolveTextHeightDialogInitials,
@@ -354,7 +349,9 @@ export class AcUiDrawStyleSessionAccessory {
       !!host.closest('.ml-mobile-cmd')
     this.hideColorPanel()
     if (this.mobileMounted) {
-      this.colorPanel.classList.add('ml-draw-style-toolbar__color-panel--drop-up')
+      this.colorPanel.classList.add(
+        'ml-draw-style-toolbar__color-panel--drop-up'
+      )
     } else {
       this.colorPanel.classList.remove(
         'ml-draw-style-toolbar__color-panel--drop-up'
@@ -394,7 +391,7 @@ export class AcUiDrawStyleSessionAccessory {
     const db = acdbHostApplicationServices().workingDatabase
     const color =
       selected?.color ??
-      (db ? acapGetMeasurementColor(db) : acapCssToMeasurementColor('#7b8794'))
+      (db ? acapGetMeasurementColor() : acapCssToMeasurementColor('#7b8794'))
     this.paint(color)
   }
 
@@ -483,10 +480,10 @@ export class AcUiDrawStyleSessionAccessory {
         selectedMeasure?.fontSize ?? acapGetMeasurementFontSize()
       const measureId = getSelectedMeasurementId()
       const selectedTextHeightWcs = hasSelection
-        ? selectedMeasure?.textHeightWcs ??
+        ? (selectedMeasure?.textHeightWcs ??
           (measureId
             ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-            : undefined)
+            : undefined))
         : acapGetMeasurementCustomTextHeightWcs()
 
       const initials = acuiResolveTextHeightDialogInitials({

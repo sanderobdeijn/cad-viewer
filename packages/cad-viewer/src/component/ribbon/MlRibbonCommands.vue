@@ -20,6 +20,8 @@ import {
   acapScreenPxToWcs,
   acapSetMeasurementDrawColor,
   acapSetMeasurementTextHeight,
+  AcApSettingManager,
+  type AcApSettingManagerEventArgs,
   type AcEdCommandEventArgs,
   AcEdOpenMode,
   type AcTrView2d,
@@ -115,16 +117,6 @@ const OVERLAY_STYLE_CONTROL_WIDTH = '120px'
 
 /** Authoring mode for overlay text height (Fit to screen vs world height). */
 type OverlayTextHeightMode = 'adaptive' | 'custom'
-
-/**
- * Subset of the system variable change event used by the ribbon property sync.
- */
-interface RibbonSysVarChangeEvent {
-  /** Database whose system variable changed. */
-  database: AcDbDatabase
-  /** Name of the updated system variable. */
-  name: string
-}
 
 const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
@@ -279,7 +271,23 @@ const handleObservedEntityChange = (args: {
  *
  * @param args System variable change payload raised by the CAD runtime.
  */
-const handleSysVarChange = (args: RibbonSysVarChangeEvent) => {
+/** Updates the measurement unit controls when the unit settings change. */
+const handleSettingChange = (args: AcApSettingManagerEventArgs) => {
+  switch (args.key) {
+    case 'linearUnits':
+    case 'linearPrecision':
+    case 'angularUnits':
+    case 'angularPrecision':
+    case 'insertionUnits':
+      syncMeasurementUnitControls()
+      refreshCurrentMeasurementLabels()
+      break
+    default:
+      break
+  }
+}
+
+const handleSysVarChange = (args: { database: AcDbDatabase; name: string }) => {
   if (args.database !== observedDatabase) return
 
   switch (args.name.toUpperCase()) {
@@ -290,15 +298,6 @@ const handleSysVarChange = (args: RibbonSysVarChangeEvent) => {
       break
     case 'CLAYER':
       syncRibbonProperties(args.database)
-      break
-    case 'LUNITS':
-    case 'LUPREC':
-    case 'AUNITS':
-    case 'AUPREC':
-    case 'INSUNITS':
-    case 'MEASUREMENT':
-      syncMeasurementUnitControls()
-      refreshCurrentMeasurementLabels()
       break
     default:
       break
@@ -462,6 +461,9 @@ onMounted(() => {
   AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(
     handleSysVarChange
   )
+  AcApSettingManager.instance.events.modified.addEventListener(
+    handleSettingChange
+  )
   AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
     activateRibbonTabForDrawCommand
   )
@@ -487,6 +489,9 @@ onUnmounted(() => {
   unsubscribeMeasurementSelection = undefined
   AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
     handleSysVarChange
+  )
+  AcApSettingManager.instance.events.modified.removeEventListener(
+    handleSettingChange
   )
   AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
     activateRibbonTabForDrawCommand
@@ -564,7 +569,7 @@ const syncMeasurementStyleControls = () => {
   } else {
     const db = getCurrentDatabase()
     if (db) {
-      const color = acapGetMeasurementColor(db)
+      const color = acapGetMeasurementColor()
       measurementDrawColor.value = color.clone()
       measurementDrawColorDisplay.value = acapCssColor(color)
     }
@@ -636,9 +641,7 @@ const handleMeasurementTextHeightClick = async () => {
 }
 
 const syncMeasurementUnitControls = () => {
-  const db = getCurrentDatabase()
-  if (!db) return
-  const units = getEffectiveMeasurementUnits(db)
+  const units = getEffectiveMeasurementUnits()
   measurementLunits.value = units.lunits
   measurementLuprec.value = units.luprec
   measurementAunits.value = units.aunits

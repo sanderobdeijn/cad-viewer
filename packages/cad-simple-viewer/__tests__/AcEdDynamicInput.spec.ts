@@ -1,18 +1,12 @@
 import {
-  AcDbDatabase,
-  AcDbSystemVariables,
-  AcDbSysVarManager
-} from '@mlightcad/data-model'
-
-import {
   ML_UI_COARSE_POINTER_MEDIA_QUERY,
   ML_UI_COMPACT_MEDIA_QUERY,
   ML_UI_MOBILE_MEDIA_QUERY
 } from '../src/editor/global/AcEdUiLayout'
 import { acedIsDynamicInputEnabled } from '../src/editor/input/AcEdDynamicInput'
+import { useTestSettings } from './helpers/settings'
 
-const DESKTOP_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
+const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
 const IPAD_UA =
   'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
 
@@ -76,28 +70,14 @@ function installEnvironment(options: {
 }
 
 describe('acedIsDynamicInputEnabled', () => {
-  let database: AcDbDatabase
-
-  beforeEach(() => {
-    database = new AcDbDatabase()
-  })
-
   it('follows DYNMODE on desktop layouts', () => {
     const env = installEnvironment({})
     try {
-      AcDbSysVarManager.instance().setVar(
-        AcDbSystemVariables.DYNMODE,
-        3,
-        database
-      )
-      expect(acedIsDynamicInputEnabled(database)).toBe(true)
+      useTestSettings({ dynamicInputMode: 3 })
+      expect(acedIsDynamicInputEnabled()).toBe(true)
 
-      AcDbSysVarManager.instance().setVar(
-        AcDbSystemVariables.DYNMODE,
-        0,
-        database
-      )
-      expect(acedIsDynamicInputEnabled(database)).toBe(false)
+      useTestSettings({ dynamicInputMode: 0 })
+      expect(acedIsDynamicInputEnabled()).toBe(false)
     } finally {
       env.restore()
     }
@@ -108,12 +88,8 @@ describe('acedIsDynamicInputEnabled', () => {
       media: query => query === ML_UI_MOBILE_MEDIA_QUERY
     })
     try {
-      AcDbSysVarManager.instance().setVar(
-        AcDbSystemVariables.DYNMODE,
-        3,
-        database
-      )
-      expect(acedIsDynamicInputEnabled(database)).toBe(false)
+      useTestSettings({ dynamicInputMode: 3 })
+      expect(acedIsDynamicInputEnabled()).toBe(false)
     } finally {
       env.restore()
     }
@@ -124,12 +100,8 @@ describe('acedIsDynamicInputEnabled', () => {
       media: query => query === ML_UI_COMPACT_MEDIA_QUERY
     })
     try {
-      AcDbSysVarManager.instance().setVar(
-        AcDbSystemVariables.DYNMODE,
-        3,
-        database
-      )
-      expect(acedIsDynamicInputEnabled(database)).toBe(false)
+      useTestSettings({ dynamicInputMode: 3 })
+      expect(acedIsDynamicInputEnabled()).toBe(false)
     } finally {
       env.restore()
     }
@@ -141,12 +113,8 @@ describe('acedIsDynamicInputEnabled', () => {
       userAgent: IPAD_UA
     })
     try {
-      AcDbSysVarManager.instance().setVar(
-        AcDbSystemVariables.DYNMODE,
-        3,
-        database
-      )
-      expect(acedIsDynamicInputEnabled(database)).toBe(false)
+      useTestSettings({ dynamicInputMode: 3 })
+      expect(acedIsDynamicInputEnabled()).toBe(false)
     } finally {
       env.restore()
     }

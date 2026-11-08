@@ -251,11 +251,15 @@ jest.mock('@mlightcad/data-model', () => ({
     DXF: 'DXF',
     DWG: 'DWG'
   },
-  AcDbSysVarManager: {
-    instance: jest.fn(() => ({
-      getAllDescriptors: jest.fn(() => [])
-    }))
+  AcDbOsnapMode: {
+    EndPoint: 1,
+    MidPoint: 2,
+    Center: 3,
+    Quadrant: 4,
+    Intersection: 5,
+    Nearest: 6
   },
+  acdbOsnapModesToMask: jest.fn(() => 0),
   GeometryBox2d: jest.fn(),
   acdbHostApplicationServices: jest.fn(() => ({})),
   log: {

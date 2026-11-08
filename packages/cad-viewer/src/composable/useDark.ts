@@ -1,21 +1,13 @@
-import { AcApDocManager, acedApplyUiTheme } from '@mlightcad/cad-simple-viewer'
 import {
-  type AcDbColorTheme,
-  AcDbDatabase,
-  AcDbSystemVariables,
-  AcDbSysVarManager
-} from '@mlightcad/data-model'
+  type AcApColorTheme,
+  AcApSettingManager,
+  acedApplyUiTheme} from '@mlightcad/cad-simple-viewer'
 import { computed, ref } from 'vue'
 
-import {
-  getColorThemeFromDatabase,
-  setColorThemeForDatabase
-} from './useSystemVars'
-
-const currentTheme = ref<AcDbColorTheme>('dark')
+const currentTheme = ref<AcApColorTheme>('dark')
 let isThemeSyncInitialized = false
 
-function applyThemeToDom(theme: AcDbColorTheme) {
+function applyThemeToDom(theme: AcApColorTheme) {
   if (typeof document === 'undefined') return
 
   const html = document.documentElement
@@ -24,63 +16,32 @@ function applyThemeToDom(theme: AcDbColorTheme) {
   acedApplyUiTheme(theme, html)
 }
 
-function updateCurrentTheme(theme: AcDbColorTheme) {
+function updateCurrentTheme(theme: AcApColorTheme) {
   currentTheme.value = theme
   applyThemeToDom(theme)
 }
 
-function getExistingDocManager(): AcApDocManager | null {
-  const singleton = AcApDocManager as unknown as {
-    _instance?: AcApDocManager
-  }
-  return singleton._instance ?? null
-}
-
-function getCurrentDatabase(): AcDbDatabase | null {
-  return getExistingDocManager()?.curDocument?.database ?? null
-}
-
-function syncThemeFromDatabase(database: AcDbDatabase | null) {
-  if (!database) return
-  updateCurrentTheme(getColorThemeFromDatabase(database))
-}
-
+/** Follows the colour theme setting. */
 export function ensureColorThemeSync() {
   if (isThemeSyncInitialized) return
-
-  const docManager = getExistingDocManager()
-  if (!docManager) return
-
   isThemeSyncInitialized = true
-  syncThemeFromDatabase(getCurrentDatabase())
 
-  AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(args => {
-    if (
-      args.name.toLowerCase() !== AcDbSystemVariables.COLORTHEME.toLowerCase()
-    ) {
-      return
+  const settings = AcApSettingManager.instance
+  updateCurrentTheme(settings.get('colorTheme'))
+  settings.events.modified.addEventListener(args => {
+    if (args.key === 'colorTheme') {
+      updateCurrentTheme(args.value as AcApColorTheme)
     }
-    updateCurrentTheme(getColorThemeFromDatabase(args.database))
-  })
-
-  docManager.events.documentActivated.addEventListener(args => {
-    syncThemeFromDatabase(args.doc.database)
   })
 }
 
-export function setColorTheme(
-  theme: AcDbColorTheme,
-  database?: AcDbDatabase | null
-) {
+export function setColorTheme(theme: AcApColorTheme) {
   updateCurrentTheme(theme)
-
   ensureColorThemeSync()
-
-  const targetDatabase = database ?? getCurrentDatabase()
-  if (!targetDatabase) return
-
-  if (getColorThemeFromDatabase(targetDatabase) === theme) return
-  setColorThemeForDatabase(targetDatabase, theme)
+  const settings = AcApSettingManager.instance
+  if (settings.get('colorTheme') !== theme) {
+    settings.set('colorTheme', theme)
+  }
 }
 
 export const isDark = computed<boolean>({

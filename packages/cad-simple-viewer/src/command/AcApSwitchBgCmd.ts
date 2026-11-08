@@ -1,9 +1,8 @@
-import { AcCmColor, AcDbSysVarManager } from '@mlightcad/data-model'
-
 import { AcApContext } from '../app'
+import { AcApSettingManager } from '../app/AcApSettingManager'
 import { AcEdCommand } from '../editor'
 import {
-  layoutBackgroundSysVar,
+  layoutBackgroundSetting,
   toggleBlackWhiteBackgroundColor
 } from '../editor/global/AcEdUiColor'
 import { AcTrView2d } from '../view/AcTrView2d'
@@ -11,8 +10,8 @@ import { AcTrView2d } from '../view/AcTrView2d'
 /**
  * Command for switching the drawing background between white and black.
  *
- * Toggles `MODELBKCOLOR` in model space or `PAPERBKCOLOR` in the active
- * paper-space layout.
+ * Toggles the model space background in model space, or the paper space
+ * background in the active paper-space layout.
  */
 export class AcApSwitchBgCmd extends AcEdCommand {
   /**
@@ -22,20 +21,9 @@ export class AcApSwitchBgCmd extends AcEdCommand {
    */
   async execute(context: AcApContext) {
     const view = context.view as AcTrView2d
-    const db = context.doc.database
     const isModelSpace = view.activeLayoutBtrId === view.modelSpaceBtrId
-    const variableName = layoutBackgroundSysVar(isModelSpace)
-    const sysVarManager = AcDbSysVarManager.instance()
-    const sysVar = sysVarManager.getDescriptor(variableName)
-    if (!sysVar) {
-      return
-    }
-
-    const currentColor = sysVarManager.getVar(variableName, db) as AcCmColor
-    sysVarManager.setVar(
-      variableName,
-      toggleBlackWhiteBackgroundColor(currentColor),
-      db
-    )
+    const key = layoutBackgroundSetting(isModelSpace)
+    const settings = AcApSettingManager.instance
+    settings.set(key, toggleBlackWhiteBackgroundColor(settings.get(key)))
   }
 }

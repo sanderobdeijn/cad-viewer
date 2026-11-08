@@ -1,10 +1,9 @@
-import {
-  AcDbSystemVariables,
-  AcDbSysVarManager,
-  GeometryPoint2d,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { GeometryPoint2d, GeometryPoint2dLike } from '@mlightcad/data-model'
 
+import {
+  AcApSettingManager,
+  type AcApSettingManagerEventArgs
+} from '../../../app/AcApSettingManager'
 import { AcEdBaseView } from '../../view'
 import { AcEdOsnapPoint, AcEdOsnapResolver } from '../AcEdOsnapResolver'
 import { constrainToTracking } from '../AcEdPolarTracking'
@@ -133,10 +132,9 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
   /** When false, click / touch pick must not commit (string prompts). */
   private allowPickCommit = true
   /** Cached sysvar handler */
-  private boundOnInputSysVarChanged: (args: {
-    name: string
-    database: unknown
-  }) => void
+  private boundOnInputSettingChanged: (
+    args: AcApSettingManagerEventArgs
+  ) => void
   /** Cached view change handler */
   private boundOnViewChanged: () => void
 
@@ -246,24 +244,21 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
     // -----------------------------
     // Dynamic input settings listener
     // -----------------------------
-    this.boundOnInputSysVarChanged = args => {
-      const name = args.name?.toLowerCase()
-      if (
-        name === AcDbSystemVariables.DYNMODE.toLowerCase() ||
-        name === AcDbSystemVariables.DYNPROMPT.toLowerCase()
-      ) {
+    this.boundOnInputSettingChanged = args => {
+      const key = args.key
+      if (key === 'dynamicInputMode' || key === 'dynamicPrompt') {
         this.updateDynamicInputDisplay()
       } else if (
-        name === AcDbSystemVariables.ORTHOMODE.toLowerCase() ||
-        name === AcDbSystemVariables.POLARMODE.toLowerCase() ||
-        name === AcDbSystemVariables.POLARANG.toLowerCase() ||
-        name === AcDbSystemVariables.POLARADDANG.toLowerCase()
+        key === 'orthoMode' ||
+        key === 'polarMode' ||
+        key === 'polarAngle' ||
+        key === 'polarAdditionalAngles'
       ) {
         this.requestPreviewRefresh()
       }
     }
-    AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(
-      this.boundOnInputSysVarChanged
+    AcApSettingManager.instance.events.modified.addEventListener(
+      this.boundOnInputSettingChanged
     )
     this.boundOnViewChanged = () => this.requestPreviewRefresh()
     this.view.events.viewChanged.addEventListener(this.boundOnViewChanged)
@@ -348,8 +343,8 @@ export class AcEdFloatingInput<T> extends AcEdFloatingMessage {
     this.touchSession.cancel()
     this.hideTouchPreciseHud()
     this.view.setNavigationEnabled(true)
-    AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
-      this.boundOnInputSysVarChanged
+    AcApSettingManager.instance.events.modified.removeEventListener(
+      this.boundOnInputSettingChanged
     )
     this.view.events.viewChanged.removeEventListener(this.boundOnViewChanged)
     this.view.events.viewResize.removeEventListener(this.boundOnViewChanged)

@@ -41,11 +41,10 @@
 <script lang="ts" setup>
 import { ArrowDown, Check } from '@element-plus/icons-vue'
 import {
-  AcApDocManager,
+  AcApSettingManager,
   POLARMODE_POLAR_TRACKING,
-  togglePolarTracking as togglePolarTrackingSysVar
+  togglePolarTracking as togglePolarTrackingSetting
 } from '@mlightcad/cad-simple-viewer'
-import { AcDbSysVarManager } from '@mlightcad/data-model'
 import {
   ElButton,
   ElButtonGroup,
@@ -58,10 +57,7 @@ import {
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import {
-  POLAR_ANGLE_SYSVAR_NAME,
-  useSystemVars
-} from '../../composable/useSystemVars'
+import { useSettings } from '../../composable/useSettings'
 import { polarTracking } from '../../svg'
 import {
   formatPolarIncrementMenuLabel,
@@ -70,14 +66,14 @@ import {
 } from './polarTrackingMenu'
 
 const { t } = useI18n()
-const systemVars = useSystemVars(AcApDocManager.instance)
+const settings = useSettings()
 
 const polarIncrements = POLAR_TRACKING_INCREMENTS
 
-const currentPolarang = computed(() => Number(systemVars.polarang ?? 90))
+const currentPolarang = computed(() => Number(settings.polarAngle ?? 90))
 
 const isEnabled = computed(
-  () => (Number(systemVars.polarmode ?? 0) & POLARMODE_POLAR_TRACKING) !== 0
+  () => (Number(settings.polarMode ?? 0) & POLARMODE_POLAR_TRACKING) !== 0
 )
 
 const iconColor = computed(() =>
@@ -91,16 +87,11 @@ const tooltip = computed(() =>
 )
 
 const togglePolarTracking = () => {
-  togglePolarTrackingSysVar(AcApDocManager.instance.curDocument.database)
+  togglePolarTrackingSetting()
 }
 
 const setPolarang = (increment: number) => {
-  const database = AcApDocManager.instance.curDocument.database
-  AcDbSysVarManager.instance().setVar(
-    POLAR_ANGLE_SYSVAR_NAME,
-    increment,
-    database
-  )
+  AcApSettingManager.instance.set('polarAngle', increment)
 }
 
 const handleCommand = (command: number) => {

@@ -8,7 +8,6 @@ import {
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
   AcDbObjectId,
-  AcDbSysVarManager,
   AcDbViewport,
   acgiForegroundColorForBackground,
   AcGiViewport,
@@ -19,7 +18,6 @@ import {
   GeometryPoint2dLike,
   log
 } from '@mlightcad/data-model'
-import { AcDbSystemVariables } from '@mlightcad/data-model'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import {
   AcTrEntity,
@@ -362,10 +360,6 @@ export class AcTrView2d extends AcEdBaseView {
   /** Named listeners so dispose can detach from shared singletons. */
   private _onFontNotFound?: (args: { fontName: string; count?: number }) => void
   private _onFontLoaded?: (args?: { fontName?: string }) => void
-  private _onSysVarChanged?: (args: {
-    name: string
-    database?: AcDbDatabase
-  }) => void
   private _onSettingsModified?: (args: { key: string; value: unknown }) => void
   private _onLayoutSwitched?: (args: {
     layout: AcDbLayout & { database?: object }
@@ -619,35 +613,22 @@ export class AcTrView2d extends AcEdBaseView {
         (AcApDocManager.tryGetInstance() == null || this.isActiveManagedView())
     )
 
-    // Layout background sysvars drive the canvas clear colour and ACI-7
-    // inversion (`MODELBKCOLOR` for model space, `PAPERBKCOLOR` for the
-    // active layout). `COLORTHEME` only affects UI chrome — see
-    // `useDark` / `AcEdUiTheme`, not the renderer foreground.
-    const sysVarManager = AcDbSysVarManager.instance()
-    const modelBkVar = AcDbSystemVariables.MODELBKCOLOR.toLowerCase()
-    const paperBkVar = AcDbSystemVariables.PAPERBKCOLOR.toLowerCase()
-    this._onSysVarChanged = args => {
-      const nameLower = args.name.toLowerCase()
-      if (nameLower === modelBkVar || nameLower === paperBkVar) {
-        const database = args.database
-        if (!database) return
-        const isModelSpace = this.isModelSpaceLayout(database)
-        const applies =
-          (nameLower === modelBkVar && isModelSpace) ||
-          (nameLower === paperBkVar && !isModelSpace)
-        if (!applies) {
-          return
-        }
-        this.applyCanvasBackground(
-          readLayoutBackgroundColor(database, isModelSpace)
-        )
-      }
-    }
-    sysVarManager.events.sysVarChanged.addEventListener(this._onSysVarChanged)
-
+    // The background settings drive the canvas clear colour and ACI-7
+    // inversion (`modelBackgroundColor` for model space,
+    // `paperBackgroundColor` for the active layout). `colorTheme` only
+    // affects UI chrome — see `useDark` / `AcEdUiTheme`, not the renderer
+    // foreground.
     this._onSettingsModified = args => {
       if (args.key == 'isShowStats') {
         this.toggleStatsVisibility(this._stats, args.value as boolean)
+      } else if (
+        args.key === 'modelBackgroundColor' ||
+        args.key === 'paperBackgroundColor'
+      ) {
+        const isModelSpace = this.isModelSpaceLayout()
+        if ((args.key === 'modelBackgroundColor') === isModelSpace) {
+          this.applyCanvasBackground(readLayoutBackgroundColor(isModelSpace))
+        }
       }
     }
     AcApSettingManager.instance.events.modified.addEventListener(
@@ -1440,13 +1421,13 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * Re-reads layout background sysvars from the active database. Called after
-   * a document is opened so DWG-stored values take effect.
+   * Binds the database and applies the background setting of its space.
+   * Called after a document is opened.
    */
   syncDisplaySysVars(database: AcDbDatabase) {
     this.bindDrawDatabase(database)
     this.applyCanvasBackground(
-      readLayoutBackgroundColor(database, this.isModelSpaceLayout(database))
+      readLayoutBackgroundColor(this.isModelSpaceLayout(database))
     )
   }
 
@@ -1522,16 +1503,8 @@ export class AcTrView2d extends AcEdBaseView {
    * the newly active layout (model or paper space).
    */
   private refreshCanvasBackgroundForActiveLayout() {
-    const docManager = AcApDocManager as unknown as {
-      _instance?: AcApDocManager
-    }
-    const database = docManager._instance?.curDocument?.database
-    if (!database) return
-
     const isModelSpace = this.activeLayoutBtrId === this.modelSpaceBtrId
-    this.applyCanvasBackground(
-      readLayoutBackgroundColor(database, isModelSpace)
-    )
+    this.applyCanvasBackground(readLayoutBackgroundColor(isModelSpace))
   }
 
   /**
@@ -3006,11 +2979,6 @@ export class AcTrView2d extends AcEdBaseView {
     }
     if (this._onFontLoaded) {
       this._renderer.events.fontLoaded.removeEventListener(this._onFontLoaded)
-    }
-    if (this._onSysVarChanged) {
-      AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
-        this._onSysVarChanged
-      )
     }
     if (this._onSettingsModified) {
       AcApSettingManager.instance.events.modified.removeEventListener(

@@ -13,9 +13,6 @@ export * from './AcApObjectDisplay'
 export * from './AcApProgress'
 export * from './openFileProgress'
 export * from './AcApSettingManager'
-export type {
-  AcApOpenDatabaseOptions,
-  AcApOpenSysVars
-} from './AcApOpenDatabaseOptions'
+export type { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
 export { AcApOpenViewMode } from './AcApOpenDatabaseOptions'
 export * from './notification'

@@ -12,6 +12,7 @@ import {
   resetMeasurementUnitOverride,
   setMeasurementUnitOverride
 } from '../src/util/AcApMeasurementUnits'
+import { useTestSettings } from './helpers/settings'
 
 function mockDb(options?: {
   insunits?: number
@@ -38,11 +39,7 @@ function mockDb(options?: {
     formatter: {
       formatLength(value: number, options?: { showUnits?: boolean }) {
         const suffix =
-          options?.showUnits === false
-            ? ''
-            : db.insunits === 4
-              ? ' mm'
-              : ''
+          options?.showUnits === false ? '' : db.insunits === 4 ? ' mm' : ''
         return `L${Number(value).toFixed(db._luprec)}:${db._lunits}${suffix}`
       },
       formatAngle(radians: number) {
@@ -50,6 +47,15 @@ function mockDb(options?: {
       }
     }
   }
+  // Measurements read the units from the settings, and the database formatter
+  // reads its header, so both describe the same drawing.
+  useTestSettings({
+    linearUnits: db._lunits,
+    linearPrecision: db._luprec,
+    angularUnits: db._aunits,
+    angularPrecision: db._auprec,
+    insertionUnits: db.insunits
+  })
   return db as unknown as AcDbDatabase
 }
 
@@ -60,7 +66,7 @@ describe('AcApMeasurementUnits', () => {
 
   it('follows drawing units until the user overrides a field', () => {
     const db = mockDb()
-    expect(getEffectiveMeasurementUnits(db)).toEqual({
+    expect(getEffectiveMeasurementUnits()).toEqual({
       lunits: 2,
       luprec: 4,
       aunits: 0,
@@ -69,7 +75,7 @@ describe('AcApMeasurementUnits', () => {
     })
 
     setMeasurementUnitOverride({ luprec: 2, aunits: 3 })
-    expect(getEffectiveMeasurementUnits(db)).toEqual({
+    expect(getEffectiveMeasurementUnits()).toEqual({
       lunits: 2,
       luprec: 2,
       aunits: 3,
@@ -96,9 +102,9 @@ describe('AcApMeasurementUnits', () => {
     expect(formatMeasurementValue(db, { kind: 'area', value: 10 })).toBe(
       'L10.0:2 mm²'
     )
-    expect(
-      formatMeasurementValue(db, { kind: 'coordinate', x: 1, y: 2 })
-    ).toBe('X L1.0:2 mm  Y L2.0:2 mm')
+    expect(formatMeasurementValue(db, { kind: 'coordinate', x: 1, y: 2 })).toBe(
+      'X L1.0:2 mm  Y L2.0:2 mm'
+    )
   })
 
   it('keeps trailing zeros on near-right angles (formatter toFixed strip bug)', () => {
@@ -174,7 +180,7 @@ describe('AcApMeasurementUnits', () => {
     setMeasurementUnitOverride({ lengthUnit: 6 })
     resetMeasurementUnitOverride()
 
-    expect(getEffectiveMeasurementUnits(db).lengthUnit).toBe(
+    expect(getEffectiveMeasurementUnits().lengthUnit).toBe(
       MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
     )
     expect(formatMeasurementLength(db, 1000)).toBe('L1000.0000:2 mm')

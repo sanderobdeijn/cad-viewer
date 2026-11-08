@@ -127,9 +127,12 @@ const onCreate = () => {
 
 const exposeForTests = () => {
   if (import.meta.env.DEV) {
-    ;(
-      window as Window & { AcApDocManager?: typeof AcApDocManager }
-    ).AcApDocManager = AcApDocManager
+    const testWindow = window as Window & {
+      AcApDocManager?: typeof AcApDocManager
+      AcApSettingManager?: typeof AcApSettingManager
+    }
+    testWindow.AcApDocManager = AcApDocManager
+    testWindow.AcApSettingManager = AcApSettingManager
   }
 }
 </script>

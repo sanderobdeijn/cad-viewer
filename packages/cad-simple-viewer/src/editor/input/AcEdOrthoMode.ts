@@ -1,21 +1,12 @@
-import {
-  AcDbDatabase,
-  acdbHostApplicationServices,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
+
+import { AcApSettingManager } from '../../app/AcApSettingManager'
 
 /**
- * Returns whether orthogonal cursor locking is enabled for the given database.
+ * Returns whether orthogonal cursor locking is enabled.
  */
-export function isOrthoModeEnabled(database?: AcDbDatabase): boolean {
-  const db = database ?? acdbHostApplicationServices().workingDatabase
-  const raw = AcDbSysVarManager.instance().getVar(
-    AcDbSystemVariables.ORTHOMODE,
-    db
-  )
-  return Number(raw) !== 0
+export function isOrthoModeEnabled(): boolean {
+  return Number(AcApSettingManager.instance.get('orthoMode')) !== 0
 }
 
 /**

@@ -106,8 +106,8 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
   }
 
   update(cursor: GeometryPoint2dLike) {
-    this._color = acapGetMeasurementColor(this._db)
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    this._color = acapGetMeasurementColor()
+    const style = acapGetCurrentMeasurementStyle()
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     const vertices = [...this._points, cursor].map(clonePoint)
     const segmentArrowSizesPx: number[] = []
@@ -165,7 +165,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
 
   /** Creates, updates, or hides per-segment live badges. */
   private syncBadges(vertices: GeometryPoint2dLike[], fontSize: number) {
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    const style = acapGetCurrentMeasurementStyle()
     const needed = Math.max(0, vertices.length - 1)
     while (this._badges.length < needed) {
       const badge = new AcTrHtmlBadge({
@@ -222,7 +222,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
     const db = context.doc.database
-    const color = acapGetMeasurementColor(db)
+    const color = acapGetMeasurementColor()
     const points: GeometryPoint2dLike[] = []
 
     await this.withMeasureInput(context, async () => {
@@ -258,7 +258,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
     if (points.length < 2) return
 
     const view = context.view as AcTrView2d
-    const style = acapGetCurrentMeasurementStyle(db)
+    const style = acapGetCurrentMeasurementStyle()
     runMeasurementEdit(() => {
       for (let i = 0; i < points.length - 1; i++) {
         const a = points[i]!

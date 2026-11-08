@@ -2,24 +2,30 @@
   <ml-toggle-button
     v-model="isEnabled"
     :data="buttonData"
-    @click="toggleSysVar"
+    @click="toggleSetting"
   />
 </template>
 
 <script lang="ts" setup>
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
-import { AcDbSysVarManager } from '@mlightcad/data-model'
+import {
+  AcApSettingManager,
+  type AcApSettings
+} from '@mlightcad/cad-simple-viewer'
 import { computed, ref, watch } from 'vue'
 
 import { markComponentConfigRaw } from '../../composable/markComponentConfigRaw'
-import {
-  type SystemVariables,
-  useSystemVars
-} from '../../composable/useSystemVars'
+import { useSettings } from '../../composable/useSettings'
 import MlToggleButton, { type MlIconType } from './MlToggleButton.vue'
 
+/** A setting that is on or off, or a number where `disabledValue` is off. */
+type ToggleSetting = {
+  [K in keyof AcApSettings]: AcApSettings[K] extends number | boolean
+    ? K
+    : never
+}[keyof AcApSettings]
+
 interface Props {
-  sysVarName: string
+  setting: ToggleSetting
   onIcon: MlIconType
   offIcon: MlIconType
   onTooltip: string
@@ -37,28 +43,19 @@ const props = withDefaults(defineProps<Props>(), {
   rememberLastEnabled: false
 })
 
-const systemVars = useSystemVars(AcApDocManager.instance)
-const systemVarKey = computed(
-  () => props.sysVarName.toLowerCase() as keyof SystemVariables
-)
+const settings = useSettings()
 const lastEnabledValue = ref(
   props.rememberLastEnabled
-    ? Number(
-        AcDbSysVarManager.instance().getDefaultValue(props.sysVarName) ??
-          props.enabledValue
-      )
+    ? Number(AcApSettingManager.instance.get(props.setting))
     : props.enabledValue
 )
 
 watch(
-  () => systemVars[systemVarKey.value],
+  () => settings[props.setting],
   value => {
-    if (!props.rememberLastEnabled) return
-    if (value == null) return
-    const numericValue = Number(value)
-    if (Number.isNaN(numericValue) || numericValue === props.disabledValue)
-      return
-    lastEnabledValue.value = numericValue
+    if (!props.rememberLastEnabled || typeof value !== 'number') return
+    if (Number.isNaN(value) || value === props.disabledValue) return
+    lastEnabledValue.value = value
   },
   { immediate: true }
 )
@@ -75,19 +72,24 @@ const buttonData = computed(() =>
 )
 
 const isEnabled = computed(() => {
-  const currentValue = Number(
-    systemVars[systemVarKey.value] ?? props.disabledValue
-  )
-  return currentValue !== props.disabledValue
+  const value = settings[props.setting]
+  return typeof value === 'boolean'
+    ? value
+    : Number(value ?? props.disabledValue) !== props.disabledValue
 })
 
-const toggleSysVar = () => {
-  const database = AcApDocManager.instance.curDocument.database
+const toggleSetting = () => {
+  const manager = AcApSettingManager.instance
+  const current = manager.get(props.setting)
+  if (typeof current === 'boolean') {
+    manager.set(props.setting, !current as never)
+    return
+  }
   const nextValue = isEnabled.value
     ? props.disabledValue
     : props.rememberLastEnabled
       ? lastEnabledValue.value
       : props.enabledValue
-  AcDbSysVarManager.instance().setVar(props.sysVarName, nextValue, database)
+  manager.set(props.setting, nextValue as never)
 }
 </script>

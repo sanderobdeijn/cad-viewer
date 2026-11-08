@@ -106,7 +106,7 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> 
     acapSyncLiveOverlayTextHeight(
       this._view,
       [this._badge],
-      acapGetCurrentMeasurementStyle(this._db)
+      acapGetCurrentMeasurementStyle()
     )
     // `add()` applies layout visibility and would force the empty capsule on.
     this._badge.object.visible = false
@@ -125,9 +125,9 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> 
 
   update(p2: GeometryPoint2dLike) {
     this._p2 = p2
-    this._color = acapGetMeasurementColor(this._db)
+    this._color = acapGetMeasurementColor()
     this._badge.setColor(this._color)
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    const style = acapGetCurrentMeasurementStyle()
 
     const dist = calcDist(this._p1, p2)
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
@@ -203,7 +203,7 @@ export class AcApMeasureDistanceCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
     const db = context.doc.database
-    const color = acapGetMeasurementColor(db)
+    const color = acapGetMeasurementColor()
 
     await this.withMeasureInput(context, async () => {
       const p1Prompt = new AcEdPromptPointOptions(
@@ -228,7 +228,7 @@ export class AcApMeasureDistanceCmd extends AcApMeasureDrawCmd {
         db,
         p1,
         p2,
-        acapGetCurrentMeasurementStyle(db)
+        acapGetCurrentMeasurementStyle()
       )
     })
   }

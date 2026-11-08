@@ -324,7 +324,7 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     acapSyncLiveOverlayTextHeight(
       this._view,
       [this._badge],
-      acapGetCurrentMeasurementStyle(this._db)
+      acapGetCurrentMeasurementStyle()
     )
     this._badge.object.visible = false
 
@@ -388,10 +388,10 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     const snapped = snapToCircle(mouse, this._geom)
     const end = toPoint2(snapped)
     this._trackSweepDirection(end)
-    this._color = acapGetMeasurementColor(this._db)
+    this._color = acapGetMeasurementColor()
     this._indicator.setPosition(snapped)
     this._badge.setColor(this._color)
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    const style = acapGetCurrentMeasurementStyle()
 
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     const sweep = lockedSweep(this._start, end, this._geom, this.clockwise)
@@ -540,7 +540,7 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     acapSyncLiveOverlayTextHeight(
       this._view,
       [this._badge],
-      acapGetCurrentMeasurementStyle(this._db)
+      acapGetCurrentMeasurementStyle()
     )
     this._badge.object.visible = false
 
@@ -558,9 +558,9 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 
   update(p: GeometryPoint2dLike) {
     this._end = toPoint2(p)
-    this._color = acapGetMeasurementColor(this._db)
+    this._color = acapGetMeasurementColor()
     this._badge.setColor(this._color)
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    const style = acapGetCurrentMeasurementStyle()
 
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     const arc = GeometryCircularArc2d.tryCreateByThreePoints(
@@ -642,7 +642,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
     const db = context.doc.database
-    const color = acapGetMeasurementColor(db)
+    const color = acapGetMeasurementColor()
     const view = context.view as AcTrView2d
 
     await this.withMeasureInput(context, async () => {
@@ -718,7 +718,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
         start2,
         through2,
         end2,
-        acapGetCurrentMeasurementStyle(db)
+        acapGetCurrentMeasurementStyle()
       )
     })
   }
@@ -782,7 +782,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
       start2,
       sweep.through,
       end2,
-      acapGetCurrentMeasurementStyle(db)
+      acapGetCurrentMeasurementStyle()
     )
   }
 }

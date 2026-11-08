@@ -5,6 +5,8 @@ import {
   AcDbLinearUnits
 } from '@mlightcad/data-model'
 
+import { AcApSettingManager } from '../app/AcApSettingManager'
+
 /** Linear/angular unit settings used when formatting measurement labels. */
 export interface AcApMeasurementUnits {
   /** Linear display format (LUNITS). */
@@ -143,16 +145,15 @@ function asUnitHeader(db: AcDbDatabase): AcDbUnitHeader {
 
 /**
  * Effective measurement units: session override when the user changed a ribbon
- * control, otherwise the current drawing units.
+ * control, otherwise the unit settings.
  */
-export function getEffectiveMeasurementUnits(
-  db: AcDbDatabase
-): AcApMeasurementUnits {
+export function getEffectiveMeasurementUnits(): AcApMeasurementUnits {
+  const settings = AcApSettingManager.instance
   return {
-    lunits: measurementUnitOverride.lunits ?? db.lunits,
-    luprec: measurementUnitOverride.luprec ?? db.luprec,
-    aunits: measurementUnitOverride.aunits ?? db.aunits,
-    auprec: measurementUnitOverride.auprec ?? db.auprec,
+    lunits: measurementUnitOverride.lunits ?? settings.get('linearUnits'),
+    luprec: measurementUnitOverride.luprec ?? settings.get('linearPrecision'),
+    aunits: measurementUnitOverride.aunits ?? settings.get('angularUnits'),
+    auprec: measurementUnitOverride.auprec ?? settings.get('angularPrecision'),
     lengthUnit:
       measurementUnitOverride.lengthUnit ??
       MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
@@ -185,12 +186,12 @@ export function resetMeasurementUnitOverride(): void {
 }
 
 /**
- * True when a ribbon override differs from the drawing header. Formatting then
- * patches private header fields for the duration of one formatter call and
- * restores them — it never writes LUNITS / LUPREC / AUNITS / AUPREC sysvars.
+ * True when the effective units differ from the units the database formatter
+ * reads. Formatting then patches private header fields for the duration of
+ * one formatter call and restores them.
  */
 function hasEffectiveUnitOverride(db: AcDbDatabase): boolean {
-  const units = getEffectiveMeasurementUnits(db)
+  const units = getEffectiveMeasurementUnits()
   return (
     units.lunits !== db.lunits ||
     units.luprec !== db.luprec ||
@@ -216,10 +217,9 @@ function withMeasurementFormatContext<T>(
   fn: () => T,
   formatPatch?: { forceDecimalLength?: boolean }
 ): T {
-  const units = getEffectiveMeasurementUnits(db)
+  const units = getEffectiveMeasurementUnits()
   const lunitsForFormat =
-    formatPatch?.forceDecimalLength &&
-    isDrawingNativeLengthFormat(units.lunits)
+    formatPatch?.forceDecimalLength && isDrawingNativeLengthFormat(units.lunits)
       ? AcDbLinearUnits.Decimal
       : units.lunits
   const needsPatch =
@@ -279,8 +279,8 @@ function convertedLengthFormatOptions(
  * drawing's INSUNITS, INSUNITS is undefined, or the follow-drawing sentinel is
  * active).
  */
-function convertedLengthUnit(db: AcDbDatabase): number | undefined {
-  const fromUnit = db.insunits ?? 0
+function convertedLengthUnit(): number | undefined {
+  const fromUnit = AcApSettingManager.instance.get('insertionUnits') ?? 0
   if (fromUnit === 0) return undefined
 
   const target = measurementUnitOverride.lengthUnit
@@ -299,12 +299,12 @@ export function formatMeasurementLength(
   value: number,
   options: AcDbFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
 ): string {
-  const target = convertedLengthUnit(db)
+  const target = convertedLengthUnit()
   if (target == null) {
     return formatMeasurementLengthRaw(db, value, options)
   }
 
-  const fromUnit = db.insunits ?? 0
+  const fromUnit = AcApSettingManager.instance.get('insertionUnits') ?? 0
   const scaled = convertLengthValue(value, fromUnit, target)
   const text = formatMeasurementLengthRaw(
     db,
@@ -322,12 +322,12 @@ export function formatMeasurementArea(
   value: number,
   options: AcDbFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
 ): string {
-  const target = convertedLengthUnit(db)
+  const target = convertedLengthUnit()
   if (target == null) {
     return `${formatMeasurementLengthRaw(db, value, options)}²`
   }
 
-  const fromUnit = db.insunits ?? 0
+  const fromUnit = AcApSettingManager.instance.get('insertionUnits') ?? 0
   const scaled = convertAreaValue(value, fromUnit, target)
   const text = formatMeasurementLengthRaw(
     db,
@@ -388,7 +388,7 @@ export function formatMeasurementAngle(
   options: AcDbFormatterOptions = MEASUREMENT_ANGLE_FORMAT_OPTIONS
 ): string {
   return withMeasurementFormatContext(db, () => {
-    const { aunits, auprec } = getEffectiveMeasurementUnits(db)
+    const { aunits, auprec } = getEffectiveMeasurementUnits()
     const value = radiansForMeasurementFormat(radians, aunits, auprec)
     return db.formatter.formatAngle(value, {
       ...MEASUREMENT_ANGLE_FORMAT_OPTIONS,

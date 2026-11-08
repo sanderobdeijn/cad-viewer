@@ -10,6 +10,7 @@ import { AcApEntityService } from '../service/AcApEntityService'
 import { AcApDocManager } from './AcApDocManager'
 import { AcApModelSync } from './AcApModelSync'
 import { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
+import { AcApSettingManager } from './AcApSettingManager'
 
 /** Sentinel stored in {@link AcApDocument.docTitle} for unsaved documents. */
 export const ACAP_UNTITLED_DOC_TITLE = 'Untitled'
@@ -81,6 +82,7 @@ export class AcApDocument {
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
     try {
       this._database.createNewDrawing(options as AcDbOpenDatabaseOptions)
+      this.applyDrawingSettings()
       this._modelSync.resync()
       await this._database.regen()
       return true
@@ -88,6 +90,19 @@ export class AcApDocument {
       log.error('Failed to create a new drawing:', error)
       return false
     }
+  }
+
+  /**
+   * Copies the point style settings into the database.
+   *
+   * Points are drawn through database entities, which read their display mode
+   * and size from the database, so these follow the settings until the
+   * database is removed.
+   */
+  applyDrawingSettings() {
+    const settings = AcApSettingManager.instance
+    this._database.pdmode = settings.get('pointDisplayMode')
+    this._database.pdsize = settings.get('pointDisplaySize')
   }
 
   /**

@@ -170,7 +170,7 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     acapSyncLiveOverlayTextHeight(
       this._view,
       [this._badge],
-      acapGetCurrentMeasurementStyle(this._db)
+      acapGetCurrentMeasurementStyle()
     )
     this._badge.object.visible = false
 
@@ -188,9 +188,9 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 
   update(p: GeometryPoint2dLike) {
     this._arm2 = p
-    this._color = acapGetMeasurementColor(this._db)
+    this._color = acapGetMeasurementColor()
     this._badge.setColor(this._color)
-    const style = acapGetCurrentMeasurementStyle(this._db)
+    const style = acapGetCurrentMeasurementStyle()
 
     const lineWidth = acapMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT)
     this._preview.acapSetDraw((ctx, view) => {
@@ -254,7 +254,7 @@ export class AcApMeasureAngleCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
     const db = context.doc.database
-    const color = acapGetMeasurementColor(db)
+    const color = acapGetMeasurementColor()
 
     await this.withMeasureInput(context, async () => {
       // Pick vertex
@@ -297,7 +297,7 @@ export class AcApMeasureAngleCmd extends AcApMeasureDrawCmd {
         vertex,
         arm1,
         arm2,
-        acapGetCurrentMeasurementStyle(db)
+        acapGetCurrentMeasurementStyle()
       )
     })
   }

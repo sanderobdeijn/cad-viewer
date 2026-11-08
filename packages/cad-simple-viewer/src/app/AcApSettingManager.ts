@@ -62,7 +62,99 @@ export interface AcApSettings {
    * press still shows the magnifier loupe around the active sample.
    */
   useSimulatedMouseOnTouch: boolean
+
+  /** Point display style, as the old `PDMODE` system variable */
+  pointDisplayMode: number
+  /**
+   * Point display size, as `PDSIZE`: positive in drawing units, negative as a
+   * percentage of the view, zero for the default size
+   */
+  pointDisplaySize: number
+  /** Linear unit format, as `LUNITS` (`AcDbLinearUnits`) */
+  linearUnits: number
+  /** Decimal places of lengths, as `LUPREC` */
+  linearPrecision: number
+  /** Angle unit format, as `AUNITS` (`AcDbAngleUnits`) */
+  angularUnits: number
+  /** Decimal places of angles, as `AUPREC` */
+  angularPrecision: number
+  /** Direction of angle 0 in radians, as `ANGBASE` */
+  angleBase: number
+  /** 1 when angles increase clockwise, 0 otherwise, as `ANGDIR` */
+  angleDirection: number
+  /** Unit of drawing lengths, as `INSUNITS` (`AcDbUnitsValue`) */
+  insertionUnits: number
+  /** 1 when ortho mode is on, as `ORTHOMODE` */
+  orthoMode: number
+  /** Polar tracking flags, as `POLARMODE` */
+  polarMode: number
+  /** Polar tracking increment in degrees, as `POLARANG` */
+  polarAngle: number
+  /** Extra polar tracking angles in degrees, separated by `;`, as `POLARADDANG` */
+  polarAdditionalAngles: string
+  /** Dynamic input flags, as `DYNMODE` */
+  dynamicInputMode: number
+  /** Whether prompts show next to the cursor, as `DYNPROMPT` */
+  dynamicPrompt: boolean
+  /** Grip size in pixels, as `GRIPSIZE` */
+  gripSize: number
+  /** Colour index of grips, as `GRIPCOLOR` */
+  gripColor: number
+  /** Colour index of hot grips, as `GRIPHOT` */
+  gripHotColor: number
+  /** Most selected objects that show grips, as `GRIPOBJLIMIT` */
+  gripObjectLimit: number
+  /** Pick box size in pixels, as `PICKBOX` */
+  pickBox: number
+  /** Right-click behaviour flags, as `SHORTCUTMENU` */
+  shortcutMenu: number
+  /** Colour theme of the viewer chrome, as `COLORTHEME` */
+  colorTheme: AcApColorTheme
+  /** Model space background as `0xRRGGBB`, as `MODELBKCOLOR` */
+  modelBackgroundColor: number
+  /** Paper space background as `0xRRGGBB`, as `PAPERBKCOLOR` */
+  paperBackgroundColor: number
+  /** Colour of measurements as `0xRRGGBB`, as `MEASUREMENTCOLOR` */
+  measurementColor: number
+  /** Whether line weights are drawn, as `LWDISPLAY` */
+  lineWeightDisplay: boolean
+  /** Whether opening a file is profiled, as `OPENPROF` */
+  openProfile: boolean
 }
+
+/** Colour theme of the viewer chrome. */
+export type AcApColorTheme = 'dark' | 'light'
+
+/**
+ * Settings that can be read and changed from the command line, by the name of
+ * the system variable they replace.
+ */
+export const ACAP_SETTING_COMMANDS = {
+  PDMODE: 'pointDisplayMode',
+  PDSIZE: 'pointDisplaySize',
+  LUNITS: 'linearUnits',
+  LUPREC: 'linearPrecision',
+  AUNITS: 'angularUnits',
+  AUPREC: 'angularPrecision',
+  ANGBASE: 'angleBase',
+  ANGDIR: 'angleDirection',
+  INSUNITS: 'insertionUnits',
+  ORTHOMODE: 'orthoMode',
+  POLARMODE: 'polarMode',
+  POLARANG: 'polarAngle',
+  POLARADDANG: 'polarAdditionalAngles',
+  DYNMODE: 'dynamicInputMode',
+  DYNPROMPT: 'dynamicPrompt',
+  GRIPSIZE: 'gripSize',
+  GRIPCOLOR: 'gripColor',
+  GRIPHOT: 'gripHotColor',
+  GRIPOBJLIMIT: 'gripObjectLimit',
+  PICKBOX: 'pickBox',
+  SHORTCUTMENU: 'shortcutMenu',
+  COLORTHEME: 'colorTheme',
+  LWDISPLAY: 'lineWeightDisplay',
+  OPENPROF: 'openProfile'
+} as const satisfies Record<string, keyof AcApSettings>
 
 /**
  * Options for {@link AcApSettingManager.set} and {@link AcApSettingManager.apply}.
@@ -110,7 +202,34 @@ const DEFAULT_VALUES: AcApSettings = {
   ]),
   hideTouchPointTutorial: false,
   touchPointTutorialSnoozeDate: null,
-  useSimulatedMouseOnTouch: true
+  useSimulatedMouseOnTouch: true,
+  pointDisplayMode: 0,
+  pointDisplaySize: 0,
+  linearUnits: 2,
+  linearPrecision: 4,
+  angularUnits: 0,
+  angularPrecision: 0,
+  angleBase: 0,
+  angleDirection: 0,
+  insertionUnits: 4,
+  orthoMode: 0,
+  polarMode: 0,
+  polarAngle: 90,
+  polarAdditionalAngles: '',
+  dynamicInputMode: 3,
+  dynamicPrompt: true,
+  gripSize: 5,
+  gripColor: 150,
+  gripHotColor: 12,
+  gripObjectLimit: 100,
+  pickBox: 10,
+  shortcutMenu: 0,
+  colorTheme: 'dark',
+  modelBackgroundColor: 0x000000,
+  paperBackgroundColor: 0xffffff,
+  measurementColor: 0x60a5fa,
+  lineWeightDisplay: false,
+  openProfile: false
 }
 
 /** Default localStorage key for persisting user preferences */

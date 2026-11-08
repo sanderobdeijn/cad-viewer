@@ -18,12 +18,17 @@ import {
   MEASUREMENT_FONT_SIZE,
   MEASUREMENT_LINE_WEIGHT
 } from '../src/util/AcApMeasurementUtil'
+import { useTestSettings } from './helpers/settings'
 
 function mockDb(): AcDbDatabase {
   return {} as AcDbDatabase
 }
 
 describe('AcApMeasurementUtil', () => {
+  beforeEach(() => {
+    useTestSettings()
+  })
+
   afterEach(() => {
     acapResetMeasurementDrawStyle()
   })
@@ -31,7 +36,7 @@ describe('AcApMeasurementUtil', () => {
   it('defaults to hairline line weight and factory font size', () => {
     expect(MEASUREMENT_LINE_WEIGHT).toBe(0)
     expect(acapGetMeasurementFontSize()).toBe(MEASUREMENT_FONT_SIZE)
-    expect(acapGetCurrentMeasurementStyle(mockDb()).lineWeight).toBe(0)
+    expect(acapGetCurrentMeasurementStyle().lineWeight).toBe(0)
   })
 
   it('stores session draw color and font size for later measurements', () => {
@@ -40,13 +45,13 @@ describe('AcApMeasurementUtil', () => {
     acapSetMeasurementDrawColor(color)
     acapSetMeasurementDrawFontSize(18)
 
-    const drawn = acapGetMeasurementColor(mockDb())
+    const drawn = acapGetMeasurementColor()
     expect(drawn.red).toBe(10)
     expect(drawn.green).toBe(20)
     expect(drawn.blue).toBe(30)
     expect(acapGetMeasurementFontSize()).toBe(18)
 
-    const style = acapGetCurrentMeasurementStyle(mockDb())
+    const style = acapGetCurrentMeasurementStyle()
     expect(style.fontSize).toBe(18)
     expect(style.lineWeight).toBe(MEASUREMENT_LINE_WEIGHT)
     expect(style.color.red).toBe(10)

@@ -1,15 +1,14 @@
-import {
-  AcDbObjectId,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { AcDbObjectId, GeometryPoint2dLike } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../app'
+import {
+  AcApSettingManager,
+  type AcApSettingManagerEventArgs
+} from '../../app/AcApSettingManager'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import {
   applyGripAppearanceToHost,
-  isGripAppearanceSysVar,
+  isGripAppearanceSetting,
   readGripAppearance
 } from './AcEdGripAppearance'
 import { AcEdGripEditSession, AcEdGripEditTarget } from './AcEdGripEditSession'
@@ -72,9 +71,9 @@ export class AcEdGripManager {
   private readonly _boundRefresh = () => this.refresh()
   /** Stable listener reference for view pan/zoom/resize repositioning. */
   private readonly _boundReposition = () => this.repositionAll()
-  /** Stable listener reference for grip-related system variable changes. */
-  private readonly _boundSysVarChanged = (args: { name: string }) =>
-    this.onGripSysVarChanged(args.name)
+  /** Stable listener reference for grip-related setting changes. */
+  private readonly _boundSettingChanged = (args: AcApSettingManagerEventArgs) =>
+    this.onGripSettingChanged(args.key)
 
   /**
    * Creates a grip manager bound to the given view.
@@ -131,7 +130,7 @@ export class AcEdGripManager {
     }
 
     const doc = AcApDocManager.instance.curDocument
-    const appearance = readGripAppearance(doc.database)
+    const appearance = readGripAppearance()
 
     for (const entityId of this._view.selectionSet.ids) {
       const entity = doc.modelSync.entity(entityId)
@@ -164,10 +163,7 @@ export class AcEdGripManager {
    */
   private canShowGrips(): boolean {
     const doc = AcApDocManager.instance.curDocument
-    const gripObjLimit = AcDbSysVarManager.instance().getVar(
-      AcDbSystemVariables.GRIPOBJLIMIT,
-      doc.database
-    ) as number
+    const gripObjLimit = AcApSettingManager.instance.get('gripObjectLimit')
 
     return acedShouldShowGrips(
       doc.openMode,
@@ -194,8 +190,8 @@ export class AcEdGripManager {
     editor.events.commandWillStart.addEventListener(this._boundRefresh)
     editor.events.commandEnded.addEventListener(this._boundRefresh)
 
-    AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(
-      this._boundSysVarChanged
+    AcApSettingManager.instance.events.modified.addEventListener(
+      this._boundSettingChanged
     )
   }
 
@@ -212,21 +208,20 @@ export class AcEdGripManager {
     editor.events.commandWillStart.removeEventListener(this._boundRefresh)
     editor.events.commandEnded.removeEventListener(this._boundRefresh)
 
-    AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
-      this._boundSysVarChanged
+    AcApSettingManager.instance.events.modified.removeEventListener(
+      this._boundSettingChanged
     )
   }
 
   /**
-   * Reacts to grip-related system variable changes.
+   * Reacts to grip-related setting changes.
    */
-  private onGripSysVarChanged(name: string) {
-    const normalized = name.toLowerCase()
-    if (normalized === AcDbSystemVariables.GRIPOBJLIMIT.toLowerCase()) {
+  private onGripSettingChanged(key: string) {
+    if (key === 'gripObjectLimit') {
       this.refresh()
       return
     }
-    if (isGripAppearanceSysVar(normalized)) {
+    if (isGripAppearanceSetting(key as never)) {
       this.applyAppearance()
     }
   }
@@ -238,9 +233,7 @@ export class AcEdGripManager {
    */
   private applyAppearance() {
     try {
-      const doc = AcApDocManager.instance.curDocument
-      if (!doc?.database) return
-      const appearance = readGripAppearance(doc.database)
+      const appearance = readGripAppearance()
       applyGripAppearanceToHost(this._view.container, appearance)
       for (const entry of this._entries) {
         entry.handle.applyAppearance(appearance)

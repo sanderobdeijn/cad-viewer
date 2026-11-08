@@ -1,14 +1,13 @@
 import {
   AcCmEventManager,
   AcDbLayout,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
   ModelItemEventArgs
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import { AcTrView2d } from '../view'
 import { AcApDocument } from './AcApDocument'
+import { AcApSettingManager } from './AcApSettingManager'
 
 /**
  * Application context that binds a CAD document with its associated view.
@@ -109,28 +108,27 @@ export class AcApContext {
       this._view.updateLayer(args.layer, args.changes)
     })
 
-    // Set point display mode / size. Sysvars are global; ignore other documents.
-    bind(AcDbSysVarManager.instance().events.sysVarChanged, args => {
-      if (!this._active || args.database !== this._doc.database) {
-        return
-      }
-      if (
-        args.name == AcDbSystemVariables.PDMODE.toLowerCase() ||
-        args.name == AcDbSystemVariables.PDSIZE.toLowerCase()
-      ) {
+    // Set point display mode / size and line weight display.
+    bind(AcApSettingManager.instance.events.modified, args => {
+      if (args.key === 'pointDisplayMode' || args.key === 'pointDisplaySize') {
+        // Points are drawn through entities that read their style from the
+        // database, so it follows the settings until the database goes.
+        doc.applyDrawingSettings()
+        if (!this._active) return
+        const settings = AcApSettingManager.instance
         ;(this._view as AcTrView2d).rerenderPoints(
-          args.database.pdmode,
-          args.database.pdsize
+          settings.get('pointDisplayMode'),
+          settings.get('pointDisplaySize')
         )
-      } else if (args.name == AcDbSystemVariables.LWDISPLAY.toLowerCase()) {
+      } else if (args.key === 'lineWeightDisplay') {
+        if (!this._active) return
         const currentView = this._view as AcTrView2d
-        const showLineWeight = !!args.database.lwdisplay
+        const showLineWeight = !!args.value
         if (currentView.renderer.showLineWeight !== showLineWeight) {
           currentView.renderer.showLineWeight = showLineWeight
           // Existing line objects may need different geometry/material classes.
-          // Regenerate to rebuild scene content using the new display mode.
-          currentView.clear()
-          args.database.regen()
+          // Redraw to rebuild scene content using the new display mode.
+          void this.regen()
         }
       }
     })
@@ -193,6 +191,25 @@ export class AcApContext {
   resume() {
     this._active = true
     this.bindEntityLookup()
+  }
+
+  /**
+   * Clears the view and draws the document again: the layouts and layers of
+   * its database, then the items of its model.
+   */
+  async regen() {
+    this._view.clear()
+    await this._doc.database.regen()
+    this.redrawModel()
+  }
+
+  /** Adds the items of the document's model to the view. */
+  redrawModel() {
+    if (!this._active) return
+    const entities = this._doc.modelSync.entities(
+      this._doc.model.items.map(item => item.id)
+    )
+    if (entities.length > 0) this._view.addEntity(entities)
   }
 
   /** Lets the view look up the entities of this document's model. */

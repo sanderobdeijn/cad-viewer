@@ -1,11 +1,10 @@
 import {
   AcCmColor,
-  AcDbDatabase,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
+  AcCmColorMethod,
   AcGiLineWeight
 } from '@mlightcad/data-model'
 
+import { AcApSettingManager } from '../app/AcApSettingManager'
 import { acCmColorToCssHex, parseCssToAcCmColor } from './AcApCssColor'
 
 /**
@@ -47,13 +46,12 @@ export interface AcApMeasurementStyle {
   textHeightWcs?: number
 }
 
-/** Returns the current measurement overlay color (session override or MEASUREMENTCOLOR). */
-export function acapGetMeasurementColor(db: AcDbDatabase): AcCmColor {
+/** Returns the current measurement overlay color (session override or the measurement colour setting). */
+export function acapGetMeasurementColor(): AcCmColor {
   if (measurementDrawColor) return measurementDrawColor.clone()
-  return AcDbSysVarManager.instance().getVar(
-    AcDbSystemVariables.MEASUREMENTCOLOR,
-    db
-  ) as AcCmColor
+  const color = new AcCmColor(AcCmColorMethod.ByColor)
+  color.setRGBValue(AcApSettingManager.instance.get('measurementColor'))
+  return color
 }
 
 /** Current font size (CSS px) used when drawing measurement badges. */
@@ -113,11 +111,9 @@ export function acapResetMeasurementDrawStyle(): void {
 }
 
 /** Build a style object from the current measurement draw color / font size. */
-export function acapGetCurrentMeasurementStyle(
-  db: AcDbDatabase
-): AcApMeasurementStyle {
+export function acapGetCurrentMeasurementStyle(): AcApMeasurementStyle {
   return {
-    color: acapGetMeasurementColor(db),
+    color: acapGetMeasurementColor(),
     lineWeight: MEASUREMENT_LINE_WEIGHT,
     fontSize: acapGetMeasurementFontSize(),
     textHeightMode: measurementTextHeightMode,

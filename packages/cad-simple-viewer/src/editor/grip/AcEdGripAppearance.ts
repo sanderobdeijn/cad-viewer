@@ -1,10 +1,9 @@
+import { AcCmColor, AcCmColorMethod } from '@mlightcad/data-model'
+
 import {
-  AcCmColor,
-  AcCmColorMethod,
-  AcDbDatabase,
-  AcDbSystemVariables,
-  AcDbSysVarManager
-} from '@mlightcad/data-model'
+  AcApSettingManager,
+  type AcApSettings
+} from '../../app/AcApSettingManager'
 
 /** CSS custom property for grip square edge length (`GRIPSIZE`). */
 export const ML_UI_GRIP_SIZE_VAR = '--ml-ui-grip-size'
@@ -16,7 +15,7 @@ export const ML_UI_GRIP_HOT_VAR = '--ml-ui-grip-hot'
 /** Fallback grip size in CSS pixels when `GRIPSIZE` is unavailable. */
 export const DEFAULT_GRIP_SIZE_PX = 8
 
-/** Visual appearance of grip handles derived from grip system variables. */
+/** Visual appearance of grip handles derived from the grip settings. */
 export interface AcEdGripAppearance {
   /** Grip square edge length in CSS pixels (`GRIPSIZE`). */
   size: number
@@ -46,34 +45,26 @@ function aciIndexToCss(index: number): string {
 }
 
 /**
- * Reads grip appearance from `GRIPSIZE`, `GRIPCOLOR`, and `GRIPHOT`.
+ * Reads grip appearance from the grip size and colour settings.
  */
-export function readGripAppearance(database: AcDbDatabase): AcEdGripAppearance {
-  const manager = AcDbSysVarManager.instance()
-  const size = manager.getVar(AcDbSystemVariables.GRIPSIZE, database) as number
-  const gripColor = manager.getVar(
-    AcDbSystemVariables.GRIPCOLOR,
-    database
-  ) as number
-  const gripHot = manager.getVar(
-    AcDbSystemVariables.GRIPHOT,
-    database
-  ) as number
+export function readGripAppearance(): AcEdGripAppearance {
+  const settings = AcApSettingManager.instance
+  const size = settings.get('gripSize')
 
   return {
     size: size > 0 && Number.isFinite(size) ? size : DEFAULT_GRIP_SIZE_PX,
-    colorCss: aciIndexToCss(gripColor),
-    hotColorCss: aciIndexToCss(gripHot)
+    colorCss: aciIndexToCss(settings.get('gripColor')),
+    hotColorCss: aciIndexToCss(settings.get('gripHotColor'))
   }
 }
 
-/** Sysvar names that affect grip handle appearance or visibility. */
-export const GRIP_APPEARANCE_SYSVARS = new Set([
-  AcDbSystemVariables.GRIPSIZE.toLowerCase(),
-  AcDbSystemVariables.GRIPCOLOR.toLowerCase(),
-  AcDbSystemVariables.GRIPHOT.toLowerCase()
+/** Settings that affect grip handle appearance. */
+export const GRIP_APPEARANCE_SETTINGS = new Set<keyof AcApSettings>([
+  'gripSize',
+  'gripColor',
+  'gripHotColor'
 ])
 
-export function isGripAppearanceSysVar(name: string): boolean {
-  return GRIP_APPEARANCE_SYSVARS.has(name.toLowerCase())
+export function isGripAppearanceSetting(key: keyof AcApSettings): boolean {
+  return GRIP_APPEARANCE_SETTINGS.has(key)
 }

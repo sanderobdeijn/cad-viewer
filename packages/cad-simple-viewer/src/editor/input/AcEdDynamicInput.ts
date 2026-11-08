@@ -1,10 +1,4 @@
-import {
-  AcDbDatabase,
-  acdbHostApplicationServices,
-  AcDbSystemVariables,
-  AcDbSysVarManager
-} from '@mlightcad/data-model'
-
+import { AcApSettingManager } from '../../app/AcApSettingManager'
 import { acedInteractionStrategy } from './ui/AcEdInteractionStrategy'
 
 /**
@@ -14,16 +8,10 @@ import { acedInteractionStrategy } from './ui/AcEdInteractionStrategy'
  * not usable on touch devices, regardless of **DYNMODE**. This includes
  * landscape / wide tablets, not only the phone breakpoint.
  *
- * @param database - Drawing whose **DYNMODE** value is read. Defaults to the
- *   current working database.
- * @returns `true` when **DYNMODE** is non-zero and the layout allows cursor
+ * @returns `true` when the dynamic input setting (**DYNMODE**) is non-zero and the layout allows cursor
  *   dynamic input ({@link AcEdPointPromptPolicy.showsCursorDynamicInput}).
  */
-export function acedIsDynamicInputEnabled(database?: AcDbDatabase): boolean {
+export function acedIsDynamicInputEnabled(): boolean {
   if (!acedInteractionStrategy().point.showsCursorDynamicInput) return false
-  const db = database ?? acdbHostApplicationServices().workingDatabase
-  const mode = Number(
-    AcDbSysVarManager.instance().getVar(AcDbSystemVariables.DYNMODE, db)
-  )
-  return mode !== 0
+  return Number(AcApSettingManager.instance.get('dynamicInputMode')) !== 0
 }

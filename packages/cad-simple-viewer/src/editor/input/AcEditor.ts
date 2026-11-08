@@ -95,11 +95,6 @@ export class AcEditor {
    * Editor events
    */
   public readonly events = {
-    /**
-     * Fired after a system variable is changed directly through the SETVAR command or
-     * by entering the variable name at the command line.
-     */
-    sysVarChanged: new AcCmEventManager<AcDbSysVarEventArgs>(),
     /** Fired just before the command starts executing */
     commandWillStart: new AcCmEventManager<AcEdCommandEventArgs>(),
     /** Fired after the command finishes executing */

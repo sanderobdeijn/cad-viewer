@@ -1,10 +1,9 @@
-import {
-  acdbHostApplicationServices,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/data-model'
 
+import {
+  AcApSettingManager,
+  type AcApSettingManagerEventArgs
+} from '../../../app/AcApSettingManager'
 import { AcEdBaseView } from '../../view'
 import { acedIsDynamicInputEnabled } from '../AcEdDynamicInput'
 
@@ -84,10 +83,7 @@ export class AcEdFloatingMessage {
   protected allowPrompt: boolean
 
   /** Cached sysvar handler */
-  private boundOnSysVarChanged: (args: {
-    name: string
-    database: unknown
-  }) => void
+  private boundOnSettingChanged: (args: AcApSettingManagerEventArgs) => void
 
   /**
    * Constructs a floating message widget.
@@ -146,17 +142,13 @@ export class AcEdFloatingMessage {
     this.parent.addEventListener('mouseenter', this.boundOnMouseEnter)
     this.parent.addEventListener('mouseleave', this.boundOnMouseLeave)
 
-    this.boundOnSysVarChanged = args => {
-      const name = args.name?.toLowerCase()
-      if (
-        name === AcDbSystemVariables.DYNMODE.toLowerCase() ||
-        name === AcDbSystemVariables.DYNPROMPT.toLowerCase()
-      ) {
+    this.boundOnSettingChanged = args => {
+      if (args.key === 'dynamicInputMode' || args.key === 'dynamicPrompt') {
         this.updateDynamicDisplay()
       }
     }
-    AcDbSysVarManager.instance().events.sysVarChanged.addEventListener(
-      this.boundOnSysVarChanged
+    AcApSettingManager.instance.events.modified.addEventListener(
+      this.boundOnSettingChanged
     )
     this.updateDynamicDisplay()
 
@@ -243,8 +235,8 @@ export class AcEdFloatingMessage {
     this.hide()
     this.parent.removeEventListener('mouseenter', this.boundOnMouseEnter)
     this.parent.removeEventListener('mouseleave', this.boundOnMouseLeave)
-    AcDbSysVarManager.instance().events.sysVarChanged.removeEventListener(
-      this.boundOnSysVarChanged
+    AcApSettingManager.instance.events.modified.removeEventListener(
+      this.boundOnSettingChanged
     )
     this.container.remove()
   }
@@ -309,17 +301,12 @@ export class AcEdFloatingMessage {
   // Dynamic Prompt Settings
   // ---------------------------------------------------------------------------
 
-  protected getSysVarValue(name: string) {
-    const db = acdbHostApplicationServices().workingDatabase
-    return AcDbSysVarManager.instance().getVar(name, db)
-  }
-
   protected isDynamicInputEnabled() {
     return acedIsDynamicInputEnabled()
   }
 
   protected isDynamicPromptEnabled() {
-    return !!this.getSysVarValue(AcDbSystemVariables.DYNPROMPT)
+    return !!AcApSettingManager.instance.get('dynamicPrompt')
   }
 
   private shouldShowPrompt() {

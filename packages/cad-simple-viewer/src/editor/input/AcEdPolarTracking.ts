@@ -1,8 +1,9 @@
 /**
  * Polar and orthogonal cursor tracking for interactive point input.
  *
- * Reads AutoCAD system variables **POLARMODE**, **POLARANG**, and **POLARADDANG**
- * together with drawing angles **ANGBASE** and **ANGDIR**, then constrains the
+ * Reads the polar tracking settings (as the AutoCAD **POLARMODE**, **POLARANG**
+ * and **POLARADDANG** variables) together with the angle settings (**ANGBASE**
+ * and **ANGDIR**), then constrains the
  * cursor to the nearest allowed tracking direction relative to a reference point.
  * Used by {@link AcEdFloatingInput} during `getPoint`-style acquisition.
  *
@@ -10,15 +11,9 @@
  * @packageDocumentation
  */
 
-import {
-  AcDbDatabase,
-  acdbHostApplicationServices,
-  AcDbSystemVariables,
-  AcDbSysVarManager,
-  GeometryMathUtil,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { GeometryMathUtil, GeometryPoint2dLike } from '@mlightcad/data-model'
 
+import { AcApSettingManager } from '../../app/AcApSettingManager'
 import { constrainToOrtho, isOrthoModeEnabled } from './AcEdOrthoMode'
 
 /**
@@ -54,47 +49,10 @@ interface AcEdBuildTrackingDisplayAnglesOptions {
   includeOrtho: boolean
 }
 
-/**
- * Resolves the database used for sysvar and header-variable lookups.
- *
- * @param database - Optional explicit database; when omitted, uses the working database.
- * @returns The database instance used for subsequent reads in this module.
- * @internal
- */
-function getDatabase(database?: AcDbDatabase): AcDbDatabase {
-  return database ?? acdbHostApplicationServices().workingDatabase
-}
-
-/**
- * Reads a numeric system variable from the given database.
- *
- * @param name - Registered sysvar name (for example `POLARMODE`).
- * @param database - Database that owns the variable.
- * @param fallback - Value returned when the variable is missing or not numeric.
- * @returns Parsed finite number, or `fallback`.
- * @internal
- */
-function getSysVarNumber(
-  name: string,
-  database: AcDbDatabase,
-  fallback: number
-): number {
-  const raw = AcDbSysVarManager.instance().getVar(name, database)
-  const value = Number(raw)
-  return Number.isFinite(value) ? value : fallback
-}
-
-/**
- * Reads a string system variable from the given database.
- *
- * @param name - Registered sysvar name (for example `POLARADDANG`).
- * @param database - Database that owns the variable.
- * @returns String form of the value, or `''` when unset.
- * @internal
- */
-function getSysVarString(name: string, database: AcDbDatabase): string {
-  const raw = AcDbSysVarManager.instance().getVar(name, database)
-  return raw == null ? '' : String(raw)
+/** Returns the value when it is a finite number, otherwise the fallback. */
+function finiteOr(value: unknown, fallback: number): number {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
 }
 
 /**
@@ -104,13 +62,11 @@ function getSysVarString(name: string, database: AcDbDatabase): string {
  * {@link POLARMODE_ADDITIONAL_ANGLES} (bit 4). Other bits (0, 8, …) are stored
  * but not interpreted by this module yet.
  *
- * @param database - Optional database; defaults to the working database.
  * @returns Integer bit sum of **POLARMODE** (default `0` when unset).
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-D91628CC-9975-4DBF-8D02-10B23A6F3ED5
  */
-export function getPolarmode(database?: AcDbDatabase): number {
-  const db = getDatabase(database)
-  return getSysVarNumber(AcDbSystemVariables.POLARMODE, db, 0)
+export function getPolarmode(): number {
+  return finiteOr(AcApSettingManager.instance.get('polarMode'), 0)
 }
 
 /**
@@ -119,13 +75,11 @@ export function getPolarmode(database?: AcDbDatabase): number {
  * Defines spacing of polar tracking alignment paths (common values: 90, 45, 30,
  * 22.5, 18, 15, 10, 5).
  *
- * @param database - Optional database; defaults to the working database.
  * @returns Increment in degrees (default `90` when unset).
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-0CF67F9E-F953-43D6-9227-0D56E0E693ED
  */
-export function getPolarang(database?: AcDbDatabase): number {
-  const db = getDatabase(database)
-  return getSysVarNumber(AcDbSystemVariables.POLARANG, db, 90)
+export function getPolarang(): number {
+  return finiteOr(AcApSettingManager.instance.get('polarAngle'), 90)
 }
 
 /**
@@ -135,13 +89,11 @@ export function getPolarang(database?: AcDbDatabase): number {
  * **POLARANG**, entries are absolute display angles, not increments. Only applied
  * when {@link POLARMODE_ADDITIONAL_ANGLES} is set in **POLARMODE**.
  *
- * @param database - Optional database; defaults to the working database.
  * @returns Semicolon-separated angle list, or `''` when unset.
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-73162BAB-C98D-4159-A653-E4C7D4CB38C3
  */
-export function getPolaraddang(database?: AcDbDatabase): string {
-  const db = getDatabase(database)
-  return getSysVarString(AcDbSystemVariables.POLARADDANG, db)
+export function getPolaraddang(): string {
+  return AcApSettingManager.instance.get('polarAdditionalAngles') ?? ''
 }
 
 /**
@@ -149,12 +101,11 @@ export function getPolaraddang(database?: AcDbDatabase): string {
  *
  * Corresponds to the status bar polar tracking toggle and {@link POLARMODE_POLAR_TRACKING}.
  *
- * @param database - Optional database; defaults to the working database.
  * @returns `true` when bit 2 of **POLARMODE** is set; otherwise `false`.
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-D91628CC-9975-4DBF-8D02-10B23A6F3ED5
  */
-export function isPolarTrackingEnabled(database?: AcDbDatabase): boolean {
-  return (getPolarmode(database) & POLARMODE_POLAR_TRACKING) !== 0
+export function isPolarTrackingEnabled(): boolean {
+  return (getPolarmode() & POLARMODE_POLAR_TRACKING) !== 0
 }
 
 /**
@@ -237,17 +188,15 @@ function parsePolaraddangDegrees(value: string): number[] {
  * Candidates depend on **POLARMODE**, **POLARANG**, **POLARADDANG**, and whether
  * orthogonal directions should be included (typically when **ORTHOMODE** is on).
  *
- * @param database - Database providing sysvars and **ANGBASE** / **ANGDIR**.
  * @param options - Controls inclusion of 90° orthogonal directions.
  * @returns Unique display angles in radians; empty when polar tracking is off and
  *   `includeOrtho` is `false`.
  * @internal
  */
 function buildTrackingDisplayAnglesRadians(
-  database: AcDbDatabase,
   options: AcEdBuildTrackingDisplayAnglesOptions
 ): number[] {
-  const polarmode = getPolarmode(database)
+  const polarmode = getPolarmode()
   const usePolar = (polarmode & POLARMODE_POLAR_TRACKING) !== 0
   const useAdditional = (polarmode & POLARMODE_ADDITIONAL_ANGLES) !== 0
 
@@ -260,7 +209,7 @@ function buildTrackingDisplayAnglesRadians(
   }
 
   if (usePolar) {
-    const increment = getPolarang(database)
+    const increment = getPolarang()
     if (increment > 0) {
       const steps = Math.max(1, Math.round(360 / increment))
       for (let i = 0; i < steps; i++) {
@@ -269,7 +218,7 @@ function buildTrackingDisplayAnglesRadians(
     }
 
     if (useAdditional) {
-      for (const degrees of parsePolaraddangDegrees(getPolaraddang(database))) {
+      for (const degrees of parsePolaraddangDegrees(getPolaraddang())) {
         degreeSet.add(degrees)
       }
     }
@@ -329,19 +278,19 @@ function nearestDisplayAngle(target: number, candidates: number[]): number {
  *
  * @param point - Current cursor position in WCS (typically after OSNAP).
  * @param reference - Tracking base point (last point or prompt base point).
- * @param database - Optional database; defaults to the working database.
  * @returns Constrained WCS point on the nearest tracking ray, or `point` when
  *   tracking does not apply or distance to `reference` is negligible.
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-3E0AAC2C-0756-4626-B79C-ED8DAB930EA3
  */
 export function constrainToTracking(
   point: GeometryPoint2dLike,
-  reference: GeometryPoint2dLike,
-  database?: AcDbDatabase
+  reference: GeometryPoint2dLike
 ): GeometryPoint2dLike {
-  const db = getDatabase(database)
-  const ortho = isOrthoModeEnabled(db)
-  const polar = isPolarTrackingEnabled(db)
+  const settings = AcApSettingManager.instance
+  const angleBase = settings.get('angleBase')
+  const angleDirection = settings.get('angleDirection')
+  const ortho = isOrthoModeEnabled()
+  const polar = isPolarTrackingEnabled()
 
   if (!ortho && !polar) {
     return point
@@ -359,8 +308,12 @@ export function constrainToTracking(
   }
 
   const wcsAngle = Math.atan2(dy, dx)
-  const displayAngle = toDisplayAngleRadians(wcsAngle, db.angbase, db.angdir)
-  const candidates = buildTrackingDisplayAnglesRadians(db, {
+  const displayAngle = toDisplayAngleRadians(
+    wcsAngle,
+    angleBase,
+    angleDirection
+  )
+  const candidates = buildTrackingDisplayAnglesRadians({
     includeOrtho: ortho
   })
 
@@ -371,8 +324,8 @@ export function constrainToTracking(
   const lockedDisplay = nearestDisplayAngle(displayAngle, candidates)
   const lockedWcs = fromDisplayAngleRadians(
     lockedDisplay,
-    db.angbase,
-    db.angdir
+    angleBase,
+    angleDirection
   )
 
   return {
@@ -387,17 +340,15 @@ export function constrainToTracking(
  * Preserves all other **POLARMODE** bits (orthogonal-only tracking source,
  * additional angles, shift-to-acquire, etc.).
  *
- * @param database - Optional database; defaults to the working database.
  * @returns The new **POLARMODE** value after the toggle.
  * @see https://help.autodesk.com/view/ACD/2027/ENU/?guid=GUID-D91628CC-9975-4DBF-8D02-10B23A6F3ED5
  */
-export function togglePolarTracking(database?: AcDbDatabase): number {
-  const db = getDatabase(database)
-  const current = getPolarmode(db)
+export function togglePolarTracking(): number {
+  const current = getPolarmode()
   const next =
     (current & POLARMODE_POLAR_TRACKING) !== 0
       ? current & ~POLARMODE_POLAR_TRACKING
       : current | POLARMODE_POLAR_TRACKING
-  AcDbSysVarManager.instance().setVar(AcDbSystemVariables.POLARMODE, next, db)
+  AcApSettingManager.instance.set('polarMode', next)
   return next
 }
