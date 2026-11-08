@@ -1,11 +1,11 @@
 <template>
-  <ml-status-bar
+  <div
     :class="{ 'is-disabled': isStatusBarDisabled }"
     :aria-disabled="isStatusBarDisabled"
     class="ml-status-bar"
   >
-    <!-- Right Slot Content -->
-    <template #right>
+    <div class="ml-status-bar-left"></div>
+    <div class="ml-status-bar-right">
       <el-button-group class="ml-status-bar-right-button-group">
         <el-button
           v-if="features.isShowCoordinate && !isMobile"
@@ -53,13 +53,12 @@
         />
         <ml-setting-button />
       </el-button-group>
-    </template>
-  </ml-status-bar>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ApplicationDocManager } from '@mlightcad/cad-simple-viewer'
-import { MlStatusBar } from '@mlightcad/ui-components'
 import { ElButton, ElButtonGroup } from 'element-plus'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -105,7 +104,17 @@ const toggleNotificationCenter = () => {
 
 <style scoped>
 .ml-status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--el-fill-color);
   box-sizing: border-box;
+  border: 1px solid var(--el-border-color);
 }
 
 .ml-status-bar.is-disabled {
@@ -114,14 +123,22 @@ const toggleNotificationCenter = () => {
   user-select: none;
 }
 
-.ml-status-bar :deep(.ml-status-bar-left) {
+.ml-status-bar-left {
+  display: flex;
+  align-items: center;
   flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
 }
 
-.ml-status-bar :deep(.ml-status-bar-right) {
+.ml-status-bar-right {
+  display: flex;
+  align-items: center;
   flex: 0 0 auto;
+}
+
+.ml-status-bar-right > * {
+  margin-left: 10px;
 }
 
 .ml-status-bar-right-button-group {
