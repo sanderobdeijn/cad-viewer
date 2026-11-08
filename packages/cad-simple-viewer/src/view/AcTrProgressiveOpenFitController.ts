@@ -1,5 +1,4 @@
-import { GeometryBox2d, GeometryVector2d } from '@mlightcad/data-model'
-
+import { GeometryBox2d, GeometryVector2d } from '@mlightcad/geometry-engine'
 /** Callback that applies a zoom-to-fit in the host view. */
 export type AcTrProgressiveOpenFitZoomFn = (
   box: GeometryBox2d,

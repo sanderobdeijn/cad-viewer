@@ -1,9 +1,9 @@
+import { log } from '@mlightcad/common'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcGiSubEntityTraits,
-  AcGiTextStyle,
-  GeometryPoint2dLike,
-  log
-} from '@mlightcad/data-model'
+  AcGiTextStyle
+} from '@mlightcad/graphic-interface'
 import { ColorSettings, MTextObject } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 

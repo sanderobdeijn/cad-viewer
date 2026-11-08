@@ -1,10 +1,10 @@
+import { AcCmEventManager } from '@mlightcad/common'
 import {
-  AcCmEventManager,
   GeometryBox2d,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryVector2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 

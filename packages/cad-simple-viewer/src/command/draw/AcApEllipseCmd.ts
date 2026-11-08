@@ -1,11 +1,11 @@
+import { AcDbEllipse } from '@mlightcad/data-model'
 import {
-  AcDbEllipse,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol,
   GeometryVector3dLike,
   TAU
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {

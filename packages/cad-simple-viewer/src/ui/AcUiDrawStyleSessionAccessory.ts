@@ -1,4 +1,5 @@
-import { AcCmColor, acdbHostApplicationServices } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
+import { acdbHostApplicationServices } from '@mlightcad/data-model'
 
 import {
   applyMeasurementStyleToSelection,

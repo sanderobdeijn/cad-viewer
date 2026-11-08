@@ -1,13 +1,13 @@
+import { log } from '@mlightcad/common'
+import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
-  acdbDrawTessellateOptions,
-  AcGiSubEntityTraits,
   GeometryArea2d,
   GeometryIndexNode,
   GeometryPoint2d,
   GeometryPoint2dLike,
-  GeometryUtil,
-  log
-} from '@mlightcad/data-model'
+  GeometryUtil
+} from '@mlightcad/geometry-engine'
+import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import { GeometryEpsilon, PolyBool } from '@velipso/polybool'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'

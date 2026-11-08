@@ -74,10 +74,8 @@ import {
   AcEdOpenMode,
   eventBus
 } from '@mlightcad/cad-simple-viewer'
-import {
-  ACDB_DRAW_CIRCLE_SIDES_DRAFT,
-  log
-} from '@mlightcad/data-model'
+import { log } from '@mlightcad/common'
+import { ACDB_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/data-model'
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'

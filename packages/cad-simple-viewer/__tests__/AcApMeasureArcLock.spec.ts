@@ -1,10 +1,8 @@
+import { AcDbArc, AcDbCircle, AcDbPolyline } from '@mlightcad/data-model'
 import {
-  AcDbArc,
-  AcDbCircle,
-  AcDbPolyline,
   GeometryCircularArc2d,
   GeometryPoint2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import {
   lockCurvesFromEntity,

@@ -1,5 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
-
+import { AcCmColor } from '@mlightcad/common'
 /**
  * Describes basic layer state information within the editor view.
  *

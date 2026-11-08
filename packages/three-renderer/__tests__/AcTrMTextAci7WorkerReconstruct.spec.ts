@@ -1,7 +1,5 @@
-import {
-  AcCmColor,
-  ACGI_LIGHT_THEME_FOREGROUND
-} from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
+import { ACGI_LIGHT_THEME_FOREGROUND } from '@mlightcad/graphic-interface'
 import { MTextColor } from '@mlightcad/mtext-parser'
 import {
   buildWorkerMaterialColorSettings,

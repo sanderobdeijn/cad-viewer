@@ -1,9 +1,5 @@
-import {
-  AcCmPerformanceCollector,
-  AcDbDatabase,
-  AcDbProgressdEventArgs,
-  log
-} from '@mlightcad/data-model'
+import { AcCmPerformanceCollector, log } from '@mlightcad/common'
+import { AcDbDatabase, AcDbProgressdEventArgs } from '@mlightcad/data-model'
 
 import type { AcTrView2d } from '../view/AcTrView2d'
 import { getLastFontLoadStats } from './AcApFontLoader'

@@ -97,9 +97,9 @@ import {
   AcDbDatabase,
   acdbHostApplicationServices,
   AcDbLine,
-  AcDbPolyline,
-  GeometryPoint2d
+  AcDbPolyline
 } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { AcTrEntity, AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 

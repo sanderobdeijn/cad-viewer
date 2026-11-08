@@ -115,9 +115,18 @@ importers:
 
   packages/cad-simple-viewer:
     devDependencies:
+      '@mlightcad/common':
+        specifier: workspace:*
+        version: link:../common
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
+      '@mlightcad/geometry-engine':
+        specifier: workspace:*
+        version: link:../geometry-engine
+      '@mlightcad/graphic-interface':
+        specifier: workspace:*
+        version: link:../graphic-interface
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser
@@ -160,9 +169,15 @@ importers:
       '@mlightcad/cad-simple-viewer':
         specifier: workspace:*
         version: link:../cad-simple-viewer
+      '@mlightcad/common':
+        specifier: workspace:*
+        version: link:../common
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
+      '@mlightcad/geometry-engine':
+        specifier: workspace:*
+        version: link:../geometry-engine
       '@mlightcad/ribbon':
         specifier: workspace:*
         version: link:../ribbon
@@ -404,9 +419,18 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
     devDependencies:
+      '@mlightcad/common':
+        specifier: workspace:*
+        version: link:../common
       '@mlightcad/data-model':
         specifier: workspace:*
         version: link:../data-model
+      '@mlightcad/geometry-engine':
+        specifier: workspace:*
+        version: link:../geometry-engine
+      '@mlightcad/graphic-interface':
+        specifier: workspace:*
+        version: link:../graphic-interface
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser

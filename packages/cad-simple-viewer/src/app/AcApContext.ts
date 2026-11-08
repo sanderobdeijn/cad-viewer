@@ -1,8 +1,6 @@
-import {
-  AcCmEventManager,
-  AcDbLayout,
-  ModelItemEventArgs
-} from '@mlightcad/data-model'
+import { AcCmEventManager } from '@mlightcad/common'
+import { AcDbLayout } from '@mlightcad/data-model'
+import { ModelItemEventArgs } from '@mlightcad/geometry-engine'
 
 import { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import { AcTrView2d } from '../view'

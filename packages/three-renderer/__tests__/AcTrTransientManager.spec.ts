@@ -1,12 +1,12 @@
-import { GeometryMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 import { AcTrEntity } from '../src/object/AcTrEntity'
 import { AcTrGroup } from '../src/object/AcTrGroup'
 import { AcTrLine } from '../src/object/AcTrLine'
+import { AcTrTransientManager } from '../src/object/AcTrTransientManager'
 import { AcTrRenderContext } from '../src/renderer/AcTrRenderContext'
 import { AcTrSubEntityTraitsUtil } from '../src/util'
-import { AcTrTransientManager } from '../src/object/AcTrTransientManager'
 import { AcTrMatrixUtil } from '../src/util/AcTrMatrixUtil'
 
 const defaultTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()

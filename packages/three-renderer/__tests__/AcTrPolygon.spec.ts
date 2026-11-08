@@ -2,14 +2,14 @@ import {
   GeometryArea2d,
   GeometryPoint2d,
   GeometryPolyline2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
-import { expectWcsBboxCloseTo } from './helpers/expectWcsBbox'
 import { AcTrPolygon } from '../src/object/AcTrPolygon'
 import { AcTrRenderContext } from '../src/renderer/AcTrRenderContext'
 import { AcTrSubEntityTraitsUtil } from '../src/util'
 import { getSceneDrawableUserData } from '../src/util/AcTrObjectUserData'
+import { expectWcsBboxCloseTo } from './helpers/expectWcsBbox'
 
 const defaultTraits = AcTrSubEntityTraitsUtil.createDefaultTraits()
 

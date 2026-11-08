@@ -40,14 +40,20 @@
     "lint:fix": "eslint --fix --quiet src/"
   },
   "devDependencies": {
+    "@mlightcad/common": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
+    "@mlightcad/geometry-engine": "workspace:*",
+    "@mlightcad/graphic-interface": "workspace:*",
     "@mlightcad/mtext-parser": "workspace:*",
     "@mlightcad/mtext-renderer": "workspace:*",
     "@types/three": "^0.186.0",
     "three": "^0.186.1"
   },
   "peerDependencies": {
+    "@mlightcad/common": "workspace:*",
     "@mlightcad/data-model": "workspace:*",
+    "@mlightcad/geometry-engine": "workspace:*",
+    "@mlightcad/graphic-interface": "workspace:*",
     "@mlightcad/mtext-parser": "workspace:*",
     "@mlightcad/mtext-renderer": "workspace:*",
     "@velipso/polybool": "^1.1.1",

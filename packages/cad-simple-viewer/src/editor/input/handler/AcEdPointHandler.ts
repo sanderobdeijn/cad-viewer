@@ -1,4 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcEdPromptPointOptions } from '../prompt/AcEdPromptPointOptions'
 import { AcEdInputHandler, AcEdPointInputContext } from './AcEdInputHandler'

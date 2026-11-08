@@ -1,8 +1,5 @@
-import {
-  AcDbEntity,
-  GeometryBox2d,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { AcDbEntity } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApDocManager, AcApSettingManager } from '../../../app'
 import { AcApI18n } from '../../../i18n'

@@ -11,7 +11,10 @@
  * @packageDocumentation
  */
 
-import { GeometryMathUtil, GeometryPoint2dLike } from '@mlightcad/data-model'
+import {
+  GeometryMathUtil,
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
 import { constrainToOrtho, isOrthoModeEnabled } from './AcEdOrthoMode'

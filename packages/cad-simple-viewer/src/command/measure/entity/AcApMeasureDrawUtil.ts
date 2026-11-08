@@ -1,8 +1,8 @@
+import { type AcCmColor } from '@mlightcad/common'
 import {
-  type AcCmColor,
   GeometryCircularArc2d,
   GeometryMathUtil
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import type { AcEdBaseView } from '../../../editor'
 import { acapColorToCssAlpha, acapCssColor } from '../../../util'

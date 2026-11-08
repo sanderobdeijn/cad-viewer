@@ -1,9 +1,9 @@
+import { AcDbEntity } from '@mlightcad/data-model'
 import {
-  AcDbEntity,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import {
   AcEdSelectionStaticPreviewJig,

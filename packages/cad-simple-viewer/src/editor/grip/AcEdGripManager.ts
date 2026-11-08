@@ -1,4 +1,5 @@
-import { AcDbObjectId, GeometryPoint2dLike } from '@mlightcad/data-model'
+import { AcDbObjectId } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApDocManager } from '../../app'
 import {

@@ -1,4 +1,5 @@
-import { AcDbDxfCode, AcDbLine, GeometryPoint2d } from '@mlightcad/data-model'
+import { AcDbDxfCode, AcDbLine } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcEdSelectionFilter } from '../src/editor/input/AcEdSelectionFilter'
 

@@ -1,9 +1,9 @@
+import { AcDbPolyline } from '@mlightcad/data-model'
 import {
-  AcDbPolyline,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {

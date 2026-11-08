@@ -44,6 +44,12 @@ const packagesProject: ProjectConfig = {
   ],
   moduleNameMapper: {
     '^lodash-es$': 'lodash',
+    // Resolve these to one copy each, so a class seen through data-model's
+    // re-exports is the same class as one imported from its own package.
+    // data-model's unbundled build imports the others by package name.
+    '^@mlightcad/(common|geometry-engine|graphic-interface)$':
+      '<rootDir>/packages/$1/src/index.ts',
+    '^@mlightcad/data-model$': '<rootDir>/packages/data-model/lib/index.js',
     '^@mlightcad/cad-simple-viewer$':
       '<rootDir>/packages/cad-simple-viewer/src/index.ts',
     '^@mlightcad/cad-simple-viewer/icons$':

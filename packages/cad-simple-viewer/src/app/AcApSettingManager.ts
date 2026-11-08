@@ -1,9 +1,5 @@
-import {
-  AcCmEventManager,
-  AcDbOsnapMode,
-  acdbOsnapModesToMask
-} from '@mlightcad/data-model'
-
+import { AcCmEventManager } from '@mlightcad/common'
+import { AcDbOsnapMode, acdbOsnapModesToMask } from '@mlightcad/data-model'
 /**
  * Font mappings for CAD text rendering.
  *

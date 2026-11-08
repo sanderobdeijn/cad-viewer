@@ -1,4 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import { stringifyMeasurementSidecar } from '../src/command/measure/AcApMeasurementSidecar'

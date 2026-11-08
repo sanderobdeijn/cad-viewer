@@ -1,8 +1,8 @@
+import { log } from '@mlightcad/common'
 import {
   GeometryPoint2d,
-  GeometryPoint2dLike,
-  log
-} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
 import { GeometryEpsilon, PolyBool } from '@velipso/polybool'
 
 /**

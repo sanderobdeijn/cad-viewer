@@ -2,7 +2,7 @@ import {
   GeometryBox2d,
   GeometryPoint2d,
   GeometryVector2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 

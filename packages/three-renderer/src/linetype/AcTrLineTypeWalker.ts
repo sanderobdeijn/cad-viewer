@@ -1,7 +1,5 @@
-import type {
-  AcGiLineTypePatternElement,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
-
+import type { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+import type { AcGiLineTypePatternElement } from '@mlightcad/graphic-interface'
 /**
  * Complex linetype pattern fields from RealDWG plus PDF-compatible aliases.
  */

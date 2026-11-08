@@ -4,7 +4,7 @@ import {
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryPolyline2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 import {

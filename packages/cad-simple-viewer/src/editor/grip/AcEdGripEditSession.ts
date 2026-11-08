@@ -1,8 +1,5 @@
-import {
-  AcDbEntity,
-  AcDbObjectId,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcEdOsnapResolver } from '../input/AcEdOsnapResolver'
 import { AcEdMarkerManager } from '../input/marker'

@@ -1,9 +1,9 @@
+import type { AcDbObjectId } from '@mlightcad/data-model'
 import type {
-  AcDbObjectId,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryVector3dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import type { AcTrView2d } from '../../view'

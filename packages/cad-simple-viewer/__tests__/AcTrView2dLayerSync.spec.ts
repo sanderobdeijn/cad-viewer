@@ -1,4 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import {
   AcTrEntity,
   AcTrRenderContext,
@@ -8,8 +8,8 @@ import {
 } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
-import { AcTrLayerAppearanceController } from '../src/view/AcTrLayerAppearanceController'
 import { AcTrLayer } from '../src/view/AcTrLayer'
+import { AcTrLayerAppearanceController } from '../src/view/AcTrLayerAppearanceController'
 import { AcTrScene } from '../src/view/AcTrScene'
 
 /**

@@ -1,7 +1,5 @@
-import {
-  AcDbAlignedDimension,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { AcDbAlignedDimension } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {

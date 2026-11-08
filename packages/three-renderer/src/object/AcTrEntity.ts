@@ -1,16 +1,11 @@
-import {
-  AcGiEntity,
-  GeometryPoint2d
-} from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
+import { AcGiEntity } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import type { AcTrBatchDrawPolicy } from '../draw/AcTrBatchDrawPolicy'
 import type { AcTrDrawMode } from '../draw/AcTrDrawMode'
 import { AcTrRenderContext } from '../renderer/AcTrRenderContext'
-import {
-  AcTrMaterialUtil,
-  isObjectHierarchyVisible
-} from '../util'
+import { AcTrMaterialUtil, isObjectHierarchyVisible } from '../util'
 import {
   type AcTrEntityUserData,
   getObjectUserData,

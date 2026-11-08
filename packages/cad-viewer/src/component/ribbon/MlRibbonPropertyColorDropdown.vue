@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 
 import { color as colorIcon } from '../../svg'
 import MlColorDropdown from '../common/MlColorDropdown.vue'

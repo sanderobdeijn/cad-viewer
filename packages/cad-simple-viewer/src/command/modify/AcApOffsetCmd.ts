@@ -1,10 +1,9 @@
+import { AcDbCurve, AcDbEntity } from '@mlightcad/data-model'
 import {
-  AcDbCurve,
-  AcDbEntity,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {

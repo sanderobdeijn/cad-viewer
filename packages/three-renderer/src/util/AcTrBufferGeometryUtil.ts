@@ -1,4 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 const _vector1 = /*@__PURE__*/ new THREE.Vector3()

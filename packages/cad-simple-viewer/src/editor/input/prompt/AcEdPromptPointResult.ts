@@ -1,4 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcEdPromptResult } from './AcEdPromptResult'
 import { AcEdPromptStatus } from './AcEdPromptStatus'

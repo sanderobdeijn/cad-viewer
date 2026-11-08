@@ -1,5 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
-
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 /**
  * Describes the raw text values from the X and Y fields in {@link AcEdFloatingInput}.
  */

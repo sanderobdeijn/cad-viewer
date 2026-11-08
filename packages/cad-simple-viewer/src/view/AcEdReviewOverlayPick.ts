@@ -1,4 +1,4 @@
-import { GeometryBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 
 import { measurementGeometryBounds } from '../command/measure/AcApMeasurementGeometry'
 import {

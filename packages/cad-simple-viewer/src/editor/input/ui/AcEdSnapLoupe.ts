@@ -1,4 +1,4 @@
-import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcEdBaseView } from '../../view'
 import { AcEdMarker, AcEdMarkerType } from '../marker/AcEdMarker'

@@ -1,4 +1,4 @@
-import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 import { AcTrEntity } from '../src/object/AcTrEntity'

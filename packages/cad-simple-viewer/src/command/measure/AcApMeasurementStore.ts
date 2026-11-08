@@ -1,5 +1,5 @@
+import type { AcCmColor } from '@mlightcad/common'
 import type {
-  AcCmColor,
   AcDbDatabase,
   AcDbEntity,
   AcDbObjectId

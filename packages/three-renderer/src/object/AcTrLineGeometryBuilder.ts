@@ -1,10 +1,10 @@
+import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
-  acdbDrawTessellateOptions,
-  AcGiSubEntityTraits,
   GeometryArea2d,
   GeometryIndexNode,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
+import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'

@@ -99,9 +99,9 @@ import {
   AcDbDatabase,
   acdbHostApplicationServices,
   AcDbLine,
-  AcDbPolyline,
-  GeometryPoint2d
+  AcDbPolyline
 } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 import {
   defaultBatchDrawPolicy,
   RTE_REBASE_THRESHOLD

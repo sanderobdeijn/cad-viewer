@@ -2,7 +2,7 @@ import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryPoint2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import type { AcEdBaseView } from '../editor'
 

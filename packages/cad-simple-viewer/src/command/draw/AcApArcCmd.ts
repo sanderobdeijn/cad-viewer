@@ -1,10 +1,10 @@
+import { AcDbArc } from '@mlightcad/data-model'
 import {
-  AcDbArc,
   GeometryCircularArc2d,
   GeometryMathUtil,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -658,9 +658,7 @@ export class AcApArcCmd extends AcEdCommand {
    * @param arc - Arc definition to append.
    */
   private appendArc(context: AcApContext, arc: ArcDefinition) {
-    context.doc.modelSync.add(
-      createArcEntity(arc)
-    )
+    context.doc.modelSync.add(createArcEntity(arc))
   }
 
   /**

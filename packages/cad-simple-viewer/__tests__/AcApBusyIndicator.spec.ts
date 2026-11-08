@@ -8,8 +8,8 @@ const mockProgressInstances: Array<{
 const mockEventBusEmit = jest.fn()
 const mockYieldForPaint = jest.fn(() => Promise.resolve())
 
-jest.mock('@mlightcad/data-model', () => ({
-  ...jest.requireActual('@mlightcad/data-model'),
+jest.mock('@mlightcad/common', () => ({
+  ...jest.requireActual('@mlightcad/common'),
   accmYieldForPaint: mockYieldForPaint
 }))
 

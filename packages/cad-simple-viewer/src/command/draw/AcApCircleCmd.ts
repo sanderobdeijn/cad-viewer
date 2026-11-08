@@ -1,9 +1,9 @@
+import { AcDbCircle } from '@mlightcad/data-model'
 import {
-  AcDbCircle,
   GeometryCircularArc2d,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -520,9 +520,7 @@ export class AcApCircleCmd extends AcEdCommand {
     await machine.run(prompt => AcApDocManager.instance.editor.getPoint(prompt))
 
     if (!circle) return
-    context.doc.modelSync.add(
-      new AcDbCircle(circle.center, circle.radius)
-    )
+    context.doc.modelSync.add(new AcDbCircle(circle.center, circle.radius))
   }
 
   /**

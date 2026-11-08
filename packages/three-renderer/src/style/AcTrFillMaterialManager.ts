@@ -1,4 +1,4 @@
-import { AcGiSubEntityTraits } from '@mlightcad/data-model'
+import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import { AcTrMaterialManager, AcTrMaterialSide } from './AcTrMaterialManager'

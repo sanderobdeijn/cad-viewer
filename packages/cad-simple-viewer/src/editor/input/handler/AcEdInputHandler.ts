@@ -1,5 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
-
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 /**
  * Optional context for AutoCAD-style command-line point entry.
  */

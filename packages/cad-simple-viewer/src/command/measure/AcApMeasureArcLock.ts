@@ -1,11 +1,9 @@
+import { AcDbArc, AcDbCircle, AcDbPolyline } from '@mlightcad/data-model'
 import {
-  AcDbArc,
-  AcDbCircle,
-  AcDbPolyline,
   GeometryCircularArc2d,
   GeometryPoint2dLike,
   TAU
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import type { AcApMeasureCircleGeom } from './entity/AcApMeasureDrawUtil'
 

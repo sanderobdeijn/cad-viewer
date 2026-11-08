@@ -1,5 +1,5 @@
+import { AcCmEventManager } from '@mlightcad/common'
 import {
-  AcCmEventManager,
   AcDb3PointAngularDimension,
   AcDbAlignedDimension,
   AcDbArc,
@@ -15,7 +15,9 @@ import {
   AcDbPoint,
   AcDbPolyline,
   AcDbRadialDimension,
-  AcDbRotatedDimension,
+  AcDbRotatedDimension
+} from '@mlightcad/data-model'
+import {
   GeometryCircularArc2d,
   GeometryDimension,
   GeometryEllipseArc2d,
@@ -27,7 +29,7 @@ import {
   Model,
   ModelItem,
   ModelTextItem
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import {
   getMeasurementValueText,

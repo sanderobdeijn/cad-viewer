@@ -4,9 +4,9 @@ import {
   acdbHostApplicationServices,
   AcDbLine,
   AcDbPoint,
-  AcDbPolyline,
-  GeometryPoint2d
+  AcDbPolyline
 } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcApModelSync, itemContentsFor } from '../src/app/AcApModelSync'
 import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'

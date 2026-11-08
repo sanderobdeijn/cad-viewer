@@ -1,6 +1,6 @@
 import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
 import { AcEdBaseView, AcEdMouseEventArgs } from '@mlightcad/cad-simple-viewer'
-import { GeometryPoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 function formatCoordinatePair(x: number, y: number): string {

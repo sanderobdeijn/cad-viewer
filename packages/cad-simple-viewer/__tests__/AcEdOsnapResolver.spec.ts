@@ -8,11 +8,13 @@ import {
   AcDbLine,
   AcDbOsnapMode,
   acdbOsnapModesToMask,
-  AcDbPolyline,
+  AcDbPolyline
+} from '@mlightcad/data-model'
+import {
   GeometryCircularArc2d,
   GeometryPoint2d,
   GeometryVector3d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApSettingManager } from '../src/app/AcApSettingManager'
 import { AcEdOsnapResolver } from '../src/editor/input/AcEdOsnapResolver'

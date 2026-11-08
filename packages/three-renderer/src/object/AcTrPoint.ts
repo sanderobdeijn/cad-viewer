@@ -1,7 +1,8 @@
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcGiPointStyle,
-  AcGiSubEntityTraits,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  AcGiSubEntityTraits
+} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import type { AcTrDrawMode } from '../draw/AcTrDrawMode'

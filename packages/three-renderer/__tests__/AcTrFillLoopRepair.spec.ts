@@ -1,4 +1,4 @@
-import { GeometryPoint2d } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import {
   fillLoopHasSelfIntersection,

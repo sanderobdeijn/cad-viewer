@@ -1,4 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import type { AcTrEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 

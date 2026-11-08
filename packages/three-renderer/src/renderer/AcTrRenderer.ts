@@ -1,20 +1,22 @@
+import { AcCmEventManager } from '@mlightcad/common'
+import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
-  AcCmEventManager,
-  acdbDrawTessellateOptions,
-  AcGiFontMapping,
-  AcGiMTextData,
-  AcGiPointStyle,
-  AcGiRenderer,
-  AcGiShapeData,
-  AcGiSubEntityTraits,
-  AcGiTextStyle,
   GeometryArea2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryPolyline2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
+import {
+  AcGiFontMapping,
+  AcGiMTextData,
+  AcGiPointStyle,
+  AcGiRenderer,
+  AcGiShapeData,
+  AcGiSubEntityTraits,
+  AcGiTextStyle
+} from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 

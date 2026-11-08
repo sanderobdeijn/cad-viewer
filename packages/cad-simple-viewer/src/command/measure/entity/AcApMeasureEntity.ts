@@ -1,4 +1,5 @@
-import type { AcDbDatabase, GeometryPoint2dLike } from '@mlightcad/data-model'
+import type { AcDbDatabase } from '@mlightcad/data-model'
+import type { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import { type AcTrHtmlElement, AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {

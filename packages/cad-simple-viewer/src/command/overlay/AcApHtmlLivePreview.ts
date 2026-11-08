@@ -6,7 +6,7 @@
  * so jig rubber-bands no longer force a WebGL redraw.
  */
 
-import type { AcCmColor } from '@mlightcad/data-model'
+import type { AcCmColor } from '@mlightcad/common'
 import { AcTrHtmlCanvasOverlay } from '@mlightcad/three-renderer'
 
 import { acapCssColor } from '../../util'

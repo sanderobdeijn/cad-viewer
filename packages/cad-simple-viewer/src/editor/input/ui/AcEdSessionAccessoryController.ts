@@ -1,4 +1,4 @@
-import type { AcCmEventManager } from '@mlightcad/data-model'
+import type { AcCmEventManager } from '@mlightcad/common'
 
 import type { AcEdCommand } from '../../command/AcEdCommand'
 import type {
@@ -261,7 +261,9 @@ export class AcEdSessionAccessoryController {
       const events = this.getEditorEvents()
       events.beforeMountSessionAccessory.removeEventListener(this.onBeforeMount)
       events.afterMountSessionAccessory.removeEventListener(this.onAfterMount)
-      events.afterUnmountSessionAccessory.removeEventListener(this.onAfterUnmount)
+      events.afterUnmountSessionAccessory.removeEventListener(
+        this.onAfterUnmount
+      )
       this.bound = false
     }
     if (this.mounted) {

@@ -1,8 +1,8 @@
+import { AcDbEntity } from '@mlightcad/data-model'
 import {
-  AcDbEntity,
   GeometryCircularArc2d,
   GeometryPoint2d
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcTrGeometrySanitizer } from '../src/util/AcTrGeometrySanitizer'
 
@@ -58,9 +58,7 @@ describe('AcTrGeometrySanitizer', () => {
       { currentDrawingEntity: entity }
     )
 
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('Line ABC123')
-    )
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Line ABC123'))
     warn.mockRestore()
   })
 })

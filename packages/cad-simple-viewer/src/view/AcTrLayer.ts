@@ -1,4 +1,5 @@
-import { AcDbObjectId, AcGiSubEntityTraits } from '@mlightcad/data-model'
+import { AcDbObjectId } from '@mlightcad/data-model'
+import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import {
   AcTrBatchedGroup,
   AcTrBatchedGroupStats,

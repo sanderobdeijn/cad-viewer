@@ -1,10 +1,11 @@
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcGiMTextAttachmentPoint,
   AcGiMTextData,
   AcGiShapeData,
   AcGiSubEntityTraits,
-  AcGiTextStyle,
-  GeometryPoint2dLike} from '@mlightcad/data-model'
+  AcGiTextStyle
+} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'

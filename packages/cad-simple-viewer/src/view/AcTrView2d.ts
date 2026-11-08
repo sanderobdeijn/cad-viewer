@@ -1,19 +1,20 @@
+import { AcCmUiYieldGate, log } from '@mlightcad/common'
 import {
-  AcCmUiYieldGate,
   AcDbDatabase,
   AcDbEntity,
   AcDbLayerTableRecord,
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
-  AcDbObjectId,
-  acgiForegroundColorForBackground,
+  AcDbObjectId
+} from '@mlightcad/data-model'
+import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
-  GeometryPoint2dLike,
-  log
-} from '@mlightcad/data-model'
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
+import { acgiForegroundColorForBackground } from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import {
   AcTrEntity,
@@ -1344,9 +1345,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   syncDisplaySysVars(database: AcDbDatabase) {
     this.bindDrawDatabase(database)
-    this.applyCanvasBackground(
-      readBackgroundColor()
-    )
+    this.applyCanvasBackground(readBackgroundColor())
   }
 
   /**
@@ -2362,7 +2361,6 @@ export class AcTrView2d extends AcEdBaseView {
         if (this._convertEpoch !== epoch) return
       }
     }
-
   }
 
   /**
@@ -3328,7 +3326,6 @@ export class AcTrView2d extends AcEdBaseView {
             await commitEntity()
           }
         }
-
       } catch (error) {
         const failedId = String(entity.objectId ?? '')
         if (failedId) {

@@ -1,8 +1,6 @@
-import {
-  AcCmEventManager,
-  AcDbObjectId,
-  GeometryPoint2d
-} from '@mlightcad/data-model'
+import { AcCmEventManager } from '@mlightcad/common'
+import { AcDbObjectId } from '@mlightcad/data-model'
+import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import type { AcEdViewHoverEventArgs } from './AcEdBaseView'
 

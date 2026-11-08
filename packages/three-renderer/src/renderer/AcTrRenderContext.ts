@@ -1,10 +1,10 @@
+import { AcDbDatabase } from '@mlightcad/data-model'
 import {
-  AcDbDatabase,
   ACGI_DARK_THEME_FOREGROUND,
   ACGI_LIGHT_THEME_FOREGROUND,
   AcGiContext,
   acgiIsLightBackground
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 
 import {
   AcTrBatchDrawPolicy,

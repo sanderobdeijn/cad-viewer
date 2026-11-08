@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import { ElPopover } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 

@@ -53,7 +53,8 @@ jest.mock('rbush', () => {
   }
 })
 
-import { AcCmColor, GeometryBox2d } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import type { AcTrEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
@@ -105,8 +106,8 @@ jest.mock('@mlightcad/three-renderer', () => {
   }
 })
 
-import { AcTrLayout } from '../src/view/AcTrLayout'
 import { isEffectiveSpatialQueryHit } from '../src/editor/view/AcEdSpatialQueryResult'
+import { AcTrLayout } from '../src/view/AcTrLayout'
 
 function createLayerInfo(name = '0') {
   return {

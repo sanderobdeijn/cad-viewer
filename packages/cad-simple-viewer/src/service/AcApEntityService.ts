@@ -1,9 +1,8 @@
+import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
 import {
-  AcDbEntity,
-  AcDbObjectId,
   GeometryMatrix3d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import type { AcApModelSync } from '../app/AcApModelSync'
 import { createRotationMatrix } from '../util/AcApGeTransform'

@@ -1,4 +1,5 @@
-import { type AcDbDatabase, GeometryCircularArc2d } from '@mlightcad/data-model'
+import { type AcDbDatabase } from '@mlightcad/data-model'
+import { GeometryCircularArc2d } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,

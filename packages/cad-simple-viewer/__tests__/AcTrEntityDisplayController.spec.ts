@@ -1,5 +1,5 @@
+import { AcCmColor } from '@mlightcad/common'
 import {
-  AcCmColor,
   type AcDbBlockTableRecord,
   type AcDbEntity
 } from '@mlightcad/data-model'

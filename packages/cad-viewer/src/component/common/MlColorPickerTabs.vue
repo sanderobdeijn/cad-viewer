@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import 'element-plus/es/components/color-picker-panel/style/css'
 
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import { ElTabPane, ElTabs } from 'element-plus'
 import ElColorPickerPanel from 'element-plus/es/components/color-picker-panel/index'
 import { ref, watch } from 'vue'

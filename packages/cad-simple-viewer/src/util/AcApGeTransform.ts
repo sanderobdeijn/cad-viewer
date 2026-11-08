@@ -1,5 +1,7 @@
-import { GeometryMatrix3d, GeometryPoint2dLike } from '@mlightcad/data-model'
-
+import {
+  GeometryMatrix3d,
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
 /**
  * Builds a world-space rotation matrix around a given base point.
  *

@@ -2,7 +2,7 @@ import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 /**

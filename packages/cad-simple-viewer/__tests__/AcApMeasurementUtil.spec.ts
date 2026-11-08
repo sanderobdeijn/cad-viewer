@@ -1,17 +1,14 @@
-import {
-  AcCmColor,
-  AcCmColorMethod,
-  type AcDbDatabase,
-  AcGiLineWeight
-} from '@mlightcad/data-model'
+import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
+import { type AcDbDatabase } from '@mlightcad/data-model'
+import { AcGiLineWeight } from '@mlightcad/graphic-interface'
 
 import {
   acapCssColor,
   acapCssToMeasurementColor,
   acapGetCurrentMeasurementStyle,
+  acapGetMeasurementColor,
   acapGetMeasurementFontSize,
   acapMeasurementCanvasLineWidth,
-  acapGetMeasurementColor,
   acapResetMeasurementDrawStyle,
   acapSetMeasurementDrawColor,
   acapSetMeasurementDrawFontSize,

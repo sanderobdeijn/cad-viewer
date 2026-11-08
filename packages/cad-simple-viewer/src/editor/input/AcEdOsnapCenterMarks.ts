@@ -6,11 +6,12 @@ import {
   AcDbEntity,
   AcDbObjectId,
   AcDbOsnapMode,
-  AcDbPolyline,
+  AcDbPolyline
+} from '@mlightcad/data-model'
+import {
   GeometryCircularArc2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
-
+} from '@mlightcad/geometry-engine'
 /** Geometric center acquired by hovering circular geometry. */
 export interface AcEdOsnapCenterMark {
   x: number

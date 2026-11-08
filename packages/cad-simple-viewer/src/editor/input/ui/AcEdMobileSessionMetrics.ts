@@ -1,5 +1,4 @@
-import { GeometryPoint2dLike } from '@mlightcad/data-model'
-
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 /**
  * Live values shown on the mobile command session panel, replacing desktop
  * Dynamic Input boxes next to the cursor.

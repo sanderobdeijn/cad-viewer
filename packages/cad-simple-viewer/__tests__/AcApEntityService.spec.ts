@@ -1,9 +1,5 @@
-import {
-  AcDbDatabase,
-  AcDbLine,
-  GeometryMatrix3d,
-  GeometryPoint2d
-} from '@mlightcad/data-model'
+import { AcDbDatabase, AcDbLine } from '@mlightcad/data-model'
+import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcApModelSync } from '../src/app/AcApModelSync'
 import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'

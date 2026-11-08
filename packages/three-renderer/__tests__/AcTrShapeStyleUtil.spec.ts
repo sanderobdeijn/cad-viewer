@@ -1,9 +1,9 @@
 import {
   AcDbDatabase,
-  AcDbTextStyleTableRecord,
   acdbHostApplicationServices,
-  AcGiTextStyle
+  AcDbTextStyleTableRecord
 } from '@mlightcad/data-model'
+import { AcGiTextStyle } from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 
 import { AcTrRenderContext } from '../src/renderer/AcTrRenderContext'

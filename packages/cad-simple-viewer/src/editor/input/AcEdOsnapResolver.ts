@@ -6,12 +6,14 @@ import {
   AcDbLine,
   acdbMaskToOsnapModes,
   AcDbObjectId,
-  AcDbOsnapMode,
+  AcDbOsnapMode
+} from '@mlightcad/data-model'
+import {
   GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
 import { AcEdBaseView } from '../view/AcEdBaseView'

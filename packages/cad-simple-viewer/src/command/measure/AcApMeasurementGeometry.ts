@@ -1,4 +1,4 @@
-import { GeometryBox2d, GeometryMathUtil } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryMathUtil } from '@mlightcad/geometry-engine'
 
 import {
   type AcApScreenPoint,

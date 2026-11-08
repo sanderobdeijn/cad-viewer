@@ -1,10 +1,10 @@
+import { AcCmColor } from '@mlightcad/common'
 import {
-  AcCmColor,
   ACGI_PAPER_SPACE_BACKGROUND,
   AcGiContext,
   acgiForegroundColorForBackground,
   AcGiSubEntityTraits
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 import { MTextColor } from '@mlightcad/mtext-parser'
 import { ColorSettings } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'

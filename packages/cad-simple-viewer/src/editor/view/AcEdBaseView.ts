@@ -1,16 +1,18 @@
+import { AcCmEventManager } from '@mlightcad/common'
 import {
-  AcCmEventManager,
   AcDbEntity,
   AcDbLayerTableRecord,
   AcDbLayerTableRecordAttrs,
   AcDbLayout,
-  AcDbObjectId,
+  AcDbObjectId
+} from '@mlightcad/data-model'
+import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 import { debounce } from 'lodash-es'
 
 import type { AcTrSpatialSearchOptions } from '../../spatialIndex/AcTrSpatialIndex'

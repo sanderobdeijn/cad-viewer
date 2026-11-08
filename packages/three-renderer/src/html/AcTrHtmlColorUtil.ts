@@ -1,5 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
-
+import { AcCmColor } from '@mlightcad/common'
 /** Converts an AcCmColor to a CSS color string, with rgb() fallback. */
 export function acTrHtmlCssColor(c: AcCmColor): string {
   // Prefer live RGB channels so palette edits are reflected immediately.

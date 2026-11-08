@@ -1,9 +1,9 @@
+import { AcDbObjectId } from '@mlightcad/data-model'
 import {
-  AcDbObjectId,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
 

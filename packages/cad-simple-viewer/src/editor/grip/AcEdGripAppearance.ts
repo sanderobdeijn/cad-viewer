@@ -1,4 +1,4 @@
-import { AcCmColor, AcCmColorMethod } from '@mlightcad/data-model'
+import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
 
 import {
   AcApSettingManager,

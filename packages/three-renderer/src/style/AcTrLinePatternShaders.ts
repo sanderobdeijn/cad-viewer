@@ -1,4 +1,4 @@
-import { AcGiLineTypePatternElement } from '@mlightcad/data-model'
+import { AcGiLineTypePatternElement } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import {

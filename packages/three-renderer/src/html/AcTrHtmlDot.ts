@@ -1,4 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 
 import { AC_TR_HTML_BADGE_REF_FONT_PX } from './AcTrHtmlBadge'
 import { acTrHtmlCssColor } from './AcTrHtmlColorUtil'

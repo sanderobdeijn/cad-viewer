@@ -1,5 +1,4 @@
-import type { AcGiLineWeight } from '@mlightcad/data-model'
-
+import type { AcGiLineWeight } from '@mlightcad/graphic-interface'
 /** Measurement kinds that can be persisted in a sidecar JSON file. */
 export type AcApMeasurementType =
   | 'distance'

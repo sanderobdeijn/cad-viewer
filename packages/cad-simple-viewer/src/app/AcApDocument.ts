@@ -1,8 +1,8 @@
+import { log } from '@mlightcad/common'
 import {
   AcDbDatabase,
   AcDbObjectId,
-  AcDbOpenDatabaseOptions,
-  log
+  AcDbOpenDatabaseOptions
 } from '@mlightcad/data-model'
 
 import { AcEdOpenMode } from '../editor/view'

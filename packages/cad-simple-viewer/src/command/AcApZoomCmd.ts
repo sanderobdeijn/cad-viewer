@@ -3,7 +3,7 @@ import {
   GeometryBox2d,
   GeometryPoint2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../app'
 import {
@@ -343,7 +343,8 @@ export class AcApZoomCmd extends AcEdCommand {
    */
   private resolveSavedViewBox(context: AcApContext): GeometryBox2d | undefined {
     const aspect = context.view.width / Math.max(context.view.height, 1)
-    const box = context.doc.database.tables.viewportTable.getActiveVportBox(aspect)
+    const box =
+      context.doc.database.tables.viewportTable.getActiveVportBox(aspect)
     return box ?? undefined
   }
 

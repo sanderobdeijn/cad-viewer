@@ -1,5 +1,4 @@
-import { accmYieldForPaint } from '@mlightcad/data-model'
-
+import { accmYieldForPaint } from '@mlightcad/common'
 /**
  * Cooperative main-thread work budget for long smart-extents / spatial walks.
  *

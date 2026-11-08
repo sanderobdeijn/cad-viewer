@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 
 import {
   ACI_GRAY_PALETTE_INDICES,
@@ -458,7 +458,11 @@ function bindAciCellLoupe(
     loupeActive = false
   }
 
-  const showLoupeFor = (cell: HTMLElement, clientX: number, clientY: number) => {
+  const showLoupeFor = (
+    cell: HTMLElement,
+    clientX: number,
+    clientY: number
+  ) => {
     const index = parseCellIndex(cell)
     if (index == null) return
     clearPreviewClass()
@@ -489,7 +493,7 @@ function bindAciCellLoupe(
     clearLongPressTimer()
     const wasLoupe = loupeActive
     const cell = wasLoupe
-      ? previewCell ?? cellFromPoint(root, event.clientX, event.clientY)
+      ? (previewCell ?? cellFromPoint(root, event.clientX, event.clientY))
       : startCell
     const index = parseCellIndex(cell)
     hideLoupe()

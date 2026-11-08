@@ -1,8 +1,6 @@
-import {
-  AcCmColor,
-  AcDbDatabase,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
+import { AcDbDatabase } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
   AcTrHtmlTransientManager

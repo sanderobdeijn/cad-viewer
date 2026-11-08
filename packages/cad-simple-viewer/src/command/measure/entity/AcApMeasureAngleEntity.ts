@@ -1,7 +1,5 @@
-import {
-  type AcDbDatabase,
-  type GeometryPoint2dLike
-} from '@mlightcad/data-model'
+import { type AcDbDatabase } from '@mlightcad/data-model'
+import { type GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
   AcTrHtmlCanvasOverlay,

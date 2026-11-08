@@ -1,11 +1,10 @@
+import { AcCmColor, deepClone } from '@mlightcad/common'
 import {
-  AcCmColor,
   acgiForegroundColorForBackground,
   AcGiLineWeight,
   acgiResolveSubEntityTraitsRgbFromBackground,
-  AcGiSubEntityTraits,
-  deepClone
-} from '@mlightcad/data-model'
+  AcGiSubEntityTraits
+} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import { AcTrCommonUtil, AcTrMaterialUtil } from '../util'

@@ -1,9 +1,9 @@
+import { AcCmColor } from '@mlightcad/common'
 import {
-  AcCmColor,
   ACGI_MODEL_SPACE_BACKGROUND,
   acgiForegroundColorForBackground,
   AcGiSubEntityTraits
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
 import { AcTrFillMaterialManager } from './AcTrFillMaterialManager'

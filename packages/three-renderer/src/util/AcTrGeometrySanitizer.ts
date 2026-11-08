@@ -1,9 +1,9 @@
+import { AcDbEntity } from '@mlightcad/data-model'
 import {
-  AcDbEntity,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryPoint2dLike
-} from '@mlightcad/data-model'
+} from '@mlightcad/geometry-engine'
 
 import { AcTrBufferGeometryUtil } from './AcTrBufferGeometryUtil'
 

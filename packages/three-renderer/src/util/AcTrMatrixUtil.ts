@@ -1,4 +1,4 @@
-import { GeometryMatrix3d } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 /**

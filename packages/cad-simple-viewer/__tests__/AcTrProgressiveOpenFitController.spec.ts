@@ -1,4 +1,4 @@
-import { GeometryBox2d } from '@mlightcad/data-model'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 
 import { AcTrProgressiveOpenFitController } from '../src/view/AcTrProgressiveOpenFitController'
 

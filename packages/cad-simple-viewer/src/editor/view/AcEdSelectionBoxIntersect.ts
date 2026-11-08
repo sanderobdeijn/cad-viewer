@@ -1,9 +1,5 @@
-import {
-  AcDbEntity,
-  GeometryBox2d,
-  GeometryPoint2dLike
-} from '@mlightcad/data-model'
-
+import { AcDbEntity } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 /**
  * Minimal line primitive shape used for crossing-selection refinement.
  *

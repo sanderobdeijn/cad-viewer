@@ -1,8 +1,8 @@
 import {
   AcDbLayerTableRecord,
-  AcDbLayerTableRecordAttrs,
-  AcGiSubEntityTraits
+  AcDbLayerTableRecordAttrs
 } from '@mlightcad/data-model'
+import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import { AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 

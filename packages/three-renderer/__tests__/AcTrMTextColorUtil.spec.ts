@@ -1,19 +1,19 @@
+import { AcCmColor } from '@mlightcad/common'
 import {
-  AcCmColor,
   ACGI_LIGHT_THEME_FOREGROUND,
   ACGI_PAPER_SPACE_BACKGROUND
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
+import { MTextColor } from '@mlightcad/mtext-parser'
 import * as THREE from 'three'
 
 import {
-  setMaterialMetadata,
-  getMaterialMetadata
+  getMaterialMetadata,
+  setMaterialMetadata
 } from '../src/style/AcTrMaterialMetadata'
 import { AcTrStyleManager } from '../src/style/AcTrStyleManager'
 import { AcTrSubEntityTraitsUtil } from '../src/util/AcTrEntityTraitsUtil'
 import { AcTrMaterialUtil } from '../src/util/AcTrMaterialUtil'
 import { AcTrMTextColorUtil } from '../src/util/AcTrMTextColorUtil'
-import { MTextColor } from '@mlightcad/mtext-parser'
 
 describe('AcTrMTextColorUtil', () => {
   it('uses resolved traits rgb for ByLayer instead of hard-coded white', () => {

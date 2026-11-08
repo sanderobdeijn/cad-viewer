@@ -26,7 +26,7 @@ export {
 import {
   ACGI_MODEL_SPACE_BACKGROUND,
   acgiIsLightBackground
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
 

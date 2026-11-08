@@ -39,11 +39,8 @@ import {
   setMeasurementUnitOverride,
   subscribeMeasurementSelection
 } from '@mlightcad/cad-simple-viewer'
-import {
-  AcCmColor,
-  AcDbAngleUnits,
-  AcDbLinearUnits
-} from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
+import { AcDbAngleUnits, AcDbLinearUnits } from '@mlightcad/data-model'
 import {
   FileMenuItemModel,
   MlRibbon,

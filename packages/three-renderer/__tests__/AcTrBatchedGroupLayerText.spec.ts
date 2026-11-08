@@ -1,4 +1,4 @@
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import * as THREE from 'three'
 
 import { AcTrBatchedGroup } from '../src/batch/AcTrBatchedGroup'

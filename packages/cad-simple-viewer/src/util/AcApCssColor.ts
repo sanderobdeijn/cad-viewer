@@ -1,5 +1,4 @@
-import { AcCmColor, AcCmColorUtil } from '@mlightcad/data-model'
-
+import { AcCmColor, AcCmColorUtil } from '@mlightcad/common'
 /**
  * If an RGB color matches the AutoCAD palette exactly, restore ByACI so
  * ribbon color dropdowns can show named colors (Red, Yellow, …) instead of

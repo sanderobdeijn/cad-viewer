@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/data-model'
+import { AcCmColor } from '@mlightcad/common'
 import { computed, shallowRef, watch } from 'vue'
 
 import { MlBaseDialog, MlColorPickerTabs } from '../common'

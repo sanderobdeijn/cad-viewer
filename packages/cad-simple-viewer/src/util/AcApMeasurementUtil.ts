@@ -1,8 +1,5 @@
-import {
-  AcCmColor,
-  AcCmColorMethod,
-  AcGiLineWeight
-} from '@mlightcad/data-model'
+import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
+import { AcGiLineWeight } from '@mlightcad/graphic-interface'
 
 import { AcApSettingManager } from '../app/AcApSettingManager'
 import { acCmColorToCssHex, parseCssToAcCmColor } from './AcApCssColor'

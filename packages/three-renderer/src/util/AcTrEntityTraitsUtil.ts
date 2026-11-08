@@ -1,9 +1,8 @@
+import { AcCmColor, AcCmTransparency } from '@mlightcad/common'
 import {
-  AcCmColor,
-  AcCmTransparency,
   AcGiLineWeight,
   AcGiSubEntityTraits
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 import { ColorSettings } from '@mlightcad/mtext-renderer'
 
 import { AcTrMTextColorUtil } from './AcTrMTextColorUtil'

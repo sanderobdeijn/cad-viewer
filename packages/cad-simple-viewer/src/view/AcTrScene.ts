@@ -1,9 +1,6 @@
-import {
-  AcDbObjectId,
-  GeometryBox2d,
-  GeometryBox3d,
-  log
-} from '@mlightcad/data-model'
+import { log } from '@mlightcad/common'
+import { AcDbObjectId } from '@mlightcad/data-model'
+import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
 import {
   AcTrDirectEntityMeta,
   AcTrEntity,

@@ -1,4 +1,5 @@
-import { AcDbDatabase, GeometryPoint2dLike } from '@mlightcad/data-model'
+import { AcDbDatabase } from '@mlightcad/data-model'
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApContext } from '../../app'
 import { AcEdPromptPointOptions, AcEdPromptStatus } from '../../editor'

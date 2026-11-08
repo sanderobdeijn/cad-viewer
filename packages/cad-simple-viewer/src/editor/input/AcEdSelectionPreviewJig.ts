@@ -1,8 +1,5 @@
-import {
-  AcDbEntity,
-  AcDbObjectId,
-  GeometryMatrix3d
-} from '@mlightcad/data-model'
+import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
+import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import { AcEdBatchedPreview } from './AcEdBatchPreview'
