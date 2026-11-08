@@ -43,14 +43,8 @@ const createContext = ({
     clear,
     context: {
       doc: {
-        database: {
-          tables: {
-            blockTable: {
-              getEntityById: jest.fn((objectId: string) =>
-                entities.get(objectId)
-              )
-            }
-          }
+        modelSync: {
+          entity: jest.fn((objectId: string) => entities.get(objectId))
         }
       },
       view: {

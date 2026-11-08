@@ -16,10 +16,10 @@ export class AcApLogCmd extends AcEdCommand {
   }
 
   private printSelectionSet(context: AcApContext) {
-    const modelSpace = context.doc.database.tables.blockTable.modelSpace
+    const sync = context.doc.modelSync
     context.view.selectionSet.ids.forEach(id => {
-      const entity = modelSpace.getIdAt(id)
-      if (entity) log.info(entity)
+      const item = sync.model.get(id)
+      if (item) log.info(item)
     })
   }
 

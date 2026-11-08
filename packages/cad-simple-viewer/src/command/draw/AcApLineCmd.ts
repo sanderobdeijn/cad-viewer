@@ -86,7 +86,6 @@ export class AcApLineCmd extends AcEdCommand {
    * @param context - Current application/document context.
    */
   async execute(context: AcApContext) {
-    const db = context.doc.database
     const points: GeometryPoint2d[] = []
     const hasContinuePoint = () => !!AcApLineCmd._lastEndpoint
     const getContinuePoint = () =>
@@ -107,8 +106,7 @@ export class AcApLineCmd extends AcEdCommand {
       const startPoint = getCurrentPoint()
       if (!startPoint) return
       const segment = new AcDbLine(new GeometryPoint2d(startPoint), endPoint)
-      db.tables.blockTable.modelSpace.appendEntity(segment)
-      context.view.addEntity(segment)
+      context.doc.modelSync.add(segment)
       appendPoint(endPoint)
     }
     const closeSegment = () => {

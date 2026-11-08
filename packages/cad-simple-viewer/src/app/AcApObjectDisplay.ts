@@ -52,7 +52,6 @@ export function hideObjects(
   }
 
   const doc = context.doc
-  const db = doc.database
   let count = 0
 
   for (const objectId of objectIds) {
@@ -60,7 +59,7 @@ export function hideObjects(
       continue
     }
 
-    const entity = db.tables.blockTable.getEntityById(objectId)
+    const entity = doc.modelSync.entity(objectId)
     if (!entity?.visibility || !view.hasEntity(objectId)) {
       continue
     }
@@ -88,12 +87,11 @@ export function unisolateObjects(context: AcApContext): number {
   }
 
   const doc = context.doc
-  const db = doc.database
   const hiddenIds = doc.takeHiddenObjects()
   let count = 0
 
   for (const objectId of hiddenIds) {
-    const entity = db.tables.blockTable.getEntityById(objectId)
+    const entity = doc.modelSync.entity(objectId)
     if (!entity || !view.hasEntity(objectId)) {
       continue
     }

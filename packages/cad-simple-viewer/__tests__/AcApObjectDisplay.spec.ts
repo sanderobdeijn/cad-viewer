@@ -27,14 +27,10 @@ function createMockContext(options: {
       hidden.clear()
       return ids
     },
-    database: {
-      tables: {
-        blockTable: {
-          getEntityById: (id: AcDbObjectId) => {
-            const entity = entities.get(id)
-            return entity ? { visibility: entity.visibility } : undefined
-          }
-        }
+    modelSync: {
+      entity: (id: AcDbObjectId) => {
+        const entity = entities.get(id)
+        return entity ? { visibility: entity.visibility } : undefined
       }
     }
   } as unknown as AcApDocument

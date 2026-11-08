@@ -862,7 +862,6 @@ export class AcApPolylineCmd extends AcEdCommand {
 
     // Create polyline if we have at least two points
     if (points.length >= 2) {
-      const db = context.doc.database
       const polyline = new AcDbPolyline()
       points.forEach((p, index) =>
         polyline.addVertexAt(index, p, bulges[index])
@@ -870,7 +869,7 @@ export class AcApPolylineCmd extends AcEdCommand {
       if (closed) {
         polyline.closed = true
       }
-      db.tables.blockTable.modelSpace.appendEntity(polyline)
+      context.doc.modelSync.add(polyline)
     }
   }
 }

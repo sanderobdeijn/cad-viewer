@@ -87,6 +87,9 @@ function createMockView(
 ): AcEdBaseView {
   return {
     pick: jest.fn().mockReturnValue(pickResults),
+    // These tests keep their entities in the working database.
+    entityLookup: (id: string) =>
+      acdbHostApplicationServices().workingDatabase.getObjectById(id),
     // 1 CSS px == 1 WCS unit so threshold equals hitRadiusPx
     screenToWorld: jest.fn(({ x, y }: { x: number; y: number }) => ({
       x,

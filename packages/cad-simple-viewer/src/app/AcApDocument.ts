@@ -161,8 +161,7 @@ export class AcApDocument {
     if (this._docTitle !== ACAP_UNTITLED_DOC_TITLE) {
       return false
     }
-    const modelSpace = this._database.tables.blockTable.modelSpace
-    if (modelSpace && modelSpace.newIterator().count > 0) {
+    if (this._modelSync.model.items.length > 0) {
       return false
     }
     return true
@@ -192,11 +191,11 @@ export class AcApDocument {
   }
 
   /**
-   * Returns the entity service for this document's database.
+   * Returns the entity service for this document's model.
    */
   get entityService(): AcApEntityService {
     if (!this._entityService) {
-      this._entityService = new AcApEntityService(this._database)
+      this._entityService = new AcApEntityService(this._modelSync)
     }
     return this._entityService
   }

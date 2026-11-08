@@ -41,12 +41,8 @@ const getEntityById = jest.fn()
 
 const mockDocManager = {
   curDocument: {
-    database: {
-      tables: {
-        blockTable: {
-          getEntityById
-        }
-      }
+    modelSync: {
+      entity: getEntityById
     }
   },
   curView: {

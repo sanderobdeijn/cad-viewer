@@ -83,9 +83,7 @@ export function useHover(): UseHoverResult {
   /** Handler for CAD viewer hover events */
   const updateHoverEntity = (args: AcEdViewHoverEventArgs) => {
     const view = AcApDocManager.instance.curView
-    const db = AcApDocManager.instance.curDocument.database
-    // Use getEntityById which works for entities in any layout (model space or paper space)
-    const ent = db.tables.blockTable.getEntityById(args.id)
+    const ent = AcApDocManager.instance.curDocument.modelSync.entity(args.id)
     if (ent) {
       entity.value = ent
       id.value = args.id

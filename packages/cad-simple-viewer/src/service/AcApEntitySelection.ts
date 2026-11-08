@@ -58,7 +58,6 @@ export async function resolveSelectedEntities(
   options: AcApResolveSelectedOptions = {}
 ): Promise<AcApResolveSelectedResult | undefined> {
   const selectionSet = context.view.selectionSet
-  const blockTable = context.doc.database.tables.blockTable
   const clearOnEmpty = options.clearOnEmpty ?? true
 
   let selectionIds: AcDbObjectId[] | undefined
@@ -73,7 +72,7 @@ export async function resolveSelectedEntities(
   const entities: AcDbEntity[] = []
   const ids: AcDbObjectId[] = []
   for (const id of selectionIds) {
-    const entity = blockTable.getEntityById(id)
+    const entity = context.doc.modelSync.entity(id)
     if (entity) {
       entities.push(entity)
       ids.push(id)

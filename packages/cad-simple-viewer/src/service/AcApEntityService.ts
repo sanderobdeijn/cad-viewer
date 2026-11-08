@@ -1,66 +1,62 @@
 import {
-  AcDbDatabase,
   AcDbEntity,
   AcDbObjectId,
   GeometryMatrix3d,
   GeometryPoint2dLike
 } from '@mlightcad/data-model'
 
+import type { AcApModelSync } from '../app/AcApModelSync'
 import { createRotationMatrix } from '../util/AcApGeTransform'
-import { acapRunServiceEdit } from './AcApServiceEdit'
 
 /**
  * Options for {@link AcApEntityService.cloneAndTransform}.
  */
 export interface AcApCloneAndTransformOptions {
-  /** Append clones to model space. Default `true`. */
+  /** Add the clones to the drawing. Default `true`. */
   append?: boolean
 }
 
 /**
- * Centralizes entity mutations for modify commands and non-command callers.
+ * Centralizes drawing changes for modify commands and non-command callers.
  *
- * Provides geometric transforms, cloning, erasure,
- * and transactional edit helpers against a single {@link AcDbDatabase}.
+ * Provides geometric transforms, cloning and erasure of the items of one
+ * document's model, seen through the entities that draw them.
  */
 export class AcApEntityService {
-  private readonly db: AcDbDatabase
+  private readonly sync: AcApModelSync
 
   /**
-   * Creates an entity service bound to a database.
+   * Creates an entity service bound to a document's model.
    *
-   * @param db - Database whose entities will be mutated.
+   * @param sync - The model whose items will be changed.
    */
-  constructor(db: AcDbDatabase) {
-    this.db = db
+  constructor(sync: AcApModelSync) {
+    this.sync = sync
   }
 
   /**
-   * Returns entity instances for the given object ids.
+   * Returns the entities that draw the items with the given ids.
    *
-   * @param ids - Entity object ids to look up.
-   * @returns Entities that exist in the block table.
+   * @param ids - Item ids to look up.
+   * @returns Entities for the ids that exist.
    */
   getEntitiesByIds(ids: AcDbObjectId[]): AcDbEntity[] {
-    return ids
-      .map(id => this.db.tables.blockTable.getEntityById(id))
-      .filter((entity): entity is AcDbEntity => !!entity)
+    return this.sync.entities(ids)
   }
 
   /**
-   * Applies a transform matrix to entities opened for write.
+   * Applies a transform matrix to the items drawn by entities.
    *
    * @param entities - Entities to transform.
    * @param matrix - Transform to apply via {@link AcDbEntity.transformBy}.
-   * @returns Number of entities successfully transformed.
+   * @returns Number of items transformed.
    */
   transformEntities(entities: AcDbEntity[], matrix: GeometryMatrix3d): number {
     let count = 0
     entities.forEach(entity => {
-      const opened = this.db.openEntityForWrite(entity)
-      if (!opened) return
-      opened.transformBy(matrix)
-      count++
+      if (this.sync.edit(entity.objectId, copy => copy.transformBy(matrix))) {
+        count++
+      }
     })
     return count
   }
@@ -70,7 +66,7 @@ export class AcApEntityService {
    *
    * @param entities - Entities to move.
    * @param displacement - Translation vector in WCS.
-   * @returns Number of entities successfully translated.
+   * @returns Number of items translated.
    */
   translateEntities(
     entities: AcDbEntity[],
@@ -90,7 +86,7 @@ export class AcApEntityService {
    * @param entities - Entities to rotate.
    * @param basePoint - Rotation origin in WCS.
    * @param angleRad - Rotation angle in radians.
-   * @returns Number of entities successfully rotated.
+   * @returns Number of items rotated.
    */
   rotateEntities(
     entities: AcDbEntity[],
@@ -102,7 +98,7 @@ export class AcApEntityService {
   }
 
   /**
-   * Clones entities, transforms them, and optionally appends to model space.
+   * Clones entities, transforms them, and optionally adds them to the drawing.
    *
    * @param sourceEntities - Entities to clone.
    * @param matrix - Transform applied to each clone.
@@ -122,57 +118,19 @@ export class AcApEntityService {
     clones.forEach(entity => entity.transformBy(matrix))
 
     if (append && clones.length > 0) {
-      this.db.tables.blockTable.modelSpace.appendEntity(clones)
+      this.sync.add(clones)
     }
 
     return clones
   }
 
   /**
-   * Erases entities by object id.
+   * Erases items by id.
    *
-   * @param objectIds - Entity ids to erase.
-   * @returns Number of entities successfully erased.
+   * @param objectIds - Item ids to erase.
+   * @returns Number of items erased.
    */
   eraseEntities(objectIds: AcDbObjectId[]): number {
-    return this.runEntityEdit(() => {
-      let count = 0
-      objectIds.forEach(objectId => {
-        const entity = this.db.openEntityForWrite(objectId)
-        if (!entity) return
-        entity.erase()
-        count++
-      })
-      return count
-    })
-  }
-
-  /**
-   * Copies display traits from one entity to another.
-   *
-   * Copies layer, color, linetype, line weight, linetype scale, transparency,
-   * and visibility.
-   *
-   * @param source - Entity to copy traits from.
-   * @param target - Entity to receive traits.
-   */
-  static copyDisplayTraits(source: AcDbEntity, target: AcDbEntity): void {
-    target.layer = source.layer
-    target.color = source.color.clone()
-    target.lineType = source.lineType
-    target.lineWeight = source.lineWeight
-    target.linetypeScale = source.linetypeScale
-    target.transparency = source.transparency
-    target.visibility = source.visibility
-  }
-
-  /**
-   * Runs an entity edit in a transaction when outside a command transaction.
-   *
-   * @param fn - Mutation callback.
-   * @returns The value returned by `fn`.
-   */
-  runEntityEdit<T>(fn: () => T): T {
-    return acapRunServiceEdit(this.db, fn)
+    return this.sync.remove(objectIds)
   }
 }

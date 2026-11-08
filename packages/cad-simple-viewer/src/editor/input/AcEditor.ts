@@ -473,12 +473,10 @@ export class AcEditor {
    */
   selectAll(filter?: AcEdSelectionFilter): AcEdPromptSelectionResult {
     try {
-      const modelSpace =
-        AcApDocManager.instance.curDocument.database.tables.blockTable
-          .modelSpace
+      const sync = AcApDocManager.instance.curDocument.modelSync
       const ids: AcDbObjectId[] = []
 
-      for (const entity of modelSpace.newIterator()) {
+      for (const entity of sync.entities(sync.model.items.map(i => i.id))) {
         if (!filter || filter.matches(entity)) {
           ids.push(entity.objectId)
         }

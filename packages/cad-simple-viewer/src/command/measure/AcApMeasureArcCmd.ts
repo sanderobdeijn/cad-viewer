@@ -127,7 +127,6 @@ function pickCircleGeomAtPoint(
   context: AcApContext,
   p: GeometryPoint2dLike
 ): { geom: AcApMeasureCircleGeom; snapped: GeometryPoint2dLike } | null {
-  const blockTable = context.doc.database.tables.blockTable
   // OSNAP may have pulled `p` onto a shared polyline vertex. Score against
   // the live cursor so the lock follows whichever arc the mouse is nearer.
   const mouse = context.view.curPos
@@ -151,7 +150,7 @@ function pickCircleGeomAtPoint(
   let bestAlign = -Infinity
 
   for (const hit of hits) {
-    const entity = blockTable.getEntityById(hit.id)
+    const entity = context.doc.modelSync.entity(hit.id)
     if (!entity) continue
     for (const curve of lockCurvesFromEntity(entity)) {
       if (!(curve.radius > 0)) continue

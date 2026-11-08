@@ -74,18 +74,19 @@ export class AcApContext {
     // The drawing window shows the document model.
     const model = doc.model
     const sync = doc.modelSync
+    this.bindEntityLookup()
 
     // Add item to scene
     bind(model.events.itemAdded, ({ item }: ModelItemEventArgs) => {
       if (!this._active || this.view.hasEntity(item.id)) return
-      const entity = sync.createEntity(item)
+      const entity = sync.entity(item.id)
       if (entity) this.view.addEntity(entity)
     })
 
     // Update item
     bind(model.events.itemModified, ({ item }: ModelItemEventArgs) => {
       if (!this._active) return
-      const entity = sync.createEntity(item)
+      const entity = sync.entity(item.id)
       if (entity) this.view.updateEntity(entity)
     })
 
@@ -191,6 +192,13 @@ export class AcApContext {
    */
   resume() {
     this._active = true
+    this.bindEntityLookup()
+  }
+
+  /** Lets the view look up the entities of this document's model. */
+  private bindEntityLookup() {
+    const sync = this._doc.modelSync
+    this._view.entityLookup = id => sync.entity(id)
   }
 
   /**

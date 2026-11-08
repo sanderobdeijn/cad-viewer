@@ -658,7 +658,7 @@ export class AcApArcCmd extends AcEdCommand {
    * @param arc - Arc definition to append.
    */
   private appendArc(context: AcApContext, arc: ArcDefinition) {
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(
+    context.doc.modelSync.add(
       createArcEntity(arc)
     )
   }

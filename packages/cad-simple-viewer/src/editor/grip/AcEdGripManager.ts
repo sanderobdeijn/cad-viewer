@@ -131,11 +131,10 @@ export class AcEdGripManager {
     }
 
     const doc = AcApDocManager.instance.curDocument
-    const blockTable = doc.database.tables.blockTable
     const appearance = readGripAppearance(doc.database)
 
     for (const entityId of this._view.selectionSet.ids) {
-      const entity = blockTable.getEntityById(entityId)
+      const entity = doc.modelSync.entity(entityId)
       if (!entity) continue
 
       const gripPoints = entity.subGetGripPoints()
@@ -305,10 +304,9 @@ export class AcEdGripManager {
    * @param entry - The grip entry that was activated by the user
    */
   private startEdit(entry: AcEdGripEntry) {
-    const entity =
-      AcApDocManager.instance.curDocument.database.tables.blockTable.getEntityById(
-        entry.entityId
-      )
+    const entity = AcApDocManager.instance.curDocument.modelSync.entity(
+      entry.entityId
+    )
     if (!entity) {
       this.endEdit()
       return
@@ -326,7 +324,11 @@ export class AcEdGripManager {
       this._view,
       entity,
       target,
-      () => this.endEdit()
+      () => this.endEdit(),
+      (entityId, gripIndex, offset) =>
+        AcApDocManager.instance.curDocument.modelSync.edit(entityId, copy =>
+          copy.subMoveGripPointsAt([gripIndex], offset)
+        )
     )
   }
 

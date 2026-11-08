@@ -723,9 +723,7 @@ export class AcEdInputManager {
    * @returns The matching database entity, or `undefined` if it can no longer be found
    */
   private getEntityById(objectId: string): AcDbEntity | undefined {
-    return AcApDocManager.instance.curDocument.database.tables.blockTable.getEntityById(
-      objectId
-    )
+    return AcApDocManager.instance.curDocument.modelSync.entity(objectId)
   }
 
   /**

@@ -414,7 +414,7 @@ export class AcApRectCmd extends AcEdCommand {
       return
     }
 
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(rect)
+    context.doc.modelSync.add(rect)
     AcApRectCmd._settings = cloneRectSettings(settings)
   }
 

@@ -3,7 +3,6 @@ import {
   AcDbCircle,
   AcDbEntity,
   acdbHasOsnapMode,
-  acdbHostApplicationServices,
   AcDbLine,
   acdbMaskToOsnapModes,
   AcDbObjectId,
@@ -378,7 +377,6 @@ export class AcEdOsnapResolver {
 
   private collectIntersectionOsnapPoints(
     pickResults: AcEdSpatialQueryResultItemEx[],
-    db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
     osnapPoints: AcEdOsnapPoint[],
     cursorWcs: GeometryPoint2dLike,
     threshold: number
@@ -398,7 +396,7 @@ export class AcEdOsnapResolver {
     for (const item of pickResults) {
       if (sources.length >= MAX_INTERSECTION_SOURCES) break
       if (!isEffectiveSpatialQueryHit(item)) continue
-      const entity = AcEdOsnapResolver.getEntityById(db, item.id)
+      const entity = this._view.entityLookup(item.id)
       if (!entity) continue
       const viewportId = item.viewportId
       // Drill-through hits without a live mapper must not be treated as
@@ -476,21 +474,6 @@ export class AcEdOsnapResolver {
     }
   }
 
-  /**
-   * Looks an entity up by id with no block-table-record owner check, so a
-   * hit is resolved the same way whether it came from the active layout's
-   * own spatial index (paper space) or was drilled through a paper-space
-   * viewport into model space (#746) — a BTR-scoped `getIdAt` only resolves
-   * entities it owns and silently drops every other hit.
-   */
-  private static getEntityById(
-    db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
-    id: AcDbObjectId
-  ): AcDbEntity | undefined {
-    const object = db.getObjectById(id)
-    return object instanceof AcDbEntity ? object : undefined
-  }
-
   private collectOsnapPoints(
     cursorWcs: GeometryPoint2dLike,
     lastPoint: GeometryPoint2dLike,
@@ -498,13 +481,12 @@ export class AcEdOsnapResolver {
     threshold: number
   ): AcEdOsnapPoint[] {
     const results = this._view.pick(cursorWcs, hitRadiusPx)
-    const db = acdbHostApplicationServices().workingDatabase
     const osnapPoints: AcEdOsnapPoint[] = []
     const pickPoint = cursorWcs
     const last = lastPoint
 
     results.forEach(item => {
-      const entity = AcEdOsnapResolver.getEntityById(db, item.id)
+      const entity = this._view.entityLookup(item.id)
       if (!entity) return
 
       // A viewport drill-through hit's geometry is in model-space WCS: the
@@ -565,21 +547,19 @@ export class AcEdOsnapResolver {
     ) {
       this.collectIntersectionOsnapPoints(
         results,
-        db,
         osnapPoints,
         cursorWcs,
         threshold
       )
     }
 
-    this.updateAcquiredCenters(results, db, pickPoint)
+    this.updateAcquiredCenters(results, pickPoint)
 
     return osnapPoints
   }
 
   private updateAcquiredCenters(
     results: AcEdSpatialQueryResultItemEx[],
-    db: ReturnType<typeof acdbHostApplicationServices>['workingDatabase'],
     pickPoint: GeometryPoint2dLike
   ) {
     if (
@@ -594,7 +574,7 @@ export class AcEdOsnapResolver {
 
     const hovered: AcEdOsnapCenterMark[] = []
     results.forEach(item => {
-      const entity = AcEdOsnapResolver.getEntityById(db, item.id)
+      const entity = this._view.entityLookup(item.id)
       if (!entity) return
 
       const mapper =

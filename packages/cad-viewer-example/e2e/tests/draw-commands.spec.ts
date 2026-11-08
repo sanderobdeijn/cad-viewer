@@ -2,26 +2,32 @@ import { expect, type Locator, type Page, test } from '@playwright/test'
 
 test.describe.configure({ timeout: 40000 })
 
-type Db = {
-  tables: {
-    blockTable: {
-      modelSpace: {
-        newIterator: () => Iterable<{ dxfTypeName: string }>
-      }
-    }
-  }
+type DrawnEntity = {
+  dxfTypeName: string
+  startPoint?: { x: number; y: number; z?: number }
 }
 
-const modelSpaceTypes = (page: Page) =>
+type ModelSync = {
+  model: { items: { id: string }[] }
+  entities: (ids: string[]) => DrawnEntity[]
+}
+
+/** The entities that draw the items of the current document's model. */
+const drawnEntities = (page: Page) =>
   page.evaluate(() => {
-    const mgr = (
+    const sync = (
       window as Window & {
-        AcApDocManager?: { instance: { curDocument: { database: Db } } }
+        AcApDocManager?: { instance: { curDocument: { modelSync: ModelSync } } }
       }
-    ).AcApDocManager!.instance
-    const entities = mgr.curDocument.database.tables.blockTable.modelSpace
-    return [...entities.newIterator()].map(entity => entity.dxfTypeName)
+    ).AcApDocManager!.instance.curDocument.modelSync
+    return sync.entities(sync.model.items.map(item => item.id)).map(entity => ({
+      dxfTypeName: entity.dxfTypeName,
+      startPoint: entity.startPoint && { ...entity.startPoint }
+    }))
   })
+
+const modelSpaceTypes = async (page: Page) =>
+  (await drawnEntities(page)).map(entity => entity.dxfTypeName)
 
 const countDrawnPixels = async (page: Page) => {
   const canvas = page.locator('.ml-cad-container canvas').first()
@@ -118,35 +124,12 @@ for (const [name, inputs, type] of cases) {
   })
 }
 
-const lineStart = (page: Page) =>
-  page.evaluate(() => {
-    const mgr = (
-      window as unknown as {
-        AcApDocManager: {
-          instance: {
-            curDocument: {
-              database: {
-                tables: {
-                  blockTable: {
-                    modelSpace: {
-                      newIterator: () => Iterable<{
-                        dxfTypeName: string
-                        startPoint: { x: number; y: number; z?: number }
-                      }>
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    ).AcApDocManager.instance
-    const entities =
-      mgr.curDocument.database.tables.blockTable.modelSpace.newIterator()
-    const line = [...entities].find(entity => entity.dxfTypeName === 'LINE')!
-    return { ...line.startPoint }
-  })
+const lineStart = async (page: Page) => {
+  const line = (await drawnEntities(page)).find(
+    entity => entity.dxfTypeName === 'LINE'
+  )!
+  return { ...line.startPoint! }
+}
 
 test('moves a drawn shape through the UI', async ({ page }) => {
   const errors: string[] = []

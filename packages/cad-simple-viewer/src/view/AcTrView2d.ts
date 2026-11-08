@@ -2067,8 +2067,8 @@ export class AcTrView2d extends AcEdBaseView {
     box: GeometryBox2d,
     results: AcEdSpatialQueryResultItemEx[]
   ): AcDbObjectId[] {
-    const database = AcApDocManager.instance.curDocument?.database
-    if (!database) {
+    const sync = AcApDocManager.instance.curDocument?.modelSync
+    if (!sync) {
       return results.map(item => item.id)
     }
 
@@ -2088,7 +2088,7 @@ export class AcTrView2d extends AcEdBaseView {
         continue
       }
 
-      const entity = database.tables.blockTable.getEntityById(item.id)
+      const entity = sync.entity(item.id)
       if (!entity || acedEntityIntersectsSelectionBox(entity, box)) {
         ids.push(item.id)
       }

@@ -520,7 +520,7 @@ export class AcApCircleCmd extends AcEdCommand {
     await machine.run(prompt => AcApDocManager.instance.editor.getPoint(prompt))
 
     if (!circle) return
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(
+    context.doc.modelSync.add(
       new AcDbCircle(circle.center, circle.radius)
     )
   }

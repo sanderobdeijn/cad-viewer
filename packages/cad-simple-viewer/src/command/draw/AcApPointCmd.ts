@@ -38,7 +38,7 @@ export class AcApPointCmd extends AcEdCommand {
 
       const point = new AcDbPoint()
       point.position = new GeometryPoint2d(pointResult.value)
-      context.doc.database.tables.blockTable.modelSpace.appendEntity(point)
+      context.doc.modelSync.add(point)
     }
   }
 }

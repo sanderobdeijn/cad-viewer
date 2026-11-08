@@ -301,7 +301,7 @@ export class AcApPolygonCmd extends AcEdCommand {
   private appendPolygon(context: AcApContext, vertices: GeometryPoint2d[]) {
     const polygon = new AcDbPolyline()
     updatePolylineVertices(polygon, vertices)
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(polygon)
+    context.doc.modelSync.add(polygon)
   }
 
   /**

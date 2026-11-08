@@ -765,6 +765,12 @@ export abstract class AcEdBaseView {
   ): void
 
   /**
+   * Looks up the entity that draws the item with this id in the document on
+   * screen. The application sets it when it shows a document in this view.
+   */
+  entityLookup: (id: AcDbObjectId) => AcDbEntity | undefined = () => undefined
+
+  /**
    * Add the specified entity or entities in drawing database into the current scene
    * and draw it or them
    * @param entity Input one or multiple entities to add into the current scene

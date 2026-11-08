@@ -341,7 +341,7 @@ export class AcApEllipseCmd extends AcEdCommand {
       definition.startAngle,
       definition.endAngle
     )
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(ellipse)
+    context.doc.modelSync.add(ellipse)
   }
 
   /**

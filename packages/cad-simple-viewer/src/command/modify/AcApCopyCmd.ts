@@ -97,22 +97,17 @@ export class AcApCopyCmd extends AcEdCommand {
   }
 
   /**
-   * Appends cloned entities to model space and shows them immediately in the view.
+   * Adds cloned entities to the drawing. The view follows the model, so each
+   * placement shows while the COPY loop continues.
    *
-   * Database edits during an active command transaction may not reach the view
-   * until the command ends. Explicit {@link AcEdBaseView.addEntity} keeps each
-   * placement visible while the COPY loop continues. All placements still share
-   * one transaction from {@link AcEdCommand.trigger}.
-   *
-   * @param context - Active command context with database and view access
-   * @param copies - Cloned entities to append and display
+   * @param context - Active command context
+   * @param copies - Cloned entities to add
    */
   private appendCopies(context: AcApContext, copies: AcDbEntity[]) {
     if (copies.length === 0) {
       return
     }
-    context.doc.database.tables.blockTable.modelSpace.appendEntity(copies)
-    context.view.addEntity(copies)
+    context.doc.modelSync.add(copies)
   }
 
   /**
@@ -370,8 +365,6 @@ export class AcApCopyCmd extends AcEdCommand {
     if (!resolved) return
 
     const sourceEntities = resolved.entities
-      .map(entity => context.doc.database.openEntityForRead(entity.objectId))
-      .filter((entity): entity is AcDbEntity => !!entity)
     if (sourceEntities.length === 0) {
       selectionSet.clear()
       return

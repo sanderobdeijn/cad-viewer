@@ -25,7 +25,6 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
-import { AcApEntityService } from '../../service'
 
 /**
  * Union of prompt option types used across the OFFSET state machine.
@@ -67,7 +66,7 @@ function isOffsettableCurve(
  * Builds one or more offset curves on the side indicated by a pick point.
  *
  * The side is resolved from the source curve geometry, the absolute distance is
- * applied with the correct sign, and display traits are copied onto each result.
+ * applied with the correct sign.
  * Any geometric failure is swallowed and reported as an empty result set.
  *
  * @param curve - Source curve to offset.
@@ -82,11 +81,7 @@ function buildOffsetCurves(
 ) {
   try {
     const side = curve.getOffsetSideAtPoint(sidePoint)
-    const offsetCurves = curve.getOffsetCurves(offsetDistance * side)
-    offsetCurves.forEach(offsetCurve =>
-      AcApEntityService.copyDisplayTraits(curve, offsetCurve)
-    )
-    return offsetCurves
+    return curve.getOffsetCurves(offsetDistance * side)
   } catch {
     return []
   }
@@ -198,7 +193,6 @@ export class AcApOffsetCmd extends AcEdCommand {
     ) => {
       this.showMessage(message, type)
     }
-    const blockTable = context.doc.database.tables.blockTable
     let offsetDistance: number | undefined
     let currentCurve: AcDbCurve | undefined
 
@@ -322,7 +316,7 @@ export class AcApOffsetCmd extends AcEdCommand {
           return 'finish'
         }
 
-        const entity = context.doc.database.openEntityForRead(result.objectId)
+        const entity = context.doc.modelSync.entity(result.objectId)
         if (!isOffsettableCurve(entity)) {
           showCommandMessage(
             AcApI18n.t('jig.offset.invalidSelection'),
@@ -406,7 +400,7 @@ export class AcApOffsetCmd extends AcEdCommand {
         if (offsetCurves.length === 0) {
           showCommandMessage(AcApI18n.t('jig.offset.offsetFailed'), 'warning')
         } else {
-          blockTable.modelSpace.appendEntity(offsetCurves)
+          context.doc.modelSync.add(offsetCurves)
         }
 
         currentCurve = undefined

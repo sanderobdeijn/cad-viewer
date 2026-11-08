@@ -94,12 +94,11 @@ export class AcApDimLinearCmd extends AcEdCommand {
     if (dimLinePointResult.status !== AcEdPromptStatus.OK) return
     const dimLinePoint = dimLinePointResult.value!
 
-    const db = context.doc.database
     const dimension = new AcDbAlignedDimension(
       xLine1Point,
       xLine2Point,
       dimLinePoint
     )
-    db.tables.blockTable.modelSpace.appendEntity(dimension)
+    context.doc.modelSync.add(dimension)
   }
 }

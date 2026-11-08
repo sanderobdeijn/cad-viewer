@@ -9,6 +9,13 @@ import { AcEdMarkerManager } from '../input/marker'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import { AcEdGripPreviewJig } from './AcEdGripPreviewJig'
 
+/** Moves the grip of an item by an offset, changing the drawing. */
+export type AcEdGripMove = (
+  entityId: AcDbObjectId,
+  gripIndex: number,
+  offset: GeometryPoint2dLike
+) => void
+
 export interface AcEdGripEditTarget {
   entityId: AcDbObjectId
   gripIndex: number
@@ -20,10 +27,10 @@ export interface AcEdGripEditTarget {
  */
 export class AcEdGripEditSession {
   private readonly _view: AcEdBaseView
-  private readonly _entity: AcDbEntity
   private readonly _target: AcEdGripEditTarget
   private readonly _jig: AcEdGripPreviewJig
   private readonly _onEnd: () => void
+  private readonly _moveGrip: AcEdGripMove
   private readonly _osnapMarkerManager: AcEdMarkerManager
 
   private _boundMouseMove = (e: MouseEvent) => this.onMouseMove(e)
@@ -34,12 +41,13 @@ export class AcEdGripEditSession {
     view: AcEdBaseView,
     entity: AcDbEntity,
     target: AcEdGripEditTarget,
-    onEnd: () => void
+    onEnd: () => void,
+    moveGrip: AcEdGripMove
   ) {
     this._view = view
-    this._entity = entity
     this._target = target
     this._onEnd = onEnd
+    this._moveGrip = moveGrip
     this._osnapMarkerManager = new AcEdMarkerManager(view)
     this._jig = new AcEdGripPreviewJig(
       view,
@@ -63,12 +71,7 @@ export class AcEdGripEditSession {
     if (e.button !== 0) return
     const wcs = this.resolveWcs(e)
     const offset = this._jig.computeOffset(wcs)
-    const db = this._entity.database
-    db.runDatabaseEdit(() => {
-      const entity = db.openEntityForWrite(this._entity)
-      if (!entity) return
-      entity.subMoveGripPointsAt([this._target.gripIndex], offset)
-    })
+    this._moveGrip(this._target.entityId, this._target.gripIndex, offset)
     this.finish()
   }
 
