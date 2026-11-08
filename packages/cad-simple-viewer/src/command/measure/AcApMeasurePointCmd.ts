@@ -1,4 +1,3 @@
-import { AcDbDatabase } from '@mlightcad/data-model'
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApContext } from '../../app'
@@ -17,12 +16,11 @@ import { AcApMeasurePointEntity } from './entity'
  */
 export function placePointMeasurement(
   view: AcTrView2d,
-  db: AcDbDatabase,
   point: GeometryPoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
-  AcApMeasurePointEntity.create(point, style, options).commit(view, db)
+  AcApMeasurePointEntity.create(point, style, options).commit(view)
 }
 
 /**
@@ -35,7 +33,6 @@ export function placePointMeasurement(
 export class AcApMeasurePointCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
 
     await this.withMeasureInput(context, async () => {
       const pointPrompt = new AcEdPromptPointOptions(
@@ -46,7 +43,6 @@ export class AcApMeasurePointCmd extends AcApMeasureDrawCmd {
       const point = pointResult.value!
       placePointMeasurement(
         context.view as AcTrView2d,
-        db,
         point,
         acapGetCurrentMeasurementStyle()
       )

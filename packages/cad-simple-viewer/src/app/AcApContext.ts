@@ -1,5 +1,4 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { AcDbLayout } from '@mlightcad/data-model'
 import { ModelItemEventArgs } from '@mlightcad/geometry-engine'
 
 import { AcEdBaseView } from '../editor/view/AcEdBaseView'
@@ -10,18 +9,17 @@ import { AcApSettingManager } from './AcApSettingManager'
 /**
  * Application context that binds a CAD document with its associated view.
  *
- * This class establishes the connection between a CAD document (containing the drawing database)
+ * This class establishes the connection between a CAD document (containing the drawing model)
  * and its visual representation (the view). It handles event forwarding between the document
  * and view to keep them synchronized.
  *
  * The context manages:
  * - Entity lifecycle events (add, modify, remove)
- * - Layer visibility changes
  * - System variable changes (like point display mode)
  * - Entity selection and highlighting
  *
  * Call {@link dispose} when the document is closed. Use {@link suspend} /
- * {@link resume} when parking an inactive document so its database events do
+ * {@link resume} when parking an inactive document so its model events do
  * not mutate the shared view while another document is on screen.
  *
  * @example
@@ -37,9 +35,9 @@ import { AcApSettingManager } from './AcApSettingManager'
 export class AcApContext {
   /** The view component that renders the CAD drawing */
   private _view: AcEdBaseView
-  /** The document containing the CAD database */
+  /** The document containing the drawing model */
   private _doc: AcApDocument
-  /** When false, database and selection listeners no-op (inactive MDI session). */
+  /** When false, model and selection listeners no-op (inactive MDI session). */
   private _active = true
   /** Unbind functions registered in the constructor. */
   private readonly _disposers: Array<() => void> = []
@@ -49,12 +47,11 @@ export class AcApContext {
    *
    * The constructor sets up event listeners to synchronize the document and view:
    * - Entity additions/modifications are reflected in the view
-   * - Layer visibility changes update the view
    * - System variable changes (like point display mode) update rendering
    * - Entity selections show/hide grip points
    *
    * @param view - The view used to display the drawing
-   * @param doc - The document containing the drawing database
+   * @param doc - The document containing the drawing model
    */
   constructor(view: AcEdBaseView, doc: AcApDocument) {
     this._view = view
@@ -76,42 +73,26 @@ export class AcApContext {
     // Add item to scene
     bind(model.events.itemAdded, ({ item }: ModelItemEventArgs) => {
       if (!this._active || this.view.hasEntity(item.id)) return
-      const entity = sync.entity(item.id)
-      if (entity) this.view.addEntity(entity)
+      const drawable = sync.drawable(item.id)
+      if (drawable) this.view.addEntity(drawable)
     })
 
     // Update item
     bind(model.events.itemModified, ({ item }: ModelItemEventArgs) => {
       if (!this._active) return
-      const entity = sync.entity(item.id)
-      if (entity) this.view.updateEntity(entity)
+      const drawable = sync.drawable(item.id)
+      if (drawable) this.view.updateEntity(drawable)
     })
 
     // Remove item
     bind(model.events.itemRemoved, ({ item }: ModelItemEventArgs) => {
       if (!this._active || !this.view.hasEntity(item.id)) return
-      const entity = sync.createEntity(item)
-      if (entity) this.view.removeEntity(entity)
-    })
-
-    // Set layer visibility
-    bind(doc.database.events.layerAppended, args => {
-      if (!this._active) return
-      this._view.addLayer(args.layer)
-    })
-
-    // Update layer information such as visibility
-    bind(doc.database.events.layerModified, args => {
-      if (!this._active) return
-      this._view.updateLayer(args.layer, args.changes)
+      this.view.removeEntity(sync.createDrawable(item))
     })
 
     // Set point display mode / size and line weight display.
     bind(AcApSettingManager.instance.events.modified, args => {
       if (args.key === 'pointDisplayMode' || args.key === 'pointDisplaySize') {
-        // Points are drawn through entities that read their style from the
-        // database, so it follows the settings until the database goes.
-        doc.applyDrawingSettings()
         if (!this._active) return
         const settings = AcApSettingManager.instance
         ;(this._view as AcTrView2d).rerenderPoints(
@@ -128,18 +109,6 @@ export class AcApContext {
           // Redraw to rebuild scene content using the new display mode.
           void this.regen()
         }
-      }
-    })
-
-    // The drawing is model space only, so paper layouts are not shown.
-    bind(doc.database.events.dictObjetSet, args => {
-      if (!this._active) return
-      if (
-        args.object instanceof AcDbLayout &&
-        args.object.blockTableRecordId ===
-          doc.database.tables.blockTable.modelSpace.objectId
-      ) {
-        this._view.addLayout(args.object)
       }
     })
 
@@ -166,7 +135,7 @@ export class AcApContext {
   }
 
   /**
-   * Gets the document containing the CAD database.
+   * Gets the document containing the drawing model.
    *
    * @returns The associated document instance
    */
@@ -175,21 +144,21 @@ export class AcApContext {
   }
 
   /**
-   * Whether this context currently forwards database events to the shared view.
+   * Whether this context currently forwards model events to the shared view.
    */
   get isActive() {
     return this._active
   }
 
   /**
-   * Stops forwarding database events to the view (document is no longer on screen).
+   * Stops forwarding model events to the view (document is no longer on screen).
    */
   suspend() {
     this._active = false
   }
 
   /**
-   * Resumes forwarding database events after {@link suspend}.
+   * Resumes forwarding model events after {@link suspend}.
    */
   resume() {
     this._active = true
@@ -197,28 +166,28 @@ export class AcApContext {
   }
 
   /**
-   * Clears the view and draws the document again: the layouts and layers of
-   * its database, then the items of its model.
+   * Clears the view and draws the document again: model space and its layer,
+   * then the items of its model.
    */
   async regen() {
     this._view.clear()
-    await this._doc.database.regen()
+    this._view.addModelSpace()
     this.redrawModel()
   }
 
   /** Adds the items of the document's model to the view. */
   redrawModel() {
     if (!this._active) return
-    const entities = this._doc.modelSync.entities(
+    const drawables = this._doc.modelSync.drawables(
       this._doc.model.items.map(item => item.id)
     )
-    if (entities.length > 0) this._view.addEntity(entities)
+    if (drawables.length > 0) this._view.addEntity(drawables)
   }
 
-  /** Lets the view look up the entities of this document's model. */
+  /** Lets the view look up the items of this document's model. */
   private bindEntityLookup() {
     const sync = this._doc.modelSync
-    this._view.entityLookup = id => sync.entity(id)
+    this._view.itemLookup = id => sync.item(id)
   }
 
   /**

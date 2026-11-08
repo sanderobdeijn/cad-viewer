@@ -1,8 +1,6 @@
 /** @jest-environment jsdom */
 
-import {
-  acedComputeSessionMetrics
-} from '../src/editor/input/ui/AcEdMobileSessionMetrics'
+import { acedComputeSessionMetrics } from '../src/editor/input/ui/AcEdMobileSessionMetrics'
 
 describe('acedComputeSessionMetrics', () => {
   it('returns absolute X/Y when no base point is given', () => {
@@ -18,7 +16,10 @@ describe('acedComputeSessionMetrics', () => {
   })
 
   it('computes length, angle, and deltas from a base point', () => {
-    const metrics = acedComputeSessionMetrics({ x: 40, y: 30 }, { x: 10, y: 30 })
+    const metrics = acedComputeSessionMetrics(
+      { x: 40, y: 30 },
+      { x: 10, y: 30 }
+    )
     expect(metrics.hasBasePoint).toBe(true)
     expect(metrics.dx).toBe(30)
     expect(metrics.dy).toBe(0)

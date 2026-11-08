@@ -1,5 +1,4 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
   GeometryArea2d,
   GeometryCircularArc2d,
@@ -9,6 +8,7 @@ import {
   GeometryPolyline2d
 } from '@mlightcad/geometry-engine'
 import {
+  acgiDrawTessellateOptions,
   AcGiFontMapping,
   AcGiMTextData,
   AcGiPointStyle,
@@ -691,7 +691,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
    * @inheritdoc
    */
   circularArc(arc: GeometryCircularArc2d) {
-    return this.linePoints(arc.tessellate(acdbDrawTessellateOptions(this)))
+    return this.linePoints(arc.tessellate(acgiDrawTessellateOptions(this)))
   }
 
   /**
@@ -699,7 +699,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
    */
   ellipticalArc(ellipseArc: GeometryEllipseArc2d) {
     return this.linePoints(
-      ellipseArc.tessellate(acdbDrawTessellateOptions(this))
+      ellipseArc.tessellate(acgiDrawTessellateOptions(this))
     )
   }
 

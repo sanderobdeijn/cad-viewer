@@ -45,8 +45,7 @@ export function acapPointerEventToOverlayWorld(
 
 /**
  * View methods used for overlay grip object snap and the mobile snap loupe.
- * Duck-typed so jsdom tests can mock a view without loading
- * `@mlightcad/data-model`.
+ * Duck-typed so jsdom tests can mock a view without loading the renderer.
  */
 interface AcApOverlayOsnapView {
   osnapResolver?: {

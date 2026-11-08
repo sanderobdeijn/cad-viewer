@@ -100,10 +100,20 @@ describe('hitTestMeasurementGeometry', () => {
       ]
     }
     expect(
-      hitTestMeasurementGeometry(geometry, { x: 20, y: 15 }, identity, threshold)
+      hitTestMeasurementGeometry(
+        geometry,
+        { x: 20, y: 15 },
+        identity,
+        threshold
+      )
     ).toBe(true)
     expect(
-      hitTestMeasurementGeometry(geometry, { x: 40, y: 15 }, identity, threshold)
+      hitTestMeasurementGeometry(
+        geometry,
+        { x: 40, y: 15 },
+        identity,
+        threshold
+      )
     ).toBe(true)
     expect(
       hitTestMeasurementGeometry(

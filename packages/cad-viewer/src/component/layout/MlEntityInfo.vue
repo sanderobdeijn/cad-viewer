@@ -7,38 +7,19 @@
         </el-text>
       </el-col>
     </el-row>
-    <el-row class="ml-entity-info-text">
-      <el-col :span="10">
-        <el-text size="small">{{ t('main.entityInfo.color') }}</el-text>
-      </el-col>
-      <el-col :span="14">
-        <el-text size="small">{{ info.color }}</el-text>
-      </el-col>
-    </el-row>
-    <el-row class="ml-entity-info-text">
-      <el-col :span="10">
-        <el-text size="small">{{ t('main.entityInfo.lineType') }}</el-text>
-      </el-col>
-      <el-col :span="14">
-        <el-text size="small">{{ info.lineType }}</el-text>
-      </el-col>
-    </el-row>
   </el-card>
 </template>
 
 <script setup lang="ts">
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
-import { AcDbEntity } from '@mlightcad/data-model'
+import { AcApDocManager, itemTypeName } from '@mlightcad/cad-simple-viewer'
 import { ElCard, ElCol, ElRow, ElText } from 'element-plus'
 import { ComponentPublicInstance, computed, nextTick, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 import { useHover, useSettings } from '../../composable'
-import { colorName, entityName } from '../../locale'
+import { entityName } from '../../locale'
 
-const { t } = useI18n()
 const cardRef = ref<ComponentPublicInstance<{}, HTMLElement> | null>(null)
-const { hovered, entity, mouse } = useHover()
+const { hovered, item, mouse } = useHover()
 const features = useSettings()
 
 const cardWidth = ref(180)
@@ -55,14 +36,8 @@ const top = computed(
 )
 
 const info = computed(() => {
-  const ent = entity.value as unknown as AcDbEntity | null
-  if (!ent) return { type: '', color: '', lineType: '' }
-
-  return {
-    type: entityName(ent),
-    color: colorName(ent.color.toString()),
-    lineType: ent.lineType
-  }
+  const hoveredItem = item.value
+  return { type: hoveredItem ? entityName(itemTypeName(hoveredItem)) : '' }
 })
 
 const visible = computed(

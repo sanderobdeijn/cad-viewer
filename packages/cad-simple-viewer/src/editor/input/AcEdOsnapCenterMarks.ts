@@ -1,17 +1,11 @@
 import {
-  AcDb2dPolyline,
-  AcDbArc,
-  AcDbCircle,
-  AcDbEllipse,
-  AcDbEntity,
-  AcDbObjectId,
-  AcDbOsnapMode,
-  AcDbPolyline
-} from '@mlightcad/data-model'
-import {
   GeometryCircularArc2d,
-  GeometryPoint2dLike
+  GeometryEllipseArc2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d
 } from '@mlightcad/geometry-engine'
+
+import type { AcApItemContents } from '../../model/AcApItemGeometry'
 /** Geometric center acquired by hovering circular geometry. */
 export interface AcEdOsnapCenterMark {
   x: number
@@ -74,54 +68,21 @@ function markFromPoint(point: GeometryPoint2dLike): AcEdOsnapCenterMark {
   }
 }
 
-function polylineVertices(entity: AcDbPolyline | AcDb2dPolyline): Array<{
-  x: number
-  y: number
-  bulge: number
-}> {
-  if (entity instanceof AcDb2dPolyline) {
-    const count = entity.numberOfVertices
-    return Array.from({ length: count }, (_, i) => {
-      const p = entity.getPointAt(i)
-      return { x: p.x, y: p.y, bulge: entity.getBulgeAt(i) }
-    })
-  }
-
-  const runtimeVertices = (
-    entity as unknown as {
-      _geo?: { vertices?: Array<{ x: number; y: number; bulge?: number }> }
-    }
-  )._geo?.vertices
-  if (runtimeVertices && runtimeVertices.length > 0) {
-    return runtimeVertices.map(vertex => ({
-      x: vertex.x,
-      y: vertex.y,
-      bulge: vertex.bulge ?? 0
-    }))
-  }
-
-  const count = entity.numberOfVertices
-  return Array.from({ length: count }, (_, i) => {
-    const p = entity.getPoint2dAt(i)
-    return { x: p.x, y: p.y, bulge: 0 }
-  })
-}
-
 function collectPolylineArcCenter(
-  entity: AcDbPolyline | AcDb2dPolyline,
+  polyline: GeometryPolyline2d,
   pickPoint: GeometryPoint2dLike
 ): AcEdOsnapCenterMark | undefined {
-  const vertices = polylineVertices(entity)
+  const vertices = polyline.vertices
   if (vertices.length < 2) return undefined
 
-  const segmentCount = entity.closed ? vertices.length : vertices.length - 1
+  const segmentCount = polyline.closed ? vertices.length : vertices.length - 1
   let bestDist = Number.POSITIVE_INFINITY
   let bestArc: GeometryCircularArc2d | undefined
 
   for (let i = 0; i < segmentCount; i++) {
     const start = vertices[i]!
     const end = vertices[(i + 1) % vertices.length]!
-    const arc = tryBulgeArc(start, end, start.bulge)
+    const arc = tryBulgeArc(start, end, start.bulge ?? 0)
     let dist: number
     if (arc) {
       const nearest = arc.nearestPoint(pickPoint)
@@ -149,49 +110,29 @@ function collectPolylineArcCenter(
   })
 }
 
-function collectFromOsnapCenter(
-  entity: AcDbEntity,
-  pickPoint: GeometryPoint2dLike,
-  gsMark?: AcDbObjectId
-): AcEdOsnapCenterMark[] {
-  const points: GeometryPoint2dLike[] = []
-  entity.subGetOsnapPoints(
-    AcDbOsnapMode.Center,
-    pickPoint,
-    pickPoint,
-    points,
-    gsMark
-  )
-  return points.map(point => markFromPoint(point))
-}
-
 /**
- * Collects AutoCAD-style center ticks for circular geometry under the cursor.
- *
- * Circle, arc, ellipse and polyline bulge segments each contribute a center.
+ * Returns the center marks an item offers near the cursor: the center of a
+ * circle, arc or ellipse, or of the polyline arc segment nearest the cursor.
  */
-export function collectCenterMarksFromEntity(
-  entity: AcDbEntity,
-  pickPoint: GeometryPoint2dLike,
-  gsMark?: AcDbObjectId
+export function collectCenterMarksFromItem(
+  item: AcApItemContents,
+  pickPoint: GeometryPoint2dLike
 ): AcEdOsnapCenterMark[] {
-  if (entity instanceof AcDbCircle) {
-    return [markFromPoint(entity.center)]
+  if (item.kind !== 'shape') return []
+  const shape = item.geometry
+  if (
+    shape instanceof GeometryCircularArc2d ||
+    shape instanceof GeometryEllipseArc2d
+  ) {
+    return [markFromPoint(shape.center)]
   }
-  if (entity instanceof AcDbArc) {
-    return [markFromPoint(entity.center)]
-  }
-  if (entity instanceof AcDbEllipse) {
-    return [markFromPoint(entity.center)]
-  }
-  if (entity instanceof AcDbPolyline || entity instanceof AcDb2dPolyline) {
-    const mark = collectPolylineArcCenter(entity, pickPoint)
+  if (shape instanceof GeometryPolyline2d) {
+    const mark = collectPolylineArcCenter(shape, pickPoint)
     return mark ? [mark] : []
   }
-  return collectFromOsnapCenter(entity, pickPoint, gsMark)
+  return []
 }
 
-/** Appends newly hovered centers without dropping marks acquired earlier. */
 export function mergeAcquiredCenterMarks(
   existing: readonly AcEdOsnapCenterMark[],
   incoming: readonly AcEdOsnapCenterMark[]

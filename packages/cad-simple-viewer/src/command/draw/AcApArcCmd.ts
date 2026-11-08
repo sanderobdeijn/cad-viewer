@@ -1,10 +1,10 @@
-import { AcDbArc } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
   GeometryMathUtil,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -19,6 +19,10 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import {
+  acapNewPreviewId,
+  acapPreviewDrawable
+} from '../../model/AcApItemDrawable'
 
 // Arc orientation in this command:
 // 1  -> counterclockwise in XY
@@ -58,7 +62,7 @@ function polarAngle(center: GeometryPoint2dLike, point: GeometryPoint2dLike) {
 }
 
 /**
- * Maps a geometry-engine arc onto the OCS fields stored by `AcDbArc`.
+ * Maps a geometry-engine arc onto center, radius, polar angles and direction.
  */
 function toArcDefinition(
   arc: GeometryCircularArc2d | null
@@ -78,18 +82,14 @@ function toArcDefinition(
   }
 }
 
-function directionSignOf(entity: AcDbArc): ArcDirectionSign {
-  return entity.clockwise ? -1 : 1
-}
-
 /**
- * Creates one `AcDbArc` entity from normalized arc definition data.
+ * Creates the arc an arc definition describes.
  *
  * @param definition - Arc definition (center/radius/angles/orientation).
- * @returns New arc entity instance.
+ * @returns The arc geometry.
  */
-function createArcEntity(definition: ArcDefinition) {
-  return new AcDbArc(
+function createArc(definition: ArcDefinition) {
+  return GeometryCircularArc2d.fromMathAngles(
     definition.center,
     definition.radius,
     definition.startAngle,
@@ -98,21 +98,12 @@ function createArcEntity(definition: ArcDefinition) {
   )
 }
 
-/**
- * Applies arc definition fields onto an existing `AcDbArc`.
- *
- * Used by the preview jig to update transient geometry without recreating
- * entity instances on each mouse-move.
- *
- * @param entity - Target arc entity to mutate.
- * @param definition - Source definition values.
- */
-function applyArcDefinition(entity: AcDbArc, definition: ArcDefinition) {
-  entity.center = definition.center
-  entity.radius = definition.radius
-  entity.clockwise = definition.directionSign === -1
-  entity.startAngle = definition.startAngle
-  entity.endAngle = definition.endAngle
+/** Builds the preview drawable of an arc definition under a preview id. */
+function arcPreview(definition: ArcDefinition, id: string) {
+  return acapPreviewDrawable(
+    { kind: 'shape', geometry: createArc(definition) },
+    id
+  )
 }
 
 /**
@@ -265,14 +256,15 @@ function createArcFromStartEndRadius(
 /**
  * Dynamic preview jig for ARC command.
  *
- * The jig holds one transient `AcDbArc` and updates it from a builder callback
+ * The jig holds one preview arc and updates it from a builder callback
  * as cursor input changes.
  */
 class AcApArcJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient arc entity reused across preview updates.
    */
-  private _arc: AcDbArc
+  private readonly _previewId = acapNewPreviewId()
+  private _drawable: AcGiDrawable
   /**
    * Builder callback that resolves current cursor point to arc definition.
    */
@@ -292,14 +284,14 @@ class AcApArcJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   ) {
     super(view)
     this._builder = builder
-    this._arc = createArcEntity(fallback)
+    this._drawable = arcPreview(fallback, this._previewId)
   }
 
   /**
    * Gets transient arc entity.
    */
-  get entity(): AcDbArc {
-    return this._arc
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -311,12 +303,7 @@ class AcApArcJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     // Ignore invalid intermediate states while the cursor moves.
     const definition = this._builder(point)
     if (!definition) return
-    if (definition.directionSign !== directionSignOf(this._arc)) {
-      this.end()
-      this._arc = createArcEntity(definition)
-      return
-    }
-    applyArcDefinition(this._arc, definition)
+    this._drawable = arcPreview(definition, this._previewId)
   }
 }
 
@@ -333,7 +320,8 @@ class AcApArcValueJig<T> extends AcEdPreviewJig<T> {
   /**
    * Transient arc entity reused across preview updates.
    */
-  private _arc: AcDbArc
+  private readonly _previewId = acapNewPreviewId()
+  private _drawable: AcGiDrawable
   /**
    * Builder callback that resolves current prompt value to an arc definition.
    */
@@ -353,14 +341,14 @@ class AcApArcValueJig<T> extends AcEdPreviewJig<T> {
   ) {
     super(view)
     this._builder = builder
-    this._arc = createArcEntity(fallback)
+    this._drawable = arcPreview(fallback, this._previewId)
   }
 
   /**
    * Gets transient arc entity.
    */
-  get entity(): AcDbArc {
-    return this._arc
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -371,12 +359,7 @@ class AcApArcValueJig<T> extends AcEdPreviewJig<T> {
   update(value: T) {
     const definition = this._builder(value)
     if (!definition) return
-    if (definition.directionSign !== directionSignOf(this._arc)) {
-      this.end()
-      this._arc = createArcEntity(definition)
-      return
-    }
-    applyArcDefinition(this._arc, definition)
+    this._drawable = arcPreview(definition, this._previewId)
   }
 }
 
@@ -658,7 +641,7 @@ export class AcApArcCmd extends AcEdCommand {
    * @param arc - Arc definition to append.
    */
   private appendArc(context: AcApContext, arc: ArcDefinition) {
-    context.doc.modelSync.add(createArcEntity(arc))
+    context.doc.modelSync.addItems({ kind: 'shape', geometry: createArc(arc) })
   }
 
   /**

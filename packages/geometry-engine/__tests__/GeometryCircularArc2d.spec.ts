@@ -1,8 +1,8 @@
 import {
+  DEFAULT_TOL,
   GeometryCircularArc2d,
   GeometryMatrix3d,
   GeometryTol,
-  DEFAULT_TOL,
   ORIGIN_POINT_2D,
   TAU
 } from '../src'
@@ -16,6 +16,24 @@ describe('Test GeometryCircularArc2d', () => {
     expect(actual.x).toBeCloseTo(expected.x, 10)
     expect(actual.y).toBeCloseTo(expected.y, 10)
   }
+
+  it('clones a clockwise arc unchanged', () => {
+    const arc = GeometryCircularArc2d.fromMathAngles(
+      { x: 1, y: 1 },
+      4,
+      2.2,
+      0.3,
+      true
+    )
+    const copy = arc.clone()
+
+    expect(copy.clockwise).toBe(true)
+    expect(copy.startAngle).toBeCloseTo(arc.startAngle, 10)
+    expect(copy.endAngle).toBeCloseTo(arc.endAngle, 10)
+    expectPointClose(copy.startPoint, arc.startPoint)
+    expectPointClose(copy.endPoint, arc.endPoint)
+    expectPointClose(copy.midPoint, arc.midPoint)
+  })
 
   it('computes closed property correctly', () => {
     const closedArc1 = new GeometryCircularArc2d(

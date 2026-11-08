@@ -1,5 +1,9 @@
-import { AcDbAlignedDimension } from '@mlightcad/data-model'
-import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+import {
+  type GeometryDimension,
+  GeometryPoint2d,
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -11,9 +15,33 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
+
+/**
+ * Returns an aligned dimension between two points, labelled with their
+ * distance.
+ */
+function alignedDimension(
+  xLine1Point: GeometryPoint2dLike,
+  xLine2Point: GeometryPoint2dLike,
+  dimLinePoint: GeometryPoint2dLike
+): GeometryDimension {
+  const first = new GeometryPoint2d(xLine1Point)
+  const second = new GeometryPoint2d(xLine2Point)
+  return {
+    type: 'AlignedDimension',
+    points: {
+      xLine1Point: first,
+      xLine2Point: second,
+      dimLinePoint: new GeometryPoint2d(dimLinePoint)
+    },
+    text: first.distanceTo(second).toFixed(3)
+  }
+}
 
 export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
-  private _dim: AcDbAlignedDimension
+  private _dim: GeometryDimension
+  private _drawable: AcGiDrawable
 
   /**
    * Creates a dimension jig.
@@ -26,29 +54,19 @@ export class AcApDimJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     xline2Point: GeometryPoint2dLike
   ) {
     super(view)
-    this._dim = new AcDbAlignedDimension(xline1Point, xline2Point, xline1Point)
-    this._dim.rotation = 0
+    this._dim = alignedDimension(xline1Point, xline2Point, xline1Point)
+    this._drawable = acapPreviewDrawable({
+      kind: 'dimension',
+      geometry: this._dim
+    })
   }
 
-  get entity(): AcDbAlignedDimension {
-    return this._dim
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   update(point: GeometryPoint2dLike) {
-    this._dim.dimLinePoint = point
-    this._dim.rotation = this.calculateAngle(
-      this._dim.xLine1Point,
-      this._dim.xLine2Point
-    )
-    this._dim.dimensionText = this._dim.xLine1Point
-      .distanceTo(this._dim.xLine2Point)
-      .toFixed(3)
-  }
-
-  private calculateAngle(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
-    const dx = p2.x - p1.x
-    const dy = p2.y - p1.y
-    return Math.atan2(dy, dx)
+    this._dim.points.dimLinePoint.copy(point)
   }
 }
 
@@ -92,11 +110,9 @@ export class AcApDimLinearCmd extends AcEdCommand {
     if (dimLinePointResult.status !== AcEdPromptStatus.OK) return
     const dimLinePoint = dimLinePointResult.value!
 
-    const dimension = new AcDbAlignedDimension(
-      xLine1Point,
-      xLine2Point,
-      dimLinePoint
-    )
-    context.doc.modelSync.add(dimension)
+    context.doc.modelSync.addItems({
+      kind: 'dimension',
+      geometry: alignedDimension(xLine1Point, xLine2Point, dimLinePoint)
+    })
   }
 }

@@ -17,7 +17,8 @@ A typical command consists of:
 ### Example Structure
 
 ```typescript
-import { AcDbEntity, GeometryPoint2dLike } from '@mlightcad/data-model'
+import { GeometryLine2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../app'
 import {
@@ -28,22 +29,27 @@ import {
   AcEdPromptPointOptions
 } from '../editor'
 import { AcApI18n } from '../i18n'
+import { acapPreviewDrawable } from '../model'
 
 // Jig class for real-time preview (optional)
 export class AcAp[CommandName]Jig extends AcEdPreviewJig<GeometryPoint2dLike> {
-  private _entity: AcDbEntity
+  private _line: GeometryLine2d
+  private _drawable: AcGiDrawable
 
-  constructor(view: AcEdBaseView, /* initial parameters */) {
+  constructor(view: AcEdBaseView, start: GeometryPoint2dLike) {
     super(view)
-    // Initialize the entity
+    // Build the geometry and the drawable that previews it
+    this._line = new GeometryLine2d(start, start)
+    this._drawable = acapPreviewDrawable({ kind: 'shape', geometry: this._line })
   }
 
-  get entity(): AcDbEntity {
-    return this._entity
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
-  update(/* parameters to update */) {
-    // Update the entity based on user input
+  update(point: GeometryPoint2dLike) {
+    // Update the geometry based on user input
+    this._line.endPoint = point
   }
 }
 
@@ -66,8 +72,8 @@ export class AcAp[CommandName]Cmd extends AcEdCommand {
 
 1. **Prompt for user input** using prompt options like `AcEdPromptPointOptions`, `AcEdPromptDistanceOptions`, etc.
 2. **Handle user input** in an async function
-3. **Create the entity** once all required input is collected
-4. **Add the entity** to the model space
+3. **Build the geometry** once all required input is collected
+4. **Add it as an item** to the document's model
 
 ### Example: Point-based Command
 
@@ -88,10 +94,11 @@ async execute(context: AcApContext) {
   nextPointPrompt.jig = new AcAp[CommandName]Jig(context.view, firstPoint)
   const nextPoint = await AcApDocManager.instance.editor.getPoint(nextPointPrompt)
 
-  // Create and add entity to model space
-  const db = context.doc.database
-  const entity = new AcDb[EntityType](/* parameters */)
-  db.tables.blockTable.modelSpace.appendEntity(entity)
+  // Add the item to the document's model
+  context.doc.modelSync.addItems({
+    kind: 'shape',
+    geometry: new GeometryLine2d(firstPoint, nextPoint)
+  })
 }
 ```
 

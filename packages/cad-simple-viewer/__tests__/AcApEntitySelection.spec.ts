@@ -24,18 +24,18 @@ jest.mock('../src/i18n', () => ({
 import { AcApDocManager } from '../src/app'
 import { AcEdPromptStatus } from '../src/editor'
 import {
-  resolveSelectedEntities,
-  resolveSelectedIds
+  resolveSelectedIds,
+  resolveSelectedItems
 } from '../src/service/AcApEntitySelection'
 
 interface TestContextOptions {
   selectionIds?: string[]
-  entities?: Map<string, { objectId: string }>
+  items?: Map<string, { id: string }>
 }
 
 const createContext = ({
   selectionIds = [],
-  entities = new Map()
+  items = new Map()
 }: TestContextOptions = {}) => {
   const clear = jest.fn()
 
@@ -44,7 +44,7 @@ const createContext = ({
     context: {
       doc: {
         modelSync: {
-          entity: jest.fn((objectId: string) => entities.get(objectId))
+          item: jest.fn((id: string) => items.get(id))
         }
       },
       view: {
@@ -63,25 +63,25 @@ describe('AcApEntitySelection', () => {
     jest.clearAllMocks()
   })
 
-  describe('resolveSelectedEntities', () => {
-    test('returns entities from preselection without prompting', async () => {
-      const line = { objectId: 'line' }
+  describe('resolveSelectedItems', () => {
+    test('returns items from preselection without prompting', async () => {
+      const line = { id: 'line' }
       const { clear, context } = createContext({
         selectionIds: ['line'],
-        entities: new Map([['line', line]])
+        items: new Map([['line', line]])
       })
 
-      const result = await resolveSelectedEntities(context as never)
+      const result = await resolveSelectedItems(context as never)
 
-      expect(result).toEqual({ entities: [line], ids: ['line'] })
+      expect(result).toEqual({ items: [line], ids: ['line'] })
       expect(AcApDocManager.instance.editor.getSelection).not.toHaveBeenCalled()
       expect(clear).not.toHaveBeenCalled()
     })
 
     test('prompts for selection when nothing is preselected', async () => {
-      const line = { objectId: 'line' }
+      const line = { id: 'line' }
       const { context } = createContext({
-        entities: new Map([['line', line]])
+        items: new Map([['line', line]])
       })
       const getSelection = jest.mocked(
         AcApDocManager.instance.editor.getSelection
@@ -91,13 +91,13 @@ describe('AcApEntitySelection', () => {
         value: { count: 1, ids: ['line'] } as never
       })
 
-      const result = await resolveSelectedEntities(context as never, {
+      const result = await resolveSelectedItems(context as never, {
         promptKey: 'move'
       })
 
       expect(getSelection).toHaveBeenCalledTimes(1)
       expect(getSelection.mock.calls[0][0].message).toBe('move')
-      expect(result).toEqual({ entities: [line], ids: ['line'] })
+      expect(result).toEqual({ items: [line], ids: ['line'] })
     })
 
     test('returns undefined when the selection prompt is cancelled', async () => {
@@ -110,7 +110,7 @@ describe('AcApEntitySelection', () => {
         value: undefined
       } as never)
 
-      const result = await resolveSelectedEntities(context as never, {
+      const result = await resolveSelectedItems(context as never, {
         promptKey: 'move'
       })
 
@@ -123,7 +123,7 @@ describe('AcApEntitySelection', () => {
         selectionIds: ['missing']
       })
 
-      const result = await resolveSelectedEntities(context as never, {
+      const result = await resolveSelectedItems(context as never, {
         clearOnEmpty: false
       })
 
@@ -131,12 +131,12 @@ describe('AcApEntitySelection', () => {
       expect(clear).not.toHaveBeenCalled()
     })
 
-    test('clears selection when ids do not resolve to entities by default', async () => {
+    test('clears selection when ids do not resolve to items by default', async () => {
       const { clear, context } = createContext({
         selectionIds: ['missing']
       })
 
-      const result = await resolveSelectedEntities(context as never)
+      const result = await resolveSelectedItems(context as never)
 
       expect(result).toBeUndefined()
       expect(clear).toHaveBeenCalledTimes(1)

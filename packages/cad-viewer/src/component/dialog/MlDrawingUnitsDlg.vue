@@ -109,12 +109,12 @@
 </template>
 
 <script setup lang="ts">
-import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import {
-  AcDbAngleUnits,
-  AcDbLinearUnits,
-  AcDbUnitsValue
-} from '@mlightcad/data-model'
+  AcApAngleUnits,
+  AcApLinearUnits,
+  AcApSettingManager,
+  AcApUnitsValue
+} from '@mlightcad/cad-simple-viewer'
 import {
   ElCheckbox,
   ElForm,
@@ -145,12 +145,12 @@ const visible = computed({
 })
 
 const form = reactive({
-  lunits: AcDbLinearUnits.Decimal,
+  lunits: AcApLinearUnits.Decimal,
   luprec: 4,
-  aunits: AcDbAngleUnits.DecimalDegrees,
+  aunits: AcApAngleUnits.DecimalDegrees,
   auprec: 0,
   angdir: 0,
-  insunits: AcDbUnitsValue.Millimeters
+  insunits: AcApUnitsValue.Millimeters
 })
 
 /** ANGDIR: 1 = clockwise positive, 0 = counterclockwise (AutoCAD Clockwise checkbox). */
@@ -171,133 +171,133 @@ const anglePrecisionOptions = computed(() =>
 
 const linearUnitOptions = computed(() => [
   {
-    value: AcDbLinearUnits.Scientific,
+    value: AcApLinearUnits.Scientific,
     label: t('dialog.drawingUnitsDlg.linear.scientific')
   },
   {
-    value: AcDbLinearUnits.Decimal,
+    value: AcApLinearUnits.Decimal,
     label: t('dialog.drawingUnitsDlg.linear.decimal')
   },
   {
-    value: AcDbLinearUnits.Engineering,
+    value: AcApLinearUnits.Engineering,
     label: t('dialog.drawingUnitsDlg.linear.engineering')
   },
   {
-    value: AcDbLinearUnits.Architectural,
+    value: AcApLinearUnits.Architectural,
     label: t('dialog.drawingUnitsDlg.linear.architectural')
   },
   {
-    value: AcDbLinearUnits.Fractional,
+    value: AcApLinearUnits.Fractional,
     label: t('dialog.drawingUnitsDlg.linear.fractional')
   },
   {
-    value: AcDbLinearUnits.WindowsDesktop,
+    value: AcApLinearUnits.WindowsDesktop,
     label: t('dialog.drawingUnitsDlg.linear.windowsDesktop')
   }
 ])
 
 const angleUnitOptions = computed(() => [
   {
-    value: AcDbAngleUnits.DecimalDegrees,
+    value: AcApAngleUnits.DecimalDegrees,
     label: t('dialog.drawingUnitsDlg.angle.decimalDegrees')
   },
   {
-    value: AcDbAngleUnits.DegreesMinutesSeconds,
+    value: AcApAngleUnits.DegreesMinutesSeconds,
     label: t('dialog.drawingUnitsDlg.angle.dms')
   },
   {
-    value: AcDbAngleUnits.Gradians,
+    value: AcApAngleUnits.Gradians,
     label: t('dialog.drawingUnitsDlg.angle.gradians')
   },
   {
-    value: AcDbAngleUnits.Radians,
+    value: AcApAngleUnits.Radians,
     label: t('dialog.drawingUnitsDlg.angle.radians')
   },
   {
-    value: AcDbAngleUnits.SurveyorsUnits,
+    value: AcApAngleUnits.SurveyorsUnits,
     label: t('dialog.drawingUnitsDlg.angle.surveyors')
   }
 ])
 
-const insertionUnitValues: AcDbUnitsValue[] = [
-  AcDbUnitsValue.Undefined,
-  AcDbUnitsValue.Inches,
-  AcDbUnitsValue.Feet,
-  AcDbUnitsValue.Miles,
-  AcDbUnitsValue.Millimeters,
-  AcDbUnitsValue.Centimeters,
-  AcDbUnitsValue.Meters,
-  AcDbUnitsValue.Kilometers,
-  AcDbUnitsValue.Microinches,
-  AcDbUnitsValue.Mils,
-  AcDbUnitsValue.Yards,
-  AcDbUnitsValue.Angstroms,
-  AcDbUnitsValue.Nanometers,
-  AcDbUnitsValue.Microns,
-  AcDbUnitsValue.Decimeters,
-  AcDbUnitsValue.Dekameters,
-  AcDbUnitsValue.Hectometers,
-  AcDbUnitsValue.Gigameters,
-  AcDbUnitsValue.Astronomical,
-  AcDbUnitsValue.LightYears,
-  AcDbUnitsValue.Parsecs,
-  AcDbUnitsValue.USSurveyFeet,
-  AcDbUnitsValue.USSurveyInch,
-  AcDbUnitsValue.USSurveyYard,
-  AcDbUnitsValue.USSurveyMile
+const insertionUnitValues: AcApUnitsValue[] = [
+  AcApUnitsValue.Undefined,
+  AcApUnitsValue.Inches,
+  AcApUnitsValue.Feet,
+  AcApUnitsValue.Miles,
+  AcApUnitsValue.Millimeters,
+  AcApUnitsValue.Centimeters,
+  AcApUnitsValue.Meters,
+  AcApUnitsValue.Kilometers,
+  AcApUnitsValue.Microinches,
+  AcApUnitsValue.Mils,
+  AcApUnitsValue.Yards,
+  AcApUnitsValue.Angstroms,
+  AcApUnitsValue.Nanometers,
+  AcApUnitsValue.Microns,
+  AcApUnitsValue.Decimeters,
+  AcApUnitsValue.Dekameters,
+  AcApUnitsValue.Hectometers,
+  AcApUnitsValue.Gigameters,
+  AcApUnitsValue.Astronomical,
+  AcApUnitsValue.LightYears,
+  AcApUnitsValue.Parsecs,
+  AcApUnitsValue.USSurveyFeet,
+  AcApUnitsValue.USSurveyInch,
+  AcApUnitsValue.USSurveyYard,
+  AcApUnitsValue.USSurveyMile
 ]
 
-function insertionUnitLabel(value: AcDbUnitsValue): string {
+function insertionUnitLabel(value: AcApUnitsValue): string {
   switch (value) {
-    case AcDbUnitsValue.Undefined:
+    case AcApUnitsValue.Undefined:
       return t('dialog.drawingUnitsDlg.insUnits._0')
-    case AcDbUnitsValue.Inches:
+    case AcApUnitsValue.Inches:
       return t('dialog.drawingUnitsDlg.insUnits._1')
-    case AcDbUnitsValue.Feet:
+    case AcApUnitsValue.Feet:
       return t('dialog.drawingUnitsDlg.insUnits._2')
-    case AcDbUnitsValue.Miles:
+    case AcApUnitsValue.Miles:
       return t('dialog.drawingUnitsDlg.insUnits._3')
-    case AcDbUnitsValue.Millimeters:
+    case AcApUnitsValue.Millimeters:
       return t('dialog.drawingUnitsDlg.insUnits._4')
-    case AcDbUnitsValue.Centimeters:
+    case AcApUnitsValue.Centimeters:
       return t('dialog.drawingUnitsDlg.insUnits._5')
-    case AcDbUnitsValue.Meters:
+    case AcApUnitsValue.Meters:
       return t('dialog.drawingUnitsDlg.insUnits._6')
-    case AcDbUnitsValue.Kilometers:
+    case AcApUnitsValue.Kilometers:
       return t('dialog.drawingUnitsDlg.insUnits._7')
-    case AcDbUnitsValue.Microinches:
+    case AcApUnitsValue.Microinches:
       return t('dialog.drawingUnitsDlg.insUnits._8')
-    case AcDbUnitsValue.Mils:
+    case AcApUnitsValue.Mils:
       return t('dialog.drawingUnitsDlg.insUnits._9')
-    case AcDbUnitsValue.Yards:
+    case AcApUnitsValue.Yards:
       return t('dialog.drawingUnitsDlg.insUnits._10')
-    case AcDbUnitsValue.Angstroms:
+    case AcApUnitsValue.Angstroms:
       return t('dialog.drawingUnitsDlg.insUnits._11')
-    case AcDbUnitsValue.Nanometers:
+    case AcApUnitsValue.Nanometers:
       return t('dialog.drawingUnitsDlg.insUnits._12')
-    case AcDbUnitsValue.Microns:
+    case AcApUnitsValue.Microns:
       return t('dialog.drawingUnitsDlg.insUnits._13')
-    case AcDbUnitsValue.Decimeters:
+    case AcApUnitsValue.Decimeters:
       return t('dialog.drawingUnitsDlg.insUnits._14')
-    case AcDbUnitsValue.Dekameters:
+    case AcApUnitsValue.Dekameters:
       return t('dialog.drawingUnitsDlg.insUnits._15')
-    case AcDbUnitsValue.Hectometers:
+    case AcApUnitsValue.Hectometers:
       return t('dialog.drawingUnitsDlg.insUnits._16')
-    case AcDbUnitsValue.Gigameters:
+    case AcApUnitsValue.Gigameters:
       return t('dialog.drawingUnitsDlg.insUnits._17')
-    case AcDbUnitsValue.Astronomical:
+    case AcApUnitsValue.Astronomical:
       return t('dialog.drawingUnitsDlg.insUnits._18')
-    case AcDbUnitsValue.LightYears:
+    case AcApUnitsValue.LightYears:
       return t('dialog.drawingUnitsDlg.insUnits._19')
-    case AcDbUnitsValue.Parsecs:
+    case AcApUnitsValue.Parsecs:
       return t('dialog.drawingUnitsDlg.insUnits._20')
-    case AcDbUnitsValue.USSurveyFeet:
+    case AcApUnitsValue.USSurveyFeet:
       return t('dialog.drawingUnitsDlg.insUnits._21')
-    case AcDbUnitsValue.USSurveyInch:
+    case AcApUnitsValue.USSurveyInch:
       return t('dialog.drawingUnitsDlg.insUnits._22')
-    case AcDbUnitsValue.USSurveyYard:
+    case AcApUnitsValue.USSurveyYard:
       return t('dialog.drawingUnitsDlg.insUnits._23')
-    case AcDbUnitsValue.USSurveyMile:
+    case AcApUnitsValue.USSurveyMile:
       return t('dialog.drawingUnitsDlg.insUnits._24')
     default:
       return t('dialog.drawingUnitsDlg.insUnits._0')
@@ -312,12 +312,12 @@ const insertionUnitOptions = computed(() =>
 )
 
 const VALID_LUNITS = new Set<number>([
-  AcDbLinearUnits.Scientific,
-  AcDbLinearUnits.Decimal,
-  AcDbLinearUnits.Engineering,
-  AcDbLinearUnits.Architectural,
-  AcDbLinearUnits.Fractional,
-  AcDbLinearUnits.WindowsDesktop
+  AcApLinearUnits.Scientific,
+  AcApLinearUnits.Decimal,
+  AcApLinearUnits.Engineering,
+  AcApLinearUnits.Architectural,
+  AcApLinearUnits.Fractional,
+  AcApLinearUnits.WindowsDesktop
 ])
 
 function clampInt(value: number, min: number, max: number) {
@@ -327,7 +327,7 @@ function clampInt(value: number, min: number, max: number) {
 }
 
 function normalizeLunits(raw: number) {
-  return VALID_LUNITS.has(raw) ? raw : AcDbLinearUnits.Decimal
+  return VALID_LUNITS.has(raw) ? raw : AcApLinearUnits.Decimal
 }
 
 function normalizeAunits(raw: number) {
@@ -341,8 +341,8 @@ function readFormFromSettings() {
   form.aunits = normalizeAunits(settings.get('angularUnits'))
   form.auprec = clampInt(settings.get('angularPrecision'), 0, 8)
   form.angdir = settings.get('angleDirection') === 1 ? 1 : 0
-  const ins = clampInt(settings.get('insertionUnits'), 0, AcDbUnitsValue.Max)
-  form.insunits = ins as AcDbUnitsValue
+  const ins = clampInt(settings.get('insertionUnits'), 0, AcApUnitsValue.Max)
+  form.insunits = ins as AcApUnitsValue
 }
 
 function handleOpen() {
@@ -359,7 +359,7 @@ function handleOk() {
   const aunits = normalizeAunits(form.aunits)
   const auprec = clampInt(form.auprec, 0, 8)
   const angdir = form.angdir === 1 ? 1 : 0
-  const insunits = clampInt(form.insunits, 0, AcDbUnitsValue.Max)
+  const insunits = clampInt(form.insunits, 0, AcApUnitsValue.Max)
 
   AcApSettingManager.instance.apply({
     linearUnits: lunits,

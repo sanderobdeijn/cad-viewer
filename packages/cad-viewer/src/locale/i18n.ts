@@ -1,5 +1,4 @@
 import { AcApI18n } from '@mlightcad/cad-simple-viewer'
-import { AcDbEntity } from '@mlightcad/data-model'
 import { createI18n } from 'vue-i18n'
 
 import enCommand from './en/command'
@@ -14,7 +13,6 @@ const messages = {
     dialog: enDialog,
     entity: enEntity
   }
-
 }
 
 AcApI18n.mergeLocaleMessage('en', messages.en)
@@ -36,10 +34,10 @@ AcApI18n.events.localeChanged.addEventListener(args => {
   i18n.global.locale.value = args.new
 })
 
-export const entityName = (entity: AcDbEntity) => {
+export const entityName = (type: string) => {
   const t = i18n.global.t
-  const key = 'entity.entityName.' + entity.type
-  return t(key, entity.type, { missingWarn: false })
+  const key = 'entity.entityName.' + type
+  return t(key, type, { missingWarn: false })
 }
 
 export const colorName = (colorKeyName: string) => {

@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import RBush from 'rbush'
 
 import { AcEdSpatialQueryResultItem } from '../editor/view'
@@ -19,11 +18,11 @@ const RBUSH_TREE_OVERHEAD_FACTOR = 1.4
 
 export class AcTrRBushSpatialIndex implements AcTrSpatialIndex {
   private readonly tree: RBush<AcEdSpatialQueryResultItem>
-  private readonly idMap: Map<AcDbObjectId, AcEdSpatialQueryResultItem>
+  private readonly idMap: Map<string, AcEdSpatialQueryResultItem>
 
   constructor(maxEntries?: number) {
     this.tree = new RBush<AcEdSpatialQueryResultItem>(maxEntries)
-    this.idMap = new Map<AcDbObjectId, AcEdSpatialQueryResultItem>()
+    this.idMap = new Map<string, AcEdSpatialQueryResultItem>()
   }
 
   insert(item: AcEdSpatialQueryResultItem) {
@@ -89,7 +88,7 @@ export class AcTrRBushSpatialIndex implements AcTrSpatialIndex {
     }
   }
 
-  removeById(id: AcDbObjectId): void {
+  removeById(id: string): void {
     if (!(typeof id === 'string' && id.length > 0)) {
       return
     }
@@ -110,7 +109,7 @@ export class AcTrRBushSpatialIndex implements AcTrSpatialIndex {
   /**
    * Returns the item currently indexed for {@link id}, when present.
    */
-  getById(id: AcDbObjectId): AcEdSpatialQueryResultItem | undefined {
+  getById(id: string): AcEdSpatialQueryResultItem | undefined {
     if (!(typeof id === 'string' && id.length > 0)) {
       return undefined
     }

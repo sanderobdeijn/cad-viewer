@@ -1,8 +1,3 @@
-import {
-  AcDbDatabase,
-  acdbHostApplicationServices,
-  AcDbTextStyleTableRecord
-} from '@mlightcad/data-model'
 import { AcGiTextStyle } from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 
@@ -86,91 +81,6 @@ describe('resolveShapeTextStyle', () => {
     expect(resolved).not.toBe(style)
   })
 
-  it('searches shape definition files when the provided style lacks the glyph', () => {
-    const db = new AcDbDatabase()
-    acdbHostApplicationServices().workingDatabase = db
-
-    const shapeDef = new AcDbTextStyleTableRecord(
-      makeStyle('', 'tecosymbol', 1)
-    )
-    db.tables.textStyleTable.add(shapeDef)
-
-    jest
-      .mocked(fontManager.getShapeByName)
-      .mockImplementation((name, fontName) => {
-        if (name === '_GV_' && fontName === 'tecosymbol') {
-          return {
-            polylines: [
-              [
-                { x: 0, y: 0 },
-                { x: 1, y: 0 }
-              ]
-            ]
-          } as never
-        }
-        return undefined
-      })
-
-    const context = new AcTrRenderContext()
-    context.database = db
-
-    const resolved = resolveShapeTextStyle(
-      {
-        name: '_GV_',
-        size: 0.01,
-        position: { x: 0, y: 0 }
-      },
-      makeStyle('pipe', 'romans'),
-      context
-    )
-
-    expect(resolved.font).toBe('tecosymbol')
-  })
-
-  it('searches shape definition files when style is omitted', () => {
-    const db = new AcDbDatabase()
-    acdbHostApplicationServices().workingDatabase = db
-
-    const shapeDef = new AcDbTextStyleTableRecord(makeStyle('', 'ltypeshp', 1))
-    db.tables.textStyleTable.add(shapeDef)
-
-    jest
-      .mocked(fontManager.getShapeByName)
-      .mockImplementation((name, fontName) => {
-        if (name === 'ARROW' && fontName === 'ltypeshp') {
-          return {
-            polylines: [
-              [
-                { x: 0, y: 0 },
-                { x: 1, y: 0 }
-              ]
-            ]
-          } as never
-        }
-        return undefined
-      })
-
-    const context = new AcTrRenderContext()
-    context.database = db
-
-    const resolved = resolveShapeTextStyle(
-      {
-        name: 'ARROW',
-        size: 2,
-        position: { x: 0, y: 0 }
-      },
-      undefined,
-      context
-    )
-
-    expect(resolved.font).toBe('ltypeshp')
-    expect(fontManager.getShapeByName).toHaveBeenCalledWith(
-      'ARROW',
-      'ltypeshp',
-      2
-    )
-  })
-
   it('uses shape number only when shape name is absent', () => {
     const style = makeStyle('Standard', 'ltypeshp')
     jest
@@ -242,29 +152,6 @@ describe('resolveShapeTextStyle', () => {
       1
     )
     expect(fontManager.getShapeByCode).not.toHaveBeenCalled()
-  })
-
-  it('returns an empty style when no shape file contains the glyph', () => {
-    const db = new AcDbDatabase()
-    acdbHostApplicationServices().workingDatabase = db
-
-    const shapeDef = new AcDbTextStyleTableRecord(makeStyle('', 'ltypeshp', 1))
-    db.tables.textStyleTable.add(shapeDef)
-
-    const context = new AcTrRenderContext()
-    context.database = db
-
-    const resolved = resolveShapeTextStyle(
-      {
-        name: 'MISSING',
-        size: 1,
-        position: { x: 0, y: 0 }
-      },
-      null,
-      context
-    )
-
-    expect(resolved).toEqual(EMPTY_TEXT_STYLE)
   })
 })
 

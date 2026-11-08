@@ -1,4 +1,4 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcEdBaseView } from '../view/AcEdBaseView'
 
@@ -69,7 +69,7 @@ export abstract class AcEdPreviewJig<T> {
    *
    * @param ent The preview entity to display.
    */
-  get entity(): AcDbEntity | null {
+  get entity(): AcGiDrawable | null {
     return null
   }
 

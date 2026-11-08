@@ -32,7 +32,9 @@ describe('AcUiAciColorDialog', () => {
       initialIndex: 7
     })
 
-    const dialog = document.querySelector('.ml-ui-aci-color-dialog') as HTMLElement
+    const dialog = document.querySelector(
+      '.ml-ui-aci-color-dialog'
+    ) as HTMLElement
     expect(dialog).toBeTruthy()
     expect(dialog.querySelector('.ml-aci-picker')).toBeTruthy()
     expect(dialog.querySelector('.ml-aci-preview-box')).toBeTruthy()
@@ -78,9 +80,7 @@ describe('AcUiAciColorDialog', () => {
     expect(css).toContain('width: 440px')
     expect(css).toContain('max-width: calc(100vw - 24px)')
     expect(css).toContain('@media (max-width: 600px)')
-    expect(css).toMatch(
-      /@media \(max-width: 600px\) \{[\s\S]*width: 100%;/
-    )
+    expect(css).toMatch(/@media \(max-width: 600px\) \{[\s\S]*width: 100%;/)
 
     const cancel = [...document.querySelectorAll('button')].find(
       b => b.textContent === 'Cancel'

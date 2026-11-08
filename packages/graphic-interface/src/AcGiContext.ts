@@ -1,13 +1,8 @@
 import { AcGiSubEntityTraits } from './AcGiSubEntityTraits'
 
 export interface AcGiContextOptions {
-  /**
-   * Database being drawn. Runtime type is `AcDbDatabase` (data-model); typed as
-   * `unknown` here so graphic-interface does not depend on data-model.
-   *
-   * Display tessellation reads `drawCircleSides` from this object.
-   */
-  database?: unknown
+  /** Segments a full circle is drawn with; see {@link AcGiContext.circleSides}. */
+  circleSides?: number
   /** RGB used when the resolved color is foreground (ACI 7) on a dark background. */
   foregroundOnDark?: number
   /** RGB used when the resolved color is foreground (ACI 7) on a light background. */
@@ -26,13 +21,10 @@ export interface AcGiContextOptions {
  */
 export class AcGiContext {
   /**
-   * Database being drawn. Runtime type is `AcDbDatabase` (data-model); typed as
-   * `unknown` here so graphic-interface does not depend on data-model.
-   *
-   * Display tessellation of circles, arcs, ellipses, and areas should read
-   * `drawCircleSides` from this object.
+   * Segments a full circle is drawn with. When unset, tessellation uses the
+   * default number of segments.
    */
-  database: unknown
+  circleSides?: number
   /** RGB used when the resolved color is foreground (ACI 7) on a dark background. */
   foregroundOnDark: number
   /** RGB used when the resolved color is foreground (ACI 7) on a light background. */
@@ -43,7 +35,7 @@ export class AcGiContext {
   fallbackRgb?: number
 
   constructor(options: AcGiContextOptions = {}) {
-    this.database = options.database
+    this.circleSides = options.circleSides
     this.foregroundOnDark =
       options.foregroundOnDark ?? ACGI_DARK_THEME_FOREGROUND
     this.foregroundOnLight =
@@ -72,11 +64,9 @@ export class AcGiContext {
    * Creates a draw-time context from the current canvas background colour.
    */
   static fromBackgroundColor(
-    backgroundColor: number = ACGI_MODEL_SPACE_BACKGROUND,
-    database?: unknown
+    backgroundColor: number = ACGI_MODEL_SPACE_BACKGROUND
   ): AcGiContext {
     return new AcGiContext({
-      database,
       foregroundOnDark: ACGI_DARK_THEME_FOREGROUND,
       foregroundOnLight: ACGI_LIGHT_THEME_FOREGROUND,
       backgroundIsDark: !acgiIsLightBackground(backgroundColor),
@@ -102,7 +92,6 @@ const ACGI_LIGHT_BACKGROUND_LUMA_THRESHOLD = 128
 
 /** Default draw context matching a dark AutoCAD model-space background. */
 export const DEFAULT_ACGI_CONTEXT = new AcGiContext({
-  database: undefined,
   foregroundOnDark: ACGI_DARK_THEME_FOREGROUND,
   foregroundOnLight: ACGI_LIGHT_THEME_FOREGROUND,
   backgroundIsDark: true,

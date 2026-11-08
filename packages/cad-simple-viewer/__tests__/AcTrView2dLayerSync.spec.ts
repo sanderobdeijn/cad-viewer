@@ -8,6 +8,7 @@ import {
 } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
+import { acapDefaultLayerTraits } from '../src/model/AcApItemDrawable'
 import { AcTrLayer } from '../src/view/AcTrLayer'
 import { AcTrLayerAppearanceController } from '../src/view/AcTrLayerAppearanceController'
 import { AcTrScene } from '../src/view/AcTrScene'
@@ -147,9 +148,7 @@ describe('layer material remap fan-out', () => {
       () => ({ layer: 'WALL' })
     )
 
-    controller.syncFromLiveRecord({
-      name: 'WALL'
-    } as Parameters<AcTrLayerAppearanceController['syncFromLiveRecord']>[0])
+    controller.syncFromLiveRecord('WALL')
 
     expect(scene.forEachSceneLayer).toHaveBeenCalledTimes(1)
     expect(sceneLayerA.syncAppearanceFromRecord).toHaveBeenCalledTimes(1)
@@ -159,24 +158,8 @@ describe('layer material remap fan-out', () => {
     })
   })
 
-  it('resolves layer traits from renderer draw context by default', () => {
-    const layer = {
-      name: 'WALL',
-      color: new AcCmColor(),
-      lineStyle: 'Continuous',
-      lineWeight: 25,
-      transparency: 0
-    }
-    const database = {
-      tables: {
-        layerTable: {
-          getAt: jest.fn(() => layer)
-        }
-      }
-    }
-
+  it('resolves layer 0 to the default layer traits', () => {
     const renderer = {
-      context: { database },
       updateLayerMaterial: jest.fn(() => ({}))
     } as unknown as AcTrRenderer
 
@@ -187,23 +170,16 @@ describe('layer material remap fan-out', () => {
       renderer
     )
 
-    controller.syncFromLiveRecord({
-      name: 'WALL'
-    } as Parameters<AcTrLayerAppearanceController['syncFromLiveRecord']>[0])
+    controller.syncFromLiveRecord('0')
 
-    expect(database.tables.layerTable.getAt).toHaveBeenCalledWith('WALL')
-    expect(renderer.updateLayerMaterial).toHaveBeenCalledWith('WALL', {
-      layer: 'WALL',
-      color: layer.color,
-      lineType: layer.lineStyle,
-      lineWeight: layer.lineWeight,
-      transparency: layer.transparency
-    })
+    expect(renderer.updateLayerMaterial).toHaveBeenCalledWith(
+      '0',
+      acapDefaultLayerTraits()
+    )
   })
 
-  it('skips layer sync when draw database is not yet bound', () => {
+  it('skips layers other than layer 0', () => {
     const renderer = {
-      context: { database: undefined },
       updateLayerMaterial: jest.fn(() => ({}))
     } as unknown as AcTrRenderer
 
@@ -214,9 +190,7 @@ describe('layer material remap fan-out', () => {
       renderer
     )
 
-    controller.syncFromLiveRecord({
-      name: 'WALL'
-    } as Parameters<AcTrLayerAppearanceController['syncFromLiveRecord']>[0])
+    controller.syncFromLiveRecord('WALL')
 
     expect(renderer.updateLayerMaterial).not.toHaveBeenCalled()
   })

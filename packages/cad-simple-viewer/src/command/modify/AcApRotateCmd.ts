@@ -1,4 +1,4 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
@@ -14,7 +14,7 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
-import { resolveSelectedEntities } from '../../service'
+import { resolveSelectedItems } from '../../service'
 import { createRotationMatrix } from '../../util/AcApGeTransform'
 import {
   AcApRotatePreviewJig,
@@ -104,7 +104,7 @@ export class AcApRotateCmd extends AcEdCommand {
    */
   private async promptReferenceAngle(
     context: AcApContext,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2d
   ): Promise<number | undefined> {
     while (true) {
@@ -181,7 +181,7 @@ export class AcApRotateCmd extends AcEdCommand {
    */
   private async promptRotationAngle(
     context: AcApContext,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2d
   ) {
     let copyMode = false
@@ -268,12 +268,12 @@ export class AcApRotateCmd extends AcEdCommand {
    */
   async execute(context: AcApContext) {
     const selectionSet = context.view.selectionSet
-    const resolved = await resolveSelectedEntities(context, {
+    const resolved = await resolveSelectedItems(context, {
       promptKey: 'rotate'
     })
     if (!resolved) return
 
-    const { entities: sourceEntities } = resolved
+    const { items: sourceEntities } = resolved
 
     const basePointPrompt = new AcEdPromptPointOptions(
       AcApI18n.t('jig.rotate.basePoint')
@@ -308,7 +308,7 @@ export class AcApRotateCmd extends AcEdCommand {
     if (rotation.copyMode) {
       entityService.cloneAndTransform(sourceEntities, matrix)
     } else {
-      entityService.transformEntities(sourceEntities, matrix)
+      entityService.transformItems(sourceEntities, matrix)
     }
 
     selectionSet.clear()

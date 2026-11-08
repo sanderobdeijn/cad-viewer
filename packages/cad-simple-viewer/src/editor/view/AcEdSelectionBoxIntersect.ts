@@ -1,10 +1,14 @@
-import { AcDbEntity } from '@mlightcad/data-model'
 import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+
+import {
+  type AcApItemContents,
+  itemIntersectCurves
+} from '../../model/AcApItemGeometry'
 /**
  * Minimal line primitive shape used for crossing-selection refinement.
  *
  * Matches {@code GeometryIntersectPrimitive} line entries without importing the
- * geometry-engine type (not re-exported from `@mlightcad/data-model`).
+ * geometry-engine type.
  */
 type SelectionIntersectLinePrimitive = {
   kind: 'line'
@@ -84,11 +88,11 @@ export function acedPrimitiveIntersectsSelectionBox(
  * against the box so long thin AABBs do not false-positive when the pick
  * rectangle sits in empty space inside a large closed boundary.
  */
-export function acedEntityIntersectsSelectionBox(
-  entity: AcDbEntity,
+export function acedItemIntersectsSelectionBox(
+  item: AcApItemContents,
   box: GeometryBox2d
 ): boolean {
-  const curves = entity.subGetIntersectCurves()
+  const curves = itemIntersectCurves(item)
   if (curves.length === 0) {
     return true
   }

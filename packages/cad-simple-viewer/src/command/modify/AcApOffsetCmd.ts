@@ -1,4 +1,3 @@
-import { AcDbCurve, AcDbEntity } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
@@ -24,6 +23,13 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
+import {
+  type AcApItemContents,
+  canOffsetItem,
+  itemOffsetSide,
+  offsetItem
+} from '../../model/AcApItemGeometry'
 
 /**
  * Union of prompt option types used across the OFFSET state machine.
@@ -56,9 +62,9 @@ type OffsetPromptResult =
  * @returns `true` when `entity` is an offset-capable curve.
  */
 function isOffsettableCurve(
-  entity: AcDbEntity | undefined
-): entity is AcDbCurve {
-  return entity instanceof AcDbCurve
+  item: AcApItemContents | undefined
+): item is AcApItemContents {
+  return !!item && canOffsetItem(item)
 }
 
 /**
@@ -74,13 +80,13 @@ function isOffsettableCurve(
  * @returns Offset curve instances ready for preview or commit, or an empty array on failure.
  */
 function buildOffsetCurves(
-  curve: AcDbCurve,
+  curve: AcApItemContents,
   offsetDistance: number,
   sidePoint: GeometryPoint2dLike
-) {
+): AcApItemContents[] {
   try {
-    const side = curve.getOffsetSideAtPoint(sidePoint)
-    return curve.getOffsetCurves(offsetDistance * side)
+    const side = itemOffsetSide(curve, sidePoint)
+    return offsetItem(curve, offsetDistance * side)
   } catch {
     return []
   }
@@ -95,9 +101,9 @@ function buildOffsetCurves(
  */
 class AcApOffsetPreviewJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private _view: AcEdBaseView
-  private _curve: AcDbCurve
+  private _curve: AcApItemContents
   private _distance: number
-  private _previewCurves: AcDbCurve[] = []
+  private _previewCurves: AcApItemContents[] = []
   private _renderedIds: string[] = []
 
   /**
@@ -107,7 +113,7 @@ class AcApOffsetPreviewJig extends AcEdPreviewJig<GeometryPoint2dLike> {
    * @param curve - Source curve whose offset geometry should be previewed.
    * @param distance - Offset distance already confirmed by the user.
    */
-  constructor(view: AcEdBaseView, curve: AcDbCurve, distance: number) {
+  constructor(view: AcEdBaseView, curve: AcApItemContents, distance: number) {
     super(view)
     this._view = view
     this._curve = curve
@@ -132,8 +138,11 @@ class AcApOffsetPreviewJig extends AcEdPreviewJig<GeometryPoint2dLike> {
    */
   override render() {
     if (this._previewCurves.length === 0) return
-    this._view.addTransientEntity(this._previewCurves)
-    this._renderedIds = this._previewCurves.map(entity => entity.objectId)
+    const drawables = this._previewCurves.map(curve =>
+      acapPreviewDrawable(curve)
+    )
+    this._view.addTransientEntity(drawables)
+    this._renderedIds = drawables.map(drawable => drawable.objectId)
   }
 
   /**
@@ -193,7 +202,7 @@ export class AcApOffsetCmd extends AcEdCommand {
       this.showMessage(message, type)
     }
     let offsetDistance: number | undefined
-    let currentCurve: AcDbCurve | undefined
+    let currentCurve: AcApItemContents | undefined
 
     /** Prompt state contract shared by every OFFSET workflow step. */
     type OffsetState = AcEdPromptState<OffsetPromptOptions, OffsetPromptResult>
@@ -315,7 +324,7 @@ export class AcApOffsetCmd extends AcEdCommand {
           return 'finish'
         }
 
-        const entity = context.doc.modelSync.entity(result.objectId)
+        const entity = context.doc.modelSync.item(result.objectId)
         if (!isOffsettableCurve(entity)) {
           showCommandMessage(
             AcApI18n.t('jig.offset.invalidSelection'),
@@ -399,7 +408,7 @@ export class AcApOffsetCmd extends AcEdCommand {
         if (offsetCurves.length === 0) {
           showCommandMessage(AcApI18n.t('jig.offset.offsetFailed'), 'warning')
         } else {
-          context.doc.modelSync.add(offsetCurves)
+          context.doc.modelSync.addItems(offsetCurves)
         }
 
         currentCurve = undefined

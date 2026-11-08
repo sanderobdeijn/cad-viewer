@@ -1,4 +1,4 @@
-jest.mock('@mlightcad/data-model', () => ({
+jest.mock('@mlightcad/common', () => ({
   log: { warn: jest.fn(), info: jest.fn(), error: jest.fn() }
 }))
 

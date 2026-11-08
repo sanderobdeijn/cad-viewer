@@ -1,5 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
-
 import { AcEdSpatialQueryResultItem } from '../editor/view'
 import {
   AcTrSpatialIndex,
@@ -83,7 +81,7 @@ export class AcTrLinearSpatialIndex implements AcTrSpatialIndex {
     }
   }
 
-  removeById(id: AcDbObjectId): void {
+  removeById(id: string): void {
     if (typeof id === 'string' && id.length > 0) {
       this.items.delete(id)
     }
@@ -92,7 +90,7 @@ export class AcTrLinearSpatialIndex implements AcTrSpatialIndex {
   /**
    * Returns the item currently indexed for {@link id}, when present.
    */
-  getById(id: AcDbObjectId): AcEdSpatialQueryResultItem | undefined {
+  getById(id: string): AcEdSpatialQueryResultItem | undefined {
     if (!(typeof id === 'string' && id.length > 0)) {
       return undefined
     }

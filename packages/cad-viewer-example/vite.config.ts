@@ -6,31 +6,27 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import svgLoader from 'vite-svg-loader'
 import { visualizer } from 'rollup-plugin-visualizer'
 import vue from '@vitejs/plugin-vue'
-import { examplePeerPackageAliases, exampleRollupOutput } from '../vite-config/pluginRollupOutput'
 import {
-  MTEXT_RENDERER_WORKER_FILE
-} from '../../tools/worker-assets.mjs'
+  examplePeerPackageAliases,
+  exampleRollupOutput
+} from '../vite-config/pluginRollupOutput'
+import { MTEXT_RENDERER_WORKER_FILE } from '../../tools/worker-assets.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const LOCAL_DATA_MODEL_LIB = resolve(
-  __dirname,
-  '../../../realdwg-web/packages/data-model/lib'
-)
-const LOCAL_DATA_MODEL_ENTRY = resolve(LOCAL_DATA_MODEL_LIB, 'index.js')
 const LOCAL_UI_COMPONENTS_SRC = resolve(
   __dirname,
   '../../../ui-components/packages/ui-components/src'
 )
-const LOCAL_UI_COMPONENTS_ROOT = resolve(
-  __dirname,
-  '../../../ui-components'
-)
+const LOCAL_UI_COMPONENTS_ROOT = resolve(__dirname, '../../../ui-components')
 const LOCAL_MTEXT_RENDERER_ROOT = resolve(
   __dirname,
   '../../../mtext-renderer/packages/mtext-renderer'
 )
 const LOCAL_MTEXT_RENDERER_DIST = resolve(LOCAL_MTEXT_RENDERER_ROOT, 'dist')
-const LOCAL_MTEXT_RENDERER_ENTRY = resolve(LOCAL_MTEXT_RENDERER_DIST, 'index.js')
+const LOCAL_MTEXT_RENDERER_ENTRY = resolve(
+  LOCAL_MTEXT_RENDERER_DIST,
+  'index.js'
+)
 const LOCAL_MTEXT_RENDERER_WORKER = resolve(
   LOCAL_MTEXT_RENDERER_DIST,
   MTEXT_RENDERER_WORKER_FILE
@@ -39,13 +35,6 @@ const LOCAL_MTEXT_RENDERER_WORKER = resolve(
 function isEnvFlagEnabled(name: string): boolean {
   const flag = process.env[name]
   return flag === '1' || flag?.toLowerCase() === 'true'
-}
-
-function useLocalDataModel(mode: string): boolean {
-  return (
-    mode === 'local-data-model' ||
-    isEnvFlagEnabled('CAD_VIEWER_USE_LOCAL_DATA_MODEL')
-  )
 }
 
 function useLocalUiComponents(mode: string): boolean {
@@ -69,10 +58,6 @@ export default defineConfig(({ command, mode }) => {
     'cad-simple-viewer',
     'cad-viewer'
   ]
-  const linkLocalDataModel =
-    command === 'serve' &&
-    useLocalDataModel(mode) &&
-    existsSync(LOCAL_DATA_MODEL_ENTRY)
   const linkLocalUiComponents =
     command === 'serve' &&
     useLocalUiComponents(mode) &&
@@ -102,17 +87,6 @@ export default defineConfig(({ command, mode }) => {
       console.warn(
         '[cad-viewer-example] Local mtext-renderer alias requested but not found at:',
         LOCAL_MTEXT_RENDERER_ENTRY
-      )
-    }
-    if (linkLocalDataModel) {
-      aliases.push({
-        find: '@mlightcad/data-model',
-        replacement: LOCAL_DATA_MODEL_LIB
-      })
-    } else if (useLocalDataModel(mode) && !existsSync(LOCAL_DATA_MODEL_ENTRY)) {
-      console.warn(
-        '[cad-viewer-example] Local data-model alias requested but not found at:',
-        LOCAL_DATA_MODEL_ENTRY
       )
     }
     if (linkLocalUiComponents) {
@@ -175,7 +149,6 @@ export default defineConfig(({ command, mode }) => {
         command === 'serve'
           ? [
               ...devSourcePackages.map(name => `@mlightcad/${name}`),
-              ...(linkLocalDataModel ? ['@mlightcad/data-model'] : []),
               ...(linkLocalUiComponents ? ['@mlightcad/ui-components'] : []),
               ...(linkLocalMtextRenderer ? ['@mlightcad/mtext-renderer'] : [])
             ]

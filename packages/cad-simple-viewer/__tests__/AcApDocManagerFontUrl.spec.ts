@@ -68,13 +68,13 @@ jest.mock('../src/view', () => ({
         selectionSessionAccessory: null
       }
     },
-    renderer: {},
+    renderer: { context: {} },
+    addModelSpace: jest.fn(),
     clear: jest.fn(),
     zoomToFitDrawing: jest.fn(),
     zoomToSmartExtents: jest.fn(),
     zoomTo: jest.fn(),
-    bindDrawDatabase: jest.fn(),
-    syncDisplaySysVars: jest.fn(),
+    syncDisplaySettings: jest.fn(),
     captureSessionState: jest.fn(() => ({})),
     restoreSessionState: jest.fn(),
     beginNewSession: jest.fn(() => ({})),
@@ -88,28 +88,7 @@ jest.mock('../src/app/AcApDocument', () => ({
   AcApDocument: jest.fn().mockImplementation(() => ({
     isReusableUntitled: true,
     destroy: jest.fn(),
-    openMode: 0,
-    database: {
-      events: {
-        openProgress: {
-          addEventListener: jest.fn()
-        }
-      },
-      ltscale: 1,
-      celtscale: 1,
-      lwdisplay: false,
-      extents: {
-        isEmpty: jest.fn(() => true)
-      },
-      tables: {
-        blockTable: {
-          modelSpace: {
-            objectId: 'model-space'
-          }
-        }
-      },
-      currentSpaceId: 'model-space'
-    }
+    openMode: 0
   }))
 }))
 
@@ -240,35 +219,6 @@ jest.mock('../src/command', () => {
   }
 })
 
-jest.mock('@mlightcad/data-model', () => ({
-  AcCmColor: jest.fn(),
-  AcCmEventManager: jest.fn().mockImplementation(() => ({
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatch: jest.fn()
-  })),
-  AcDbFileType: {
-    DXF: 'DXF',
-    DWG: 'DWG'
-  },
-  AcDbOsnapMode: {
-    EndPoint: 1,
-    MidPoint: 2,
-    Center: 3,
-    Quadrant: 4,
-    Intersection: 5,
-    Nearest: 6
-  },
-  acdbOsnapModesToMask: jest.fn(() => 0),
-  GeometryBox2d: jest.fn(),
-  acdbHostApplicationServices: jest.fn(() => ({})),
-  log: {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn()
-  }
-}))
-
 import { AcApDocManager } from '../src/app/AcApDocManager'
 import { acapDisposeNotificationService } from '../src/app/notification'
 
@@ -394,16 +344,6 @@ describe('AcApDocManager preset fonts for open', () => {
         }, 50)
       })
     }
-    ;(
-      manager as unknown as {
-        _openFileProgress: { setSeeThroughOverlay: (v: boolean) => void }
-      }
-    )._openFileProgress.setSeeThroughOverlay = jest.fn()
-    ;(
-      manager as unknown as {
-        _openFileProfiler: { begin: (db: unknown) => void }
-      }
-    )._openFileProfiler.begin = jest.fn()
     ;(
       manager as unknown as {
         onBeforeOpenDocument: (options?: unknown, replace?: boolean) => void

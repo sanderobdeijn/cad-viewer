@@ -1,4 +1,3 @@
-import { AcDbProgressdEventArgs } from '@mlightcad/data-model'
 import mitt, { type Emitter } from 'mitt'
 
 import { AcEdMessageType } from '../input/ui/AcEdMessageType'
@@ -17,7 +16,7 @@ export interface AcEdFontNotLoadedInfo {
  * type safety for event emission and listening throughout the application.
  *
  * ## Event Categories
- * - **File Operations**: `open-file-progress`, `cache-font`, `font-file-selected`
+ * - **File Operations**: `cache-font`, `font-file-selected`
  * - **Font Management**: `fonts-not-loaded`, `failed-to-get-avaiable-fonts`, `font-not-found`
  * - **Missing Resources**: `missed-data-changed`
  * - **User Messages**: `message`
@@ -37,8 +36,6 @@ export type AcEdEvents = {
   'font-file-selected': {
     file?: File
   }
-  /** Emitted while a drawing is being prepared to report progress */
-  'open-file-progress': AcDbProgressdEventArgs
   /** Emitted to display a message to the user */
   message: {
     /** The message text to display */
@@ -89,14 +86,6 @@ export type AcEdEvents = {
  * @example
  * ```typescript
  * import { eventBus } from './eventBus';
- *
- * // Emit a progress update
- * eventBus.emit('open-file-progress', {
- *   percentage: 50,
- *   stage: 'CONVERSION'
- *   subStage: AcDbConversionStage.Parsing,
- *   stageStatus: AcDbConversionStageStatus.InProgress
- * });
  *
  * // Display a message to the user
  * eventBus.emit('message', {

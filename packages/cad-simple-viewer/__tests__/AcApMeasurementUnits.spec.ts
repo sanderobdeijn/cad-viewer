@@ -1,6 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
-import { AcDbLinearUnits } from '@mlightcad/data-model'
-
 import {
   formatMeasurementAngle,
   formatMeasurementArea,
@@ -12,51 +9,22 @@ import {
   resetMeasurementUnitOverride,
   setMeasurementUnitOverride
 } from '../src/util/AcApMeasurementUnits'
+import {
+  AcApAngleUnits,
+  AcApLinearUnits,
+  AcApUnitsValue
+} from '../src/util/units'
 import { useTestSettings } from './helpers/settings'
 
-function mockDb(options?: {
-  insunits?: number
-  lunits?: number
-}): AcDbDatabase {
-  const db = {
-    _lunits: options?.lunits ?? 2,
-    _luprec: 4,
-    _aunits: 0,
-    _auprec: 0,
-    insunits: options?.insunits ?? 4,
-    get lunits() {
-      return this._lunits
-    },
-    get luprec() {
-      return this._luprec
-    },
-    get aunits() {
-      return this._aunits
-    },
-    get auprec() {
-      return this._auprec
-    },
-    formatter: {
-      formatLength(value: number, options?: { showUnits?: boolean }) {
-        const suffix =
-          options?.showUnits === false ? '' : db.insunits === 4 ? ' mm' : ''
-        return `L${Number(value).toFixed(db._luprec)}:${db._lunits}${suffix}`
-      },
-      formatAngle(radians: number) {
-        return `A${radians}:${db._aunits}:${db._auprec}`
-      }
-    }
-  }
-  // Measurements read the units from the settings, and the database formatter
-  // reads its header, so both describe the same drawing.
+/** Decimal lengths with 4 places and decimal degrees, in the given units. */
+function useDrawingUnits(options?: { insunits?: number; lunits?: number }) {
   useTestSettings({
-    linearUnits: db._lunits,
-    linearPrecision: db._luprec,
-    angularUnits: db._aunits,
-    angularPrecision: db._auprec,
-    insertionUnits: db.insunits
+    linearUnits: options?.lunits ?? AcApLinearUnits.Decimal,
+    linearPrecision: 4,
+    angularUnits: AcApAngleUnits.DecimalDegrees,
+    angularPrecision: 0,
+    insertionUnits: options?.insunits ?? AcApUnitsValue.Millimeters
   })
-  return db as unknown as AcDbDatabase
 }
 
 describe('AcApMeasurementUnits', () => {
@@ -65,7 +33,7 @@ describe('AcApMeasurementUnits', () => {
   })
 
   it('follows drawing units until the user overrides a field', () => {
-    const db = mockDb()
+    useDrawingUnits()
     expect(getEffectiveMeasurementUnits()).toEqual({
       lunits: 2,
       luprec: 4,
@@ -85,104 +53,100 @@ describe('AcApMeasurementUnits', () => {
     expect(getMeasurementUnitOverride()).toEqual({ luprec: 2, aunits: 3 })
   })
 
-  it('formats length with the override without changing drawing units', () => {
-    const db = mockDb()
-    setMeasurementUnitOverride({ lunits: 1, luprec: 1 })
+  it('formats lengths in the drawing units', () => {
+    useDrawingUnits()
+    expect(formatMeasurementLength(1000)).toBe('1000 mm')
+    expect(formatMeasurementLength(12.3456)).toBe('12.3456 mm')
+  })
 
-    expect(formatMeasurementLength(db, 12.3456)).toBe('L12.3:1 mm')
-    expect(db.lunits).toBe(2)
-    expect(db.luprec).toBe(4)
+  it('formats lengths with the override precision', () => {
+    useDrawingUnits()
+    setMeasurementUnitOverride({ luprec: 1 })
+
+    expect(formatMeasurementLength(12.3456)).toBe('~ 12.3 mm')
   })
 
   it('formats angle, area, and coordinate labels from stored values', () => {
-    const db = mockDb()
-    setMeasurementUnitOverride({ aunits: 1, auprec: 2, luprec: 1 })
+    useDrawingUnits()
+    setMeasurementUnitOverride({ luprec: 1 })
 
-    expect(formatMeasurementAngle(db, 1.5)).toBe('A1.5:1:2')
-    expect(formatMeasurementValue(db, { kind: 'area', value: 10 })).toBe(
-      'L10.0:2 mm²'
-    )
-    expect(formatMeasurementValue(db, { kind: 'coordinate', x: 1, y: 2 })).toBe(
-      'X L1.0:2 mm  Y L2.0:2 mm'
+    expect(formatMeasurementAngle(Math.PI / 4)).toBe('45°')
+    expect(formatMeasurementValue({ kind: 'area', value: 10 })).toBe('10 mm²')
+    expect(formatMeasurementValue({ kind: 'coordinate', x: 1, y: 2 })).toBe(
+      'X 1 mm  Y 2 mm'
     )
   })
 
-  it('keeps trailing zeros on near-right angles (formatter toFixed strip bug)', () => {
-    // AcDbFormatter.formatDecimal turns toFixed(0) of 90.16 ("90") into "9"
-    // via /\.?0+$/. Measurement formatting must pre-round so labels stay "90°".
-    const { AcDbDatabase } = require('@mlightcad/data-model') as {
-      AcDbDatabase: new () => AcDbDatabase
-    }
-    const db = new AcDbDatabase()
+  it('keeps trailing zeros on near-right angles', () => {
+    useDrawingUnits()
     const radians = (90.16096030272212 * Math.PI) / 180
-    expect(formatMeasurementAngle(db, radians)).toBe('90°')
-    expect(formatMeasurementAngle(db, Math.PI / 2)).toBe('90°')
+    expect(formatMeasurementAngle(radians)).toBe('90°')
+    expect(formatMeasurementAngle(Math.PI / 2)).toBe('90°')
   })
 
   it('converts length to the selected unit and appends its symbol', () => {
-    const db = mockDb() // insunits = 4 (millimeters)
-    setMeasurementUnitOverride({ lengthUnit: 6 }) // meters
+    useDrawingUnits()
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Meters })
 
-    expect(formatMeasurementLength(db, 1000)).toBe('L1.0000:2 m')
-    expect(db.insunits).toBe(4)
+    expect(formatMeasurementLength(1000)).toBe('1 m')
+    expect(formatMeasurementLength(1234.5)).toBe('1.2345 m')
   })
 
   it('follows drawing units for the follow-drawing sentinel', () => {
-    const db = mockDb()
+    useDrawingUnits()
     setMeasurementUnitOverride({
       lengthUnit: MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
     })
 
-    expect(formatMeasurementLength(db, 1000)).toBe('L1000.0000:2 mm')
+    expect(formatMeasurementLength(1000)).toBe('1000 mm')
   })
 
   it('converts area by the square of the selected length unit', () => {
-    const db = mockDb() // insunits = 4 (millimeters)
-    setMeasurementUnitOverride({ lengthUnit: 6 }) // meters
+    useDrawingUnits()
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Meters })
 
-    expect(formatMeasurementArea(db, 3125000)).toBe('L3.1250:2 m²')
-    expect(db.insunits).toBe(4)
+    expect(formatMeasurementArea(3125000)).toBe('3.125 m²')
   })
 
   it('keeps area in drawing units for the follow-drawing sentinel', () => {
-    const db = mockDb()
+    useDrawingUnits()
     setMeasurementUnitOverride({
       lengthUnit: MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
     })
 
-    expect(formatMeasurementArea(db, 3125000)).toBe('L3125000.0000:2 mm²')
+    expect(formatMeasurementArea(3125000)).toBe('3125000 mm²')
   })
 
   it('skips conversion when drawing INSUNITS is undefined (0)', () => {
-    const db = mockDb({ insunits: 0 })
-    setMeasurementUnitOverride({ lengthUnit: 6 })
+    useDrawingUnits({ insunits: AcApUnitsValue.Undefined })
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Meters })
 
-    expect(formatMeasurementLength(db, 1000)).toBe('L1000.0000:2')
-    expect(formatMeasurementArea(db, 1000)).toBe('L1000.0000:2²')
+    expect(formatMeasurementLength(1000)).toBe('1000 mm')
+    expect(formatMeasurementArea(1000)).toBe('1000 mm²')
   })
 
   it('uses decimal length format when converting with architectural LUNITS', () => {
-    const db = mockDb({ lunits: AcDbLinearUnits.Architectural })
-    setMeasurementUnitOverride({ lengthUnit: 6 })
+    useDrawingUnits({ lunits: AcApLinearUnits.Architectural })
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Meters })
 
-    expect(formatMeasurementLength(db, 1000)).toBe('L1.0000:2 m')
+    expect(formatMeasurementLength(1000)).toBe('1 m')
   })
 
   it('converts from feet drawing units to millimeters', () => {
-    const db = mockDb({ insunits: 2 })
-    setMeasurementUnitOverride({ lengthUnit: 4 })
+    useDrawingUnits({ insunits: AcApUnitsValue.Feet })
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Millimeters })
 
-    expect(formatMeasurementLength(db, 1)).toBe('L304.8000:2 mm')
+    expect(formatMeasurementLength(1)).toBe('304.8 mm')
   })
 
   it('restores follow-drawing length unit after reset', () => {
-    const db = mockDb()
-    setMeasurementUnitOverride({ lengthUnit: 6 })
+    useDrawingUnits()
+    setMeasurementUnitOverride({ lengthUnit: AcApUnitsValue.Meters })
     resetMeasurementUnitOverride()
 
     expect(getEffectiveMeasurementUnits().lengthUnit).toBe(
       MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
     )
-    expect(formatMeasurementLength(db, 1000)).toBe('L1000.0000:2 mm')
+    expect(formatMeasurementLength(1000)).toBe('1000 mm')
   })
 })

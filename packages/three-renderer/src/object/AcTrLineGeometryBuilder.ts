@@ -1,10 +1,12 @@
-import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
   GeometryArea2d,
   GeometryIndexNode,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
-import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
+import {
+  acgiDrawTessellateOptions,
+  AcGiSubEntityTraits
+} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
@@ -731,7 +733,7 @@ export function buildAreaGeometry(
   let hierarchy: GeometryIndexNode | undefined
   let areaForGeneralPath: GeometryArea2d = area
   if (!_forceGeneralAreaPath) {
-    const tessellateOptions = acdbDrawTessellateOptions({ context })
+    const tessellateOptions = acgiDrawTessellateOptions({ context })
     const areaApi = area as GeometryArea2d & {
       tessellate?: (options: unknown) => GeometryPoint2dLike[][]
       getPoints?: (segments?: number) => GeometryPoint2dLike[][]

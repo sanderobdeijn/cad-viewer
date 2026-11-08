@@ -1,18 +1,13 @@
 import { AcCmEventManager } from '@mlightcad/common'
 import {
-  AcDbEntity,
-  AcDbLayerTableRecord,
-  AcDbLayerTableRecordAttrs,
-  AcDbLayout,
-  AcDbObjectId
-} from '@mlightcad/data-model'
-import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
-  GeometryPoint2dLike
+  GeometryPoint2dLike,
+  type ModelItem
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 import { debounce } from 'lodash-es'
 
 import type { AcTrSpatialSearchOptions } from '../../spatialIndex/AcTrSpatialIndex'
@@ -89,7 +84,7 @@ export interface AcEdViewHoverEventArgs {
   /**
    * Object id of the hovered entity
    */
-  id: AcDbObjectId
+  id: string
 }
 
 /**
@@ -149,7 +144,7 @@ export interface AcEdMissedXref {
  */
 export interface AcEdMissedData {
   fonts: Record<string, number>
-  /** Unresolved external references in the current database */
+  /** Unresolved external references in the drawing */
   xrefs: AcEdMissedXref[]
 }
 
@@ -676,39 +671,28 @@ export abstract class AcEdBaseView {
   abstract clear(): void
 
   /**
-   * Add the specified layer in drawing database into the current scene
-   * @param layer Input the layer to add into the current scene
+   * Adds model space and the one layer that items are drawn on, if missing.
    */
-  abstract addLayer(layer: AcDbLayerTableRecord): void
-
-  /**
-   * Update the specified layer in the current scene
-   * @param layer - The layer to update
-   * @param changes - Changes made to the layer
-   */
-  abstract updateLayer(
-    layer: AcDbLayerTableRecord,
-    changes: Partial<AcDbLayerTableRecordAttrs>
-  ): void
+  abstract addModelSpace(): void
 
   /**
    * Add the specified transient entity or entities in the current scene.
    * @param entity Input one or multiple transient entities
    */
-  abstract addTransientEntity(entity: AcDbEntity | AcDbEntity[]): void
+  abstract addTransientEntity(entity: AcGiDrawable | AcGiDrawable[]): void
 
   /**
    * Remove the specified transient entity or entities in the current scene.
    * @param entity Input the object id of one transient entity
    */
-  abstract removeTransientEntity(objectId: AcDbObjectId): void
+  abstract removeTransientEntity(objectId: string): void
 
   /**
    * Returns true when batched GPU-resident preview can be created for all ids.
    *
    * @param entityIds - Database object ids to include in the preview overlay
    */
-  abstract canCreateEntityPreview(entityIds: AcDbObjectId[]): boolean
+  abstract canCreateEntityPreview(entityIds: string[]): boolean
 
   /**
    * Creates one batched preview overlay for command jigs.
@@ -716,7 +700,7 @@ export abstract class AcEdBaseView {
    * @param entityIds - Database object ids to include in the preview overlay
    * @returns Preview handle id, or `null` when preview creation failed
    */
-  abstract createEntityPreview(entityIds: AcDbObjectId[]): string | null
+  abstract createEntityPreview(entityIds: string[]): string | null
 
   /**
    * Updates the world transform of one batched preview overlay.
@@ -739,89 +723,89 @@ export abstract class AcEdBaseView {
    */
   abstract updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
-      objectId: AcDbObjectId
+      objectId: string
       matrix: GeometryMatrix3d
     }>
   ): void
 
   /**
-   * Looks up the entity that draws the item with this id in the document on
-   * screen. The application sets it when it shows a document in this view.
+   * Looks up the item with this id in the model of the document on screen.
+   * The application sets it when it shows a document in this view.
    */
-  entityLookup: (id: AcDbObjectId) => AcDbEntity | undefined = () => undefined
+  itemLookup: (id: string) => ModelItem | undefined = () => undefined
 
   /**
    * Add the specified entity or entities in drawing database into the current scene
    * and draw it or them
    * @param entity Input one or multiple entities to add into the current scene
    */
-  abstract addEntity(entity: AcDbEntity | AcDbEntity[]): void
+  abstract addEntity(entity: AcGiDrawable | AcGiDrawable[]): void
 
   /**
    * Remove the specified entity or entities from current drawing database and current scene
    * and draw it or them
    * @param entity Input one or multiple entities to remove
    */
-  abstract removeEntity(entity: AcDbEntity | AcDbEntity[]): void
+  abstract removeEntity(entity: AcGiDrawable | AcGiDrawable[]): void
 
   /**
    * Update the specified entity or entities
    * @param entity Input the entity or entities to update
    */
-  abstract updateEntity(entity: AcDbEntity | AcDbEntity[]): void
+  abstract updateEntity(entity: AcGiDrawable | AcGiDrawable[]): void
 
   /**
    * Returns true when the entity is already present in the scene.
    */
-  hasEntity(_objectId: AcDbObjectId): boolean {
+  hasEntity(_objectId: string): boolean {
     return false
   }
 
   /**
    * Applies a visibility-only scene update without rebuilding geometry.
    */
-  updateEntityVisibility(_entity: AcDbEntity): boolean {
+  updateEntityVisibility(_entity: AcGiDrawable): boolean {
     return false
   }
 
   /**
    * Updates scene visibility for one entity without changing the database.
    */
-  setEntitySceneVisible(_objectId: AcDbObjectId, _visible: boolean): boolean {
+  setEntitySceneVisible(_objectId: string, _visible: boolean): boolean {
     return false
   }
 
   /**
    * Returns the current scene visibility for one entity.
    */
-  getEntityVisible(_objectId: AcDbObjectId): boolean | undefined {
+  getEntityVisible(_objectId: string): boolean | undefined {
     return undefined
   }
 
   /**
-   * Add the specified layout in drawing database into the current scene
-   * @param layout Input the layout to add into the current scene
+   * Adds an empty layout to the current scene
+   * @param layoutBtrId Id of the block table record of the layout
    */
-  abstract addLayout(layout: AcDbLayout): void
+  abstract addLayout(layoutBtrId: string): void
 
   /**
    * Select the specified entities
    */
-  abstract highlight(ids: AcDbObjectId[]): void
+  abstract highlight(ids: string[]): void
   /**
    * Unhighlight the specified entities
    */
-  abstract unhighlight(ids: AcDbObjectId[]): void
+  abstract unhighlight(ids: string[]): void
 
   /**
    * Called when hovering the specified entity
    */
-  abstract onHover(id: AcDbObjectId): void
+  abstract onHover(id: string): void
 
   /**
    * Called when unhovering the specified entity
    */
-  abstract onUnhover(id: AcDbObjectId): void
+  abstract onUnhover(id: string): void
 
   /**
    * Temporarily switches the view mode, executes an action, then restores
@@ -923,7 +907,7 @@ export abstract class AcEdBaseView {
   /**
    * Applies selection based on action.
    */
-  applySelection(ids: AcDbObjectId[], action: AcEdSelectionAction) {
+  applySelection(ids: string[], action: AcEdSelectionAction) {
     if (!this.entitySelectionEnabled) return
     if (action === 'replace') {
       this.selectionSet.clear()
@@ -985,7 +969,7 @@ export abstract class AcEdBaseView {
   protected refineCrossingSelectionHits(
     _box: GeometryBox2d,
     results: AcEdSpatialQueryResultItemEx[]
-  ): AcDbObjectId[] {
+  ): string[] {
     return results.map(item => item.id)
   }
 

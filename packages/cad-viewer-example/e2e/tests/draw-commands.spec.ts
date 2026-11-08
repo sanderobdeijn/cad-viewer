@@ -2,32 +2,37 @@ import { expect, type Locator, type Page, test } from '@playwright/test'
 
 test.describe.configure({ timeout: 40000 })
 
-type DrawnEntity = {
-  dxfTypeName: string
-  startPoint?: { x: number; y: number; z?: number }
+type Drawable = {
+  type: string
+  item: { geometry: { startPoint?: { x: number; y: number } } }
 }
 
 type ModelSync = {
   model: { items: { id: string }[] }
-  entities: (ids: string[]) => DrawnEntity[]
+  drawables: (ids: string[]) => Drawable[]
 }
 
-/** The entities that draw the items of the current document's model. */
-const drawnEntities = (page: Page) =>
+/** The kind and start point of each item the drawing window draws. */
+const drawnItems = (page: Page) =>
   page.evaluate(() => {
     const sync = (
       window as Window & {
         AcApDocManager?: { instance: { curDocument: { modelSync: ModelSync } } }
       }
     ).AcApDocManager!.instance.curDocument.modelSync
-    return sync.entities(sync.model.items.map(item => item.id)).map(entity => ({
-      dxfTypeName: entity.dxfTypeName,
-      startPoint: entity.startPoint && { ...entity.startPoint }
-    }))
+    return sync
+      .drawables(sync.model.items.map(item => item.id))
+      .map(drawable => {
+        const start = drawable.item.geometry.startPoint
+        return {
+          type: drawable.type,
+          startPoint: start && { x: start.x, y: start.y }
+        }
+      })
   })
 
 const modelSpaceTypes = async (page: Page) =>
-  (await drawnEntities(page)).map(entity => entity.dxfTypeName)
+  (await drawnItems(page)).map(item => item.type)
 
 const countDrawnPixels = async (page: Page) => {
   const canvas = page.locator('.ml-cad-container canvas').first()
@@ -94,15 +99,15 @@ const run = async (page: Page, ...inputs: string[]) => {
 }
 
 const cases: Array<[string, string[], string]> = [
-  ['line', ['line', '0,0', '100,50', ''], 'LINE'],
-  ['polyline', ['pline', '0,0', '100,0', '100,50', ''], 'LWPOLYLINE'],
-  ['circle', ['circle', '0,0', '50'], 'CIRCLE'],
-  ['arc', ['arc', '50,0', '0,50', '-50,0'], 'ARC'],
-  ['clockwise arc', ['arc', '-50,0', '0,50', '50,0'], 'ARC'],
-  ['ellipse', ['ellipse', '-50,0', '50,0', '20'], 'ELLIPSE'],
-  ['rectangle', ['rectang', '0,0', '100,50'], 'LWPOLYLINE'],
-  ['polygon', ['polygon', '6', '0,0', 'I', '50'], 'LWPOLYLINE'],
-  ['point', ['point', '10,10'], 'POINT']
+  ['line', ['line', '0,0', '100,50', ''], 'Line'],
+  ['polyline', ['pline', '0,0', '100,0', '100,50', ''], 'Polyline'],
+  ['circle', ['circle', '0,0', '50'], 'Circle'],
+  ['arc', ['arc', '50,0', '0,50', '-50,0'], 'Arc'],
+  ['clockwise arc', ['arc', '-50,0', '0,50', '50,0'], 'Arc'],
+  ['ellipse', ['ellipse', '-50,0', '50,0', '20'], 'Ellipse'],
+  ['rectangle', ['rectang', '0,0', '100,50'], 'Polyline'],
+  ['polygon', ['polygon', '6', '0,0', 'I', '50'], 'Polyline'],
+  ['point', ['point', '10,10'], 'Point']
 ]
 
 for (const [name, inputs, type] of cases) {
@@ -125,9 +130,7 @@ for (const [name, inputs, type] of cases) {
 }
 
 const lineStart = async (page: Page) => {
-  const line = (await drawnEntities(page)).find(
-    entity => entity.dxfTypeName === 'LINE'
-  )!
+  const line = (await drawnItems(page)).find(item => item.type === 'Line')!
   return { ...line.startPoint! }
 }
 
@@ -281,13 +284,13 @@ test('updates the drawing when the text in the editor is edited', async ({
   await editor.fill(
     'Line start=(0, 0) end=(50, 0)\nLine start=(25, -5) end=(25, 5)'
   )
-  await applied(['LINE', 'LINE'])
+  await applied(['Line', 'Line'])
   await expect(error).toHaveCount(0)
   expect(await settledDrawnPixels(page)).toBeGreaterThan(halfLine)
 
   // A removed line erases its entity from the screen.
   await editor.fill('Line start=(0, 0) end=(50, 0)')
-  await applied(['LINE'])
+  await applied(['Line'])
   expect(await settledDrawnPixels(page)).toBe(halfLine)
 
   expect(errors).toEqual([])
@@ -364,13 +367,13 @@ test('creates every kind of entity from the text editor', async ({ page }) => {
     .poll(async () => (await modelSpaceTypes(page)).sort(), { timeout: 5000 })
     .toEqual(
       [
-        'ARC',
-        'CIRCLE',
-        'DIMENSION',
-        'ELLIPSE',
-        'LINE',
-        'LWPOLYLINE',
-        'POINT'
+        'Arc',
+        'Circle',
+        'AlignedDimension',
+        'Ellipse',
+        'Line',
+        'Polyline',
+        'Point'
       ].sort()
     )
   await expect(page.getByRole('alert')).toHaveCount(0)

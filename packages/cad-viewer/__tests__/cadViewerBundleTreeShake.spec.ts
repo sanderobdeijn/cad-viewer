@@ -35,7 +35,6 @@ describeIfBuilt('cad-viewer bundle tree-shakes ui-components MlToolBar', () => {
 })
 
 if (!existsSync(bundlePath)) {
-  // eslint-disable-next-line no-console
   console.warn(
     `[cadViewerBundle] skipped: missing ${bundlePath} (build @mlightcad/cad-viewer first)`
   )

@@ -41,19 +41,21 @@ npm install @mlightcad/graphic-interface
 
 ### Basic Entity Rendering
 ```typescript
-import { AcGiRenderer, AcGiEntity } from '@mlightcad/graphic-interface';
-import { AcDbLine, GeometryPoint2d } from '@mlightcad/data-model';
+import type { AcGiDrawable, AcGiRenderer } from '@mlightcad/graphic-interface';
+import { GeometryPoint2d } from '@mlightcad/geometry-engine';
 
-// Create a renderer
-const renderer = new AcGiRenderer();
-
-// Create an entity
-const startPoint = new GeometryPoint2d(0, 0);
-const endPoint = new GeometryPoint2d(10, 10);
-const line = new AcDbLine(startPoint, endPoint);
-
-// Render the entity
-const drawableEntity = renderer.renderEntity(line);
+// A drawable draws itself through the renderer it is given
+const line: AcGiDrawable = {
+  objectId: '1',
+  ownerId: '*MODEL_SPACE',
+  layer: '0',
+  visibility: true,
+  type: 'Line',
+  directBatchPrimitive: null,
+  worldDraw(renderer: AcGiRenderer) {
+    return renderer.lines([new GeometryPoint2d(0, 0), new GeometryPoint2d(10, 10)]);
+  }
+};
 ```
 
 ### Style Configuration

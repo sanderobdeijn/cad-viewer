@@ -1,24 +1,24 @@
-import { AcDbEntity } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcTrBufferGeometryUtil } from './AcTrBufferGeometryUtil'
 
 const reportedIssues = new Set<string>()
 
 export interface AcTrGeometrySanitizerContext {
-  currentDrawingEntity?: AcDbEntity
+  currentDrawingEntity?: AcGiDrawable
 }
 
 /**
  * Optional diagnostics for invalid CAD geometry during development.
  *
- * Not used on the normal render path — upstream fixes in data-model /
- * geometry-engine should prevent non-finite coordinates. Call these helpers
- * manually while investigating a DWG, or from tests.
+ * Not used on the normal render path — geometry-engine should prevent
+ * non-finite coordinates. Call these helpers manually while investigating
+ * a drawing, or from tests.
  */
 export class AcTrGeometrySanitizer {
   static isFinitePoint(point: GeometryPoint2dLike | null | undefined): boolean {
@@ -180,7 +180,7 @@ export class AcTrGeometrySanitizer {
   }
 }
 
-function entityTypeName(entity: AcDbEntity): string {
+function entityTypeName(entity: AcGiDrawable): string {
   const ctor = entity.constructor as { typeName?: string; name?: string }
   return ctor.typeName ?? ctor.name ?? 'Entity'
 }

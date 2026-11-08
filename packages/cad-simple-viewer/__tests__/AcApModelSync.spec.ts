@@ -1,15 +1,16 @@
 import {
-  AcDbAlignedDimension,
-  AcDbDatabase,
-  acdbHostApplicationServices,
-  AcDbLine,
-  AcDbPoint,
-  AcDbPolyline
-} from '@mlightcad/data-model'
-import { GeometryPoint2d } from '@mlightcad/geometry-engine'
+  GeometryLine2d,
+  GeometryPoint2d,
+  GeometryPolyline2d
+} from '@mlightcad/geometry-engine'
 
-import { AcApModelSync, itemContentsFor } from '../src/app/AcApModelSync'
+import { AcApModelSync } from '../src/app/AcApModelSync'
 import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'
+import {
+  ACAP_MODEL_SPACE_ID,
+  itemTypeName
+} from '../src/model/AcApItemDrawable'
+import type { AcApItemContents } from '../src/model/AcApItemGeometry'
 
 const withoutIds = (text: string) => text.replace(/ id=\S+/g, '')
 
@@ -35,38 +36,43 @@ const distance = (id: string) => ({
   geometry: { type: 'distance', start: { x: 0, y: 0 }, end: { x: 100, y: 0 } }
 })
 
-const createDatabase = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  acdbHostApplicationServices().workingDatabase = db
-  return db
-}
+const createLine = (x = 10): AcApItemContents => ({
+  kind: 'shape',
+  geometry: new GeometryLine2d(
+    new GeometryPoint2d(0, 0),
+    new GeometryPoint2d(x, 0)
+  )
+})
 
-const createLine = (x = 10) =>
-  new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(x, 0))
+const createPoint = (x: number, y: number): AcApItemContents => ({
+  kind: 'point',
+  geometry: new GeometryPoint2d(x, y)
+})
 
 const createDimension = () =>
-  new AcDbAlignedDimension(
-    new GeometryPoint2d(0, 0),
-    new GeometryPoint2d(10, 0),
-    new GeometryPoint2d(5, 5)
-  )
+  ({
+    kind: 'dimension',
+    geometry: {
+      type: 'AlignedDimension',
+      points: {
+        xLine1Point: new GeometryPoint2d(0, 0),
+        xLine2Point: new GeometryPoint2d(10, 0),
+        dimLinePoint: new GeometryPoint2d(5, 5)
+      },
+      text: '10.000'
+    }
+  }) satisfies AcApItemContents
 
 const createSync = (openMode: AcEdOpenMode = AcEdOpenMode.Write) => {
-  const db = createDatabase()
-  const sync = new AcApModelSync(
-    { database: db, openMode },
-    () => ({}) as never
-  )
-  return { db, sync }
+  const sync = new AcApModelSync({ openMode }, () => ({}) as never)
+  return { sync }
 }
 
 /** A sync whose document becomes read-only after it is filled. */
 const createLockableSync = () => {
-  const db = createDatabase()
-  const doc = { database: db, openMode: AcEdOpenMode.Write }
+  const doc = { openMode: AcEdOpenMode.Write }
   const sync = new AcApModelSync(doc, () => ({}) as never)
-  return { db, sync, lock: () => (doc.openMode = AcEdOpenMode.Read) }
+  return { sync, lock: () => (doc.openMode = AcEdOpenMode.Read) }
 }
 
 afterEach(() => {
@@ -80,14 +86,16 @@ describe('AcApModelSync', () => {
     sync.dispose()
   })
 
-  it('adds the items that entities describe under new ids', () => {
-    const { db, sync } = createSync()
+  it('adds items under new ids', () => {
+    const { sync } = createSync()
     const listener = jest.fn()
     sync.events.modelChanged.addEventListener(listener)
-    const point = new AcDbPoint()
-    point.position = new GeometryPoint2d(1, 2)
 
-    const ids = sync.add([createLine(), point, createDimension()])
+    const ids = sync.addItems([
+      createLine(),
+      createPoint(1, 2),
+      createDimension()
+    ])
 
     expect(ids).toHaveLength(3)
     expect(new Set(ids).size).toBe(3)
@@ -97,90 +105,49 @@ describe('AcApModelSync', () => {
       'Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(10, 0) dimLinePoint=(5, 5) text="10.000"'
     ])
     expect(listener).toHaveBeenCalledTimes(3)
-    expect([...db.tables.blockTable.modelSpace.newIterator()]).toHaveLength(0)
     sync.dispose()
   })
 
-  it('keeps its own copy of the geometry it is given', () => {
+  it('returns the same drawable for an item until it changes', () => {
     const { sync } = createSync()
-    const line = createLine()
-    const point = new AcDbPoint()
-    const dimension = createDimension()
+    const [id] = sync.addItems(createLine())
 
-    sync.add([line, point, dimension])
+    const drawable = sync.drawable(id)!
+    expect(drawable.objectId).toBe(id)
+    expect(drawable.ownerId).toBe(ACAP_MODEL_SPACE_ID)
+    expect(sync.drawable(id)).toBe(drawable)
 
-    expect(sync.model.shapes[0]).not.toBe(line.geometry)
-    expect(sync.model.points[0]).not.toBe(point.position)
-    expect(sync.model.dimensions[0].points.xLine1Point).not.toBe(
-      dimension.xLine1Point
-    )
-    sync.dispose()
-  })
-
-  it('describes only shapes, points and dimensions', () => {
-    expect(itemContentsFor(createLine())?.kind).toBe('shape')
-    expect(itemContentsFor(new AcDbPoint())?.kind).toBe('point')
-    expect(itemContentsFor(createDimension())?.kind).toBe('dimension')
-  })
-
-  it('returns the same entity for an item until it changes', () => {
-    const { db, sync } = createSync()
-    const [id] = sync.add(createLine())
-
-    const entity = sync.entity(id)
-    expect(entity).toBeInstanceOf(AcDbLine)
-    expect(entity!.objectId).toBe(id)
-    expect(entity!.ownerId).toBe(db.tables.blockTable.modelSpace.objectId)
-    expect(sync.entity(id)).toBe(entity)
-
-    sync.replace(id, createLine(20))
-    const changed = sync.entity(id) as AcDbLine
-    expect(changed).not.toBe(entity)
-    expect(changed.endPoint.x).toBe(20)
+    sync.update(id, createLine(20))
+    const changed = sync.drawable(id)!
+    expect(changed).not.toBe(drawable)
+    expect((changed.item.geometry as GeometryLine2d).endPoint.x).toBe(20)
 
     sync.remove([id])
-    expect(sync.entity(id)).toBeUndefined()
+    expect(sync.drawable(id)).toBeUndefined()
     sync.dispose()
   })
 
-  it('lists the entities of the ids that exist', () => {
+  it('lists the drawables of the ids that exist', () => {
     const { sync } = createSync()
-    const ids = sync.add([createLine(), createLine(20)])
+    const ids = sync.addItems([createLine(), createLine(20)])
 
-    expect(sync.entities([...ids, 'missing'])).toHaveLength(2)
+    expect(sync.drawables([...ids, 'missing'])).toHaveLength(2)
     sync.dispose()
   })
 
-  it('replaces an item and keeps its id', () => {
+  it('updates an item and keeps its id', () => {
     const { sync } = createSync()
-    const [id] = sync.add(createLine())
-    const point = new AcDbPoint()
-    point.position = new GeometryPoint2d(3, 4)
+    const [id] = sync.addItems(createLine())
 
-    expect(sync.replace(id, point)).toBe(true)
+    expect(sync.update(id, createPoint(3, 4))).toBe(true)
     expect(sync.model.toString()).toBe(`Point id=${id} position=(3, 4)`)
-    expect(sync.replace('missing', point)).toBe(false)
-    sync.dispose()
-  })
-
-  it('edits an item through a copy of its entity', () => {
-    const { sync } = createSync()
-    const [id] = sync.add(createLine())
-    const drawn = sync.entity(id) as AcDbLine
-
-    sync.edit(id, entity => {
-      ;(entity as AcDbLine).endPoint = new GeometryPoint2d(30, 0)
-    })
-
-    expect(drawn.endPoint.x).toBe(10)
-    expect(sync.model.toString()).toBe(`Line id=${id} start=(0, 0) end=(30, 0)`)
-    expect(sync.edit('missing', () => {})).toBe(false)
+    expect(sync.update('missing', createPoint(3, 4))).toBe(false)
     sync.dispose()
   })
 
   it('removes items and counts them', () => {
     const { sync } = createSync()
-    const ids = sync.add([createLine(), createLine(20)])
+    const ids = sync.addItems([createLine(), createLine(20)])
 
     expect(sync.remove([ids[0], 'missing'])).toBe(1)
     expect(sync.model.items.map(item => item.id)).toEqual([ids[1]])
@@ -189,12 +156,11 @@ describe('AcApModelSync', () => {
 
   it('refuses to change a read-only document', () => {
     const { sync, lock } = createLockableSync()
-    const [id] = sync.add(createLine())
+    const [id] = sync.addItems(createLine())
     lock()
 
-    expect(() => sync.add(createLine())).toThrow('read-only')
-    expect(() => sync.replace(id, createLine(20))).toThrow('read-only')
-    expect(() => sync.edit(id, () => {})).toThrow('read-only')
+    expect(() => sync.addItems(createLine())).toThrow('read-only')
+    expect(() => sync.update(id, createLine(20))).toThrow('read-only')
     expect(() => sync.remove([id])).toThrow('read-only')
     expect(sync.model.items).toHaveLength(1)
     sync.dispose()
@@ -202,7 +168,7 @@ describe('AcApModelSync', () => {
 
   it('lists measurements after the dimensions', () => {
     const { sync } = createSync()
-    sync.add(createDimension())
+    sync.addItems(createDimension())
     const listener = jest.fn()
     sync.events.modelChanged.addEventListener(listener)
 
@@ -238,9 +204,9 @@ describe('AcApModelSync', () => {
 
     const [measurement] = sync.model.items
     expect(sync.isMeasurement(measurement.id)).toBe(true)
-    expect(sync.createEntity(measurement)).toBeUndefined()
-    expect(sync.entity(measurement.id)).toBeUndefined()
-    expect(sync.replace(measurement.id, createLine())).toBe(false)
+    expect(sync.item(measurement.id)).toBeUndefined()
+    expect(sync.drawable(measurement.id)).toBeUndefined()
+    expect(sync.update(measurement.id, createLine())).toBe(false)
     expect(sync.remove([measurement.id])).toBe(0)
     expect(sync.model.items).toHaveLength(1)
     sync.dispose()
@@ -248,26 +214,13 @@ describe('AcApModelSync', () => {
 
   it('empties the drawing but keeps measurements when asked to resync', () => {
     const { sync } = createSync()
-    sync.add(createLine())
+    sync.addItems(createLine())
     setMeasurements([distance('m1')])
 
     sync.resync()
 
     expect(sync.model.shapes).toHaveLength(0)
     expect(sync.model.items.map(item => item.id)).toEqual(['m1'])
-    sync.dispose()
-  })
-
-  it('builds a new entity that draws an item under its id', () => {
-    const { db, sync } = createSync()
-    const [id] = sync.add(createLine())
-
-    const entity = sync.createEntity(sync.model.get(id)!)
-
-    expect(entity).toBeInstanceOf(AcDbLine)
-    expect(entity).not.toBe(sync.entity(id))
-    expect(entity!.objectId).toBe(id)
-    expect([...db.tables.blockTable.modelSpace.newIterator()]).toHaveLength(0)
     sync.dispose()
   })
 
@@ -282,11 +235,11 @@ describe('AcApModelSync', () => {
 
   describe('applyText', () => {
     const kinds = (sync: AcApModelSync) =>
-      sync.model.items.map(item => sync.entity(item.id)!.dxfTypeName)
+      sync.model.items.map(item => itemTypeName(item))
 
     it('updates a changed line in place', () => {
       const { sync } = createSync()
-      const [id] = sync.add(createLine())
+      const [id] = sync.addItems(createLine())
 
       sync.applyText('Line start=(1, 2) end=(3, 4)')
 
@@ -298,7 +251,7 @@ describe('AcApModelSync', () => {
 
     it('leaves the drawing alone when nothing changed', () => {
       const { sync } = createSync()
-      sync.add(createLine())
+      sync.addItems(createLine())
       const listener = jest.fn()
       sync.events.modelChanged.addEventListener(listener)
 
@@ -310,7 +263,7 @@ describe('AcApModelSync', () => {
 
     it('changes nothing when any line is invalid', () => {
       const { sync } = createSync()
-      sync.add(createLine())
+      sync.addItems(createLine())
 
       expect(() =>
         sync.applyText('Line start=(9, 9) end=(9, 0)\nnonsense')
@@ -324,7 +277,7 @@ describe('AcApModelSync', () => {
 
     it('removes items whose line was removed', () => {
       const { sync } = createSync()
-      sync.add([createLine(10), createLine(20)])
+      sync.addItems([createLine(10), createLine(20)])
 
       sync.applyText('Line start=(0, 0) end=(20, 0)')
 
@@ -351,13 +304,13 @@ describe('AcApModelSync', () => {
       sync.applyText(text)
 
       expect(kinds(sync)).toEqual([
-        'LINE',
-        'ARC',
-        'CIRCLE',
-        'ELLIPSE',
-        'LWPOLYLINE',
-        'POINT',
-        'DIMENSION'
+        'Line',
+        'Arc',
+        'Circle',
+        'Ellipse',
+        'Polyline',
+        'Point',
+        'AlignedDimension'
       ])
       expect(withoutIds(sync.model.toString())).toBe(text)
       const ids = sync.model.items.map(item => item.id)
@@ -380,10 +333,11 @@ describe('AcApModelSync', () => {
 
     describe('polyline arcs', () => {
       const addArcPolyline = (sync: AcApModelSync) => {
-        const polyline = new AcDbPolyline()
-        polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0.5)
-        polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
-        return sync.add(polyline)[0]
+        const polyline = new GeometryPolyline2d([
+          { x: 0, y: 0, bulge: 0.5 },
+          { x: 10, y: 0, bulge: 0 }
+        ])
+        return sync.addItems({ kind: 'shape', geometry: polyline })[0]
       }
       const bulges = (sync: AcApModelSync) => {
         const [item] = sync.model.items
@@ -454,8 +408,8 @@ describe('AcApModelSync', () => {
         )
 
         const [item] = sync.model.items
-        const entity = sync.entity(item.id) as AcDbPolyline
-        const geometry = entity.geometry as unknown as {
+        const drawable = sync.drawable(item.id)!
+        const geometry = drawable.item.geometry as unknown as {
           vertices: { bulge?: number }[]
         }
         expect(geometry.vertices[0].bulge).toBe(0.5)
@@ -465,12 +419,12 @@ describe('AcApModelSync', () => {
 
     it('changes the kind of an item and keeps its id', () => {
       const { sync } = createSync()
-      const [id] = sync.add(createLine())
+      const [id] = sync.addItems(createLine())
 
       sync.applyText('Point position=(1, 1)')
 
       expect(sync.model.toString()).toBe(`Point id=${id} position=(1, 1)`)
-      expect(kinds(sync)).toEqual(['POINT'])
+      expect(kinds(sync)).toEqual(['Point'])
       sync.dispose()
     })
 
@@ -494,9 +448,10 @@ describe('AcApModelSync', () => {
 
     it('ignores measurement lines and a stale measured value', () => {
       const { sync } = createSync()
-      const dimension = createDimension()
-      dimension.measurement = 10
-      sync.add(dimension)
+      sync.addItems({
+        kind: 'dimension',
+        geometry: { ...createDimension().geometry, measurement: 10 }
+      })
       const listener = jest.fn()
       sync.events.modelChanged.addEventListener(listener)
 
@@ -516,21 +471,23 @@ Dimension type=MeasureDistance start=(0, 0) end=(1, 1)`
 
     it('applies a line to the item its id names', () => {
       const { sync } = createSync()
-      const [a, b] = sync.add([createLine(10), createLine(10)])
+      const [a, b] = sync.addItems([createLine(10), createLine(10)])
 
       // Both lines read the same, so only the id says which one changed.
       sync.applyText(
         `Line id=${a} start=(0, 0) end=(10, 0)\nLine id=${b} start=(0, 0) end=(30, 0)`
       )
 
-      expect((sync.entity(a) as AcDbLine).endPoint.x).toBe(10)
-      expect((sync.entity(b) as AcDbLine).endPoint.x).toBe(30)
+      const endX = (id: string) =>
+        (sync.item(id)!.geometry as GeometryLine2d).endPoint.x
+      expect(endX(a)).toBe(10)
+      expect(endX(b)).toBe(30)
       sync.dispose()
     })
 
     it('removes the item whose line is removed, by id', () => {
       const { sync } = createSync()
-      const [, b] = sync.add([createLine(10), createLine(10)])
+      const [, b] = sync.addItems([createLine(10), createLine(10)])
 
       sync.applyText(`Line id=${b} start=(0, 0) end=(10, 0)`)
 
@@ -540,7 +497,7 @@ Dimension type=MeasureDistance start=(0, 0) end=(1, 1)`
 
     it('changes the kind of the item its id names', () => {
       const { sync } = createSync()
-      const [id] = sync.add(createLine())
+      const [id] = sync.addItems(createLine())
 
       sync.applyText(`Point id=${id} position=(1, 1)`)
 

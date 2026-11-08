@@ -27,11 +27,8 @@ jest.mock('../src/editor', () => ({
   }
 }))
 
+import { AcApFontLoader, getLastFontLoadStats } from '../src/app/AcApFontLoader'
 import { eventBus } from '../src/editor'
-import {
-  AcApFontLoader,
-  getLastFontLoadStats
-} from '../src/app/AcApFontLoader'
 
 describe('AcApFontLoader', () => {
   beforeEach(() => {

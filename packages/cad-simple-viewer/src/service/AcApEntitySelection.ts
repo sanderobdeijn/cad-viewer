@@ -1,4 +1,4 @@
-import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../app'
 import { AcEdPromptSelectionOptions, AcEdPromptStatus } from '../editor'
@@ -12,7 +12,7 @@ import { AcApI18n } from '../i18n'
  */
 async function promptForSelectionIds(
   promptKey: string
-): Promise<AcDbObjectId[] | undefined> {
+): Promise<string[] | undefined> {
   const selectionResult = await AcApDocManager.instance.editor.getSelection(
     new AcEdPromptSelectionOptions(AcApI18n.sysCmdPrompt(promptKey))
   )
@@ -27,7 +27,7 @@ async function promptForSelectionIds(
 }
 
 /**
- * Options for {@link resolveSelectedEntities}.
+ * Options for {@link resolveSelectedItems}.
  */
 export interface AcApResolveSelectedOptions {
   /** I18n `sysCmdPrompt` key used when prompting for a selection. */
@@ -37,30 +37,30 @@ export interface AcApResolveSelectedOptions {
 }
 
 /**
- * Result of resolving selected entities from preselection or a prompt.
+ * Result of resolving selected items from preselection or a prompt.
  */
 export interface AcApResolveSelectedResult {
-  /** Resolved entity instances. */
-  entities: AcDbEntity[]
-  /** Object ids corresponding to `entities`. */
-  ids: AcDbObjectId[]
+  /** Resolved items. */
+  items: ModelItem[]
+  /** Ids of `items`. */
+  ids: string[]
 }
 
 /**
- * Resolves selected entities from preselection or an interactive prompt.
+ * Resolves selected items from preselection or an interactive prompt.
  *
  * @param context - Application context with view, document, and editor access.
  * @param options - Prompt and empty-selection behavior.
- * @returns Resolved entities and ids, or `undefined` when nothing is selected.
+ * @returns Resolved items and ids, or `undefined` when nothing is selected.
  */
-export async function resolveSelectedEntities(
+export async function resolveSelectedItems(
   context: AcApContext,
   options: AcApResolveSelectedOptions = {}
 ): Promise<AcApResolveSelectedResult | undefined> {
   const selectionSet = context.view.selectionSet
   const clearOnEmpty = options.clearOnEmpty ?? true
 
-  let selectionIds: AcDbObjectId[] | undefined
+  let selectionIds: string[] | undefined
   if (selectionSet.count > 0) {
     selectionIds = selectionSet.ids
   } else if (options.promptKey) {
@@ -69,22 +69,22 @@ export async function resolveSelectedEntities(
 
   if (!selectionIds || selectionIds.length === 0) return undefined
 
-  const entities: AcDbEntity[] = []
-  const ids: AcDbObjectId[] = []
+  const items: ModelItem[] = []
+  const ids: string[] = []
   for (const id of selectionIds) {
-    const entity = context.doc.modelSync.entity(id)
-    if (entity) {
-      entities.push(entity)
+    const item = context.doc.modelSync.item(id)
+    if (item) {
+      items.push(item)
       ids.push(id)
     }
   }
 
-  if (entities.length === 0) {
+  if (items.length === 0) {
     if (clearOnEmpty) selectionSet.clear()
     return undefined
   }
 
-  return { entities, ids }
+  return { items, ids }
 }
 
 /**
@@ -99,7 +99,7 @@ export async function resolveSelectedEntities(
 export async function resolveSelectedIds(
   context: AcApContext,
   promptKey: string
-): Promise<AcDbObjectId[] | undefined> {
+): Promise<string[] | undefined> {
   const selectionSet = context.view.selectionSet
 
   if (selectionSet.count > 0) {

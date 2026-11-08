@@ -1,10 +1,12 @@
-import { AcDbPolyline } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
+  GeometryPolyline2d,
+  type GeometryPolyline2dVertex,
   GeometryTol,
   TAU
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -21,6 +23,13 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
+
+/** Returns a polyline vertex at a point, with the bulge of its segment. */
+const vertexAt = (
+  point: GeometryPoint2dLike,
+  bulge: number | undefined
+): GeometryPolyline2dVertex => ({ x: point.x, y: point.y, bulge: bulge ?? 0 })
 
 /**
  * Preview jig that dynamically updates a polyline while the user is acquiring
@@ -37,7 +46,8 @@ import { AcApI18n } from '../../i18n'
  *   instead of `reset()` to avoid flicker and preserve transient state.
  */
 export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
-  private _polyline: AcDbPolyline
+  private _polyline: GeometryPolyline2d
+  private _drawable: AcGiDrawable
   private _points: GeometryPoint2d[]
   private _bulges: (number | undefined)[]
   private _currentBulge?: number
@@ -69,7 +79,11 @@ export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     bulgeProvider?: (endPoint: GeometryPoint2dLike) => number | undefined
   ) {
     super(view)
-    this._polyline = new AcDbPolyline()
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
     this._points = points
     this._bulges = bulges
     this._currentBulge = currentBulge
@@ -82,8 +96,8 @@ export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * The transient polyline entity being previewed.
    */
-  get entity(): AcDbPolyline {
-    return this._polyline
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -109,15 +123,11 @@ export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     if (desiredBulge !== this._appliedBulge) {
       const lastPoint = this._points[lastIndex]
       this._polyline.removeVertexAt(lastIndex)
-      this._polyline.addVertexAt(lastIndex, lastPoint, desiredBulge)
+      this._polyline.addVertexAt(lastIndex, vertexAt(lastPoint, desiredBulge))
       this._appliedBulge = desiredBulge
     }
 
-    this._polyline.addVertexAt(
-      this._baseCount,
-      new GeometryPoint2d(point),
-      undefined
-    )
+    this._polyline.addVertexAt(this._baseCount, vertexAt(point, undefined))
     this._hasTemp = true
   }
 
@@ -126,7 +136,7 @@ export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
    */
   private addBaseVertices() {
     this._points.forEach((p, index) =>
-      this._polyline.addVertexAt(index, p, this._bulges[index])
+      this._polyline.addVertexAt(index, vertexAt(p, this._bulges[index]))
     )
   }
 }
@@ -146,7 +156,8 @@ export class AcApPolylineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
  * - `AcApPolylineStaticJig` is for "hold the drawing while asking other inputs".
  */
 class AcApPolylineStaticJig<T> extends AcEdPreviewJig<T> {
-  private _polyline: AcDbPolyline
+  private _polyline: GeometryPolyline2d
+  private _drawable: AcGiDrawable
 
   /**
    * Create a static polyline preview jig.
@@ -161,17 +172,21 @@ class AcApPolylineStaticJig<T> extends AcEdPreviewJig<T> {
     bulges: (number | undefined)[]
   ) {
     super(view)
-    this._polyline = new AcDbPolyline()
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
     points.forEach((p, index) =>
-      this._polyline.addVertexAt(index, p, bulges[index])
+      this._polyline.addVertexAt(index, vertexAt(p, bulges[index]))
     )
   }
 
   /**
    * The transient polyline entity being previewed.
    */
-  get entity(): AcDbPolyline {
-    return this._polyline
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -862,14 +877,11 @@ export class AcApPolylineCmd extends AcEdCommand {
 
     // Create polyline if we have at least two points
     if (points.length >= 2) {
-      const polyline = new AcDbPolyline()
-      points.forEach((p, index) =>
-        polyline.addVertexAt(index, p, bulges[index])
+      const polyline = new GeometryPolyline2d(
+        points.map((p, index) => vertexAt(p, bulges[index])),
+        closed
       )
-      if (closed) {
-        polyline.closed = true
-      }
-      context.doc.modelSync.add(polyline)
+      context.doc.modelSync.addItems({ kind: 'shape', geometry: polyline })
     }
   }
 }

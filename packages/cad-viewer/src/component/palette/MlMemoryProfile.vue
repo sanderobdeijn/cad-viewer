@@ -3,7 +3,11 @@
     <div class="ml-memory-profile-toolbar">
       <div class="ml-memory-profile-meta">
         <span v-if="collectedAtLabel">
-          {{ t('main.toolPalette.memoryProfile.collectedAt', { time: collectedAtLabel }) }}
+          {{
+            t('main.toolPalette.memoryProfile.collectedAt', {
+              time: collectedAtLabel
+            })
+          }}
         </span>
         <span v-if="snapshot?.heap" class="ml-memory-profile-heap">
           {{
@@ -168,10 +172,7 @@
       :tabs="detailTabs"
       class="ml-memory-profile-tabs"
     >
-      <div
-        v-if="activeTab === 'geometry'"
-        class="ml-memory-profile-pane"
-      >
+      <div v-if="activeTab === 'geometry'" class="ml-memory-profile-pane">
         <el-table
           :data="snapshot?.geometry.layers ?? []"
           size="small"
@@ -221,10 +222,7 @@
         </el-table>
       </div>
 
-      <div
-        v-else-if="activeTab === 'spatial'"
-        class="ml-memory-profile-pane"
-      >
+      <div v-else-if="activeTab === 'spatial'" class="ml-memory-profile-pane">
         <el-table
           :data="snapshot?.spatial.layouts ?? []"
           size="small"
@@ -271,114 +269,7 @@
         </el-table>
       </div>
 
-      <div
-        v-else-if="activeTab === 'dataModel'"
-        class="ml-memory-profile-pane ml-memory-profile-pane-data-model"
-      >
-        <div class="ml-memory-profile-dm-section">
-          <button
-            type="button"
-            class="ml-memory-profile-dm-section-title"
-            @click="dmCategoriesExpanded = !dmCategoriesExpanded"
-          >
-            <el-icon
-              class="ml-memory-profile-dm-caret"
-              :class="{ 'is-expanded': dmCategoriesExpanded }"
-            >
-              <ArrowRight />
-            </el-icon>
-            {{ t('main.toolPalette.memoryProfile.dataModelCategories') }}
-          </button>
-          <el-table
-            v-show="dmCategoriesExpanded"
-            :data="snapshot?.dataModel.categories ?? []"
-            size="small"
-            class="ml-memory-profile-table ml-memory-profile-table-compact"
-            table-layout="fixed"
-            :empty-text="t('main.toolPalette.memoryProfile.empty')"
-            max-height="160"
-          >
-            <el-table-column
-              prop="name"
-              :label="t('main.toolPalette.memoryProfile.columns.category')"
-              min-width="100"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="count"
-              :label="t('main.toolPalette.memoryProfile.columns.count')"
-              width="72"
-              align="right"
-              header-align="right"
-            />
-            <el-table-column
-              :label="t('main.toolPalette.memoryProfile.columns.estimated')"
-              width="96"
-              align="right"
-              header-align="right"
-            >
-              <template #default="{ row }">
-                {{ formatMemoryBytes(row.estimatedBytes) }}
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-        <div
-          class="ml-memory-profile-dm-section"
-          :class="{ 'ml-memory-profile-dm-section-grow': dmEntityTypesExpanded }"
-        >
-          <button
-            type="button"
-            class="ml-memory-profile-dm-section-title"
-            @click="dmEntityTypesExpanded = !dmEntityTypesExpanded"
-          >
-            <el-icon
-              class="ml-memory-profile-dm-caret"
-              :class="{ 'is-expanded': dmEntityTypesExpanded }"
-            >
-              <ArrowRight />
-            </el-icon>
-            {{ t('main.toolPalette.memoryProfile.dataModelEntityTypes') }}
-          </button>
-          <el-table
-            v-show="dmEntityTypesExpanded"
-            :data="snapshot?.dataModel.entitiesByType ?? []"
-            size="small"
-            class="ml-memory-profile-table"
-            table-layout="fixed"
-            :empty-text="t('main.toolPalette.memoryProfile.empty')"
-          >
-            <el-table-column
-              prop="name"
-              :label="t('main.toolPalette.memoryProfile.columns.type')"
-              min-width="100"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="count"
-              :label="t('main.toolPalette.memoryProfile.columns.count')"
-              width="72"
-              align="right"
-              header-align="right"
-            />
-            <el-table-column
-              :label="t('main.toolPalette.memoryProfile.columns.estimated')"
-              width="96"
-              align="right"
-              header-align="right"
-            >
-              <template #default="{ row }">
-                {{ formatMemoryBytes(row.estimatedBytes) }}
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
-
-      <div
-        v-else-if="activeTab === 'materials'"
-        class="ml-memory-profile-pane"
-      >
+      <div v-else-if="activeTab === 'materials'" class="ml-memory-profile-pane">
         <el-table
           :data="materialRows"
           size="small"
@@ -411,10 +302,7 @@
         </el-table>
       </div>
 
-      <div
-        v-else-if="activeTab === 'fonts'"
-        class="ml-memory-profile-pane"
-      >
+      <div v-else-if="activeTab === 'fonts'" class="ml-memory-profile-pane">
         <div class="ml-memory-profile-fonts" v-if="snapshot">
           <div class="ml-memory-profile-fonts-meta">
             {{
@@ -488,11 +376,8 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, InfoFilled, PieChart } from '@element-plus/icons-vue'
-import {
-  type MlOverflowTab,
-  MlOverflowTabs
-} from '@mlightcad/ui-components'
+import { InfoFilled, PieChart } from '@element-plus/icons-vue'
+import { type MlOverflowTab, MlOverflowTabs } from '@mlightcad/ui-components'
 import {
   ElAlert,
   ElButton,
@@ -526,8 +411,6 @@ const {
 
 const activeTab = ref('geometry')
 const showPie = ref(true)
-const dmCategoriesExpanded = ref(true)
-const dmEntityTypesExpanded = ref(true)
 
 const detailTabs = computed<MlOverflowTab[]>(() => [
   {
@@ -537,10 +420,6 @@ const detailTabs = computed<MlOverflowTab[]>(() => [
   {
     name: 'spatial',
     label: t('main.toolPalette.memoryProfile.tabs.spatial')
-  },
-  {
-    name: 'dataModel',
-    label: t('main.toolPalette.memoryProfile.tabs.dataModel')
   },
   {
     name: 'materials',
@@ -561,7 +440,6 @@ const PIE_COLORS: Record<string, string> = {
   geometry: 'var(--el-color-primary)',
   mapping: 'var(--el-color-success)',
   spatial: 'var(--el-color-warning)',
-  dataModel: 'var(--el-color-danger)',
   materials: 'var(--el-color-info)',
   fonts: '#b37feb'
 }
@@ -645,8 +523,6 @@ const categoryLabel = (id: string) => {
       return t('main.toolPalette.memoryProfile.categories.mapping')
     case 'spatial':
       return t('main.toolPalette.memoryProfile.categories.spatial')
-    case 'dataModel':
-      return t('main.toolPalette.memoryProfile.categories.dataModel')
     case 'materials':
       return t('main.toolPalette.memoryProfile.categories.materials')
     case 'fonts':
@@ -851,10 +727,6 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.ml-memory-profile-pane-data-model {
-  overflow: hidden;
-}
-
 .ml-memory-profile-table {
   flex: 1;
   min-height: 0;
@@ -863,60 +735,6 @@ onMounted(() => {
 
 .ml-memory-profile-table :deep(.el-table__inner-wrapper) {
   height: 100%;
-}
-
-.ml-memory-profile-dm-meta {
-  font-size: 12px;
-  opacity: 0.85;
-  margin-bottom: 6px;
-  flex-shrink: 0;
-}
-
-.ml-memory-profile-dm-section {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  flex-shrink: 0;
-  margin-bottom: 8px;
-}
-
-.ml-memory-profile-dm-section-grow {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.ml-memory-profile-dm-section-title {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
-
-.ml-memory-profile-dm-section-title:hover {
-  color: var(--el-color-primary);
-}
-
-.ml-memory-profile-dm-caret {
-  transition: transform 0.15s ease;
-  font-size: 12px;
-}
-
-.ml-memory-profile-dm-caret.is-expanded {
-  transform: rotate(90deg);
-}
-
-.ml-memory-profile-table-compact {
-  flex: 0 0 auto;
 }
 
 .ml-memory-profile-fonts {

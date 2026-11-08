@@ -1,5 +1,4 @@
-import { AcDbDatabase, AcDbLine } from '@mlightcad/data-model'
-import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
+import { GeometryLine2d, GeometryMatrix3d } from '@mlightcad/geometry-engine'
 
 import { AcApModelSync } from '../src/app/AcApModelSync'
 import { AcEdOpenMode } from '../src/editor/view/AcEdOpenMode'
@@ -12,28 +11,28 @@ jest.mock('../src/command/measure/AcApMeasurementStore', () => ({
 }))
 
 const createService = () => {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  const sync = new AcApModelSync({ database: db, openMode: AcEdOpenMode.Write })
-  const ids = sync.add([
-    new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(10, 0)),
-    new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(20, 0))
-  ])
+  const sync = new AcApModelSync({ openMode: AcEdOpenMode.Write })
+  const ids = sync.addItems(
+    [10, 20].map(x => ({
+      kind: 'shape' as const,
+      geometry: new GeometryLine2d({ x: 0, y: 0 }, { x, y: 0 })
+    }))
+  )
   return { sync, ids, service: new AcApEntityService(sync) }
 }
 
 describe('AcApEntityService', () => {
-  test('eraseEntities returns the number of erased items', () => {
+  test('eraseItems returns the number of erased items', () => {
     const { sync, ids, service } = createService()
 
-    expect(service.eraseEntities([ids[0], 'missing'])).toBe(1)
+    expect(service.eraseItems([ids[0], 'missing'])).toBe(1)
     expect(sync.model.items.map(item => item.id)).toEqual([ids[1]])
   })
 
-  test('translateEntities moves items and keeps their ids', () => {
+  test('translateItems moves items and keeps their ids', () => {
     const { sync, ids, service } = createService()
 
-    const count = service.translateEntities(service.getEntitiesByIds(ids), {
+    const count = service.translateItems(service.getItemsByIds(ids), {
       x: 1,
       y: 2
     })
@@ -49,7 +48,7 @@ describe('AcApEntityService', () => {
     const { sync, ids, service } = createService()
     const matrix = new GeometryMatrix3d().makeTranslation(0, 5, 0)
 
-    service.cloneAndTransform(service.getEntitiesByIds([ids[0]]), matrix)
+    service.cloneAndTransform(service.getItemsByIds([ids[0]]), matrix)
 
     expect(sync.model.items).toHaveLength(3)
     expect(sync.model.toString()).toContain('start=(0, 5) end=(10, 5)')

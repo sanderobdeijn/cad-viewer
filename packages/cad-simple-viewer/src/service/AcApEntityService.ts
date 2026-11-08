@@ -1,10 +1,11 @@
-import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
 import {
   GeometryMatrix3d,
-  GeometryPoint2dLike
+  GeometryPoint2dLike,
+  type ModelItem
 } from '@mlightcad/geometry-engine'
 
 import type { AcApModelSync } from '../app/AcApModelSync'
+import { type AcApItemContents, transformItem } from '../model/AcApItemGeometry'
 import { createRotationMatrix } from '../util/AcApGeTransform'
 
 /**
@@ -19,13 +20,13 @@ export interface AcApCloneAndTransformOptions {
  * Centralizes drawing changes for modify commands and non-command callers.
  *
  * Provides geometric transforms, cloning and erasure of the items of one
- * document's model, seen through the entities that draw them.
+ * document's model.
  */
 export class AcApEntityService {
   private readonly sync: AcApModelSync
 
   /**
-   * Creates an entity service bound to a document's model.
+   * Creates a service bound to a document's model.
    *
    * @param sync - The model whose items will be changed.
    */
@@ -34,41 +35,40 @@ export class AcApEntityService {
   }
 
   /**
-   * Returns the entities that draw the items with the given ids.
+   * Returns the items with the given ids that exist.
    *
    * @param ids - Item ids to look up.
-   * @returns Entities for the ids that exist.
    */
-  getEntitiesByIds(ids: AcDbObjectId[]): AcDbEntity[] {
-    return this.sync.entities(ids)
+  getItemsByIds(ids: string[]): ModelItem[] {
+    return ids
+      .map(id => this.sync.item(id))
+      .filter((item): item is ModelItem => !!item)
   }
 
   /**
-   * Applies a transform matrix to the items drawn by entities.
+   * Applies a transform matrix to items, keeping their ids.
    *
-   * @param entities - Entities to transform.
-   * @param matrix - Transform to apply via {@link AcDbEntity.transformBy}.
+   * @param items - Items to transform.
+   * @param matrix - Transform to apply.
    * @returns Number of items transformed.
    */
-  transformEntities(entities: AcDbEntity[], matrix: GeometryMatrix3d): number {
+  transformItems(items: ModelItem[], matrix: GeometryMatrix3d): number {
     let count = 0
-    entities.forEach(entity => {
-      if (this.sync.edit(entity.objectId, copy => copy.transformBy(matrix))) {
-        count++
-      }
-    })
+    for (const item of items) {
+      if (this.sync.update(item.id, transformItem(item, matrix))) count++
+    }
     return count
   }
 
   /**
-   * Translates entities by a displacement vector.
+   * Translates items by a displacement vector.
    *
-   * @param entities - Entities to move.
+   * @param items - Items to move.
    * @param displacement - Translation vector in WCS.
    * @returns Number of items translated.
    */
-  translateEntities(
-    entities: AcDbEntity[],
+  translateItems(
+    items: ModelItem[],
     displacement: GeometryPoint2dLike
   ): number {
     const matrix = new GeometryMatrix3d().makeTranslation(
@@ -76,60 +76,52 @@ export class AcApEntityService {
       displacement.y,
       0
     )
-    return this.transformEntities(entities, matrix)
+    return this.transformItems(items, matrix)
   }
 
   /**
-   * Rotates entities around a base point.
+   * Rotates items around a base point.
    *
-   * @param entities - Entities to rotate.
+   * @param items - Items to rotate.
    * @param basePoint - Rotation origin in WCS.
    * @param angleRad - Rotation angle in radians.
    * @returns Number of items rotated.
    */
-  rotateEntities(
-    entities: AcDbEntity[],
+  rotateItems(
+    items: ModelItem[],
     basePoint: GeometryPoint2dLike,
     angleRad: number
   ): number {
-    const matrix = createRotationMatrix(basePoint, angleRad)
-    return this.transformEntities(entities, matrix)
+    return this.transformItems(items, createRotationMatrix(basePoint, angleRad))
   }
 
   /**
-   * Clones entities, transforms them, and optionally adds them to the drawing.
+   * Transforms copies of items and optionally adds them to the drawing.
    *
-   * @param sourceEntities - Entities to clone.
-   * @param matrix - Transform applied to each clone.
+   * @param items - Items to copy.
+   * @param matrix - Transform applied to each copy.
    * @param options - Append behavior.
-   * @returns Transformed clone instances.
+   * @returns The transformed copies.
    */
   cloneAndTransform(
-    sourceEntities: AcDbEntity[],
+    items: ModelItem[],
     matrix: GeometryMatrix3d,
     options: AcApCloneAndTransformOptions = {}
-  ): AcDbEntity[] {
-    const append = options.append ?? true
-    const clones = sourceEntities
-      .map(entity => entity.clone())
-      .filter((entity): entity is AcDbEntity => !!entity)
-
-    clones.forEach(entity => entity.transformBy(matrix))
-
-    if (append && clones.length > 0) {
-      this.sync.add(clones)
+  ): AcApItemContents[] {
+    const copies = items.map(item => transformItem(item, matrix))
+    if ((options.append ?? true) && copies.length > 0) {
+      this.sync.addItems(copies)
     }
-
-    return clones
+    return copies
   }
 
   /**
    * Erases items by id.
    *
-   * @param objectIds - Item ids to erase.
+   * @param ids - Item ids to erase.
    * @returns Number of items erased.
    */
-  eraseEntities(objectIds: AcDbObjectId[]): number {
-    return this.sync.remove(objectIds)
+  eraseItems(ids: string[]): number {
+    return this.sync.remove(ids)
   }
 }

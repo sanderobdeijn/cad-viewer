@@ -1,9 +1,10 @@
-import { AcDbPolyline } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
+  GeometryPolyline2d,
   GeometryTol
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -16,6 +17,7 @@ import {
   AcEdPromptStringOptions
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 
 const MIN_SIDES = 3
 const MAX_SIDES = 1024
@@ -29,11 +31,13 @@ function distance2d(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
 }
 
 function updatePolylineVertices(
-  polyline: AcDbPolyline,
+  polyline: GeometryPolyline2d,
   vertices: GeometryPoint2d[]
 ) {
   polyline.reset(false)
-  vertices.forEach((point, index) => polyline.addVertexAt(index, point))
+  vertices.forEach((point, index) =>
+    polyline.addVertexAt(index, { x: point.x, y: point.y, bulge: 0 })
+  )
   polyline.closed = true
 }
 
@@ -111,7 +115,8 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient polygon polyline shown during preview.
    */
-  private _polyline: AcDbPolyline
+  private _polyline: GeometryPolyline2d
+  private _drawable: AcGiDrawable
   /**
    * Fixed polygon center point.
    */
@@ -140,7 +145,11 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     modeProvider: () => PolygonMode
   ) {
     super(view)
-    this._polyline = new AcDbPolyline()
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
     this._center = center
     this._sides = sides
     this._modeProvider = modeProvider
@@ -149,8 +158,8 @@ class AcApPolygonCenterJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Gets transient polygon entity used by this jig.
    */
-  get entity(): AcDbPolyline {
-    return this._polyline
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -177,7 +186,8 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient polygon polyline shown during edge preview.
    */
-  private _polyline: AcDbPolyline
+  private _polyline: GeometryPolyline2d
+  private _drawable: AcGiDrawable
   /**
    * Fixed first endpoint of the polygon edge.
    */
@@ -200,7 +210,11 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     sides: number
   ) {
     super(view)
-    this._polyline = new AcDbPolyline()
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
     this._firstPoint = firstPoint
     this._sides = sides
   }
@@ -208,8 +222,8 @@ class AcApPolygonEdgeJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Gets transient polygon entity used by this jig.
    */
-  get entity(): AcDbPolyline {
-    return this._polyline
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -299,9 +313,9 @@ export class AcApPolygonCmd extends AcEdCommand {
    * @param vertices - Polygon vertex list in world coordinates.
    */
   private appendPolygon(context: AcApContext, vertices: GeometryPoint2d[]) {
-    const polygon = new AcDbPolyline()
+    const polygon = new GeometryPolyline2d()
     updatePolylineVertices(polygon, vertices)
-    context.doc.modelSync.add(polygon)
+    context.doc.modelSync.addItems({ kind: 'shape', geometry: polygon })
   }
 
   /**

@@ -76,11 +76,10 @@ export const VIEWER_PACKAGE_IDS = [
 ] as const
 
 /**
- * data-model and its tightly coupled packages — keep together to avoid
+ * The core geometry and drawing packages — keep together to avoid
  * cross-chunk "extends undefined" for class hierarchies.
  */
-export const DATA_MODEL_PACKAGE_IDS = [
-  'data-model',
+export const CORE_PACKAGE_IDS = [
   'geometry-engine',
   'graphic-interface',
   'common'
@@ -88,7 +87,7 @@ export const DATA_MODEL_PACKAGE_IDS = [
 
 /**
  * Packages that stay with the three-renderer chunk (text/rendering stack).
- * three and data-model are split out separately for clearer caching.
+ * three and the core packages are split out separately for clearer caching.
  */
 export const THREE_RENDERER_STACK_IDS = [
   'three-renderer',
@@ -131,9 +130,9 @@ export const exampleManualChunks: ManualChunksOption = (id: string) => {
     return 'three'
   }
 
-  for (const packageId of DATA_MODEL_PACKAGE_IDS) {
+  for (const packageId of CORE_PACKAGE_IDS) {
     if (matchMonorepoPackage(id, packageId)) {
-      return 'data-model'
+      return 'core'
     }
   }
 

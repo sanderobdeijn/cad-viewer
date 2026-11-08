@@ -3,21 +3,11 @@ import { reactive } from 'vue'
 export const store = reactive({
   dialogs: {
     toolPalette: false,
-    activePaletteTab: 'measurements',
-    /** Sub-tab inside Missing / External Resources palette */
-    /**
-     * Dev-oriented Open Performance tab. Hidden until OPENPERF runs so it
-     * does not clutter the palette for ordinary users.
-     */
-    openFileProfileTabVisible: false
+    activePaletteTab: 'measurements'
   },
   /**
    * Bumped by the MEM command after publishing a fresh snapshot so an already
    * mounted Memory palette can pick it up without remounting.
    */
-  memoryProfileTick: 0,
-  /**
-   * Bumped by the OPENPERF command after publishing the latest open profile.
-   */
-  openFileProfileTick: 0
+  memoryProfileTick: 0
 })

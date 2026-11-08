@@ -9,7 +9,7 @@
             :key="mode.value"
             :command="mode.value"
             :icon="
-              acdbHasOsnapMode(features.osnapModes, mode.value)
+              acapHasOsnapMode(features.osnapModes, mode.value)
                 ? Check
                 : undefined
             "
@@ -24,12 +24,12 @@
 
 <script lang="ts" setup>
 import { Check } from '@element-plus/icons-vue'
-import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import {
-  acdbHasOsnapMode,
-  AcDbOsnapMode,
-  acdbToggleOsnapMode
-} from '@mlightcad/data-model'
+  acapHasOsnapMode,
+  AcApOsnapMode,
+  acapToggleOsnapMode
+} from '@mlightcad/cad-simple-viewer'
+import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
 import {
   ElButton,
   ElDropdown,
@@ -46,39 +46,39 @@ const { t } = useI18n()
 const features = useSettings()
 
 /**
- * All object snap modes generated from AcDbOsnapMode enum.
+ * All object snap modes generated from AcApOsnapMode enum.
  *
  * Label key format:
  *   main.statusBar.osnap.<LowerCaseEnumName>
  *
  * Example:
- *   AcDbOsnapMode.EndPoint → main.statusBar.osnap.endpoint
+ *   AcApOsnapMode.EndPoint → main.statusBar.osnap.endpoint
  */
 const osnapModes = [
-  { value: AcDbOsnapMode.EndPoint, label: t('main.statusBar.osnap.endpoint') },
-  { value: AcDbOsnapMode.MidPoint, label: t('main.statusBar.osnap.midpoint') },
-  { value: AcDbOsnapMode.Center, label: t('main.statusBar.osnap.center') },
-  { value: AcDbOsnapMode.Node, label: t('main.statusBar.osnap.node') },
-  { value: AcDbOsnapMode.Quadrant, label: t('main.statusBar.osnap.quadrant') },
+  { value: AcApOsnapMode.EndPoint, label: t('main.statusBar.osnap.endpoint') },
+  { value: AcApOsnapMode.MidPoint, label: t('main.statusBar.osnap.midpoint') },
+  { value: AcApOsnapMode.Center, label: t('main.statusBar.osnap.center') },
+  { value: AcApOsnapMode.Node, label: t('main.statusBar.osnap.node') },
+  { value: AcApOsnapMode.Quadrant, label: t('main.statusBar.osnap.quadrant') },
   {
-    value: AcDbOsnapMode.Intersection,
+    value: AcApOsnapMode.Intersection,
     label: t('main.statusBar.osnap.intersection')
   },
   {
-    value: AcDbOsnapMode.Insertion,
+    value: AcApOsnapMode.Insertion,
     label: t('main.statusBar.osnap.insertion')
   },
-  { value: AcDbOsnapMode.Nearest, label: t('main.statusBar.osnap.nearest') }
-  // { value: AcDbOsnapMode.Perpendicular, label: t('main.statusBar.osnap.perpendicular') },
-  // { value: AcDbOsnapMode.Tangent, label: t('main.statusBar.osnap.tangent') },
-  // { value: AcDbOsnapMode.Centroid, label: t('main.statusBar.osnap.centroid') }
+  { value: AcApOsnapMode.Nearest, label: t('main.statusBar.osnap.nearest') }
+  // { value: AcApOsnapMode.Perpendicular, label: t('main.statusBar.osnap.perpendicular') },
+  // { value: AcApOsnapMode.Tangent, label: t('main.statusBar.osnap.tangent') },
+  // { value: AcApOsnapMode.Centroid, label: t('main.statusBar.osnap.centroid') }
 ]
 
 /**
  * Toggle osnap mode and update the bitmask.
  */
-const handleCommand = (mode: AcDbOsnapMode) => {
-  features.osnapModes = acdbToggleOsnapMode(features.osnapModes, mode)
+const handleCommand = (mode: AcApOsnapMode) => {
+  features.osnapModes = acapToggleOsnapMode(features.osnapModes, mode)
   AcApSettingManager.instance.osnapModes = features.osnapModes
 }
 </script>

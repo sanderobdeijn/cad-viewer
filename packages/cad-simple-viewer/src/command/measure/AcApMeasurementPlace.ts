@@ -1,5 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
-
 import type { AcTrView2d } from '../../view'
 import { registerMeasurementPublish } from './AcApMeasurementRepublish'
 import { getSelectedMeasurementId } from './AcApMeasurementStore'
@@ -17,7 +15,6 @@ function newImportedId(prefix: string): string {
  */
 export function placeMeasurementRecord(
   view: AcTrView2d,
-  db: AcDbDatabase,
   record: AcApMeasurementRecord
 ): boolean {
   const prefix =
@@ -27,7 +24,7 @@ export function placeMeasurementRecord(
     id: newImportedId(prefix)
   }
   try {
-    createMeasureEntityFromRecord(placed).commit(view, db)
+    createMeasureEntityFromRecord(placed).commit(view)
     return true
   } catch {
     return false
@@ -40,7 +37,6 @@ export function placeMeasurementRecord(
  */
 function publishMeasurementRecord(
   view: AcTrView2d,
-  db: AcDbDatabase,
   record: AcApMeasurementRecord
 ): void {
   const ht = view.htmlTransientManager
@@ -48,7 +44,7 @@ function publishMeasurementRecord(
   if (ht.has(record.id)) {
     ht.remove(record.id)
   }
-  createMeasureEntityFromRecord(record).commit(view, db)
+  createMeasureEntityFromRecord(record).commit(view)
   if (restoreSelection) {
     ht.selectGroup(record.id)
   }

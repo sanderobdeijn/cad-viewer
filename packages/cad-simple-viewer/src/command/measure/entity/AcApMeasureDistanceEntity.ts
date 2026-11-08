@@ -1,4 +1,3 @@
-import { type AcDbDatabase } from '@mlightcad/data-model'
 import { type GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
@@ -158,13 +157,9 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
    * Draws the distance canvas stroke, endpoint dots, length badge, and extras.
    *
    * @param view - Active 2D view for HTML overlays
-   * @param db - Database used to format the length label
    * @returns World-draw result with dispose for the viewChanged listener
    */
-  protected subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
-  ): AcApMeasureWorldDrawResult {
+  protected drawMeasurement(view: AcTrView2d): AcApMeasureWorldDrawResult {
     const live = {
       start: { x: this.p1.x, y: this.p1.y },
       end: { x: this.p2.x, y: this.p2.y }
@@ -198,7 +193,7 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
       worldPosition: live.end,
       layer: MEASUREMENT_LAYER
     })
-    const label = formatMeasurementLength(db, dist)
+    const label = formatMeasurementLength(dist)
     // Fit-to-screen: shrink the capsule when it would cover more than half the
     // segment so both side lines stay visible. Sidecar / custom WCS is kept.
     const importedTextHeight =
@@ -293,7 +288,7 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
 
     const refreshLive = () => {
       dist = calcDist(live.start, live.end)
-      badge.setText(formatMeasurementLength(db, dist))
+      badge.setText(formatMeasurementLength(dist))
       acapPlaceOverlayHtml(view, badge, midOf(live.start, live.end))
       paintSegment(getMeasurementStyle(this.entityId) ?? this.style)
       view.isHtmlDirty = true
@@ -342,7 +337,7 @@ export class AcApMeasureDistanceEntity extends AcApMeasureEntity {
             }
           }
       runMeasurementEdit(() => {
-        republishMeasurement(view, db, record)
+        republishMeasurement(view, record)
       })
     }
 

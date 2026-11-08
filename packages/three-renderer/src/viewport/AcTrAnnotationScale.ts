@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 
 /**
- * Annotation-scale metadata written by `@mlightcad/data-model` onto annotative
- * drawables (see `AcDbAnnotationScaleDrawInfo`).
+ * Annotation-scale metadata written onto annotative drawables.
  */
 export interface AcTrAnnotationScaleUserData {
   drawnScaleFactor: number

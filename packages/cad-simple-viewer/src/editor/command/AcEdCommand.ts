@@ -187,11 +187,6 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
   }
 
   /**
-   * When false, this command does not run in its own transaction.
-   */
-  usesTransaction = true
-
-  /**
    * Called right before the command starts executing.
    *
    * This lifecycle hook is intended for subclasses that need to perform
@@ -245,15 +240,8 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
    * ```
    */
   async trigger(context: AcApContext) {
-    const db = context.doc.database
-    const tm = db.transactionManager
-    let transactionActive = this.shouldUseTransaction(context)
     let sessionAccessoryMounted = false
     const accessory = this.sessionAccessory
-
-    if (transactionActive) {
-      tm.startTransaction()
-    }
 
     try {
       this.onCommandWillStart(context)
@@ -287,12 +275,6 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
         }
       }
       await this.execute(context)
-    } catch (error) {
-      if (transactionActive && tm.hasTransaction()) {
-        tm.abortTransaction()
-      }
-      transactionActive = false
-      throw error
     } finally {
       if (sessionAccessoryMounted && accessory) {
         try {
@@ -312,26 +294,9 @@ export abstract class AcEdCommand<TUserData extends object = {}> {
           // Unmount failures must not mask command completion.
         }
       }
-      if (transactionActive && tm.hasTransaction()) {
-        tm.commitTransaction()
-        transactionActive = false
-      }
       context.view.editor.events.commandEnded.dispatch({ command: this })
       this.onCommandEnded(context)
     }
-  }
-
-  /**
-   * Returns true when this command should run in its own transaction.
-   */
-  protected shouldUseTransaction(context: AcApContext): boolean {
-    if (!this.usesTransaction) {
-      return false
-    }
-    return (
-      context.doc.openMode >= AcEdOpenMode.Write &&
-      this.mode >= AcEdOpenMode.Write
-    )
   }
 
   /**

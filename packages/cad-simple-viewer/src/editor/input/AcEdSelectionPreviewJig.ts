@@ -1,6 +1,8 @@
-import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import { AcEdBatchedPreview } from './AcEdBatchPreview'
 import { AcEdPreviewJig } from './AcEdPreviewJig'
@@ -9,7 +11,7 @@ import { AcEdPreviewJig } from './AcEdPreviewJig'
  * One transient preview clone paired with its copy-array factor.
  */
 export interface AcEdSelectionPreviewEntry {
-  entity: AcDbEntity
+  entity: AcGiDrawable
   copyFactor: number
 }
 
@@ -17,7 +19,7 @@ export interface AcEdSelectionPreviewEntry {
  * Transform description applied to one transient preview entity.
  */
 export interface AcEdSelectionPreviewTransform {
-  objectId: AcDbObjectId
+  objectId: string
   matrix: GeometryMatrix3d
 }
 
@@ -30,7 +32,7 @@ export interface AcEdSelectionPreviewTransform {
 export class AcEdSelectionStaticPreviewJig<T> extends AcEdPreviewJig<T> {
   protected readonly _view: AcEdBaseView
   protected readonly batchPreview: AcEdBatchedPreview
-  protected readonly previewEntities: AcDbEntity[]
+  protected readonly previewEntities: AcGiDrawable[]
   private _transientsPublished = false
 
   /**
@@ -39,18 +41,16 @@ export class AcEdSelectionStaticPreviewJig<T> extends AcEdPreviewJig<T> {
    * @param view - Active editor view that renders transient entities.
    * @param sourceEntities - Original entities cloned for preview display.
    */
-  constructor(view: AcEdBaseView, sourceEntities: AcDbEntity[]) {
+  constructor(view: AcEdBaseView, sourceEntities: ModelItem[]) {
     super(view)
     this._view = view
     this.batchPreview = new AcEdBatchedPreview(
       view,
-      sourceEntities.map(entity => entity.objectId)
+      sourceEntities.map(item => item.id)
     )
     this.previewEntities = this.batchPreview.useBatchPreview
       ? []
-      : sourceEntities
-          .map(entity => entity.clone())
-          .filter((entity): entity is AcDbEntity => !!entity)
+      : sourceEntities.map(item => acapPreviewDrawable(item))
   }
 
   /**
@@ -107,13 +107,13 @@ export abstract class AcEdSelectionTransformPreviewJig<
    * @param sourceEntities - Original entities cloned for preview display.
    * @param copyCount - Number of copy placements for array previews (default `1`).
    */
-  constructor(view: AcEdBaseView, sourceEntities: AcDbEntity[], copyCount = 1) {
+  constructor(view: AcEdBaseView, sourceEntities: ModelItem[], copyCount = 1) {
     super(view)
     this._view = view
     this.copyCount = copyCount
     this.batchPreview = new AcEdBatchedPreview(
       view,
-      sourceEntities.map(entity => entity.objectId),
+      sourceEntities.map(item => item.id),
       copyCount
     )
     this.previewEntries = this.batchPreview.useBatchPreview
@@ -127,7 +127,7 @@ export abstract class AcEdSelectionTransformPreviewJig<
   /**
    * Flat list of transient preview entities derived from {@link previewEntries}.
    */
-  protected get previewEntities(): AcDbEntity[] {
+  protected get previewEntities(): AcGiDrawable[] {
     return this.previewEntries.map(entry => entry.entity)
   }
 
@@ -192,17 +192,14 @@ export abstract class AcEdSelectionTransformPreviewJig<
    * @param copyCount - Number of array placements to clone.
    */
   private static createPreviewEntries(
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     copyCount: number
   ): AcEdSelectionPreviewEntry[] {
     const entries: AcEdSelectionPreviewEntry[] = []
     for (let factor = 1; factor <= copyCount; factor++) {
-      sourceEntities
-        .map(entity => entity.clone())
-        .filter((entity): entity is AcDbEntity => !!entity)
-        .forEach(entity => {
-          entries.push({ entity, copyFactor: factor })
-        })
+      sourceEntities.forEach(item => {
+        entries.push({ entity: acapPreviewDrawable(item), copyFactor: factor })
+      })
     }
     return entries
   }

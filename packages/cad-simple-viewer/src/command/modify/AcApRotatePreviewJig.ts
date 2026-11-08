@@ -1,4 +1,4 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
@@ -40,7 +40,7 @@ export class AcApRotatePreviewJig extends AcEdSelectionTransformPreviewJig<numbe
    */
   constructor(
     view: AcEdBaseView,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2dLike,
     referenceAngleDeg = 0
   ) {

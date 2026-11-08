@@ -1,8 +1,9 @@
-import { AcDbLine } from '@mlightcad/data-model'
 import {
+  GeometryLine2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -18,15 +19,18 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 
 /**
  * Dynamic preview jig for LINE command.
  */
 export class AcApLineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
-   * Transient line entity reused during interactive preview.
+   * Line shown during interactive preview.
    */
-  private _line: AcDbLine
+  private _line: GeometryLine2d
+  /** Draws {@link _line} as a preview. */
+  private _drawable: AcGiDrawable
 
   /**
    * Creates a line jig.
@@ -35,14 +39,18 @@ export class AcApLineJig extends AcEdPreviewJig<GeometryPoint2dLike> {
    */
   constructor(view: AcEdBaseView, start: GeometryPoint2dLike) {
     super(view)
-    this._line = new AcDbLine(start, start)
+    this._line = new GeometryLine2d(start, start)
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._line
+    })
   }
 
   /**
-   * Gets transient line entity used by this jig.
+   * Gets the preview drawn by this jig.
    */
-  get entity(): AcDbLine {
-    return this._line
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -105,8 +113,11 @@ export class AcApLineCmd extends AcEdCommand {
     const appendSegment = (endPoint: GeometryPoint2dLike) => {
       const startPoint = getCurrentPoint()
       if (!startPoint) return
-      const segment = new AcDbLine(new GeometryPoint2d(startPoint), endPoint)
-      context.doc.modelSync.add(segment)
+      const segment = new GeometryLine2d(
+        new GeometryPoint2d(startPoint),
+        endPoint
+      )
+      context.doc.modelSync.addItems({ kind: 'shape', geometry: segment })
       appendPoint(endPoint)
     }
     const closeSegment = () => {

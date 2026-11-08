@@ -5,8 +5,7 @@
  * refresh this loupe instead of owning their own {@link AcEdSnapLoupe}.
  */
 
-import type { AcDbOsnapMode } from '@mlightcad/data-model'
-
+import { AcApOsnapMode } from '../../../model/AcApOsnapMode'
 import type { AcEdBaseView } from '../../view'
 import { AcEdOsnapResolver } from '../AcEdOsnapResolver'
 import type { AcEdMarkerType } from '../marker/AcEdMarker'
@@ -26,7 +25,7 @@ export interface AcEdMobileSnapLoupeSnap {
   /** Snapped world Y. */
   y: number
   /** Object-snap mode or marker shape for the glyph. */
-  type: AcDbOsnapMode | AcEdMarkerType
+  type: AcApOsnapMode | AcEdMarkerType
 }
 
 /**

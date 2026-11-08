@@ -122,36 +122,8 @@ function resolveTextStyleForElement(
   placement: AcTrLineWalkPlacement,
   context: AcTrRenderContext
 ): AcGiTextStyle {
-  const database = context.database
-  const styleObjectId = placement.element.styleObjectId
-  if (database && styleObjectId) {
-    const record = database.openObjectForRead(styleObjectId) as
-      | { textStyle?: AcGiTextStyle }
-      | undefined
-    if (record?.textStyle) {
-      return { ...record.textStyle }
-    }
-  }
-
-  const styleName = placement.element.style?.trim()
-  if (database && styleName) {
-    const record = database.tables.textStyleTable.getAt(styleName) as
-      | { textStyle?: AcGiTextStyle }
-      | undefined
-    if (record?.textStyle) {
-      return { ...record.textStyle }
-    }
-  }
-
-  if (database) {
-    const standard = database.tables.textStyleTable.getAt('Standard') as
-      | { textStyle?: AcGiTextStyle }
-      | undefined
-    if (standard?.textStyle) {
-      return { ...standard.textStyle }
-    }
-  }
-
+  void placement
+  void context
   return { ...EMPTY_TEXT_STYLE }
 }
 

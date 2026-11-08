@@ -1,4 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
 import type { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import { AcTrHtmlBadge, AcTrHtmlGrip } from '@mlightcad/three-renderer'
 
@@ -102,13 +101,9 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
    * Draws the coordinate dot, badge, and commit extras (no CAD transients).
    *
    * @param view - Active 2D view for HTML overlays
-   * @param db - Database used to format the coordinate label
    * @returns World-draw result with empty `entityIds`
    */
-  protected subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
-  ): AcApMeasureWorldDrawResult {
+  protected drawMeasurement(view: AcTrView2d): AcApMeasureWorldDrawResult {
     const live = { x: this.point.x, y: this.point.y }
     const layoutId = this.resolveLayoutId(view)
     let value = {
@@ -126,7 +121,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
     const badge = new AcTrHtmlBadge({
       id: `${this.entityId}-badge`,
       color,
-      text: formatMeasurementValue(db, value),
+      text: formatMeasurementValue(value),
       worldPosition: live,
       layer: MEASUREMENT_LAYER,
       fontSize: this.style.fontSize,
@@ -141,7 +136,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
 
     const refreshLive = () => {
       value = { kind: 'coordinate', x: live.x, y: live.y }
-      badge.setText(formatMeasurementValue(db, value))
+      badge.setText(formatMeasurementValue(value))
       acapPlaceOverlayHtml(view, badge, live)
       view.isHtmlDirty = true
     }
@@ -181,7 +176,7 @@ export class AcApMeasurePointEntity extends AcApMeasureEntity {
                   geometry
                 }
             runMeasurementEdit(() => {
-              republishMeasurement(view, db, record)
+              republishMeasurement(view, record)
             })
           }
         })

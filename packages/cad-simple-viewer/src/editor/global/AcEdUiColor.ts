@@ -21,7 +21,7 @@ export {
   acgiContrastingForegroundColor,
   acgiForegroundColorForBackground,
   acgiIsLightBackground
-} from '@mlightcad/data-model'
+} from '@mlightcad/graphic-interface'
 
 import {
   ACGI_MODEL_SPACE_BACKGROUND,

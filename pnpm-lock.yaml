@@ -5,7 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@mlightcad/data-model': workspace:*
   '@mlightcad/mtext-parser': workspace:*
   '@mlightcad/mtext-renderer': workspace:*
   '@mlightcad/ribbon': workspace:*
@@ -118,9 +117,6 @@ importers:
       '@mlightcad/common':
         specifier: workspace:*
         version: link:../common
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
@@ -172,12 +168,12 @@ importers:
       '@mlightcad/common':
         specifier: workspace:*
         version: link:../common
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
+      '@mlightcad/graphic-interface':
+        specifier: workspace:*
+        version: link:../graphic-interface
       '@mlightcad/ribbon':
         specifier: workspace:*
         version: link:../ribbon
@@ -247,9 +243,6 @@ importers:
       '@mlightcad/cad-viewer':
         specifier: workspace:*
         version: link:../cad-viewer
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
       '@mlightcad/mtext-parser':
         specifier: workspace:*
         version: link:../mtext-parser
@@ -302,25 +295,6 @@ importers:
       loglevel:
         specifier: ^1.9.1
         version: 1.9.2
-    devDependencies:
-      vite-plugin-strip-comments:
-        specifier: ^0.0.10
-        version: 0.0.10
-
-  packages/data-model:
-    dependencies:
-      '@mlightcad/common':
-        specifier: workspace:*
-        version: link:../common
-      '@mlightcad/geometry-engine':
-        specifier: workspace:*
-        version: link:../geometry-engine
-      '@mlightcad/graphic-interface':
-        specifier: workspace:*
-        version: link:../graphic-interface
-      uid:
-        specifier: ^2.0.2
-        version: 2.0.2
     devDependencies:
       vite-plugin-strip-comments:
         specifier: ^0.0.10
@@ -422,9 +396,6 @@ importers:
       '@mlightcad/common':
         specifier: workspace:*
         version: link:../common
-      '@mlightcad/data-model':
-        specifier: workspace:*
-        version: link:../data-model
       '@mlightcad/geometry-engine':
         specifier: workspace:*
         version: link:../geometry-engine
@@ -1974,10 +1945,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
-
-  '@lukeed/csprng@1.1.0':
-    resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
-    engines: {node: '>=8'}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -5564,10 +5531,6 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
-  uid@2.0.2:
-    resolution: {integrity: sha512-u3xV3X7uzvi5b1MncmZo3i2Aw222Zk1keqLA1YkHldREkAhAqi65wuPfe7lHx8H/Wzy+8CE7S7uS3jekIM5s8g==}
-    engines: {node: '>=8'}
-
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
@@ -7801,8 +7764,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
-
-  '@lukeed/csprng@1.1.0': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:
@@ -11685,10 +11646,6 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
-
-  uid@2.0.2:
-    dependencies:
-      '@lukeed/csprng': 1.1.0
 
   undici-types@7.16.0: {}
 

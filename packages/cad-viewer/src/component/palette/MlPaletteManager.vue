@@ -29,12 +29,6 @@
         >
           <ml-memory-profile />
         </div>
-        <div
-          v-else-if="store.dialogs.activePaletteTab === 'openFileProfile'"
-          class="ml-open-file-profile-wrapper"
-        >
-          <ml-open-file-profile />
-        </div>
       </ml-overflow-tabs>
     </ml-tool-palette>
   </el-config-provider>
@@ -55,7 +49,6 @@ import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlMeasurementPalette from './MlMeasurementPalette.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
 import MlMissingResources from './MlMissingResources.vue'
-import MlOpenFileProfile from './MlOpenFileProfile.vue'
 
 const containerRect = useViewerRect()
 
@@ -147,14 +140,7 @@ const baseTabNames = [
   'missingResources',
   'memoryProfile'
 ] as const
-const tabNames = computed((): readonly string[] => {
-  const names: string[] = [...baseTabNames]
-  // Revealed by OPENPERF only — keep out of the default palette chrome.
-  if (store.dialogs.openFileProfileTabVisible) {
-    names.push('openFileProfile')
-  }
-  return names
-})
+const tabNames = computed((): readonly string[] => [...baseTabNames])
 
 const tabs = computed<MlOverflowTab[]>(() => {
   return tabNames.value.map(name => {
@@ -219,15 +205,6 @@ watch(
 }
 
 .ml-memory-profile-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-open-file-profile-wrapper {
   overflow: hidden;
   width: 100%;
   height: 100%;

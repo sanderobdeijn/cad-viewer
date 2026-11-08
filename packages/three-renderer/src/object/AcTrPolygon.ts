@@ -1,5 +1,4 @@
 import { log } from '@mlightcad/common'
-import { acdbDrawTessellateOptions } from '@mlightcad/data-model'
 import {
   GeometryArea2d,
   GeometryIndexNode,
@@ -7,7 +6,10 @@ import {
   GeometryPoint2dLike,
   GeometryUtil
 } from '@mlightcad/geometry-engine'
-import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
+import {
+  acgiDrawTessellateOptions,
+  AcGiSubEntityTraits
+} from '@mlightcad/graphic-interface'
 import { GeometryEpsilon, PolyBool } from '@velipso/polybool'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -98,7 +100,7 @@ export class AcTrPolygon extends AcTrEntity {
   ) {
     super(context)
 
-    const tessellateOptions = acdbDrawTessellateOptions({ context })
+    const tessellateOptions = acgiDrawTessellateOptions({ context })
     const pointBoundaries = area.tessellate(tessellateOptions)
     // Reuse sampled loops so buildHierarchy does not tessellate a second time.
     const hierarchy = (

@@ -1,0 +1,1815 @@
+{
+  "samples": {
+    "line": {
+      "contents": {
+        "kind": "line",
+        "start": {
+          "x": 1,
+          "y": 2
+        },
+        "end": {
+          "x": 11,
+          "y": 7
+        }
+      },
+      "text": "Line start=(1, 2) end=(11, 7)",
+      "grips": [
+        {
+          "x": 6,
+          "y": 4.5
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 11,
+          "y": 7
+        }
+      ],
+      "moved": [
+        "Line start=(2.5, 0) end=(12.5, 5)",
+        "Line start=(2.5, 0) end=(11, 7)",
+        "Line start=(1, 2) end=(12.5, 5)"
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 11,
+            "y": 7
+          }
+        ],
+        "2": [
+          {
+            "x": 6,
+            "y": 4.5
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 7.8,
+            "y": 5.4
+          }
+        ],
+        "9": [],
+        "10": [
+          {
+            "x": 7.800000000000001,
+            "y": 5.4
+          }
+        ],
+        "11": []
+      },
+      "transformed": "Line start=(2.476407, -1.826098) end=(6.90374, 8.44029)",
+      "extents": [
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 11,
+          "y": 7
+        }
+      ],
+      "offsetSides": [
+        1,
+        1
+      ],
+      "offsets": {
+        "1": [
+          "Line start=(0.552786, 2.894427) end=(10.552786, 7.894427)"
+        ],
+        "-1": [
+          "Line start=(1.447214, 1.105573) end=(11.447214, 6.105573)"
+        ]
+      }
+    },
+    "circle": {
+      "contents": {
+        "kind": "arc",
+        "center": {
+          "x": 3,
+          "y": 4
+        },
+        "radius": 5,
+        "startAngle": 0,
+        "endAngle": 0,
+        "clockwise": false
+      },
+      "text": "CircularArc center=(3, 4) radius=5 startAngle=0 endAngle=0",
+      "grips": [
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 8,
+          "y": 4
+        },
+        {
+          "x": 3.0000000000000004,
+          "y": 9
+        },
+        {
+          "x": -2,
+          "y": 4.000000000000001
+        },
+        {
+          "x": 2.999999999999999,
+          "y": -1
+        }
+      ],
+      "moved": [
+        "CircularArc center=(4.5, 2) radius=5 startAngle=0 endAngle=0",
+        "CircularArc center=(3, 4) radius=6.800735 startAngle=0 endAngle=0",
+        "CircularArc center=(3, 4) radius=3.354102 startAngle=0 endAngle=0",
+        "CircularArc center=(3, 4) radius=4.031129 startAngle=0 endAngle=0",
+        "CircularArc center=(3, 4) radius=7.158911 startAngle=0 endAngle=0"
+      ],
+      "osnap": {
+        "1": [],
+        "2": [],
+        "3": [
+          {
+            "x": 3,
+            "y": 4
+          }
+        ],
+        "4": [],
+        "5": [
+          {
+            "x": 8,
+            "y": 4
+          },
+          {
+            "x": 3.0000000000000004,
+            "y": 9
+          },
+          {
+            "x": -2,
+            "y": 4.000000000000001
+          },
+          {
+            "x": 2.999999999999999,
+            "y": -1
+          }
+        ],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 5.572478777137633,
+            "y": 8.287464628562722
+          }
+        ],
+        "9": [
+          {
+            "x": 3.0000000000000004,
+            "y": 9
+          },
+          {
+            "x": 7.411764705882353,
+            "y": 6.352941176470589
+          }
+        ],
+        "10": [
+          {
+            "x": 5.572478777137633,
+            "y": 8.28746462856272
+          }
+        ],
+        "11": [
+          {
+            "x": 3,
+            "y": 4
+          }
+        ]
+      },
+      "transformed": "CircularArc center=(2.717656, 0.992022) radius=5 startAngle=0.7 endAngle=0.7",
+      "extents": [
+        {
+          "x": -2,
+          "y": -1
+        },
+        {
+          "x": 8,
+          "y": 9
+        }
+      ],
+      "offsetSides": [
+        1,
+        -1
+      ],
+      "offsets": {
+        "1": [
+          "CircularArc center=(3, 4) radius=6 startAngle=0 endAngle=0"
+        ],
+        "-1": [
+          "CircularArc center=(3, 4) radius=4 startAngle=0 endAngle=0"
+        ]
+      }
+    },
+    "arc": {
+      "contents": {
+        "kind": "arc",
+        "center": {
+          "x": 1,
+          "y": 1
+        },
+        "radius": 4,
+        "startAngle": 0.2999999999999998,
+        "endAngle": 2.1999999999999993,
+        "clockwise": false
+      },
+      "text": "CircularArc center=(1, 1) radius=4 startAngle=0.3 endAngle=2.2",
+      "grips": [
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 4.821345956502425,
+          "y": 2.1820808266453575
+        },
+        {
+          "x": -1.3540044690213806,
+          "y": 4.233985615278362
+        }
+      ],
+      "moved": [
+        "CircularArc center=(2.5, -1) radius=4 startAngle=0.3 endAngle=2.2",
+        "CircularArc center=(1, 1) radius=4 startAngle=6.130674 endAngle=2.2",
+        "CircularArc center=(1, 1) radius=4 startAngle=0.3 endAngle=2.17618"
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": 4.821345956502425,
+            "y": 2.1820808266453575
+          },
+          {
+            "x": -1.3540044690213806,
+            "y": 4.233985615278362
+          }
+        ],
+        "2": [
+          {
+            "x": 2.261289449581078,
+            "y": 4.795938477422344
+          }
+        ],
+        "3": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ],
+        "4": [],
+        "5": [
+          {
+            "x": 1.0000000000000002,
+            "y": 5
+          }
+        ],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 3.11999576001272,
+            "y": 4.391993216020352
+          }
+        ],
+        "9": [
+          {
+            "x": -1.173124942136639,
+            "y": 4.358203088835401
+          }
+        ],
+        "10": [
+          {
+            "x": 3.119995760012719,
+            "y": 4.391993216020353
+          }
+        ],
+        "11": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      "transformed": "CircularArc center=(3.120625, -2.59094) radius=4 startAngle=1 endAngle=2.9",
+      "extents": [
+        {
+          "x": -1.3540044690213806,
+          "y": 2.1820808266453575
+        },
+        {
+          "x": 4.821345956502425,
+          "y": 5
+        }
+      ],
+      "offsetSides": [
+        1,
+        -1
+      ],
+      "offsets": {
+        "1": [
+          "CircularArc center=(1, 1) radius=5 startAngle=0.3 endAngle=2.2"
+        ],
+        "-1": [
+          "CircularArc center=(1, 1) radius=3 startAngle=0.3 endAngle=2.2"
+        ]
+      }
+    },
+    "clockwise arc": {
+      "contents": {
+        "kind": "arc",
+        "center": {
+          "x": 1,
+          "y": 1
+        },
+        "radius": 4,
+        "startAngle": 4.083185307179587,
+        "endAngle": 5.983185307179586,
+        "clockwise": true
+      },
+      "text": "CircularArc center=(1, 1) radius=4 startAngle=4.083185 endAngle=5.983185",
+      "grips": [
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": -1.3540044690213806,
+          "y": 4.233985615278362
+        },
+        {
+          "x": 4.821345956502424,
+          "y": 2.1820808266453584
+        }
+      ],
+      "moved": [
+        "CircularArc center=(2.5, -1) radius=4 startAngle=4.083185 endAngle=5.983185",
+        "CircularArc center=(1, 1) radius=4 startAngle=4.107005 endAngle=5.983185",
+        "CircularArc center=(1, 1) radius=4 startAngle=4.083185 endAngle=0.152512"
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": -1.3540044690213806,
+            "y": 4.233985615278362
+          },
+          {
+            "x": 4.821345956502424,
+            "y": 2.1820808266453584
+          }
+        ],
+        "2": [
+          {
+            "x": 2.26128944958107,
+            "y": 4.795938477422347
+          }
+        ],
+        "3": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ],
+        "4": [],
+        "5": [
+          {
+            "x": 1.0000000000000002,
+            "y": 5
+          }
+        ],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 3.11999576001272,
+            "y": 4.391993216020352
+          }
+        ],
+        "9": [
+          {
+            "x": -1.173124942136639,
+            "y": 4.358203088835401
+          }
+        ],
+        "10": [
+          {
+            "x": 3.119995760012718,
+            "y": 4.391993216020353
+          }
+        ],
+        "11": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      "transformed": "CircularArc center=(3.120625, -2.59094) radius=4 startAngle=3.383185 endAngle=5.283185",
+      "extents": [
+        {
+          "x": -1.3540044690213806,
+          "y": 2.1820808266453584
+        },
+        {
+          "x": 4.821345956502424,
+          "y": 5
+        }
+      ],
+      "offsetSides": [
+        1,
+        -1
+      ],
+      "offsets": {
+        "1": [
+          "CircularArc center=(1, 1) radius=5 startAngle=4.083185 endAngle=5.983185"
+        ],
+        "-1": [
+          "CircularArc center=(1, 1) radius=3 startAngle=4.083185 endAngle=5.983185"
+        ]
+      }
+    },
+    "ellipse": {
+      "contents": {
+        "kind": "ellipse",
+        "center": {
+          "x": 0,
+          "y": 0
+        },
+        "majorAxisRadius": 6,
+        "minorAxisRadius": 2,
+        "startAngle": 0,
+        "endAngle": 6.283185307179586,
+        "clockwise": false,
+        "rotation": 0.7853981633974483
+      },
+      "text": "EllipseArc center=(0, 0) majorRadius=6 minorRadius=2 rotation=0.785398 startAngle=0 endAngle=6.283185",
+      "grips": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 4.242640687119286,
+          "y": 4.242640687119285
+        },
+        {
+          "x": -1.4142135623730947,
+          "y": 1.4142135623730954
+        },
+        {
+          "x": -4.242640687119286,
+          "y": -4.242640687119285
+        },
+        {
+          "x": 1.414213562373094,
+          "y": -1.414213562373096
+        }
+      ],
+      "moved": [
+        "EllipseArc center=(1.5, -2) majorRadius=6 minorRadius=2 rotation=0.785398 startAngle=0 endAngle=6.283185",
+        "EllipseArc center=(0, 0) majorRadius=5.646447 minorRadius=2 rotation=0.785398 startAngle=0 endAngle=6.283185",
+        "EllipseArc center=(0, 0) majorRadius=6 minorRadius=0.474874 rotation=0.785398 startAngle=0 endAngle=6.283185",
+        "EllipseArc center=(0, 0) majorRadius=6.353553 minorRadius=2 rotation=0.785398 startAngle=0 endAngle=6.283185",
+        "EllipseArc center=(0, 0) majorRadius=6 minorRadius=4.474874 rotation=0.785398 startAngle=0 endAngle=6.283185"
+      ],
+      "osnap": {
+        "1": [],
+        "2": [],
+        "3": [
+          {
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "4": [],
+        "5": [
+          {
+            "x": 4.242640687119286,
+            "y": 4.242640687119285
+          },
+          {
+            "x": -1.4142135623730947,
+            "y": 1.4142135623730954
+          },
+          {
+            "x": -4.242640687119286,
+            "y": -4.242640687119285
+          },
+          {
+            "x": 1.414213562373094,
+            "y": -1.414213562373096
+          }
+        ],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 4.019311628599084,
+            "y": 4.39199010182971
+          }
+        ],
+        "9": [
+          {
+            "x": -1.557512815101352,
+            "y": 1.2692820528183355
+          },
+          {
+            "x": 4.381042226856681,
+            "y": 2.9660120648299038
+          }
+        ],
+        "10": [
+          {
+            "x": 3.932609833982168,
+            "y": 4.423761049858059
+          }
+        ],
+        "11": [
+          {
+            "x": 0,
+            "y": 0
+          }
+        ]
+      },
+      "transformed": "EllipseArc center=(3, -4) majorRadius=6 minorRadius=2 rotation=1.485398 startAngle=0 endAngle=6.283185",
+      "extents": [
+        {
+          "x": -4.47213595499958,
+          "y": -4.472135954999579
+        },
+        {
+          "x": 4.472135954999579,
+          "y": 4.472135954999579
+        }
+      ],
+      "offsetSides": [
+        1,
+        1
+      ],
+      "offsets": {
+        "1": [
+          "EllipseArc center=(0, 0) majorRadius=7 minorRadius=3 rotation=0.785398 startAngle=0 endAngle=6.283185"
+        ],
+        "-1": [
+          "EllipseArc center=(0, 0) majorRadius=5 minorRadius=1 rotation=0.785398 startAngle=0 endAngle=6.283185"
+        ]
+      }
+    },
+    "elliptical arc": {
+      "contents": {
+        "kind": "ellipse",
+        "center": {
+          "x": 2,
+          "y": 0
+        },
+        "majorAxisRadius": 6,
+        "minorAxisRadius": 2,
+        "startAngle": 0.40000000000000036,
+        "endAngle": 2.5,
+        "clockwise": false,
+        "rotation": 0
+      },
+      "text": "EllipseArc center=(2, 0) majorRadius=6 minorRadius=2 rotation=0 startAngle=0.4 endAngle=2.5",
+      "grips": [
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 7.52636596401731,
+          "y": 0.7788366846173016
+        },
+        {
+          "x": -2.8068616932816024,
+          "y": 1.1969442882079129
+        }
+      ],
+      "moved": [
+        "EllipseArc center=(3.5, -2) majorRadius=6 minorRadius=2 rotation=0 startAngle=0.4 endAngle=2.5",
+        "EllipseArc center=(2, 0) majorRadius=6 minorRadius=2 rotation=0 startAngle=5.802571 endAngle=2.5",
+        "EllipseArc center=(2, 0) majorRadius=6 minorRadius=2 rotation=0 startAngle=0.4 endAngle=3.771215"
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": 7.52636596401731,
+            "y": 0.7788366846173016
+          },
+          {
+            "x": -2.8068616932816024,
+            "y": 1.1969442882079129
+          }
+        ],
+        "2": [
+          {
+            "x": 2.723016616204198,
+            "y": 1.985425982075177
+          }
+        ],
+        "3": [
+          {
+            "x": 2,
+            "y": 0
+          }
+        ],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 4.755301965750609,
+            "y": 1.7766482512344803
+          }
+        ],
+        "9": [],
+        "10": [
+          {
+            "x": 4.7215767285534636,
+            "y": 1.7824147201228708
+          }
+        ],
+        "11": [
+          {
+            "x": 2,
+            "y": 0
+          }
+        ]
+      },
+      "transformed": "EllipseArc center=(4.529684, -2.711565) majorRadius=6 minorRadius=2 rotation=0.7 startAngle=0.4 endAngle=2.5",
+      "extents": [
+        {
+          "x": -2.8068616932816024,
+          "y": 0.7788366846173016
+        },
+        {
+          "x": 7.52636596401731,
+          "y": 2
+        }
+      ],
+      "offsetSides": [
+        1,
+        1
+      ],
+      "offsets": {
+        "1": [
+          "EllipseArc center=(2, 0) majorRadius=7 minorRadius=3 rotation=0 startAngle=0.4 endAngle=2.5"
+        ],
+        "-1": [
+          "EllipseArc center=(2, 0) majorRadius=5 minorRadius=1 rotation=0 startAngle=0.4 endAngle=2.5"
+        ]
+      }
+    },
+    "polyline": {
+      "contents": {
+        "kind": "polyline",
+        "vertices": [
+          {
+            "x": 0,
+            "y": 0,
+            "bulge": 0
+          },
+          {
+            "x": 10,
+            "y": 0,
+            "bulge": 0.5
+          },
+          {
+            "x": 10,
+            "y": 10,
+            "bulge": 0
+          },
+          {
+            "x": 0,
+            "y": 10,
+            "bulge": 0
+          }
+        ],
+        "closed": true
+      },
+      "text": "Polyline vertices=[(0, 0), (10, 0, bulge=0.5), (10, 10), (0, 10)] closed=true",
+      "grips": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 10
+        },
+        {
+          "x": 0,
+          "y": 10
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 12.5,
+          "y": 5
+        },
+        {
+          "x": 5,
+          "y": 10
+        },
+        {
+          "x": 0,
+          "y": 5
+        }
+      ],
+      "moved": [
+        "Polyline vertices=[(1.5, -2), (10, 0, bulge=0.5), (10, 10), (0, 10)] closed=true",
+        "Polyline vertices=[(0, 0), (11.5, -2, bulge=0.5), (10, 10), (0, 10)] closed=true",
+        "Polyline vertices=[(0, 0), (10, 0, bulge=0.5), (11.5, 8), (0, 10)] closed=true",
+        "Polyline vertices=[(0, 0), (10, 0, bulge=0.5), (10, 10), (1.5, 8)] closed=true",
+        "Polyline vertices=[(1.5, -2), (11.5, -2, bulge=0.5), (10, 10), (0, 10)] closed=true",
+        "Polyline vertices=[(0, 0), (11.5, -2, bulge=0.5), (11.5, 8), (0, 10)] closed=true",
+        "Polyline vertices=[(0, 0), (10, 0, bulge=0.5), (11.5, 8), (1.5, 8)] closed=true",
+        "Polyline vertices=[(1.5, -2), (10, 0, bulge=0.5), (10, 10), (1.5, 8)] closed=true"
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 10,
+            "y": 0
+          },
+          {
+            "x": 10,
+            "y": 10
+          },
+          {
+            "x": 0,
+            "y": 10
+          }
+        ],
+        "2": [
+          {
+            "x": 5,
+            "y": 0
+          },
+          {
+            "x": 12.5,
+            "y": 5
+          },
+          {
+            "x": 5,
+            "y": 10
+          },
+          {
+            "x": 0,
+            "y": 5
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 6,
+            "y": 10
+          }
+        ],
+        "9": [],
+        "10": [
+          {
+            "x": 6,
+            "y": 10
+          }
+        ],
+        "11": []
+      },
+      "transformed": "Polyline vertices=[(3, -4), (10.648422, 2.442177, bulge=0.5), (4.206245, 10.090599), (-3.442177, 3.648422)] closed=true",
+      "extents": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 12.5,
+          "y": 10
+        }
+      ],
+      "offsetSides": [
+        -1,
+        1
+      ],
+      "offsets": {
+        "1": [
+          "Polyline vertices=[(1, 1), (9.650368, 1), (9.861842, 1.189869), (10.062731, 1.390903), (10.252448, 1.602514), (10.430435, 1.824081), (10.596172, 2.054955), (10.749172, 2.294459), (10.888988, 2.541892), (11.015209, 2.796529), (11.127466, 3.057623), (11.225429, 3.324408), (11.308812, 3.596104), (11.37737, 3.871915), (11.430903, 4.151031), (11.469252, 4.432634), (11.492307, 4.715901), (11.5, 5), (11.492307, 5.284099), (11.469252, 5.567366), (11.430903, 5.848969), (11.37737, 6.128085), (11.308812, 6.403896), (11.225429, 6.675592), (11.127466, 6.942377), (11.015209, 7.203471), (10.888988, 7.458108), (10.749172, 7.705541), (10.596172, 7.945045), (10.430435, 8.175919), (10.252448, 8.397486), (10.062731, 8.609097), (9.861842, 8.810131), (9.650368, 9), (1, 9), (1, 1)] closed=true"
+        ],
+        "-1": [
+          "Polyline vertices=[(-1, -1), (10, -1), (10.160182, -0.987087), (10.316228, -0.948683), (10.464107, -0.885779), (10.928653, -0.538295), (11.241595, -0.257992), (11.537776, 0.039967), (11.8162, 0.354581), (12.075934, 0.684794), (12.316104, 1.029498), (12.535904, 1.387535), (12.734597, 1.757701), (12.911515, 2.138756), (13.066064, 2.529418), (13.197725, 2.928377), (13.306055, 3.334291), (13.390692, 3.7458), (13.451351, 4.161519), (13.487827, 4.580055), (13.5, 5), (13.487827, 5.419945), (13.451351, 5.838481), (13.390692, 6.2542), (13.306055, 6.665709), (13.197725, 7.071623), (13.066064, 7.470582), (12.911515, 7.861244), (12.734597, 8.242299), (12.535904, 8.612465), (12.316104, 8.970502), (12.075934, 9.315206), (11.8162, 9.645419), (11.537776, 9.960033), (11.241595, 10.257992), (10.928653, 10.538295), (10.6, 10.8), (10.464107, 10.885779), (10.316228, 10.948683), (10.160182, 10.987087), (-1, 11), (-1, -1)] closed=true"
+        ]
+      }
+    },
+    "point": {
+      "contents": {
+        "kind": "point",
+        "x": 4,
+        "y": 5
+      },
+      "text": "Point position=(4, 5)",
+      "grips": [
+        {
+          "x": 4,
+          "y": 5
+        }
+      ],
+      "moved": [
+        "Point position=(5.5, 3)"
+      ],
+      "osnap": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "4": [
+          {
+            "x": 4,
+            "y": 5
+          }
+        ],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [],
+        "9": [],
+        "10": [],
+        "11": []
+      },
+      "transformed": "Point position=(2.83828, 2.401082)",
+      "extents": [
+        {
+          "x": 4,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 5
+        }
+      ]
+    },
+    "aligned dimension": {
+      "contents": {
+        "kind": "dimension",
+        "type": "AlignedDimension",
+        "points": {
+          "xLine1Point": {
+            "x": 0,
+            "y": 0
+          },
+          "xLine2Point": {
+            "x": 10,
+            "y": 2
+          },
+          "dimLinePoint": {
+            "x": 5,
+            "y": 8
+          }
+        },
+        "text": "10.198"
+      },
+      "text": "Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(10, 2) dimLinePoint=(5, 8) text=\"10.198\"",
+      "grips": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 8
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "moved": [
+        "Dimension type=AlignedDimension xLine1Point=(1.5, -2) xLine2Point=(10, 2) dimLinePoint=(5, 8) text=\"10.198\"",
+        "Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(11.5, 0) dimLinePoint=(5, 8) text=\"10.198\"",
+        "Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(10, 2) dimLinePoint=(6.5, 6) text=\"10.198\"",
+        "Dimension type=AlignedDimension xLine1Point=(0, 0) xLine2Point=(10, 2) dimLinePoint=(5, 8) text=\"10.198\""
+      ],
+      "osnap": {
+        "1": [
+          {
+            "x": -1.3461538461538467,
+            "y": 6.730769230769231
+          },
+          {
+            "x": 8.653846153846153,
+            "y": 8.730769230769232
+          },
+          {
+            "x": -0.12257258446136508,
+            "y": 0.6128629223068252
+          },
+          {
+            "x": -1.3814547504787198,
+            "y": 6.907273752393596
+          },
+          {
+            "x": 9.877427415538635,
+            "y": 2.612862922306825
+          },
+          {
+            "x": 8.61854524952128,
+            "y": 8.907273752393598
+          }
+        ],
+        "2": [
+          {
+            "x": 3.6538461538461533,
+            "y": 7.730769230769232
+          },
+          {
+            "x": -0.7520136674700424,
+            "y": 3.760068337350211
+          },
+          {
+            "x": 9.247986332529958,
+            "y": 5.760068337350211
+          }
+        ],
+        "3": [],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [
+          {
+            "x": 6.153846153846155,
+            "y": 8.230769230769232
+          },
+          {
+            "x": -1.5000000000000004,
+            "y": 7.499999999999998
+          },
+          {
+            "x": 8.499999999999998,
+            "y": 9.500000000000002
+          }
+        ],
+        "9": [],
+        "10": [
+          {
+            "x": 6.153846153846153,
+            "y": 8.230769230769232
+          },
+          {
+            "x": -1.3814547504787198,
+            "y": 6.907273752393596
+          },
+          {
+            "x": 8.61854524952128,
+            "y": 8.907273752393598
+          }
+        ],
+        "11": []
+      },
+      "transformed": "Dimension type=AlignedDimension xLine1Point=(3, -4) xLine2Point=(9.359986, 3.971861) dimLinePoint=(1.670469, 5.339826) text=\"10.198\"",
+      "extents": [
+        {
+          "x": -14.977186684281328,
+          "y": -0.7022245801726816
+        },
+        {
+          "x": 22.284878991973635,
+          "y": 16.163763041711146
+        }
+      ]
+    },
+    "radial dimension": {
+      "contents": {
+        "kind": "dimension",
+        "type": "RadialDimension",
+        "points": {
+          "center": {
+            "x": 0,
+            "y": 0
+          },
+          "chordPoint": {
+            "x": 3,
+            "y": 4
+          }
+        }
+      },
+      "text": "Dimension type=RadialDimension center=(0, 0) chordPoint=(3, 4)",
+      "grips": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "moved": [
+        "Dimension type=RadialDimension center=(1.5, -2) chordPoint=(3, 4)",
+        "Dimension type=RadialDimension center=(0, 0) chordPoint=(4.5, 2)",
+        "Dimension type=RadialDimension center=(0, 0) chordPoint=(3, 4)"
+      ],
+      "osnap": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [],
+        "9": [],
+        "10": [],
+        "11": []
+      },
+      "transformed": "Dimension type=RadialDimension center=(3, -4) chordPoint=(2.717656, 0.992022)",
+      "extents": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 4
+        }
+      ]
+    }
+  },
+  "intersections": [
+    [
+      "line",
+      "circle",
+      [
+        {
+          "x": 7.800000000000001,
+          "y": 5.4
+        }
+      ]
+    ],
+    [
+      "line",
+      "arc",
+      [
+        {
+          "x": 4.087119154832539,
+          "y": 3.5435595774162696
+        }
+      ]
+    ],
+    [
+      "line",
+      "clockwise arc",
+      [
+        {
+          "x": 4.087119154832539,
+          "y": 3.5435595774162696
+        }
+      ]
+    ],
+    [
+      "line",
+      "ellipse",
+      [
+        {
+          "x": 4.464101615137754,
+          "y": 3.732050807568877
+        }
+      ]
+    ],
+    [
+      "line",
+      "elliptical arc",
+      []
+    ],
+    [
+      "line",
+      "polyline",
+      []
+    ],
+    [
+      "line",
+      "point",
+      []
+    ],
+    [
+      "line",
+      "aligned dimension",
+      [
+        {
+          "x": 9.181818181818182,
+          "y": 6.090909090909091
+        }
+      ]
+    ],
+    [
+      "line",
+      "radial dimension",
+      []
+    ],
+    [
+      "circle",
+      "line",
+      [
+        {
+          "x": 7.800000000000001,
+          "y": 5.4
+        }
+      ]
+    ],
+    [
+      "circle",
+      "arc",
+      []
+    ],
+    [
+      "circle",
+      "clockwise arc",
+      []
+    ],
+    [
+      "circle",
+      "ellipse",
+      [
+        {
+          "x": -1.3292592572867035,
+          "y": 1.498604525776384
+        },
+        {
+          "x": 1.9259569044535756,
+          "y": -0.8809380918261003
+        }
+      ]
+    ],
+    [
+      "circle",
+      "elliptical arc",
+      [
+        {
+          "x": -1.408174688425865,
+          "y": 1.6460169194881982
+        },
+        {
+          "x": 7.053993241018058,
+          "y": 1.0779173499414247
+        }
+      ]
+    ],
+    [
+      "circle",
+      "polyline",
+      [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 8
+        }
+      ]
+    ],
+    [
+      "circle",
+      "point",
+      []
+    ],
+    [
+      "circle",
+      "aligned dimension",
+      [
+        {
+          "x": -1.1645134779361124,
+          "y": 6.767097304412777
+        },
+        {
+          "x": 5.7798980933207265,
+          "y": 8.155979618664146
+        },
+        {
+          "x": -1.3076923076923082,
+          "y": 6.538461538461538
+        }
+      ]
+    ],
+    [
+      "circle",
+      "radial dimension",
+      []
+    ],
+    [
+      "arc",
+      "line",
+      [
+        {
+          "x": 4.087119154832539,
+          "y": 3.5435595774162696
+        }
+      ]
+    ],
+    [
+      "arc",
+      "circle",
+      []
+    ],
+    [
+      "arc",
+      "clockwise arc",
+      []
+    ],
+    [
+      "arc",
+      "ellipse",
+      [
+        {
+          "x": 4.411378019421387,
+          "y": 3.0882987981339793
+        },
+        {
+          "x": 3.0882908620498295,
+          "y": 4.411376216872826
+        }
+      ]
+    ],
+    [
+      "arc",
+      "elliptical arc",
+      []
+    ],
+    [
+      "arc",
+      "polyline",
+      [
+        {
+          "x": 0,
+          "y": 4.872983346207417
+        }
+      ]
+    ],
+    [
+      "arc",
+      "point",
+      []
+    ],
+    [
+      "arc",
+      "aligned dimension",
+      [
+        {
+          "x": -0.9035995649853055,
+          "y": 4.517997824926525
+        }
+      ]
+    ],
+    [
+      "arc",
+      "radial dimension",
+      []
+    ],
+    [
+      "clockwise arc",
+      "line",
+      [
+        {
+          "x": 4.087119154832539,
+          "y": 3.5435595774162696
+        }
+      ]
+    ],
+    [
+      "clockwise arc",
+      "circle",
+      []
+    ],
+    [
+      "clockwise arc",
+      "arc",
+      []
+    ],
+    [
+      "clockwise arc",
+      "ellipse",
+      [
+        {
+          "x": 3.0882908620498273,
+          "y": 4.411376216872828
+        },
+        {
+          "x": 4.411378019421384,
+          "y": 3.088298798133984
+        }
+      ]
+    ],
+    [
+      "clockwise arc",
+      "elliptical arc",
+      []
+    ],
+    [
+      "clockwise arc",
+      "polyline",
+      [
+        {
+          "x": 0,
+          "y": 4.872983346207417
+        }
+      ]
+    ],
+    [
+      "clockwise arc",
+      "point",
+      []
+    ],
+    [
+      "clockwise arc",
+      "aligned dimension",
+      [
+        {
+          "x": -0.9035995649853055,
+          "y": 4.517997824926525
+        }
+      ]
+    ],
+    [
+      "clockwise arc",
+      "radial dimension",
+      []
+    ],
+    [
+      "ellipse",
+      "line",
+      [
+        {
+          "x": 4.464101615137754,
+          "y": 3.732050807568877
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "circle",
+      [
+        {
+          "x": -1.3292592572867035,
+          "y": 1.498604525776384
+        },
+        {
+          "x": 1.9259569044535756,
+          "y": -0.8809380918261003
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "arc",
+      [
+        {
+          "x": 4.411378019421387,
+          "y": 3.0882987981339793
+        },
+        {
+          "x": 3.0882908620498295,
+          "y": 4.411376216872826
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "clockwise arc",
+      [
+        {
+          "x": 3.0882908620498273,
+          "y": 4.411376216872828
+        },
+        {
+          "x": 4.411378019421384,
+          "y": 3.088298798133984
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "elliptical arc",
+      [
+        {
+          "x": -1.1106903675301043,
+          "y": 1.7102178365913294
+        },
+        {
+          "x": 3.9434818756159045,
+          "y": 1.8921733007063604
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "polyline",
+      [
+        {
+          "x": 2.6832815729997477,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 2.6832815729997463
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "point",
+      []
+    ],
+    [
+      "ellipse",
+      "aligned dimension",
+      [
+        {
+          "x": -0.4601789933084225,
+          "y": 2.3008949665421112
+        }
+      ]
+    ],
+    [
+      "ellipse",
+      "radial dimension",
+      []
+    ],
+    [
+      "elliptical arc",
+      "line",
+      []
+    ],
+    [
+      "elliptical arc",
+      "circle",
+      [
+        {
+          "x": -1.408174688425865,
+          "y": 1.6460169194881982
+        },
+        {
+          "x": 7.053993241018058,
+          "y": 1.0779173499414247
+        }
+      ]
+    ],
+    [
+      "elliptical arc",
+      "arc",
+      []
+    ],
+    [
+      "elliptical arc",
+      "clockwise arc",
+      []
+    ],
+    [
+      "elliptical arc",
+      "ellipse",
+      [
+        {
+          "x": 3.9448643896571203,
+          "y": 1.891891440128563
+        },
+        {
+          "x": -1.1114593335294274,
+          "y": 1.709924092542509
+        }
+      ]
+    ],
+    [
+      "elliptical arc",
+      "polyline",
+      [
+        {
+          "x": 0,
+          "y": 1.8856180831641307
+        }
+      ]
+    ],
+    [
+      "elliptical arc",
+      "point",
+      []
+    ],
+    [
+      "elliptical arc",
+      "aligned dimension",
+      [
+        {
+          "x": -0.36754283748914596,
+          "y": 1.837714187445729
+        }
+      ]
+    ],
+    [
+      "elliptical arc",
+      "radial dimension",
+      []
+    ],
+    [
+      "polyline",
+      "line",
+      []
+    ],
+    [
+      "polyline",
+      "circle",
+      [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 8
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "arc",
+      [
+        {
+          "x": 0,
+          "y": 4.872983346207417
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "clockwise arc",
+      [
+        {
+          "x": 0,
+          "y": 4.872983346207417
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "ellipse",
+      [
+        {
+          "x": 2.6832815729997477,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 2.6832815729997463
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "elliptical arc",
+      [
+        {
+          "x": 0,
+          "y": 1.8856180831641307
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "point",
+      []
+    ],
+    [
+      "polyline",
+      "aligned dimension",
+      [
+        {
+          "x": 0,
+          "y": 7
+        }
+      ]
+    ],
+    [
+      "polyline",
+      "radial dimension",
+      []
+    ],
+    [
+      "point",
+      "line",
+      []
+    ],
+    [
+      "point",
+      "circle",
+      []
+    ],
+    [
+      "point",
+      "arc",
+      []
+    ],
+    [
+      "point",
+      "clockwise arc",
+      []
+    ],
+    [
+      "point",
+      "ellipse",
+      []
+    ],
+    [
+      "point",
+      "elliptical arc",
+      []
+    ],
+    [
+      "point",
+      "polyline",
+      []
+    ],
+    [
+      "point",
+      "aligned dimension",
+      []
+    ],
+    [
+      "point",
+      "radial dimension",
+      []
+    ],
+    [
+      "aligned dimension",
+      "line",
+      [
+        {
+          "x": 9.181818181818182,
+          "y": 6.09090909090909
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "circle",
+      [
+        {
+          "x": -1.1645134779361124,
+          "y": 6.767097304412777
+        },
+        {
+          "x": 5.7798980933207265,
+          "y": 8.155979618664146
+        },
+        {
+          "x": -1.3076923076923082,
+          "y": 6.538461538461538
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "arc",
+      [
+        {
+          "x": -0.9035995649853055,
+          "y": 4.517997824926525
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "clockwise arc",
+      [
+        {
+          "x": -0.9035995649853055,
+          "y": 4.517997824926525
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "ellipse",
+      [
+        {
+          "x": -0.4601789933084225,
+          "y": 2.3008949665421112
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "elliptical arc",
+      [
+        {
+          "x": -0.36754283748914596,
+          "y": 1.837714187445729
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "polyline",
+      [
+        {
+          "x": 0,
+          "y": 7
+        }
+      ]
+    ],
+    [
+      "aligned dimension",
+      "point",
+      []
+    ],
+    [
+      "aligned dimension",
+      "radial dimension",
+      []
+    ],
+    [
+      "radial dimension",
+      "line",
+      []
+    ],
+    [
+      "radial dimension",
+      "circle",
+      []
+    ],
+    [
+      "radial dimension",
+      "arc",
+      []
+    ],
+    [
+      "radial dimension",
+      "clockwise arc",
+      []
+    ],
+    [
+      "radial dimension",
+      "ellipse",
+      []
+    ],
+    [
+      "radial dimension",
+      "elliptical arc",
+      []
+    ],
+    [
+      "radial dimension",
+      "polyline",
+      []
+    ],
+    [
+      "radial dimension",
+      "point",
+      []
+    ],
+    [
+      "radial dimension",
+      "aligned dimension",
+      []
+    ]
+  ]
+}

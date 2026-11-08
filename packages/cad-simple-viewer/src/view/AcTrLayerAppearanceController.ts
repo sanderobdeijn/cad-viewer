@@ -1,11 +1,11 @@
-import {
-  AcDbLayerTableRecord,
-  AcDbLayerTableRecordAttrs
-} from '@mlightcad/data-model'
 import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import { AcTrRenderer } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
+import {
+  ACAP_DEFAULT_LAYER,
+  acapDefaultLayerTraits
+} from '../model/AcApItemDrawable'
 import { AcTrScene } from './AcTrScene'
 
 /**
@@ -18,7 +18,7 @@ import { AcTrScene } from './AcTrScene'
 export class AcTrLayerAppearanceController {
   /**
    * @param scene - Scene whose layout layer groups receive appearance updates.
-   * @param renderer - Renderer whose draw context supplies the active database.
+   * @param renderer - Renderer whose layer materials are updated.
    * @param getLayerTraits - Optional override for resolving live layer-table traits.
    */
   constructor(
@@ -30,38 +30,21 @@ export class AcTrLayerAppearanceController {
   ) {}
 
   /**
-   * Returns true when a layer-table edit may require material refresh.
-   *
-   * @param changes - Partial layer record attributes from the edit event.
-   * @returns True when color, linetype, lineweight, or transparency changed.
-   */
-  layerStyleMayHaveChanged(
-    changes: Partial<AcDbLayerTableRecordAttrs>
-  ): boolean {
-    return (
-      changes.color != null ||
-      changes.linetype != null ||
-      changes.lineWeight !== undefined ||
-      changes.transparency != null
-    )
-  }
-
-  /**
    * Refreshes cached layer materials from the live layer-table record and
    * propagates the result to batched drawables and text hierarchies.
    *
    * @param layer - Live layer-table record whose traits should drive the refresh.
    */
-  syncFromLiveRecord(layer: AcDbLayerTableRecord): void {
-    const layerTraits = this.getEffectiveLayerTraits(layer.name)
+  syncFromLiveRecord(layerName: string): void {
+    const layerTraits = this.getEffectiveLayerTraits(layerName)
     if (!layerTraits) {
       return
     }
 
-    const materials = this.renderer.updateLayerMaterial(layer.name, layerTraits)
-    this.scene.forEachSceneLayer(layer.name, sceneLayer =>
+    const materials = this.renderer.updateLayerMaterial(layerName, layerTraits)
+    this.scene.forEachSceneLayer(layerName, sceneLayer =>
       sceneLayer.syncAppearanceFromRecord(
-        layer.name,
+        layerName,
         layerTraits,
         materials,
         this.renderer
@@ -97,10 +80,10 @@ export class AcTrLayerAppearanceController {
   /**
    * Builds resolved layer traits used when syncing appearance.
    *
-   * Reads the active draw database from {@link AcTrRenderer.context} unless a custom
-   * resolver was supplied to the constructor.
+   * Uses the traits of {@link ACAP_DEFAULT_LAYER} unless a custom resolver was
+   * supplied to the constructor.
    *
-   * @param layerName - Name of the layer to resolve from the active database.
+   * @param layerName - Name of the layer to resolve.
    * @returns Resolved sub-entity traits, or undefined when the layer is missing.
    */
   getEffectiveLayerTraits(
@@ -110,22 +93,8 @@ export class AcTrLayerAppearanceController {
       return this.getLayerTraits(layerName)
     }
 
-    const database = this.renderer.context.database
-    if (!database) {
-      return undefined
-    }
-
-    const layer = database.tables.layerTable.getAt(layerName)
-    if (!layer) {
-      return undefined
-    }
-
-    return {
-      layer: layer.name,
-      color: layer.color.clone(),
-      lineType: layer.lineStyle,
-      lineWeight: layer.lineWeight,
-      transparency: layer.transparency
-    }
+    return layerName === ACAP_DEFAULT_LAYER.name
+      ? acapDefaultLayerTraits()
+      : undefined
   }
 }

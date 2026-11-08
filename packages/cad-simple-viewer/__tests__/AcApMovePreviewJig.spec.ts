@@ -1,15 +1,18 @@
-import type { AcDbEntity } from '@mlightcad/data-model'
-import { GeometryPoint2d } from '@mlightcad/geometry-engine'
+import {
+  GeometryLine2d,
+  GeometryPoint2d,
+  type ModelItem
+} from '@mlightcad/geometry-engine'
 
 import { AcApMovePreviewJig } from '../src/command/modify/AcApMovePreviewJig'
 import { AcEdBaseView } from '../src/editor/view/AcEdBaseView'
 
-function createEntity(objectId: string): AcDbEntity {
-  const entity = {
-    objectId,
-    clone: jest.fn(() => createEntity(objectId))
+function createItem(id: string): ModelItem {
+  return {
+    id,
+    kind: 'shape',
+    geometry: new GeometryLine2d({ x: 0, y: 0 }, { x: 10, y: 0 })
   }
-  return entity as unknown as AcDbEntity
 }
 
 function createTransientFallbackView() {
@@ -37,12 +40,8 @@ function createBatchView() {
 describe('AcApMovePreviewJig', () => {
   it('publishes transient previews once and updates transforms on each render', () => {
     const view = createTransientFallbackView()
-    const entities = [createEntity('line-1'), createEntity('line-2')]
-    const jig = new AcApMovePreviewJig(
-      view,
-      entities,
-      new GeometryPoint2d(0, 0)
-    )
+    const items = [createItem('line-1'), createItem('line-2')]
+    const jig = new AcApMovePreviewJig(view, items, new GeometryPoint2d(0, 0))
 
     jig.update(new GeometryPoint2d(5, 0))
     jig.render()
@@ -57,12 +56,8 @@ describe('AcApMovePreviewJig', () => {
 
   it('updates batch preview matrix without publishing transients', () => {
     const view = createBatchView()
-    const entities = [createEntity('line-1')]
-    const jig = new AcApMovePreviewJig(
-      view,
-      entities,
-      new GeometryPoint2d(0, 0)
-    )
+    const items = [createItem('line-1')]
+    const jig = new AcApMovePreviewJig(view, items, new GeometryPoint2d(0, 0))
 
     jig.update(new GeometryPoint2d(3, 4))
     jig.render()

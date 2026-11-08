@@ -21,13 +21,12 @@ export function useMeasurement() {
 
   const refresh = () => {
     const view = AcApDocManager.instance.curView
-    const db = AcApDocManager.instance.curDocument?.database
     const list = view ? listLayoutMeasurements(view) : []
     measurements.value = list
     selectedId.value = getSelectedMeasurementId()
     const values: Record<string, string> = {}
     for (const record of list) {
-      values[record.id] = getMeasurementValueText(record.id, db) || '—'
+      values[record.id] = getMeasurementValueText(record.id) || '—'
     }
     valueById.value = values
   }

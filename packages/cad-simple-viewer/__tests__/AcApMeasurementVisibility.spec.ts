@@ -11,16 +11,16 @@ import {
 } from '../src/command/measure/AcApMeasurementStore'
 import type { AcTrView2d } from '../src/view'
 
-function makeGroup(
-  id: string,
-  layoutId: string | undefined
-): AcTrHtmlGroup {
+function makeGroup(id: string, layoutId: string | undefined): AcTrHtmlGroup {
   return {
     id,
     layer: MEASUREMENT_LAYER,
     layoutId,
     visible: true,
-    setVisible: jest.fn(function (this: { visible: boolean }, visible: boolean) {
+    setVisible: jest.fn(function (
+      this: { visible: boolean },
+      visible: boolean
+    ) {
       this.visible = visible
     })
   } as unknown as AcTrHtmlGroup

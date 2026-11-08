@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@mlightcad/common": "workspace:*",
-    "@mlightcad/data-model": "workspace:*",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
     "@mlightcad/mtext-parser": "workspace:*",
@@ -51,7 +50,6 @@
   },
   "peerDependencies": {
     "@mlightcad/common": "workspace:*",
-    "@mlightcad/data-model": "workspace:*",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
     "@mlightcad/mtext-parser": "workspace:*",

@@ -131,7 +131,9 @@ describe('AcApOverlayDrawUtil arrow and dash scale', () => {
 
   it('uses imported arrowSizeWcs instead of seeding from screen pixels', () => {
     const canvas = document.createElement('canvas')
-    expect(acapScaledOverlayArrowSize(canvas, mockView(10), 2.4)).toBeCloseTo(24)
+    expect(acapScaledOverlayArrowSize(canvas, mockView(10), 2.4)).toBeCloseTo(
+      24
+    )
     expect(Number(canvas.dataset[ACAP_OVERLAY_ARROW_WCS])).toBe(2.4)
   })
 

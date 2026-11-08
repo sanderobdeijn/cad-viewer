@@ -6,7 +6,6 @@
   >
     <!-- Right Slot Content -->
     <template #right>
-      <ml-progress />
       <el-button-group class="ml-status-bar-right-button-group">
         <el-button
           v-if="features.isShowCoordinate && !isMobile"
@@ -78,7 +77,6 @@ import MlNotificationButton from './MlNotificationButton.vue'
 import MlOsnapButton from './MlOsnapButton.vue'
 import MlPointStyleButton from './MlPointStyleButton.vue'
 import MlPolarTrackingButton from './MlPolarTrackingButton.vue'
-import MlProgress from './MlProgress.vue'
 import MlSettingButton from './MlSettingButton.vue'
 import MlThemeButton from './MlThemeButton.vue'
 import MlWarningButton from './MlWarningButton.vue'

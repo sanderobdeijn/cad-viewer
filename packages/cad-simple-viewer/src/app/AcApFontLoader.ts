@@ -47,7 +47,7 @@ function isMeshFontInfo(info: AcApFontInfo): boolean {
 /**
  * Viewer-side font loader for explicit loads (default fonts, missing-font UI).
  *
- * Drawing open no longer collects or awaits fonts in data-model. Text entities
+ * Drawing open does not collect or await fonts. Text entities
  * load faces on demand via {@link FontManager.lazyFontLoading}. This class is
  * still used for {@link AcApDocManager.loadFonts} /
  * {@link AcApDocManager.loadDefaultFonts}.
@@ -168,9 +168,7 @@ export class AcApFontLoader {
 
     const criticalStartedAt = performance.now()
     loadStatus =
-      criticalFonts.length > 0
-        ? await this._loader.load(criticalFonts)
-        : []
+      criticalFonts.length > 0 ? await this._loader.load(criticalFonts) : []
     criticalLoadMs = performance.now() - criticalStartedAt
 
     if (deferredFonts.length > 0 && !shouldDeferMesh) {

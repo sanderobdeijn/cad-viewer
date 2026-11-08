@@ -1,5 +1,4 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import type { AcEdViewHoverEventArgs } from './AcEdBaseView'
@@ -24,7 +23,7 @@ export interface AcEdHoverHost {
    * @param point - Pick location in world coordinates
    * @returns An array of pick results containing object ids
    */
-  pick(point: { x: number; y: number }): { id: AcDbObjectId }[]
+  pick(point: { x: number; y: number }): { id: string }[]
 
   /**
    * Called immediately when an entity becomes hovered.
@@ -33,7 +32,7 @@ export interface AcEdHoverHost {
    *
    * @param id - Object id of the hovered entity
    */
-  onHover(id: AcDbObjectId): void
+  onHover(id: string): void
 
   /**
    * Called immediately when an entity stops being hovered.
@@ -42,7 +41,7 @@ export interface AcEdHoverHost {
    *
    * @param id - Object id of the entity that was previously hovered
    */
-  onUnhover(id: AcDbObjectId): void
+  onUnhover(id: string): void
 
   /**
    * Current mouse position in screen (client) coordinates.
@@ -86,7 +85,7 @@ export class AcEdHoverController {
    *
    * A value of `null` indicates no entity is hovered.
    */
-  private hoveredId: AcDbObjectId | null = null
+  private hoveredId: string | null = null
 
   /**
    * Creates a new hover controller.
@@ -182,7 +181,7 @@ export class AcEdHoverController {
    *
    * @param newId - New hovered object id, or `null` to clear hover
    */
-  private setHoveredId(newId: AcDbObjectId | null) {
+  private setHoveredId(newId: string | null) {
     if (this.hoveredId === newId) return
 
     if (this.hoveredId) {
@@ -211,7 +210,7 @@ export class AcEdHoverController {
    *
    * @param id - Object id of the hovered entity
    */
-  private startPauseTimer(id: AcDbObjectId) {
+  private startPauseTimer(id: string) {
     this.clearPauseTimer()
     this.pauseTimer = setTimeout(() => {
       this.hoverEvent.dispatch({

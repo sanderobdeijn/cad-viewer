@@ -1,38 +1,10 @@
-import { AcDbOpenDatabaseOptions } from '@mlightcad/data-model'
-
 import { AcEdOpenMode } from '../editor/view'
 
 /**
- * Controls how the view is framed immediately after a document opens.
- */
-export enum AcApOpenViewMode {
-  /** Poll converted geometry and frame the full drawing (`zoomToFitDrawing`). */
-  Extents = 'extents',
-  /** Restore AutoCAD's saved view (layout limits or VPORT `*ACTIVE`). */
-  Saved = 'saved'
-}
-
-/**
- * Options for opening a CAD database.
+ * Options for creating a drawing.
  *
- * This interface extends the base options from the data model but replaces
- * the `readOnly` property with a `mode` property that provides more granular
- * access control.
- *
- * Inherits {@link AcDbOpenDatabaseOptions.drawNoPlotLayers} and
- * {@link AcDbOpenDatabaseOptions.circleSides} from the data model.
- * {@link AcApDocManager} defaults `drawNoPlotLayers` to `false`
- * (web viewer semantics) when omitted. When `circleSides` is omitted,
- * the data model uses draft quality (50).
- *
- * Display options such as the paper-space background or line weight display
- * are settings on {@link AcApSettingManager}, not open options.
- *
- * Fonts are not loaded during database open. They are fetched on demand by
- * `@mlightcad/mtext-renderer` (`FontManager.lazyFontLoading`) while text is
- * drawn. Legacy open options `fontLoader` and `failOnFontLoadError` are no
- * longer part of this API (removed in data-model); if still passed at runtime
- * they are stripped with a warning in {@link AcApDocManager}.
+ * Display options such as the background or line weight display are settings
+ * on {@link AcApSettingManager}, not open options.
  *
  * @example
  * ```typescript
@@ -41,12 +13,9 @@ export enum AcApOpenViewMode {
  * }
  * ```
  */
-export interface AcApOpenDatabaseOptions extends Omit<
-  AcDbOpenDatabaseOptions,
-  'readOnly' | 'sysVars'
-> {
+export interface AcApOpenDatabaseOptions {
   /**
-   * The access mode for opening the database.
+   * The access mode of the drawing.
    * Higher value modes are compatible with lower value modes.
    * - Read (0): Read-only access
    * - Write (8): Full read/write access, compatible with Read
@@ -90,12 +59,10 @@ export interface AcApOpenDatabaseOptions extends Omit<
   waitForTextGeometry?: boolean
 
   /**
-   * How to frame the view when the document finishes opening.
-   *
-   * When omitted, Read mode uses {@link AcApOpenViewMode.Extents};
-   * Write mode uses {@link AcApOpenViewMode.Saved} (AutoCAD VPORT behavior).
+   * Segments a full circle is drawn with. Lower values save memory; higher
+   * values look smoother. When omitted, 50 is used.
    */
-  openViewMode?: AcApOpenViewMode
+  circleSides?: number
 
   /**
    * When `true`, convert entities on off/frozen layers during open so offline

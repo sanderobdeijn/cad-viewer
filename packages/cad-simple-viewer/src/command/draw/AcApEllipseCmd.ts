@@ -1,11 +1,12 @@
-import { AcDbEllipse } from '@mlightcad/data-model'
 import {
+  GeometryEllipseArc2d,
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol,
   GeometryVector3dLike,
   TAU
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -19,6 +20,7 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 import { AcApLineJig } from './AcApLineCmd'
 
 type EllipseKeywordKey = 'arc' | 'center' | 'rotation'
@@ -151,20 +153,32 @@ function normalizeFullEllipseAngles(startAngle: number, endAngle: number) {
 }
 
 function createFallbackEllipse(point: GeometryPoint2dLike) {
-  return new AcDbEllipse(point, { x: 1, y: 0 }, 1e-6, 1e-6, 0, TAU)
+  return new GeometryEllipseArc2d(point, 1e-6, 1e-6, 0, TAU)
+}
+
+/** Returns the ellipse a definition describes. */
+function createEllipse(definition: EllipseDefinition) {
+  return new GeometryEllipseArc2d(
+    definition.center,
+    definition.majorRadius,
+    definition.minorRadius,
+    definition.startAngle,
+    definition.endAngle,
+    false,
+    Math.atan2(definition.majorAxis.y, definition.majorAxis.x)
+  )
 }
 
 function applyEllipseDefinition(
-  entity: AcDbEllipse,
+  ellipse: GeometryEllipseArc2d,
   definition: EllipseDefinition
 ) {
-  entity.center = definition.center
-  entity.majorAxisRadius = definition.majorRadius
-  entity.minorAxisRadius = definition.minorRadius
-  entity.startAngle = definition.startAngle
-  entity.endAngle = definition.endAngle
-
-  entity.majorAxis = definition.majorAxis
+  ellipse.center = definition.center
+  ellipse.majorAxisRadius = definition.majorRadius
+  ellipse.minorAxisRadius = definition.minorRadius
+  ellipse.startAngle = definition.startAngle
+  ellipse.endAngle = definition.endAngle
+  ellipse.rotation = Math.atan2(definition.majorAxis.y, definition.majorAxis.x)
 }
 
 /**
@@ -174,7 +188,8 @@ class AcApEllipsePointJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient ellipse entity reused during preview updates.
    */
-  private _ellipse: AcDbEllipse
+  private _ellipse: GeometryEllipseArc2d
+  private _drawable: AcGiDrawable
   /**
    * Callback that maps cursor point to ellipse definition.
    */
@@ -197,13 +212,17 @@ class AcApEllipsePointJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     super(view)
     this._builder = builder
     this._ellipse = createFallbackEllipse(fallbackPoint)
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._ellipse
+    })
   }
 
   /**
    * Gets transient ellipse entity displayed by this jig.
    */
-  get entity(): AcDbEllipse {
-    return this._ellipse
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -225,7 +244,8 @@ class AcApEllipseDistanceJig extends AcEdPreviewJig<number> {
   /**
    * Transient ellipse entity reused during numeric preview updates.
    */
-  private _ellipse: AcDbEllipse
+  private _ellipse: GeometryEllipseArc2d
+  private _drawable: AcGiDrawable
   /**
    * Callback that maps numeric input to ellipse definition.
    */
@@ -246,13 +266,17 @@ class AcApEllipseDistanceJig extends AcEdPreviewJig<number> {
     super(view)
     this._builder = builder
     this._ellipse = createFallbackEllipse(fallbackPoint)
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._ellipse
+    })
   }
 
   /**
    * Gets transient ellipse entity displayed by this jig.
    */
-  get entity(): AcDbEllipse {
-    return this._ellipse
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -333,15 +357,10 @@ export class AcApEllipseCmd extends AcEdCommand {
    * @param definition - Ellipse geometric definition to append.
    */
   private appendEllipse(context: AcApContext, definition: EllipseDefinition) {
-    const ellipse = new AcDbEllipse(
-      definition.center,
-      definition.majorAxis,
-      definition.majorRadius,
-      definition.minorRadius,
-      definition.startAngle,
-      definition.endAngle
-    )
-    context.doc.modelSync.add(ellipse)
+    context.doc.modelSync.addItems({
+      kind: 'shape',
+      geometry: createEllipse(definition)
+    })
   }
 
   /**

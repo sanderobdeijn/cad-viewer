@@ -1,12 +1,10 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
-
 import { AcEdBaseView } from '../editor'
 import { AcApContext } from './AcApContext'
 import { AcApDocument } from './AcApDocument'
 
 type SceneVisibilityView = AcEdBaseView & {
-  hasEntity(objectId: AcDbObjectId): boolean
-  setEntitySceneVisible(objectId: AcDbObjectId, visible: boolean): boolean
+  hasEntity(objectId: string): boolean
+  setEntitySceneVisible(objectId: string, visible: boolean): boolean
 }
 
 /**
@@ -27,7 +25,7 @@ function isSceneVisibilityView(
 export function applySessionHiddenObjectState(
   doc: AcApDocument,
   view: AcApContext['view'],
-  objectId: AcDbObjectId
+  objectId: string
 ) {
   if (!doc.isObjectHidden(objectId) || !isSceneVisibilityView(view)) {
     return
@@ -42,10 +40,7 @@ export function applySessionHiddenObjectState(
  * Hidden objects remain in the drawing database and reappear after
  * {@link unisolateObjects} or when the document session ends.
  */
-export function hideObjects(
-  context: AcApContext,
-  objectIds: AcDbObjectId[]
-): number {
+export function hideObjects(context: AcApContext, objectIds: string[]): number {
   const view = context.view
   if (!isSceneVisibilityView(view)) {
     return 0
@@ -59,8 +54,7 @@ export function hideObjects(
       continue
     }
 
-    const entity = doc.modelSync.entity(objectId)
-    if (!entity?.visibility || !view.hasEntity(objectId)) {
+    if (!doc.modelSync.item(objectId) || !view.hasEntity(objectId)) {
       continue
     }
 
@@ -91,12 +85,11 @@ export function unisolateObjects(context: AcApContext): number {
   let count = 0
 
   for (const objectId of hiddenIds) {
-    const entity = doc.modelSync.entity(objectId)
-    if (!entity || !view.hasEntity(objectId)) {
+    if (!doc.modelSync.item(objectId) || !view.hasEntity(objectId)) {
       continue
     }
 
-    if (view.setEntitySceneVisible(objectId, entity.visibility)) {
+    if (view.setEntitySceneVisible(objectId, true)) {
       count++
     }
   }

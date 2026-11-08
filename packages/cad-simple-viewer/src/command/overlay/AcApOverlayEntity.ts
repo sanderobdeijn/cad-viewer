@@ -1,4 +1,3 @@
-import type { AcDbObjectId } from '@mlightcad/data-model'
 import type {
   GeometryPoint2d,
   GeometryPoint2dLike,
@@ -18,7 +17,7 @@ export interface AcApOverlayWorldDrawResult {
   /** Selectable HTML group that owns leaf overlays and canvases. */
   group: AcTrHtmlGroup
   /** CAD transient entity ids owned by this overlay (for highlight / visibility). */
-  entityIds: AcDbObjectId[]
+  entityIds: string[]
   /** Tear down listeners and non-HTML resources; HTML is disposed with the group. */
   dispose: () => void
   /**

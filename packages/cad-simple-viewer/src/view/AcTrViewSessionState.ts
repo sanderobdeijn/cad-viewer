@@ -1,5 +1,3 @@
-import type { AcDbObjectId } from '@mlightcad/data-model'
-
 import type { AcTrLayoutViewManager } from './AcTrLayoutViewManager'
 import type { AcTrScene } from './AcTrScene'
 
@@ -15,11 +13,11 @@ export interface AcTrViewSessionState {
   /** Per-layout cameras for this document. */
   layoutViewManager: AcTrLayoutViewManager
   /** Layouts that have already received first-visit framing. */
-  initializedLayouts: Set<AcDbObjectId>
+  initializedLayouts: Set<string>
   /** Layouts framed by document-open, not first user visit. */
-  externallyFramedLayouts: Set<AcDbObjectId>
+  externallyFramedLayouts: Set<string>
   /** Layouts currently being batch-converted. */
-  loadingLayouts: Set<AcDbObjectId>
+  loadingLayouts: Set<string>
   /**
    * Missing fonts reported while this document was active.
    * Parked with the session so FontManager's live map can track the active
@@ -27,5 +25,5 @@ export interface AcTrViewSessionState {
    */
   missedFonts: Record<string, number>
   /** Selected entity ids at the moment the session was parked. */
-  selectionIds: AcDbObjectId[]
+  selectionIds: string[]
 }

@@ -1,6 +1,5 @@
 export * from './AcApMemCmd'
 export * from './AcApMissedDataCmd'
 export * from './AcApMeasurementPanelCmd'
-export * from './AcApOpenPerfCmd'
 export * from './AcApDrawingUnitsCmd'
 export * from './AcApPointStyleCmd'

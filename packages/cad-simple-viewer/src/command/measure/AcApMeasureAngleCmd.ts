@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDatabase } from '@mlightcad/data-model'
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
@@ -56,17 +55,13 @@ function calcAngleDeg(
  */
 export function placeAngleMeasurement(
   view: AcTrView2d,
-  db: AcDbDatabase,
   vertex: GeometryPoint2dLike,
   arm1: GeometryPoint2dLike,
   arm2: GeometryPoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
-  AcApMeasureAngleEntity.create(vertex, arm1, arm2, style, options).commit(
-    view,
-    db
-  )
+  AcApMeasureAngleEntity.create(vertex, arm1, arm2, style, options).commit(view)
 }
 
 /**
@@ -129,7 +124,6 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
   private readonly _vertex: GeometryPoint2dLike
   private readonly _arm1: GeometryPoint2dLike
-  private readonly _db: AcDbDatabase
   private readonly _badge: AcTrHtmlBadge
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badgeId: string
@@ -139,7 +133,6 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 
   constructor(
     view: AcEdBaseView,
-    db: AcDbDatabase,
     vertex: GeometryPoint2dLike,
     arm1: GeometryPoint2dLike,
     color: AcCmColor
@@ -150,7 +143,6 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     this._arm1 = arm1
     this._arm2 = vertex
     this._color = color
-    this._db = db
 
     this._badgeId = `live-angle-badge-${Date.now()}`
     this._htManager = this._view.htmlTransientManager
@@ -212,7 +204,7 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     })
 
     const deg = calcAngleDeg(this._vertex, this._arm1, p)
-    const label = formatMeasurementAngle(this._db, (deg * Math.PI) / 180)
+    const label = formatMeasurementAngle((deg * Math.PI) / 180)
     const fontSize = acapAdaptiveMeasureBadgeFontSize(
       label,
       style,
@@ -251,7 +243,6 @@ class AcApMeasureAngleJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 export class AcApMeasureAngleCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
     const color = acapGetMeasurementColor()
 
     await this.withMeasureInput(context, async () => {
@@ -279,7 +270,6 @@ export class AcApMeasureAngleCmd extends AcApMeasureDrawCmd {
       )
       arm2Prompt.jig = new AcApMeasureAngleJig(
         context.view,
-        db,
         vertex,
         arm1,
         color
@@ -291,7 +281,6 @@ export class AcApMeasureAngleCmd extends AcApMeasureDrawCmd {
 
       placeAngleMeasurement(
         context.view as AcTrView2d,
-        db,
         vertex,
         arm1,
         arm2,

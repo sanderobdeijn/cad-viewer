@@ -1,4 +1,4 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { resolveAnchorFromBox } from '../draw/AcTrBatchDrawPolicy'
 import type { AcTrEntity } from '../object/AcTrEntity'
@@ -17,19 +17,19 @@ import type { AcTrRenderer } from './AcTrRenderer'
  * Whether the entity advertises a single batchable draw primitive.
  * Prefer this over hard-coded `instanceof` lists.
  */
-export function isDirectBatchCandidate(entity: AcDbEntity): boolean {
+export function isDirectBatchCandidate(entity: AcGiDrawable): boolean {
   return entity.directBatchPrimitive != null
 }
 
 /**
  * Builds a direct-batch payload by running the entity's normal
- * {@link AcDbEntity.worldDraw} path so tessellation stays in `subWorldDraw`.
+ * {@link AcGiDrawable.worldDraw} path so tessellation stays in `subWorldDraw`.
  *
  * Returns `null` when the entity does not declare a direct primitive, capture
  * misses, materials are unbatchable, or large-coordinate policy forces unbatch.
  */
 export function tryBuildDirectEntityMeta(
-  entity: AcDbEntity,
+  entity: AcGiDrawable,
   renderer: AcTrRenderer
 ): AcTrDirectEntityMeta | null {
   if (entity.directBatchPrimitive == null) {

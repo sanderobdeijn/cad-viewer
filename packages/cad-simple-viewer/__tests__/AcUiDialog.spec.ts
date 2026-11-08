@@ -16,9 +16,7 @@ describe('AcUiDialog', () => {
     const css = document.getElementById(AcUiDialog.styleId)?.textContent
     expect(css).toContain('width: 440px')
     expect(css).toContain('max-width: calc(100vw - 24px)')
-    expect(css).toMatch(
-      /@media \(max-width: 600px\) \{[\s\S]*width: 100%;/
-    )
+    expect(css).toMatch(/@media \(max-width: 600px\) \{[\s\S]*width: 100%;/)
     expect(css).toContain('border-radius: 10px')
     expect(css).not.toMatch(
       /@media \(max-width: 600px\) \{[\s\S]*border-radius:\s*0/

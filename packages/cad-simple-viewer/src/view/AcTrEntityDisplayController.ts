@@ -1,19 +1,14 @@
-import {
-  AcDbBlockTableRecord,
-  AcDbEntity,
-  AcDbLayerTableRecordAttrs,
-  AcDbObjectId
-} from '@mlightcad/data-model'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcEdLayerInfo } from '../editor'
 import { AcTrLayer } from './AcTrLayer'
 
-type AcTrEntityDisplayCandidate = Pick<AcDbEntity, 'visibility' | 'layer'>
+type AcTrEntityDisplayCandidate = Pick<AcGiDrawable, 'visibility' | 'layer'>
 
 /**
  * Resolves whether database entities should be converted into scene geometry.
  *
- * Entity-level {@link AcDbEntity.visibility} only reflects per-entity hide state
+ * Entity-level {@link AcGiDrawable.visibility} only reflects per-entity hide state
  * (DXF code 60). Layer off/frozen state is tracked separately on the layer table
  * so off-layer content can be skipped at open time and converted later when the
  * layer becomes visible again.
@@ -63,63 +58,5 @@ export class AcTrEntityDisplayController {
     }
 
     return this.shouldConvert(entity)
-  }
-
-  /**
-   * Returns true when a layer visibility change may have made entities drawable.
-   */
-  layerVisibilityMayHaveChanged(
-    changes: Partial<AcDbLayerTableRecordAttrs>
-  ): boolean {
-    return changes.isOff !== undefined || changes.standardFlags !== undefined
-  }
-
-  /**
-   * Collects entities on the given layer that were skipped while the layer was
-   * off/frozen and therefore are not yet present in the scene.
-   */
-  collectMissingEntitiesOnLayer(
-    layerName: string,
-    blockTableRecord: AcDbBlockTableRecord,
-    hasEntity: (objectId: AcDbObjectId) => boolean
-  ): AcDbEntity[] {
-    return this.collectMissingEntities(
-      blockTableRecord,
-      hasEntity,
-      entity => entity.layer === layerName && this.shouldConvert(entity)
-    )
-  }
-
-  /**
-   * Collects drawable entities missing from the scene across an entire layout,
-   * including entities on off/frozen layers skipped during interactive viewing.
-   */
-  collectMissingEntitiesForExport(
-    blockTableRecord: AcDbBlockTableRecord,
-    hasEntity: (objectId: AcDbObjectId) => boolean,
-    includeInvisibleLayers = true
-  ): AcDbEntity[] {
-    return this.collectMissingEntities(blockTableRecord, hasEntity, entity =>
-      this.shouldConvertForExport(entity, includeInvisibleLayers)
-    )
-  }
-
-  private collectMissingEntities(
-    blockTableRecord: AcDbBlockTableRecord,
-    hasEntity: (objectId: AcDbObjectId) => boolean,
-    includeEntity: (entity: AcDbEntity) => boolean
-  ): AcDbEntity[] {
-    const pending: AcDbEntity[] = []
-    const iterator = blockTableRecord.newIterator()
-    for (const entity of iterator) {
-      if (!includeEntity(entity)) {
-        continue
-      }
-      if (hasEntity(entity.objectId)) {
-        continue
-      }
-      pending.push(entity)
-    }
-    return pending
   }
 }

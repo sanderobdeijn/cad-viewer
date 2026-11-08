@@ -729,13 +729,19 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
    * @inheritdoc
    */
   clone() {
-    return new GeometryCircularArc2d(
+    // The stored angles are `atan2` angles. The five-argument constructor
+    // mirrors its angles for a clockwise arc, so build the copy as
+    // counter-clockwise and set the direction afterwards.
+    const arc = new GeometryCircularArc2d(
       this.center.clone(),
       this.radius,
       this._startAngle,
       this._endAngle,
-      this.clockwise
+      false
     )
+    arc._clockwise = this._clockwise
+    arc._boundingBoxNeedsUpdate = true
+    return arc
   }
 
   /**

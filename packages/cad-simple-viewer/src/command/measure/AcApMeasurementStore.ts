@@ -1,9 +1,4 @@
 import type { AcCmColor } from '@mlightcad/common'
-import type {
-  AcDbDatabase,
-  AcDbEntity,
-  AcDbObjectId
-} from '@mlightcad/data-model'
 import type { AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
@@ -82,12 +77,7 @@ export interface AcApMeasurementGroupExtras {
    * @deprecated CAD transients are no longer used for measurements; kept empty
    * for backward-compatible call sites.
    */
-  entityIds?: AcDbObjectId[]
-  /**
-   * @deprecated CAD entity refs are no longer used; style updates go through
-   * {@link redraw}.
-   */
-  entities?: AcDbEntity[]
+  entityIds?: string[]
   /** Style used when the group was committed (and after later style edits). */
   style?: AcApMeasurementStyle
   /** Raw measured value used to refresh the badge when display units change. */
@@ -184,15 +174,12 @@ export function listLayoutMeasurements(
 
 /**
  * Formatted badge text for a committed measurement, or an empty string when
- * the value or drawing database is unavailable.
+ * the measurement has no value.
  */
-export function getMeasurementValueText(
-  id: string,
-  db?: AcDbDatabase | null
-): string {
+export function getMeasurementValueText(id: string): string {
   const extras = extrasById.get(id)
-  if (!extras?.value || !db) return ''
-  return formatMeasurementValue(db, extras.value)
+  if (!extras?.value) return ''
+  return formatMeasurementValue(extras.value)
 }
 
 /**
@@ -424,16 +411,13 @@ function paintMeasurementGroup(
  * Reformat committed measurement badges using the effective measurement units.
  * Notifies list subscribers so palettes refresh their cached value text.
  */
-export function refreshMeasurementValueLabels(
-  view: AcTrView2d,
-  db: AcDbDatabase
-): void {
+export function refreshMeasurementValueLabels(view: AcTrView2d): void {
   for (const group of view.htmlTransientManager.groupsOnLayer(
     MEASUREMENT_LAYER
   )) {
     const extras = extrasById.get(group.id)
     if (!extras?.value) continue
-    const text = formatMeasurementValue(db, extras.value)
+    const text = formatMeasurementValue(extras.value)
     for (const child of group.children) {
       const badge = child as { setText?: (next: string) => void }
       badge.setText?.(text)

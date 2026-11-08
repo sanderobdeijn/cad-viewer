@@ -82,7 +82,7 @@ describe('acuiBindDrawStyleSessionAccessory', () => {
     const view = {
       container,
       sessionProviders: {
-        get: <T,>(id: string) => providers.get(id) as T | undefined,
+        get: <T>(id: string) => providers.get(id) as T | undefined,
         set: (id: string, value: unknown) => {
           providers.set(id, value)
         },
@@ -128,7 +128,7 @@ describe('acuiBindDrawStyleSessionAccessory', () => {
     const view = {
       container,
       sessionProviders: {
-        get: <T,>(id: string) => providers.get(id) as T | undefined,
+        get: <T>(id: string) => providers.get(id) as T | undefined,
         set: (id: string, value: unknown) => {
           providers.set(id, value)
         },

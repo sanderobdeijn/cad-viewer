@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import * as THREE from 'three'
 
 import {
@@ -14,7 +13,7 @@ export interface AcTrEntityBox {
   minY: number
   maxX: number
   maxY: number
-  id: AcDbObjectId
+  id: string
 }
 
 /**

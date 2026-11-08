@@ -1,33 +1,25 @@
 import { log } from '@mlightcad/common'
-import {
-  AcDbDatabase,
-  AcDbObjectId,
-  AcDbOpenDatabaseOptions
-} from '@mlightcad/data-model'
 
 import { AcEdOpenMode } from '../editor/view'
 import { AcApEntityService } from '../service/AcApEntityService'
 import { AcApDocManager } from './AcApDocManager'
 import { AcApModelSync } from './AcApModelSync'
 import { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
-import { AcApSettingManager } from './AcApSettingManager'
 
 /** Sentinel stored in {@link AcApDocument.docTitle} for unsaved documents. */
 export const ACAP_UNTITLED_DOC_TITLE = 'Untitled'
 
 /**
- * Represents a CAD document that manages a drawing database and associated metadata.
+ * Represents a CAD document: the drawing model and its metadata.
  *
  * This class handles:
  * - Creating blank drawings
  * - Managing document properties (title, access mode)
- * - Providing access to the underlying database
+ * - Providing access to the drawing model
  */
 export class AcApDocument {
   /** The URI of the opened document, if opened from a URI */
   private _uri?: string
-  /** The underlying CAD database containing all drawing data */
-  private _database: AcDbDatabase
   /** The file name of the document */
   private _fileName: string = ''
   /** The display title of the document */
@@ -35,19 +27,18 @@ export class AcApDocument {
   /** The access mode for the document */
   private _openMode: AcEdOpenMode = AcEdOpenMode.Write
   /** Object ids temporarily hidden by HIDEOBJECTS in the current session */
-  private _hiddenObjects = new Set<AcDbObjectId>()
-  /** Lazily created entity service bound to this document's database. */
+  private _hiddenObjects = new Set<string>()
+  /** Lazily created entity service bound to this document's model. */
   private _entityService?: AcApEntityService
-  /** Keeps {@link model} in step with the database */
+  /** Holds the drawing model and its drawables */
   private readonly _modelSync: AcApModelSync
 
   /**
-   * Creates a new document instance with an empty database.
+   * Creates a new document instance with an empty drawing.
    *
    * The document is initialized with {@link ACAP_UNTITLED_DOC_TITLE} and write mode enabled.
    */
   constructor() {
-    this._database = new AcDbDatabase()
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
     this._openMode = AcEdOpenMode.Write
     this._modelSync = new AcApModelSync(this, () => {
@@ -64,7 +55,7 @@ export class AcApDocument {
     return this._modelSync.model
   }
 
-  /** Keeps {@link model} in step with the database and applies edited text. */
+  /** Holds the drawing model, its drawables and applies edited text. */
   get modelSync() {
     return this._modelSync
   }
@@ -81,28 +72,12 @@ export class AcApDocument {
     this._openMode = options?.mode ?? AcEdOpenMode.Write
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
     try {
-      this._database.createNewDrawing(options as AcDbOpenDatabaseOptions)
-      this.applyDrawingSettings()
       this._modelSync.resync()
-      await this._database.regen()
       return true
     } catch (error) {
       log.error('Failed to create a new drawing:', error)
       return false
     }
-  }
-
-  /**
-   * Copies the point style settings into the database.
-   *
-   * Points are drawn through database entities, which read their display mode
-   * and size from the database, so these follow the settings until the
-   * database is removed.
-   */
-  applyDrawingSettings() {
-    const settings = AcApSettingManager.instance
-    this._database.pdmode = settings.get('pointDisplayMode')
-    this._database.pdsize = settings.get('pointDisplaySize')
   }
 
   /**
@@ -112,15 +87,6 @@ export class AcApDocument {
    */
   get uri() {
     return this._uri
-  }
-
-  /**
-   * Gets the database object containing all drawing data.
-   *
-   * @returns The underlying CAD database instance
-   */
-  get database() {
-    return this._database
   }
 
   /**
@@ -185,21 +151,21 @@ export class AcApDocument {
   /**
    * Returns true when the object is temporarily hidden by HIDEOBJECTS.
    */
-  isObjectHidden(objectId: AcDbObjectId) {
+  isObjectHidden(objectId: string) {
     return this._hiddenObjects.has(objectId)
   }
 
   /**
    * Records one object as temporarily hidden in the current session.
    */
-  addHiddenObject(objectId: AcDbObjectId) {
+  addHiddenObject(objectId: string) {
     this._hiddenObjects.add(objectId)
   }
 
   /**
    * Returns and clears all temporarily hidden object ids.
    */
-  takeHiddenObjects(): AcDbObjectId[] {
+  takeHiddenObjects(): string[] {
     const hiddenIds = [...this._hiddenObjects]
     this._hiddenObjects.clear()
     return hiddenIds

@@ -11,9 +11,6 @@ import { AcUiAboutDialog } from '../ui/AcUiAboutDialog'
  * `../app` barrel) to avoid a circular dependency with {@link AcApDocManager}.
  */
 export class AcApAboutCmd extends AcEdCommand {
-  /** About does not mutate the drawing database. */
-  usesTransaction = false
-
   /**
    * Shows the About dialog on the current view host (or `document.body`).
    *

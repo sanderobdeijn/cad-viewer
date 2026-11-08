@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDatabase } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike
@@ -54,13 +53,12 @@ function calcDist(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike): number {
  */
 export function placeDistanceMeasurement(
   view: AcTrView2d,
-  db: AcDbDatabase,
   p1: GeometryPoint2dLike,
   p2: GeometryPoint2dLike,
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
-  AcApMeasureDistanceEntity.create(p1, p2, style, options).commit(view, db)
+  AcApMeasureDistanceEntity.create(p1, p2, style, options).commit(view)
 }
 
 /**
@@ -71,7 +69,6 @@ export function placeDistanceMeasurement(
 export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
   private readonly _p1: GeometryPoint2dLike
-  private readonly _db: AcDbDatabase
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badge: AcTrHtmlBadge
   private readonly _badgeId: string
@@ -79,17 +76,11 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> 
   private _color: AcCmColor
   private _p2: GeometryPoint2dLike
 
-  constructor(
-    view: AcEdBaseView,
-    db: AcDbDatabase,
-    p1: GeometryPoint2dLike,
-    color: AcCmColor
-  ) {
+  constructor(view: AcEdBaseView, p1: GeometryPoint2dLike, color: AcCmColor) {
     super(view)
     this._view = view as AcTrView2d
     this._p1 = p1
     this._p2 = p1
-    this._db = db
     this._color = color
 
     this._badgeId = `live-dist-badge-${Date.now()}`
@@ -155,7 +146,7 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> 
       return
     }
 
-    const label = formatMeasurementLength(this._db, dist)
+    const label = formatMeasurementLength(dist)
     const fontSize = acapAdaptiveMeasureBadgeFontSize(label, style, linePx)
     const arrowSizePx = acapScaleMeasureOverlayPx(
       ACAP_OVERLAY_ARROW_SIZE_PX,
@@ -202,7 +193,6 @@ export class AcApMeasureDistanceJig extends AcEdPreviewJig<GeometryPoint2dLike> 
 export class AcApMeasureDistanceCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
     const color = acapGetMeasurementColor()
 
     await this.withMeasureInput(context, async () => {
@@ -218,14 +208,13 @@ export class AcApMeasureDistanceCmd extends AcApMeasureDrawCmd {
       )
       p2Prompt.useBasePoint = true
       p2Prompt.basePoint = new GeometryPoint2d(p1)
-      p2Prompt.jig = new AcApMeasureDistanceJig(context.view, db, p1, color)
+      p2Prompt.jig = new AcApMeasureDistanceJig(context.view, p1, color)
       const p2Result = await editor.getPoint(p2Prompt)
       if (p2Result.status !== AcEdPromptStatus.OK) return
       const p2 = p2Result.value!
 
       placeDistanceMeasurement(
         context.view as AcTrView2d,
-        db,
         p1,
         p2,
         acapGetCurrentMeasurementStyle()

@@ -6,7 +6,6 @@ import {
   AcApMeasurementPanelCmd,
   AcApMemCmd,
   AcApMissedDataCmd,
-  AcApOpenPerfCmd,
   AcApPointStyleCmd
 } from '../command'
 import { MlDrawingUnitsDlg, MlPointStyleDlg } from '../component'
@@ -46,13 +45,6 @@ export const registerCmds = () => {
       'mem',
       new AcApMemCmd(),
       'memstat'
-    )
-    register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'openperf',
-      'openperf',
-      new AcApOpenPerfCmd(),
-      ['openprofile', 'openprofui']
     )
     isCommandRegistered = true
   }

@@ -61,8 +61,7 @@ export function useMemoryProfile() {
   const collectNow = async (): Promise<AcApMemorySnapshot> => {
     const docManager = AcApDocManager.instance
     const view = docManager.curView as AcTrView2d
-    const database = docManager.curDocument.database
-    return AcApMemoryProfiler.collect(view, database)
+    return AcApMemoryProfiler.collect(view)
   }
 
   /**

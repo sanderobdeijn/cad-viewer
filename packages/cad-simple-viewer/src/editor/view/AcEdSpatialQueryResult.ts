@@ -1,5 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
-
 import { isFiniteSpatialBBox } from '../../view/AcTrGroupWcsBboxAssert'
 
 /**
@@ -10,7 +8,7 @@ export interface AcEdSpatialQueryResultItem {
   minY: number
   maxX: number
   maxY: number
-  id: AcDbObjectId
+  id: string
 }
 
 /**
@@ -36,7 +34,7 @@ export interface AcEdSpatialQueryResultItemEx extends AcEdSpatialQueryResultItem
  */
 export function unionSpatialQueryItems(
   items: ReadonlyArray<AcEdSpatialQueryResultItem>,
-  id?: AcDbObjectId
+  id?: string
 ): AcEdSpatialQueryResultItem {
   let minX = Infinity
   let minY = Infinity

@@ -1,4 +1,3 @@
-import { type AcDbDatabase } from '@mlightcad/data-model'
 import { GeometryCircularArc2d } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
@@ -194,13 +193,9 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
    * Draws the arc canvas stroke, control-point dots, length badge, and extras.
    *
    * @param view - Active 2D view for HTML overlays
-   * @param db - Database used to format the arc-length label
    * @returns World-draw result including redraw/dispose hooks
    */
-  protected subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
-  ): AcApMeasureWorldDrawResult {
+  protected drawMeasurement(view: AcTrView2d): AcApMeasureWorldDrawResult {
     const hasThrough = this.through != null
     const live = {
       geom: { ...this.geom } as AcApMeasureCircleGeom,
@@ -263,7 +258,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
       worldPosition: live.end,
       layer: MEASUREMENT_LAYER
     })
-    const label = formatMeasurementLength(db, arcLen)
+    const label = formatMeasurementLength(arcLen)
     const importedTextHeight =
       this.textHeightWcs != null && this.textHeightWcs > 0
         ? this.textHeightWcs
@@ -347,7 +342,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
       const valid = syncGeomFromThreePoints()
       const arc = valid ? resolveArc() : null
       arcLen = arc?.length ?? 0
-      badge.setText(formatMeasurementLength(db, arcLen))
+      badge.setText(formatMeasurementLength(arcLen))
       acapPlaceOverlayHtml(view, badge, midPoint())
       paintArc(getMeasurementStyle(this.entityId) ?? this.style)
       view.isHtmlDirty = true
@@ -416,7 +411,7 @@ export class AcApMeasureArcEntity extends AcApMeasureEntity {
             geometry
           }
       runMeasurementEdit(() => {
-        republishMeasurement(view, db, record)
+        republishMeasurement(view, record)
       })
     }
 

@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDatabase } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
   GeometryMathUtil,
@@ -41,7 +40,7 @@ import { acapSyncLiveOverlayTextHeight } from '../overlay/AcApOverlayDrawUtil'
 import {
   inwardLockAlignment,
   isBetterLockCandidate,
-  lockCurvesFromEntity,
+  lockCurvesFromItem,
   pointLiesOnCircle,
   sameCircleGeom
 } from './AcApMeasureArcLock'
@@ -150,9 +149,9 @@ function pickCircleGeomAtPoint(
   let bestAlign = -Infinity
 
   for (const hit of hits) {
-    const entity = context.doc.modelSync.entity(hit.id)
-    if (!entity) continue
-    for (const curve of lockCurvesFromEntity(entity)) {
+    const item = context.doc.modelSync.item(hit.id)
+    if (!item) continue
+    for (const curve of lockCurvesFromItem(item)) {
       if (!(curve.radius > 0)) continue
       const nearest = curve.nearestPoint(pick)
       const nearScreen = context.view.worldToScreen(nearest)
@@ -193,7 +192,6 @@ function pickCircleGeomAtPoint(
  */
 export function placeArcMeasurement(
   view: AcTrView2d,
-  db: AcDbDatabase,
   geom: AcApMeasureCircleGeom,
   start: Point2,
   through: Point2 | undefined,
@@ -204,7 +202,7 @@ export function placeArcMeasurement(
   AcApMeasureArcEntity.create(geom, start, end, style, {
     ...options,
     through
-  }).commit(view, db)
+  }).commit(view)
 }
 
 /**
@@ -268,7 +266,6 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
   private _geom: AcApMeasureCircleGeom
   private readonly _start: Point2
-  private readonly _db: AcDbDatabase
   private readonly _indicator: AcTrHtmlSnapIndicator
   private readonly _badge: AcTrHtmlBadge
   private readonly _htManager: AcTrHtmlTransientManager
@@ -286,7 +283,6 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 
   constructor(
     context: AcApContext,
-    db: AcDbDatabase,
     geom: AcApMeasureCircleGeom,
     start: GeometryPoint2dLike,
     color: AcCmColor
@@ -296,7 +292,6 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     this._view = context.view as AcTrView2d
     this._geom = geom
     this._start = toPoint2(start)
-    this._db = db
     this._color = color
     this._lastAngle = Math.atan2(start.y - geom.cy, start.x - geom.cx)
     this._htManager = this._view.htmlTransientManager
@@ -413,7 +408,7 @@ class AcApArcLockedEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
       this._badge.object.visible = false
       return
     }
-    const label = formatMeasurementLength(this._db, sweep.length)
+    const label = formatMeasurementLength(sweep.length)
     const fontSize = acapAdaptiveMeasureBadgeFontSize(
       label,
       style,
@@ -503,7 +498,6 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
   private readonly _start: Point2
   private readonly _through: Point2
-  private readonly _db: AcDbDatabase
   private readonly _badge: AcTrHtmlBadge
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badgeId: string
@@ -513,7 +507,6 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 
   constructor(
     view: AcEdBaseView,
-    db: AcDbDatabase,
     start: GeometryPoint2dLike,
     through: GeometryPoint2dLike,
     color: AcCmColor
@@ -524,7 +517,6 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     this._through = toPoint2(through)
     this._end = toPoint2(through)
     this._color = color
-    this._db = db
 
     this._badgeId = `live-arc-badge-${Date.now()}`
     this._htManager = this._view.htmlTransientManager
@@ -598,7 +590,7 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
       return
     }
 
-    const label = formatMeasurementLength(this._db, arc.length)
+    const label = formatMeasurementLength(arc.length)
     const fontSize = acapAdaptiveMeasureBadgeFontSize(
       label,
       style,
@@ -641,7 +633,6 @@ class AcApMeasureArcEndJig extends AcEdPreviewJig<GeometryPoint2dLike> {
 export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
     const color = acapGetMeasurementColor()
     const view = context.view as AcTrView2d
 
@@ -661,14 +652,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
         const startOnLock = pointLiesOnCircle(toPoint2(start), lock.geom)
           ? start
           : lock.snapped
-        await this.commitLockedArc(
-          context,
-          view,
-          db,
-          color,
-          lock.geom,
-          startOnLock
-        )
+        await this.commitLockedArc(context, view, color, lock.geom, startOnLock)
         return
       }
       const throughPrompt = new AcEdPromptPointOptions(
@@ -689,7 +673,6 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
       )
       endPrompt.jig = new AcApMeasureArcEndJig(
         context.view,
-        db,
         start,
         through,
         color
@@ -713,7 +696,6 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
 
       placeArcMeasurement(
         view,
-        db,
         circleGeomFromArc(measured),
         start2,
         through2,
@@ -732,7 +714,6 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
   private async commitLockedArc(
     context: AcApContext,
     view: AcTrView2d,
-    db: AcDbDatabase,
     color: AcCmColor,
     geom: AcApMeasureCircleGeom,
     start: GeometryPoint2dLike
@@ -753,7 +734,7 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
     const endPrompt = new AcEdPromptPointOptions(
       AcApI18n.t('jig.measureArc.lockedEndPoint')
     )
-    const jig = new AcApArcLockedEndJig(context, db, geom, start, color)
+    const jig = new AcApArcLockedEndJig(context, geom, start, color)
     endPrompt.jig = jig
 
     let endRaw: GeometryPoint2dLike | undefined
@@ -777,7 +758,6 @@ export class AcApMeasureArcCmd extends AcApMeasureDrawCmd {
 
     placeArcMeasurement(
       view,
-      db,
       geomNow,
       start2,
       sweep.through,

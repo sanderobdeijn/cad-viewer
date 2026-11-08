@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApDocManager } from '../../app'
@@ -6,6 +5,7 @@ import {
   AcApSettingManager,
   type AcApSettingManagerEventArgs
 } from '../../app/AcApSettingManager'
+import { itemGripPoints, moveItemGrips } from '../../model/AcApItemGeometry'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import {
   applyGripAppearanceToHost,
@@ -24,7 +24,7 @@ import { acedShouldShowGrips } from './AcEdGripPolicy'
  */
 interface AcEdGripEntry {
   /** Object id of the entity that owns this grip. */
-  entityId: AcDbObjectId
+  entityId: string
   /** Zero-based index into the entity's grip point array. */
   gripIndex: number
   /** Grip location in world (WCS) coordinates at creation time. */
@@ -134,10 +134,10 @@ export class AcEdGripManager {
     const appearance = readGripAppearance()
 
     for (const entityId of this._view.selectionSet.ids) {
-      const entity = doc.modelSync.entity(entityId)
-      if (!entity) continue
+      const item = doc.modelSync.item(entityId)
+      if (!item) continue
 
-      const gripPoints = entity.subGetGripPoints()
+      const gripPoints = itemGripPoints(item)
       for (let gripIndex = 0; gripIndex < gripPoints.length; ++gripIndex) {
         const wcsPoint = gripPoints[gripIndex]
         const handle = new AcEdGripHandle(this._view.container, appearance)
@@ -298,10 +298,10 @@ export class AcEdGripManager {
    * @param entry - The grip entry that was activated by the user
    */
   private startEdit(entry: AcEdGripEntry) {
-    const entity = AcApDocManager.instance.curDocument.modelSync.entity(
+    const item = AcApDocManager.instance.curDocument.modelSync.item(
       entry.entityId
     )
-    if (!entity) {
+    if (!item) {
       this.endEdit()
       return
     }
@@ -316,13 +316,16 @@ export class AcEdGripManager {
 
     this._editSession = new AcEdGripEditSession(
       this._view,
-      entity,
+      item,
       target,
       () => this.endEdit(),
-      (entityId, gripIndex, offset) =>
-        AcApDocManager.instance.curDocument.modelSync.edit(entityId, copy =>
-          copy.subMoveGripPointsAt([gripIndex], offset)
-        )
+      (entityId, gripIndex, offset) => {
+        const sync = AcApDocManager.instance.curDocument.modelSync
+        const current = sync.item(entityId)
+        if (current) {
+          sync.update(entityId, moveItemGrips(current, [gripIndex], offset))
+        }
+      }
     )
   }
 

@@ -2,57 +2,21 @@ import { expect, type Page, test } from '@playwright/test'
 
 async function readNewDrawing(page: Page) {
   return page.evaluate(() => {
-    type Named = { name: string }
     const mgr = (
       window as Window & {
         AcApDocManager?: {
           instance: {
-            curDocument: {
-              docTitle: string
-              database: {
-                clayer: string
-                dimstyle: string
-                insunits: number
-                tables: {
-                  layerTable: { newIterator: () => Iterable<Named> }
-                  dimStyleTable: { newIterator: () => Iterable<Named> }
-                  textStyleTable: { newIterator: () => Iterable<Named> }
-                  blockTable: {
-                    newIterator: () => Iterable<{
-                      newIterator: () => Iterable<unknown>
-                    }>
-                  }
-                }
-                objects: {
-                  layout: {
-                    newIterator: () => Iterable<{ layoutName: string }>
-                  }
-                }
-              }
-            }
+            curDocument: { docTitle: string; model: { items: unknown[] } }
+            curView: { activeLayoutBtrId: string }
           }
         }
       }
     ).AcApDocManager?.instance
     if (!mgr) return null
-    const doc = mgr.curDocument
-    const db = doc.database
-    const names = (table: { newIterator: () => Iterable<Named> }) =>
-      [...table.newIterator()].map(record => record.name)
-    let entityCount = 0
-    for (const block of db.tables.blockTable.newIterator()) {
-      entityCount += [...block.newIterator()].length
-    }
     return {
-      title: doc.docTitle,
-      clayer: db.clayer,
-      dimstyle: db.dimstyle,
-      insunits: db.insunits,
-      layers: names(db.tables.layerTable),
-      dimStyles: names(db.tables.dimStyleTable),
-      textStyles: names(db.tables.textStyleTable),
-      layouts: [...db.objects.layout.newIterator()].map(l => l.layoutName),
-      entityCount
+      title: mgr.curDocument.docTitle,
+      itemCount: mgr.curDocument.model.items.length,
+      layout: mgr.curView.activeLayoutBtrId
     }
   })
 }
@@ -76,14 +40,8 @@ test('opens straight into a blank drawing', async ({ page }) => {
   const drawing = await readNewDrawing(page)
   expect(drawing).toEqual({
     title: 'Untitled',
-    clayer: '0',
-    dimstyle: 'ISO-25',
-    insunits: 4,
-    layers: ['0'],
-    dimStyles: ['Standard', 'Annotative', 'ISO-25'],
-    textStyles: ['Standard', 'Annotative'],
-    layouts: ['Model', 'Layout1', 'Layout2'],
-    entityCount: 0
+    itemCount: 0,
+    layout: '*MODEL_SPACE'
   })
 })
 

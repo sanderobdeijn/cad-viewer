@@ -1,4 +1,3 @@
-import { AcDbPoint } from '@mlightcad/data-model'
 import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import { AcApContext, AcApDocManager } from '../../app'
@@ -15,7 +14,7 @@ import { AcApI18n } from '../../i18n'
  *
  * Behavior is aligned with AutoCAD POINT:
  * - Prompt for a point.
- * - Create one `AcDbPoint` immediately after each confirmed point.
+ * - Add one point to the drawing immediately after each confirmed point.
  * - Continue prompting until the user cancels the command.
  * - Point display is controlled by the current `PDMODE` and `PDSIZE`.
  */
@@ -37,9 +36,10 @@ export class AcApPointCmd extends AcEdCommand {
         return
       }
 
-      const point = new AcDbPoint()
-      point.position = new GeometryPoint2d(pointResult.value)
-      context.doc.modelSync.add(point)
+      context.doc.modelSync.addItems({
+        kind: 'point',
+        geometry: new GeometryPoint2d(pointResult.value)
+      })
     }
   }
 }

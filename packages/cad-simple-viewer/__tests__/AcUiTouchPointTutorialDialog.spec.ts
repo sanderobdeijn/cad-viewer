@@ -1,12 +1,12 @@
 /** @jest-environment jsdom */
 
+import { ACED_TOUCH_POINT_LONG_PRESS_MS } from '../src/editor/input/ui/AcEdTouchPointTiming'
+import { AcUiDialog } from '../src/ui/AcUiDialog'
 import {
   acuiLocalIsoDate,
   acuiShouldShowTouchPointTutorialFromPrefs,
   AcUiTouchPointTutorial
 } from '../src/ui/touch-point-tutorial'
-import { AcUiDialog } from '../src/ui/AcUiDialog'
-import { ACED_TOUCH_POINT_LONG_PRESS_MS } from '../src/editor/input/ui/AcEdTouchPointTiming'
 
 describe('AcUiTouchPointTutorial', () => {
   afterEach(() => {
@@ -43,28 +43,28 @@ describe('AcUiTouchPointTutorial', () => {
 
   it('respects hide and snooze preferences', () => {
     expect(
-      acuiShouldShowTouchPointTutorialFromPrefs(
-        () => true,
-        { hideForever: false, snoozeDate: null }
-      )
+      acuiShouldShowTouchPointTutorialFromPrefs(() => true, {
+        hideForever: false,
+        snoozeDate: null
+      })
     ).toBe(true)
     expect(
-      acuiShouldShowTouchPointTutorialFromPrefs(
-        () => true,
-        { hideForever: true, snoozeDate: null }
-      )
+      acuiShouldShowTouchPointTutorialFromPrefs(() => true, {
+        hideForever: true,
+        snoozeDate: null
+      })
     ).toBe(false)
     expect(
-      acuiShouldShowTouchPointTutorialFromPrefs(
-        () => true,
-        { hideForever: false, snoozeDate: acuiLocalIsoDate() }
-      )
+      acuiShouldShowTouchPointTutorialFromPrefs(() => true, {
+        hideForever: false,
+        snoozeDate: acuiLocalIsoDate()
+      })
     ).toBe(false)
     expect(
-      acuiShouldShowTouchPointTutorialFromPrefs(
-        () => false,
-        { hideForever: false, snoozeDate: null }
-      )
+      acuiShouldShowTouchPointTutorialFromPrefs(() => false, {
+        hideForever: false,
+        snoozeDate: null
+      })
     ).toBe(false)
   })
 })

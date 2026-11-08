@@ -1,5 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
-
 import { AcEdSpatialQueryResultItem } from '../editor/view'
 
 export type AcTrSpatialIndexBBox = {
@@ -103,7 +101,7 @@ export interface AcTrSpatialIndex<
    *
    * @param id The id of a previously inserted item
    */
-  removeById(id: AcDbObjectId): void
+  removeById(id: string): void
 
   /**
    * Removes all items.

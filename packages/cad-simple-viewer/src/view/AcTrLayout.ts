@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
 import {
   AcTrDirectEntityMeta,
@@ -108,7 +107,7 @@ export class AcTrLayout {
   /** When true, {@link box} is recomputed from batch geometry on next read */
   private _boxDirty: boolean
   /** Entity ids excluded from layout bounds (e.g. RAY/XLINE) */
-  private _extentExcludedObjectIds: Set<AcDbObjectId>
+  private _extentExcludedObjectIds: Set<string>
   /** Map of layers indexed by layer name */
   private _layers: Map<string, AcTrLayer>
   /** The flag indicating whether the layout is loaded/activated */
@@ -395,7 +394,7 @@ export class AcTrLayout {
     return false
   }
 
-  hasVisibleEntity(objectId: AcDbObjectId) {
+  hasVisibleEntity(objectId: string) {
     return this.getLayersByObjectId(objectId).some(layer => layer.visible)
   }
 
@@ -479,7 +478,7 @@ export class AcTrLayout {
    * @param objectId - Input the object id of the entity to remove
    * @returns Return true if remove the specified entity successfully. Otherwise, return false.
    */
-  removeEntity(objectId: AcDbObjectId) {
+  removeEntity(objectId: string) {
     let result = false
     for (const [_, layer] of this._layers) {
       if (layer.removeEntity(objectId)) {
@@ -515,7 +514,7 @@ export class AcTrLayout {
   /**
    * Returns true when any layer in this layout contains the entity.
    */
-  hasEntity(objectId: AcDbObjectId) {
+  hasEntity(objectId: string) {
     for (const [_, layer] of this._layers) {
       if (layer.hasEntity(objectId)) {
         return true
@@ -527,7 +526,7 @@ export class AcTrLayout {
   /**
    * Updates entity visibility without rebuilding batched geometry.
    */
-  setEntityVisible(objectId: AcDbObjectId, visible: boolean) {
+  setEntityVisible(objectId: string, visible: boolean) {
     let updated = false
     for (const [_, layer] of this._layers) {
       if (layer.setEntityVisible(objectId, visible)) {
@@ -543,7 +542,7 @@ export class AcTrLayout {
   /**
    * Returns the current scene visibility for one entity.
    */
-  getEntityVisible(objectId: AcDbObjectId) {
+  getEntityVisible(objectId: string) {
     for (const [_, layer] of this._layers) {
       const visible = layer.getEntityVisible(objectId)
       if (visible !== undefined) {
@@ -563,7 +562,7 @@ export class AcTrLayout {
    *   true (default), every id must be present; otherwise at least one id is enough
    */
   canCreateEntityPreview(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     options?: Pick<AcTrEntityPreviewRootOptions, 'requireAllEntities'>
   ): boolean {
     if (entityIds.length === 0) {
@@ -593,8 +592,8 @@ export class AcTrLayout {
    *
    * @param entityIds - Database object ids to check
    */
-  findPreviewableEntityIds(entityIds: AcDbObjectId[]): AcDbObjectId[] {
-    const previewable: AcDbObjectId[] = []
+  findPreviewableEntityIds(entityIds: string[]): string[] {
+    const previewable: string[] = []
     for (const id of entityIds) {
       if (!this.hasEntity(id)) {
         continue
@@ -618,7 +617,7 @@ export class AcTrLayout {
    * @returns Axis-aligned bounds box, empty when nothing matched
    */
   computeEntityPreviewBoundsBox(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     target = new THREE.Box3()
   ) {
     target.makeEmpty()
@@ -644,7 +643,7 @@ export class AcTrLayout {
    * @param margin - Margin multiplier applied around the raw bounds
    */
   computeEntityPreviewBounds2d(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     margin = 1.1
   ): GeometryBox2d | null {
     const box = this.computeEntityPreviewBoundsBox(entityIds)
@@ -661,7 +660,7 @@ export class AcTrLayout {
    * @returns Preview root group, or `null` when no preview geometry was extracted
    */
   createEntityPreviewRoot(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     options?: AcTrEntityPreviewRootOptions
   ): THREE.Group | null {
     const missingEntity = options?.missingEntity ?? 'fail'
@@ -675,7 +674,7 @@ export class AcTrLayout {
       }
     }
 
-    const idsByLayer = new Map<AcTrLayer, Set<AcDbObjectId>>()
+    const idsByLayer = new Map<AcTrLayer, Set<string>>()
 
     for (const id of entityIds) {
       const layers = this.getLayersByObjectId(id)
@@ -775,7 +774,7 @@ export class AcTrLayout {
    *
    * @param ids - Array of entity object IDs to hover
    */
-  hover(ids: AcDbObjectId[]) {
+  hover(ids: string[]) {
     this.applyHighlightToLayers(ids, (layer, entityIds) =>
       layer.hover(entityIds)
     )
@@ -787,7 +786,7 @@ export class AcTrLayout {
    *
    * @param ids - Array of entity object IDs to unhover
    */
-  unhover(ids: AcDbObjectId[]) {
+  unhover(ids: string[]) {
     this.applyHighlightToLayers(ids, (layer, entityIds) =>
       layer.unhover(entityIds)
     )
@@ -799,7 +798,7 @@ export class AcTrLayout {
    *
    * @param ids - Array of entity object IDs to select
    */
-  select(ids: AcDbObjectId[]) {
+  select(ids: string[]) {
     this.applyHighlightToLayers(ids, (layer, entityIds) =>
       layer.select(entityIds)
     )
@@ -811,7 +810,7 @@ export class AcTrLayout {
    *
    * @param ids - Array of entity object IDs to unselect
    */
-  unselect(ids: AcDbObjectId[]) {
+  unselect(ids: string[]) {
     this.applyHighlightToLayers(ids, (layer, entityIds) =>
       layer.unselect(entityIds)
     )
@@ -824,10 +823,10 @@ export class AcTrLayout {
    * @param apply - Layer callback invoked once per layer with its grouped entity ids.
    */
   private applyHighlightToLayers(
-    ids: AcDbObjectId[],
-    apply: (layer: AcTrLayer, entityIds: AcDbObjectId[]) => void
+    ids: string[],
+    apply: (layer: AcTrLayer, entityIds: string[]) => void
   ) {
-    const layerToIds = new Map<AcTrLayer, AcDbObjectId[]>()
+    const layerToIds = new Map<AcTrLayer, string[]>()
     for (const id of ids) {
       const layers = this.getLayersByObjectId(id)
       for (const layer of layers) {
@@ -933,7 +932,7 @@ export class AcTrLayout {
    * @returns An array of layers containing entities associated with the given object ID;
    *          returns an empty array if no matching layers are found
    */
-  private getLayersByObjectId(objectId: AcDbObjectId) {
+  private getLayersByObjectId(objectId: string) {
     const layers = []
     for (const [_, layer] of this._layers) {
       if (layer.hasEntity(objectId)) {
@@ -1001,7 +1000,7 @@ export class AcTrLayout {
       minY: number
       maxX: number
       maxY: number
-      id: AcDbObjectId
+      id: string
     }
 
     if (spatialIndexChildBoxes && spatialIndexChildBoxes.length > 0) {
@@ -1074,7 +1073,7 @@ export class AcTrLayout {
   /**
    * Registers a simple axis-aligned WCS box in the spatial index by object id.
    */
-  private registerSpatialIndexBox(objectId: AcDbObjectId, wcsBbox: THREE.Box3) {
+  private registerSpatialIndexBox(objectId: string, wcsBbox: THREE.Box3) {
     if (this.skipSpatialIndex) {
       return
     }

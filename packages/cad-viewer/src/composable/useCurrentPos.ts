@@ -1,14 +1,13 @@
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
-import { AcEdBaseView, AcEdMouseEventArgs } from '@mlightcad/cad-simple-viewer'
+import {
+  acapDrawingFormatter,
+  AcEdBaseView,
+  AcEdMouseEventArgs
+} from '@mlightcad/cad-simple-viewer'
 import { GeometryPoint2d } from '@mlightcad/geometry-engine'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 function formatCoordinatePair(x: number, y: number): string {
-  const db = AcApDocManager.instance.curDocument?.database
-  if (!db) {
-    return `${x.toFixed(3)}, ${y.toFixed(3)}`
-  }
-  return db.formatter.formatPoint2d(new GeometryPoint2d(x, y))
+  return acapDrawingFormatter().formatPoint2d(new GeometryPoint2d(x, y))
 }
 
 export function useCurrentPos(view: AcEdBaseView) {

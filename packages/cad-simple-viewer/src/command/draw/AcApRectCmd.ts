@@ -1,9 +1,10 @@
-import { AcDbPolyline } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
+  GeometryPolyline2d,
   GeometryTol
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -21,6 +22,7 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 
 const FILLET_BULGE_BASE = Math.tan(Math.PI / 8)
 
@@ -207,7 +209,7 @@ function resolveRectVertices(
 }
 
 function updateRect(
-  rect: AcDbPolyline,
+  rect: GeometryPolyline2d,
   firstPoint: GeometryPoint2dLike,
   input: RectBuildInput,
   settings: RectSettings
@@ -231,15 +233,15 @@ function updateRect(
 
   rect.reset(false)
   const vertices = resolveRectVertices(lx, ly, settings)
-  const segWidth = normalizeNonNegative(settings.width)
 
+  // Model polylines have no widths, so the width option is not drawn.
   vertices.forEach((vertex, index) => {
     const worldPoint = toWorldPoint(firstPoint, vertex.point, settings.rotation)
-    if (GeometryTol.isPositive(segWidth)) {
-      rect.addVertexAt(index, worldPoint, vertex.bulge, segWidth, segWidth)
-    } else {
-      rect.addVertexAt(index, worldPoint, vertex.bulge)
-    }
+    rect.addVertexAt(index, {
+      x: worldPoint.x,
+      y: worldPoint.y,
+      bulge: vertex.bulge
+    })
   })
   rect.closed = true
   return true
@@ -252,7 +254,8 @@ export class AcApRectJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Preview polyline entity reused across cursor updates.
    */
-  private _rect: AcDbPolyline
+  private _rect: GeometryPolyline2d
+  private _drawable: AcGiDrawable
   /**
    * Fixed first-corner point captured at jig start.
    */
@@ -275,7 +278,11 @@ export class AcApRectJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     settingsProvider: () => RectSettings
   ) {
     super(view)
-    this._rect = new AcDbPolyline()
+    this._rect = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._rect
+    })
     this._firstPoint = new GeometryPoint2d(start)
     this._settingsProvider = settingsProvider
   }
@@ -283,8 +290,8 @@ export class AcApRectJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Gets the transient polyline entity displayed by the jig.
    */
-  get entity(): AcDbPolyline {
-    return this._rect
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -313,7 +320,8 @@ class AcApRectStaticJig<T> extends AcEdPreviewJig<T> {
   /**
    * Transient static rectangle entity.
    */
-  private _rect: AcDbPolyline
+  private _rect: GeometryPolyline2d
+  private _drawable: AcGiDrawable
 
   /**
    * Creates a static preview jig with precomputed rectangle geometry.
@@ -330,15 +338,19 @@ class AcApRectStaticJig<T> extends AcEdPreviewJig<T> {
     settings: RectSettings
   ) {
     super(view)
-    this._rect = new AcDbPolyline()
+    this._rect = new GeometryPolyline2d()
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._rect
+    })
     updateRect(this._rect, firstPoint, input, settings)
   }
 
   /**
    * Gets the transient static rectangle entity.
    */
-  get entity(): AcDbPolyline {
-    return this._rect
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -407,14 +419,14 @@ export class AcApRectCmd extends AcEdCommand {
     )
     if (!secondInput) return
 
-    const rect = new AcDbPolyline()
+    const rect = new GeometryPolyline2d()
     const isValid = updateRect(rect, firstPoint, secondInput, settings)
     if (!isValid) {
       this.warnRectMessage('invalidRect')
       return
     }
 
-    context.doc.modelSync.add(rect)
+    context.doc.modelSync.addItems({ kind: 'shape', geometry: rect })
     AcApRectCmd._settings = cloneRectSettings(settings)
   }
 

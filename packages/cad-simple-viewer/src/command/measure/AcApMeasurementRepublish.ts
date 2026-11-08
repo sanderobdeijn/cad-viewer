@@ -1,5 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
-
 import type { AcEdBaseView } from '../../editor'
 import type { AcTrView2d } from '../../view'
 import type { AcApMeasurementRecord } from './AcApMeasurementTypes'
@@ -8,12 +6,10 @@ import type { AcApMeasurementRecord } from './AcApMeasurementTypes'
  * Callback that replaces one measurement visual on a view from a record.
  *
  * @param view - Host 2D view.
- * @param db - Drawing database for unit labels.
  * @param record - Updated measurement record to publish.
  */
 type MeasurementPublishFn = (
   view: AcTrView2d,
-  db: AcDbDatabase,
   record: AcApMeasurementRecord
 ) => void
 
@@ -42,13 +38,11 @@ export function registerMeasurementPublish(fn: MeasurementPublishFn): void {
  * has not been called yet.
  *
  * @param view - Host view for the measurement overlays.
- * @param db - Drawing database for unit labels.
  * @param record - Updated store/sidecar record to publish.
  */
 export function republishMeasurement(
   view: AcEdBaseView,
-  db: AcDbDatabase,
   record: AcApMeasurementRecord
 ): void {
-  publishImpl?.(view as AcTrView2d, db, record)
+  publishImpl?.(view as AcTrView2d, record)
 }

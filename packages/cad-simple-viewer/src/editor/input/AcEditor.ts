@@ -1,5 +1,4 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { AcDbObjectId } from '@mlightcad/data-model'
 
 import { AcApDocManager } from '../../app'
 import { AcEdCommand } from '../command'
@@ -8,7 +7,6 @@ import { AcEdBaseView } from '../view/AcEdBaseView'
 import { AcEdCorsorType, AcEdCursorManager } from './AcEdCursorManager'
 import { AcEdInputModifiers } from './AcEdInputModifiers'
 import { AcEdInputToggles } from './AcEdInputToggles'
-import { AcEdSelectionFilter } from './AcEdSelectionFilter'
 import { AcEdSelectionSet } from './AcEdSelectionSet'
 import {
   AcEdPromptAngleOptions,
@@ -458,26 +456,19 @@ export class AcEditor {
   }
 
   /**
-   * Selects all objects in model space that satisfy the specified filter.
+   * Selects every item of the drawing.
    *
-   * This method is analogous to AutoCAD .NET `Editor.SelectAll(SelectionFilter)`,
-   * but it does not modify the current view selection set directly. Instead, it
-   * returns an independent {@link AcEdPromptSelectionResult}.
+   * This method does not modify the current view selection set directly.
+   * Instead, it returns an independent {@link AcEdPromptSelectionResult}.
    *
-   * @param filter - Optional typed-value filter expression
-   * @returns Selection result containing all matched object ids
+   * @returns Selection result containing the ids of all drawing items
    */
-  selectAll(filter?: AcEdSelectionFilter): AcEdPromptSelectionResult {
+  selectAll(): AcEdPromptSelectionResult {
     try {
       const sync = AcApDocManager.instance.curDocument.modelSync
-      const ids: AcDbObjectId[] = []
-
-      for (const entity of sync.entities(sync.model.items.map(i => i.id))) {
-        if (!filter || filter.matches(entity)) {
-          ids.push(entity.objectId)
-        }
-      }
-
+      const ids = sync.model.items
+        .map(item => item.id)
+        .filter(id => !sync.isMeasurement(id))
       return new AcEdPromptSelectionResult(
         AcEdPromptStatus.OK,
         new AcEdSelectionSet(ids)

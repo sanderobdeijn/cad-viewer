@@ -2,29 +2,29 @@ import {
   AcApDocManager,
   AcEdViewHoverEventArgs
 } from '@mlightcad/cad-simple-viewer'
-import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
-import { onMounted, onUnmounted, type Ref,ref } from 'vue'
+import type { ModelItem } from '@mlightcad/geometry-engine'
+import { onMounted, onUnmounted, type Ref, ref } from 'vue'
 
 export interface UseHoverResult {
   hovered: Ref<boolean>
-  entity: Ref<AcDbEntity | null>
-  id: Ref<AcDbObjectId | null>
+  item: Ref<ModelItem | null>
+  id: Ref<string | null>
   mouse: Ref<{ x: number; y: number }>
 }
 
 /**
  * Composable: useHover
  *
- * Tracks which CAD entity is currently hovered in the active view.
+ * Tracks which drawing item is currently hovered in the active view.
  *
  * This composable automatically listens to `hover` and `unhover` events
  * from the `AcApDocManager.instance.curView.events` system in the CAD viewer.
  * It exposes reactive state containing:
  *
- * - The currently hovered entity (`entity`)
- * - The hovered entity’s object ID (`id`)
+ * - The currently hovered model item (`item`)
+ * - The hovered item's id (`id`)
  * - The mouse position when hovering (`mouse`)
- * - A boolean indicating if an entity is hovered (`hovered`)
+ * - A boolean indicating if an item is hovered (`hovered`)
  *
  * When the component using this composable unmounts,
  * all event listeners are automatically cleaned up.
@@ -34,22 +34,17 @@ export interface UseHoverResult {
  * ```ts
  * import { useHover } from '@/composables/useHover'
  * import { computed } from 'vue'
- * import { colorName, entityName } from '@/locale'
+ * import { itemTypeName } from '@mlightcad/cad-simple-viewer'
+ * import { entityName } from '@/locale'
  *
  * export default {
  *   setup() {
- *     const { hovered, entity, mouse } = useHover()
+ *     const { hovered, item, mouse } = useHover()
  *
- *     // Example: compute entity info for display
- *     const info = computed(() => {
- *       if (!entity.value) return null
- *       return {
- *         type: entityName(entity.value),
- *         color: colorName(entity.value.color.toString()),
- *         layer: entity.value.layer,
- *         lineType: entity.value.lineType
- *       }
- *     })
+ *     // Example: the kind of the hovered item, for display
+ *     const info = computed(() =>
+ *       item.value ? { type: entityName(itemTypeName(item.value)) } : null
+ *     )
  *
  *     // Example: compute tooltip position
  *     const tooltipStyle = computed(() => ({
@@ -65,34 +60,36 @@ export interface UseHoverResult {
  * ---
  * @returns {{
  *   hovered: import('vue').Ref<boolean>;
- *   entity: import('vue').Ref<AcDbEntity | null>;
- *   id: import('vue').Ref<AcDbObjectId | null>;
+ *   item: import('vue').Ref<ModelItem | null>;
+ *   id: import('vue').Ref<string | null>;
  *   mouse: import('vue').Ref<{ x: number; y: number }>;
  * }}
  * Reactive state tracking the current hover context.
  */
 export function useHover(): UseHoverResult {
-  /** Whether an entity is currently hovered */
+  /** Whether an item is currently hovered */
   const hovered = ref(false)
-  /** The hovered CAD entity object (null if none) */
-  const entity = ref<AcDbEntity | null>(null)
-  /** Object ID of the hovered entity */
-  const id = ref<AcDbObjectId | null>(null)
+  /** The hovered model item (null if none) */
+  const item = ref<ModelItem | null>(null)
+  /** Id of the hovered item */
+  const id = ref<string | null>(null)
   /** Current mouse coordinates during hover */
   const mouse = ref({ x: -1, y: -1 })
   /** Handler for CAD viewer hover events */
   const updateHoverEntity = (args: AcEdViewHoverEventArgs) => {
     const view = AcApDocManager.instance.curView
-    const ent = AcApDocManager.instance.curDocument.modelSync.entity(args.id)
-    if (ent) {
-      entity.value = ent
+    const hoveredItem = AcApDocManager.instance.curDocument.modelSync.item(
+      args.id
+    )
+    if (hoveredItem) {
+      item.value = hoveredItem
       id.value = args.id
       hovered.value = true
       const viewportPos = view.canvasToViewport({ x: args.x, y: args.y })
       mouse.value = { x: viewportPos.x, y: viewportPos.y }
     } else {
       hovered.value = false
-      entity.value = null
+      item.value = null
       id.value = null
     }
   }
@@ -100,7 +97,7 @@ export function useHover(): UseHoverResult {
   /** Clears hover state when the cursor leaves an entity */
   const clearHover = () => {
     hovered.value = false
-    entity.value = null
+    item.value = null
     id.value = null
   }
 
@@ -122,7 +119,7 @@ export function useHover(): UseHoverResult {
     hovered,
     // Local realdwg-web link can resolve two AcDbEntity identities across packages;
     // assert to the imported public type so vue-tsc can emit portable declarations.
-    entity: entity as UseHoverResult['entity'],
+    item: item as UseHoverResult['item'],
     id,
     mouse
   }

@@ -1,4 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
 import type { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
@@ -131,13 +130,9 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
    * empty extras without registering view listeners.
    *
    * @param view - Active 2D view for HTML overlays
-   * @param db - Database used to format the area label
    * @returns World-draw result including redraw/dispose hooks when valid
    */
-  protected subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
-  ): AcApMeasureWorldDrawResult {
+  protected drawMeasurement(view: AcTrView2d): AcApMeasureWorldDrawResult {
     if (this.points.length < 3) {
       const group = this.createGroup(view)
       return {
@@ -158,7 +153,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
       layer: MEASUREMENT_LAYER,
       layoutId
     })
-    const label = formatMeasurementArea(db, area)
+    const label = formatMeasurementArea(area)
     const importedTextHeight =
       this.textHeightWcs != null && this.textHeightWcs > 0
         ? this.textHeightWcs
@@ -233,7 +228,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
 
     const refreshLive = () => {
       area = measureShoelaceArea(live)
-      badge.setText(formatMeasurementArea(db, area))
+      badge.setText(formatMeasurementArea(area))
       acapPlaceOverlayHtml(view, badge, measureCentroid(live))
       paintArea(getMeasurementStyle(this.entityId) ?? this.style)
       view.isHtmlDirty = true
@@ -271,7 +266,7 @@ export class AcApMeasureAreaEntity extends AcApMeasureEntity {
             geometry
           }
       runMeasurementEdit(() => {
-        republishMeasurement(view, db, record)
+        republishMeasurement(view, record)
       })
     }
 

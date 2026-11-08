@@ -18,11 +18,7 @@ import { publishMemorySnapshot } from '../composable/useMemoryProfile'
 export class AcApMemCmd extends AcEdCommand {
   async execute(context: AcApContext) {
     const snapshot = await this.withBusyIndicator(
-      () =>
-        AcApMemoryProfiler.collect(
-          context.view as AcTrView2d,
-          context.doc.database
-        ),
+      () => AcApMemoryProfiler.collect(context.view as AcTrView2d),
       AcApI18n.t('main.message.collectingMemoryProfile')
     )
 

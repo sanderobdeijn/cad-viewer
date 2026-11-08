@@ -1,21 +1,18 @@
-import {
-  AcDbArc,
-  AcDbCircle,
-  AcDbEntity,
-  acdbHasOsnapMode,
-  AcDbLine,
-  acdbMaskToOsnapModes,
-  AcDbObjectId,
-  AcDbOsnapMode
-} from '@mlightcad/data-model'
-import {
-  GeometryBox3d,
-  GeometryMatrix3d,
-  GeometryPoint2d,
-  GeometryPoint2dLike
-} from '@mlightcad/geometry-engine'
+import { GeometryBox3d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApSettingManager } from '../../app/AcApSettingManager'
+import {
+  type AcApItemContents,
+  intersectItems,
+  itemExtents,
+  itemIntersectCurves,
+  itemOsnapPoints
+} from '../../model/AcApItemGeometry'
+import {
+  acapHasOsnapMode,
+  acapMaskToOsnapModes,
+  AcApOsnapMode
+} from '../../model/AcApOsnapMode'
 import { AcEdBaseView } from '../view/AcEdBaseView'
 import {
   AcEdSpatialQueryResultItemEx,
@@ -24,7 +21,7 @@ import {
 import {
   type AcEdOsnapCenterMark,
   centerMarksCoincide,
-  collectCenterMarksFromEntity,
+  collectCenterMarksFromItem,
   mergeAcquiredCenterMarks
 } from './AcEdOsnapCenterMarks'
 import { AcEdMarkerType } from './marker/AcEdMarker'
@@ -32,7 +29,7 @@ import { AcEdMarkerType } from './marker/AcEdMarker'
 export type { AcEdOsnapCenterMark } from './AcEdOsnapCenterMarks'
 
 export type AcEdOsnapPoint = GeometryPoint2dLike & {
-  type: AcDbOsnapMode
+  type: AcApOsnapMode
 }
 
 export interface AcEdOsnapResolveOptions {
@@ -67,9 +64,7 @@ const MAX_PRIMITIVES_PER_SOURCE = 32
 type IntersectionSource = {
   key: string
   box: GeometryBox3d
-  entity: AcDbEntity
-  /** Maps entity-local geometry into WCS. Identity for model-space entities. */
-  transform: GeometryMatrix3d
+  item: AcApItemContents
 }
 
 function boxesOverlapXY(a: GeometryBox3d, b: GeometryBox3d): boolean {
@@ -81,124 +76,15 @@ function boxesOverlapXY(a: GeometryBox3d, b: GeometryBox3d): boolean {
   )
 }
 
-function boxFromSpatialItem(item: {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-}): GeometryBox3d {
-  return new GeometryBox3d(
-    { x: item.minX, y: item.minY, z: -Infinity },
-    { x: item.maxX, y: item.maxY, z: Infinity }
-  )
-}
-
-function isIdentityTransform(matrix: GeometryMatrix3d): boolean {
-  return matrix.equals(GeometryMatrix3d.IDENTITY)
-}
-
 /**
- * Builds a disposable entity whose geometry is `entity` transformed by
- * `matrix`, without mutating database-resident entities.
- *
- * Returns the original entity when `matrix` is identity. Returns `undefined`
- * when the entity type cannot be safely copied for cross-transform INT.
+ * Whether an item has few enough curves to be tested for intersections on
+ * every cursor move.
  */
-function transformedEntityCopy(
-  entity: AcDbEntity,
-  matrix: GeometryMatrix3d
-): AcDbEntity | undefined {
-  if (isIdentityTransform(matrix)) return entity
-
-  if (entity instanceof AcDbLine) {
-    return new AcDbLine(
-      new GeometryPoint2d(entity.startPoint).applyMatrix4(matrix),
-      new GeometryPoint2d(entity.endPoint).applyMatrix4(matrix)
-    )
-  }
-
-  if (entity instanceof AcDbCircle) {
-    const scale = matrix.getMaxScaleOnAxis()
-    if (!(scale > 0) || !Number.isFinite(scale)) return undefined
-    return new AcDbCircle(
-      new GeometryPoint2d(entity.center).applyMatrix4(matrix),
-      entity.radius * scale
-    )
-  }
-
-  if (entity instanceof AcDbArc) {
-    const scale = matrix.getMaxScaleOnAxis()
-    if (!(scale > 0) || !Number.isFinite(scale)) return undefined
-    return new AcDbArc(
-      new GeometryPoint2d(entity.center).applyMatrix4(matrix),
-      entity.radius * scale,
-      entity.startAngle,
-      entity.endAngle,
-      entity.clockwise
-    )
-  }
-
-  return undefined
-}
-
-function isLightIntersectionEntity(entity: AcDbEntity): boolean {
-  const count = entity.subGetIntersectCurves().length
+function isLightIntersectionItem(item: AcApItemContents): boolean {
+  const count = itemIntersectCurves(item).length
   return count > 0 && count <= MAX_PRIMITIVES_PER_SOURCE
 }
 
-/**
- * Maps local intersect points through `frame` into WCS.
- */
-function mapIntersectPointsToWcs(
-  local: GeometryPoint2d[],
-  frame: GeometryMatrix3d
-): GeometryPoint2d[] {
-  if (isIdentityTransform(frame)) return local
-  return local.map(point =>
-    new GeometryPoint2d(point.x, point.y).applyMatrix4(frame)
-  )
-}
-
-/**
- * Intersects two osnap sources without mutating database entities.
- * Same-frame pairs use local `intersectWith` then map to WCS; cross-frame
- * pairs express one entity in the other's local space via a disposable copy.
- * Tries B→A first, then A→B, so order does not drop polyline partners
- * when the other side is a transformable Line/Circle/Arc.
- */
-function intersectSources(
-  a: IntersectionSource,
-  b: IntersectionSource
-): GeometryPoint2d[] {
-  if (a.transform.equals(b.transform)) {
-    return mapIntersectPointsToWcs(
-      a.entity.intersectWith(b.entity),
-      a.transform
-    )
-  }
-
-  const bToA = new GeometryMatrix3d().multiplyMatrices(
-    a.transform.clone().invert(),
-    b.transform
-  )
-  const bInA = transformedEntityCopy(b.entity, bToA)
-  if (bInA) {
-    return mapIntersectPointsToWcs(a.entity.intersectWith(bInA), a.transform)
-  }
-
-  const aToB = new GeometryMatrix3d().multiplyMatrices(
-    b.transform.clone().invert(),
-    a.transform
-  )
-  const aInB = transformedEntityCopy(a.entity, aToB)
-  if (!aInB) return []
-
-  return mapIntersectPointsToWcs(b.entity.intersectWith(aInB), b.transform)
-}
-
-/**
- * Resolves object snap points for a view during interactive input.
- */
 export class AcEdOsnapResolver {
   private readonly _view: AcEdBaseView
   private _acquiredCenters: AcEdOsnapCenterMark[] = []
@@ -229,7 +115,7 @@ export class AcEdOsnapResolver {
     marks: readonly AcEdOsnapCenterMark[],
     snap?: AcEdOsnapPoint
   ): AcEdOsnapCenterMark[] {
-    if (!snap || snap.type !== AcDbOsnapMode.Center) {
+    if (!snap || snap.type !== AcApOsnapMode.Center) {
       return marks as AcEdOsnapCenterMark[]
     }
     return marks.filter(mark => !centerMarksCoincide(mark, snap))
@@ -240,13 +126,11 @@ export class AcEdOsnapResolver {
    */
   resolve(options: AcEdOsnapResolveOptions): AcEdOsnapPoint | undefined {
     const hitRadiusPx = options.hitRadiusPx ?? DEFAULT_HIT_RADIUS_PX
-    const lastPoint = options.lastPoint ?? options.cursorWcs
     const p1 = this._view.screenToWorld({ x: 0, y: 0 })
     const p2 = this._view.screenToWorld({ x: hitRadiusPx, y: 0 })
     const threshold = Math.abs(p2.x - p1.x)
     const snapPoints = this.collectOsnapPoints(
       options.cursorWcs,
-      lastPoint,
       hitRadiusPx,
       threshold
     )
@@ -255,7 +139,7 @@ export class AcEdOsnapResolver {
       snapPoints.push({
         x: mark.x,
         y: mark.y,
-        type: AcDbOsnapMode.Center
+        type: AcApOsnapMode.Center
       })
     }
 
@@ -289,82 +173,53 @@ export class AcEdOsnapResolver {
   /**
    * Maps an osnap mode to the marker shape shown at the snap location.
    */
-  static osnapModeToMarkerType(osnapMode: AcDbOsnapMode): AcEdMarkerType {
+  static osnapModeToMarkerType(osnapMode: AcApOsnapMode): AcEdMarkerType {
     switch (osnapMode) {
-      case AcDbOsnapMode.EndPoint:
+      case AcApOsnapMode.EndPoint:
         return 'rect'
-      case AcDbOsnapMode.MidPoint:
+      case AcApOsnapMode.MidPoint:
         return 'triangle'
-      case AcDbOsnapMode.Center:
+      case AcApOsnapMode.Center:
         return 'circle'
-      case AcDbOsnapMode.Quadrant:
+      case AcApOsnapMode.Quadrant:
         return 'diamond'
-      case AcDbOsnapMode.Nearest:
+      case AcApOsnapMode.Nearest:
         return 'x'
-      case AcDbOsnapMode.Intersection:
+      case AcApOsnapMode.Intersection:
         return 'intersection'
       default:
         return 'rect'
     }
   }
 
-  private static osnapModePriority(mode: AcDbOsnapMode): number {
+  private static osnapModePriority(mode: AcApOsnapMode): number {
     switch (mode) {
-      case AcDbOsnapMode.EndPoint:
-      case AcDbOsnapMode.MidPoint:
-      case AcDbOsnapMode.Center:
-      case AcDbOsnapMode.Intersection:
+      case AcApOsnapMode.EndPoint:
+      case AcApOsnapMode.MidPoint:
+      case AcApOsnapMode.Center:
+      case AcApOsnapMode.Intersection:
         return 0
-      case AcDbOsnapMode.Quadrant:
+      case AcApOsnapMode.Quadrant:
         return 1
-      case AcDbOsnapMode.Nearest:
+      case AcApOsnapMode.Nearest:
         return 2
       default:
         return 1
     }
   }
 
-  private collectOsnapPointsByMode(
-    entity: AcDbEntity,
-    osnapMode: AcDbOsnapMode,
-    osnapPoints: AcEdOsnapPoint[],
-    pickPoint: GeometryPoint2dLike,
-    lastPoint: GeometryPoint2dLike,
-    gsMark?: AcDbObjectId
-  ) {
-    const start = osnapPoints.length
-    entity.subGetOsnapPoints(
-      osnapMode,
-      pickPoint,
-      lastPoint,
-      osnapPoints,
-      gsMark
-    )
-
-    for (let i = start; i < osnapPoints.length; i++) {
-      osnapPoints[i].type = osnapMode
-    }
-  }
-
   private collectOsnapPointsInAvailableModes(
-    entity: AcDbEntity,
+    item: AcApItemContents,
     osnapPoints: AcEdOsnapPoint[],
-    pickPoint: GeometryPoint2dLike,
-    lastPoint: GeometryPoint2dLike,
-    gsMark?: AcDbObjectId
+    pickPoint: GeometryPoint2dLike
   ) {
-    const modes = acdbMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
+    const modes = acapMaskToOsnapModes(AcApSettingManager.instance.osnapModes)
     modes.forEach(mode => {
-      // Intersection requires pairwise entity tests; see collectIntersectionOsnapPoints.
-      if (mode === AcDbOsnapMode.Intersection) return
-      this.collectOsnapPointsByMode(
-        entity,
-        mode,
-        osnapPoints,
-        pickPoint,
-        lastPoint,
-        gsMark
-      )
+      // Intersection requires pairwise item tests; see collectIntersectionOsnapPoints.
+      if (mode === AcApOsnapMode.Intersection) return
+      for (const point of itemOsnapPoints(item, mode, pickPoint)) {
+        osnapPoints.push({ x: point.x, y: point.y, type: mode })
+      }
     })
   }
 
@@ -381,40 +236,17 @@ export class AcEdOsnapResolver {
       if (sources.length >= MAX_INTERSECTION_SOURCES) return
       if (seenKeys.has(source.key)) return
       if (source.box.isEmpty()) return
-      if (!isLightIntersectionEntity(source.entity)) return
+      if (!isLightIntersectionItem(source.item)) return
       seenKeys.add(source.key)
       sources.push(source)
     }
 
-    for (const item of pickResults) {
+    for (const hit of pickResults) {
       if (sources.length >= MAX_INTERSECTION_SOURCES) break
-      if (!isEffectiveSpatialQueryHit(item)) continue
-      const entity = this._view.entityLookup(item.id)
-      if (!entity) continue
-
-      if (item.children && item.children.length > 0) {
-        // Hierarchical hits: only the aperture-hit children.
-        for (const child of item.children) {
-          if (sources.length >= MAX_INTERSECTION_SOURCES) break
-          // Keep the `#n` occurrence suffix so two instances of the same part
-          // do not collapse to one INT source (#745).
-          const key = `${item.id}:${child.id}`
-          tryAdd({
-            key,
-            box: boxFromSpatialItem(child),
-            entity,
-            transform: new GeometryMatrix3d()
-          })
-        }
-        continue
-      }
-
-      tryAdd({
-        key: item.id,
-        box: entity.geometricExtents,
-        entity,
-        transform: new GeometryMatrix3d()
-      })
+      if (!isEffectiveSpatialQueryHit(hit)) continue
+      const item = this._view.itemLookup(hit.id)
+      if (!item) continue
+      tryAdd({ key: hit.id, box: itemExtents(item), item })
     }
 
     if (sources.length < 2) return
@@ -430,7 +262,7 @@ export class AcEdOsnapResolver {
         if (!boxesOverlapXY(sources[i].box, sources[j].box)) continue
 
         pairTests++
-        const points = intersectSources(sources[i], sources[j])
+        const points = intersectItems(sources[i].item, sources[j].item)
         for (const point of points) {
           const dx = point.x - cursorWcs.x
           const dy = point.y - cursorWcs.y
@@ -438,7 +270,7 @@ export class AcEdOsnapResolver {
           osnapPoints.push({
             x: point.x,
             y: point.y,
-            type: AcDbOsnapMode.Intersection
+            type: AcApOsnapMode.Intersection
           })
         }
       }
@@ -447,45 +279,23 @@ export class AcEdOsnapResolver {
 
   private collectOsnapPoints(
     cursorWcs: GeometryPoint2dLike,
-    lastPoint: GeometryPoint2dLike,
     hitRadiusPx: number,
     threshold: number
   ): AcEdOsnapPoint[] {
     const results = this._view.pick(cursorWcs, hitRadiusPx)
     const osnapPoints: AcEdOsnapPoint[] = []
     const pickPoint = cursorWcs
-    const last = lastPoint
 
-    results.forEach(item => {
-      const entity = this._view.entityLookup(item.id)
-      if (!entity) return
-
-      const localPoints: AcEdOsnapPoint[] = []
-      if (item.children && item.children.length > 0) {
-        item.children.forEach(child => {
-          this.collectOsnapPointsInAvailableModes(
-            entity,
-            localPoints,
-            pickPoint,
-            last,
-            child.id
-          )
-        })
-      } else {
-        this.collectOsnapPointsInAvailableModes(
-          entity,
-          localPoints,
-          pickPoint,
-          last
-        )
-      }
-      osnapPoints.push(...localPoints)
+    results.forEach(hit => {
+      const item = this._view.itemLookup(hit.id)
+      if (!item) return
+      this.collectOsnapPointsInAvailableModes(item, osnapPoints, pickPoint)
     })
 
     if (
-      acdbHasOsnapMode(
+      acapHasOsnapMode(
         AcApSettingManager.instance.osnapModes,
-        AcDbOsnapMode.Intersection
+        AcApOsnapMode.Intersection
       )
     ) {
       this.collectIntersectionOsnapPoints(
@@ -506,9 +316,9 @@ export class AcEdOsnapResolver {
     pickPoint: GeometryPoint2dLike
   ) {
     if (
-      !acdbHasOsnapMode(
+      !acapHasOsnapMode(
         AcApSettingManager.instance.osnapModes,
-        AcDbOsnapMode.Center
+        AcApOsnapMode.Center
       )
     ) {
       this._acquiredCenters = []
@@ -516,21 +326,9 @@ export class AcEdOsnapResolver {
     }
 
     const hovered: AcEdOsnapCenterMark[] = []
-    results.forEach(item => {
-      const entity = this._view.entityLookup(item.id)
-      if (!entity) return
-
-      const localMarks: AcEdOsnapCenterMark[] = []
-      if (item.children && item.children.length > 0) {
-        item.children.forEach(child => {
-          localMarks.push(
-            ...collectCenterMarksFromEntity(entity, pickPoint, child.id)
-          )
-        })
-      } else {
-        localMarks.push(...collectCenterMarksFromEntity(entity, pickPoint))
-      }
-      hovered.push(...localMarks)
+    results.forEach(hit => {
+      const item = this._view.itemLookup(hit.id)
+      if (item) hovered.push(...collectCenterMarksFromItem(item, pickPoint))
     })
 
     this._acquiredCenters = mergeAcquiredCenterMarks(

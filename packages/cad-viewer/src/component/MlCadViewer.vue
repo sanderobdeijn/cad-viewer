@@ -32,7 +32,6 @@
   
   DEPENDENCIES:
   - @mlightcad/cad-simple-viewer: Core CAD functionality
-  - @mlightcad/data-model: File format support
   - Element Plus: UI components
   - Vue 3 Composition API
 -->
@@ -75,7 +74,7 @@ import {
   eventBus
 } from '@mlightcad/cad-simple-viewer'
 import { log } from '@mlightcad/common'
-import { ACDB_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/data-model'
+import { ACGI_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/graphic-interface'
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -152,8 +151,7 @@ interface Props {
   /**
    * Maximum segments used to tessellate a full circle when drawing.
    * Lower values save memory; higher values look smoother.
-   * When omitted, {@link ACDB_DRAW_CIRCLE_SIDES_DRAFT} (50) is used,
-   * matching the data-model default for {@link AcApOpenDatabaseOptions.circleSides}.
+   * When omitted, {@link ACGI_DRAW_CIRCLE_SIDES_DRAFT} (50) is used.
    */
   circleSides?: number
 }
@@ -165,11 +163,10 @@ const props = withDefaults(defineProps<Props>(), {
   useMainThreadDraw: true,
   theme: 'dark',
   progressiveRendering: false,
-  circleSides: ACDB_DRAW_CIRCLE_SIDES_DRAFT
+  circleSides: ACGI_DRAW_CIRCLE_SIDES_DRAFT
 })
 
 const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
-  minimumChunkSize: 1000,
   progressiveRendering: props.progressiveRendering,
   circleSides: props.circleSides
 })

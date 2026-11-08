@@ -16,7 +16,9 @@ describe('AcApMessageLink', () => {
   })
 
   it('escapes HTML special characters', () => {
-    expect(acapEscapeHtml(`a <b> & "c"`)).toBe('a &lt;b&gt; &amp; &quot;c&quot;')
+    expect(acapEscapeHtml('a <b> & "c"')).toBe(
+      'a &lt;b&gt; &amp; &quot;c&quot;'
+    )
   })
 
   it('builds a markdown link', () => {

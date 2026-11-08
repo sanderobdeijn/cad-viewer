@@ -311,7 +311,7 @@ describe('AcTrLayout bounding box', () => {
 describe('AcTrLayout spatial index', () => {
   function collectBoxSelectionIds(
     layout: AcTrLayout,
-    pickBox: import('@mlightcad/data-model').GeometryBox2d,
+    pickBox: import('@mlightcad/geometry-engine').GeometryBox2d,
     mode: 'window' | 'crossing'
   ) {
     const results = layout.search(pickBox, { selectionMode: mode })
@@ -353,7 +353,7 @@ describe('AcTrLayout spatial index', () => {
     const hits = layout.search({
       min: { x: -10, y: -72 },
       max: { x: 584, y: 410 }
-    } as unknown as import('@mlightcad/data-model').GeometryBox2d)
+    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d)
 
     expect(hits).toHaveLength(1)
     expect(hits[0].id).toBe('GROUP-1')
@@ -390,7 +390,7 @@ describe('AcTrLayout spatial index', () => {
     const pickBox = {
       min: { x: 0, y: 0 },
       max: { x: 100, y: 10 }
-    } as unknown as import('@mlightcad/data-model').GeometryBox2d
+    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d
 
     const hits = layout.search(pickBox)
     expect(hits).toHaveLength(1)
@@ -433,7 +433,7 @@ describe('AcTrLayout spatial index', () => {
     const pickBox = {
       min: { x: 400, y: 0 },
       max: { x: 500, y: 56 }
-    } as unknown as import('@mlightcad/data-model').GeometryBox2d
+    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d
 
     expect(collectBoxSelectionIds(layout, pickBox, 'crossing')).toEqual([
       'GROUP-cross'
@@ -468,7 +468,7 @@ describe('AcTrLayout spatial index', () => {
     const pickBox = {
       min: { x: 390, y: -5 },
       max: { x: 580, y: 60 }
-    } as unknown as import('@mlightcad/data-model').GeometryBox2d
+    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d
 
     expect(collectBoxSelectionIds(layout, pickBox, 'window')).toEqual([
       'GROUP-window'
@@ -489,7 +489,7 @@ describe('AcTrLayout spatial index', () => {
     const farPick = {
       min: { x: 101.5, y: 198.5 },
       max: { x: 102.5, y: 201.5 }
-    } as unknown as import('@mlightcad/data-model').GeometryBox2d
+    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d
     expect(layout.search(farPick).some(hit => hit.id === 'point-1')).toBe(false)
 
     mockCollectPointObjectWorldBoxes.mockImplementation(

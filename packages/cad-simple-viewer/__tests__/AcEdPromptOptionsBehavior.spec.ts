@@ -1,8 +1,8 @@
-import { AcEdPromptNumericalOptions } from '../src/editor/input/prompt/AcEdPromptNumericalOptions'
-import { AcEdPromptStringOptions } from '../src/editor/input/prompt/AcEdPromptStringOptions'
+import { AcEdPromptDistanceOptions } from '../src/editor/input/prompt/AcEdPromptDistanceOptions'
 import { AcEdPromptDoubleOptions } from '../src/editor/input/prompt/AcEdPromptDoubleOptions'
 import { AcEdPromptIntegerOptions } from '../src/editor/input/prompt/AcEdPromptIntegerOptions'
-import { AcEdPromptDistanceOptions } from '../src/editor/input/prompt/AcEdPromptDistanceOptions'
+import { AcEdPromptNumericalOptions } from '../src/editor/input/prompt/AcEdPromptNumericalOptions'
+import { AcEdPromptStringOptions } from '../src/editor/input/prompt/AcEdPromptStringOptions'
 import { AcEdFloatingInputBoxes } from '../src/editor/input/ui/AcEdFloatingInputBoxes'
 
 describe('FloatingInputBoxes Enter priority', () => {

@@ -16,7 +16,7 @@ export class AcApEraseCmd extends AcEdCommand {
     const ids = await resolveSelectedIds(context, 'erase')
     if (!ids) return
 
-    context.doc.entityService.eraseEntities(ids)
+    context.doc.entityService.eraseItems(ids)
     selectionSet.clear()
   }
 }

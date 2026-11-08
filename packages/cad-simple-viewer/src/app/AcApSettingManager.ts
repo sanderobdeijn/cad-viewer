@@ -1,5 +1,6 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { AcDbOsnapMode, acdbOsnapModesToMask } from '@mlightcad/data-model'
+
+import { AcApOsnapMode, acapOsnapModesToMask } from '../model/AcApOsnapMode'
 /**
  * Font mappings for CAD text rendering.
  *
@@ -186,13 +187,13 @@ const DEFAULT_VALUES: AcApSettings = {
   isShowShortCutToolbar: true,
   isShowStats: false,
   fontMapping: {},
-  osnapModes: acdbOsnapModesToMask([
-    AcDbOsnapMode.EndPoint,
-    AcDbOsnapMode.MidPoint,
-    AcDbOsnapMode.Center,
-    AcDbOsnapMode.Quadrant,
-    AcDbOsnapMode.Intersection,
-    AcDbOsnapMode.Nearest
+  osnapModes: acapOsnapModesToMask([
+    AcApOsnapMode.EndPoint,
+    AcApOsnapMode.MidPoint,
+    AcApOsnapMode.Center,
+    AcApOsnapMode.Quadrant,
+    AcApOsnapMode.Intersection,
+    AcApOsnapMode.Nearest
   ]),
   hideTouchPointTutorial: false,
   touchPointTutorialSnoozeDate: null,

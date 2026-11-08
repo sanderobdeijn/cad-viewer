@@ -1,46 +1,75 @@
-import { AcDbArc, AcDbCircle, AcDbPolyline } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
-  GeometryPoint2d
+  GeometryPoint2d,
+  type GeometryPoint2dLike,
+  GeometryPolyline2d
 } from '@mlightcad/geometry-engine'
 
+import type { AcApItemContents } from '../src/model/AcApItemGeometry'
+
+const circle = (
+  center: GeometryPoint2dLike,
+  radius: number
+): AcApItemContents => ({
+  kind: 'shape',
+  geometry: GeometryCircularArc2d.fromMathAngles(center, radius, 0, 0, false)
+})
+const arc = (
+  center: GeometryPoint2dLike,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  clockwise = false
+): AcApItemContents => ({
+  kind: 'shape',
+  geometry: GeometryCircularArc2d.fromMathAngles(
+    center,
+    radius,
+    startAngle,
+    endAngle,
+    clockwise
+  )
+})
+/** A polyline from vertices given as [x, y, bulge]. */
+const polylineOf = (
+  ...vertices: [number, number, number?][]
+): AcApItemContents => ({
+  kind: 'shape',
+  geometry: new GeometryPolyline2d(
+    vertices.map(([x, y, bulge]) => ({ x, y, bulge: bulge ?? 0 })),
+    false
+  )
+})
+
 import {
-  lockCurvesFromEntity,
-  pickLockOnEntities,
+  lockCurvesFromItem,
+  pickLockOnItems,
   pointLiesOnCircle
 } from '../src/command/measure/AcApMeasureArcLock'
 
-describe('lockCurvesFromEntity', () => {
-  it('returns a full circle for AcDbCircle', () => {
-    const curves = lockCurvesFromEntity(
-      new AcDbCircle(new GeometryPoint2d(0, 0), 10)
-    )
+describe('lockCurvesFromItem', () => {
+  it('returns a full circle for a circle', () => {
+    const curves = lockCurvesFromItem(circle({ x: 0, y: 0 }, 10))
     expect(curves).toHaveLength(1)
     expect(curves[0]!.center.x).toBeCloseTo(0)
     expect(curves[0]!.center.y).toBeCloseTo(0)
     expect(curves[0]!.radius).toBeCloseTo(10)
   })
 
-  it('returns the drawn sweep for AcDbArc, not the complementary gap', () => {
-    const curves = lockCurvesFromEntity(
-      new AcDbArc(new GeometryPoint2d(0, 0), 10, 0, Math.PI / 2)
-    )
+  it('returns the drawn sweep for an arc, not the complementary gap', () => {
+    const curves = lockCurvesFromItem(arc({ x: 0, y: 0 }, 10, 0, Math.PI / 2))
     expect(curves).toHaveLength(1)
     expect(curves[0]!.radius).toBeCloseTo(10)
   })
 
   it('ignores straight polyline chords', () => {
-    const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 0)
-    polyline.addVertexAt(1, new GeometryPoint2d(40, 0), 0)
-    expect(lockCurvesFromEntity(polyline)).toHaveLength(0)
+    const polyline = polylineOf([0, 0, 0], [40, 0, 0])
+    expect(lockCurvesFromItem(polyline)).toHaveLength(0)
   })
 
   it('returns a bulge segment from a polyline', () => {
-    const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new GeometryPoint2d(10, 0), Math.tan(Math.PI / 8))
-    polyline.addVertexAt(1, new GeometryPoint2d(0, 10), 0)
-    const curves = lockCurvesFromEntity(polyline)
+    const polyline = polylineOf([10, 0, Math.tan(Math.PI / 8)], [0, 10, 0])
+    const curves = lockCurvesFromItem(polyline)
     expect(curves).toHaveLength(1)
     expect(curves[0]!.center.x).toBeCloseTo(0, 5)
     expect(curves[0]!.center.y).toBeCloseTo(0, 5)
@@ -48,12 +77,12 @@ describe('lockCurvesFromEntity', () => {
   })
 })
 
-describe('pickLockOnEntities', () => {
-  const quarterArc = new AcDbArc(new GeometryPoint2d(0, 0), 10, 0, Math.PI / 2)
+describe('pickLockOnItems', () => {
+  const quarterArc = arc({ x: 0, y: 0 }, 10, 0, Math.PI / 2)
 
   it('locks onto a circle circumference', () => {
-    const hit = pickLockOnEntities(
-      [new AcDbCircle(new GeometryPoint2d(0, 0), 10)],
+    const hit = pickLockOnItems(
+      [circle({ x: 0, y: 0 }, 10)],
       { x: 10.2, y: 0 },
       1
     )
@@ -61,53 +90,55 @@ describe('pickLockOnEntities', () => {
   })
 
   it('locks onto the drawn arc, not the complementary sweep', () => {
-    const hit = pickLockOnEntities([quarterArc], { x: 7.071, y: 7.071 }, 1)
+    const hit = pickLockOnItems([quarterArc], { x: 7.071, y: 7.071 }, 1)
     expect(hit?.geom.cx).toBeCloseTo(0)
     expect(hit?.geom.cy).toBeCloseTo(0)
     expect(hit?.geom.r).toBeCloseTo(10)
-    expect(
-      pickLockOnEntities([quarterArc], { x: -10, y: 0 }, 1)
-    ).toBeUndefined()
+    expect(pickLockOnItems([quarterArc], { x: -10, y: 0 }, 1)).toBeUndefined()
   })
 
   it('keeps nearest on the drawn stroke when a pick would project onto the complementary arc', () => {
-    const hit = pickLockOnEntities([quarterArc], { x: 9, y: -1 }, 2)
+    const hit = pickLockOnItems([quarterArc], { x: 9, y: -1 }, 2)
     expect(hit).toBeDefined()
     expect(hit!.nearest.y).toBeGreaterThanOrEqual(0)
     expect(hit!.nearest.x).toBeCloseTo(10, 1)
   })
 
   it('locks onto the drawn sweep of a clockwise arc', () => {
-    const arc = new AcDbArc({ x: 0, y: 0 }, 10, Math.PI, Math.PI / 2, true)
+    const clockwiseArc = arc({ x: 0, y: 0 }, 10, Math.PI, Math.PI / 2, true)
     // Drawn stroke is Q2: (-10, 0) → (0, 10) through (−√2/2, √2/2).
-    const hit = pickLockOnEntities([arc], { x: -7.071, y: 7.071 }, 1)
+    const hit = pickLockOnItems([clockwiseArc], { x: -7.071, y: 7.071 }, 1)
     expect(hit?.geom.cx).toBeCloseTo(0)
     expect(hit?.geom.cy).toBeCloseTo(0)
     expect(hit?.geom.r).toBeCloseTo(10)
-    expect(pickLockOnEntities([arc], { x: 7.071, y: 7.071 }, 1)).toBeUndefined()
+    expect(
+      pickLockOnItems([clockwiseArc], { x: 7.071, y: 7.071 }, 1)
+    ).toBeUndefined()
   })
 
   it('locks onto a polyline bulge and ignores a far straight chord', () => {
-    const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new GeometryPoint2d(10, 0), Math.tan(Math.PI / 8))
-    polyline.addVertexAt(1, new GeometryPoint2d(0, 10), 0)
-    polyline.addVertexAt(2, new GeometryPoint2d(80, 10), 0)
+    const polyline = polylineOf(
+      [10, 0, Math.tan(Math.PI / 8)],
+      [0, 10, 0],
+      [80, 10, 0]
+    )
 
     expect(
-      pickLockOnEntities([polyline], { x: 7.071, y: 7.071 }, 1)?.geom
+      pickLockOnItems([polyline], { x: 7.071, y: 7.071 }, 1)?.geom
     ).toMatchObject({
       cx: expect.closeTo(0, 5),
       cy: expect.closeTo(0, 5),
       r: expect.closeTo(10, 5)
     })
-    expect(pickLockOnEntities([polyline], { x: 50, y: 10 }, 1)).toBeUndefined()
+    expect(pickLockOnItems([polyline], { x: 50, y: 10 }, 1)).toBeUndefined()
   })
 
   it('at a shared bulge vertex, locks the arc the cursor is closer to', () => {
-    const polyline = new AcDbPolyline()
-    polyline.addVertexAt(0, new GeometryPoint2d(0, 0), -Math.tan(Math.PI / 16))
-    polyline.addVertexAt(1, new GeometryPoint2d(40, 0), 1)
-    polyline.addVertexAt(2, new GeometryPoint2d(50, 0))
+    const polyline = polylineOf(
+      [0, 0, -Math.tan(Math.PI / 16)],
+      [40, 0, 1],
+      [50, 0]
+    )
 
     const first = new GeometryCircularArc2d(
       { x: 0, y: 0 },
@@ -138,15 +169,16 @@ describe('pickLockOnEntities', () => {
     }
 
     expect(
-      pickLockOnEntities([polyline], toward(first, false, 0.05), 2)?.geom.r
+      pickLockOnItems([polyline], toward(first, false, 0.05), 2)?.geom.r
     ).toBeCloseTo(first.radius, 5)
     expect(
-      pickLockOnEntities([polyline], toward(second, true, 0.05), 2)?.geom.r
+      pickLockOnItems([polyline], toward(second, true, 0.05), 2)?.geom.r
     ).toBeCloseTo(second.radius, 5)
     // Exact vertex: distances tie; do not let the later segment win.
-    expect(
-      pickLockOnEntities([polyline], { x: 40, y: 0 }, 2)?.geom.r
-    ).toBeCloseTo(first.radius, 5)
+    expect(pickLockOnItems([polyline], { x: 40, y: 0 }, 2)?.geom.r).toBeCloseTo(
+      first.radius,
+      5
+    )
     expect(
       pointLiesOnCircle(
         { x: 40, y: 0 },

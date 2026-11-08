@@ -1,4 +1,3 @@
-import type { AcDbDatabase } from '@mlightcad/data-model'
 import type { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import { type AcTrHtmlElement, AcTrHtmlGroup } from '@mlightcad/three-renderer'
 
@@ -79,8 +78,8 @@ export interface AcApMeasureWorldDrawResult extends AcApOverlayWorldDrawResult {
  *
  * Not an HTML leaf — composes {@link AcTrHtmlGroup} and canvas / badge / dot
  * children. Subclasses implement {@link toRecord} and
- * {@link subWorldDrawWithDb}; callers should use {@link commit} rather than
- * the generic overlay `worldDraw` path because unit labels need the database.
+ * {@link drawMeasurement}; callers should use {@link commit} rather than
+ * the generic overlay `worldDraw` path.
  *
  * Implements {@link AcApOverlaySerializable} via {@link toRecord}. Rehydrate
  * with {@link import('./AcApMeasureEntityFactory').createMeasureEntityFromRecord}.
@@ -181,15 +180,14 @@ export abstract class AcApMeasureEntity
   /**
    * Builds visuals and commits them to the measurement store / HTML manager.
    *
-   * Calls {@link subWorldDrawWithDb}, then {@link commitMeasurementGroup}
+   * Calls {@link drawMeasurement}, then {@link commitMeasurementGroup}
    * with the resulting group and extras. Uses {@link AcApOverlayWorldDrawResult.dispose}
    * as the store's dispose hook so entity cleanup cannot be dropped.
    *
    * @param view - Active 2D view hosting HTML overlays and CAD transients
-   * @param db - Drawing database used for unit/format labels
    */
-  commit(view: AcTrView2d, db: AcDbDatabase): void {
-    const drawn = this.subWorldDrawWithDb(view, db)
+  commit(view: AcTrView2d): void {
+    const drawn = this.drawMeasurement(view)
     commitMeasurementGroup(view, drawn.group, {
       ...drawn.extras,
       dispose: drawn.dispose
@@ -201,7 +199,7 @@ export abstract class AcApMeasureEntity
   /**
    * Overlay `worldDraw` hook — not supported for measurements.
    *
-   * Prefer {@link commit}; measure draw needs the database for unit labels.
+   * Use {@link commit}, which also publishes the measurement.
    *
    * @param view - Active 2D view (unused)
    * @returns Never returns; always throws
@@ -209,21 +207,17 @@ export abstract class AcApMeasureEntity
    */
   protected subWorldDraw(view: AcTrView2d): AcApOverlayWorldDrawResult {
     void view
-    throw new Error(
-      'Use AcApMeasureEntity.commit(view, db) instead of worldDraw'
-    )
+    throw new Error('Use AcApMeasureEntity.commit(view) instead of worldDraw')
   }
 
   /**
    * Builds the HTML group, CAD transients, and store extras for this measure.
    *
    * @param view - Active 2D view
-   * @param db - Drawing database for formatting measured values
    * @returns World-draw result including commit extras
    */
-  protected abstract subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
+  protected abstract drawMeasurement(
+    view: AcTrView2d
   ): AcApMeasureWorldDrawResult
 
   /**

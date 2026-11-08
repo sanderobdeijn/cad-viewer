@@ -371,22 +371,17 @@ export default {
       materialLine: 'Line',
       materialFill: 'Fill',
       materialTotal: 'Total',
-      dataModelCounts: '{entities} entities · {objects} objects · {total}',
-      dataModelCategories: 'By category',
-      dataModelEntityTypes: 'By entity type',
       categories: {
         heap: 'JS Heap',
         geometry: 'Geometry',
         mapping: 'Mapping',
         spatial: 'Spatial Index',
-        dataModel: 'Data Model',
         materials: 'Materials',
         fonts: 'Fonts'
       },
       tabs: {
         geometry: 'Geometry',
         spatial: 'Spatial',
-        dataModel: 'Data Model',
         materials: 'Materials',
         fonts: 'Fonts'
       },
@@ -414,10 +409,6 @@ export default {
     colorIndex: 'Color Index: ',
     inputPlaceholder: '0-256, BYLAYER, BYBLOCK',
     rgb: 'RGB: '
-  },
-  entityInfo: {
-    color: 'Color',
-    lineType: 'Linetype'
   },
   ribbonProperty: {
     color: 'Color',

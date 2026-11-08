@@ -69,7 +69,6 @@ Firstly, add the following dependencies into your package.json.
 - @element-plus/icons-vue
 - @mlightcad/cad-simple-viewer
 - @mlightcad/cad-viewer
-- @mlightcad/data-model
 - @vueuse/core
 - element-plus
 - vue

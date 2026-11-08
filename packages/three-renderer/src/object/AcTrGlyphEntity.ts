@@ -69,13 +69,9 @@ export abstract class AcTrGlyphEntity extends AcTrEntity {
     super(context)
     this._style = style
     this._entityTraits = AcTrMTextColorUtil.snapshotEntityTraits(traits)
-    const layerColor = traits.layer
-      ? context.database?.tables.layerTable.getAt(traits.layer)?.color
-      : undefined
     this._colorSettings = AcTrMTextColorUtil.buildColorSettingsFromTraits(
       traits,
-      context.styleManager.currentBackgroundColor,
-      layerColor
+      context.styleManager.currentBackgroundColor
     )
   }
 

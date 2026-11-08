@@ -1,9 +1,10 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { scaleCopyDisplacement } from '../../editor/input/AcEdBatchPreview'
 import { AcEdSelectionTransformPreviewJig } from '../../editor/input/AcEdSelectionPreviewJig'
@@ -22,7 +23,7 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<Geometr
 
   constructor(
     view: AcEdBaseView,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2dLike,
     copyCount = 1,
     fitMode = false
@@ -58,7 +59,7 @@ export class AcApCopyPreviewJig extends AcEdSelectionTransformPreviewJig<Geometr
     const targets =
       this.previewEntries.length > 0
         ? this.previewEntries
-        : [{ entity: { objectId: '' } as AcDbEntity, copyFactor: 1 }]
+        : [{ entity: { objectId: '' } as AcGiDrawable, copyFactor: 1 }]
     return targets.map(entry => {
       const scaled = scaleCopyDisplacement(
         displacement,

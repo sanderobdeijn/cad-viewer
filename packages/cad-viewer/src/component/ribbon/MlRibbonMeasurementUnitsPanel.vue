@@ -49,7 +49,9 @@
     </el-form-item>
   </el-form>
   <div v-else class="ml-ribbon-measure-unit-field">
-    <span class="ml-ribbon-measure-unit-field__label">{{ activeFieldLabel }}</span>
+    <span class="ml-ribbon-measure-unit-field__label">{{
+      activeFieldLabel
+    }}</span>
     <el-select
       :model-value="activeFieldValue"
       size="small"
@@ -67,8 +69,12 @@
 </template>
 
 <script setup lang="ts">
-import { MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING } from '@mlightcad/cad-simple-viewer'
-import { AcDbAngleUnits, AcDbLinearUnits, AcDbUnitsValue } from '@mlightcad/data-model'
+import {
+  AcApAngleUnits,
+  AcApLinearUnits,
+  AcApUnitsValue,
+  MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
+} from '@mlightcad/cad-simple-viewer'
 import { ElForm, ElFormItem, ElOption, ElSelect } from 'element-plus'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -124,49 +130,49 @@ const unitOptions = computed(() =>
   isLength.value
     ? [
         {
-          value: AcDbLinearUnits.Scientific,
+          value: AcApLinearUnits.Scientific,
           label: t('dialog.drawingUnitsDlg.linear.scientific')
         },
         {
-          value: AcDbLinearUnits.Decimal,
+          value: AcApLinearUnits.Decimal,
           label: t('dialog.drawingUnitsDlg.linear.decimal')
         },
         {
-          value: AcDbLinearUnits.Engineering,
+          value: AcApLinearUnits.Engineering,
           label: t('dialog.drawingUnitsDlg.linear.engineering')
         },
         {
-          value: AcDbLinearUnits.Architectural,
+          value: AcApLinearUnits.Architectural,
           label: t('dialog.drawingUnitsDlg.linear.architectural')
         },
         {
-          value: AcDbLinearUnits.Fractional,
+          value: AcApLinearUnits.Fractional,
           label: t('dialog.drawingUnitsDlg.linear.fractional')
         },
         {
-          value: AcDbLinearUnits.WindowsDesktop,
+          value: AcApLinearUnits.WindowsDesktop,
           label: t('dialog.drawingUnitsDlg.linear.windowsDesktop')
         }
       ]
     : [
         {
-          value: AcDbAngleUnits.DecimalDegrees,
+          value: AcApAngleUnits.DecimalDegrees,
           label: t('dialog.drawingUnitsDlg.angle.decimalDegrees')
         },
         {
-          value: AcDbAngleUnits.DegreesMinutesSeconds,
+          value: AcApAngleUnits.DegreesMinutesSeconds,
           label: t('dialog.drawingUnitsDlg.angle.dms')
         },
         {
-          value: AcDbAngleUnits.Gradians,
+          value: AcApAngleUnits.Gradians,
           label: t('dialog.drawingUnitsDlg.angle.gradians')
         },
         {
-          value: AcDbAngleUnits.Radians,
+          value: AcApAngleUnits.Radians,
           label: t('dialog.drawingUnitsDlg.angle.radians')
         },
         {
-          value: AcDbAngleUnits.SurveyorsUnits,
+          value: AcApAngleUnits.SurveyorsUnits,
           label: t('dialog.drawingUnitsDlg.angle.surveyors')
         }
       ]
@@ -182,31 +188,31 @@ const lengthUnitOptions = computed(() => [
     label: t('dialog.drawingUnitsDlg.lengthUnitFollowDrawing')
   },
   {
-    value: AcDbUnitsValue.Millimeters,
+    value: AcApUnitsValue.Millimeters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._4')} (mm)`
   },
   {
-    value: AcDbUnitsValue.Centimeters,
+    value: AcApUnitsValue.Centimeters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._5')} (cm)`
   },
   {
-    value: AcDbUnitsValue.Meters,
+    value: AcApUnitsValue.Meters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._6')} (m)`
   },
   {
-    value: AcDbUnitsValue.Kilometers,
+    value: AcApUnitsValue.Kilometers,
     label: `${t('dialog.drawingUnitsDlg.insUnits._7')} (km)`
   },
   {
-    value: AcDbUnitsValue.Inches,
+    value: AcApUnitsValue.Inches,
     label: `${t('dialog.drawingUnitsDlg.insUnits._1')} (in)`
   },
   {
-    value: AcDbUnitsValue.Feet,
+    value: AcApUnitsValue.Feet,
     label: `${t('dialog.drawingUnitsDlg.insUnits._2')} (ft)`
   },
   {
-    value: AcDbUnitsValue.Yards,
+    value: AcApUnitsValue.Yards,
     label: `${t('dialog.drawingUnitsDlg.insUnits._10')} (yd)`
   }
 ])

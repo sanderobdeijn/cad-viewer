@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { AcGiSubEntityTraits } from '@mlightcad/graphic-interface'
 import {
   AcTrBatchedGroup,
@@ -320,21 +319,21 @@ export class AcTrLayer {
    * @returns Return true if this layer contains the entity with the specified object id. Otherwise,
    * return false.
    */
-  hasEntity(objectId: AcDbObjectId) {
+  hasEntity(objectId: string) {
     return this._group.hasEntity(objectId)
   }
 
   /**
    * Updates visibility for one entity without rebuilding batched geometry.
    */
-  setEntityVisible(objectId: AcDbObjectId, visible: boolean) {
+  setEntityVisible(objectId: string, visible: boolean) {
     return this._group.setEntityVisible(objectId, visible)
   }
 
   /**
    * Returns the current scene visibility for one entity.
    */
-  getEntityVisible(objectId: AcDbObjectId) {
+  getEntityVisible(objectId: string) {
     return this._group.getEntityVisible(objectId)
   }
 
@@ -345,10 +344,7 @@ export class AcTrLayer {
    * @param options - Optional preview style, slot limits, and missing-entity policy
    * @returns Preview subset group, or `null` when extraction failed
    */
-  createPreviewSubset(
-    entityIds: AcDbObjectId[],
-    options?: AcTrPreviewSubsetOptions
-  ) {
+  createPreviewSubset(entityIds: string[], options?: AcTrPreviewSubsetOptions) {
     return this._group.createPreviewSubset(entityIds, options)
   }
 
@@ -424,7 +420,7 @@ export class AcTrLayer {
    * @param objectId Input the object id of the entity to remove
    * @returns Return true if remove the specified entity successfully. Otherwise, return false.
    */
-  removeEntity(objectId: AcDbObjectId): boolean {
+  removeEntity(objectId: string): boolean {
     const removed = this._group.removeEntity(objectId)
     if (removed) {
       this._boxDirty = true
@@ -468,7 +464,7 @@ export class AcTrLayer {
   /**
    * Hover the specified entities
    */
-  hover(ids: AcDbObjectId[]) {
+  hover(ids: string[]) {
     if (ids.length === 0) {
       return
     }
@@ -482,7 +478,7 @@ export class AcTrLayer {
   /**
    * Unhover the specified entities
    */
-  unhover(ids: AcDbObjectId[]) {
+  unhover(ids: string[]) {
     if (ids.length === 0) {
       return
     }
@@ -496,7 +492,7 @@ export class AcTrLayer {
   /**
    * Select the specified entities
    */
-  select(ids: AcDbObjectId[]) {
+  select(ids: string[]) {
     if (ids.length === 0) {
       return
     }
@@ -510,7 +506,7 @@ export class AcTrLayer {
   /**
    * Unselect the specified entities
    */
-  unselect(ids: AcDbObjectId[]) {
+  unselect(ids: string[]) {
     if (ids.length === 0) {
       return
     }

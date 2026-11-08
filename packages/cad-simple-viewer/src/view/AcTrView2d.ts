@@ -1,20 +1,15 @@
 import { AcCmUiYieldGate, log } from '@mlightcad/common'
 import {
-  AcDbDatabase,
-  AcDbEntity,
-  AcDbLayerTableRecord,
-  AcDbLayerTableRecordAttrs,
-  AcDbLayout,
-  AcDbObjectId
-} from '@mlightcad/data-model'
-import {
   GeometryBox2d,
   GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
-import { acgiForegroundColorForBackground } from '@mlightcad/graphic-interface'
+import {
+  type AcGiDrawable,
+  acgiForegroundColorForBackground
+} from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import {
   AcTrEntity,
@@ -59,16 +54,18 @@ import {
 } from '../editor/global/AcEdUiColor'
 import { ML_UI_Z_CANVAS_HTML_OVERLAY } from '../editor/global/AcEdUiLayout'
 import {
-  acedEntityIntersectsSelectionBox,
+  acedItemIntersectsSelectionBox,
   acedNeedsCrossingGeometryRefine
 } from '../editor/view/AcEdSelectionBoxIntersect'
 import { isEffectiveSpatialQueryHit } from '../editor/view/AcEdSpatialQueryResult'
+import { ACAP_DIMENSION_TEXT_STYLE } from '../model/AcApDimensionGeometry'
+import {
+  ACAP_DEFAULT_LAYER,
+  ACAP_MODEL_SPACE_ID
+} from '../model/AcApItemDrawable'
 import type { AcTrSpatialSearchOptions } from '../spatialIndex/AcTrSpatialIndex'
 import { AcTrGeometryUtil } from '../util'
-import {
-  collectTextStyleFontNames,
-  planTextStyleFontPreload
-} from '../util/AcApTextStyleFontPreload'
+import { planTextStyleFontPreload } from '../util/AcApTextStyleFontPreload'
 import {
   trySelectReviewOverlay,
   trySelectReviewOverlaysByBox
@@ -84,7 +81,6 @@ import { tryBuildDirectEntityMeta } from './AcTrDirectBatch'
 import { AcTrEntityDisplayController } from './AcTrEntityDisplayController'
 import { unionGroupWcsChildBoxes } from './AcTrGroupWcsBboxAssert'
 import { computeIntelligentExtentsAsync } from './AcTrIntelligentExtents'
-import { AcTrLayer } from './AcTrLayer'
 import { AcTrLayerAppearanceController } from './AcTrLayerAppearanceController'
 import { AcTrLayoutView } from './AcTrLayoutView'
 import { AcTrLayoutViewManager } from './AcTrLayoutViewManager'
@@ -177,7 +173,7 @@ export class AcTrView2d extends AcEdBaseView {
    * `AcTrLayout.isLoaded` to `true`, which would otherwise duplicate
    * entities when the same layout tab is clicked twice in quick succession.
    */
-  private _loadingLayouts: Set<AcDbObjectId> = new Set()
+  private _loadingLayouts: Set<string> = new Set()
   /**
    * Block table record ids of layouts that have already received an
    * initial zoom-to-fit. Used by the `layoutSwitched` handler to apply
@@ -199,7 +195,7 @@ export class AcTrView2d extends AcEdBaseView {
    *  - `layoutSwitched` handler: after the first user-driven switch
    *    completes its initial zoom-to-fit.
    */
-  private _initializedLayouts: Set<AcDbObjectId> = new Set()
+  private _initializedLayouts: Set<string> = new Set()
   /**
    * Layouts already framed by `AcApDocManager.onAfterOpenDocument` before a
    * first-visit async zoom runs. Suppresses redundant `applyInitialZoom` /
@@ -207,7 +203,7 @@ export class AcTrView2d extends AcEdBaseView {
    * application layer's initial camera when startup and layout-switch events
    * race during document open.
    */
-  private _externallyFramedLayouts: Set<AcDbObjectId> = new Set()
+  private _externallyFramedLayouts: Set<string> = new Set()
   /** Progressive camera framing while entities batch-convert at document open. */
   private readonly _progressiveOpenFit: AcTrProgressiveOpenFitController
   /** Entity display policy for layer-aware conversion skipping. */
@@ -223,7 +219,6 @@ export class AcTrView2d extends AcEdBaseView {
    * pending entities. `hasEntity` prevents duplicate scene entries, but not the
    * wasted conversion work — this set skips re-entry until the current pass ends.
    */
-  private readonly _convertingLayers = new Set<string>()
   /**
    * Object ids claimed by an in-flight interactive {@link batchConvert},
    * including deferred glyph commits that have not yet called
@@ -260,7 +255,7 @@ export class AcTrView2d extends AcEdBaseView {
    * convert overlaps ENTITY flush instead of waiting for a post-open
    * `setTimeout` storm after the loading overlay hides.
    */
-  private _convertQueue: AcDbEntity[] = []
+  private _convertQueue: AcGiDrawable[] = []
   /** In-flight progressive convert drain; shared so awaiters wait for the queue. */
   private _convertDrainPromise: Promise<void> | null = null
   /**
@@ -324,7 +319,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   private _textStyleFontPreloadEpoch = -1
   /**
-   * In-flight (or resolved) preload of {@link AcDbTextStyleTable.fonts}.
+   * In-flight (or resolved) preload of the text style fonts.
    * Started at conversion stage `STYLE` END so download overlaps LAYER/BLOCK/
    * ENTITY parse and linework convert; glyph jobs await this before draw.
    */
@@ -864,7 +859,7 @@ export class AcTrView2d extends AcEdBaseView {
       }
     )
     this._entityDisplay = new AcTrEntityDisplayController(layerName =>
-      this.resolveLayerInfo(layerName)
+      layerName === ACAP_DEFAULT_LAYER.name ? ACAP_DEFAULT_LAYER : undefined
     )
     this.initialize()
     this.onWindowResize()
@@ -1219,33 +1214,7 @@ export class AcTrView2d extends AcEdBaseView {
   get missedData() {
     return {
       fonts: this._renderer.missedFonts,
-      xrefs: this.collectUnresolvedXrefs()
-    }
-  }
-
-  private collectUnresolvedXrefs() {
-    try {
-      const db = AcApDocManager.instance?.curDocument?.database
-      if (!db) return []
-      // Available once @mlightcad/data-model exports getUnresolvedXrefs on the
-      // block table (realdwg-web). Soft-detect so older package versions still run.
-      const blockTable = db.tables.blockTable as {
-        getUnresolvedXrefs?: () => Array<{
-          name: string
-          pathName: string
-          isOverlayReference: boolean
-        }>
-      }
-      if (typeof blockTable.getUnresolvedXrefs !== 'function') {
-        return []
-      }
-      return blockTable.getUnresolvedXrefs().map(btr => ({
-        name: btr.name,
-        pathName: btr.pathName,
-        isOverlay: btr.isOverlayReference
-      }))
-    } catch {
-      return []
+      xrefs: []
     }
   }
 
@@ -1320,31 +1289,13 @@ export class AcTrView2d extends AcEdBaseView {
    * tracking attached for subsequent switches.
    */
   private resyncForegroundLayersForBackground() {
-    const database = this._renderer.context.database
-    if (!database) return
-    for (const layer of database.tables.layerTable.newIterator()) {
-      if (layer.color?.isForeground) {
-        this._layerAppearance.syncFromLiveRecord(layer)
-      }
-    }
+    this._layerAppearance.syncFromLiveRecord(ACAP_DEFAULT_LAYER.name)
   }
 
   /**
-   * Binds the active drawing database on the renderer draw context.
-   *
-   * Called before document read so layer-table traits are available while layers
-   * are appended during open, and again after open to refresh display sysvars.
+   * Applies the background setting. Called after a document is opened.
    */
-  bindDrawDatabase(database: AcDbDatabase | undefined): void {
-    this._renderer.context.database = database
-  }
-
-  /**
-   * Binds the database and applies the background setting of its space.
-   * Called after a document is opened.
-   */
-  syncDisplaySysVars(database: AcDbDatabase) {
-    this.bindDrawDatabase(database)
+  syncDisplaySettings() {
     this.applyCanvasBackground(readBackgroundColor())
   }
 
@@ -1354,7 +1305,7 @@ export class AcTrView2d extends AcEdBaseView {
   get modelSpaceBtrId() {
     return this._scene.modelSpaceBtrId
   }
-  set modelSpaceBtrId(value: AcDbObjectId) {
+  set modelSpaceBtrId(value: string) {
     this._scene.modelSpaceBtrId = value
   }
 
@@ -1512,7 +1463,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  zoomToFitDrawing(timeout: number = 0, layoutBtrId?: AcDbObjectId) {
+  zoomToFitDrawing(timeout: number = 0, layoutBtrId?: string) {
     const waiter = new AcEdConditionWaiter(
       // Include deferred glyph/group jobs so text extents land before final fit.
       () => !this.isProcessingEntities,
@@ -1652,7 +1603,7 @@ export class AcTrView2d extends AcEdBaseView {
    * @inheritdoc
    */
   select(point?: GeometryPoint2dLike) {
-    const idsAdded: Array<AcDbObjectId> = []
+    const idsAdded: Array<string> = []
     const results = this.pick(point)
     results.forEach(item => idsAdded.push(item.id))
     if (idsAdded.length > 0) this.selectionSet.add(idsAdded)
@@ -1675,13 +1626,13 @@ export class AcTrView2d extends AcEdBaseView {
   protected override refineCrossingSelectionHits(
     box: GeometryBox2d,
     results: AcEdSpatialQueryResultItemEx[]
-  ): AcDbObjectId[] {
+  ): string[] {
     const sync = AcApDocManager.instance.curDocument?.modelSync
     if (!sync) {
       return results.map(item => item.id)
     }
 
-    const ids: AcDbObjectId[] = []
+    const ids: string[] = []
     for (const item of results) {
       if (!acedNeedsCrossingGeometryRefine(item)) {
         ids.push(item.id)
@@ -1697,8 +1648,8 @@ export class AcTrView2d extends AcEdBaseView {
         continue
       }
 
-      const entity = sync.entity(item.id)
-      if (!entity || acedEntityIntersectsSelectionBox(entity, box)) {
+      const modelItem = sync.item(item.id)
+      if (!modelItem || acedItemIntersectsSelectionBox(modelItem, box)) {
         ids.push(item.id)
       }
     }
@@ -1706,43 +1657,19 @@ export class AcTrView2d extends AcEdBaseView {
   }
 
   /**
-   * @inheritdoc
+   * Adds model space and the one layer that items are drawn on, if missing.
    */
-  addLayer(layer: AcDbLayerTableRecord) {
-    this._scene.addLayer(this.toLayerInfo(layer))
-    this._layerAppearance.syncFromLiveRecord(layer)
-    this._isDirty = true
-  }
-
-  /**
-   * @inheritdoc
-   */
-  updateLayer(
-    layer: AcDbLayerTableRecord,
-    changes: Partial<AcDbLayerTableRecordAttrs>
-  ) {
-    this._scene.updateLayer(this.toLayerInfo(layer))
-
-    if (this._layerAppearance.layerStyleMayHaveChanged(changes)) {
-      this._layerAppearance.syncFromLiveRecord(layer)
-    }
-
-    if (this._entityDisplay.layerVisibilityMayHaveChanged(changes)) {
-      const layerInfo = this.toLayerInfo(layer)
-      // Entities skipped at open time convert when the layer is on and thawed.
-      if (AcTrLayer.isLayerVisible(layerInfo)) {
-        void this.convertMissingEntitiesOnLayer(layer.name)
-      }
-    }
-
-    this._isDirty = true
+  addModelSpace() {
+    this._scene.addLayer(ACAP_DEFAULT_LAYER)
+    this._layerAppearance.syncFromLiveRecord(ACAP_DEFAULT_LAYER.name)
+    this.addLayout(ACAP_MODEL_SPACE_ID)
   }
 
   /**
    * Add the specified transient entity or entities into this view
    * @param entity Input one or multiple transient entities
    */
-  addTransientEntity(entity: AcDbEntity | AcDbEntity[]) {
+  addTransientEntity(entity: AcGiDrawable | AcGiDrawable[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     const epoch = this._convertEpoch
     // Overlay transients (measurement / jigs) must honor entity
@@ -1781,7 +1708,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Remove the specified transient entity from this view
    * @param objectId Input the object id of the transient entity to remove
    */
-  removeTransientEntity(objectId: AcDbObjectId) {
+  removeTransientEntity(objectId: string) {
     this._scene.removeTransientEntity(objectId)
     this._isDirty = true
   }
@@ -1790,7 +1717,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Show or hide a published CAD transient entity (e.g. when its measurement
    * group is hidden by a layout switch).
    */
-  setTransientEntityVisible(objectId: AcDbObjectId, visible: boolean): void {
+  setTransientEntityVisible(objectId: string, visible: boolean): void {
     if (this._scene.setTransientEntityVisible(objectId, visible)) {
       this._isDirty = true
     }
@@ -1799,14 +1726,14 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  canCreateEntityPreview(entityIds: AcDbObjectId[]): boolean {
+  canCreateEntityPreview(entityIds: string[]): boolean {
     return this._scene.canCreatePreview(entityIds)
   }
 
   /**
    * @inheritdoc
    */
-  createEntityPreview(entityIds: AcDbObjectId[]): string | null {
+  createEntityPreview(entityIds: string[]): string | null {
     const handleId = this._scene.createPreview(entityIds)
     if (handleId) {
       this._isDirty = true
@@ -1839,7 +1766,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
-      objectId: AcDbObjectId
+      objectId: string
       matrix: GeometryMatrix3d
     }>
   ): void {
@@ -1856,7 +1783,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  addEntity(entity: AcDbEntity | AcDbEntity[]) {
+  addEntity(entity: AcGiDrawable | AcGiDrawable[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     // Mark each owner layout as loaded as soon as the open-time ENTITY stream
     // enqueues work. Progressive convert may not have committed scene entities
@@ -1890,7 +1817,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  removeEntity(entity: AcDbEntity | AcDbEntity[]) {
+  removeEntity(entity: AcGiDrawable | AcGiDrawable[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     entities.forEach(entity => this._scene.removeEntity(entity.objectId))
     this._isDirty = true
@@ -1899,21 +1826,21 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  hasEntity(objectId: AcDbObjectId) {
+  hasEntity(objectId: string) {
     return this._scene.hasEntity(objectId)
   }
 
   /**
    * @inheritdoc
    */
-  getEntityVisible(objectId: AcDbObjectId) {
+  getEntityVisible(objectId: string) {
     return this._scene.getEntityVisible(objectId)
   }
 
   /**
    * Updates entity visibility without rebuilding batched geometry.
    */
-  updateEntityVisibility(entity: AcDbEntity) {
+  updateEntityVisibility(entity: AcGiDrawable) {
     if (!this._scene.setEntityVisible(entity.objectId, entity.visibility)) {
       return false
     }
@@ -1924,7 +1851,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * Updates scene visibility for one entity without changing the database.
    */
-  setEntitySceneVisible(objectId: AcDbObjectId, visible: boolean) {
+  setEntitySceneVisible(objectId: string, visible: boolean) {
     if (!this._scene.setEntityVisible(objectId, visible)) {
       return false
     }
@@ -1935,7 +1862,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * Reapplies session-only hidden state after an entity enters the scene.
    */
-  private applySessionHiddenObjectState(objectId: AcDbObjectId) {
+  private applySessionHiddenObjectState(objectId: string) {
     if (!AcApDocManager.instance.curDocument.isObjectHidden(objectId)) {
       return
     }
@@ -1947,7 +1874,7 @@ export class AcTrView2d extends AcEdBaseView {
    *
    * Pure translations should use {@link translateEntity} instead.
    */
-  updateEntity(entity: AcDbEntity | AcDbEntity[]) {
+  updateEntity(entity: AcGiDrawable | AcGiDrawable[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     if (entities.length === 0) return
 
@@ -1998,9 +1925,9 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  addLayout(layout: AcDbLayout) {
-    this._scene.addEmptyLayout(layout.blockTableRecordId)
-    this.createLayoutViewIfNeeded(layout.blockTableRecordId)
+  addLayout(layoutBtrId: string) {
+    this._scene.addEmptyLayout(layoutBtrId)
+    this.createLayoutViewIfNeeded(layoutBtrId)
     this._isDirty = true
   }
 
@@ -2017,7 +1944,7 @@ export class AcTrView2d extends AcEdBaseView {
    * notion of "which layouts have been framed already" without
    * needing access to private state.
    */
-  markLayoutAsInitialized(layoutBtrId: AcDbObjectId) {
+  markLayoutAsInitialized(layoutBtrId: string) {
     this._initializedLayouts.add(layoutBtrId)
     this._externallyFramedLayouts.add(layoutBtrId)
   }
@@ -2030,7 +1957,7 @@ export class AcTrView2d extends AcEdBaseView {
    *
    * @param layoutBtrId Input the block table record id of the layout
    */
-  isLayoutInitialized(layoutBtrId: AcDbObjectId) {
+  isLayoutInitialized(layoutBtrId: string) {
     return this._initializedLayouts.has(layoutBtrId)
   }
 
@@ -2413,7 +2340,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  highlight(ids: AcDbObjectId[]) {
+  highlight(ids: string[]) {
     if (!this.entitySelectionEnabled) return
     this._isDirty = this._scene.select(ids)
   }
@@ -2421,7 +2348,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  unhighlight(ids: AcDbObjectId[]) {
+  unhighlight(ids: string[]) {
     this._isDirty = this._scene.unselect(ids)
   }
 
@@ -2502,7 +2429,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  onHover(id: AcDbObjectId) {
+  onHover(id: string) {
     if (!this.entitySelectionEnabled) return
     this._isDirty = this._scene.hover([id])
   }
@@ -2510,7 +2437,7 @@ export class AcTrView2d extends AcEdBaseView {
   /**
    * @inheritdoc
    */
-  onUnhover(id: AcDbObjectId) {
+  onUnhover(id: string) {
     this._isDirty = this._scene.unhover([id])
   }
 
@@ -2624,7 +2551,7 @@ export class AcTrView2d extends AcEdBaseView {
    * Create the layout view with the specified block table record id.
    * @param layoutBtrId Input the block table record id associated with the layout view.
    */
-  private createLayoutViewIfNeeded(layoutBtrId: AcDbObjectId) {
+  private createLayoutViewIfNeeded(layoutBtrId: string) {
     let layoutView = this._layoutViewManager.getAt(layoutBtrId)
     if (layoutView == null) {
       layoutView = new AcTrLayoutView(
@@ -2662,58 +2589,7 @@ export class AcTrView2d extends AcEdBaseView {
     }
   }
 
-  private toLayerInfo(layer: AcDbLayerTableRecord) {
-    return {
-      name: layer.name,
-      isFrozen: layer.isFrozen,
-      isOff: layer.isOff,
-      color: layer.color
-    }
-  }
-
-  private resolveLayerInfo(layerName: string) {
-    const layer =
-      AcApDocManager.instance.curDocument.database.tables.layerTable.getAt(
-        layerName
-      )
-    return layer ? this.toLayerInfo(layer) : undefined
-  }
-
-  /**
-   * Converts entities on the given layer that were skipped while the layer was
-   * off/frozen and therefore are not yet present in the scene.
-   */
-  private async convertMissingEntitiesOnLayer(layerName: string) {
-    if (this._convertingLayers.has(layerName)) {
-      return
-    }
-    this._convertingLayers.add(layerName)
-    try {
-      const db = AcApDocManager.instance.curDocument.database
-      const blockTableRecord = db.tables.blockTable.getIdAt(
-        this.activeLayoutBtrId
-      )
-      if (!blockTableRecord) {
-        return
-      }
-
-      const pending = this._entityDisplay.collectMissingEntitiesOnLayer(
-        layerName,
-        blockTableRecord,
-        objectId => this.hasEntity(objectId)
-      )
-      if (pending.length === 0) {
-        return
-      }
-
-      this._numOfEntitiesToProcess += pending.length
-      await this.batchConvert(pending)
-    } finally {
-      this._convertingLayers.delete(layerName)
-    }
-  }
-
-  private drawEntity(entity: AcDbEntity, delay?: boolean) {
+  private drawEntity(entity: AcGiDrawable, delay?: boolean) {
     return entity.worldDraw(this._renderer, delay) as AcTrEntity | null
   }
 
@@ -2728,9 +2604,8 @@ export class AcTrView2d extends AcEdBaseView {
    * Drawing-independent preset faces are loaded separately via
    * {@link AcApDocManager.ensurePresetFontsForOpen} at open start.
    *
-   * @param database - Database whose text style table has just been filled.
    */
-  startTextStyleFontPreload(database: AcDbDatabase): void {
+  startTextStyleFontPreload(): void {
     const epoch = this._convertEpoch
     if (
       this._textStyleFontPreloadEpoch === epoch &&
@@ -2746,7 +2621,7 @@ export class AcTrView2d extends AcEdBaseView {
     //
     // Main mode: gate deferred glyph jobs on style-table faces only. Unused
     // preset faces were already started at open — do not re-request here.
-    const styleFonts = collectTextStyleFontNames(database)
+    const styleFonts = [ACAP_DIMENSION_TEXT_STYLE.font]
     const fallbackFonts = FontManager.instance.getFontsToLoad()
     const firstDefault = [...FontManager.instance.defaultFonts][0]
     const plan = planTextStyleFontPreload(styleFonts, fallbackFonts, {
@@ -2805,14 +2680,7 @@ export class AcTrView2d extends AcEdBaseView {
    */
   async awaitTextStyleFontsReady(): Promise<void> {
     if (!this._textStyleFontPreloadPromise) {
-      // Prefer the database bound to this canvas — not curDocument — so
-      // split-view / multi-session opens preload the correct style table.
-      const db = this._renderer.context.database
-      if (db) {
-        this.startTextStyleFontPreload(db)
-      } else {
-        return
-      }
+      this.startTextStyleFontPreload()
     }
     await this._textStyleFontPreloadPromise
   }
@@ -2993,11 +2861,7 @@ export class AcTrView2d extends AcEdBaseView {
       return
     }
 
-    const db = AcApDocManager.instance?.curDocument?.database
-    if (!db) {
-      return
-    }
-    db.regen()
+    void AcApDocManager.instance?.regen()
   }
 
   private groupHasPendingGlyphGeometry(group: AcTrGroup): boolean {
@@ -3157,7 +3021,7 @@ export class AcTrView2d extends AcEdBaseView {
    * @returns The converted three entities
    */
   private async batchConvert(
-    entities: AcDbEntity[],
+    entities: AcGiDrawable[],
     options: { forExport?: boolean } = {}
   ) {
     const epoch = this._convertEpoch
@@ -3165,10 +3029,7 @@ export class AcTrView2d extends AcEdBaseView {
     // paths), kick it off without blocking linework convert. Glyph finalize
     // awaits the promise via {@link awaitTextStyleFontsReady}.
     if (!options.forExport && !this._textStyleFontPreloadPromise) {
-      const db = this._renderer.context.database
-      if (db) {
-        this.startTextStyleFontPreload(db)
-      }
+      this.startTextStyleFontPreload()
     }
     const progressive = this._progressiveRendering && !options.forExport
     // Time-budgeted yields keep the UI (and optional progressive paints) alive

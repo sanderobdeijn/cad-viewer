@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { acdbHostApplicationServices } from '@mlightcad/data-model'
 
 import {
   applyMeasurementStyleToSelection,
@@ -15,7 +14,6 @@ import { acedApplyUiTheme, resolveUiTheme } from '../editor/global/AcEdUiTheme'
 import { AcApI18n } from '../i18n'
 import {
   acapCssColor,
-  acapCssToMeasurementColor,
   acapGetMeasurementColor,
   acapGetMeasurementCustomTextHeightWcs,
   acapGetMeasurementFontSize,
@@ -389,10 +387,7 @@ export class AcUiDrawStyleSessionAccessory {
    */
   private syncFromSession(): void {
     const selected = getActiveMeasurementStyle()
-    const db = acdbHostApplicationServices().workingDatabase
-    const color =
-      selected?.color ??
-      (db ? acapGetMeasurementColor() : acapCssToMeasurementColor('#7b8794'))
+    const color = selected?.color ?? acapGetMeasurementColor()
     this.paint(color)
   }
 

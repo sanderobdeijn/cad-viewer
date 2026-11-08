@@ -61,9 +61,7 @@ describe('AcUiAciPaletteUi', () => {
     const stacks = acuiCreateAciPaletteStacks({ onSelect: () => undefined })
     document.body.appendChild(stacks.root)
 
-    const cells = [
-      ...stacks.root.querySelectorAll<HTMLElement>('.ml-aci-cell')
-    ]
+    const cells = [...stacks.root.querySelectorAll<HTMLElement>('.ml-aci-cell')]
     expect(cells).toHaveLength(255)
     expect(cells.map(c => Number(c.dataset.aci))).toEqual([
       ...ACI_LARGE_PALETTE_INDICES,
@@ -241,7 +239,10 @@ describe('AcUiAciPaletteUi', () => {
       bottom: 428,
       toJSON: () => ({})
     } as DOMRect)
-    const widthDescriptor = Object.getOwnPropertyDescriptor(window, 'innerWidth')
+    const widthDescriptor = Object.getOwnPropertyDescriptor(
+      window,
+      'innerWidth'
+    )
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
       value: 390

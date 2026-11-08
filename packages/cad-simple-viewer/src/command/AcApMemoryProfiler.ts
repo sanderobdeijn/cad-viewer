@@ -1,11 +1,4 @@
 import {
-  type AcDbDatabase,
-  acdbEstimateDatabaseMemory,
-  type AcDbMemoryEstimate,
-  type AcDbMemoryEstimateBucket,
-  type AcDbObjectId
-} from '@mlightcad/data-model'
-import {
   FontManager,
   type FontMemoryStats,
   type MemoryUsageReport
@@ -54,29 +47,6 @@ export interface AcApMemoryGeometryLayerRow {
 export interface AcApMemorySpatialLayoutRow {
   layoutKey: string
   stats: AcTrSpatialIndexStats
-}
-
-/** One named bucket for data-model breakdown tables. */
-export interface AcApMemoryBucketRow {
-  name: string
-  count: number
-  estimatedBytes: number
-}
-
-/**
- * Data-model memory stats from {@link acdbEstimateDatabaseMemory}.
- */
-export interface AcApMemoryDataModelStats {
-  /** Full structured estimate from data-model. */
-  estimate: AcDbMemoryEstimate
-  /** Category breakdown sorted by descending bytes. */
-  categories: AcApMemoryBucketRow[]
-  /** Entity-type breakdown sorted by descending bytes. */
-  entitiesByType: AcApMemoryBucketRow[]
-  estimatedBytes: number
-  entityCount: number
-  objectCount: number
-  isEstimated: true
 }
 
 /** One loaded font row for the Memory palette fonts table. */
@@ -130,7 +100,6 @@ export interface AcApMemorySnapshot {
     totalRootItems: number
     totalChildItems: number
   }
-  dataModel: AcApMemoryDataModelStats
   materials: AcTrStyleManagerStats
   fonts: AcApMemoryFontStats
 }
@@ -165,31 +134,6 @@ function readHeapStats(): AcApMemoryHeapStats | undefined {
   }
 }
 
-function toBucketRows(
-  buckets: Record<string, AcDbMemoryEstimateBucket>
-): AcApMemoryBucketRow[] {
-  return Object.entries(buckets)
-    .map(([name, bucket]) => ({
-      name,
-      count: bucket.count,
-      estimatedBytes: bucket.bytes
-    }))
-    .sort((a, b) => b.estimatedBytes - a.estimatedBytes)
-}
-
-function collectDataModelStats(db: AcDbDatabase): AcApMemoryDataModelStats {
-  const estimate = acdbEstimateDatabaseMemory(db)
-  return {
-    estimate,
-    categories: toBucketRows(estimate.byCategory),
-    entitiesByType: toBucketRows(estimate.byEntityType),
-    estimatedBytes: estimate.totalBytes,
-    entityCount: estimate.entityCount,
-    objectCount: estimate.objectCount,
-    isEstimated: true
-  }
-}
-
 function collectGeometryLayers(
   sceneStats: AcTrSceneStats,
   layoutKeys: string[]
@@ -218,19 +162,6 @@ function collectGeometryLayers(
     }
   })
   return rows
-}
-
-function resolveLayoutKey(ownerId: AcDbObjectId, db: AcDbDatabase): string {
-  try {
-    for (const record of db.tables.blockTable.newIterator()) {
-      if (record.objectId === ownerId) {
-        return String(record.name ?? ownerId)
-      }
-    }
-  } catch {
-    // Fall through to owner id.
-  }
-  return ownerId
 }
 
 function flattenFontRows(report: MemoryUsageReport): AcApMemoryFontRow[] {
@@ -281,23 +212,20 @@ async function collectFontStats(): Promise<AcApMemoryFontStats> {
 }
 
 /**
- * Collects a cross-cutting memory snapshot for the current view + database.
+ * Collects a cross-cutting memory snapshot for the current view.
  */
 export async function collectMemorySnapshot(
-  view: AcTrView2d,
-  database: AcDbDatabase
+  view: AcTrView2d
 ): Promise<AcApMemorySnapshot> {
   const sceneStats = view.stats
   const layoutEntries = [...view.cadScene.layouts.entries()]
-  const layoutKeys = layoutEntries.map(([ownerId]) =>
-    resolveLayoutKey(ownerId, database)
-  )
+  const layoutKeys = layoutEntries.map(([ownerId]) => ownerId)
 
   const geometryLayers = collectGeometryLayers(sceneStats, layoutKeys)
 
   const spatialLayouts: AcApMemorySpatialLayoutRow[] = layoutEntries.map(
     ([ownerId, layout]) => ({
-      layoutKey: resolveLayoutKey(ownerId, database),
+      layoutKey: ownerId,
       stats: layout.spatialIndexStats
     })
   )
@@ -314,7 +242,6 @@ export async function collectMemorySnapshot(
     0
   )
 
-  const dataModel = collectDataModelStats(database)
   const materials = view.renderer.styleManager.getStats()
   const fonts = await collectFontStats()
   const heap = readHeapStats()
@@ -347,12 +274,6 @@ export async function collectMemorySnapshot(
       bytes: totalEstimatedBytes,
       isEstimated: true,
       detail: `${totalRootItems} root / ${totalChildItems} child items`
-    },
-    {
-      id: 'dataModel',
-      bytes: dataModel.estimatedBytes,
-      isEstimated: true,
-      detail: `${dataModel.entityCount} entities`
     },
     {
       id: 'materials',
@@ -391,20 +312,16 @@ export async function collectMemorySnapshot(
       totalRootItems,
       totalChildItems
     },
-    dataModel,
     materials,
     fonts
   }
 }
 
 /**
- * Collects a cross-cutting memory snapshot for the current view + database.
+ * Collects a cross-cutting memory snapshot for the current view.
  */
 export class AcApMemoryProfiler {
-  static collect(
-    view: AcTrView2d,
-    database: AcDbDatabase
-  ): Promise<AcApMemorySnapshot> {
-    return collectMemorySnapshot(view, database)
+  static collect(view: AcTrView2d): Promise<AcApMemorySnapshot> {
+    return collectMemorySnapshot(view)
   }
 }

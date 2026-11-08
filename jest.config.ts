@@ -3,12 +3,7 @@ import type { Config } from 'jest'
 type ProjectConfig = Exclude<NonNullable<Config['projects']>[number], string>
 
 /** Packages vendored from mlightcad/realdwg-web; tested in their own project. */
-const REALDWG_PACKAGES = [
-  'common',
-  'geometry-engine',
-  'graphic-interface',
-  'data-model'
-]
+const REALDWG_PACKAGES = ['common', 'geometry-engine', 'graphic-interface']
 
 const packagesProject: ProjectConfig = {
   displayName: 'packages',
@@ -44,12 +39,9 @@ const packagesProject: ProjectConfig = {
   ],
   moduleNameMapper: {
     '^lodash-es$': 'lodash',
-    // Resolve these to one copy each, so a class seen through data-model's
-    // re-exports is the same class as one imported from its own package.
-    // data-model's unbundled build imports the others by package name.
+    // Resolve these to one copy each, so every package sees the same classes.
     '^@mlightcad/(common|geometry-engine|graphic-interface)$':
       '<rootDir>/packages/$1/src/index.ts',
-    '^@mlightcad/data-model$': '<rootDir>/packages/data-model/lib/index.js',
     '^@mlightcad/cad-simple-viewer$':
       '<rootDir>/packages/cad-simple-viewer/src/index.ts',
     '^@mlightcad/cad-simple-viewer/icons$':
@@ -78,7 +70,7 @@ const realdwgProject: ProjectConfig = {
   testEnvironment: 'node',
   roots: REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}`),
   moduleNameMapper: {
-    '^@mlightcad/(common|geometry-engine|graphic-interface|data-model)$':
+    '^@mlightcad/(common|geometry-engine|graphic-interface)$':
       '<rootDir>/packages/$1/src/index.ts'
   },
   transform: {

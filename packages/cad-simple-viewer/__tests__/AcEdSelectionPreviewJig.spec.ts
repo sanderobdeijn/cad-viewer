@@ -1,5 +1,9 @@
-import type { AcDbEntity } from '@mlightcad/data-model'
-import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
+import {
+  GeometryLine2d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  type ModelItem
+} from '@mlightcad/geometry-engine'
 
 import {
   AcEdSelectionStaticPreviewJig,
@@ -7,12 +11,12 @@ import {
 } from '../src/editor/input/AcEdSelectionPreviewJig'
 import { AcEdBaseView } from '../src/editor/view/AcEdBaseView'
 
-function createEntity(objectId: string): AcDbEntity {
-  const entity = {
-    objectId,
-    clone: jest.fn(() => createEntity(objectId))
+function createItem(id: string): ModelItem {
+  return {
+    id,
+    kind: 'shape',
+    geometry: new GeometryLine2d({ x: 0, y: 0 }, { x: 10, y: 0 })
   }
-  return entity as unknown as AcDbEntity
 }
 
 function createTransientFallbackView() {
@@ -50,8 +54,8 @@ class TestTransformJig extends AcEdSelectionTransformPreviewJig<GeometryPoint2d>
 describe('AcEdSelectionTransformPreviewJig', () => {
   it('publishes transient previews once and updates transforms on each render', () => {
     const view = createTransientFallbackView()
-    const entities = [createEntity('line-1'), createEntity('line-2')]
-    const jig = new TestTransformJig(view, entities)
+    const items = [createItem('line-1'), createItem('line-2')]
+    const jig = new TestTransformJig(view, items)
 
     jig.update(new GeometryPoint2d(5, 0))
     jig.render()
@@ -66,8 +70,8 @@ describe('AcEdSelectionTransformPreviewJig', () => {
 
   it('updates batch preview matrix without publishing transients', () => {
     const view = createBatchView()
-    const entities = [createEntity('line-1')]
-    const jig = new TestTransformJig(view, entities)
+    const items = [createItem('line-1')]
+    const jig = new TestTransformJig(view, items)
 
     jig.update(new GeometryPoint2d(3, 4))
     jig.render()
@@ -78,30 +82,27 @@ describe('AcEdSelectionTransformPreviewJig', () => {
     expect(view.removeEntityPreview).toHaveBeenCalledWith('preview-1')
   })
 
-  it('creates one clone per source entity per copy factor', () => {
+  it('creates one preview per source item per copy factor', () => {
     const view = createTransientFallbackView()
-    const entities = [createEntity('line-1'), createEntity('line-2')]
-    const jig = new TestTransformJig(view, entities, 2)
+    const items = [createItem('line-1'), createItem('line-2')]
+    const jig = new TestTransformJig(view, items, 2)
 
     jig.update(new GeometryPoint2d(0, 0))
     jig.render()
 
-    expect(view.addTransientEntity).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ objectId: 'line-1' }),
-        expect.objectContaining({ objectId: 'line-2' })
-      ])
-    )
-    const published = (view.addTransientEntity as jest.Mock).mock.calls[0][0]
+    const published = (view.addTransientEntity as jest.Mock).mock
+      .calls[0][0] as { objectId: string }[]
     expect(published).toHaveLength(4)
+    // Previews get their own ids so they never clash with the drawn items.
+    expect(new Set(published.map(preview => preview.objectId)).size).toBe(4)
   })
 })
 
 describe('AcEdSelectionStaticPreviewJig', () => {
-  it('publishes static clones once and cleans up on end', () => {
+  it('publishes static previews once and cleans up on end', () => {
     const view = createTransientFallbackView()
-    const entities = [createEntity('line-1')]
-    const jig = new AcEdSelectionStaticPreviewJig<number>(view, entities)
+    const items = [createItem('line-1')]
+    const jig = new AcEdSelectionStaticPreviewJig<number>(view, items)
 
     jig.update(0)
     jig.render()
@@ -115,8 +116,8 @@ describe('AcEdSelectionStaticPreviewJig', () => {
 
   it('skips transient publish when batch preview is active', () => {
     const view = createBatchView()
-    const entities = [createEntity('line-1')]
-    const jig = new AcEdSelectionStaticPreviewJig<number>(view, entities)
+    const items = [createItem('line-1')]
+    const jig = new AcEdSelectionStaticPreviewJig<number>(view, items)
 
     jig.render()
     jig.end()

@@ -63,7 +63,6 @@ export class AcApMeasurementExportCmd extends AcEdCommand {
   constructor() {
     super()
     this.mode = AcEdOpenMode.Read
-    this.usesTransaction = false
   }
 
   async execute(context: AcApContext) {
@@ -85,7 +84,6 @@ export class AcApMeasurementImportCmd extends AcEdCommand {
   constructor() {
     super()
     this.mode = AcEdOpenMode.Read
-    this.usesTransaction = false
   }
 
   async execute(context: AcApContext) {
@@ -103,10 +101,9 @@ export class AcApMeasurementImportCmd extends AcEdCommand {
       return
     }
     const view = context.view as AcTrView2d
-    const db = context.doc.database
     runMeasurementEdit(() => {
       for (const record of sidecar.measurements) {
-        placeMeasurementRecord(view, db, record)
+        placeMeasurementRecord(view, record)
       }
     })
   }

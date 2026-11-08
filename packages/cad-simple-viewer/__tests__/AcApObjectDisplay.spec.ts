@@ -1,37 +1,32 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
-
-import { hideObjects, unisolateObjects } from '../src/app/AcApObjectDisplay'
-import { AcApDocument } from '../src/app/AcApDocument'
 import { AcApContext } from '../src/app/AcApContext'
+import { AcApDocument } from '../src/app/AcApDocument'
+import { hideObjects, unisolateObjects } from '../src/app/AcApObjectDisplay'
 
 function createMockContext(options: {
-  hidden?: Set<AcDbObjectId>
+  hidden?: Set<string>
   entities?: Map<
-    AcDbObjectId,
+    string,
     { visibility: boolean; inScene: boolean; sceneVisible: boolean }
   >
 }) {
-  const hidden = options.hidden ?? new Set<AcDbObjectId>()
+  const hidden = options.hidden ?? new Set<string>()
   const entities =
     options.entities ??
     new Map<
-      AcDbObjectId,
+      string,
       { visibility: boolean; inScene: boolean; sceneVisible: boolean }
     >()
 
   const doc = {
-    isObjectHidden: (id: AcDbObjectId) => hidden.has(id),
-    addHiddenObject: (id: AcDbObjectId) => hidden.add(id),
+    isObjectHidden: (id: string) => hidden.has(id),
+    addHiddenObject: (id: string) => hidden.add(id),
     takeHiddenObjects: () => {
       const ids = [...hidden]
       hidden.clear()
       return ids
     },
     modelSync: {
-      entity: (id: AcDbObjectId) => {
-        const entity = entities.get(id)
-        return entity ? { visibility: entity.visibility } : undefined
-      }
+      item: (id: string) => (entities.has(id) ? { id } : undefined)
     }
   } as unknown as AcApDocument
 
@@ -41,8 +36,8 @@ function createMockContext(options: {
 
   const view = {
     selectionSet,
-    hasEntity: (id: AcDbObjectId) => entities.get(id)?.inScene ?? false,
-    setEntitySceneVisible: (id: AcDbObjectId, visible: boolean) => {
+    hasEntity: (id: string) => entities.get(id)?.inScene ?? false,
+    setEntitySceneVisible: (id: string, visible: boolean) => {
       const entity = entities.get(id)
       if (!entity?.inScene) {
         return false
@@ -79,8 +74,8 @@ describe('AcApObjectDisplay', () => {
     expect(selectionSet.clear).toHaveBeenCalledTimes(1)
   })
 
-  it('restores session-hidden entities to their database visibility', () => {
-    const hidden = new Set<AcDbObjectId>(['a', 'b'])
+  it('shows session-hidden items again', () => {
+    const hidden = new Set<string>(['a', 'b'])
     const { context, entities, selectionSet } = createMockContext({
       hidden,
       entities: new Map([
@@ -94,7 +89,7 @@ describe('AcApObjectDisplay', () => {
     expect(count).toBe(2)
     expect(hidden.size).toBe(0)
     expect(entities.get('a')?.sceneVisible).toBe(true)
-    expect(entities.get('b')?.sceneVisible).toBe(false)
+    expect(entities.get('b')?.sceneVisible).toBe(true)
     expect(selectionSet.clear).toHaveBeenCalledTimes(1)
   })
 })

@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDatabase } from '@mlightcad/data-model'
 import {
   GeometryPoint2d,
   GeometryPoint2dLike
@@ -74,7 +73,6 @@ function clonePoint(p: GeometryPoint2dLike): GeometryPoint2dLike {
 export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   private readonly _view: AcTrView2d
   private readonly _points: GeometryPoint2dLike[]
-  private readonly _db: AcDbDatabase
   private readonly _htManager: AcTrHtmlTransientManager
   private readonly _badges: AcTrHtmlBadge[] = []
   private readonly _preview: AcApHtmlLivePreview
@@ -82,14 +80,12 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
 
   constructor(
     view: AcEdBaseView,
-    db: AcDbDatabase,
     points: GeometryPoint2dLike[],
     color: AcCmColor
   ) {
     super(view)
     this._view = view as AcTrView2d
     this._points = points
-    this._db = db
     this._color = color
     this._htManager = this._view.htmlTransientManager
     this._preview = new AcApHtmlLivePreview(
@@ -119,7 +115,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
         segmentArrowSizesPx.push(ACAP_OVERLAY_ARROW_SIZE_PX)
         continue
       }
-      const label = formatMeasurementLength(this._db, dist)
+      const label = formatMeasurementLength(dist)
       const fontSize = acapAdaptiveMeasureBadgeFontSize(
         label,
         style,
@@ -194,7 +190,7 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
         badge.object.visible = false
         continue
       }
-      const label = formatMeasurementLength(this._db, dist)
+      const label = formatMeasurementLength(dist)
       const clamped = acapAdaptiveMeasureBadgeFontSize(
         label,
         { ...style, fontSize },
@@ -221,7 +217,6 @@ export class AcApMeasureContinuousJig extends AcEdPreviewJig<GeometryPoint2dLike
 export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
     const color = acapGetMeasurementColor()
     const points: GeometryPoint2dLike[] = []
 
@@ -233,7 +228,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
       if (p1Result.status !== AcEdPromptStatus.OK) return
       points.push(clonePoint(p1Result.value!))
 
-      const jig = new AcApMeasureContinuousJig(context.view, db, points, color)
+      const jig = new AcApMeasureContinuousJig(context.view, points, color)
       try {
         while (points.length < 100) {
           const prompt = new AcEdPromptPointOptions(
@@ -264,7 +259,7 @@ export class AcApMeasureContinuousCmd extends AcApMeasureDrawCmd {
         const a = points[i]!
         const b = points[i + 1]!
         if (calcDist(a, b) < 1e-4) continue
-        placeDistanceMeasurement(view, db, a, b, style, {
+        placeDistanceMeasurement(view, a, b, style, {
           id: newMeasureOverlayId('dist')
         })
       }

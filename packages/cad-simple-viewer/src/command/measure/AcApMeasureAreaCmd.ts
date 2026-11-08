@@ -1,5 +1,4 @@
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbDatabase } from '@mlightcad/data-model'
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import { AcTrHtmlBadge, AcTrHtmlCanvasOverlay } from '@mlightcad/three-renderer'
 
@@ -106,13 +105,12 @@ function centroid(pts: GeometryPoint2dLike[]): { x: number; y: number } {
  */
 export function placeAreaMeasurement(
   view: AcTrView2d,
-  db: AcDbDatabase,
   points: GeometryPoint2dLike[],
   style: AcApMeasurementStyle,
   options?: { id?: string; layoutId?: string }
 ): void {
   if (points.length < 3) return
-  AcApMeasureAreaEntity.create(points, style, options).commit(view, db)
+  AcApMeasureAreaEntity.create(points, style, options).commit(view)
 }
 
 /**
@@ -132,7 +130,6 @@ export function placeAreaMeasurement(
 export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
   async execute(context: AcApContext) {
     const editor = context.view.editor
-    const db = context.doc.database
     const color = acapGetMeasurementColor()
     const style = acapGetCurrentMeasurementStyle()
     const canvasLineWidth = acapMeasurementCanvasLineWidth(style.lineWeight)
@@ -277,7 +274,7 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
               const tempPts = [...points, cursor]
               const area = shoelaceArea(tempPts)
               const liveStyle = acapGetCurrentMeasurementStyle()
-              const label = formatMeasurementArea(db, area)
+              const label = formatMeasurementArea(area)
               const fontSize = acapAdaptiveMeasureBadgeFontSize(
                 label,
                 liveStyle,
@@ -347,7 +344,6 @@ export class AcApMeasureAreaCmd extends AcApMeasureDrawCmd {
 
     placeAreaMeasurement(
       context.view as AcTrView2d,
-      db,
       points,
       acapGetCurrentMeasurementStyle()
     )

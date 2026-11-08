@@ -9,6 +9,7 @@ import {
   View
 } from '@element-plus/icons-vue'
 import {
+  AcApAngleUnits,
   acapCssColor,
   AcApDocManager,
   acapDrawStyleKindForCommand,
@@ -16,6 +17,7 @@ import {
   acapGetMeasurementCustomTextHeightWcs,
   acapGetMeasurementFontSize,
   acapGetMeasurementTextHeightMode,
+  AcApLinearUnits,
   AcApQNewCmd,
   acapScreenPxToWcs,
   acapSetMeasurementDrawColor,
@@ -40,7 +42,6 @@ import {
   subscribeMeasurementSelection
 } from '@mlightcad/cad-simple-viewer'
 import { AcCmColor } from '@mlightcad/common'
-import { AcDbAngleUnits, AcDbLinearUnits } from '@mlightcad/data-model'
 import {
   FileMenuItemModel,
   MlRibbon,
@@ -119,20 +120,15 @@ const measurementTextHeightWcs = ref<number | undefined>(
   acapGetMeasurementCustomTextHeightWcs()
 )
 let textHeightDialogOpen = false
-const measurementLunits = ref(AcDbLinearUnits.Decimal)
+const measurementLunits = ref(AcApLinearUnits.Decimal)
 const measurementLuprec = ref(4)
-const measurementAunits = ref(AcDbAngleUnits.DecimalDegrees)
+const measurementAunits = ref(AcApAngleUnits.DecimalDegrees)
 const measurementAuprec = ref(0)
 const measurementLengthUnit = ref<number>(
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
 )
 const isRibbonDisabled = computed(() => isDocumentOpening.value)
 const activeRibbonTabId = ref('home')
-
-/**
- * Returns the database currently attached to the active document, if any.
- */
-const getCurrentDatabase = () => AcApDocManager.instance?.curDocument?.database
 
 const syncMeasurementVisibility = () => {
   isMeasurementOverlayVisible.value = isMeasurementVisible()
@@ -304,12 +300,9 @@ const syncMeasurementStyleControls = () => {
     measurementTextHeightMode.value = 'custom'
     measurementTextHeightWcs.value = resolvedWcs
   } else {
-    const db = getCurrentDatabase()
-    if (db) {
-      const color = acapGetMeasurementColor()
-      measurementDrawColor.value = color.clone()
-      measurementDrawColorDisplay.value = acapCssColor(color)
-    }
+    const color = acapGetMeasurementColor()
+    measurementDrawColor.value = color.clone()
+    measurementDrawColorDisplay.value = acapCssColor(color)
     measurementTextHeightMode.value = acapGetMeasurementTextHeightMode()
     measurementTextHeightWcs.value =
       measurementTextHeightMode.value === 'custom'
@@ -387,10 +380,9 @@ const syncMeasurementUnitControls = () => {
 }
 
 const refreshCurrentMeasurementLabels = () => {
-  const db = getCurrentDatabase()
   const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
-  if (!db || !view) return
-  refreshMeasurementValueLabels(view, db)
+  if (!view) return
+  refreshMeasurementValueLabels(view)
 }
 
 const applyMeasurementUnitOverride = (

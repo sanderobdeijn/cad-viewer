@@ -1,31 +1,7 @@
 import { AcCmEventManager } from '@mlightcad/common'
 import {
-  AcDb3PointAngularDimension,
-  AcDbAlignedDimension,
-  AcDbArc,
-  AcDbArcDimension,
-  AcDbCircle,
-  AcDbDatabase,
-  AcDbDiametricDimension,
-  AcDbDimension,
-  AcDbEllipse,
-  AcDbEntity,
-  AcDbLine,
-  AcDbOrdinateDimension,
-  AcDbPoint,
-  AcDbPolyline,
-  AcDbRadialDimension,
-  AcDbRotatedDimension
-} from '@mlightcad/data-model'
-import {
-  GeometryCircularArc2d,
   GeometryDimension,
-  GeometryEllipseArc2d,
-  GeometryLine2d,
   GeometryPoint2d,
-  GeometryPolyline2d,
-  GeometryShape,
-  GeometryVector2d,
   Model,
   ModelItem,
   ModelTextItem
@@ -43,12 +19,18 @@ import type {
 } from '../command/measure/AcApMeasurementTypes'
 import type { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import { AcEdOpenMode } from '../editor/view/AcEdOpenMode'
+import { ACAP_DIMENSION_POINTS } from '../model/AcApDimensionGeometry'
+import {
+  ACAP_MODEL_SPACE_ID,
+  AcApItemDrawable,
+  acapPointDisplay,
+  itemTypeName
+} from '../model/AcApItemDrawable'
+import type { AcApItemContents } from '../model/AcApItemGeometry'
 import type { AcTrView2d } from '../view'
 
 /** The parts of a document that {@link AcApModelSync} uses. */
 export interface AcApModelSyncDocument {
-  /** The drawing database that entities built for drawing belong to */
-  readonly database: AcDbDatabase
   /** Whether the document may be changed */
   readonly openMode: AcEdOpenMode
 }
@@ -90,238 +72,45 @@ const MEASUREMENT_TYPE_NAMES = {
 
 const MEASUREMENT_TYPES = new Set(Object.values(MEASUREMENT_TYPE_NAMES))
 
-type DimensionPoints = Record<string, GeometryPoint2d>
-
-const ALIGNED_POINTS = ['xLine1Point', 'xLine2Point', 'dimLinePoint']
-const ANGULAR_POINTS = ['centerPoint', 'xLine1Point', 'xLine2Point', 'arcPoint']
-
-/** The dimension types that text can create and the points each one needs. */
-const DIMENSION_TYPES: Record<
-  string,
-  {
-    points: string[]
-    create: (points: DimensionPoints, text: string | null) => AcDbDimension
-  }
-> = {
-  AlignedDimension: {
-    points: ALIGNED_POINTS,
-    create: (p, text) =>
-      new AcDbAlignedDimension(
-        p.xLine1Point,
-        p.xLine2Point,
-        p.dimLinePoint,
-        text
-      )
-  },
-  RotatedDimension: {
-    points: ALIGNED_POINTS,
-    create: (p, text) =>
-      new AcDbRotatedDimension(
-        p.xLine1Point,
-        p.xLine2Point,
-        p.dimLinePoint,
-        text
-      )
-  },
-  RadialDimension: {
-    points: ['center', 'chordPoint'],
-    create: (p, text) =>
-      new AcDbRadialDimension(p.center, p.chordPoint, 0, text)
-  },
-  DiametricDimension: {
-    points: ['chordPoint', 'farChordPoint'],
-    create: (p, text) =>
-      new AcDbDiametricDimension(p.chordPoint, p.farChordPoint, 0, text)
-  },
-  OrdinateDimension: {
-    points: ['definingPoint', 'leaderEndPoint'],
-    create: (p, text) =>
-      new AcDbOrdinateDimension(p.definingPoint, p.leaderEndPoint, text)
-  },
-  '3PointAngularDimension': {
-    points: ANGULAR_POINTS,
-    create: (p, text) =>
-      new AcDb3PointAngularDimension(
-        p.centerPoint,
-        p.xLine1Point,
-        p.xLine2Point,
-        p.arcPoint,
-        text
-      )
-  },
-  ArcDimension: {
-    points: ANGULAR_POINTS,
-    create: (p, text) =>
-      new AcDbArcDimension(
-        p.centerPoint,
-        p.xLine1Point,
-        p.xLine2Point,
-        p.arcPoint,
-        text
-      )
-  }
-}
-
-/** The measured value is derived, so editing it does not change an entity. */
+/** The measured value is derived, so editing it does not change an item. */
 const dimensionLine = (dimension: GeometryDimension) =>
   Model.formatDimension({ ...dimension, measurement: undefined })
 
 const checkDimension = (dimension: GeometryDimension) => {
-  const definition = DIMENSION_TYPES[dimension.type]
-  if (!definition) {
+  const names = ACAP_DIMENSION_POINTS[dimension.type]
+  if (!names) {
     throw new Error(`Unknown dimension type "${dimension.type}"`)
   }
-  const names = Object.keys(dimension.points)
-  for (const name of definition.points) {
-    if (!names.includes(name)) {
+  const given = Object.keys(dimension.points)
+  for (const name of names) {
+    if (!given.includes(name)) {
       throw new Error(`${dimension.type} needs ${name}`)
     }
   }
-  for (const name of names) {
-    if (!definition.points.includes(name)) {
+  for (const name of given) {
+    if (!names.includes(name)) {
       throw new Error(`${dimension.type} has no ${name}`)
     }
   }
 }
 
-/** One line of edited text and how to turn it into an entity. */
-interface ModelTextTarget {
-  line: string
-  /** Whether an item drawn by this entity may take this line in place */
-  canUpdate: (entity: AcDbEntity) => boolean
-  create: () => AcDbEntity
-}
-
-const createPolyline = (shape: GeometryPolyline2d) => {
-  const entity = new AcDbPolyline()
-  shape.vertices.forEach((vertex, index) => {
-    entity.addVertexAt(
-      index,
-      new GeometryPoint2d(vertex.x, vertex.y),
-      vertex.bulge ?? 0
-    )
-  })
-  entity.closed = shape.closed
-  return entity
-}
-
-const shapeTarget = (shape: GeometryShape): ModelTextTarget => {
-  const line = Model.formatShape(shape)
-  if (shape instanceof GeometryLine2d) {
-    return {
-      line,
-      canUpdate: entity => entity instanceof AcDbLine,
-      create: () => new AcDbLine(shape.startPoint, shape.endPoint)
-    }
-  }
-  if (shape instanceof GeometryCircularArc2d) {
-    const full = shape.closed
-    return {
-      line,
-      canUpdate: entity =>
-        full ? entity instanceof AcDbCircle : entity instanceof AcDbArc,
-      create: () =>
-        full
-          ? new AcDbCircle(shape.center, shape.radius)
-          : new AcDbArc(
-              shape.center,
-              shape.radius,
-              shape.startAngle,
-              shape.endAngle
-            )
-    }
-  }
-  if (shape instanceof GeometryEllipseArc2d) {
-    return {
-      line,
-      canUpdate: entity => entity instanceof AcDbEllipse,
-      create: () =>
-        new AcDbEllipse(
-          shape.center,
-          new GeometryVector2d(
-            Math.cos(shape.rotation),
-            Math.sin(shape.rotation)
-          ),
-          shape.majorAxisRadius,
-          shape.minorAxisRadius,
-          shape.startAngle,
-          shape.endAngle
-        )
-    }
-  }
-  if (shape instanceof GeometryPolyline2d) {
-    return {
-      line,
-      canUpdate: entity => entity instanceof AcDbPolyline,
-      create: () => createPolyline(shape)
-    }
-  }
-  throw new Error(`Cannot edit "${line}"`)
-}
-
-const targetFor = (item: ModelTextItem): ModelTextTarget => {
-  switch (item.kind) {
-    case 'shape':
-      return shapeTarget(item.geometry)
-    case 'point':
-      return pointTarget(item.geometry)
-    case 'dimension':
-      return dimensionTarget(item.geometry)
-  }
-}
+/** The line of text that describes an item, without its id. */
+const lineOf = (item: ModelTextItem) =>
+  item.kind === 'dimension'
+    ? dimensionLine(item.geometry)
+    : Model.formatItem({ ...item, id: undefined })
 
 const isMeasurementItem = (item: ModelTextItem | ModelItem) =>
   item.kind === 'dimension' && MEASUREMENT_TYPES.has(item.geometry.type)
-
-const pointTarget = (point: GeometryPoint2d): ModelTextTarget => ({
-  line: Model.formatPoint(point),
-  canUpdate: entity => entity instanceof AcDbPoint,
-  create: () => {
-    const entity = new AcDbPoint()
-    entity.position = point
-    return entity
-  }
-})
-
-const dimensionTarget = (dimension: GeometryDimension): ModelTextTarget => ({
-  line: dimensionLine(dimension),
-  canUpdate: entity =>
-    entity instanceof AcDbDimension && entity.type === dimension.type,
-  create: () =>
-    DIMENSION_TYPES[dimension.type].create(
-      dimension.points,
-      dimension.text ?? null
-    )
-})
-
-/**
- * Returns the contents of a model item that an entity describes.
- *
- * @param entity - A line, circle, arc, ellipse, polyline, point or dimension
- * @returns The kind and geometry, or undefined for other entities
- */
-export const itemContentsFor = (
-  entity: AcDbEntity
-): Omit<ModelItem, 'id'> | undefined => {
-  if (entity instanceof AcDbPoint) {
-    return { kind: 'point', geometry: entity.position.clone() }
-  }
-  if (entity instanceof AcDbDimension) {
-    return { kind: 'dimension', geometry: entity.geometryDimension }
-  }
-  const shape = entity.geometry
-  return shape ? { kind: 'shape', geometry: shape.clone() } : undefined
-}
 
 /**
  * Holds the {@link Model} of one document: the shapes, points and dimensions
  * of its drawing, and the way commands and the text editor change them.
  *
- * The model is the drawing. The drawing window, grips, object snaps and
- * selection see each item through an entity built from it by {@link entity},
- * whose object id is the item id. Those entities are not in the database, and
- * changing one does not change the drawing: commands pass changed entities
- * back through {@link add}, {@link replace} and {@link remove}.
+ * The model is the drawing. The drawing window draws each item through a
+ * drawable from {@link drawable}, whose object id is the item id. Commands
+ * change the drawing through {@link addItems}, {@link update} and
+ * {@link remove}, and the text editor through {@link applyText}.
  *
  * Measurements are overlays rather than items of the drawing, so they are
  * followed through the measurement store of the document's view and listed
@@ -340,10 +129,10 @@ export class AcApModelSync {
 
   /** Ids of the measurement items currently in {@link model} */
   private _measurementIds = new Set<string>()
-  /** Entities built for items, with the item each was built from */
-  private readonly _entities = new Map<
+  /** Drawables built for items, with the item each was built from */
+  private readonly _drawables = new Map<
     string,
-    { item: ModelItem; entity: AcDbEntity | undefined }
+    { item: ModelItem; drawable: AcApItemDrawable }
   >()
   private readonly _unsubscribeMeasurements: () => void
 
@@ -373,7 +162,7 @@ export class AcApModelSync {
    * Call when the document starts a new drawing.
    */
   resync() {
-    this._entities.clear()
+    this._drawables.clear()
     for (const item of this.model.items) {
       if (!this._measurementIds.has(item.id)) this.model.remove(item.id)
     }
@@ -387,126 +176,82 @@ export class AcApModelSync {
   }
 
   /**
-   * Returns the entity that draws the item with this id.
-   *
-   * The same entity is returned until the item changes. Treat it as read-only:
-   * to change the item, change a clone and pass it to {@link replace}.
-   *
-   * @param id - The id of the item
-   * @returns The entity, or undefined for measurements, missing ids and items
-   *   that cannot be drawn
+   * Returns the drawing item with this id: undefined for measurements and
+   * missing ids.
    */
-  entity(id: string): AcDbEntity | undefined {
+  item(id: string): ModelItem | undefined {
     const item = this.model.get(id)
-    if (!item) {
-      this._entities.delete(id)
+    if (!item || this._measurementIds.has(id) || isMeasurementItem(item)) {
       return undefined
     }
-    const cached = this._entities.get(id)
-    if (cached?.item === item) {
-      return cached.entity
-    }
-    const entity = this.createEntity(item)
-    this._entities.set(id, { item, entity })
-    return entity
+    return item
   }
 
   /**
-   * Returns the entities that draw the items with these ids, skipping ids
-   * that have none.
+   * Returns the drawable that draws the item with this id, the same one until
+   * the item changes.
+   *
+   * @param id - The id of the item
+   * @returns The drawable, or undefined for measurements and missing ids
    */
-  entities(ids: Iterable<string>): AcDbEntity[] {
-    const result: AcDbEntity[] = []
+  drawable(id: string): AcApItemDrawable | undefined {
+    const item = this.item(id)
+    if (!item) {
+      this._drawables.delete(id)
+      return undefined
+    }
+    const cached = this._drawables.get(id)
+    if (cached?.item === item) return cached.drawable
+    const drawable = this.createDrawable(item)
+    this._drawables.set(id, { item, drawable })
+    return drawable
+  }
+
+  /** Returns the drawables of the items with these ids that exist. */
+  drawables(ids: Iterable<string>): AcApItemDrawable[] {
+    const result: AcApItemDrawable[] = []
     for (const id of ids) {
-      const entity = this.entity(id)
-      if (entity) result.push(entity)
+      const drawable = this.drawable(id)
+      if (drawable) result.push(drawable)
     }
     return result
   }
 
   /**
-   * Builds a new entity that draws a model item.
-   *
-   * The entity is not added to the database. It carries the item id as its
-   * object id and belongs to model space.
+   * Builds a new drawable for an item, in model space.
    *
    * @param item - The item to draw
-   * @returns The entity, or undefined for measurements and items that cannot
-   *   be drawn
    */
-  createEntity(item: ModelItem): AcDbEntity | undefined {
-    if (this._measurementIds.has(item.id) || isMeasurementItem(item)) {
-      return undefined
-    }
-    if (item.kind === 'dimension') {
-      try {
-        checkDimension(item.geometry)
-      } catch {
-        return undefined
-      }
-    }
-    const database = this._doc.database
-    const entity = targetFor(item).create()
-    entity.database = database
-    entity.objectId = item.id
-    entity.ownerId = database.tables.blockTable.modelSpace.objectId
-    return entity
+  createDrawable(item: ModelItem): AcApItemDrawable {
+    return new AcApItemDrawable(item, ACAP_MODEL_SPACE_ID, acapPointDisplay)
   }
 
   /**
-   * Adds the shapes, points and dimensions described by entities to the
-   * drawing, each under a new id.
-   *
-   * @param entities - The entities to add; others are skipped
-   * @returns The new ids, in the order of the entities that were added
-   * @throws When the document is read-only
-   */
-  add(entities: AcDbEntity | AcDbEntity[]): string[] {
-    this.checkWritable()
-    const ids: string[] = []
-    for (const entity of Array.isArray(entities) ? entities : [entities]) {
-      const contents = itemContentsFor(entity)
-      if (contents) {
-        ids.push(this.model.add(contents as ModelTextItem).id)
-      }
-    }
-    return ids
-  }
-
-  /**
-   * Changes an item to what an entity describes, keeping its id.
+   * Changes the kind and geometry of an item, keeping its id.
    *
    * @param id - The id of the item to change
-   * @param entity - The new contents
+   * @param contents - The new kind and geometry
    * @returns Whether the item was changed
    * @throws When the document is read-only
    */
-  replace(id: string, entity: AcDbEntity) {
+  update(id: string, contents: AcApItemContents) {
     this.checkWritable()
-    const contents = itemContentsFor(entity)
-    if (!contents || !this.model.has(id) || this._measurementIds.has(id)) {
-      return false
-    }
+    if (!this.item(id)) return false
     this.model.update({ ...contents, id } as ModelItem)
     return true
   }
 
   /**
-   * Changes an item through a copy of its entity, keeping its id.
+   * Adds items with the given kinds and geometry, each under a new id.
    *
-   * @param id - The id of the item to change
-   * @param change - Changes the copy, such as by moving a grip point
-   * @returns Whether the item was changed
+   * @param contents - The items to add
+   * @returns The new ids
    * @throws When the document is read-only
    */
-  edit(id: string, change: (entity: AcDbEntity) => void) {
+  addItems(contents: AcApItemContents | AcApItemContents[]): string[] {
     this.checkWritable()
-    const copy = this.entity(id)?.clone()
-    if (!copy) {
-      return false
-    }
-    change(copy)
-    return this.replace(id, copy)
+    const list = Array.isArray(contents) ? contents : [contents]
+    return list.map(item => this.model.add(item as ModelTextItem).id)
   }
 
   /**
@@ -551,24 +296,24 @@ export class AcApModelSync {
 
     const current = new Map(this.currentLines().map(item => [item.id, item]))
     const named: ModelItem[] = []
-    const unnamed: { item: ModelTextItem; target: ModelTextTarget }[] = []
+    const unnamed: { item: ModelTextItem; line: string }[] = []
     for (const item of parsed) {
-      const target = targetFor(item)
+      const line = lineOf(item)
       if (item.id !== undefined && current.has(item.id)) {
-        if (current.get(item.id)!.line !== target.line) {
+        if (current.get(item.id)!.line !== line) {
           named.push(item as ModelItem)
         }
         current.delete(item.id)
       } else {
-        unnamed.push({ item: { ...item, id: undefined }, target })
+        unnamed.push({ item: { ...item, id: undefined }, line })
       }
     }
 
     // Lines without an id keep matching the items no line names, so typing
     // a new line without its id does not create it again on every edit.
     const remaining = [...current.values()]
-    const changed = unnamed.filter(({ target }) => {
-      const index = remaining.findIndex(item => item.line === target.line)
+    const changed = unnamed.filter(({ line }) => {
+      const index = remaining.findIndex(item => item.line === line)
       if (index < 0) {
         return true
       }
@@ -580,11 +325,11 @@ export class AcApModelSync {
     }
     this.checkWritable()
 
-    const takeIdFor = (target: ModelTextTarget) => {
-      let index = remaining.findIndex(item => {
-        const entity = this.entity(item.id)
-        return !!entity && target.canUpdate(entity)
-      })
+    // Prefer an item of the same kind, such as another circle, so the id
+    // stays with the shape the line most likely describes.
+    const takeIdFor = (item: ModelTextItem) => {
+      const kind = itemTypeName(item as AcApItemContents)
+      let index = remaining.findIndex(other => other.kind === kind)
       if (index < 0 && remaining.length > 0) index = 0
       return index < 0 ? undefined : remaining.splice(index, 1)[0].id
     }
@@ -592,8 +337,8 @@ export class AcApModelSync {
     for (const item of named) {
       this.model.update(item)
     }
-    for (const { item, target } of changed) {
-      const id = takeIdFor(target)
+    for (const { item } of changed) {
+      const id = takeIdFor(item)
       if (id === undefined) {
         this.model.add(item)
       } else {
@@ -621,11 +366,15 @@ export class AcApModelSync {
     }
   }
 
-  /** The drawing items of the model, each with the line that describes it. */
+  /** The drawing items of the model, each with its line and kind. */
   private currentLines() {
     return this.model.items
       .filter(item => !this._measurementIds.has(item.id))
-      .map(item => ({ id: item.id, line: targetFor(item).line }))
+      .map(item => ({
+        id: item.id,
+        line: lineOf(item),
+        kind: itemTypeName(item)
+      }))
   }
 
   private updateMeasurements() {
@@ -657,7 +406,7 @@ export class AcApModelSync {
     return {
       type: MEASUREMENT_TYPE_NAMES[record.geometry.type],
       points,
-      text: getMeasurementValueText(record.id, this._doc.database) || undefined
+      text: getMeasurementValueText(record.id) || undefined
     }
   }
 

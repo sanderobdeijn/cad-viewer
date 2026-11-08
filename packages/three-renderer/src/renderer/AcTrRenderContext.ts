@@ -1,4 +1,3 @@
-import { AcDbDatabase } from '@mlightcad/data-model'
 import {
   ACGI_DARK_THEME_FOREGROUND,
   ACGI_LIGHT_THEME_FOREGROUND,
@@ -18,7 +17,7 @@ import { AcTrStyleManager } from '../style/AcTrStyleManager'
  * Bundles material/style access with scene-graph policies so entity instances
  * only hold one reference while each concern stays in its own module.
  * Extends {@link AcGiContext} so {@link AcGiRenderer.context} can carry the
- * active database and background-dependent colour resolution state.
+ * background-dependent colour resolution state.
  *
  * Defaults to {@link alwaysBatchDrawPolicy} so entities merge in
  * {@link AcTrBatchedGroup} whenever possible. Large-coordinate precision is
@@ -29,12 +28,6 @@ import { AcTrStyleManager } from '../style/AcTrStyleManager'
 export class AcTrRenderContext extends AcGiContext {
   readonly styleManager: AcTrStyleManager
   batchDrawPolicy: AcTrBatchDrawPolicy
-
-  /**
-   * Database being drawn. Narrows {@link AcGiContext.database} from `unknown`
-   * to {@link AcDbDatabase} for three-renderer consumers.
-   */
-  database: AcDbDatabase | undefined = undefined
 
   /**
    * When `true` (default), {@link AcTrGroup} glyph `asyncDraw` returns to the

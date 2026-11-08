@@ -1,4 +1,3 @@
-import { type AcDbDatabase } from '@mlightcad/data-model'
 import { type GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import {
   AcTrHtmlBadge,
@@ -144,13 +143,9 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
    * Draws arm lines + arc canvas, dots, badge, and commit extras.
    *
    * @param view - Active 2D view for HTML overlays
-   * @param db - Database used to format the angle label
    * @returns World-draw result including redraw/dispose hooks
    */
-  protected subWorldDrawWithDb(
-    view: AcTrView2d,
-    db: AcDbDatabase
-  ): AcApMeasureWorldDrawResult {
+  protected drawMeasurement(view: AcTrView2d): AcApMeasureWorldDrawResult {
     const live = {
       vertex: { x: this.vertex.x, y: this.vertex.y } as Point2,
       arm1: { x: this.arm1.x, y: this.arm1.y } as Point2,
@@ -184,7 +179,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
       worldPosition: live.arm2,
       layer: MEASUREMENT_LAYER
     })
-    const label = formatMeasurementAngle(db, (degrees * Math.PI) / 180)
+    const label = formatMeasurementAngle((degrees * Math.PI) / 180)
     const importedTextHeight =
       this.textHeightWcs != null && this.textHeightWcs > 0
         ? this.textHeightWcs
@@ -261,7 +256,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
 
     const refreshLive = () => {
       degrees = measureAngleDeg(live.vertex, live.arm1, live.arm2)
-      badge.setText(formatMeasurementAngle(db, (degrees * Math.PI) / 180))
+      badge.setText(formatMeasurementAngle((degrees * Math.PI) / 180))
       acapPlaceOverlayHtml(
         view,
         badge,
@@ -315,7 +310,7 @@ export class AcApMeasureAngleEntity extends AcApMeasureEntity {
             geometry
           }
       runMeasurementEdit(() => {
-        republishMeasurement(view, db, record)
+        republishMeasurement(view, record)
       })
     }
 

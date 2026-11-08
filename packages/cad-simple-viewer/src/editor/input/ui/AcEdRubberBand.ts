@@ -3,7 +3,7 @@ import {
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 
-import { AcApDocManager } from '../../../app'
+import { acapDrawingFormatter } from '../../../util/units/AcApDrawingFormatter'
 import { AcEdBaseView } from '../../view'
 
 /**
@@ -284,10 +284,7 @@ export class AcEdRubberBand {
           (targetPoint.y - this.basePoint.y) ** 2
       )
 
-      const db = AcApDocManager.instance.curDocument?.database
-      this.labelEl.textContent = db
-        ? db.formatter.formatLength(dist)
-        : dist.toFixed(3)
+      this.labelEl.textContent = acapDrawingFormatter().formatLength(dist)
       this.labelEl.style.left = `${midX - 20}px`
       this.labelEl.style.top = `${midY}px`
       this.labelEl.style.display = ''
@@ -380,13 +377,10 @@ export class AcEdRubberBand {
       this.anglePath.setAttribute('d', d)
 
       const angleValueRad = Math.abs(angleRad)
-      const db = AcApDocManager.instance.curDocument?.database
-      const angleText = db
-        ? db.formatter.formatAngle(angleValueRad, {
-            showUnits: true,
-            applyAngbaseAngdir: false
-          })
-        : `${((angleValueRad * 180) / Math.PI).toFixed(1)}°`
+      const angleText = acapDrawingFormatter().formatAngle(angleValueRad, {
+        showUnits: true,
+        applyAngbaseAngdir: false
+      })
 
       // midpoint of arc in container-local coordinates
       const midX = centerX + radius * Math.cos(midAngle)

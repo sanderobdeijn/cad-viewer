@@ -1,5 +1,4 @@
 import { AcCmColor, AcCmColorMethod } from '@mlightcad/common'
-import { type AcDbDatabase } from '@mlightcad/data-model'
 import { AcGiLineWeight } from '@mlightcad/graphic-interface'
 
 import {
@@ -16,10 +15,6 @@ import {
   MEASUREMENT_LINE_WEIGHT
 } from '../src/util/AcApMeasurementUtil'
 import { useTestSettings } from './helpers/settings'
-
-function mockDb(): AcDbDatabase {
-  return {} as AcDbDatabase
-}
 
 describe('AcApMeasurementUtil', () => {
   beforeEach(() => {

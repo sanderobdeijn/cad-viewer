@@ -15,6 +15,7 @@ import {
   AcEdPromptStringOptions
 } from '../editor'
 import { AcApI18n } from '../i18n'
+import { ACAP_MODEL_SPACE_ID } from '../model/AcApItemDrawable'
 
 /**
  * AutoCAD-style ZOOM command with keyword-driven branches in a single command.
@@ -318,34 +319,14 @@ export class AcApZoomCmd extends AcEdCommand {
   }
 
   /**
-   * Restores AutoCAD's saved view (model VPORT `*ACTIVE` or paper LIMMIN/LIMMAX).
-   *
-   * Matches the HTML export toolbar “Saved” action: prefer the drawing's stored
-   * viewport, then the open-time original view, then extents.
+   * Restores the saved view: the open-time original view, or the extents
+   * when there is none.
    *
    * @param context - Current command context.
    */
   private runSaved(context: AcApContext) {
     this.rememberViewBeforeZoom(context)
-    const saved = this.resolveSavedViewBox(context)
-    if (saved) {
-      context.view.zoomTo(saved, 1)
-      return
-    }
     this.runOriginal(context, false)
-  }
-
-  /**
-   * Resolves the saved view (VPORT `*ACTIVE`) of model space.
-   *
-   * @param context - Current command context.
-   * @returns Saved view box, or `undefined` when missing / empty.
-   */
-  private resolveSavedViewBox(context: AcApContext): GeometryBox2d | undefined {
-    const aspect = context.view.width / Math.max(context.view.height, 1)
-    const box =
-      context.doc.database.tables.viewportTable.getActiveVportBox(aspect)
-    return box ?? undefined
   }
 
   /**
@@ -356,10 +337,8 @@ export class AcApZoomCmd extends AcEdCommand {
    * @param rememberPrevious - When false, caller already recorded previous view.
    */
   private runOriginal(context: AcApContext, rememberPrevious: boolean = true) {
-    const layoutBtrId = context.doc.database.currentSpaceId
-    const original = layoutBtrId
-      ? AcApZoomCmd.originalViewBoxByLayout.get(layoutBtrId)
-      : undefined
+    const original =
+      AcApZoomCmd.originalViewBoxByLayout.get(ACAP_MODEL_SPACE_ID)
     if (rememberPrevious) {
       this.rememberViewBeforeZoom(context)
     }

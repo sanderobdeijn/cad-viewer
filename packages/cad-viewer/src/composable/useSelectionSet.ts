@@ -2,13 +2,12 @@ import {
   AcApDocManager,
   AcEdSelectionEventArgs
 } from '@mlightcad/cad-simple-viewer'
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 export function useSelectionSet() {
-  const selectionSet = ref<AcDbObjectId[]>([])
-  const added = ref<AcDbObjectId[]>([])
-  const removed = ref<AcDbObjectId[]>([])
+  const selectionSet = ref<string[]>([])
+  const added = ref<string[]>([])
+  const removed = ref<string[]>([])
 
   const selectionAdded = (args: AcEdSelectionEventArgs) => {
     added.value = args.ids

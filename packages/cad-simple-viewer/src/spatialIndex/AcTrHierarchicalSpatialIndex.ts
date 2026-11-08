@@ -1,4 +1,3 @@
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { AcTrGroup } from '@mlightcad/three-renderer'
 
 import {
@@ -137,7 +136,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    *
    * @param id Id of the root item to remove.
    */
-  removeById(id: AcDbObjectId): void {
+  removeById(id: string): void {
     this.rootIndex.removeById(id)
     this.childIndexes.delete(id)
   }
@@ -319,7 +318,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    * @param id Root item id.
    * @returns `true` if a child index is registered for `id`.
    */
-  hasChildIndex(id: AcDbObjectId) {
+  hasChildIndex(id: string) {
     return this.childIndexes.has(id)
   }
 
@@ -328,9 +327,9 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    *
    * Does not clear or inspect child indexes.
    */
-  getRootById(id: AcDbObjectId): AcEdSpatialQueryResultItem | undefined {
+  getRootById(id: string): AcEdSpatialQueryResultItem | undefined {
     const root = this.rootIndex as AcTrSpatialIndex & {
-      getById?: (id: AcDbObjectId) => AcEdSpatialQueryResultItem | undefined
+      getById?: (id: string) => AcEdSpatialQueryResultItem | undefined
     }
     return root.getById?.(id)
   }
@@ -384,10 +383,7 @@ export class AcTrHierarchicalSpatialIndex implements AcTrSpatialIndex {
    * @param items Child items used to initialize a newly created index.
    * @returns Existing or newly created child index, or `undefined` for empty input.
    */
-  ensureChildIndex(
-    id: AcDbObjectId,
-    items: readonly AcEdSpatialQueryResultItem[]
-  ) {
+  ensureChildIndex(id: string, items: readonly AcEdSpatialQueryResultItem[]) {
     // Copy each item: callers may pass live `wcsChildBoxes` that later mutate
     // via Object.assign. RBush parent bounds would go stale if we stored those
     // references; the previous insert({ ...item }) path copied for the same reason.

@@ -1,5 +1,4 @@
 import { AcCmEventManager } from '@mlightcad/common'
-import { AcDbObjectId } from '@mlightcad/data-model'
 
 /**
  * Event arguments for selection-related events.
@@ -8,7 +7,7 @@ import { AcDbObjectId } from '@mlightcad/data-model'
  */
 export interface AcEdSelectionEventArgs {
   /** Array of entity IDs that were added or removed from selection */
-  ids: AcDbObjectId[]
+  ids: string[]
 }
 
 /**
@@ -48,7 +47,7 @@ export interface AcEdSelectionEventArgs {
  */
 export class AcEdSelectionSet {
   /** Internal set storing the selected entity IDs */
-  private _ids: Set<AcDbObjectId>
+  private _ids: Set<string>
 
   /** Events fired when selection changes */
   public readonly events = {
@@ -72,8 +71,8 @@ export class AcEdSelectionSet {
    * const selectionSet = new AcEdSelectionSet(['entity1', 'entity2']);
    * ```
    */
-  constructor(ids: AcDbObjectId[] = []) {
-    this._ids = new Set<AcDbObjectId>(ids)
+  constructor(ids: string[] = []) {
+    this._ids = new Set<string>(ids)
   }
 
   /**
@@ -111,7 +110,7 @@ export class AcEdSelectionSet {
    * selectionSet.add(['entity2', 'entity3', 'entity4']);
    * ```
    */
-  add(value: AcDbObjectId | AcDbObjectId[]) {
+  add(value: string | string[]) {
     if (Array.isArray(value)) {
       value.forEach(item => this._ids.add(item))
       this.events.selectionAdded.dispatch({ ids: value })
@@ -138,7 +137,7 @@ export class AcEdSelectionSet {
    * selectionSet.delete(['entity2', 'entity3']);
    * ```
    */
-  delete(value: AcDbObjectId | AcDbObjectId[]) {
+  delete(value: string | string[]) {
     if (Array.isArray(value)) {
       value.forEach(item => this._ids.delete(item))
       this.events.selectionRemoved.dispatch({ ids: value })
@@ -161,7 +160,7 @@ export class AcEdSelectionSet {
    * }
    * ```
    */
-  has(id: AcDbObjectId) {
+  has(id: string) {
     return this._ids.has(id)
   }
 

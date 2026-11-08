@@ -58,7 +58,10 @@ function installMatchMedia(matches: (query: string) => boolean) {
       }
     },
     fire(query: string) {
-      const event = { matches: matches(query), media: query } as MediaQueryListEvent
+      const event = {
+        matches: matches(query),
+        media: query
+      } as MediaQueryListEvent
       listeners.get(query)?.forEach(listener => listener(event))
     }
   }
@@ -74,9 +77,7 @@ describe('AcEdUiLayout', () => {
     expect(ML_UI_Z_CANVAS_HTML_STROKE).toBe(1)
     expect(ML_UI_Z_CANVAS_HTML_OVERLAY).toBe(2)
     expect(ML_UI_Z_DRAW_STYLE_TOOLBAR).toBe(45)
-    expect(ML_UI_Z_CANVAS_HTML_STROKE).toBeLessThan(
-      ML_UI_Z_CANVAS_HTML_OVERLAY
-    )
+    expect(ML_UI_Z_CANVAS_HTML_STROKE).toBeLessThan(ML_UI_Z_CANVAS_HTML_OVERLAY)
     expect(ML_UI_Z_CANVAS_HTML_OVERLAY).toBeLessThan(ML_UI_Z_DRAW_STYLE_TOOLBAR)
   })
 
@@ -86,9 +87,7 @@ describe('AcEdUiLayout', () => {
   })
 
   it('reports mobile layout from matchMedia', () => {
-    const media = installMatchMedia(
-      query => query === ML_UI_MOBILE_MEDIA_QUERY
-    )
+    const media = installMatchMedia(query => query === ML_UI_MOBILE_MEDIA_QUERY)
 
     expect(acedIsMobileUiLayout()).toBe(true)
     expect(acedIsCompactUiLayout()).toBe(false)
@@ -166,9 +165,7 @@ describe('AcEdUiLayout', () => {
   })
 
   it('does not treat any-pointer coarse (touch laptop) as handheld', () => {
-    const media = installMatchMedia(
-      query => query === '(any-pointer: coarse)'
-    )
+    const media = installMatchMedia(query => query === '(any-pointer: coarse)')
 
     expect(acedGetUiLayout()).toBe('desktop')
     expect(acedIsHandheldDevice()).toBe(false)
@@ -180,9 +177,7 @@ describe('AcEdUiLayout', () => {
 
 describe('acedShouldHideDesktopCommandLine', () => {
   it('hides the CLI on the phone breakpoint even when idle', () => {
-    const media = installMatchMedia(
-      query => query === ML_UI_MOBILE_MEDIA_QUERY
-    )
+    const media = installMatchMedia(query => query === ML_UI_MOBILE_MEDIA_QUERY)
     expect(acedShouldHideDesktopCommandLine(false)).toBe(true)
     expect(acedShouldHideDesktopCommandLine(true)).toBe(true)
     media.restore()

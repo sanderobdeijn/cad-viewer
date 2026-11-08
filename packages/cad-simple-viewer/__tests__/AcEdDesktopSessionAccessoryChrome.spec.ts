@@ -13,12 +13,14 @@ describe('AcEdDesktopSessionAccessoryChrome', () => {
 
   it('exposes a mount host and toggles shell visibility', () => {
     const chrome = new AcEdDesktopSessionAccessoryChrome(host)
-    expect(chrome.host.classList.contains('ml-desktop-session-accessory__slot')).toBe(
-      true
-    )
+    expect(
+      chrome.host.classList.contains('ml-desktop-session-accessory__slot')
+    ).toBe(true)
 
     chrome.prepare()
-    const root = host.querySelector('.ml-desktop-session-accessory') as HTMLElement
+    const root = host.querySelector(
+      '.ml-desktop-session-accessory'
+    ) as HTMLElement
     expect(root.hidden).toBe(false)
     expect(root.classList.contains('is-visible')).toBe(true)
 

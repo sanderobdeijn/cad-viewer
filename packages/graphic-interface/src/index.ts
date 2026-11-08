@@ -22,6 +22,14 @@ export {
 } from './AcGiContext'
 export type { AcGiContextOptions } from './AcGiContext'
 export type { AcGiDirectBatchPrimitive } from './AcGiDirectBatchPrimitive'
+export type { AcGiDrawable } from './AcGiDrawable'
+export {
+  ACGI_DRAW_CIRCLE_SIDES_DRAFT,
+  ACGI_DRAW_CIRCLE_SIDES_HIGH,
+  ACGI_DRAW_CIRCLE_SIDES_STANDARD,
+  acgiDrawCircleSides,
+  acgiDrawTessellateOptions
+} from './AcGiDrawTessellate'
 export type { AcGiFontMapping, AcGiRenderer } from './AcGiRenderer'
 export type { AcGiShapeData } from './AcGiShapeData'
 export type { AcGiStyleType } from './AcGiStyleType'

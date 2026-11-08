@@ -1,8 +1,4 @@
-import { AcCmColor, AcCmEventManager, log } from '@mlightcad/common'
-import {
-  AcDbDatabase,
-  acdbHostApplicationServices
-} from '@mlightcad/data-model'
+import { AcCmEventManager, log } from '@mlightcad/common'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import { AcTrMTextRenderer } from '@mlightcad/three-renderer'
 
@@ -45,6 +41,7 @@ import {
   AcEdOpenMode,
   eventBus
 } from '../editor'
+import { ACAP_MODEL_SPACE_ID } from '../model/AcApItemDrawable'
 import { AcApPluginManager } from '../plugin/AcApPluginManager'
 import { isScriptQuitCommand, parseScriptLines } from '../util/AcApScriptParser'
 import { AcTrView2d } from '../view'
@@ -55,12 +52,7 @@ import { AcApDocSession } from './AcApDocSession'
 import { ACAP_DEFAULT_DOCS_BASE_URL, acapSetDocsBaseUrl } from './AcApDocsUrl'
 import { AcApDocument } from './AcApDocument'
 import { AcApFontLoader } from './AcApFontLoader'
-import {
-  AcApOpenDatabaseOptions,
-  AcApOpenViewMode
-} from './AcApOpenDatabaseOptions'
-import { AcApOpenFileProfiler } from './AcApOpenFileProfiler'
-import { AcApOpenFileProgressController } from './AcApOpenFileProgressController'
+import { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
 import { ACAP_SETTING_COMMANDS, AcApSettingManager } from './AcApSettingManager'
 import {
   checkWebworkerReadiness,
@@ -341,8 +333,6 @@ export class AcApDocManager {
    * scene on its own renderer — scenes are never moved between views.
    */
   private _splitView?: AcTrView2d
-  /** Session whose canvas currently owns the open-file overlay. */
-  private _openingSession?: AcApDocSession
   /** Monotonic id suffix for {@link AcApDocSession.id}. */
   private _nextSessionId = 1
   /** Font loader for managing CAD text fonts */
@@ -353,10 +343,6 @@ export class AcApDocManager {
   private _busyIndicatorHost: HTMLElement
   /** Busy overlay for long-running command operations */
   private _busyIndicator: AcApBusyIndicator
-  /** Open-file progress overlay and event normalization */
-  private _openFileProgress: AcApOpenFileProgressController
-  /** Optional OPENPROF session profiler (console stage timings) */
-  private _openFileProfiler = new AcApOpenFileProfiler()
   /** Command manager */
   private _commandManager: AcEdCommandStack
   /** Plugin manager */
@@ -483,7 +469,6 @@ export class AcApDocManager {
     // would leave workers on an unset/stale font base URL.
     AcTrMTextRenderer.getInstance().setFontUrl(fontsUrl)
     this.installFontFileLoadTimeout()
-    acdbHostApplicationServices().workingDatabase = doc.database
 
     this._commandManager = new AcEdCommandStack()
     this.registerCommands()
@@ -493,15 +478,6 @@ export class AcApDocManager {
     )
     const busyHost = options.busyIndicatorHost ?? view.container
     this._busyIndicatorHost = busyHost
-    this._openFileProgress = new AcApOpenFileProgressController(busyHost)
-    this._openFileProgress.setSceneBusyGate(() => {
-      const view = this.openProgressView
-      // Progressive open hides at CONVERSION END (see-through path) and does
-      // not use this gate. Default open keeps "Rendering drawing ..." until
-      // entity convert and deferred glyph jobs both finish.
-      return view.isProcessingEntities
-    })
-    this._openFileProgress.setOnHidden(() => this.onOpenProgressHidden())
     this._busyIndicator = new AcApBusyIndicator(busyHost)
     acapBindCommandServices({
       showMessage: (message, type, msgKey) =>
@@ -512,10 +488,6 @@ export class AcApDocManager {
         this.withBusyIndicator(work, message)
     })
 
-    this.events.documentToBeOpened.addEventListener(() => {
-      this._openFileProgress.reset()
-    })
-    this.bindOpenProgress(doc)
     this.events.documentCreated.dispatch({
       doc,
       mode: doc.openMode
@@ -754,10 +726,6 @@ export class AcApDocManager {
 
     const targetView = session.context.view as AcTrView2d
     const currentView = this._activeSession.context.view as AcTrView2d
-    if (this._openingSession && targetView === currentView) {
-      return false
-    }
-
     await this._commandManager.cancelActive()
     this.events.documentToBeActivated.dispatch({
       doc,
@@ -772,26 +740,18 @@ export class AcApDocManager {
         session.viewState = undefined
       }
     } else {
-      if (this._activeSession !== this._openingSession) {
-        this._activeSession.context.suspend()
-      }
+      this._activeSession.context.suspend()
       this._activeSession = session
       session.context.resume()
     }
-    acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(session.context)
-    this.curView.bindDrawDatabase(doc.database)
-    // Bind the view to the session's currentSpaceId before documentActivated
-    // so layout tabs snapshot the correct active layout.
     this.setActiveLayout()
-    this.curView.syncDisplaySysVars(doc.database)
+    this.curView.syncDisplaySettings()
     this.events.documentActivated.dispatch({
       doc,
       mode: doc.openMode
     })
-    if (!this._openingSession) {
-      this.syncProgressOverlayHost()
-    }
+    this.syncBusyIndicatorHost()
     return true
   }
 
@@ -980,56 +940,6 @@ export class AcApDocManager {
   }
 
   /**
-   * Resolves colors for creating new entities.
-   *
-   * Returns:
-   * - `entityColor`: the resolved RGB color (24-bit) to use for newly created entities.
-   * - `layerColor`: the current layer's resolved RGB color (24-bit).
-   */
-  resolveColors(): { entityColor: number; layerColor: number } {
-    const db = this.curDocument.database
-    const layer = db.tables.layerTable.getAt(db.clayer)
-    const layerColorValue = this.resolveColorToRgb(layer?.color)
-
-    let resolved: AcCmColor | undefined = db.cecolor
-    if (resolved?.isByLayer) {
-      resolved = layer?.color
-    }
-
-    return {
-      entityColor: this.resolveColorToRgb(resolved),
-      layerColor: layerColorValue
-    }
-  }
-
-  /**
-   * Resolves an AcCmColor into a 24-bit RGB number.
-   * Falls back to ACI 7 when the color is ByLayer/ByBlock or undefined.
-   */
-  private resolveColorToRgb(color?: AcCmColor): number {
-    if (
-      !color ||
-      color.isByLayer ||
-      color.isByBlock ||
-      (color.isByACI && color.colorIndex === 7)
-    ) {
-      return this.resolveAci7ForBackground()
-    }
-    const rgbValue = color.RGB
-    return rgbValue ?? this.resolveAci7ForBackground()
-  }
-
-  /**
-   * Resolves ACI 7 based on the current viewer background color.
-   * - Light background (white): use black.
-   * - Dark background: use white.
-   */
-  private resolveAci7ForBackground(): number {
-    const bg = this.curView.backgroundColor
-    return bg === 0xffffff ? 0x000000 : 0xffffff
-  }
-
-  /**
    * Gets the list of available fonts that can be loaded.
    *
    * Note: These fonts are available for loading but may not be loaded yet.
@@ -1198,9 +1108,7 @@ export class AcApDocManager {
       mode: AcEdOpenMode.Write
     })
     const created = await this.ensureOpenSession()
-    this.beginOpenProgress()
     this.onBeforeOpenDocument(openOptions, !created)
-    await this._openFileProgress.beginOpen(this.context.doc.database)
     const isSuccess = await this.context.doc.createNewDrawing(openOptions)
     this.onAfterOpenDocument(isSuccess, openOptions)
     if (!isSuccess && created) {
@@ -1680,11 +1588,10 @@ export class AcApDocManager {
    * the user back to paper when reactivating a session left on Model.
    * Open-time sync lives in {@link onAfterOpenDocument}.
    */
-  setActiveLayout(view?: AcTrView2d, database?: AcDbDatabase) {
+  setActiveLayout(view?: AcTrView2d) {
     const currentView = view ?? (this.curView as AcTrView2d)
-    const db = database ?? this.curDocument.database
-    currentView.activeLayoutBtrId = db.currentSpaceId
-    currentView.modelSpaceBtrId = db.tables.blockTable.modelSpace.objectId
+    currentView.activeLayoutBtrId = ACAP_MODEL_SPACE_ID
+    currentView.modelSpaceBtrId = ACAP_MODEL_SPACE_ID
   }
 
   /**
@@ -1707,24 +1614,20 @@ export class AcApDocManager {
       // Drop overlay history before view.clear() disposes HTML.
       resetMeasurementSession()
       AcApZoomCmd.clearOriginalViews()
-      this.openProgressView.clear()
+      this.curView.clear()
     }
-    this.openProgressView.bindDrawDatabase(this.context.doc.database)
     // `progressiveRendering` gates both stages: time-sliced mid-open paints
     // in batchConvert, and whether the open overlay waits for deferred text.
     // Camera auto-fit is started separately in onAfter when the open view
     // mode uses zoom-to-fit — not for restored VPORT/saved views.
-    this.openProgressView.progressiveRendering =
-      options?.progressiveRendering ?? false
-    this._openFileProgress.setSeeThroughOverlay(
-      options?.progressiveRendering ?? false
-    )
+    this.curView.progressiveRendering = options?.progressiveRendering ?? false
+    this.curView.renderer.context.circleSides = options?.circleSides
     // Headless HTML export: convert off layers once, skip pick indexes, and
     // optionally skip cooperative yields that only matter for an interactive UI.
-    this.openProgressView.convertInvisibleLayers =
+    this.curView.convertInvisibleLayers =
       options?.convertInvisibleLayers === true
-    this.openProgressView.cooperativeYield = options?.cooperativeYield !== false
-    const openCadScene = this.openProgressView.cadScene
+    this.curView.cooperativeYield = options?.cooperativeYield !== false
+    const openCadScene = this.curView.cadScene
     if (openCadScene) {
       openCadScene.skipSpatialIndex = options?.skipSpatialIndex === true
     }
@@ -1732,8 +1635,6 @@ export class AcApDocManager {
     // mesh parse overlaps db.read. Glyph finalize awaits the promise; linework
     // convert does not.
     void this.ensurePresetFontsForOpen()
-    // OPENPROF: start stage timings before db.read / entity flush.
-    this._openFileProfiler.begin(this.context.doc.database)
   }
 
   /**
@@ -1743,13 +1644,6 @@ export class AcApDocManager {
    * If the document was successfully opened, it dispatches the documentActivated event,
    * sets up layout information, and zooms the view to fit the content.
    *
-   * A large DWG/DXF parse can fail (e.g. a worker timeout) after entities have already
-   * been committed to the database in earlier pipeline stages, leaving `isSuccess` false
-   * while the database already has valid, non-empty extents. Without this check the view
-   * never initializes and the user is left with a blank canvas despite the data being in
-   * memory. When that happens, treat it as a recovered partial open so the view still
-   * activates and frames whatever content did land.
-   *
    * @param isSuccess - Whether the document was successfully opened
    * @protected
    */
@@ -1757,73 +1651,29 @@ export class AcApDocManager {
     isSuccess: boolean,
     options?: AcApOpenDatabaseOptions
   ) {
-    const recoveredPartialContent =
-      !isSuccess && this.hasRecoverablePartialContent()
-    if (isSuccess || recoveredPartialContent) {
-      const session = this._openingSession ?? this._activeSession
-      const view = session.context.view as AcTrView2d
-      session.doc.destroy()
-      const doc = session.doc
-      const db = doc.database
-      this.setActiveLayout(view, db)
-      view.syncDisplaySysVars(db)
-      this.events.documentActivated.dispatch({
-        doc,
-        mode: this.getDocumentEventMode(options)
-      })
-
-      // Frame the saved view (VPORT `*ACTIVE`) when the open view mode asks
-      // for it and the drawing has one; otherwise frame the drawing once its
-      // entities are converted.
-      const openViewMode = this.resolveOpenViewMode(options)
-      const progressiveRendering = options?.progressiveRendering ?? false
-      const canvasAspect = view.width / Math.max(view.height, 1)
-      const savedViewBox =
-        openViewMode === AcApOpenViewMode.Saved
-          ? db.tables.viewportTable.getActiveVportBox(canvasAspect)
-          : undefined
-      if (savedViewBox) {
-        view.zoomTo(savedViewBox)
-      } else {
-        if (progressiveRendering) {
-          view.beginProgressiveOpenFit()
-        }
-        view.zoomToFitDrawing()
-        view.requestOpenLineworkFrame()
-      }
-      view.markLayoutAsInitialized(db.currentSpaceId)
-      // `zoomToFitDrawing` frames asynchronously; capture original view in
-      // its completion callback instead of here (pre-fit camera is wrong).
-      if (savedViewBox) {
-        AcApZoomCmd.rememberOriginalView(view, db.currentSpaceId)
-      }
-      // OPENPROF: db.read is done; wait for batchConvert to drain, then print.
-      this._openFileProfiler.markReadCompleteAndScheduleReport(view)
-    } else {
-      this._openFileProfiler.cancel()
-      this.openProgressView.endProgressiveOpenFit()
+    if (!isSuccess) {
+      this.curView.endProgressiveOpenFit()
       this.regen()
+      return
     }
-  }
-
-  /**
-   * Checks whether the current document's database already has usable content
-   * even though the open operation reported failure.
-   *
-   * @returns True when the database has recoverable partial content.
-   * @protected
-   */
-  protected hasRecoverablePartialContent(): boolean {
-    const db = (this._openingSession ?? this._activeSession).doc.database
-    // `db.extents` comes from the DWG/DXF header, and some DXF files omit it
-    // entirely, leaving it empty even when entities parsed successfully. Check
-    // for actual entities in model space first, and only fall back to the
-    // (unreliable) header extents when model space itself is unavailable.
-    const modelSpace = db.tables.blockTable.modelSpace
-    if (modelSpace) {
-      return modelSpace.newIterator().count > 0
+    const session = this._activeSession
+    const view = session.context.view as AcTrView2d
+    session.doc.destroy()
+    view.addModelSpace()
+    this.setActiveLayout(view)
+    view.syncDisplaySettings()
+    view.renderer.showLineWeight =
+      AcApSettingManager.instance.get('lineWeightDisplay')
+    this.events.documentActivated.dispatch({
+      doc: session.doc,
+      mode: this.getDocumentEventMode(options)
+    })
+    if (options?.progressiveRendering ?? false) {
+      view.beginProgressiveOpenFit()
     }
-    return !db.extents.isEmpty()
+    view.zoomToFitDrawing()
+    view.requestOpenLineworkFrame()
+    view.markLayoutAsInitialized(ACAP_MODEL_SPACE_ID)
   }
 
   /**
@@ -1908,24 +1758,6 @@ export class AcApDocManager {
   }
 
   /**
-   * Resolves how the view is framed when a document finishes opening.
-   *
-   * Explicit `openViewMode` wins; otherwise Read zooms to the drawing and
-   * Write restores AutoCAD's saved view.
-   */
-  private resolveOpenViewMode(
-    options?: AcApOpenDatabaseOptions
-  ): AcApOpenViewMode {
-    if (options?.openViewMode != null) {
-      return options.openViewMode
-    }
-    const mode = this.getDocumentEventMode(options)
-    return mode === AcEdOpenMode.Write
-      ? AcApOpenViewMode.Saved
-      : AcApOpenViewMode.Extents
-  }
-
-  /**
    * Shows a spinner overlay, optionally with a message (e.g. HTML export).
    *
    * Supports nested calls via an internal reference count; the overlay stays
@@ -1944,51 +1776,16 @@ export class AcApDocManager {
    */
   setBusyIndicatorHost(host: HTMLElement): void {
     this._busyIndicatorHost = host
-    this.syncProgressOverlayHost()
+    this.syncBusyIndicatorHost()
   }
 
   /**
-   * Pins progress overlays to the canvas being opened, or the active canvas
-   * when a split view exists.
+   * Pins the busy overlay to the active canvas when a split view exists.
    */
-  private get openProgressView(): AcTrView2d {
-    return (this._openingSession?.context.view as AcTrView2d) ?? this.curView
-  }
-
-  /**
-   * Pins the open-file overlay to the session that is currently reading a file.
-   */
-  private beginOpenProgress() {
-    this._openingSession = this._activeSession
-    this.syncProgressOverlayHost()
-  }
-
-  /**
-   * Releases the open-file overlay pin after the spinner hides.
-   */
-  private onOpenProgressHidden() {
-    const opening = this._openingSession
-    this._openingSession = undefined
-    if (
-      opening &&
-      this._sessions.includes(opening) &&
-      opening !== this._activeSession
-    ) {
-      opening.context.suspend()
-    }
-    this.syncProgressOverlayHost()
-  }
-
-  /**
-   * Pins progress overlays to the canvas being opened when a split view exists.
-   *
-   * @param view - Canvas whose container receives the overlay.
-   */
-  private syncProgressOverlayHost(
-    view: AcTrView2d = this.openProgressView
-  ): void {
-    const host = this._splitView ? view.container : this._busyIndicatorHost
-    this._openFileProgress.setHost(host)
+  private syncBusyIndicatorHost(): void {
+    const host = this._splitView
+      ? this.curView.container
+      : this._busyIndicatorHost
     this._busyIndicator.setHost(host)
   }
 
@@ -2104,46 +1901,6 @@ export class AcApDocManager {
   }
 
   /**
-   * Forwards database open-progress events to the overlay and header sysvars.
-   *
-   * @param doc - Document whose `openProgress` events should drive the overlay.
-   */
-  private bindOpenProgress(doc: AcApDocument) {
-    doc.database.events.openProgress.addEventListener(args => {
-      this._openFileProgress.handle({
-        database: doc.database,
-        percentage: args.percentage,
-        stage: args.stage,
-        subStage: args.subStage,
-        subStageStatus: args.subStageStatus,
-        data: args.data
-      })
-
-      // Text styles are in the table when STYLE ends — start font download
-      // immediately so it overlaps LAYER / BLOCK / ENTITY parse and linework.
-      if (args.subStage === 'STYLE' && args.subStageStatus === 'END') {
-        const session = this._sessions.find(item => item.doc === doc)
-        const view = (session?.context.view as AcTrView2d) ?? this.curView
-        // Prefer the opening doc's session view so split-canvas opens do not
-        // kick preload on the wrong renderer.
-        if (view) {
-          view.startTextStyleFontPreload(doc.database)
-        }
-      }
-
-      if (args.subStage !== 'HEADER') {
-        return
-      }
-      const session = this._sessions.find(item => item.doc === doc)
-      const view = (session?.context.view as AcTrView2d) ?? this.curView
-      view.ltscale = doc.database.ltscale
-      view.celtscale = doc.database.celtscale
-      view.renderer.showLineWeight =
-        AcApSettingManager.instance.get('lineWeightDisplay')
-    })
-  }
-
-  /**
    * Parks the live view onto the active session so another document can take the canvas.
    */
   private parkActiveSession() {
@@ -2189,9 +1946,7 @@ export class AcApDocManager {
     const session = new AcApDocSession(`doc-${this._nextSessionId++}`, context)
     this._sessions.push(session)
     this._activeSession = session
-    acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
-    this.bindOpenProgress(doc)
     this.events.documentCreated.dispatch({
       doc,
       mode: doc.openMode
@@ -2218,6 +1973,7 @@ export class AcApDocManager {
     const oldDoc = session.doc
     resetMeasurementSession()
     this.curView.clear()
+    this.curView.addModelSpace()
     session.context.dispose()
     oldDoc.destroy()
     const doc = new AcApDocument()
@@ -2228,9 +1984,6 @@ export class AcApDocManager {
     )
     this._sessions = [replacement]
     this._activeSession = replacement
-    acdbHostApplicationServices().workingDatabase = doc.database
     this._pluginManager.setContext(context)
-    this.bindOpenProgress(doc)
-    this.curView.bindDrawDatabase(doc.database)
   }
 }

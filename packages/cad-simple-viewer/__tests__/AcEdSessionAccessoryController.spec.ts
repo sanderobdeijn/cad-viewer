@@ -139,7 +139,8 @@ describe('AcEdSessionAccessoryController', () => {
   it('resolves mobile host on phone/pad even when the prompt is closed', () => {
     const media = installMatchMedia(
       query =>
-        query === ML_UI_MOBILE_MEDIA_QUERY || query === ML_UI_COMPACT_MEDIA_QUERY
+        query === ML_UI_MOBILE_MEDIA_QUERY ||
+        query === ML_UI_COMPACT_MEDIA_QUERY
     )
     expect(isMobilePromptOpen).toBe(false)
     expect(controller.sessionAccessoryHost.type).toBe('mobile')
@@ -207,9 +208,7 @@ describe('AcEdSessionAccessoryController', () => {
   })
 
   it('does not mount selection accessories on the mobile slot', () => {
-    const media = installMatchMedia(
-      query => query === ML_UI_MOBILE_MEDIA_QUERY
-    )
+    const media = installMatchMedia(query => query === ML_UI_MOBILE_MEDIA_QUERY)
     isMobilePromptOpen = true
     const selection = createAccessory('selection')
     controller.selectionSessionAccessory = selection

@@ -2,8 +2,7 @@
  * Primitive kinds that a renderer may capture from a single {@link AcGiRenderer}
  * draw call and append into a batch without an intermediate scene-graph entity.
  *
- * Entities advertise support via the
- * {@link import('@mlightcad/data-model').AcDbEntity.directBatchPrimitive} accessor.
+ * Drawables advertise support via {@link AcGiDrawable.directBatchPrimitive}.
  *
  * @internal
  */

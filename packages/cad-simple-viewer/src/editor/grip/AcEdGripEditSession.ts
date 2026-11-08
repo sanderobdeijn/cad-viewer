@@ -1,6 +1,6 @@
-import { AcDbEntity, AcDbObjectId } from '@mlightcad/data-model'
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
+import type { AcApItemContents } from '../../model/AcApItemGeometry'
 import { AcEdOsnapResolver } from '../input/AcEdOsnapResolver'
 import { AcEdMarkerManager } from '../input/marker'
 import { AcEdBaseView } from '../view/AcEdBaseView'
@@ -8,13 +8,13 @@ import { AcEdGripPreviewJig } from './AcEdGripPreviewJig'
 
 /** Moves the grip of an item by an offset, changing the drawing. */
 export type AcEdGripMove = (
-  entityId: AcDbObjectId,
+  entityId: string,
   gripIndex: number,
   offset: GeometryPoint2dLike
 ) => void
 
 export interface AcEdGripEditTarget {
-  entityId: AcDbObjectId
+  entityId: string
   gripIndex: number
   gripBaseWcs: GeometryPoint2dLike
 }
@@ -36,7 +36,7 @@ export class AcEdGripEditSession {
 
   constructor(
     view: AcEdBaseView,
-    entity: AcDbEntity,
+    item: AcApItemContents,
     target: AcEdGripEditTarget,
     onEnd: () => void,
     moveGrip: AcEdGripMove
@@ -48,7 +48,7 @@ export class AcEdGripEditSession {
     this._osnapMarkerManager = new AcEdMarkerManager(view)
     this._jig = new AcEdGripPreviewJig(
       view,
-      entity,
+      item,
       target.gripIndex,
       target.gripBaseWcs
     )

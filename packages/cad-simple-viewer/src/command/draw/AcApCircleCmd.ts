@@ -1,9 +1,9 @@
-import { AcDbCircle } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
+import type { AcGiDrawable } from '@mlightcad/graphic-interface'
 
 import { AcApContext, AcApDocManager } from '../../app'
 import {
@@ -20,6 +20,7 @@ import {
   AcEdPromptStatus
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
+import { acapPreviewDrawable } from '../../model/AcApItemDrawable'
 
 interface CircleDefinition {
   center: GeometryPoint2dLike
@@ -46,12 +47,17 @@ function addKeyword(
   )
 }
 
+/** Returns a full circle. */
+function createCircle(center: GeometryPoint2dLike, radius: number) {
+  return GeometryCircularArc2d.fromMathAngles(center, radius, 0, 0, false)
+}
+
 function applyCircleDefinition(
-  entity: AcDbCircle,
+  circle: GeometryCircularArc2d,
   definition: CircleDefinition
 ) {
-  entity.center = definition.center
-  entity.radius = definition.radius
+  circle.center = definition.center
+  circle.radius = definition.radius
 }
 
 function toCircleDefinition(
@@ -99,7 +105,8 @@ export class AcApCircleJig extends AcEdPreviewJig<number> {
   /**
    * Transient circle entity reused during radius preview.
    */
-  private _circle: AcDbCircle
+  private _circle: GeometryCircularArc2d
+  private _drawable: AcGiDrawable
 
   /**
    * Creates a circle jig.
@@ -108,14 +115,18 @@ export class AcApCircleJig extends AcEdPreviewJig<number> {
    */
   constructor(view: AcEdBaseView, center: GeometryPoint2dLike) {
     super(view)
-    this._circle = new AcDbCircle(center, 0)
+    this._circle = createCircle(center, 0)
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._circle
+    })
   }
 
   /**
    * Gets transient circle entity displayed by the jig.
    */
-  get entity(): AcDbCircle {
-    return this._circle
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -135,7 +146,8 @@ class AcApCircleDynamicJig extends AcEdPreviewJig<GeometryPoint2dLike> {
   /**
    * Transient circle entity reused across cursor updates.
    */
-  private _circle: AcDbCircle
+  private _circle: GeometryCircularArc2d
+  private _drawable: AcGiDrawable
   /**
    * Callback that maps cursor point to circle definition.
    */
@@ -154,15 +166,19 @@ class AcApCircleDynamicJig extends AcEdPreviewJig<GeometryPoint2dLike> {
     fallback: CircleDefinition
   ) {
     super(view)
-    this._circle = new AcDbCircle(fallback.center, fallback.radius)
+    this._circle = createCircle(fallback.center, fallback.radius)
+    this._drawable = acapPreviewDrawable({
+      kind: 'shape',
+      geometry: this._circle
+    })
     this._builder = builder
   }
 
   /**
    * Gets transient circle entity displayed by the jig.
    */
-  get entity(): AcDbCircle {
-    return this._circle
+  get entity(): AcGiDrawable {
+    return this._drawable
   }
 
   /**
@@ -520,7 +536,10 @@ export class AcApCircleCmd extends AcEdCommand {
     await machine.run(prompt => AcApDocManager.instance.editor.getPoint(prompt))
 
     if (!circle) return
-    context.doc.modelSync.add(new AcDbCircle(circle.center, circle.radius))
+    context.doc.modelSync.addItems({
+      kind: 'shape',
+      geometry: createCircle(circle.center, circle.radius)
+    })
   }
 
   /**

@@ -42,7 +42,7 @@ const getEntityById = jest.fn()
 const mockDocManager = {
   curDocument: {
     modelSync: {
-      entity: getEntityById
+      item: getEntityById
     }
   },
   curView: {
@@ -83,7 +83,7 @@ describe('useHover', () => {
     expect(getEntityById).toHaveBeenCalledWith('entity-1')
     expect(canvasToViewport).toHaveBeenCalledWith({ x: 20, y: 30 })
     expect(hover.hovered.value).toBe(true)
-    expect(hover.entity.value).toEqual(entity)
+    expect(hover.item.value).toEqual(entity)
     expect(hover.id.value).toBe('entity-1')
     expect(hover.mouse.value).toEqual({ x: 120, y: 80 })
   })
@@ -97,7 +97,7 @@ describe('useHover', () => {
     unhoverEvent.dispatch({ id: 'entity-1', x: 20, y: 30 })
 
     expect(hover.hovered.value).toBe(false)
-    expect(hover.entity.value).toBeNull()
+    expect(hover.item.value).toBeNull()
     expect(hover.id.value).toBeNull()
   })
 

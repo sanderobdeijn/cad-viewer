@@ -114,20 +114,6 @@ export function resolveShapeTextStyle(
     }
   }
 
-  const database = context.database
-  if (!database) {
-    return { ...EMPTY_TEXT_STYLE }
-  }
-
-  for (const record of database.tables.textStyleTable.shapeFiles) {
-    const fontName = record.fileName || record.textStyle.font
-    if (!fontName) {
-      continue
-    }
-    if (hasDrawableShapeInFont(shape, fontName)) {
-      return { ...record.textStyle }
-    }
-  }
-
+  void context
   return { ...EMPTY_TEXT_STYLE }
 }

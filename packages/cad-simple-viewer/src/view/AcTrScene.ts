@@ -1,5 +1,4 @@
 import { log } from '@mlightcad/common'
-import { AcDbObjectId } from '@mlightcad/data-model'
 import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
 import {
   AcTrDirectEntityMeta,
@@ -93,11 +92,11 @@ export class AcTrScene {
   /** Map of layout ID to layout object */
   private _layers: Map<string, AcEdLayerInfo>
   /** Map of layout ID to layout object */
-  private _layouts: Map<AcDbObjectId, AcTrLayout>
+  private _layouts: Map<string, AcTrLayout>
   /** ID of the currently active layout */
-  private _activeLayoutBtrId: AcDbObjectId
+  private _activeLayoutBtrId: string
   /** ID of the model space layout */
-  private _modelSpaceBtrId: AcDbObjectId
+  private _modelSpaceBtrId: string
   /** Transient objects manager */
   private _transientManager: AcTrTransientManager
   /** HTML transient elements manager */
@@ -181,7 +180,7 @@ export class AcTrScene {
   get modelSpaceBtrId() {
     return this._modelSpaceBtrId
   }
-  set modelSpaceBtrId(value: AcDbObjectId) {
+  set modelSpaceBtrId(value: string) {
     this._modelSpaceBtrId = value
     if (!this._layouts.has(value)) {
       throw new Error(
@@ -291,7 +290,7 @@ export class AcTrScene {
    * @returns Return the layout associated with `ownerId` — newly created when
    * absent, or the pre-existing instance when already registered.
    */
-  addEmptyLayout(ownerId: AcDbObjectId) {
+  addEmptyLayout(ownerId: string) {
     const existing = this._layouts.get(ownerId)
     if (existing) return existing
 
@@ -337,7 +336,7 @@ export class AcTrScene {
    * given entity ids no-op gracefully (`getLayersByObjectId` returns
    * an empty array there).
    */
-  hover(ids: AcDbObjectId[]) {
+  hover(ids: string[]) {
     if (this._layouts.size === 0) return false
     this._layouts.forEach(layout => layout.hover(ids))
     return true
@@ -347,7 +346,7 @@ export class AcTrScene {
    * Unhover the specified entities across all layouts. See {@link hover}
    * for rationale on propagation.
    */
-  unhover(ids: AcDbObjectId[]) {
+  unhover(ids: string[]) {
     if (this._layouts.size === 0) return false
     this._layouts.forEach(layout => layout.unhover(ids))
     return true
@@ -370,7 +369,7 @@ export class AcTrScene {
    * must un-highlight when the user replaces the selection from any
    * layout, not just the one where it was originally picked.
    */
-  select(ids: AcDbObjectId[]) {
+  select(ids: string[]) {
     if (this._layouts.size === 0) return false
     this._layouts.forEach(layout => layout.select(ids))
     return true
@@ -380,7 +379,7 @@ export class AcTrScene {
    * Unselect the specified entities across all layouts. See
    * {@link select} for rationale.
    */
-  unselect(ids: AcDbObjectId[]) {
+  unselect(ids: string[]) {
     if (this._layouts.size === 0) return false
     this._layouts.forEach(layout => layout.unselect(ids))
     return true
@@ -456,7 +455,7 @@ export class AcTrScene {
    * Remove the specified transient entity from this scene
    * @param objectId Input the object id of the transient entity to remove
    */
-  removeTransientEntity(objectId: AcDbObjectId) {
+  removeTransientEntity(objectId: string) {
     this._transientManager.remove(objectId)
   }
 
@@ -464,7 +463,7 @@ export class AcTrScene {
    * Show or hide one transient entity already published in this scene.
    * @returns `true` when the entity exists and visibility was updated.
    */
-  setTransientEntityVisible(objectId: AcDbObjectId, visible: boolean): boolean {
+  setTransientEntityVisible(objectId: string, visible: boolean): boolean {
     const entity = this._transientManager.get(objectId)
     if (!entity) return false
     if (entity.visible === visible) return false
@@ -483,7 +482,7 @@ export class AcTrScene {
    *   WebGL and CSS2D independently.
    */
   updateTransientPreviewTransforms(
-    transforms: ReadonlyArray<{ objectId: AcDbObjectId; matrix: THREE.Matrix4 }>
+    transforms: ReadonlyArray<{ objectId: string; matrix: THREE.Matrix4 }>
   ): { webgl: boolean; html: boolean } {
     const mapped = transforms.map(entry => ({
       id: entry.objectId,
@@ -502,7 +501,7 @@ export class AcTrScene {
    *
    * @param entityIds - Database object ids required for preview creation
    */
-  canCreatePreview(entityIds: AcDbObjectId[]): boolean {
+  canCreatePreview(entityIds: string[]): boolean {
     const layout = this.activeLayout
     if (!layout) {
       return false
@@ -520,7 +519,7 @@ export class AcTrScene {
    * @param scope - Layout search order; defaults to {@link AcTrEntityPreviewScope active-first}
    */
   computeEntityPreviewBounds2d(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     margin = 1.1,
     scope: AcTrEntityPreviewScope = 'active-first'
   ): GeometryBox2d | null {
@@ -536,15 +535,15 @@ export class AcTrScene {
    * @param scope - Layout search order; defaults to {@link AcTrEntityPreviewScope active-first}
    */
   findPreviewableEntityIds(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     scope: AcTrEntityPreviewScope = 'active-first'
-  ): AcDbObjectId[] {
+  ): string[] {
     if (entityIds.length === 0) {
       return []
     }
 
     if (scope === 'all') {
-      const previewable: AcDbObjectId[] = []
+      const previewable: string[] = []
       const pending = new Set(entityIds)
       for (const layout of this.getOrderedLayouts('all')) {
         if (pending.size === 0) {
@@ -585,7 +584,7 @@ export class AcTrScene {
    * @returns Preview root group, or `null` when no preview geometry was extracted
    */
   createEntityPreviewRoot(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     options?: {
       scope?: AcTrEntityPreviewScope
       layoutOptions?: AcTrEntityPreviewRootOptions
@@ -624,7 +623,7 @@ export class AcTrScene {
    * Each entity id is assigned to the first layout that can preview it.
    */
   private mergeEntityPreviewRoots(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     layouts: Iterable<AcTrLayout>,
     layoutOptions: AcTrEntityPreviewRootOptions
   ): THREE.Group | null {
@@ -690,7 +689,7 @@ export class AcTrScene {
    * {@link createEntityPreviewRoot}.
    */
   private computeEntityPreviewBoundsBox(
-    entityIds: AcDbObjectId[],
+    entityIds: string[],
     scope: AcTrEntityPreviewScope = 'active-first'
   ) {
     const target = new THREE.Box3()
@@ -739,7 +738,7 @@ export class AcTrScene {
    * @param entityIds - Database object ids to include in the preview overlay
    * @returns Preview handle id, or `null` when preview creation failed
    */
-  createPreview(entityIds: AcDbObjectId[]): string | null {
+  createPreview(entityIds: string[]): string | null {
     const layout = this.activeLayout
     if (!layout) {
       return null
@@ -826,7 +825,7 @@ export class AcTrScene {
    * @param objectId Input the object id of the entity to remove
    * @returns Return true if remove the specified entity successfully. Otherwise, return false.
    */
-  removeEntity(objectId: AcDbObjectId) {
+  removeEntity(objectId: string) {
     for (const [_, layout] of this._layouts) {
       if (layout.removeEntity(objectId)) return true
     }
@@ -848,7 +847,7 @@ export class AcTrScene {
   /**
    * Returns true when the entity is present in any layout.
    */
-  hasEntity(objectId: AcDbObjectId) {
+  hasEntity(objectId: string) {
     for (const [_, layout] of this._layouts) {
       if (layout.hasEntity(objectId)) {
         return true
@@ -860,7 +859,7 @@ export class AcTrScene {
   /**
    * Updates entity visibility without rebuilding batched geometry.
    */
-  setEntityVisible(objectId: AcDbObjectId, visible: boolean) {
+  setEntityVisible(objectId: string, visible: boolean) {
     let updated = false
     for (const [_, layout] of this._layouts) {
       if (layout.setEntityVisible(objectId, visible)) {
@@ -873,7 +872,7 @@ export class AcTrScene {
   /**
    * Returns the current scene visibility for one entity.
    */
-  getEntityVisible(objectId: AcDbObjectId) {
+  getEntityVisible(objectId: string) {
     for (const [_, layout] of this._layouts) {
       const visible = layout.getEntityVisible(objectId)
       if (visible !== undefined) {

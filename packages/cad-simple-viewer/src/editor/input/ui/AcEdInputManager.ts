@@ -1,9 +1,11 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { AcApDocManager, AcApSettingManager } from '../../../app'
 import { AcApI18n } from '../../../i18n'
+import { itemTypeName } from '../../../model/AcApItemDrawable'
 import { AcUiTouchPointTutorialDialog } from '../../../ui/AcUiTouchPointTutorialDialog'
+import { acapDrawingFormatter } from '../../../util/units/AcApDrawingFormatter'
 import type {
   AcEdSessionAccessory,
   AcEdSessionAccessoryHostInfo
@@ -598,26 +600,16 @@ export class AcEdInputManager {
     value: number,
     type: 'point' | 'distance' | 'angle'
   ): string {
-    const db = AcApDocManager.instance.curDocument?.database
-    if (!db) {
-      switch (type) {
-        case 'angle':
-          return value.toFixed(2)
-        case 'distance':
-        case 'point':
-        default:
-          return value.toFixed(3)
-      }
-    }
+    const formatter = acapDrawingFormatter()
     switch (type) {
       case 'angle':
-        return db.formatter.formatAngle((value * Math.PI) / 180, {
+        return formatter.formatAngle((value * Math.PI) / 180, {
           applyAngbaseAngdir: false
         })
       case 'distance':
       case 'point':
       default:
-        return db.formatter.formatLength(value)
+        return formatter.formatLength(value)
     }
   }
 
@@ -716,47 +708,26 @@ export class AcEdInputManager {
    * @param objectId - Object id returned by the spatial pick query
    * @returns The matching database entity, or `undefined` if it can no longer be found
    */
-  private getEntityById(objectId: string): AcDbEntity | undefined {
-    return AcApDocManager.instance.curDocument.modelSync.entity(objectId)
+  private getEntityById(objectId: string): ModelItem | undefined {
+    return AcApDocManager.instance.curDocument.modelSync.item(objectId)
   }
 
   /**
-   * Checks whether a picked entity satisfies the prompt's allowed-class filter.
+   * Checks whether a picked item satisfies the prompt's allowed-class filter.
    *
-   * Different parts of the stack expose the entity type in slightly different
-   * forms. The data-model layer provides a short CAD type name through
-   * `entity.type` (for example `Line`), while runtime inspection exposes the
-   * TypeScript constructor name (for example `AcDbLine`). To maximize
-   * compatibility with existing caller expectations, both forms are tested
-   * against the prompt's allow-list.
+   * The item's kind name (for example `Line`) is tested against the
+   * prompt's allow-list.
    *
-   * @param entity - Picked entity being validated
+   * @param item - Picked item being validated
    * @param options - Prompt options containing the configured allowed classes
    * @returns `true` when the entity matches at least one allowed class, or when
    * no class restriction has been configured
    */
   private isEntityClassAllowed(
-    entity: AcDbEntity,
+    item: ModelItem,
     options: AcEdPromptEntityOptions
   ): boolean {
-    const candidates = new Set<string>()
-
-    if (entity.type) {
-      candidates.add(entity.type)
-    }
-
-    const constructorName = entity.constructor?.name
-    if (constructorName) {
-      candidates.add(constructorName)
-    }
-
-    for (const candidate of candidates) {
-      if (options.isClassAllowed(candidate)) {
-        return true
-      }
-    }
-
-    return false
+    return options.isClassAllowed(itemTypeName(item))
   }
 
   /**

@@ -1,4 +1,4 @@
-import { AcDbEntity } from '@mlightcad/data-model'
+import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
   GeometryMatrix3d,
   GeometryPoint2d,
@@ -16,7 +16,11 @@ import {
   scaleCopyDisplacement
 } from '../../editor'
 import { AcApI18n } from '../../i18n'
-import { resolveSelectedEntities } from '../../service'
+import {
+  type AcApItemContents,
+  transformItem
+} from '../../model/AcApItemGeometry'
+import { resolveSelectedItems } from '../../service'
 import { AcApCopyPreviewJig } from './AcApCopyPreviewJig'
 
 type CopyMode = 'Single' | 'Multiple'
@@ -103,11 +107,11 @@ export class AcApCopyCmd extends AcEdCommand {
    * @param context - Active command context
    * @param copies - Cloned entities to add
    */
-  private appendCopies(context: AcApContext, copies: AcDbEntity[]) {
+  private appendCopies(context: AcApContext, copies: AcApItemContents[]) {
     if (copies.length === 0) {
       return
     }
-    context.doc.modelSync.add(copies)
+    context.doc.modelSync.addItems(copies)
   }
 
   /**
@@ -120,17 +124,14 @@ export class AcApCopyCmd extends AcEdCommand {
    * @returns Newly cloned and transformed entities ready to append to model space.
    */
   private buildCopies(
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     displacement: GeometryPoint2dLike,
     copyCount: number = 1,
     fitMode: boolean = false
   ) {
-    const copies: AcDbEntity[] = []
+    const copies: AcApItemContents[] = []
 
     for (let factor = 1; factor <= copyCount; factor++) {
-      const batch = sourceEntities
-        .map(entity => entity.clone())
-        .filter((entity): entity is AcDbEntity => !!entity)
       const stepDisplacement = this.scaleDisplacement(
         displacement,
         factor,
@@ -142,8 +143,7 @@ export class AcApCopyCmd extends AcEdCommand {
         stepDisplacement.y,
         0
       )
-      batch.forEach(entity => entity.transformBy(matrix))
-      copies.push(...batch)
+      copies.push(...sourceEntities.map(item => transformItem(item, matrix)))
     }
 
     return copies
@@ -196,7 +196,7 @@ export class AcApCopyCmd extends AcEdCommand {
    */
   private async promptArrayPlacement(
     context: AcApContext,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2d
   ): Promise<CopyArrayPlacement | undefined> {
     const itemCountPrompt = new AcEdPromptIntegerOptions(
@@ -285,7 +285,7 @@ export class AcApCopyCmd extends AcEdCommand {
    */
   private async executeCopyLoop(
     context: AcApContext,
-    sourceEntities: AcDbEntity[],
+    sourceEntities: ModelItem[],
     basePoint: GeometryPoint2d,
     copyMode: CopyMode,
     useDisplacementPrompt: boolean = false
@@ -359,12 +359,12 @@ export class AcApCopyCmd extends AcEdCommand {
    */
   async execute(context: AcApContext) {
     const selectionSet = context.view.selectionSet
-    const resolved = await resolveSelectedEntities(context, {
+    const resolved = await resolveSelectedItems(context, {
       promptKey: 'copy'
     })
     if (!resolved) return
 
-    const sourceEntities = resolved.entities
+    const sourceEntities = resolved.items
     if (sourceEntities.length === 0) {
       selectionSet.clear()
       return

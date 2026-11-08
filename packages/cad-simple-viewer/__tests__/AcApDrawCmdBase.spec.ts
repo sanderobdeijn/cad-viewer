@@ -42,7 +42,7 @@ describe('AcApMeasureDrawCmd', () => {
     const view = {
       container,
       sessionProviders: {
-        get: <T,>(id: string) => providers.get(id) as T | undefined
+        get: <T>(id: string) => providers.get(id) as T | undefined
       }
     }
     const cmd = new MeasureDrawStub()

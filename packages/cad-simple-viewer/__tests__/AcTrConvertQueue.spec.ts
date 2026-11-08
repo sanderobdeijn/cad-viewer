@@ -57,11 +57,7 @@ describe('absorbConvertQueue', () => {
     // Two model references already converted before the sheet was activated.
     state.cursor = 2
     const next = absorbConvertQueue(state, [], paper)
-    expect(ids(next.pending.slice(next.cursor))).toEqual([
-      'frame',
-      'vp',
-      'm2'
-    ])
+    expect(ids(next.pending.slice(next.cursor))).toEqual(['frame', 'vp', 'm2'])
   })
 
   test('entities queued for the active layout convert before the old tail', () => {
@@ -94,7 +90,11 @@ describe('absorbConvertQueue', () => {
     )
     state.cursor = 1
     const pending = state.pending
-    const next = absorbConvertQueue(state, [{ id: 'm1', ownerId: model }], paper)
+    const next = absorbConvertQueue(
+      state,
+      [{ id: 'm1', ownerId: model }],
+      paper
+    )
     expect(next).toBe(state)
     expect(next.pending).toBe(pending)
     expect(next.cursor).toBe(1)

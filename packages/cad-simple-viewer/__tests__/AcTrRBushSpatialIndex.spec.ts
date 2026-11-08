@@ -56,7 +56,12 @@ describe('AcTrRBushSpatialIndex', () => {
       { minX: 10, minY: 10, maxX: 11, maxY: 11, id: 'b' }
     ])
 
-    expect(index.all().map(item => item.id).sort()).toEqual(['a', 'b'])
+    expect(
+      index
+        .all()
+        .map(item => item.id)
+        .sort()
+    ).toEqual(['a', 'b'])
     expect(
       index.search({ minX: -1, minY: -1, maxX: 12, maxY: 12 }).map(h => h.id)
     ).toEqual(expect.arrayContaining(['a', 'b']))

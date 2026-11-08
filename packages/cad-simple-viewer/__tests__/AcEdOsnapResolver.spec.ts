@@ -1,24 +1,18 @@
 import {
-  AcDbArc,
-  AcDbBlockTableRecord,
-  AcDbCircle,
-  AcDbDatabase,
-  AcDbEllipse,
-  acdbHostApplicationServices,
-  AcDbLine,
-  AcDbOsnapMode,
-  acdbOsnapModesToMask,
-  AcDbPolyline
-} from '@mlightcad/data-model'
-import {
   GeometryCircularArc2d,
+  GeometryEllipseArc2d,
+  GeometryLine2d,
   GeometryPoint2d,
-  GeometryVector3d
+  GeometryPolyline2d,
+  type GeometryShape,
+  type ModelItem
 } from '@mlightcad/geometry-engine'
 
 import { AcApSettingManager } from '../src/app/AcApSettingManager'
 import { AcEdOsnapResolver } from '../src/editor/input/AcEdOsnapResolver'
 import { AcEdBaseView } from '../src/editor/view/AcEdBaseView'
+import * as itemGeometry from '../src/model/AcApItemGeometry'
+import { AcApOsnapMode, acapOsnapModesToMask } from '../src/model/AcApOsnapMode'
 
 function installLocalStorageMock() {
   const store = new Map<string, string>()
@@ -40,21 +34,25 @@ function installLocalStorageMock() {
   })
 }
 
-function withWorkingDatabase(run: (db: AcDbDatabase) => void) {
-  const db = new AcDbDatabase()
-  db.createDefaultData()
-  const services = acdbHostApplicationServices() as unknown as {
-    _workingDatabase: AcDbDatabase | null
-    workingDatabase: AcDbDatabase
-  }
-  const previous = services._workingDatabase
-  services.workingDatabase = db
-  try {
-    run(db)
-  } finally {
-    services._workingDatabase = previous
-  }
+/** Shapes the mock view can look up, by id. */
+const items = new Map<string, ModelItem>()
+const ids = new Map<GeometryShape, string>()
+
+/** Runs `run` with an empty item store; `add` puts a shape in it. */
+function withItems(run: (add: (shape: GeometryShape) => void) => void) {
+  items.clear()
+  ids.clear()
+  run(shape => {
+    const id = String(items.size + 1)
+    items.set(id, { id, kind: 'shape', geometry: shape } as ModelItem)
+    ids.set(shape, id)
+  })
 }
+
+const idOf = (shape: GeometryShape) => ids.get(shape)!
+
+const fullCircle = (center: GeometryPoint2d, radius: number) =>
+  new GeometryCircularArc2d(center, radius, 0, Math.PI * 2, false)
 
 function createMockView(
   pickResults: Array<{
@@ -74,9 +72,7 @@ function createMockView(
 ): AcEdBaseView {
   return {
     pick: jest.fn().mockReturnValue(pickResults),
-    // These tests keep their entities in the working database.
-    entityLookup: (id: string) =>
-      acdbHostApplicationServices().workingDatabase.getObjectById(id),
+    itemLookup: (id: string) => items.get(id),
     // 1 CSS px == 1 WCS unit so threshold equals hitRadiusPx
     screenToWorld: jest.fn(({ x, y }: { x: number; y: number }) => ({
       x,
@@ -92,24 +88,24 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('snaps to intersection of two crossing lines', () => {
-    withWorkingDatabase(db => {
-      const a = new AcDbLine(
+    withItems(add => {
+      const a = new GeometryLine2d(
         new GeometryPoint2d(0, 0),
         new GeometryPoint2d(10, 10)
       )
-      const b = new AcDbLine(
+      const b = new GeometryLine2d(
         new GeometryPoint2d(0, 10),
         new GeometryPoint2d(10, 0)
       )
-      db.tables.blockTable.modelSpace.appendEntity(a)
-      db.tables.blockTable.modelSpace.appendEntity(b)
+      add(a)
+      add(b)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Intersection,
-        AcDbOsnapMode.EndPoint
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Intersection,
+        AcApOsnapMode.EndPoint
       ])
 
-      const view = createMockView([{ id: a.objectId }, { id: b.objectId }])
+      const view = createMockView([{ id: idOf(a) }, { id: idOf(b) }])
       const resolver = new AcEdOsnapResolver(view)
       const snap = resolver.resolve({
         cursorWcs: { x: 5.1, y: 4.9 },
@@ -119,7 +115,7 @@ describe('AcEdOsnapResolver', () => {
       expect(snap).toEqual({
         x: 5,
         y: 5,
-        type: AcDbOsnapMode.Intersection
+        type: AcApOsnapMode.Intersection
       })
       expect(AcEdOsnapResolver.osnapModeToMarkerType(snap!.type)).toBe(
         'intersection'
@@ -128,57 +124,54 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('does not report intersection when only nearest is enabled', () => {
-    withWorkingDatabase(db => {
-      const a = new AcDbLine(
+    withItems(add => {
+      const a = new GeometryLine2d(
         new GeometryPoint2d(0, 0),
         new GeometryPoint2d(10, 10)
       )
-      const b = new AcDbLine(
+      const b = new GeometryLine2d(
         new GeometryPoint2d(0, 10),
         new GeometryPoint2d(10, 0)
       )
-      db.tables.blockTable.modelSpace.appendEntity(a)
-      db.tables.blockTable.modelSpace.appendEntity(b)
+      add(a)
+      add(b)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Nearest
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Nearest
       ])
 
-      const view = createMockView([{ id: a.objectId }, { id: b.objectId }])
+      const view = createMockView([{ id: idOf(a) }, { id: idOf(b) }])
       const resolver = new AcEdOsnapResolver(view)
       const snap = resolver.resolve({
         cursorWcs: { x: 5.1, y: 4.9 },
         hitRadiusPx: 20
       })
 
-      expect(snap?.type).not.toBe(AcDbOsnapMode.Intersection)
-      expect(snap?.type).toBe(AcDbOsnapMode.Nearest)
+      expect(snap?.type).not.toBe(AcApOsnapMode.Intersection)
+      expect(snap?.type).toBe(AcApOsnapMode.Nearest)
     })
   })
 
   it('skips intersectWith for entity pairs whose extents do not overlap', () => {
-    withWorkingDatabase(db => {
-      const left = new AcDbLine(
+    withItems(add => {
+      const left = new GeometryLine2d(
         new GeometryPoint2d(0, 0),
         new GeometryPoint2d(10, 0)
       )
-      const right = new AcDbLine(
+      const right = new GeometryLine2d(
         new GeometryPoint2d(100, 0),
         new GeometryPoint2d(110, 0)
       )
-      db.tables.blockTable.modelSpace.appendEntity(left)
-      db.tables.blockTable.modelSpace.appendEntity(right)
+      add(left)
+      add(right)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Intersection,
-        AcDbOsnapMode.EndPoint
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Intersection,
+        AcApOsnapMode.EndPoint
       ])
 
-      const intersectSpy = jest.spyOn(left, 'intersectWith')
-      const view = createMockView([
-        { id: left.objectId },
-        { id: right.objectId }
-      ])
+      const intersectSpy = jest.spyOn(itemGeometry, 'intersectItems')
+      const view = createMockView([{ id: idOf(left) }, { id: idOf(right) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 5, y: 0 },
@@ -191,27 +184,27 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('prefers endpoint over coincident intersection at the same location', () => {
-    withWorkingDatabase(db => {
+    withItems(add => {
       // T-junction: vertical line endpoint lies on horizontal line
-      const horizontal = new AcDbLine(
+      const horizontal = new GeometryLine2d(
         new GeometryPoint2d(0, 0),
         new GeometryPoint2d(10, 0)
       )
-      const vertical = new AcDbLine(
+      const vertical = new GeometryLine2d(
         new GeometryPoint2d(5, 0),
         new GeometryPoint2d(5, 10)
       )
-      db.tables.blockTable.modelSpace.appendEntity(horizontal)
-      db.tables.blockTable.modelSpace.appendEntity(vertical)
+      add(horizontal)
+      add(vertical)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.EndPoint,
-        AcDbOsnapMode.Intersection
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.EndPoint,
+        AcApOsnapMode.Intersection
       ])
 
       const view = createMockView([
-        { id: horizontal.objectId },
-        { id: vertical.objectId }
+        { id: idOf(horizontal) },
+        { id: idOf(vertical) }
       ])
       const resolver = new AcEdOsnapResolver(view)
       const snap = resolver.resolve({
@@ -219,22 +212,22 @@ describe('AcEdOsnapResolver', () => {
         hitRadiusPx: 20
       })
 
-      expect(snap?.type).toBe(AcDbOsnapMode.EndPoint)
+      expect(snap?.type).toBe(AcApOsnapMode.EndPoint)
       expect(snap?.x).toBeCloseTo(5, 5)
       expect(snap?.y).toBeCloseTo(0, 5)
     })
   })
 
   it('acquires a center tick when hovering a large circle without snapping to the center', () => {
-    withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
-      db.tables.blockTable.modelSpace.appendEntity(circle)
+    withItems(add => {
+      const circle = fullCircle(new GeometryPoint2d(0, 0), 100)
+      add(circle)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: circle.objectId }])
+      const view = createMockView([{ id: idOf(circle) }])
       const resolver = new AcEdOsnapResolver(view)
       const snap = resolver.resolve({
         cursorWcs: { x: 100, y: 0 },
@@ -252,15 +245,15 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('snaps to an acquired circle center after the cursor moves onto the tick', () => {
-    withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
-      db.tables.blockTable.modelSpace.appendEntity(circle)
+    withItems(add => {
+      const circle = fullCircle(new GeometryPoint2d(0, 0), 100)
+      add(circle)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: circle.objectId }])
+      const view = createMockView([{ id: idOf(circle) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 100, y: 0 },
@@ -272,7 +265,7 @@ describe('AcEdOsnapResolver', () => {
         hitRadiusPx: 20
       })
 
-      expect(snap?.type).toBe(AcDbOsnapMode.Center)
+      expect(snap?.type).toBe(AcApOsnapMode.Center)
       expect(snap?.x).toBeCloseTo(0, 5)
       expect(snap?.y).toBeCloseTo(0, 5)
       expect(
@@ -282,15 +275,15 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('keeps the acquired center tick after the cursor leaves the curve until the command ends', () => {
-    withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 100)
-      db.tables.blockTable.modelSpace.appendEntity(circle)
+    withItems(add => {
+      const circle = fullCircle(new GeometryPoint2d(0, 0), 100)
+      add(circle)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: circle.objectId }])
+      const view = createMockView([{ id: idOf(circle) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 100, y: 0 },
@@ -309,7 +302,7 @@ describe('AcEdOsnapResolver', () => {
         cursorWcs: { x: 1, y: 0 },
         hitRadiusPx: 20
       })
-      expect(nearCenter?.type).toBe(AcDbOsnapMode.Center)
+      expect(nearCenter?.type).toBe(AcApOsnapMode.Center)
 
       resolver.clearAcquiredCenters()
       expect(resolver.acquiredCenterMarks).toHaveLength(0)
@@ -317,37 +310,43 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('snaps to circle center immediately when the center is already within the aperture', () => {
-    withWorkingDatabase(db => {
-      const circle = new AcDbCircle(new GeometryPoint2d(0, 0), 10)
-      db.tables.blockTable.modelSpace.appendEntity(circle)
+    withItems(add => {
+      const circle = fullCircle(new GeometryPoint2d(0, 0), 10)
+      add(circle)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: circle.objectId }])
+      const view = createMockView([{ id: idOf(circle) }])
       const resolver = new AcEdOsnapResolver(view)
       const snap = resolver.resolve({
         cursorWcs: { x: 10, y: 0 },
         hitRadiusPx: 20
       })
 
-      expect(snap?.type).toBe(AcDbOsnapMode.Center)
+      expect(snap?.type).toBe(AcApOsnapMode.Center)
       expect(snap?.x).toBeCloseTo(0, 5)
       expect(snap?.y).toBeCloseTo(0, 5)
     })
   })
 
   it('acquires the arc center when hovering an arc', () => {
-    withWorkingDatabase(db => {
-      const arc = new AcDbArc(new GeometryPoint2d(0, 0), 50, 0, Math.PI / 2)
-      db.tables.blockTable.modelSpace.appendEntity(arc)
+    withItems(add => {
+      const arc = new GeometryCircularArc2d(
+        new GeometryPoint2d(0, 0),
+        50,
+        0,
+        Math.PI / 2,
+        false
+      )
+      add(arc)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: arc.objectId }])
+      const view = createMockView([{ id: idOf(arc) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 50, y: 0 },
@@ -361,22 +360,21 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('acquires the ellipse center when hovering an ellipse', () => {
-    withWorkingDatabase(db => {
-      const ellipse = new AcDbEllipse(
+    withItems(add => {
+      const ellipse = new GeometryEllipseArc2d(
         new GeometryPoint2d(2, 3),
-        GeometryVector3d.X_AXIS,
         40,
         20,
         0,
         Math.PI * 2
       )
-      db.tables.blockTable.modelSpace.appendEntity(ellipse)
+      add(ellipse)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: ellipse.objectId }])
+      const view = createMockView([{ id: idOf(ellipse) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 42, y: 3 },
@@ -390,11 +388,12 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('acquires the bulge-arc center when hovering a polyline arc segment', () => {
-    withWorkingDatabase(db => {
-      const polyline = new AcDbPolyline()
-      polyline.addVertexAt(0, new GeometryPoint2d(0, 0), 1)
-      polyline.addVertexAt(1, new GeometryPoint2d(10, 0))
-      db.tables.blockTable.modelSpace.appendEntity(polyline)
+    withItems(add => {
+      const polyline = new GeometryPolyline2d([
+        { x: 0, y: 0, bulge: 1 },
+        { x: 10, y: 0, bulge: 0 }
+      ])
+      add(polyline)
 
       const expected = new GeometryCircularArc2d(
         { x: 0, y: 0 },
@@ -402,11 +401,11 @@ describe('AcEdOsnapResolver', () => {
         1
       )
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: polyline.objectId }])
+      const view = createMockView([{ id: idOf(polyline) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: {
@@ -429,19 +428,19 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('does not acquire a center tick when hovering a line', () => {
-    withWorkingDatabase(db => {
-      const line = new AcDbLine(
+    withItems(add => {
+      const line = new GeometryLine2d(
         new GeometryPoint2d(0, 0),
         new GeometryPoint2d(10, 0)
       )
-      db.tables.blockTable.modelSpace.appendEntity(line)
+      add(line)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center,
-        AcDbOsnapMode.EndPoint
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center,
+        AcApOsnapMode.EndPoint
       ])
 
-      const view = createMockView([{ id: line.objectId }])
+      const view = createMockView([{ id: idOf(line) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 5, y: 0 },
@@ -453,23 +452,23 @@ describe('AcEdOsnapResolver', () => {
   })
 
   it('accumulates center ticks from multiple hovered circles in one command', () => {
-    withWorkingDatabase(db => {
-      const a = new AcDbCircle(new GeometryPoint2d(0, 0), 40)
-      const b = new AcDbCircle(new GeometryPoint2d(100, 0), 40)
-      db.tables.blockTable.modelSpace.appendEntity(a)
-      db.tables.blockTable.modelSpace.appendEntity(b)
+    withItems(add => {
+      const a = fullCircle(new GeometryPoint2d(0, 0), 40)
+      const b = fullCircle(new GeometryPoint2d(100, 0), 40)
+      add(a)
+      add(b)
 
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.Center
+      AcApSettingManager.instance.osnapModes = acapOsnapModesToMask([
+        AcApOsnapMode.Center
       ])
 
-      const view = createMockView([{ id: a.objectId }])
+      const view = createMockView([{ id: idOf(a) }])
       const resolver = new AcEdOsnapResolver(view)
       resolver.resolve({
         cursorWcs: { x: 40, y: 0 },
         hitRadiusPx: 20
       })
-      ;(view.pick as jest.Mock).mockReturnValue([{ id: b.objectId }])
+      ;(view.pick as jest.Mock).mockReturnValue([{ id: idOf(b) }])
       resolver.resolve({
         cursorWcs: { x: 140, y: 0 },
         hitRadiusPx: 20
@@ -478,40 +477,6 @@ describe('AcEdOsnapResolver', () => {
       expect(resolver.acquiredCenterMarks).toHaveLength(2)
       expect(resolver.acquiredCenterMarks[0]?.x).toBeCloseTo(0, 5)
       expect(resolver.acquiredCenterMarks[1]?.x).toBeCloseTo(100, 5)
-    })
-  })
-
-  it('snaps to an entity owned by a non-model-space block table record (#746)', () => {
-    withWorkingDatabase(db => {
-      // Stand-in for a layout's own paper-space block table record: an
-      // entity here is never reachable via `modelSpace.getIdAt` (owner
-      // mismatch), which is exactly why the sheet's own frame/title-block
-      // entities used to offer no snap at all.
-      const sheet = new AcDbBlockTableRecord()
-      sheet.name = 'SHEET_BTR_746'
-      db.tables.blockTable.add(sheet)
-      const line = new AcDbLine(
-        new GeometryPoint2d(0, 0),
-        new GeometryPoint2d(10, 0)
-      )
-      sheet.appendEntity(line)
-
-      AcApSettingManager.instance.osnapModes = acdbOsnapModesToMask([
-        AcDbOsnapMode.EndPoint
-      ])
-
-      const view = createMockView([{ id: line.objectId }])
-      const resolver = new AcEdOsnapResolver(view)
-      const snap = resolver.resolve({
-        cursorWcs: { x: 0.2, y: 0.1 },
-        hitRadiusPx: 20
-      })
-
-      expect(snap).toEqual({
-        x: 0,
-        y: 0,
-        type: AcDbOsnapMode.EndPoint
-      })
     })
   })
 })

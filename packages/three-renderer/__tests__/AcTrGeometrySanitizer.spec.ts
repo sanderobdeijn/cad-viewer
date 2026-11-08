@@ -1,4 +1,3 @@
-import { AcDbEntity } from '@mlightcad/data-model'
 import {
   GeometryCircularArc2d,
   GeometryPoint2d
@@ -48,7 +47,7 @@ describe('AcTrGeometrySanitizer', () => {
       constructor: { typeName: 'Line' },
       objectId: 'ABC123',
       layer: '0'
-    } as unknown as AcDbEntity
+    } as never
 
     AcTrGeometrySanitizer.filterFinitePoints(
       [

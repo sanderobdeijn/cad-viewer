@@ -1,11 +1,11 @@
-import {
-  AcDbAngleUnits,
-  type AcDbDatabase,
-  type AcDbFormatterOptions,
-  AcDbLinearUnits
-} from '@mlightcad/data-model'
-
 import { AcApSettingManager } from '../app/AcApSettingManager'
+import {
+  AcApAngleUnits,
+  AcApFormatter,
+  type AcApFormatterOptions,
+  acapIsImperialUnits,
+  AcApLinearUnits
+} from './units'
 
 /** Linear/angular unit settings used when formatting measurement labels. */
 export interface AcApMeasurementUnits {
@@ -103,7 +103,7 @@ export type AcApMeasurementValue =
   | { kind: 'coordinate'; x: number; y: number }
 
 /** Display flags for length / area / coordinate measurement labels. */
-export const MEASUREMENT_LENGTH_FORMAT_OPTIONS: AcDbFormatterOptions = {
+export const MEASUREMENT_LENGTH_FORMAT_OPTIONS: AcApFormatterOptions = {
   showUnits: true,
   showApproximate: true
 }
@@ -113,13 +113,13 @@ export const MEASUREMENT_LENGTH_FORMAT_OPTIONS: AcDbFormatterOptions = {
  * formatter must not add the drawing suffix — the target unit symbol is
  * appended by the caller.
  */
-const MEASUREMENT_CONVERTED_LENGTH_FORMAT_OPTIONS: AcDbFormatterOptions = {
+const MEASUREMENT_CONVERTED_LENGTH_FORMAT_OPTIONS: AcApFormatterOptions = {
   showUnits: false,
   showApproximate: true
 }
 
 /** Display flags for included-angle measurement labels. */
-export const MEASUREMENT_ANGLE_FORMAT_OPTIONS: AcDbFormatterOptions = {
+export const MEASUREMENT_ANGLE_FORMAT_OPTIONS: AcApFormatterOptions = {
   showUnits: true,
   showApproximate: true,
   applyAngbaseAngdir: false
@@ -130,18 +130,6 @@ export const MEASUREMENT_ANGLE_FORMAT_OPTIONS: AcDbFormatterOptions = {
  * the current drawing (LUNITS / LUPREC / AUNITS / AUPREC).
  */
 let measurementUnitOverride: Partial<AcApMeasurementUnits> = {}
-
-/** Header fields the formatter reads on each `formatLength` / `formatAngle` call. */
-interface AcDbUnitHeader {
-  _lunits: number
-  _luprec: number
-  _aunits: number
-  _auprec: number
-}
-
-function asUnitHeader(db: AcDbDatabase): AcDbUnitHeader {
-  return db as unknown as AcDbUnitHeader
-}
 
 /**
  * Effective measurement units: session override when the user changed a ribbon
@@ -185,87 +173,57 @@ export function resetMeasurementUnitOverride(): void {
   measurementUnitOverride = {}
 }
 
-/**
- * True when the effective units differ from the units the database formatter
- * reads. Formatting then patches private header fields for the duration of
- * one formatter call and restores them.
- */
-function hasEffectiveUnitOverride(db: AcDbDatabase): boolean {
-  const units = getEffectiveMeasurementUnits()
-  return (
-    units.lunits !== db.lunits ||
-    units.luprec !== db.luprec ||
-    units.aunits !== db.aunits ||
-    units.auprec !== db.auprec
-  )
-}
-
 /** LUNITS values that assume drawing INSUNITS, not arbitrary physical units. */
 function isDrawingNativeLengthFormat(lunits: number): boolean {
   return (
-    lunits === AcDbLinearUnits.Architectural ||
-    lunits === AcDbLinearUnits.Engineering
+    lunits === AcApLinearUnits.Architectural ||
+    lunits === AcApLinearUnits.Engineering
   )
 }
 
 /**
- * Run `fn` with the formatter reading effective measurement units.
- * Drawing system variables are not changed.
+ * A formatter reading the effective measurement units and the drawing unit
+ * settings. Architectural and engineering lengths fall back to decimal when
+ * `forceDecimalLength` is set.
  */
-function withMeasurementFormatContext<T>(
-  db: AcDbDatabase,
-  fn: () => T,
-  formatPatch?: { forceDecimalLength?: boolean }
-): T {
-  const units = getEffectiveMeasurementUnits()
-  const lunitsForFormat =
-    formatPatch?.forceDecimalLength && isDrawingNativeLengthFormat(units.lunits)
-      ? AcDbLinearUnits.Decimal
-      : units.lunits
-  const needsPatch =
-    hasEffectiveUnitOverride(db) || lunitsForFormat !== units.lunits
-
-  if (!needsPatch) return fn()
-
-  const header = asUnitHeader(db)
-  const prev = {
-    lunits: header._lunits,
-    luprec: header._luprec,
-    aunits: header._aunits,
-    auprec: header._auprec
-  }
-  header._lunits = lunitsForFormat
-  header._luprec = units.luprec
-  header._aunits = units.aunits
-  header._auprec = units.auprec
-  try {
-    return fn()
-  } finally {
-    header._lunits = prev.lunits
-    header._luprec = prev.luprec
-    header._aunits = prev.aunits
-    header._auprec = prev.auprec
-  }
+function measurementFormatter(formatPatch?: {
+  forceDecimalLength?: boolean
+}): AcApFormatter {
+  return new AcApFormatter(() => {
+    const settings = AcApSettingManager.instance
+    const units = getEffectiveMeasurementUnits()
+    const insunits = settings.get('insertionUnits') ?? 0
+    return {
+      lunits:
+        formatPatch?.forceDecimalLength &&
+        isDrawingNativeLengthFormat(units.lunits)
+          ? AcApLinearUnits.Decimal
+          : units.lunits,
+      luprec: units.luprec,
+      insunits,
+      unitmode: 0,
+      measurement: acapIsImperialUnits(insunits) ? 0 : 1,
+      aunits: units.aunits,
+      auprec: units.auprec,
+      angbase: settings.get('angleBase'),
+      angdir: settings.get('angleDirection')
+    }
+  })
 }
 
 /** Format a linear value without applying a physical-unit conversion. */
 function formatMeasurementLengthRaw(
-  db: AcDbDatabase,
   value: number,
-  options: AcDbFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS,
+  options: AcApFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS,
   formatPatch?: { forceDecimalLength?: boolean }
 ): string {
-  return withMeasurementFormatContext(
-    db,
-    () => db.formatter.formatLength(value, options),
-    formatPatch
-  )
+  return measurementFormatter(formatPatch).formatLength(value, options)
 }
 
 /** Merge caller flags with converted-length defaults (units suffix always off). */
 function convertedLengthFormatOptions(
-  options: AcDbFormatterOptions
-): AcDbFormatterOptions {
+  options: AcApFormatterOptions
+): AcApFormatterOptions {
   return {
     ...MEASUREMENT_CONVERTED_LENGTH_FORMAT_OPTIONS,
     ...options,
@@ -295,19 +253,17 @@ function convertedLengthUnit(): number | undefined {
 
 /** Format a linear distance using effective measurement units. */
 export function formatMeasurementLength(
-  db: AcDbDatabase,
   value: number,
-  options: AcDbFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
+  options: AcApFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
 ): string {
   const target = convertedLengthUnit()
   if (target == null) {
-    return formatMeasurementLengthRaw(db, value, options)
+    return formatMeasurementLengthRaw(value, options)
   }
 
   const fromUnit = AcApSettingManager.instance.get('insertionUnits') ?? 0
   const scaled = convertLengthValue(value, fromUnit, target)
   const text = formatMeasurementLengthRaw(
-    db,
     scaled,
     convertedLengthFormatOptions(options),
     { forceDecimalLength: true }
@@ -318,19 +274,17 @@ export function formatMeasurementLength(
 
 /** Format an area using effective measurement units (length unit squared). */
 export function formatMeasurementArea(
-  db: AcDbDatabase,
   value: number,
-  options: AcDbFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
+  options: AcApFormatterOptions = MEASUREMENT_LENGTH_FORMAT_OPTIONS
 ): string {
   const target = convertedLengthUnit()
   if (target == null) {
-    return `${formatMeasurementLengthRaw(db, value, options)}²`
+    return `${formatMeasurementLengthRaw(value, options)}²`
   }
 
   const fromUnit = AcApSettingManager.instance.get('insertionUnits') ?? 0
   const scaled = convertAreaValue(value, fromUnit, target)
   const text = formatMeasurementLengthRaw(
-    db,
     scaled,
     convertedLengthFormatOptions(options),
     { forceDecimalLength: true }
@@ -342,7 +296,7 @@ export function formatMeasurementArea(
 /**
  * Rounds `value` to `precision` decimal places.
  *
- * Used to work around {@link AcDbFormatter} `formatDecimal`: for non-integers it
+ * Used to work around {@link AcApFormatter} `formatDecimal`: for non-integers it
  * runs `toFixed(precision)` then strips with `/\.?0+$/`, which turns `"90"` into
  * `"9"` (and `"100"` into `"1"`). Pre-rounding lets whole numbers hit the
  * `Number.isInteger` fast path that returns the full digit string.
@@ -356,7 +310,7 @@ function quantizeDecimal(value: number, precision: number): number {
 }
 
 /**
- * Pre-round an included angle so {@link AcDbFormatter.formatAngle} cannot drop
+ * Pre-round an included angle so {@link AcApFormatter.formatAngle} cannot drop
  * trailing zeros from the decimal-degree (or similar) display string.
  */
 function radiansForMeasurementFormat(
@@ -365,16 +319,16 @@ function radiansForMeasurementFormat(
   auprec: number
 ): number {
   switch (aunits) {
-    case AcDbAngleUnits.DecimalDegrees: {
+    case AcApAngleUnits.DecimalDegrees: {
       const deg = quantizeDecimal((radians * 180) / Math.PI, auprec)
       return (deg * Math.PI) / 180
     }
-    case AcDbAngleUnits.Gradians: {
+    case AcApAngleUnits.Gradians: {
       // π rad = 200 gon
       const grads = quantizeDecimal(radians * (200 / Math.PI), auprec)
       return grads * (Math.PI / 200)
     }
-    case AcDbAngleUnits.Radians:
+    case AcApAngleUnits.Radians:
       return quantizeDecimal(radians, auprec)
     default:
       return radians
@@ -383,36 +337,30 @@ function radiansForMeasurementFormat(
 
 /** Format an angle in radians using effective measurement units. */
 export function formatMeasurementAngle(
-  db: AcDbDatabase,
   radians: number,
-  options: AcDbFormatterOptions = MEASUREMENT_ANGLE_FORMAT_OPTIONS
+  options: AcApFormatterOptions = MEASUREMENT_ANGLE_FORMAT_OPTIONS
 ): string {
-  return withMeasurementFormatContext(db, () => {
-    const { aunits, auprec } = getEffectiveMeasurementUnits()
-    const value = radiansForMeasurementFormat(radians, aunits, auprec)
-    return db.formatter.formatAngle(value, {
-      ...MEASUREMENT_ANGLE_FORMAT_OPTIONS,
-      ...options,
-      applyAngbaseAngdir: false
-    })
+  const { aunits, auprec } = getEffectiveMeasurementUnits()
+  const value = radiansForMeasurementFormat(radians, aunits, auprec)
+  return measurementFormatter().formatAngle(value, {
+    ...MEASUREMENT_ANGLE_FORMAT_OPTIONS,
+    ...options,
+    applyAngbaseAngdir: false
   })
 }
 
 /** Format a stored measurement value for a badge label. */
-export function formatMeasurementValue(
-  db: AcDbDatabase,
-  value: AcApMeasurementValue
-): string {
+export function formatMeasurementValue(value: AcApMeasurementValue): string {
   switch (value.kind) {
     case 'length':
-      return formatMeasurementLength(db, value.value)
+      return formatMeasurementLength(value.value)
     case 'area':
-      return formatMeasurementArea(db, value.value)
+      return formatMeasurementArea(value.value)
     case 'angle':
-      return formatMeasurementAngle(db, value.radians)
+      return formatMeasurementAngle(value.radians)
     case 'coordinate': {
-      const x = formatMeasurementLength(db, value.x)
-      const y = formatMeasurementLength(db, value.y)
+      const x = formatMeasurementLength(value.x)
+      const y = formatMeasurementLength(value.y)
       return `X ${x}  Y ${y}`
     }
   }
