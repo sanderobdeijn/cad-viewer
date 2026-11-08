@@ -67,11 +67,11 @@ export interface AcApSettings {
    * percentage of the view, zero for the default size
    */
   pointDisplaySize: number
-  /** Linear unit format, as `LUNITS` (`AcDbLinearUnits`) */
+  /** Linear unit format, as `LUNITS` (`AcApLinearUnits`) */
   linearUnits: number
   /** Decimal places of lengths, as `LUPREC` */
   linearPrecision: number
-  /** Angle unit format, as `AUNITS` (`AcDbAngleUnits`) */
+  /** Angle unit format, as `AUNITS` (`AcApAngleUnits`) */
   angularUnits: number
   /** Decimal places of angles, as `AUPREC` */
   angularPrecision: number
@@ -79,7 +79,7 @@ export interface AcApSettings {
   angleBase: number
   /** 1 when angles increase clockwise, 0 otherwise, as `ANGDIR` */
   angleDirection: number
-  /** Unit of drawing lengths, as `INSUNITS` (`AcDbUnitsValue`) */
+  /** Unit of drawing lengths, as `INSUNITS` (`AcApUnitsValue`) */
   insertionUnits: number
   /** 1 when ortho mode is on, as `ORTHOMODE` */
   orthoMode: number

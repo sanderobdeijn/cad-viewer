@@ -217,8 +217,8 @@ export class AcGiViewport {
    * expressed in WCS coordinates.
    *
    * `viewCenter` is stored in DCS; AutoCAD maps it to WCS by rotating by
-   * `viewTwistAngle` and translating by `viewTarget` (same rule as
-   * `AcDbViewportTableRecord.modelViewBox` for the *ACTIVE VPORT).
+   * `viewTwistAngle` and translating by `viewTarget` (the same rule AutoCAD
+   * uses for the *ACTIVE VPORT).
    */
   get viewBox() {
     const wcsCenter = AcGiViewport.dcsCenterToWcs(

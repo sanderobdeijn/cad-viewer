@@ -19,17 +19,13 @@ export class AcEdPromptEntityOptions extends AcEdPromptOptions<string> {
   private _allowedClasses = new Set<string>()
 
   /**
-   * Normalizes entity class names so both "Line" and "AcDbLine" are accepted.
+   * Normalizes class names so both "Line" and the AutoCAD-style "AcDbLine"
+   * are accepted.
    *
-   * `PromptEntityOptions.AddAllowedClass()` in host CAD APIs is typically used
-   * with runtime class identifiers, while this web implementation works with
-   * string names resolved from the underlying entity instances. In practice,
-   * callers may provide either the short CAD-style type name (`Line`) or the
-   * concrete TypeScript constructor name (`AcDbLine`).
-   *
-   * This helper canonicalizes both representations to the same short form so
-   * the allow-list can be matched consistently regardless of which naming style
-   * was used by the caller or discovered at pick time.
+   * `PromptEntityOptions.AddAllowedClass()` in host CAD APIs is typically
+   * called with AutoCAD class names, while this implementation matches the
+   * picked item's kind name (`Line`). Stripping the `AcDb` prefix lets the
+   * allow-list match either form.
    *
    * @param className - Raw entity class name supplied by callers or runtime inspection
    * @returns Normalized class name without the `AcDb` prefix

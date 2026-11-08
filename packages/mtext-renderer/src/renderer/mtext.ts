@@ -460,8 +460,8 @@ export class MText extends THREE.Object3D {
     layoutHeight: number,
     options?: { shxFontType?: ShxFontType }
   ) {
-    // When the caller does not pre-declare the text width (e.g. AcDbText
-    // and AcDbAttribute, which let the renderer's own font metrics drive
+    // When the caller does not pre-declare the text width (e.g. single-line
+    // text and attributes, which let the renderer's own font metrics drive
     // layout), `mtextData.width` is `Infinity`. Using that value verbatim
     // in `calculateAnchorPoint` would yield NaN for any centered/right
     // attachment. Measure the bbox of the just-built object so the anchor
@@ -620,7 +620,7 @@ export class MText extends THREE.Object3D {
     // `width` is 0 (no wrap column). AutoCAD still centers/rights each line
     // within the content block so a short first line sits over a longer
     // second line under MiddleCenter/TopCenter. Unconstrained Infinity width
-    // (AcDbText/AcDbAttribute) stays safe: `processAlignment` falls back to
+    // (single-line text and attributes) stays safe: `processAlignment` falls back to
     // left when `maxLineWidth` is non-finite, avoiding `Infinity - size.x`.
     let horizontalAlignment = MTextParagraphAlignment.LEFT
     if (mtextData.attachmentPoint) {

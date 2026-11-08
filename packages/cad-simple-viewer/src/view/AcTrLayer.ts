@@ -73,10 +73,8 @@ export type AcTrLayerStats = AcTrBatchedGroupStats & {
  */
 export class AcTrLayer {
   /**
-   * Resolves whether a layer should be visible in the view.
-   *
-   * Non-plottable layer suppression is handled in {@link AcDbEntity.worldDraw};
-   * only freeze/off state is reflected here.
+   * Resolves whether a layer should be visible in the view from its
+   * freeze/off state.
    */
   static isLayerVisible(info: AcEdLayerInfo): boolean {
     return !(info.isFrozen || info.isOff)

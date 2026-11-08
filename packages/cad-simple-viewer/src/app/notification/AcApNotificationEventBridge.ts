@@ -2,7 +2,7 @@ import { eventBus } from '../../editor/global/eventBus'
 import { AcApFontUtil } from '../../util/AcApFontUtil'
 import { acapFormatFontsMissedReplacement } from '../../util/AcApFormatFontMissedMessage'
 import { acapI18nTranslate } from '../../util/AcApI18nTranslate'
-import type { AcApDocManager, AcDbDocumentEventArgs } from '../AcApDocManager'
+import type { AcApDocManager, AcApDocumentEventArgs } from '../AcApDocManager'
 import type { AcApNotificationCenter } from './AcApNotificationTypes'
 
 /**
@@ -193,7 +193,7 @@ export class AcApNotificationEventBridge {
    *
    * @param args - Document about to be destroyed.
    */
-  private readonly _onDocumentToBeDestroyed = (args: AcDbDocumentEventArgs) => {
+  private readonly _onDocumentToBeDestroyed = (args: AcApDocumentEventArgs) => {
     const session = this._docManager.sessionFor(args.doc)
     if (session) {
       this._getCenter().clearSession(session.id)

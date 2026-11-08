@@ -2123,8 +2123,8 @@ export class AcTrBatchedGroup extends THREE.Group {
   /**
    * Applies entity-level visibility to one batched geometry slot.
    *
-   * Batched geometry defaults to visible; DXF group code 60 and AcDbEntity
-   * visibility must be reflected per slot so invisible entities are not drawn.
+   * Batched geometry defaults to visible; the drawable's visibility must be
+   * reflected per slot so invisible entities are not drawn.
    */
   private applyBatchSlotVisibility(
     item: AcTrEntityInBatchedObject,

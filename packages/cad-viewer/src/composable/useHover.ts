@@ -117,8 +117,7 @@ export function useHover(): UseHoverResult {
 
   return {
     hovered,
-    // Local realdwg-web link can resolve two AcDbEntity identities across packages;
-    // assert to the imported public type so vue-tsc can emit portable declarations.
+    // Assert to the imported public type so vue-tsc can emit portable declarations.
     item: item as UseHoverResult['item'],
     id,
     mouse

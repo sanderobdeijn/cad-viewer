@@ -70,7 +70,7 @@ export enum AcApOsnapMode {
  *
  * @example
  * ```ts
- * const mask = acDbOsnapModesToMask([
+ * const mask = acapOsnapModesToMask([
  *   AcApOsnapMode.EndPoint,
  *   AcApOsnapMode.MidPoint,
  *   AcApOsnapMode.Perpendicular
@@ -100,7 +100,7 @@ export function acapOsnapModesToMask(modes: AcApOsnapMode[]): number {
  *
  * @example
  * ```ts
- * const modes = acDbMaskToOsnapModes(131)
+ * const modes = acapMaskToOsnapModes(131)
  * // [
  * //   AcApOsnapMode.EndPoint,
  * //   AcApOsnapMode.MidPoint,

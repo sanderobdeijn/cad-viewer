@@ -532,8 +532,8 @@ export function buildPointGeometry(
 /**
  * Triangulates an index-aligned outer/inner ring as a quad strip.
  *
- * `AcDbPolyline` calls this only for a closed wide polyline whose two offset
- * loops share centerline order. Each quad is two triangles. The vertex count
+ * Callers use this only for a closed wide polyline whose two offset loops
+ * share centerline order. Each quad is two triangles. The vertex count
  * is the two loops combined; this pass does not add samples.
  */
 function buildOffsetRingMesh(
@@ -616,7 +616,7 @@ function buildOffsetRingMesh(
 /**
  * Builds a rebased direct-batch mesh for an explicit offset ring.
  *
- * `AcDbPolyline` has already decided these loops are one closed wide polyline.
+ * The caller has already decided these loops are one closed wide polyline.
  */
 export function buildOffsetRingDirectGeometry(
   outer: GeometryPoint2dLike[],

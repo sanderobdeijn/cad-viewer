@@ -133,16 +133,16 @@ const imageEntity = renderer.renderImage(imagePath, imageStyle);
 
 ### Custom Rendering Pipeline
 ```typescript
-import { AcGiRenderer, AcGiEntity } from '@mlightcad/graphic-interface';
+import { AcGiDrawable, AcGiRenderer, AcGiEntity } from '@mlightcad/graphic-interface';
 
 // Create a custom renderer
 class CustomRenderer extends AcGiRenderer {
-  renderEntity(entity: AcDbEntity): AcGiEntity {
+  renderEntity(entity: AcGiDrawable): AcGiEntity {
     // Custom rendering logic
     const drawable = super.renderEntity(entity);
     
     // Apply custom styling
-    if (entity.getLayer() === 'HIGHLIGHT') {
+    if (entity.layer === 'HIGHLIGHT') {
       drawable.setHighlighted(true);
     }
     

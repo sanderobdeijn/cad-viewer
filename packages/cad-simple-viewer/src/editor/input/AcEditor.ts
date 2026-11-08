@@ -31,14 +31,6 @@ import {
 import { AcEdInputManager, AcEdMessageType } from './ui'
 
 /**
- * Event arguments for system variable related events.
- */
-export interface AcDbSysVarEventArgs {
-  /** The system variable name */
-  name: string
-}
-
-/**
  * Event arguments for command lifecycle events.
  *
  * Contains the command instance that triggered the event.

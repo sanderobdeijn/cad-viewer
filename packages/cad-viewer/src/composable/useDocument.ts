@@ -2,7 +2,7 @@ import {
   ACAP_UNTITLED_DOC_TITLE,
   AcApDocManager,
   AcApDocument,
-  AcDbDocumentEventArgs,
+  AcApDocumentEventArgs,
   AcEdOpenMode
 } from '@mlightcad/cad-simple-viewer'
 import {
@@ -38,7 +38,7 @@ export interface UseDocumentReturn {
    * Current or pending document access mode.
    *
    * During an open request this reflects the mode carried by
-   * {@link AcDbDocumentEventArgs.mode} from `documentToBeOpened`. After
+   * {@link AcApDocumentEventArgs.mode} from `documentToBeOpened`. After
    * activation it mirrors {@link AcApDocument.openMode}.
    */
   openMode: DeepReadonly<Ref<AcEdOpenMode>>
@@ -182,7 +182,7 @@ function endDocumentOpening() {
  *
  * @param args - Document lifecycle event arguments emitted by the manager
  */
-function onDocumentToBeOpened(args: AcDbDocumentEventArgs) {
+function onDocumentToBeOpened(args: AcApDocumentEventArgs) {
   beginDocumentOpening()
   openMode.value = args.mode
 }
@@ -195,7 +195,7 @@ function onDocumentToBeOpened(args: AcDbDocumentEventArgs) {
  *
  * @param args - Document lifecycle event arguments emitted by the manager
  */
-function onDocumentActivated(args: AcDbDocumentEventArgs) {
+function onDocumentActivated(args: AcApDocumentEventArgs) {
   endDocumentOpening()
   syncFromDocument(args.doc)
 }

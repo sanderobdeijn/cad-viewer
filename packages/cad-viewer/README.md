@@ -125,7 +125,7 @@ The `MlCadViewer` component accepts the following props:
 | `background` | `number` | `undefined` | Background color as 24-bit hexadecimal RGB (e.g., `0x000000` for black, `0x808080` for gray). |
 | `baseUrl` | `string` | `undefined` | Base URL for loading fonts, templates, and example files. This URL is used by the CAD viewer to load resources like fonts and drawing templates. **Note**: If not provided, uses the default URL. |
 | `useMainThreadDraw` | `boolean` | `false` | Optional flag whether to use main thread or webwork to render drawing. The true value means using main thread to render drawing. This approach take less memory and take longer time to show rendering results. The false value means using web worker to render drawing. This approach take more memory and take shorter time to show rendering results. |
-| `theme` | `'light' \| 'dark'` | `'dark'` | Initial UI theme of the CAD viewer. On mount, this prop initializes the `COLORTHEME` system variable in the active database (`0 = dark`, `1 = light`). After that, the viewer theme is driven by `COLORTHEME`, so runtime changes from the status bar theme button or direct system-variable updates stay synchronized across `cad-viewer` and `cad-simple-viewer`. |
+| `theme` | `'light' \| 'dark'` | `'dark'` | Initial UI theme of the CAD viewer. On mount, this prop initializes the `colorTheme` setting (`0 = dark`, `1 = light`). After that, the viewer theme is driven by `colorTheme`, so runtime changes from the status bar theme button, the `COLORTHEME` command or direct setting updates stay synchronized across `cad-viewer` and `cad-simple-viewer`. |
 ### UI Settings
 
 The `MlCadViewer` reads its UI visibility from the global `AcApSettingManager` (provided by `@mlightcad/cad-simple-viewer`). Configure these flags anywhere before rendering the viewer to customize the UI.
@@ -225,7 +225,7 @@ The `MlCadViewer` component includes:
 - **Dialog Manager** - Modal dialogs for various operations
 - **File Reader** - Local file loading via file dialog and drag-and-drop support
 - **Entity Info** - Detailed information about selected entities
-- **Theme Support** - Dark/light mode driven by the `COLORTHEME` system variable
+- **Theme Support** - Dark/light mode driven by the `colorTheme` setting
 
 ### Event Handling
 
@@ -264,24 +264,22 @@ Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to
 
 - `useCommands` - Command management
 - `useCurrentPos` - Current position tracking
-- `useDark` - Reactive dark-mode state backed by the `COLORTHEME` system variable
+- `useDark` - Reactive dark-mode state backed by the `colorTheme` setting
 - `useDialogManager` - Dialog management
 - `useFileTypes` - File type utilities
-- `useLayouts` - Layout management
 - `useMissedData` - Missed data handling
 - `useSettings` - Settings management
-- `useSystemVars` - System variables
 
 ### Theme Synchronization
 
-The viewer UI theme is synchronized through the `COLORTHEME` system variable managed by `AcDbSysVarManager`.
+The viewer UI theme is synchronized through the `colorTheme` setting on `AcApSettingManager`. The `COLORTHEME` command changes the same setting.
 
-- `COLORTHEME = 0` means dark theme.
-- `COLORTHEME = 1` means light theme.
+- `colorTheme = 0` means dark theme.
+- `colorTheme = 1` means light theme.
 - The `theme` prop provides the initial value when `MlCadViewer` mounts.
-- Clicking the status bar theme button updates `COLORTHEME`.
-- Any runtime change to `COLORTHEME` is reflected automatically in viewer UI and MTEXT-related UI.
-- The exported `useDark` composable is still available, but it now wraps `COLORTHEME` instead of maintaining an isolated local dark-mode state.
+- Clicking the status bar theme button updates `colorTheme`.
+- Any runtime change to `colorTheme` is reflected automatically in viewer UI and MTEXT-related UI.
+- The exported `useDark` composable wraps `colorTheme` instead of maintaining an isolated local dark-mode state.
 
 ### Locale
 

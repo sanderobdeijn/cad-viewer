@@ -10,15 +10,6 @@ import { AcEdViewMode } from '../editor/view/AcEdBaseView'
 import { AcTrScene } from './AcTrScene'
 
 /**
- * Interface for database entity event arguments.
- * Provides context information for entity-related events.
- */
-export interface AcDbEntityEventArgs {
-  /** The layout view associated with the event */
-  view: AcTrLayoutView
-}
-
-/**
  * Each layout has its own camera and camera control. This class represents view associated with one layout.
  *
  * A layout view manages the visual representation and interaction for a specific AutoCAD layout.

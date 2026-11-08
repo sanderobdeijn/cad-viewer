@@ -116,7 +116,7 @@ export function isPolarTrackingEnabled(): boolean {
  *
  * Applies **ANGBASE** as the zero direction and negates when **ANGDIR** is `1`
  * (clockwise positive), then normalizes to \([0, 2\pi)\). Matches
- * {@link AcDbFormatter} display-angle conventions.
+ * {@link AcApFormatter} display-angle conventions.
  *
  * @param radians - Raw WCS angle in radians.
  * @param angbase - **ANGBASE** zero direction in radians.

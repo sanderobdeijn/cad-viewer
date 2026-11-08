@@ -269,7 +269,7 @@ export class AcTrRenderer implements AcGiRenderer<AcTrEntity> {
 
   /**
    * Starts capturing the next direct-batch draw call from
-   * `AcDbEntity.worldDraw` without building full entity geometry.
+   * `AcGiDrawable.worldDraw` without building full entity geometry.
    *
    * Resets any previous payload and sets the session to `'capturing'`.
    * Call {@link takeDirectCapture} or {@link cancelDirectCapture} to end it.

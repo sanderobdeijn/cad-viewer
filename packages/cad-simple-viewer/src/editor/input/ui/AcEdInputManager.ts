@@ -698,15 +698,14 @@ export class AcEdInputManager {
   }
 
   /**
-   * Resolves a picked object id back to its database entity instance.
+   * Resolves a picked object id back to its model item.
    *
    * View-level picking only returns lightweight hit-test data such as object
-   * ids and bounding information. Prompt validation, however, needs access to
-   * the backing `AcDbEntity` so it can inspect runtime metadata like the entity
-   * type and layer.
+   * ids and bounding information. Prompt validation, however, needs the
+   * backing item so it can inspect its kind.
    *
    * @param objectId - Object id returned by the spatial pick query
-   * @returns The matching database entity, or `undefined` if it can no longer be found
+   * @returns The matching item, or `undefined` if it can no longer be found
    */
   private getEntityById(objectId: string): ModelItem | undefined {
     return AcApDocManager.instance.curDocument.modelSync.item(objectId)

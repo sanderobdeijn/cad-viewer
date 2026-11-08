@@ -28,8 +28,8 @@ export interface AcApOverlayWorldDrawResult {
 }
 
 /**
- * Domain overlay entity protocol (measure), analogous to AcDbEntity
- * template methods — not an {@link AcTrHtmlElement} subclass.
+ * Domain overlay entity protocol (measure), drawn through template
+ * methods — not an {@link AcTrHtmlElement} subclass.
  *
  * Leaves such as Dot / Badge / Callout remain render primitives; concrete
  * overlay types compose them inside {@link subWorldDraw}.

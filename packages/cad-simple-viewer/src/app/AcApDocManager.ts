@@ -111,7 +111,7 @@ const DEFAULT_COMMAND_ALIASES: Record<string, string[]> = {
 /**
  * Event arguments for document-related events.
  */
-export interface AcDbDocumentEventArgs {
+export interface AcApDocumentEventArgs {
   /** The document involved in the event */
   doc: AcApDocument
   /** The access mode used for the document open lifecycle */
@@ -377,17 +377,17 @@ export class AcApDocManager {
   /** Events fired during document lifecycle */
   public readonly events = {
     /** Fired before a document starts opening */
-    documentToBeOpened: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentToBeOpened: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired when a new document is created */
-    documentCreated: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentCreated: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired when a document becomes active */
-    documentActivated: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentActivated: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired before a document is activated */
-    documentToBeActivated: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentToBeActivated: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired before a document is closed and destroyed */
-    documentToBeDestroyed: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentToBeDestroyed: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired after a document has been closed */
-    documentDestroyed: new AcCmEventManager<AcDbDocumentEventArgs>(),
+    documentDestroyed: new AcCmEventManager<AcApDocumentEventArgs>(),
     /** Fired when a worker readiness check completes */
     workersReady: new AcCmEventManager<{ ready: boolean }>()
   }

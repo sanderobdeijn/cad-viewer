@@ -53,13 +53,13 @@ type OffsetPromptResult =
   | AcEdPromptPointResult
 
 /**
- * Type guard that checks whether an entity can participate in OFFSET.
+ * Type guard that checks whether an item can participate in OFFSET.
  *
- * Only {@link AcDbCurve} instances support side detection and offset curve
- * generation; other entity types are rejected during selection.
+ * Only curves support side detection and offset curve generation; other
+ * items are rejected during selection.
  *
- * @param entity - Database entity resolved from the user's selection.
- * @returns `true` when `entity` is an offset-capable curve.
+ * @param item - Item resolved from the user's selection.
+ * @returns `true` when `item` is an offset-capable curve.
  */
 function isOffsettableCurve(
   item: AcApItemContents | undefined
