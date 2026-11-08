@@ -34,7 +34,7 @@
     "release": "node tools/release.mjs",
     "sync:versions": "node tools/sync-versions.mjs",
     "sync:versions:check": "node tools/sync-versions.mjs --check",
-    "test": "jest && pnpm --filter @mlightcad/mtext-renderer --filter @mlightcad/ribbon test",
+    "test": "jest && pnpm --filter @mlightcad/mtext-renderer test",
     "test:e2e": "pnpm --filter @mlightcad/cad-viewer-example test:e2e"
   },
   "engines": {

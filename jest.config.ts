@@ -34,7 +34,6 @@ const packagesProject: ProjectConfig = {
     '/__tests__/helpers/',
     // These suites run on vitest (`pnpm test` runs both).
     '<rootDir>/packages/mtext-renderer/',
-    '<rootDir>/packages/ribbon/',
     ...REALDWG_PACKAGES.map(name => `<rootDir>/packages/${name}/`)
   ],
   moduleNameMapper: {

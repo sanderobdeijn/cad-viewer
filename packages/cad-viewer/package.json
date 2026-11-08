@@ -48,7 +48,7 @@
     "@mlightcad/common": "workspace:*",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
-    "@mlightcad/ribbon": "workspace:*",
+    "@mlightcad/ribbon": "^0.1.14",
     "@mlightcad/three-renderer": "workspace:*",
     "@mlightcad/three-viewcube": "workspace:*",
     "@mlightcad/ui-components": "workspace:*",
