@@ -1,22 +1,14 @@
 import {
   AcCmEventManager,
-  AcDbEntity,
   AcDbLayout,
   AcDbSystemVariables,
-  AcDbSysVarManager
+  AcDbSysVarManager,
+  ModelItemEventArgs
 } from '@mlightcad/data-model'
 
 import { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import { AcTrView2d } from '../view'
 import { AcApDocument } from './AcApDocument'
-import {
-  type AcDbEntityModifiedEventArgs,
-  canApplyVisibilityOnlySceneUpdate
-} from './AcApEntityUpdate'
-
-function asEntityList(entity: AcDbEntity | AcDbEntity[]): AcDbEntity[] {
-  return Array.isArray(entity) ? entity : [entity]
-}
 
 /**
  * Application context that binds a CAD document with its associated view.
@@ -79,47 +71,29 @@ export class AcApContext {
       this._disposers.push(() => manager.removeEventListener(listener))
     }
 
-    // Add entity to scene
-    bind(doc.database.events.entityAppended, args => {
-      if (!this._active) return
-      const pending = asEntityList(args.entity).filter(
-        entity => !this.view.hasEntity(entity.objectId)
-      )
-      if (pending.length === 0) {
-        return
-      }
-      this.view.addEntity(pending.length === 1 ? pending[0] : pending)
+    // The drawing window shows the document model.
+    const model = doc.model
+    const sync = doc.modelSync
+
+    // Add item to scene
+    bind(model.events.itemAdded, ({ item }: ModelItemEventArgs) => {
+      if (!this._active || this.view.hasEntity(item.id)) return
+      const entity = sync.createEntity(item)
+      if (entity) this.view.addEntity(entity)
     })
 
-    // Update entity
-    bind(doc.database.events.entityModified, args => {
+    // Update item
+    bind(model.events.itemModified, ({ item }: ModelItemEventArgs) => {
       if (!this._active) return
-      const eventArgs = args as AcDbEntityModifiedEventArgs
-      const currentView = this.view
-      if (
-        currentView instanceof AcTrView2d &&
-        canApplyVisibilityOnlySceneUpdate(
-          eventArgs,
-          objectId => currentView.hasEntity(objectId),
-          objectId => currentView.getEntityVisible(objectId)
-        ) &&
-        currentView.updateEntityVisibility(eventArgs.entity)
-      ) {
-        return
-      }
-      this.view.updateEntity(eventArgs.entity)
+      const entity = sync.createEntity(item)
+      if (entity) this.view.updateEntity(entity)
     })
 
-    // Erase entity
-    bind(doc.database.events.entityErased, args => {
-      if (!this._active) return
-      const pending = asEntityList(args.entity).filter(entity =>
-        this.view.hasEntity(entity.objectId)
-      )
-      if (pending.length === 0) {
-        return
-      }
-      this.view.removeEntity(pending.length === 1 ? pending[0] : pending)
+    // Remove item
+    bind(model.events.itemRemoved, ({ item }: ModelItemEventArgs) => {
+      if (!this._active || !this.view.hasEntity(item.id)) return
+      const entity = sync.createEntity(item)
+      if (entity) this.view.removeEntity(entity)
     })
 
     // Set layer visibility

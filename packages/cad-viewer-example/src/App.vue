@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import {
   AcApDocManager,
-  AcApModelSync,
+  type AcApModelSync,
   AcApSettingManager
 } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
@@ -101,16 +101,27 @@ const onEditorBlur = () => {
   }
 }
 
-const onCreate = () => {
-  modelSync = new AcApModelSync(AcApDocManager.instance)
+// A file can change many entities in one go, so write once per frame.
+const onModelChanged = ({ model }: { model: { toString(): string } }) => {
+  if (!updateScheduled) {
+    updateScheduled = true
+    requestAnimationFrame(() => showModel(model))
+  }
+}
+
+/** Shows the model of the document on screen and follows its changes. */
+const followActiveDocument = () => {
+  modelSync?.events.modelChanged.removeEventListener(onModelChanged)
+  modelSync = AcApDocManager.instance.curDocument.modelSync
+  modelSync.events.modelChanged.addEventListener(onModelChanged)
   showModel(modelSync.model)
-  // A file can change many entities in one go, so write once per frame.
-  modelSync.events.modelChanged.addEventListener(({ model }) => {
-    if (!updateScheduled) {
-      updateScheduled = true
-      requestAnimationFrame(() => showModel(model))
-    }
-  })
+}
+
+const onCreate = () => {
+  followActiveDocument()
+  AcApDocManager.instance.events.documentActivated.addEventListener(
+    followActiveDocument
+  )
   exposeForTests()
 }
 

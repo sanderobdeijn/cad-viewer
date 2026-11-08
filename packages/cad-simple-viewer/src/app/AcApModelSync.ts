@@ -11,8 +11,6 @@ import {
   AcDbEllipse,
   AcDbEntity,
   AcDbEntityEventArgs,
-  acdbHostApplicationServices,
-  AcDbLayoutEventArgs,
   AcDbLine,
   AcDbObjectId,
   AcDbOrdinateDimension,
@@ -44,10 +42,18 @@ import type {
   AcApMeasurementPoint2d,
   AcApMeasurementRecord
 } from '../command/measure/AcApMeasurementTypes'
+import type { AcEdBaseView } from '../editor/view/AcEdBaseView'
 import { AcEdOpenMode } from '../editor/view/AcEdOpenMode'
 import { AcApEntityService } from '../service/AcApEntityService'
 import type { AcTrView2d } from '../view'
-import type { AcApDocManager, AcDbDocumentEventArgs } from './AcApDocManager'
+
+/** The parts of a document that {@link AcApModelSync} follows. */
+export interface AcApModelSyncDocument {
+  /** The drawing database whose model space is mirrored */
+  readonly database: AcDbDatabase
+  /** Whether the document may be changed */
+  readonly openMode: AcEdOpenMode
+}
 
 function asEntityList(entity: AcDbEntity | AcDbEntity[]): AcDbEntity[] {
   return Array.isArray(entity) ? entity : [entity]
@@ -315,7 +321,7 @@ const targetFor = (item: ModelTextItem): ModelTextTarget => {
   }
 }
 
-const isMeasurementItem = (item: ModelTextItem) =>
+const isMeasurementItem = (item: ModelTextItem | ModelItem) =>
   item.kind === 'dimension' && MEASUREMENT_TYPES.has(item.geometry.type)
 
 const pointTarget = (point: GeometryPoint2d): ModelTextTarget => ({
@@ -348,14 +354,14 @@ const dimensionTarget = (dimension: GeometryDimension): ModelTextTarget => ({
 })
 
 /**
- * Keeps a {@link Model} in step with the drawing window.
+ * Keeps the {@link Model} of one document in step with its database.
  *
- * The model holds a copy of the shape, point or dimension of each entity in the
- * space on screen, using the entity's object id as the item id.
- * It listens to the same database events that update the view, and rebuilds
- * when another document becomes active or another layout is selected.
+ * The model holds a copy of the shape, point or dimension of each model-space
+ * entity, using the entity's object id as the item id. The drawing window
+ * draws from this model.
  * Measurements are overlays rather than entities, so they are followed through
- * the measurement store and listed with the dimensions under their own ids.
+ * the measurement store of the document's view and listed with the dimensions
+ * under their own ids. They are not drawn from the model.
  * Other entities, such as text and block references, are left out.
  * Edited text is written back to the drawing through {@link applyText}.
  *
@@ -377,28 +383,66 @@ export class AcApModelSync {
   private _spaceId?: AcDbObjectId
 
   /**
-   * Creates the model from the current document and starts following changes.
+   * Creates the model from the document and starts following changes.
    *
-   * @param _docManager - The document manager to follow
+   * @param _doc - The document whose model space is mirrored
+   * @param _getView - Returns the view showing this document, if it is on
+   *   screen; its measurements are listed in the model
    */
   constructor(
-    private readonly _docManager: Pick<
-      AcApDocManager,
-      'curDocument' | 'curView' | 'events'
-    >
+    private readonly _doc: AcApModelSyncDocument,
+    private readonly _getView: () => AcEdBaseView | undefined = () => undefined
   ) {
-    _docManager.events.documentActivated.addEventListener(
-      this.onDocumentActivated
-    )
-    acdbHostApplicationServices().layoutManager.events.layoutSwitched.addEventListener(
-      this.onLayoutSwitched
-    )
     this._unsubscribeMeasurements = subscribeMeasurements(
       this.onMeasurementsChanged
     )
-    const database = _docManager.curDocument.database
-    this.bindDatabase(database)
-    this.rebuild(database.currentSpaceId)
+    this.bindDatabase(_doc.database)
+    this.resync()
+  }
+
+  /**
+   * Rebuilds the model from the model space of the document's database.
+   *
+   * Call after the database content is replaced, such as for a new drawing.
+   */
+  resync() {
+    this.bindDatabase(this._doc.database)
+    this.rebuild(this._doc.database.tables.blockTable.modelSpace.objectId)
+  }
+
+  /** Whether the item with this id is a measurement rather than an entity. */
+  isMeasurement(id: string) {
+    return this._measurementIds.has(id)
+  }
+
+  /**
+   * Builds an entity that draws a model item, for the drawing window.
+   *
+   * The entity is not added to the database. It carries the item id as its
+   * object id and belongs to model space, so selection and editing still find
+   * the database entity with the same id.
+   *
+   * @param item - The item to draw
+   * @returns The entity, or undefined for measurements and items that cannot
+   *   be drawn
+   */
+  createEntity(item: ModelItem): AcDbEntity | undefined {
+    if (this._measurementIds.has(item.id) || isMeasurementItem(item)) {
+      return undefined
+    }
+    if (item.kind === 'dimension') {
+      try {
+        checkDimension(item.geometry)
+      } catch {
+        return undefined
+      }
+    }
+    const database = this._doc.database
+    const entity = targetFor(item).create()
+    entity.database = database
+    entity.objectId = item.id as AcDbObjectId
+    entity.ownerId = database.tables.blockTable.modelSpace.objectId
+    return entity
   }
 
   /**
@@ -462,7 +506,7 @@ export class AcApModelSync {
     if (named.length === 0 && changed.length === 0 && remaining.length === 0) {
       return
     }
-    if (this._docManager.curDocument.openMode < AcEdOpenMode.Write) {
+    if (this._doc.openMode < AcEdOpenMode.Write) {
       throw new Error('This drawing is read-only')
     }
 
@@ -521,12 +565,6 @@ export class AcApModelSync {
    * Stops following the drawing window.
    */
   dispose() {
-    this._docManager.events.documentActivated.removeEventListener(
-      this.onDocumentActivated
-    )
-    acdbHostApplicationServices().layoutManager.events.layoutSwitched.removeEventListener(
-      this.onLayoutSwitched
-    )
     this._unsubscribeMeasurements()
     this.bindDatabase(undefined)
   }
@@ -597,8 +635,8 @@ export class AcApModelSync {
   }
 
   private updateMeasurements() {
-    const view = this._docManager.curView as AcTrView2d
-    const records = listLayoutMeasurements(view)
+    const view = this._getView() as AcTrView2d | undefined
+    const records = view ? listLayoutMeasurements(view) : []
     const ids = new Set(records.map(record => record.id))
     for (const id of this._measurementIds) {
       if (!ids.has(id)) this.model.remove(id)
@@ -631,16 +669,6 @@ export class AcApModelSync {
 
   private publish() {
     this.events.modelChanged.dispatch({ model: this.model })
-  }
-
-  private readonly onDocumentActivated = (args: AcDbDocumentEventArgs) => {
-    this.bindDatabase(args.doc.database)
-    this.rebuild(args.doc.database.currentSpaceId)
-  }
-
-  private readonly onLayoutSwitched = (args: AcDbLayoutEventArgs) => {
-    // The layout manager updates currentSpaceId only after this event.
-    this.rebuild(args.layout.blockTableRecordId)
   }
 
   private readonly onMeasurementsChanged = () => {

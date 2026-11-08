@@ -7,6 +7,8 @@ import {
 
 import { AcEdOpenMode } from '../editor/view'
 import { AcApEntityService } from '../service/AcApEntityService'
+import { AcApDocManager } from './AcApDocManager'
+import { AcApModelSync } from './AcApModelSync'
 import { AcApOpenDatabaseOptions } from './AcApOpenDatabaseOptions'
 
 /** Sentinel stored in {@link AcApDocument.docTitle} for unsaved documents. */
@@ -35,6 +37,8 @@ export class AcApDocument {
   private _hiddenObjects = new Set<AcDbObjectId>()
   /** Lazily created entity service bound to this document's database. */
   private _entityService?: AcApEntityService
+  /** Keeps {@link model} in step with the database */
+  private readonly _modelSync: AcApModelSync
 
   /**
    * Creates a new document instance with an empty database.
@@ -45,6 +49,23 @@ export class AcApDocument {
     this._database = new AcDbDatabase()
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
     this._openMode = AcEdOpenMode.Write
+    this._modelSync = new AcApModelSync(this, () => {
+      const manager = AcApDocManager.tryGetInstance()
+      return manager?.curDocument === this ? manager.curView : undefined
+    })
+  }
+
+  /**
+   * The model of this drawing: its shapes, points and dimensions. The drawing
+   * window and the text editor show this model.
+   */
+  get model() {
+    return this._modelSync.model
+  }
+
+  /** Keeps {@link model} in step with the database and applies edited text. */
+  get modelSync() {
+    return this._modelSync
   }
 
   /**
@@ -60,6 +81,7 @@ export class AcApDocument {
     this.docTitle = ACAP_UNTITLED_DOC_TITLE
     try {
       this._database.createNewDrawing(options as AcDbOpenDatabaseOptions)
+      this._modelSync.resync()
       await this._database.regen()
       return true
     } catch (error) {

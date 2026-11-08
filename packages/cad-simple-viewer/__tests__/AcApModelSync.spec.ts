@@ -43,17 +43,15 @@ const createDatabase = () => {
 const createLine = (x = 10) =>
   new AcDbLine(new GeometryPoint2d(0, 0), new GeometryPoint2d(x, 0))
 
-const createSync = (db: AcDbDatabase) => {
-  const documentActivated = new AcCmEventManager<{ doc: unknown }>()
-  const manager = {
-    curDocument: { database: db },
-    curView: {},
-    events: { documentActivated }
-  }
+const createSync = (
+  db: AcDbDatabase,
+  openMode: AcEdOpenMode = AcEdOpenMode.Write
+) => {
   const sync = new AcApModelSync(
-    manager as unknown as ConstructorParameters<typeof AcApModelSync>[0]
+    { database: db, openMode },
+    () => ({}) as never
   )
-  return { sync, documentActivated }
+  return { sync }
 }
 
 describe('AcApModelSync', () => {
@@ -223,38 +221,72 @@ describe('AcApModelSync', () => {
     sync.dispose()
   })
 
-  it('switches to the database of the activated document', () => {
-    const first = createDatabase()
-    const { sync, documentActivated } = createSync(first)
+  it('follows only model space', () => {
+    const db = createDatabase()
+    db.createNewDrawing()
+    db.tables.blockTable.modelSpace.appendEntity(createLine())
+    const { sync } = createSync(db)
 
-    const second = createDatabase()
-    second.tables.blockTable.modelSpace.appendEntity(
-      new AcDbCircle(new GeometryPoint2d(0, 0), 5)
+    const paperSpace = [...db.tables.blockTable.newIterator()].find(
+      record => record.objectId !== db.tables.blockTable.modelSpace.objectId
     )
-    documentActivated.dispatch({ doc: { database: second } })
-    expect(sync.model.shapes).toHaveLength(1)
+    expect(paperSpace).toBeDefined()
+    paperSpace!.appendEntity(createLine(50))
 
-    first.tables.blockTable.modelSpace.appendEntity(createLine())
     expect(sync.model.shapes).toHaveLength(1)
     sync.dispose()
   })
 
-  it('follows the layout on screen', () => {
+  it('rebuilds the model when asked to resync', () => {
     const db = createDatabase()
     db.tables.blockTable.modelSpace.appendEntity(createLine())
     const { sync } = createSync(db)
     expect(sync.model.shapes).toHaveLength(1)
 
-    const layoutManager = acdbHostApplicationServices().layoutManager
-    layoutManager.events.layoutSwitched.dispatch({
-      layout: { blockTableRecordId: 'not-in-this-drawing' }
-    } as never)
-    expect(sync.model.shapes).toHaveLength(0)
-
-    layoutManager.events.layoutSwitched.dispatch({
-      layout: { blockTableRecordId: db.tables.blockTable.modelSpace.objectId }
-    } as never)
+    // A new drawing replaces the content without erase events.
+    db.createNewDrawing()
     expect(sync.model.shapes).toHaveLength(1)
+
+    sync.resync()
+    expect(sync.model.shapes).toHaveLength(0)
+    db.tables.blockTable.modelSpace.appendEntity(createLine())
+    expect(sync.model.shapes).toHaveLength(1)
+    sync.dispose()
+  })
+
+  it('builds an entity that draws an item under its id', () => {
+    const db = createDatabase()
+    const line = createLine()
+    db.tables.blockTable.modelSpace.appendEntity(line)
+    const { sync } = createSync(db)
+
+    const entity = sync.createEntity(sync.model.items[0])
+
+    expect(entity).toBeInstanceOf(AcDbLine)
+    expect(entity!.objectId).toBe(line.objectId)
+    expect(entity!.ownerId).toBe(db.tables.blockTable.modelSpace.objectId)
+    expect([...db.tables.blockTable.modelSpace.newIterator()]).toHaveLength(1)
+    sync.dispose()
+  })
+
+  it('does not draw measurements from the model', () => {
+    const db = createDatabase()
+    const { sync } = createSync(db)
+    setMeasurements([
+      {
+        id: 'm1',
+        geometry: {
+          type: 'distance',
+          start: { x: 0, y: 0 },
+          end: { x: 1, y: 0 }
+        }
+      }
+    ])
+
+    const [measurement] = sync.model.items
+    expect(sync.isMeasurement(measurement.id)).toBe(true)
+    expect(sync.createEntity(measurement)).toBeUndefined()
+    setMeasurements([])
     sync.dispose()
   })
 
@@ -664,14 +696,7 @@ Dimension type=MeasureDistance start=(0, 0) end=(1, 1)`
 
     it('refuses to change a read-only document', () => {
       const db = createDatabase()
-      const manager = {
-        curDocument: { database: db, openMode: AcEdOpenMode.Read },
-        curView: {},
-        events: { documentActivated: new AcCmEventManager<{ doc: unknown }>() }
-      }
-      const sync = new AcApModelSync(
-        manager as unknown as ConstructorParameters<typeof AcApModelSync>[0]
-      )
+      const { sync } = createSync(db, AcEdOpenMode.Read)
 
       expect(() => sync.applyText('Point position=(1, 1)')).toThrow('read-only')
       expect(lineOf(db)).toEqual([])
