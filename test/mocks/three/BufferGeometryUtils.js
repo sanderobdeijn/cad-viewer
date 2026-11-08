@@ -7,7 +7,7 @@ const {
 /**
  * Minimal mergeGeometries mock for Jest.
  * Concatenates matching attributes (and optional indices) so unit tests can
- * assert vertex-count conservation after AcTrGroupCompactor runs.
+ * assert vertex-count conservation after ThreeRendererGroupCompactor runs.
  */
 function mergeGeometries(geometries, useGroups = false) {
   if (!geometries || geometries.length === 0) {

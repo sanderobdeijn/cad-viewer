@@ -3,7 +3,7 @@
  *
  * Keep these in one place so rename/migration is a single-file change.
  * Runtime TypeScript mirrors these in:
- *   packages/cad-simple-viewer/src/app/AcApWorkerAssets.ts
+ *   packages/cad-simple-viewer/src/app/ApplicationWorkerAssets.ts
  */
 
 /** MTEXT layout/shaping worker from `@mlightcad/mtext-renderer`. */

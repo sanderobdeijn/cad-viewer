@@ -70,9 +70,9 @@
 
 <script setup lang="ts">
 import {
-  AcApAngleUnits,
-  AcApLinearUnits,
-  AcApUnitsValue,
+  ApplicationAngleUnits,
+  ApplicationLinearUnits,
+  ApplicationUnitsValue,
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
 } from '@mlightcad/cad-simple-viewer'
 import { ElForm, ElFormItem, ElOption, ElSelect } from 'element-plus'
@@ -130,49 +130,49 @@ const unitOptions = computed(() =>
   isLength.value
     ? [
         {
-          value: AcApLinearUnits.Scientific,
+          value: ApplicationLinearUnits.Scientific,
           label: t('dialog.drawingUnitsDlg.linear.scientific')
         },
         {
-          value: AcApLinearUnits.Decimal,
+          value: ApplicationLinearUnits.Decimal,
           label: t('dialog.drawingUnitsDlg.linear.decimal')
         },
         {
-          value: AcApLinearUnits.Engineering,
+          value: ApplicationLinearUnits.Engineering,
           label: t('dialog.drawingUnitsDlg.linear.engineering')
         },
         {
-          value: AcApLinearUnits.Architectural,
+          value: ApplicationLinearUnits.Architectural,
           label: t('dialog.drawingUnitsDlg.linear.architectural')
         },
         {
-          value: AcApLinearUnits.Fractional,
+          value: ApplicationLinearUnits.Fractional,
           label: t('dialog.drawingUnitsDlg.linear.fractional')
         },
         {
-          value: AcApLinearUnits.WindowsDesktop,
+          value: ApplicationLinearUnits.WindowsDesktop,
           label: t('dialog.drawingUnitsDlg.linear.windowsDesktop')
         }
       ]
     : [
         {
-          value: AcApAngleUnits.DecimalDegrees,
+          value: ApplicationAngleUnits.DecimalDegrees,
           label: t('dialog.drawingUnitsDlg.angle.decimalDegrees')
         },
         {
-          value: AcApAngleUnits.DegreesMinutesSeconds,
+          value: ApplicationAngleUnits.DegreesMinutesSeconds,
           label: t('dialog.drawingUnitsDlg.angle.dms')
         },
         {
-          value: AcApAngleUnits.Gradians,
+          value: ApplicationAngleUnits.Gradians,
           label: t('dialog.drawingUnitsDlg.angle.gradians')
         },
         {
-          value: AcApAngleUnits.Radians,
+          value: ApplicationAngleUnits.Radians,
           label: t('dialog.drawingUnitsDlg.angle.radians')
         },
         {
-          value: AcApAngleUnits.SurveyorsUnits,
+          value: ApplicationAngleUnits.SurveyorsUnits,
           label: t('dialog.drawingUnitsDlg.angle.surveyors')
         }
       ]
@@ -188,31 +188,31 @@ const lengthUnitOptions = computed(() => [
     label: t('dialog.drawingUnitsDlg.lengthUnitFollowDrawing')
   },
   {
-    value: AcApUnitsValue.Millimeters,
+    value: ApplicationUnitsValue.Millimeters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._4')} (mm)`
   },
   {
-    value: AcApUnitsValue.Centimeters,
+    value: ApplicationUnitsValue.Centimeters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._5')} (cm)`
   },
   {
-    value: AcApUnitsValue.Meters,
+    value: ApplicationUnitsValue.Meters,
     label: `${t('dialog.drawingUnitsDlg.insUnits._6')} (m)`
   },
   {
-    value: AcApUnitsValue.Kilometers,
+    value: ApplicationUnitsValue.Kilometers,
     label: `${t('dialog.drawingUnitsDlg.insUnits._7')} (km)`
   },
   {
-    value: AcApUnitsValue.Inches,
+    value: ApplicationUnitsValue.Inches,
     label: `${t('dialog.drawingUnitsDlg.insUnits._1')} (in)`
   },
   {
-    value: AcApUnitsValue.Feet,
+    value: ApplicationUnitsValue.Feet,
     label: `${t('dialog.drawingUnitsDlg.insUnits._2')} (ft)`
   },
   {
-    value: AcApUnitsValue.Yards,
+    value: ApplicationUnitsValue.Yards,
     label: `${t('dialog.drawingUnitsDlg.insUnits._10')} (yd)`
   }
 ])

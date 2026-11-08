@@ -26,33 +26,33 @@ npm install @mlightcad/graphic-interface
 ## Key Classes
 
 ### Core Rendering Classes
-- **AcGiRenderer**: Main interface for rendering entities to drawable objects
-- **AcGiEntity**: Base class for drawable objects that can be rendered
-- **AcGiView**: Represents a view with camera and projection settings
-- **AcGiViewport**: Manages viewport settings and clipping
+- **GraphicsInterfaceRenderer**: Main interface for rendering entities to drawable objects
+- **GraphicsInterfaceEntity**: Base class for drawable objects that can be rendered
+- **GraphicsInterfaceView**: Represents a view with camera and projection settings
+- **GraphicsInterfaceViewport**: Manages viewport settings and clipping
 
 ### Style Classes
-- **AcGiArrowType**: Defines different arrow types for dimensions and leaders
-- **AcGiLineStyle**: Defines line styles including dash patterns and widths
-- **AcGiPointStyle**: Controls point entity display appearance
-- **AcGiTextStyle**: Manages text rendering properties and formatting
+- **GraphicsInterfaceArrowType**: Defines different arrow types for dimensions and leaders
+- **GraphicsInterfaceLineStyle**: Defines line styles including dash patterns and widths
+- **GraphicsInterfacePointStyle**: Controls point entity display appearance
+- **GraphicsInterfaceTextStyle**: Manages text rendering properties and formatting
 
 ## Usage Examples
 
 ### Basic Entity Rendering
 ```typescript
-import type { AcGiDrawable, AcGiRenderer } from '@mlightcad/graphic-interface';
+import type { GraphicsInterfaceDrawable, GraphicsInterfaceRenderer } from '@mlightcad/graphic-interface';
 import { GeometryPoint2d } from '@mlightcad/geometry-engine';
 
 // A drawable draws itself through the renderer it is given
-const line: AcGiDrawable = {
+const line: GraphicsInterfaceDrawable = {
   objectId: '1',
   ownerId: '*MODEL_SPACE',
   layer: '0',
   visibility: true,
   type: 'Line',
   directBatchPrimitive: null,
-  worldDraw(renderer: AcGiRenderer) {
+  worldDraw(renderer: GraphicsInterfaceRenderer) {
     return renderer.lines([new GeometryPoint2d(0, 0), new GeometryPoint2d(10, 10)]);
   }
 };
@@ -61,33 +61,33 @@ const line: AcGiDrawable = {
 ### Style Configuration
 ```typescript
 import { 
-  AcGiLineStyle, 
-  AcGiTextStyle, 
-  AcGiPointStyle,
-  AcGiArrowType 
+  GraphicsInterfaceLineStyle, 
+  GraphicsInterfaceTextStyle, 
+  GraphicsInterfacePointStyle,
+  GraphicsInterfaceArrowType 
 } from '@mlightcad/graphic-interface';
 
 // Configure line style
-const lineStyle = new AcGiLineStyle();
+const lineStyle = new GraphicsInterfaceLineStyle();
 lineStyle.setColor(1); // Red
 lineStyle.setWidth(2.0);
 lineStyle.setDashPattern([10, 5, 5, 5]); // Dashed line
 
 // Configure text style
-const textStyle = new AcGiTextStyle();
+const textStyle = new GraphicsInterfaceTextStyle();
 textStyle.setFont('Arial');
 textStyle.setHeight(12);
 textStyle.setColor(2); // Yellow
 textStyle.setBold(true);
 
 // Configure point style
-const pointStyle = new AcGiPointStyle();
+const pointStyle = new GraphicsInterfacePointStyle();
 pointStyle.setSize(5);
 pointStyle.setShape('Circle');
 pointStyle.setColor(3); // Green
 
 // Configure arrow style
-const arrowStyle = new AcGiArrowType();
+const arrowStyle = new GraphicsInterfaceArrowType();
 arrowStyle.setType('ClosedFilled');
 arrowStyle.setSize(3);
 arrowStyle.setColor(1); // Red
@@ -95,16 +95,16 @@ arrowStyle.setColor(1); // Red
 
 ### View and Viewport Management
 ```typescript
-import { AcGiView, AcGiViewport, GeometryVector3d } from '@mlightcad/graphic-interface';
+import { GraphicsInterfaceView, GraphicsInterfaceViewport, GeometryVector3d } from '@mlightcad/graphic-interface';
 
 // Create a view
-const view = new AcGiView();
+const view = new GraphicsInterfaceView();
 view.setEyePoint(new GeometryVector3d(0, 0, 100));
 view.setTargetPoint(new GeometryVector3d(0, 0, 0));
 view.setUpVector(new GeometryVector3d(0, 1, 0));
 
 // Create a viewport
-const viewport = new AcGiViewport();
+const viewport = new GraphicsInterfaceViewport();
 viewport.setView(view);
 viewport.setWidth(800);
 viewport.setHeight(600);
@@ -117,10 +117,10 @@ viewport.setClippingBounds(0, 0, 100, 100);
 
 ### Image Rendering
 ```typescript
-import { AcGiImageStyle } from '@mlightcad/graphic-interface';
+import { GraphicsInterfaceImageStyle } from '@mlightcad/graphic-interface';
 
 // Configure image style
-const imageStyle = new AcGiImageStyle();
+const imageStyle = new GraphicsInterfaceImageStyle();
 imageStyle.setBrightness(1.0);
 imageStyle.setContrast(1.0);
 imageStyle.setFade(0.0);
@@ -133,11 +133,11 @@ const imageEntity = renderer.renderImage(imagePath, imageStyle);
 
 ### Custom Rendering Pipeline
 ```typescript
-import { AcGiDrawable, AcGiRenderer, AcGiEntity } from '@mlightcad/graphic-interface';
+import { GraphicsInterfaceDrawable, GraphicsInterfaceRenderer, GraphicsInterfaceEntity } from '@mlightcad/graphic-interface';
 
 // Create a custom renderer
-class CustomRenderer extends AcGiRenderer {
-  renderEntity(entity: AcGiDrawable): AcGiEntity {
+class CustomRenderer extends GraphicsInterfaceRenderer {
+  renderEntity(entity: GraphicsInterfaceDrawable): GraphicsInterfaceEntity {
     // Custom rendering logic
     const drawable = super.renderEntity(entity);
     
@@ -149,7 +149,7 @@ class CustomRenderer extends AcGiRenderer {
     return drawable;
   }
   
-  renderToCanvas(canvas: HTMLCanvasElement, entities: AcGiEntity[]) {
+  renderToCanvas(canvas: HTMLCanvasElement, entities: GraphicsInterfaceEntity[]) {
     const ctx = canvas.getContext('2d');
     
     entities.forEach(entity => {
@@ -167,10 +167,10 @@ customRenderer.renderToCanvas(canvas, drawableEntities);
 
 ### Batch Rendering
 ```typescript
-import { AcGiRenderer } from '@mlightcad/graphic-interface';
+import { GraphicsInterfaceRenderer } from '@mlightcad/graphic-interface';
 
 // Batch render multiple entities
-const renderer = new AcGiRenderer();
+const renderer = new GraphicsInterfaceRenderer();
 const entities = [line1, circle1, polyline1, text1];
 
 // Render all entities with consistent styling

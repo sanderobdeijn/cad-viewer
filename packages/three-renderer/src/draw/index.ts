@@ -1,2 +1,2 @@
-export * from './AcTrBatchDrawPolicy'
-export * from './AcTrDrawMode'
+export * from './ThreeRendererBatchDrawPolicy'
+export * from './ThreeRendererDrawMode'

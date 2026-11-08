@@ -1,0 +1,514 @@
+import { CommonColor } from '@mlightcad/common'
+
+import {
+  applyMeasurementStyleToSelection,
+  getActiveMeasurementStyle,
+  getMeasurementSnapshot,
+  getSelectedMeasurementId
+} from '../command/measure/ApplicationMeasurementStore'
+import {
+  EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID,
+  type EditorSessionAccessory
+} from '../editor/command/EditorSessionAccessory'
+import { editorApplyUiTheme, resolveUiTheme } from '../editor/global/EditorUiTheme'
+import { ApplicationI18n } from '../i18n'
+import {
+  applicationCssColor,
+  applicationGetMeasurementColor,
+  applicationGetMeasurementCustomTextHeightWcs,
+  applicationGetMeasurementFontSize,
+  applicationGetMeasurementTextHeightMode,
+  applicationSetMeasurementDrawColor,
+  applicationSetMeasurementTextHeight
+} from '../util/ApplicationMeasurementUtil'
+import type { ThreeRendererView2d } from '../view'
+import { createIconElement, ICON_TEXT_HEIGHT } from './icons'
+import { UIAciColorDialog } from './UIAciColorDialog'
+import {
+  type UIAciPaletteStacks,
+  uiCreateAciPaletteStacks,
+  uiEnsureAciPaletteStyles
+} from './UIAciPaletteUi'
+import { type UIDrawStyleKind } from './UIDrawStyle'
+import {
+  uiOpenTextHeightDialog,
+  uiResolveTextHeightDialogInitials,
+  uiResolveTextHeightPatch
+} from './UITextHeightDialogHelpers'
+
+/** DOM id of the injected stylesheet for draw-style controls. */
+const STYLE_ID = 'ml-draw-style-session-accessory-styles'
+
+/** CSS rules for draw-style controls and the ACI popover. */
+const CONTROLS_CSS = `
+    .ml-draw-style-toolbar__controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ml-draw-style-toolbar__swatch {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--ml-ui-border, #dcdfe6);
+      border-radius: 4px;
+      background: var(--ml-ui-bg, #fff);
+      cursor: pointer;
+    }
+    .ml-draw-style-toolbar__swatch-fill {
+      display: block;
+      width: 14px;
+      height: 14px;
+      margin: 0 auto;
+      border-radius: 50%;
+      border: 1px solid #666;
+    }
+    .ml-draw-style-toolbar__text-height {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ml-ui-border, #dcdfe6);
+      border-radius: 4px;
+      background: var(--ml-ui-bg, #fff);
+      color: inherit;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .ml-draw-style-toolbar__text-height .ml-ex-ui-icon {
+      display: inline-flex;
+      width: 18px;
+      height: 18px;
+    }
+    .ml-draw-style-toolbar__text-height .ml-ex-ui-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    .ml-draw-style-toolbar__color {
+      position: relative;
+    }
+    .ml-draw-style-toolbar__color-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 1;
+      padding: 8px;
+      border: 1px solid var(--ml-ui-border, #dcdfe6);
+      border-radius: 6px;
+      background: var(--ml-ui-bg, rgba(255, 255, 255, 0.98));
+      box-shadow: var(--ml-ui-shadow, 0 4px 12px rgba(0, 0, 0, 0.16));
+      --ml-aci-cell-size: 11px;
+    }
+    .ml-draw-style-toolbar__color-panel.is-open {
+      display: block;
+    }
+    .ml-draw-style-toolbar__color-panel--drop-up {
+      top: auto;
+      bottom: calc(100% + 6px);
+    }
+  `
+
+/**
+ * Builds an {@link CommonColor} from a 1-based ACI index.
+ *
+ * @param index - AutoCAD Color Index (1–255).
+ * @returns Color object with {@link CommonColor.colorIndex} set.
+ */
+function colorFromAci(index: number): CommonColor {
+  const color = new CommonColor()
+  color.colorIndex = index
+  return color
+}
+
+/**
+ * Reads the ACI index from a color when it is stored as ByACI.
+ *
+ * @param color - Color to inspect.
+ * @returns 1-based ACI index, or `undefined` if not ByACI.
+ */
+function aciIndexOf(color: CommonColor): number | undefined {
+  if (color.isByACI && color.colorIndex != null && color.colorIndex >= 1) {
+    return color.colorIndex
+  }
+  return undefined
+}
+
+/**
+ * Injects draw-style control styles and shared ACI palette styles into the document head.
+ */
+function ensureStyles(): void {
+  uiEnsureAciPaletteStyles()
+  if (typeof document === 'undefined') return
+  let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null
+  if (!style) {
+    style = document.createElement('style')
+    style.id = STYLE_ID
+    document.head.appendChild(style)
+  }
+  style.textContent = CONTROLS_CSS
+}
+
+/**
+ * Color / font-size session accessory for measurement drawing.
+ *
+ * Mounted into the desktop top-center slot or the phone/pad session panel.
+ */
+export class UIDrawStyleSessionAccessory {
+  /** Color swatch button that opens the palette or mobile dialog. */
+  private readonly swatch: HTMLButtonElement
+
+  /** Circular fill inside the swatch showing the active color. */
+  private readonly swatchFill: HTMLSpanElement
+
+  /** Wrapper around swatch and inline ACI palette panel. */
+  private readonly colorWrap: HTMLDivElement
+
+  /** Inline ACI palette popover (desktop hover/click). */
+  private readonly colorPanel: HTMLDivElement
+
+  /** ACI palette stacks rendered inside {@link colorPanel}. */
+  private readonly aciStacks: UIAciPaletteStacks
+
+  /** Opens the text-height settings dialog. */
+  private readonly textHeightButton: HTMLButtonElement
+
+  /** Root row reparented into session accessory hosts. */
+  private readonly controlsRow: HTMLDivElement
+
+  /** Active measure session, or `undefined` when inactive. */
+  private kind: UIDrawStyleKind | undefined
+
+  /** True when mounted in the mobile session panel (drop-up palette). */
+  private mobileMounted = false
+
+  /** Whether the inline ACI palette panel is open. */
+  private colorPanelOpen = false
+
+  /** True while the full-screen mobile ACI dialog is open. */
+  private colorDialogOpen = false
+
+  /** True while the text-height dialog is open. */
+  private textHeightDialogOpen = false
+
+  /** Timer that closes the palette after pointer leave. */
+  private colorLeaveTimer: number | undefined
+
+  /** Closes the palette when the user clicks outside the color control. */
+  private readonly onDocumentPointerDown: (event: PointerEvent) => void
+
+  /** Refreshes titles when the application locale changes. */
+  private readonly onLocaleChanged = () => this.relabel()
+
+  /** Tears down selection-sync subscriptions registered by install. */
+  private selectionUnsubscribe: (() => void) | null = null
+
+  /**
+   * Creates controls and wires events. Install registers this on
+   * {@link EditorBaseView.sessionProviders}.
+   *
+   * @param view - 2D view whose container supplies theme and dialog placement.
+   */
+  constructor(private readonly view: ThreeRendererView2d) {
+    ensureStyles()
+
+    this.colorWrap = document.createElement('div')
+    this.colorWrap.className = 'ml-draw-style-toolbar__color'
+    this.swatch = document.createElement('button')
+    this.swatch.type = 'button'
+    this.swatch.className = 'ml-draw-style-toolbar__swatch'
+    this.swatchFill = document.createElement('span')
+    this.swatchFill.className = 'ml-draw-style-toolbar__swatch-fill'
+    this.swatch.appendChild(this.swatchFill)
+    this.colorPanel = document.createElement('div')
+    this.colorPanel.className = 'ml-draw-style-toolbar__color-panel'
+    this.aciStacks = uiCreateAciPaletteStacks({
+      onSelect: index => {
+        this.applyColor(colorFromAci(index))
+        this.hideColorPanel()
+      }
+    })
+    this.colorPanel.appendChild(this.aciStacks.root)
+    this.colorWrap.appendChild(this.swatch)
+    this.colorWrap.appendChild(this.colorPanel)
+
+    this.textHeightButton = document.createElement('button')
+    this.textHeightButton.type = 'button'
+    this.textHeightButton.className = 'ml-draw-style-toolbar__text-height'
+    this.textHeightButton.appendChild(createIconElement(ICON_TEXT_HEIGHT))
+
+    this.controlsRow = document.createElement('div')
+    this.controlsRow.className = 'ml-draw-style-toolbar__controls'
+    this.controlsRow.setAttribute('role', 'toolbar')
+    editorApplyUiTheme(resolveUiTheme(view.container), this.controlsRow)
+    this.controlsRow.append(this.colorWrap, this.textHeightButton)
+
+    this.swatch.addEventListener('click', event => {
+      event.preventDefault()
+      event.stopPropagation()
+      void this.openSessionColorDialog()
+    })
+    this.textHeightButton.addEventListener('click', event => {
+      event.preventDefault()
+      event.stopPropagation()
+      void this.openTextHeightDialog()
+    })
+    this.controlsRow.addEventListener('pointerdown', event =>
+      event.stopPropagation()
+    )
+    this.controlsRow.addEventListener('mousedown', event =>
+      event.stopPropagation()
+    )
+    this.onDocumentPointerDown = event => {
+      const target = event.target as Node | null
+      const inColor = !!target && this.colorWrap.contains(target)
+      if (!this.colorPanelOpen) return
+      if (!inColor) {
+        this.hideColorPanel()
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+    document.addEventListener('pointerdown', this.onDocumentPointerDown, true)
+    ApplicationI18n.events.localeChanged.addEventListener(this.onLocaleChanged)
+
+    this.relabel()
+  }
+
+  /**
+   * Stores selection-sync cleanup from install; run from {@link dispose}.
+   * Replaces any prior subscription before storing the new one.
+   *
+   * @param unsubscribe - Cleanup returned by selection binding.
+   */
+  setSelectionUnsubscribe(unsubscribe: () => void): void {
+    this.selectionUnsubscribe?.()
+    this.selectionUnsubscribe = unsubscribe
+  }
+
+  /**
+   * Updates the active session kind before controls mount or sync.
+   *
+   * @param kind - `'measure'`, or `undefined` when inactive.
+   */
+  setActiveKind(kind: UIDrawStyleKind | undefined): void {
+    this.kind = kind
+    if (this.controlsRow.isConnected) {
+      this.syncFromSession()
+    }
+  }
+
+  /** Removes listeners, unmounts controls, and clears the session provider. */
+  dispose(): void {
+    this.hideColorPanel()
+    document.removeEventListener(
+      'pointerdown',
+      this.onDocumentPointerDown,
+      true
+    )
+    ApplicationI18n.events.localeChanged.removeEventListener(this.onLocaleChanged)
+    this.unmount()
+    this.selectionUnsubscribe?.()
+    this.selectionUnsubscribe = null
+    if (
+      this.view.sessionProviders.get(EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID) ===
+      this
+    ) {
+      this.view.sessionProviders.delete(EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID)
+    }
+    this.aciStacks.dispose()
+  }
+
+  /**
+   * Builds the session accessory that reparents draw-style controls into a host slot.
+   *
+   * @returns Accessory with id `'draw-style'` and mount/unmount delegates.
+   */
+  createSessionAccessory(): EditorSessionAccessory {
+    return {
+      id: 'draw-style',
+      mount: options => this.mount(options.host),
+      unmount: () => this.unmount()
+    }
+  }
+
+  /**
+   * Appends controls to a session host and syncs state from the active session.
+   *
+   * @param host - Desktop top-center slot or mobile session panel accessory element.
+   */
+  private mount(host: HTMLElement): void {
+    // Session panel mounts into `.ml-mobile-cmd-accessory-content`.
+    this.mobileMounted =
+      host.classList.contains('ml-mobile-cmd-accessory-content') ||
+      host.classList.contains('ml-mobile-cmd-accessory') ||
+      !!host.closest('.ml-mobile-cmd')
+    this.hideColorPanel()
+    if (this.mobileMounted) {
+      this.colorPanel.classList.add(
+        'ml-draw-style-toolbar__color-panel--drop-up'
+      )
+    } else {
+      this.colorPanel.classList.remove(
+        'ml-draw-style-toolbar__color-panel--drop-up'
+      )
+    }
+    host.appendChild(this.controlsRow)
+    this.relabel()
+    this.syncFromSession()
+  }
+
+  /** Detaches controls from the current host and resets mobile palette layout. */
+  private unmount(): void {
+    if (!this.controlsRow.isConnected) return
+    this.mobileMounted = false
+    this.hideColorPanel()
+    this.colorPanel.classList.remove(
+      'ml-draw-style-toolbar__color-panel--drop-up'
+    )
+    this.controlsRow.remove()
+  }
+
+  /** Refreshes control titles from i18n strings. */
+  private relabel(): void {
+    this.swatch.title = ApplicationI18n.t('main.drawStyle.color')
+    this.textHeightButton.title = ApplicationI18n.t('main.drawStyle.fontSize')
+    this.textHeightButton.setAttribute(
+      'aria-label',
+      ApplicationI18n.t('main.drawStyle.fontSize')
+    )
+  }
+
+  /**
+   * Reads color from the active measure session or defaults.
+   */
+  private syncFromSession(): void {
+    const selected = getActiveMeasurementStyle()
+    const color = selected?.color ?? applicationGetMeasurementColor()
+    this.paint(color)
+  }
+
+  /**
+   * Updates swatch and ACI selection to match session state.
+   *
+   * @param color - Active draw color.
+   */
+  private paint(color: CommonColor): void {
+    const css = applicationCssColor(color)
+    this.swatchFill.style.background = css
+    this.aciStacks.setSelected(aciIndexOf(color))
+  }
+
+  /**
+   * Persists a new draw color for the active session and updates selection overlays.
+   *
+   * @param color - Color chosen from the palette or dialog.
+   */
+  private applyColor(color: CommonColor): void {
+    this.swatchFill.style.background = applicationCssColor(color)
+    this.aciStacks.setSelected(aciIndexOf(color))
+    applicationSetMeasurementDrawColor(color)
+    applyMeasurementStyleToSelection(this.view, { color })
+  }
+
+  /** Closes the inline ACI palette popover if it was left open. */
+  private hideColorPanel(): void {
+    this.clearColorLeaveTimer()
+    this.colorPanelOpen = false
+    this.colorPanel.classList.remove('is-open')
+  }
+
+  /**
+   * Opens the ACI color dialog (command and selection accessories).
+   */
+  private async openSessionColorDialog(): Promise<void> {
+    if (this.colorDialogOpen) return
+    this.colorDialogOpen = true
+    this.hideColorPanel()
+    try {
+      const selected = this.aciStacks.root.querySelector(
+        '.ml-aci-cell.is-selected'
+      ) as HTMLElement | null
+      const initial = selected ? Number(selected.dataset.aci) : null
+      const index = await UIAciColorDialog.open({
+        host: this.view.container,
+        theme: resolveUiTheme(this.view.container),
+        initialIndex:
+          initial != null && Number.isFinite(initial) ? initial : null,
+        labels: {
+          title: ApplicationI18n.t('main.colorPicker.title'),
+          close: ApplicationI18n.t('main.colorPicker.close'),
+          ok: ApplicationI18n.t('main.colorPicker.ok'),
+          cancel: ApplicationI18n.t('main.colorPicker.cancel'),
+          index: ApplicationI18n.t('main.colorPicker.index'),
+          rgb: ApplicationI18n.t('main.colorPicker.rgb'),
+          input: ApplicationI18n.t('main.colorPicker.input'),
+          inputPlaceholder: ApplicationI18n.t('main.colorPicker.inputPlaceholder')
+        }
+      })
+      if (index != null) this.applyColor(colorFromAci(index))
+    } finally {
+      this.colorDialogOpen = false
+    }
+  }
+
+  /** Cancels a pending palette close timer. */
+  private clearColorLeaveTimer(): void {
+    if (this.colorLeaveTimer == null) return
+    window.clearTimeout(this.colorLeaveTimer)
+    this.colorLeaveTimer = undefined
+  }
+
+  /** Opens the text-height dialog for the active draw-style kind. */
+  private async openTextHeightDialog(): Promise<void> {
+    if (this.textHeightDialogOpen || this.kind == null) return
+    this.textHeightDialogOpen = true
+    this.hideColorPanel()
+    try {
+      const selectedMeasure = getActiveMeasurementStyle()
+      const hasSelection = selectedMeasure != null
+      const sessionMode =
+        selectedMeasure?.textHeightMode ?? applicationGetMeasurementTextHeightMode()
+      const fontSizePx =
+        selectedMeasure?.fontSize ?? applicationGetMeasurementFontSize()
+      const measureId = getSelectedMeasurementId()
+      const selectedTextHeightWcs = hasSelection
+        ? (selectedMeasure?.textHeightWcs ??
+          (measureId
+            ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
+            : undefined))
+        : applicationGetMeasurementCustomTextHeightWcs()
+
+      const initials = uiResolveTextHeightDialogInitials({
+        hasSelection,
+        sessionMode: sessionMode ?? 'adaptive',
+        fontSizePx,
+        selectedTextHeightWcs,
+        view: this.view
+      })
+
+      const result = await uiOpenTextHeightDialog({
+        view: this.view,
+        ...initials
+      })
+      if (!result) return
+      const patch = uiResolveTextHeightPatch(
+        this.view,
+        result,
+        initials.initialFontSizePx
+      )
+      applicationSetMeasurementTextHeight(
+        patch.textHeightMode,
+        patch.textHeightMode === 'custom'
+          ? (patch.textHeightWcs ?? patch.fontSize)
+          : patch.fontSize
+      )
+      applyMeasurementStyleToSelection(this.view, patch)
+    } finally {
+      this.textHeightDialogOpen = false
+    }
+  }
+}

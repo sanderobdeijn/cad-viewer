@@ -2,13 +2,13 @@ export {
   BATCH_SLOT_ID_ATTRIBUTE,
   ensureSlotIdAttribute,
   writeSlotIdRange
-} from './AcTrBatchSlotId'
+} from './ThreeRendererBatchSlotId'
 export {
-  AcTrBatchHighlightState,
-  type AcTrBatchHighlightKind
-} from './AcTrBatchHighlightState'
+  ThreeRendererBatchHighlightState,
+  type ThreeRendererBatchHighlightKind
+} from './ThreeRendererBatchHighlightState'
 export {
   bindBatchHighlightUniforms,
   installBatchHighlightRenderer,
   patchMaterialForBatchHighlight
-} from './AcTrBatchHighlightShaders'
+} from './ThreeRendererBatchHighlightShaders'

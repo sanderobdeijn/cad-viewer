@@ -1,6 +1,6 @@
 /**
  * Ensures cad-viewer no longer ships the unused `@mlightcad/ui-components`
- * MlToolBar (vertical toolbar now uses AcUiToolbar from simple-viewer).
+ * MlToolBar (vertical toolbar now uses UIToolbar from simple-viewer).
  *
  * Requires `packages/cad-viewer/dist/cad-viewer.js` (run package build).
  */
@@ -14,7 +14,7 @@ const describeIfBuilt = existsSync(bundlePath) ? describe : describe.skip
 describeIfBuilt('cad-viewer bundle tree-shakes ui-components MlToolBar', () => {
   const source = readFileSync(bundlePath, 'utf8')
 
-  it('keeps the local MlToolBars host that mounts AcUiToolbar', () => {
+  it('keeps the local MlToolBars host that mounts UIToolbar', () => {
     expect(source).toContain('MlToolBars')
     expect(source).toContain('ml-vertical-toolbar-host')
   })

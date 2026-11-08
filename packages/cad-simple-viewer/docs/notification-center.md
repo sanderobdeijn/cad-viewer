@@ -12,23 +12,23 @@ This guide covers architecture, visibility, default behavior, how to override th
 Engine events (font-not-found / open-file-progress / message / …)
         │
         ▼
-AcApNotificationEventBridge   ← formats title/body, writes into the current Center
+ApplicationNotificationEventBridge   ← formats title/body, writes into the current Center
         │
         ▼
-AcApNotificationCenter        ← replaceable: default Store, or a host implementation
+ApplicationNotificationCenter        ← replaceable: default Store, or a host implementation
         │
-        ├─ Default: AcUiDefaultNotificationUi (bell on the canvas)
+        ├─ Default: UIDefaultNotificationUi (bell on the canvas)
         └─ Override: your UI (Vue / React / custom DOM …)
 ```
 
 Key points:
 
 - **The bridge only writes to the Center; it does not draw UI.** Swapping UI does not require re-subscribing to `eventBus`.
-- **The Center is a singleton slot.** Switch it with `acapSetNotificationCenter`; pass `null` to restore the built-in implementation.
-- **Notifications are per document session (MDI).** Each entry is tagged with `sessionId` (`AcApDocSession.id`). `notifications` / `unreadCount` reflect the **active** session only.
+- **The Center is a singleton slot.** Switch it with `applicationSetNotificationCenter`; pass `null` to restore the built-in implementation.
+- **Notifications are per document session (MDI).** Each entry is tagged with `sessionId` (`ApplicationDocSession.id`). `notifications` / `unreadCount` reflect the **active** session only.
 - **Default chrome is canvas-relative**, not viewport-relative. The bell mounts on the view container (`curView.container`) unless you pass another `host`.
-- **Default DOM UI is `AcUi*`** (`src/ui/AcUiDefaultNotificationUi.ts`); the store / bridge / service stay `AcAp*` under `src/app/notification`.
-- **Copy uses `AcApI18n`,** which is English only. To change the wording, localize inside your custom Center.
+- **Default DOM UI is `AcUi*`** (`src/ui/UIDefaultNotificationUi.ts`); the store / bridge / service stay `AcAp*` under `src/app/notification`.
+- **Copy uses `ApplicationI18n`,** which is English only. To change the wording, localize inside your custom Center.
 
 ---
 
@@ -41,21 +41,21 @@ There is **no** public imperative API such as `show()` / `hide()` on the notific
 | `notificationCenter` option | Effect |
 |---|---|
 | omitted / `true` | Event bridge **on** + default bell UI **on** |
-| `{ showDefaultUi: false }` | Bridge **on**, default UI **off** (host supplies UI via `acapSetNotificationCenter`) |
+| `{ showDefaultUi: false }` | Bridge **on**, default UI **off** (host supplies UI via `applicationSetNotificationCenter`) |
 | `{ showDefaultUi: true, host }` | Bridge + default UI mounted on `host` (default host: canvas container) |
 | `false` | Bridge **off**, UI **off** — host owns all `eventBus` subscriptions |
 
 ```ts
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
+import { ApplicationDocManager } from '@mlightcad/cad-simple-viewer'
 
 // Fully disable the built-in notification system
-AcApDocManager.createInstance({
+ApplicationDocManager.createInstance({
   container: document.getElementById('viewer')!,
   notificationCenter: false
 })
 
 // Keep the bridge; hide the built-in bell (typical for cad-viewer)
-AcApDocManager.createInstance({
+ApplicationDocManager.createInstance({
   container: document.getElementById('viewer')!,
   notificationCenter: { showDefaultUi: false }
 })
@@ -64,15 +64,15 @@ AcApDocManager.createInstance({
 Replacing or restoring the Center at runtime also shows/hides the default UI:
 
 ```ts
-import { acapSetNotificationCenter } from '@mlightcad/cad-simple-viewer'
+import { applicationSetNotificationCenter } from '@mlightcad/cad-simple-viewer'
 
-acapSetNotificationCenter(myCenter) // default DOM UI is disposed
-acapSetNotificationCenter(null)     // restore built-in store + default UI (if enabled)
+applicationSetNotificationCenter(myCenter) // default DOM UI is disposed
+applicationSetNotificationCenter(null)     // restore built-in store + default UI (if enabled)
 ```
 
 ### 2.2 Default DOM UI (automatic)
 
-`AcUiDefaultNotificationUi` ties chrome visibility to the **active session’s** notification list:
+`UIDefaultNotificationUi` ties chrome visibility to the **active session’s** notification list:
 
 | State | Bell | Panel | Backdrop (phone / pad) |
 |---|---|---|---|
@@ -103,25 +103,25 @@ Custom Centers should drive their own show/hide from `subscribe` / reactive `not
 
 ## 3. Default behavior (no override)
 
-`AcApDocManager.createInstance()` by default:
+`ApplicationDocManager.createInstance()` by default:
 
-1. Installs `AcApNotificationEventBridge` (fonts, parse warnings, generic `message`, etc.);
+1. Installs `ApplicationNotificationEventBridge` (fonts, parse warnings, generic `message`, etc.);
 2. Mounts the built-in DOM notification bell on the **canvas container** (`curView.container`).
 
 ### Theme and layout
 
-- Styles use `--ml-ui-*` via `acedApplyUiTheme` / `resolveUiTheme` (same tokens as the shortcut toolbar and command line).
+- Styles use `--ml-ui-*` via `editorApplyUiTheme` / `resolveUiTheme` (same tokens as the shortcut toolbar and command line).
 - **Desktop / pad:** bell at the **canvas** bottom-right by default. Pad opens a **top sheet** (with backdrop) whose width matches the pad session input panel (`ML_UI_SESSION_PANEL_WIDTH`, capped to the canvas host via `calc(100% - ML_UI_SESSION_PANEL_INSET)`).
 - **Phone:** bell is placed **below** the measured shortcut toolbar (so it does not cover erase). The panel is a full-width top sheet + dimmed backdrop, both clipped to the canvas host.
-- Override the bell corner with `notificationCenter.placement` or `acapSetNotificationUiPlacement` (`bottom-right` | `bottom-left` | `top-right` | `top-left`).
+- Override the bell corner with `notificationCenter.placement` or `applicationSetNotificationUiPlacement` (`bottom-right` | `bottom-left` | `top-right` | `top-left`).
 - The bell is **not** merged into the shortcut toolbar: notifications are system alerts, not drawing shortcuts; toggling visibility would shift toolbar buttons, and the toolbar can be hidden in settings.
 
 ### Options
 
 ```ts
-import { AcApDocManager, acapSetNotificationUiPlacement } from '@mlightcad/cad-simple-viewer'
+import { ApplicationDocManager, applicationSetNotificationUiPlacement } from '@mlightcad/cad-simple-viewer'
 
-AcApDocManager.createInstance({
+ApplicationDocManager.createInstance({
   container: document.getElementById('viewer')!,
   notificationCenter: {
     // Mount node for the bell; defaults to curView.container (canvas host)
@@ -134,8 +134,8 @@ AcApDocManager.createInstance({
 })
 
 // Runtime (built-in DOM UI only)
-acapSetNotificationUiPlacement('bottom-left')
-acapSetNotificationUiPlacement(null) // restore layout defaults
+applicationSetNotificationUiPlacement('bottom-left')
+applicationSetNotificationUiPlacement(null) // restore layout defaults
 ```
 
 `cad-viewer` uses `showDefaultUi: false` and registers a Vue notification center.
@@ -146,18 +146,18 @@ acapSetNotificationUiPlacement(null) // restore layout defaults
 
 ### 4.1 Interface
 
-Your object must implement `AcApNotificationCenter` (core methods):
+Your object must implement `ApplicationNotificationCenter` (core methods):
 
 ```ts
 import type {
-  AcApNotification,
-  AcApNotificationCenter,
-  AcApNotificationInput,
-  AcApNotificationSource
+  ApplicationNotification,
+  ApplicationNotificationCenter,
+  ApplicationNotificationInput,
+  ApplicationNotificationSource
 } from '@mlightcad/cad-simple-viewer'
 
-class MyNotificationCenter implements AcApNotificationCenter {
-  private buckets = new Map<string, AcApNotification[]>()
+class MyNotificationCenter implements ApplicationNotificationCenter {
+  private buckets = new Map<string, ApplicationNotification[]>()
   private activeSessionId: string | null = null
   private nextId = 1
   private listeners = new Set<() => void>()
@@ -185,11 +185,11 @@ class MyNotificationCenter implements AcApNotificationCenter {
     this.emit()
   }
 
-  add(notification: AcApNotificationInput): string {
+  add(notification: ApplicationNotificationInput): string {
     const sessionId = notification.sessionId ?? this.activeSessionId
     if (sessionId == null) return ''
 
-    const entry: AcApNotification = {
+    const entry: ApplicationNotification = {
       ...notification,
       sessionId,
       id: `n-${this.nextId++}`,
@@ -202,15 +202,15 @@ class MyNotificationCenter implements AcApNotificationCenter {
     return entry.id
   }
 
-  info(title: string, message?: string, options?: Partial<AcApNotification>) {
+  info(title: string, message?: string, options?: Partial<ApplicationNotification>) {
     return this.add({ type: 'info', title, message, ...options })
   }
 
-  warning(title: string, message?: string, options?: Partial<AcApNotification>) {
+  warning(title: string, message?: string, options?: Partial<ApplicationNotification>) {
     return this.add({ type: 'warning', title, message, ...options })
   }
 
-  error(title: string, message?: string, options?: Partial<AcApNotification>) {
+  error(title: string, message?: string, options?: Partial<ApplicationNotification>) {
     return this.add({
       type: 'error',
       title,
@@ -220,7 +220,7 @@ class MyNotificationCenter implements AcApNotificationCenter {
     })
   }
 
-  success(title: string, message?: string, options?: Partial<AcApNotification>) {
+  success(title: string, message?: string, options?: Partial<ApplicationNotification>) {
     return this.add({ type: 'success', title, message, ...options })
   }
 
@@ -241,7 +241,7 @@ class MyNotificationCenter implements AcApNotificationCenter {
     this.emit()
   }
 
-  removeWhere(predicate: (n: AcApNotification) => boolean) {
+  removeWhere(predicate: (n: ApplicationNotification) => boolean) {
     if (this.activeSessionId == null) return
     const list = this.activeList()
     const next = list.filter(n => !predicate(n))
@@ -251,7 +251,7 @@ class MyNotificationCenter implements AcApNotificationCenter {
     this.emit()
   }
 
-  removeBySource(source: AcApNotificationSource) {
+  removeBySource(source: ApplicationNotificationSource) {
     this.removeWhere(n => n.source === source)
   }
 
@@ -292,25 +292,25 @@ Register immediately **after** `createInstance` so the default bell never flashe
 
 ```ts
 import {
-  AcApDocManager,
-  acapSetNotificationCenter
+  ApplicationDocManager,
+  applicationSetNotificationCenter
 } from '@mlightcad/cad-simple-viewer'
 
 const container = document.getElementById('viewer')!
 
-AcApDocManager.createInstance({
+ApplicationDocManager.createInstance({
   container,
   notificationCenter: { showDefaultUi: false }
 })
 
-acapSetNotificationCenter(new MyNotificationCenter())
+applicationSetNotificationCenter(new MyNotificationCenter())
 ```
 
 On host unmount / viewer destroy:
 
 ```ts
-acapSetNotificationCenter(null) // restore built-in if still needed
-await AcApDocManager.instance.destroy()
+applicationSetNotificationCenter(null) // restore built-in if still needed
+await ApplicationDocManager.instance.destroy()
 ```
 
 Or just `destroy()` — it tears down the bridge and the current Center.
@@ -318,9 +318,9 @@ Or just `destroy()` — it tears down the bridge and the current Center.
 ### 4.3 Reading the current Center
 
 ```ts
-import { acapNotificationCenter } from '@mlightcad/cad-simple-viewer'
+import { applicationNotificationCenter } from '@mlightcad/cad-simple-viewer'
 
-acapNotificationCenter().warning('Custom title', 'A warning pushed by the host')
+applicationNotificationCenter().warning('Custom title', 'A warning pushed by the host')
 ```
 
 ---
@@ -330,23 +330,23 @@ acapNotificationCenter().warning('Custom title', 'A warning pushed by the host')
 The `@mlightcad/cad-viewer` pattern:
 
 1. `createInstance({ notificationCenter: { showDefaultUi: false } })`
-2. Implement (or adapt) `AcApNotificationCenter` with a reactive Vue store (**per session**)
-3. `acapSetNotificationCenter(adapter)`
+2. Implement (or adapt) `ApplicationNotificationCenter` with a reactive Vue store (**per session**)
+3. `applicationSetNotificationCenter(adapter)`
 4. Panel components read the store only — do **not** re-subscribe to `font-not-found` and similar events
 
 Minimal adapter:
 
 ```ts
 import {
-  acapSetNotificationCenter,
-  type AcApNotificationCenter
+  applicationSetNotificationCenter,
+  type ApplicationNotificationCenter
 } from '@mlightcad/cad-simple-viewer'
 import { useNotificationCenter } from './myVueStore' // your reactive store
 
 export function registerHostNotificationCenter() {
   const vue = useNotificationCenter()
 
-  const adapter: AcApNotificationCenter = {
+  const adapter: ApplicationNotificationCenter = {
     get notifications() {
       return vue.notifications.value
     },
@@ -368,7 +368,7 @@ export function registerHostNotificationCenter() {
     clearSession: id => vue.clearSession(id)
   }
 
-  acapSetNotificationCenter(adapter)
+  applicationSetNotificationCenter(adapter)
 }
 ```
 
@@ -389,7 +389,7 @@ The bridge stamps some alerts with `source` for grouping and cleanup:
 |---|---|
 | `font-missed` | Font missing / load failure; use `fontNames` + `removeResolvedFontMissedNotifications` |
 
-Use `acapGroupNotifications(notifications)` to collapse same-`source` rows (built-in bell and cad-viewer panel both use this helper).
+Use `applicationGroupNotifications(notifications)` to collapse same-`source` rows (built-in bell and cad-viewer panel both use this helper).
 
 ---
 
@@ -411,7 +411,7 @@ When the bridge is enabled (`notificationCenter !== false`):
 ## 8. FAQ
 
 **Q: Default bell still shows after I override?**  
-Set `notificationCenter: { showDefaultUi: false }` on `createInstance`, and call `acapSetNotificationCenter` before the first paint.
+Set `notificationCenter: { showDefaultUi: false }` on `createInstance`, and call `applicationSetNotificationCenter` before the first paint.
 
 **Q: No notification system at all?**  
 `notificationCenter: false`. Subscribe to `eventBus` yourself if you still need alerts.
@@ -420,10 +420,10 @@ Set `notificationCenter: { showDefaultUi: false }` on `createInstance`, and call
 Clear the active list (`clear()` / remove items), or disable the default UI with `showDefaultUi: false`. There is no `hide()` method on the service.
 
 **Q: Can I keep the default Store and only swap UI?**  
-The public API replaces the whole Center. Easiest path: implement Store + UI yourself, or wrap `AcApNotificationStore` and drive your view from `subscribe`.
+The public API replaces the whole Center. Easiest path: implement Store + UI yourself, or wrap `ApplicationNotificationStore` and drive your view from `subscribe`.
 
 **Q: How does this relate to the command-line `showMessage`?**  
-Command-line history (`AcEdCommand.showMessage`) is a separate channel. Only `notify` / `eventBus.emit('message')` enter the Notification Center.
+Command-line history (`EditorCommand.showMessage`) is a separate channel. Only `notify` / `eventBus.emit('message')` enter the Notification Center.
 
 **Q: Why is the bell not at the screen corner?**  
 By design it tracks the **canvas**. If the viewer is not full-window, the bell stays on the drawing area. Pass `notificationCenter.host` only when you intentionally want a different mount node.
@@ -437,12 +437,12 @@ Notifications are stored per `sessionId`. Activate Doc A again (or read that ses
 
 | API | Role |
 |---|---|
-| `acapSetNotificationCenter(center \| null)` | install / restore Center (also shows/hides default UI) |
-| `acapNotificationCenter()` | current Center |
-| `AcApNotificationStore` | built-in per-session memory store |
-| `AcApNotificationCenter.setActiveSession` | switch visible document list |
-| `AcApNotificationCenter.clearSession` | drop a closed document’s list |
-| `acapGroupNotifications` | group by `source` |
-| `AcApDocManagerOptions.notificationCenter` | bridge / default UI / canvas host |
+| `applicationSetNotificationCenter(center \| null)` | install / restore Center (also shows/hides default UI) |
+| `applicationNotificationCenter()` | current Center |
+| `ApplicationNotificationStore` | built-in per-session memory store |
+| `ApplicationNotificationCenter.setActiveSession` | switch visible document list |
+| `ApplicationNotificationCenter.clearSession` | drop a closed document’s list |
+| `applicationGroupNotifications` | group by `source` |
+| `ApplicationDocManagerOptions.notificationCenter` | bridge / default UI / canvas host |
 
 Source: `packages/cad-simple-viewer/src/app/notification/`.

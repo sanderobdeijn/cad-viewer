@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test'
  *
  * Length/angle unit controls are now one compact row per ribbon item (no ElForm).
  * Phone layouts hide the desktop command line, so the command is started through
- * `AcApDocManager` (same path as typing `measuredistance` on desktop).
+ * `ApplicationDocManager` (same path as typing `measuredistance` on desktop).
  */
 test.use({
   viewport: { width: 390, height: 844 },
@@ -37,11 +37,11 @@ test('measure distance does not log ElForm unexpected width NaN', async ({
   const started = await page.evaluate(() => {
     const mgr = (
       window as Window & {
-        AcApDocManager?: {
+        ApplicationDocManager?: {
           instance?: { sendStringToExecute?: (cmd: string) => void }
         }
       }
-    ).AcApDocManager?.instance
+    ).ApplicationDocManager?.instance
     if (!mgr?.sendStringToExecute) return false
     mgr.sendStringToExecute('measuredistance')
     return true

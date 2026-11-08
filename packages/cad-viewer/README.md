@@ -128,7 +128,7 @@ The `MlCadViewer` component accepts the following props:
 | `theme` | `'light' \| 'dark'` | `'dark'` | Initial UI theme of the CAD viewer. On mount, this prop initializes the `colorTheme` setting (`0 = dark`, `1 = light`). After that, the viewer theme is driven by `colorTheme`, so runtime changes from the status bar theme button, the `COLORTHEME` command or direct setting updates stay synchronized across `cad-viewer` and `cad-simple-viewer`. |
 ### UI Settings
 
-The `MlCadViewer` reads its UI visibility from the global `AcApSettingManager` (provided by `@mlightcad/cad-simple-viewer`). Configure these flags anywhere before rendering the viewer to customize the UI.
+The `MlCadViewer` reads its UI visibility from the global `ApplicationSettingManager` (provided by `@mlightcad/cad-simple-viewer`). Configure these flags anywhere before rendering the viewer to customize the UI.
 
 Settings resolve in three layers (later wins): built-in defaults, user preferences in `localStorage`, and session overrides. Only user preferences are persisted. Use `{ persist: false }` for host layout (for example hide the command line on mobile) so the change does not leak into other products or later visits on the same origin.
 
@@ -152,15 +152,15 @@ Settings resolve in three layers (later wins): built-in defaults, user preferenc
 
 <script setup lang="ts">
 import { MlCadViewer } from '@mlightcad/cad-viewer'
-import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
+import { ApplicationSettingManager } from '@mlightcad/cad-simple-viewer'
 
 // Optional: isolate this product's preferences on a shared origin
-AcApSettingManager.configure({
+ApplicationSettingManager.configure({
   storageKey: 'mlightcad.settings.cad-viewer'
 })
 
 // Host layout before mount — session only (does not write localStorage)
-AcApSettingManager.instance.apply(
+ApplicationSettingManager.instance.apply(
   {
     isShowCommandLine: false
     // isShowToolbar: false,
@@ -176,9 +176,9 @@ AcApSettingManager.instance.apply(
 #### Notes
 
 - Settings are global and immediately reflected by `MlCadViewer`.
-- You can change them at runtime using the same `AcApSettingManager.instance` reference.
+- You can change them at runtime using the same `ApplicationSettingManager.instance` reference.
 - Property setters (for example `isShowToolbar = false`) and the in-app settings menu persist user preferences by default.
-- On the same origin, give each product its own `storageKey` via `AcApSettingManager.configure` so preferences do not cross-contaminate. Call `configure` before the first settings read/write.
+- On the same origin, give each product its own `storageKey` via `ApplicationSettingManager.configure` so preferences do not cross-contaminate. Call `configure` before the first settings read/write.
 
 ### Base URL Configuration
 
@@ -251,9 +251,9 @@ Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to
 
 ### Commands
 
-- `AcApLogCmd` - Log command
-- `AcApMissedDataCmd` - Missed data command
-- `AcApPointStyleCmd` - Point style command
+- `ApplicationLogCmd` - Log command
+- `ApplicationMissedDataCmd` - Missed data command
+- `ApplicationPointStyleCmd` - Point style command
 
 ### Components
 
@@ -272,7 +272,7 @@ Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to
 
 ### Theme Synchronization
 
-The viewer UI theme is synchronized through the `colorTheme` setting on `AcApSettingManager`. The `COLORTHEME` command changes the same setting.
+The viewer UI theme is synchronized through the `colorTheme` setting on `ApplicationSettingManager`. The `COLORTHEME` command changes the same setting.
 
 - `colorTheme = 0` means dark theme.
 - `colorTheme = 1` means light theme.

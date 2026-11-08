@@ -1,14 +1,14 @@
 /**
- * Shared toolbar item and chrome types for {@link AcUiToolbar}.
+ * Shared toolbar item and chrome types for {@link UIToolbar}.
  *
  * @module toolbar/types
  * @packageDocumentation
  */
 
-import type { AcEdOpenMode } from '../../editor/view/AcEdOpenMode'
+import type { EditorOpenMode } from '../../editor/view/EditorOpenMode'
 
 /** Toolbar edge placement relative to the viewer host element. */
-export type AcUiToolbarPlacement = 'top' | 'bottom' | 'left' | 'right'
+export type UIToolbarPlacement = 'top' | 'bottom' | 'left' | 'right'
 
 /**
  * Overflow behavior when toolbar buttons exceed the host bounds.
@@ -16,7 +16,7 @@ export type AcUiToolbarPlacement = 'top' | 'bottom' | 'left' | 'right'
  * - `'menu'`: show a ⋯ button; overflow items open in a dropdown menu.
  * - `'wrap'`: continue on additional rows (horizontal) or columns (vertical).
  */
-export type AcUiToolbarOverflow = 'menu' | 'wrap'
+export type UIToolbarOverflow = 'menu' | 'wrap'
 
 /**
  * Sizing along the toolbar layout axis: width for horizontal bars, height for vertical bars.
@@ -24,7 +24,7 @@ export type AcUiToolbarOverflow = 'menu' | 'wrap'
  * - `'auto'`: natural size from button content (default).
  * - `'stretch'`: fill the available host width or height and space buttons evenly.
  */
-export type AcUiToolbarSize = 'auto' | 'stretch'
+export type UIToolbarSize = 'auto' | 'stretch'
 
 /**
  * How a sub-toolbar aligns along the parent toolbar's main axis.
@@ -35,18 +35,18 @@ export type AcUiToolbarSize = 'auto' | 'stretch'
  * - `'center'`: centers the sub-toolbar on the parent toolbar
  * - `'auto'`: align to the parent button
  *
- * Ignored when the sub-toolbar {@link AcUiToolbarChromeOptions.size} is
+ * Ignored when the sub-toolbar {@link UIToolbarChromeOptions.size} is
  * `'stretch'`.
  */
-export type AcUiSubToolbarPosition = 'front' | 'end' | 'center' | 'auto'
+export type UISubToolbarPosition = 'front' | 'end' | 'center' | 'auto'
 
 /**
  * Shared layout and chrome options for the main toolbar and sub-toolbars.
  *
  * Sub-toolbars inherit unset fields from the main toolbar unless overridden via
- * {@link AcUiToolbarOptions.subToolbar}.
+ * {@link UIToolbarOptions.subToolbar}.
  */
-export interface AcUiToolbarChromeOptions {
+export interface UIToolbarChromeOptions {
   /**
    * Inset from the host edge where the toolbar is anchored in px.
    * Top/bottom placement uses top or bottom; left/right uses left or right.
@@ -71,9 +71,9 @@ export interface AcUiToolbarChromeOptions {
    * vertical bars.
    * @default 'auto'
    */
-  size?: AcUiToolbarSize
+  size?: UIToolbarSize
   /** Overflow behavior when buttons exceed the host bounds. */
-  overflow?: AcUiToolbarOverflow
+  overflow?: UIToolbarOverflow
   /**
    * When false, hides the toolbar container border line.
    * @default true
@@ -103,12 +103,12 @@ export interface AcUiToolbarChromeOptions {
  *
  * Unset chrome fields inherit from the main toolbar.
  */
-export interface AcUiSubToolbarOptions extends Partial<AcUiToolbarChromeOptions> {
+export interface UISubToolbarOptions extends Partial<UIToolbarChromeOptions> {
   /**
    * Aligns the strip along the parent toolbar axis.
    * @default 'front'
    */
-  position?: AcUiSubToolbarPosition
+  position?: UISubToolbarPosition
   /**
    * When true, opening a nested sub-toolbar hides the ancestor strip so only
    * the new strip is visible (saves vertical space on phone). When false,
@@ -127,7 +127,7 @@ export interface AcUiSubToolbarOptions extends Partial<AcUiToolbarChromeOptions>
  * - `'fixed'`: parent keeps its own `icon` (default).
  * - `'selected'`: parent shows the selected child's `icon`.
  */
-export type AcUiToolbarChildIconMode = 'fixed' | 'selected'
+export type UIToolbarChildIconMode = 'fixed' | 'selected'
 
 /**
  * How nested `children` are presented when the parent button is clicked.
@@ -139,56 +139,56 @@ export type AcUiToolbarChildIconMode = 'fixed' | 'selected'
  *   is clicked again, or another parent opens a different strip. Child and
  *   canvas clicks do not dismiss it.
  */
-export type AcUiToolbarChildrenUi = 'menu' | 'toolbar' | 'sticky-toolbar'
+export type UIToolbarChildrenUi = 'menu' | 'toolbar' | 'sticky-toolbar'
 
 /** Visual separator between toolbar button groups. */
-export interface AcUiToolbarSeparator {
+export interface UIToolbarSeparator {
   type: 'separator'
   /** Optional stable id for debugging. */
   id?: string
 }
 
 /** Reference to a built-in toolbar button when composing a custom layout. */
-export interface AcUiToolbarPresetRef {
+export interface UIToolbarPresetRef {
   preset: string
 }
 
 /**
  * Minimal i18n surface used by the toolbar engine.
  *
- * Hosts adapt their own locale tables (plugin `AcUiI18n`, HTML `AcExHtmlI18n`,
+ * Hosts adapt their own locale tables (plugin `UII18n`, HTML `AcExHtmlI18n`,
  * vue-i18n) to this shape.
  */
-export interface AcUiToolbarI18n {
+export interface UIToolbarI18n {
   t(key: string, params?: Record<string, string>): string
 }
 
 /**
  * Document-related toolbar state. Driven by the host or
- * {@link acapBindToolbarDocState} — the UI never imports DocManager.
+ * {@link applicationBindToolbarDocState} — the UI never imports DocManager.
  */
-export interface AcUiToolbarDocState {
+export interface UIToolbarDocState {
   /** Whether an active document is loaded. */
   hasDocument: boolean
   /** True while a document is opening (disables command buttons). */
   isOpening: boolean
-  /** Current document open mode used for {@link AcUiToolbarItem.minOpenMode}. */
-  openMode: AcEdOpenMode
+  /** Current document open mode used for {@link UIToolbarItem.minOpenMode}. */
+  openMode: EditorOpenMode
 }
 
 /**
  * Configuration for a single toolbar button or submenu entry.
  */
-export interface AcUiToolbarItem {
+export interface UIToolbarItem {
   /** Stable identifier used for DOM attributes and debugging. */
   id: string
   /** When `'separator'`, renders a divider instead of a button. */
   type?: 'button' | 'separator'
-  /** i18n key resolved via {@link AcUiToolbarI18n.t}. */
+  /** i18n key resolved via {@link UIToolbarI18n.t}. */
   label?: string
   /** Inline SVG string, DOM element, or factory that produces an icon element. */
   icon?: string | HTMLElement | (() => HTMLElement)
-  /** CAD command string forwarded to {@link AcUiToolbarMountOptions.onCommand}. */
+  /** CAD command string forwarded to {@link UIToolbarMountOptions.onCommand}. */
   command?: string
   /** Custom click handler. Used when no command is set (e.g. theme toggle). */
   action?: () => void
@@ -203,21 +203,21 @@ export interface AcUiToolbarItem {
    */
   requiresDocument?: boolean
   /** Minimum open mode required to show this item (Write shows in Write only). */
-  minOpenMode?: AcEdOpenMode
+  minOpenMode?: EditorOpenMode
   /** Static or dynamic disabled state evaluated at render time. */
   disabled?: boolean | (() => boolean)
   /** Nested submenu items shown when the button is clicked.
    * May be a live getter so the list can depend on the active document. */
-  children?: AcUiToolbarItem[]
+  children?: UIToolbarItem[]
   /**
    * Presentation of {@link children}. Defaults to `'menu'` (popover dropdown).
    */
-  childrenUi?: AcUiToolbarChildrenUi
+  childrenUi?: UIToolbarChildrenUi
   /**
    * When the button has `children`, controls whether the parent icon follows the
    * selected submenu item. Defaults to `'fixed'`.
    */
-  childIcon?: AcUiToolbarChildIconMode
+  childIcon?: UIToolbarChildIconMode
   /** Initial submenu selection when {@link childIcon} is `'selected'`. */
   selectedChildId?: string
   /** Two-state button that merges `on` or `off` branch fields based on `getValue`. */
@@ -225,35 +225,35 @@ export interface AcUiToolbarItem {
     /** Returns whether the toggle is in the "on" branch. */
     getValue: () => boolean
     /** Fields applied when `getValue` returns true. */
-    on: Partial<AcUiToolbarItem>
+    on: Partial<UIToolbarItem>
     /** Fields applied when `getValue` returns false. */
-    off: Partial<AcUiToolbarItem>
+    off: Partial<UIToolbarItem>
   }
 }
 
 /** Resolved toolbar entry: button, separator, or preset reference in config. */
-export type AcUiToolbarItemConfig =
-  | AcUiToolbarItem
-  | AcUiToolbarSeparator
-  | AcUiToolbarPresetRef
+export type UIToolbarItemConfig =
+  | UIToolbarItem
+  | UIToolbarSeparator
+  | UIToolbarPresetRef
 
 /**
  * Standalone toolbar configuration shared by hosts that compose item lists.
  */
-export interface AcUiToolbarOptions extends AcUiToolbarChromeOptions {
+export interface UIToolbarOptions extends UIToolbarChromeOptions {
   /** When false, the toolbar is not created. */
   enabled?: boolean
   /** Edge placement relative to `host`. */
-  placement?: AcUiToolbarPlacement
+  placement?: UIToolbarPlacement
   /** Toolbar items, `'default'`, or a custom list (may include presets and separators). */
-  items?: AcUiToolbarItemConfig[] | 'default'
+  items?: UIToolbarItemConfig[] | 'default'
   /**
    * Root toolbar item ids to omit after resolving {@link items} and
    * {@link appendItems}. Does not recurse into submenu children.
    */
   excludeItems?: string[]
   /** Extra items merged into `items` (default: appended at the end). */
-  appendItems?: AcUiToolbarItemConfig[]
+  appendItems?: UIToolbarItemConfig[]
   /**
    * Insert `appendItems` after the root toolbar item with this id.
    * Ignored when {@link appendItemsBefore} is set.
@@ -282,5 +282,5 @@ export interface AcUiToolbarOptions extends AcUiToolbarChromeOptions {
    * Sub-toolbar chrome and position overrides. Unset chrome fields inherit from
    * the main toolbar.
    */
-  subToolbar?: AcUiSubToolbarOptions
+  subToolbar?: UISubToolbarOptions
 }

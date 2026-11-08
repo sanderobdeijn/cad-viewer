@@ -1,25 +1,25 @@
 import {
-  acapGroupNotifications,
-  type AcApNotification,
-  type AcApNotificationAction,
-  type AcApNotificationGroup,
-  type AcApNotificationSource
+  applicationGroupNotifications,
+  type ApplicationNotification,
+  type ApplicationNotificationAction,
+  type ApplicationNotificationGroup,
+  type ApplicationNotificationSource
 } from '@mlightcad/cad-simple-viewer'
 import { computed, ref } from 'vue'
 
 /**
- * @deprecated Prefer {@link AcApNotificationSource} from cad-simple-viewer.
+ * @deprecated Prefer {@link ApplicationNotificationSource} from cad-simple-viewer.
  */
-export type NotificationSource = AcApNotificationSource
+export type NotificationSource = ApplicationNotificationSource
 
 /**
- * Vue notification entry. Structurally compatible with {@link AcApNotification}.
+ * Vue notification entry. Structurally compatible with {@link ApplicationNotification}.
  */
-export type Notification = AcApNotification
+export type Notification = ApplicationNotification
 
-export type NotificationGroup = AcApNotificationGroup
+export type NotificationGroup = ApplicationNotificationGroup
 
-export type NotificationAction = AcApNotificationAction
+export type NotificationAction = ApplicationNotificationAction
 
 /**
  * Groups notifications for the Vue notification center panel.
@@ -27,7 +27,7 @@ export type NotificationAction = AcApNotificationAction
 export function groupNotifications(
   notifications: Notification[]
 ): NotificationGroup[] {
-  return acapGroupNotifications(notifications)
+  return applicationGroupNotifications(notifications)
 }
 
 /**

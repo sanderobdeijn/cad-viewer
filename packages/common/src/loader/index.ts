@@ -1,10 +1,10 @@
-export { AcCmLoadingManager, DefaultLoadingManager } from './AcCmLoadingManager'
+export { CommonLoadingManager, DefaultLoadingManager } from './CommonLoadingManager'
 export type {
-  AcCmOnErrorCallback,
-  AcCmOnLoadCallback,
-  AcCmOnProgressCallback,
-  AcCmOnStartCallback,
-  AcCmUrlModifier
-} from './AcCmLoadingManager'
-export { AcCmLoader } from './AcCmLoader'
-export type { AcCmLoaderProgressCallback } from './AcCmLoader'
+  CommonOnErrorCallback,
+  CommonOnLoadCallback,
+  CommonOnProgressCallback,
+  CommonOnStartCallback,
+  CommonUrlModifier
+} from './CommonLoadingManager'
+export { CommonLoader } from './CommonLoader'
+export type { CommonLoaderProgressCallback } from './CommonLoader'

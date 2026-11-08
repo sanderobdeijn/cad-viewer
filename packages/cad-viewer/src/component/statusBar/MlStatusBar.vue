@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcApDocManager } from '@mlightcad/cad-simple-viewer'
+import { ApplicationDocManager } from '@mlightcad/cad-simple-viewer'
 import { MlStatusBar } from '@mlightcad/ui-components'
 import { ElButton, ElButtonGroup } from 'element-plus'
 import { computed } from 'vue'
@@ -86,7 +86,7 @@ const props = defineProps<{
   toggleDark: () => void
 }>()
 
-const { text: posText } = useCurrentPos(AcApDocManager.instance.curView)
+const { text: posText } = useCurrentPos(ApplicationDocManager.instance.curView)
 const features = useSettings()
 const { isDocumentOpening } = useDocument()
 const { isMobile, isMobileOrPad } = useIsMobile()

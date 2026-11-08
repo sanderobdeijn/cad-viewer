@@ -1,6 +1,6 @@
 import {
-  AcApDocManager,
-  AcEdViewHoverEventArgs
+  ApplicationDocManager,
+  EditorViewHoverEventArgs
 } from '@mlightcad/cad-simple-viewer'
 import type { ModelItem } from '@mlightcad/geometry-engine'
 import { onMounted, onUnmounted, type Ref, ref } from 'vue'
@@ -18,7 +18,7 @@ export interface UseHoverResult {
  * Tracks which drawing item is currently hovered in the active view.
  *
  * This composable automatically listens to `hover` and `unhover` events
- * from the `AcApDocManager.instance.curView.events` system in the CAD viewer.
+ * from the `ApplicationDocManager.instance.curView.events` system in the CAD viewer.
  * It exposes reactive state containing:
  *
  * - The currently hovered model item (`item`)
@@ -76,9 +76,9 @@ export function useHover(): UseHoverResult {
   /** Current mouse coordinates during hover */
   const mouse = ref({ x: -1, y: -1 })
   /** Handler for CAD viewer hover events */
-  const updateHoverEntity = (args: AcEdViewHoverEventArgs) => {
-    const view = AcApDocManager.instance.curView
-    const hoveredItem = AcApDocManager.instance.curDocument.modelSync.item(
+  const updateHoverEntity = (args: EditorViewHoverEventArgs) => {
+    const view = ApplicationDocManager.instance.curView
+    const hoveredItem = ApplicationDocManager.instance.curDocument.modelSync.item(
       args.id
     )
     if (hoveredItem) {
@@ -103,14 +103,14 @@ export function useHover(): UseHoverResult {
 
   /** Register event listeners when the component mounts */
   onMounted(() => {
-    const events = AcApDocManager.instance.curView.events
+    const events = ApplicationDocManager.instance.curView.events
     events.hover.addEventListener(updateHoverEntity)
     events.unhover.addEventListener(clearHover)
   })
 
   /** Unregister event listeners when the component unmounts */
   onUnmounted(() => {
-    const events = AcApDocManager.instance.curView.events
+    const events = ApplicationDocManager.instance.curView.events
     events.hover.removeEventListener(updateHoverEntity)
     events.unhover.removeEventListener(clearHover)
   })

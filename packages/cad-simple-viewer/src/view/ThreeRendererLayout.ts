@@ -1,0 +1,1091 @@
+import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
+import {
+  disposePreviewSubset,
+  ThreeRendererDirectEntityMeta,
+  ThreeRendererEntity,
+  ThreeRendererEntityPreview,
+  ThreeRendererGroup} from '@mlightcad/three-renderer'
+import * as THREE from 'three'
+
+import { EditorLayerInfo, EditorSpatialQueryResultItem } from '../editor'
+import { unionSpatialQueryItems } from '../editor/view/EditorSpatialQueryResult'
+import { ThreeRendererHierarchicalSpatialIndex } from '../spatialIndex'
+import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
+import { isFiniteSpatialBBox } from './ThreeRendererGroupWcsBboxAssert'
+import { ThreeRendererLayer, ThreeRendererLayerStats } from './ThreeRendererLayer'
+
+/** Options for {@link ThreeRendererLayout.createEntityPreviewRoot}. */
+export interface ThreeRendererEntityPreviewRootOptions {
+  /**
+   * Behavior when one entity id cannot be extracted from a layer batch group.
+   *
+   * - `fail` (default): dispose the partial preview and return `null`
+   * - `skip`: ignore that id and continue with the remaining ids
+   */
+  missingEntity?: 'fail' | 'skip'
+  /** When true, every requested id must exist in this layout. */
+  requireAllEntities?: boolean
+}
+
+/**
+ * Interface representing statistics for a layout.
+ * Provides detailed information about the layout's content including
+ * layer statistics and memory usage breakdown.
+ */
+export interface ThreeRendererLayoutStats {
+  /** Statistics for each layer in the layout */
+  layers: ThreeRendererLayerStats[]
+  /** Summary statistics for the entire layout */
+  summary: {
+    /** Total number of entities across all layers */
+    entityCount: number
+    /** Memory usage breakdown by object type */
+    totalSize: {
+      /** Memory used by line geometries (bytes) */
+      line: number
+      /** Memory used by mesh geometries (bytes) */
+      mesh: number
+      /** Memory used by point geometries (bytes) */
+      point: number
+      /** Memory used by unbatched geometries (bytes) */
+      unbatched: number
+      /** Total geometry memory usage (bytes) */
+      geometry: number
+      /** Memory used by entity mappings (bytes) */
+      mapping: number
+      /** Number of unbatched objects */
+      unbatchedCount: number
+      /** Unbatched object count by type */
+      unbatchedByType: {
+        line: number
+        mesh: number
+        point: number
+        other: number
+      }
+    }
+  }
+}
+
+/**
+ * This class represents objects contained in one AutoCAD layout (model space or paper space).
+ *
+ * A layout manages the organization and rendering of CAD entities within a specific coordinate space.
+ * It provides functionality for:
+ * - Managing entities organized by layers
+ * - Spatial indexing for efficient entity queries
+ * - Bounding box management for view operations
+ * - Entity selection and highlighting
+ * - Memory usage tracking and statistics
+ *
+ * Layouts use a spatial index (R-tree) for fast entity lookup operations and maintain
+ * a hierarchical structure where entities are grouped by layers for efficient rendering
+ * and visibility management.
+ *
+ * @example
+ * ```typescript
+ * const layout = new ThreeRendererLayout();
+ * layout.addEntity(entity);
+ * const entities = layout.search(boundingBox);
+ * layout.select(['entity1', 'entity2']);
+ * ```
+ */
+export class ThreeRendererLayout {
+  /** The group that contains all entities in this layout */
+  private _group: THREE.Group
+  /** Spatial index tree for efficient entity queries */
+  private _spatialIndex: ThreeRendererHierarchicalSpatialIndex
+  /** Cached layout bounds derived from packed batch vertex buffers */
+  private _cachedBox: THREE.Box3
+  /** Cached smart-extents box; cleared whenever layout geometry extents change */
+  private _cachedSmartExtents: GeometryBox2d | undefined
+  /**
+   * Bumped whenever {@link _cachedSmartExtents} is cleared so in-flight async
+   * smart-extents work can detect stale results and skip writing the cache.
+   */
+  private _smartExtentsGeneration = 0
+  /** When true, {@link box} is recomputed from batch geometry on next read */
+  private _boxDirty: boolean
+  /** Entity ids excluded from layout bounds (e.g. RAY/XLINE) */
+  private _extentExcludedObjectIds: Set<string>
+  /** Map of layers indexed by layer name */
+  private _layers: Map<string, ThreeRendererLayer>
+  /** The flag indicating whether the layout is loaded/activated */
+  private _isLoaded: boolean
+  /**
+   * When true, {@link addEntity} / {@link addDirectEntity} skip spatial-index
+   * registration. Used by headless HTML/JPEG export where pick queries are unused.
+   */
+  skipSpatialIndex = false
+  /**
+   * True when this layout renders a read-only reference/overlay drawing.
+   * Reference layouts are not registered in {@link ThreeRendererScene}'s layout map
+   * and must not participate in selection, grips, or host edits.
+   */
+  isReference = false
+  /**
+   * Creates a new layout instance.
+   * Initializes the layout with empty collections and a spatial index.
+   */
+  constructor() {
+    this._group = new THREE.Group()
+    this._spatialIndex = new ThreeRendererHierarchicalSpatialIndex()
+    this._cachedBox = new THREE.Box3()
+    this._cachedSmartExtents = undefined
+    this._boxDirty = true
+    this._extentExcludedObjectIds = new Set()
+    this._layers = new Map()
+    this._isLoaded = false
+  }
+
+  /**
+   * The internal THREE.js object to use by scene. This is internally used only. Try to avoid using it.
+   * @internal
+   */
+  get internalObject() {
+    return this._group
+  }
+
+  /**
+   * Gets the map of layers in this layout.
+   *
+   * @returns Map of layer names to layer objects
+   */
+  get layers() {
+    return this._layers
+  }
+
+  /**
+   * Gets the bounding box that contains all entities in this layout.
+   *
+   * Derived from packed batch vertex buffers (same source as GPU draw data),
+   * not from accumulated {@link ThreeRendererEntity.wcsBbox} metadata.
+   *
+   * @returns The layout's bounding box
+   */
+  get box() {
+    if (this._boxDirty) {
+      this.recomputeBox()
+    }
+    return this._cachedBox
+  }
+
+  /**
+   * Recomputes {@link box} from batch geometry across all visible layers.
+   */
+  computeBatchBoundingBox(target = new THREE.Box3()) {
+    if (this._boxDirty) {
+      this.recomputeBox()
+    }
+    return target.copy(this._cachedBox)
+  }
+
+  private recomputeBox() {
+    this._cachedBox.makeEmpty()
+    const scratch = new THREE.Box3()
+    this._layers.forEach(layer => {
+      layer.computeBatchBoundingBox(scratch, this._extentExcludedObjectIds)
+      if (!scratch.isEmpty()) {
+        this._cachedBox.union(scratch)
+      }
+    })
+    this._boxDirty = false
+  }
+
+  private invalidateBox() {
+    this._boxDirty = true
+    this.clearSmartExtentsCache()
+  }
+
+  private clearSmartExtentsCache() {
+    this._cachedSmartExtents = undefined
+    this._smartExtentsGeneration++
+  }
+
+  /**
+   * The flag indicating whether the layout is loaded/activated.
+   *
+   * @returns The flag indicating whether the layout is loaded/activated.
+   */
+  get isLoaded() {
+    return this._isLoaded
+  }
+
+  /**
+   * Sets the flag indicating whether the layout is loaded/activated.
+   *
+   * @param value - The flag indicating whether the layout is loaded/activated.
+   */
+  set isLoaded(value: boolean) {
+    this._isLoaded = value
+  }
+
+  /**
+   * The visibility of this layout.
+   * When set to false, the entire layout and all its contents are hidden.
+   */
+  get visible() {
+    return this._group.visible
+  }
+  set visible(value: boolean) {
+    this._group.visible = value
+  }
+
+  /**
+   * The number of entities stored in this layout.
+   * Calculates the total by summing entities across all layers.
+   */
+  get entityCount() {
+    let count = 0
+    this._layers.forEach(layer => (count += layer.entityCount))
+    return count
+  }
+
+  /**
+   * Approximate spatial-index memory / cardinality stats for this layout.
+   */
+  get spatialIndexStats() {
+    return this._spatialIndex.getStats()
+  }
+
+  /**
+   * The statistics of this layout.
+   * Provides detailed information about memory usage and entity counts.
+   */
+  get stats() {
+    const layers: ThreeRendererLayerStats[] = []
+    let totalGeometrySize = 0
+    let totalMappingSize = 0
+    let lineTotalSize = 0
+    let meshTotalSize = 0
+    let pointTotalSize = 0
+    let unbatchedTotalSize = 0
+    let unbatchedTotalCount = 0
+    const unbatchedByType = {
+      line: 0,
+      mesh: 0,
+      point: 0,
+      other: 0
+    }
+    this._layers.forEach(layer => {
+      const stats = layer.stats
+      layers.push(stats)
+      lineTotalSize +=
+        stats.line.indexed.geometrySize + stats.line.nonIndexed.geometrySize
+      meshTotalSize +=
+        stats.mesh.indexed.geometrySize + stats.mesh.nonIndexed.geometrySize
+      pointTotalSize +=
+        stats.point.indexed.geometrySize + stats.point.nonIndexed.geometrySize
+      unbatchedTotalSize += stats.unbatched.geometrySize
+      unbatchedTotalCount += stats.unbatched.count
+      unbatchedByType.line += stats.unbatched.byType.line
+      unbatchedByType.mesh += stats.unbatched.byType.mesh
+      unbatchedByType.point += stats.unbatched.byType.point
+      unbatchedByType.other += stats.unbatched.byType.other
+      totalGeometrySize += stats.summary.totalGeometrySize
+      totalMappingSize += stats.summary.totalMappingSize
+    })
+    return {
+      layers,
+      summary: {
+        entityCount: this.entityCount,
+        totalSize: {
+          line: lineTotalSize,
+          mesh: meshTotalSize,
+          point: pointTotalSize,
+          unbatched: unbatchedTotalSize,
+          geometry: totalGeometrySize,
+          mapping: totalMappingSize,
+          unbatchedCount: unbatchedTotalCount,
+          unbatchedByType
+        }
+      }
+    } as ThreeRendererLayoutStats
+  }
+
+  /**
+   * Clears all entities from the layout.
+   * Removes all layers, resets the bounding box, and clears the spatial index.
+   *
+   * @returns This layout instance for method chaining
+   */
+  clear() {
+    this._layers.forEach(layer => {
+      layer.clear()
+    })
+    this._layers.clear()
+    this._cachedBox.makeEmpty()
+    this.clearSmartExtentsCache()
+    this._boxDirty = true
+    this._extentExcludedObjectIds.clear()
+    this._spatialIndex.clear()
+    return this
+  }
+
+  /**
+   * Re-render points with latest point style settings.
+   * Updates the visual representation of all point entities across all layers
+   * and refreshes spatial-index boxes so enlarged markers stay selectable.
+   *
+   * @param displayMode - Input display mode of points
+   * @param displaySize - Input display size of points (`PDSIZE`)
+   */
+  rerenderPoints(displayMode: number, displaySize: number = 0) {
+    this._layers.forEach(layer => {
+      layer.rerenderPoints(displayMode, displaySize)
+    })
+    this.refreshPointSpatialIndexes()
+  }
+
+  /**
+   * Syncs root spatial-index boxes with point / point-symbol batch AABBs after
+   * a `PDMODE` / `PDSIZE` refresh.
+   *
+   * Pure point entities replace their root box. Groups that own a
+   * child index only expand so coarse bounds are never shrunk to the
+   * point-symbol subset.
+   */
+  private refreshPointSpatialIndexes() {
+    const boxes = new Map<string, THREE.Box3>()
+    this._layers.forEach(layer => {
+      layer.collectPointObjectWorldBoxes(boxes)
+    })
+
+    boxes.forEach((box, objectId) => {
+      if (this._spatialIndex.hasChildIndex(objectId)) {
+        const existing = this._spatialIndex.getRootById(objectId)
+        if (existing) {
+          this._spatialIndex.insert({
+            id: objectId,
+            minX: Math.min(existing.minX, box.min.x),
+            minY: Math.min(existing.minY, box.min.y),
+            maxX: Math.max(existing.maxX, box.max.x),
+            maxY: Math.max(existing.maxY, box.max.y)
+          })
+          return
+        }
+      }
+      this.registerSpatialIndexBox(objectId, box)
+    })
+    // Point symbol AABBs feed smart extents; discard any cached fit.
+    this.clearSmartExtentsCache()
+  }
+
+  /**
+   * Applies ACI-7 / foreground colour to owned batch material clones in this layout.
+   */
+  repaintForegroundMaterials(color: number) {
+    this._layers.forEach(layer => layer.repaintForegroundMaterials(color))
+  }
+
+  /**
+   * Return true if the object with the specified object id is intersected with the ray by using raycast.
+   *
+   * @param objectId - Input object id of object to check for intersection with the ray.
+   * @param raycaster - Input raycaster to check intersection
+   * @returns True if the object intersects with the ray, false otherwise
+   */
+  isIntersectWith(objectId: string, raycaster: THREE.Raycaster) {
+    const layers = this.getLayersByObjectId(objectId)
+    for (let index = 0; index < layers.length; ++index) {
+      const layer = layers[index]
+      if (layer && layer.isIntersectWith(objectId, raycaster)) return true
+    }
+    return false
+  }
+
+  hasVisibleEntity(objectId: string) {
+    return this.getLayersByObjectId(objectId).some(layer => layer.visible)
+  }
+
+  /**
+   * Add one AutoCAD entity into this layout. If layer group referenced by the entity doesn't exist, create one
+   * layer group and add this entity this group.
+   *
+   * @param entity - Input AutoCAD entity to be added into this layout.
+   * @param extendBbox - Input the flag whether to extend the bounding box of the scene by union the bounding box
+   * of the specified entity. Defaults to true.
+   * @returns This layout instance for method chaining
+   *
+   * @throws {Error} When entity is missing required objectId or layerName
+   */
+  addEntity(entity: ThreeRendererEntity, extendBbox: boolean = true) {
+    if (!entity.objectId) {
+      throw new Error('Object id is required to add one entity!')
+    }
+    if (!entity.layerName) {
+      throw new Error('Layer name is required to add one entity!')
+    }
+
+    const layer = this._layers.get(entity.layerName)
+    if (!layer) {
+      throw new Error(`layer '${entity.layerName}' doesn't exist!`)
+    }
+
+    layer.addEntity(entity)
+
+    if (!extendBbox) {
+      this._extentExcludedObjectIds.add(entity.objectId)
+    } else {
+      this._extentExcludedObjectIds.delete(entity.objectId)
+    }
+    this.invalidateBox()
+
+    this.registerEntitySpatialIndex(entity)
+
+    return this
+  }
+
+  /**
+   * Adds an entity via direct batch append (no temporary drawable tree).
+   *
+   * @returns `true` when geometry and spatial index were registered.
+   */
+  addDirectEntity(
+    meta: ThreeRendererDirectEntityMeta,
+    extendBbox: boolean = true
+  ): boolean {
+    if (!meta.objectId) {
+      throw new Error('Object id is required to add one entity!')
+    }
+    if (!meta.layerName) {
+      throw new Error('Layer name is required to add one entity!')
+    }
+
+    const layer = this._layers.get(meta.layerName)
+    if (!layer) {
+      throw new Error(`layer '${meta.layerName}' doesn't exist!`)
+    }
+
+    const appended = layer.addDirectEntity(meta)
+    if (!appended) {
+      return false
+    }
+
+    if (!extendBbox) {
+      this._extentExcludedObjectIds.add(meta.objectId)
+    } else {
+      this._extentExcludedObjectIds.delete(meta.objectId)
+    }
+    this.invalidateBox()
+    this.registerSpatialIndexBox(meta.objectId, meta.wcsBbox)
+    return true
+  }
+
+  /**
+   * Remove the specified entity from this layout.
+   *
+   * @param objectId - Input the object id of the entity to remove
+   * @returns Return true if remove the specified entity successfully. Otherwise, return false.
+   */
+  removeEntity(objectId: string) {
+    let result = false
+    for (const [_, layer] of this._layers) {
+      if (layer.removeEntity(objectId)) {
+        result = true
+      }
+    }
+    if (result) {
+      this._spatialIndex.removeById(objectId)
+      this._extentExcludedObjectIds.delete(objectId)
+      this.invalidateBox()
+    }
+    return result
+  }
+
+  /**
+   * Update the specified entity in this layout.
+   *
+   * @param entity - Input the entity to update
+   * @returns Return true if update the specified entity successfully. Otherwise, return false.
+   */
+  updateEntity(entity: ThreeRendererEntity) {
+    for (const [_, layer] of this._layers) {
+      if (layer.updateEntity(entity)) {
+        this._spatialIndex.removeById(entity.objectId)
+        this.registerEntitySpatialIndex(entity)
+        this.invalidateBox()
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Returns true when any layer in this layout contains the entity.
+   */
+  hasEntity(objectId: string) {
+    for (const [_, layer] of this._layers) {
+      if (layer.hasEntity(objectId)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Updates entity visibility without rebuilding batched geometry.
+   */
+  setEntityVisible(objectId: string, visible: boolean) {
+    let updated = false
+    for (const [_, layer] of this._layers) {
+      if (layer.setEntityVisible(objectId, visible)) {
+        updated = true
+      }
+    }
+    if (updated) {
+      this.invalidateBox()
+    }
+    return updated
+  }
+
+  /**
+   * Returns the current scene visibility for one entity.
+   */
+  getEntityVisible(objectId: string) {
+    for (const [_, layer] of this._layers) {
+      const visible = layer.getEntityVisible(objectId)
+      if (visible !== undefined) {
+        return visible
+      }
+    }
+    return undefined
+  }
+
+  /**
+   * Returns true when requested entities can be previewed in this layout.
+   *
+   * Uses batch bounds only and does not clone preview geometry.
+   *
+   * @param entityIds - Database object ids required for preview creation
+   * @param options - When {@link ThreeRendererEntityPreviewRootOptions.requireAllEntities} is
+   *   true (default), every id must be present; otherwise at least one id is enough
+   */
+  canCreateEntityPreview(
+    entityIds: string[],
+    options?: Pick<ThreeRendererEntityPreviewRootOptions, 'requireAllEntities'>
+  ): boolean {
+    if (entityIds.length === 0) {
+      return false
+    }
+
+    const requireAllEntities = options?.requireAllEntities ?? true
+    if (requireAllEntities) {
+      for (const id of entityIds) {
+        if (!this.hasEntity(id)) {
+          return false
+        }
+        const scratch = new THREE.Box3()
+        this.computeEntityPreviewBoundsBox([id], scratch)
+        if (scratch.isEmpty()) {
+          return false
+        }
+      }
+      return true
+    }
+
+    return !this.computeEntityPreviewBoundsBox(entityIds).isEmpty()
+  }
+
+  /**
+   * Returns entity ids that have drawable batch bounds in this layout.
+   *
+   * @param entityIds - Database object ids to check
+   */
+  findPreviewableEntityIds(entityIds: string[]): string[] {
+    const previewable: string[] = []
+    for (const id of entityIds) {
+      if (!this.hasEntity(id)) {
+        continue
+      }
+      const scratch = new THREE.Box3()
+      this.computeEntityPreviewBoundsBox([id], scratch)
+      if (!scratch.isEmpty()) {
+        previewable.push(id)
+      }
+    }
+    return previewable
+  }
+
+  /**
+   * Computes world-space bounds for the requested entities from packed batch data.
+   *
+   * This avoids building a preview subset or traversing cloned drawables.
+   *
+   * @param entityIds - Database object ids to measure
+   * @param target - Optional output box
+   * @returns Axis-aligned bounds box, empty when nothing matched
+   */
+  computeEntityPreviewBoundsBox(
+    entityIds: string[],
+    target = new THREE.Box3()
+  ) {
+    target.makeEmpty()
+    if (entityIds.length === 0) {
+      return target
+    }
+
+    const includeObjectIds = new Set(entityIds)
+    const scratch = new THREE.Box3()
+    for (const layer of this._layers.values()) {
+      layer.computeBatchBoundingBox(scratch, undefined, includeObjectIds)
+      if (!scratch.isEmpty()) {
+        target.union(scratch)
+      }
+    }
+    return target
+  }
+
+  /**
+   * Computes a 2D preview framing box for the requested entities in this layout.
+   *
+   * @param entityIds - Database object ids to measure
+   * @param margin - Margin multiplier applied around the raw bounds
+   */
+  computeEntityPreviewBounds2d(
+    entityIds: string[],
+    margin = 1.1
+  ): GeometryBox2d | null {
+    const box = this.computeEntityPreviewBoundsBox(entityIds)
+    return ThreeRendererEntityPreview.box3ToBounds2d(box, margin)
+  }
+
+  /**
+   * Builds one preview root group by extracting GPU-resident geometry from layer batches.
+   *
+   * Entities that are missing from this layout or cannot be extracted are skipped.
+   * Returns `null` only when no drawable geometry could be collected.
+   *
+   * @param entityIds - Database object ids to include in the preview overlay
+   * @returns Preview root group, or `null` when no preview geometry was extracted
+   */
+  createEntityPreviewRoot(
+    entityIds: string[],
+    options?: ThreeRendererEntityPreviewRootOptions
+  ): THREE.Group | null {
+    const missingEntity = options?.missingEntity ?? 'fail'
+    const requireAllEntities = options?.requireAllEntities ?? false
+
+    if (requireAllEntities) {
+      for (const id of entityIds) {
+        if (!this.hasEntity(id)) {
+          return null
+        }
+      }
+    }
+
+    const idsByLayer = new Map<ThreeRendererLayer, Set<string>>()
+
+    for (const id of entityIds) {
+      const layers = this.getLayersByObjectId(id)
+      if (layers.length === 0) {
+        if (requireAllEntities || missingEntity === 'fail') {
+          return null
+        }
+        continue
+      }
+      for (const layer of layers) {
+        let layerIds = idsByLayer.get(layer)
+        if (!layerIds) {
+          layerIds = new Set()
+          idsByLayer.set(layer, layerIds)
+        }
+        layerIds.add(id)
+      }
+    }
+
+    if (idsByLayer.size === 0) {
+      return null
+    }
+
+    const previewRoot = new THREE.Group()
+    previewRoot.name = 'EntityPreviewRoot'
+    for (const [layer, ids] of idsByLayer) {
+      const idList = [...ids]
+      const subset = layer.createPreviewSubset(idList, {
+        // Complex hatches may need several drawable slots per entity.
+        maxSlots: Math.max(10000, idList.length * 8),
+        missingEntity
+      })
+      if (!subset || subset.children.length === 0) {
+        if (missingEntity === 'fail') {
+          disposePreviewSubset(previewRoot)
+          return null
+        }
+        continue
+      }
+      previewRoot.add(subset)
+    }
+
+    if (previewRoot.children.length === 0) {
+      return null
+    }
+    return previewRoot
+  }
+
+  /**
+   * Gets the layer with the specified name from this layout
+   * @param name - Layer name
+   * @returns - The layer with the specified name in this layout
+   */
+  getLayer(name: string) {
+    return this._layers.get(name)
+  }
+
+  /**
+   * Adds layer into this layout. If the layer already exist, do nothing.
+   *
+   * @param name - Input layer name
+   * @returns Return added layer or the existing layer in this layout if one layer
+   * group already exists in this layout.
+   */
+  addLayer(info: EditorLayerInfo) {
+    const name = info.name
+    let layer = this._layers.get(name)
+    if (layer === undefined) {
+      layer = new ThreeRendererLayer(info)
+      this._layers.set(name, layer)
+      this._group.add(layer.internalObject)
+    }
+    return layer
+  }
+
+  /**
+   * Updates layer information (such as visibility). If the layer doesn't exist, do nothing.
+   * @param info - The layer information
+   * @returns Returns the updated layer group.
+   */
+  updateLayer(info: EditorLayerInfo) {
+    const layer = this._layers.get(info.name)
+    if (layer) {
+      // TODO: Handle layer name changes
+      const wasVisible = layer.visible
+      layer.update(info)
+      if (wasVisible !== layer.visible) {
+        this.invalidateBox()
+      }
+    }
+    return layer
+  }
+
+  /**
+   * Hover the specified entities.
+   * Applies hover highlighting to the entities with the given IDs.
+   *
+   * @param ids - Array of entity object IDs to hover
+   */
+  hover(ids: string[]) {
+    this.applyHighlightToLayers(ids, (layer, entityIds) =>
+      layer.hover(entityIds)
+    )
+  }
+
+  /**
+   * Unhover the specified entities.
+   * Removes hover highlighting from the entities with the given IDs.
+   *
+   * @param ids - Array of entity object IDs to unhover
+   */
+  unhover(ids: string[]) {
+    this.applyHighlightToLayers(ids, (layer, entityIds) =>
+      layer.unhover(entityIds)
+    )
+  }
+
+  /**
+   * Select the specified entities.
+   * Applies selection highlighting to the entities with the given IDs.
+   *
+   * @param ids - Array of entity object IDs to select
+   */
+  select(ids: string[]) {
+    this.applyHighlightToLayers(ids, (layer, entityIds) =>
+      layer.select(entityIds)
+    )
+  }
+
+  /**
+   * Unselect the specified entities.
+   * Removes selection highlighting from the entities with the given IDs.
+   *
+   * @param ids - Array of entity object IDs to unselect
+   */
+  unselect(ids: string[]) {
+    this.applyHighlightToLayers(ids, (layer, entityIds) =>
+      layer.unselect(entityIds)
+    )
+  }
+
+  /**
+   * Groups entity ids by render layer and applies one bulk highlight call per layer.
+   *
+   * @param ids - Entity object ids whose highlight state should change.
+   * @param apply - Layer callback invoked once per layer with its grouped entity ids.
+   */
+  private applyHighlightToLayers(
+    ids: string[],
+    apply: (layer: ThreeRendererLayer, entityIds: string[]) => void
+  ) {
+    const layerToIds = new Map<ThreeRendererLayer, string[]>()
+    for (const id of ids) {
+      const layers = this.getLayersByObjectId(id)
+      for (const layer of layers) {
+        const bucket = layerToIds.get(layer)
+        if (bucket) {
+          bucket.push(id)
+        } else {
+          layerToIds.set(layer, [id])
+        }
+      }
+    }
+    layerToIds.forEach((entityIds, layer) => apply(layer, entityIds))
+  }
+
+  /**
+   * Search entities intersected or contained in the specified bounding box.
+   * Uses the spatial index for efficient querying of entities within the given bounds.
+   *
+   * @param box - Input the query bounding box (2D or 3D)
+   * @returns Return query results containing entity IDs and their bounds
+   */
+  search(
+    box: GeometryBox2d | GeometryBox3d,
+    options?: ThreeRendererSpatialSearchOptions
+  ) {
+    return this._spatialIndex.search(
+      {
+        minX: box.min.x,
+        minY: box.min.y,
+        maxX: box.max.x,
+        maxY: box.max.y
+      },
+      options
+    )
+  }
+
+  /**
+   * Collects finite spatial-index AABBs for intelligent zoom-to-fit.
+   *
+   * Prefers child-level boxes when present so group/hatch islands contribute
+   * separately rather than one oversized root union.
+   *
+   * @returns Flat list of finite world XY boxes.
+   */
+  collectSpatialExtentBoxes(): EditorSpatialQueryResultItem[] {
+    return this._spatialIndex.all().filter(isFiniteSpatialBBox)
+  }
+
+  /**
+   * Async variant of {@link collectSpatialExtentBoxes} that yields while
+   * flattening large spatial indexes.
+   *
+   * @param work - Cooperative yield helper.
+   */
+  async collectSpatialExtentBoxesAsync(work: {
+    maybeYield(): Promise<void>
+  }): Promise<EditorSpatialQueryResultItem[]> {
+    const all = await this._spatialIndex.allAsync(work)
+    const result: EditorSpatialQueryResultItem[] = []
+    for (let i = 0; i < all.length; i++) {
+      const item = all[i]!
+      if (isFiniteSpatialBBox(item)) {
+        result.push(item)
+      }
+      if ((i & 0x7ff) === 0x7ff) {
+        await work.maybeYield()
+      }
+    }
+    return result
+  }
+
+  /**
+   * Returns the cached smart-extents box when still valid for this layout.
+   */
+  get cachedSmartExtents(): GeometryBox2d | undefined {
+    return this._cachedSmartExtents
+  }
+
+  /**
+   * Generation counter for smart-extents cache invalidation. Capture before
+   * async work and compare after; mismatch means geometry changed mid-flight.
+   */
+  get smartExtentsGeneration(): number {
+    return this._smartExtentsGeneration
+  }
+
+  /**
+   * Stores the last computed smart-extents box until geometry extents change.
+   * Only write when {@link smartExtentsGeneration} still matches the value
+   * captured before the async computation started.
+   */
+  set cachedSmartExtents(box: GeometryBox2d | undefined) {
+    this._cachedSmartExtents = box
+  }
+
+  /**
+   * Returns all layers that contain renderable entities associated with
+   * the specified AutoCAD object ID.
+   *
+   * This method returns every layer holding an entity with that object ID.
+   *
+   * @param objectId - The AutoCAD object ID to search for
+   * @returns An array of layers containing entities associated with the given object ID;
+   *          returns an empty array if no matching layers are found
+   */
+  private getLayersByObjectId(objectId: string) {
+    const layers = []
+    for (const [_, layer] of this._layers) {
+      if (layer.hasEntity(objectId)) {
+        layers.push(layer)
+      }
+    }
+    return layers
+  }
+
+  /**
+   * Gets optional child bounding boxes used to build a child-level spatial index
+   * for one render entity.
+   *
+   * Groups attach precomputed child query items to `entity.userData`; they are consumed
+   * here so snapping and fine-grained spatial queries can still resolve
+   * sub-entities correctly.
+   *
+   * @param entity - The render entity that may carry `spatialIndexChildBoxes` in
+   *                 its `userData`.
+   * @returns The child query boxes when available and non-empty; otherwise
+   *          `undefined`.
+   */
+  private getSpatialIndexChildBoxes(entity: ThreeRendererEntity) {
+    const boxes = (
+      entity.userData as {
+        spatialIndexChildBoxes?: EditorSpatialQueryResultItem[]
+      }
+    ).spatialIndexChildBoxes
+
+    if (!boxes || boxes.length === 0) {
+      return undefined
+    }
+
+    return boxes
+  }
+
+  /**
+   * Registers one render entity in the layout spatial index.
+   *
+   * Inserts a root bounding box for coarse queries and, when child geometry is
+   * available, builds a child-level index so snapping and fine-grained spatial
+   * queries can resolve sub-entities (for example group children).
+   *
+   * Root bounds are chosen in this order:
+   * 1. Union of {@link getSpatialIndexChildBoxes} when precomputed child boxes
+   *    are attached to `entity.userData`.
+   * 2. Union of `ThreeRendererGroup.wcsChildBoxes` when the entity is a group.
+   * 3. The entity's own `wcsBbox` as a fallback.
+   *
+   * Child indexing uses `ensureChildIndex` for userData child boxes or `createChildIndex` for a single
+   * `ThreeRendererGroup` hierarchy.
+   *
+   * @param entity - The render entity to index. Called from
+   *                 {@link addEntity} and {@link updateEntity} after layer
+   *                 membership is updated.
+   */
+  private registerEntitySpatialIndex(entity: ThreeRendererEntity) {
+    if (this.skipSpatialIndex) {
+      return
+    }
+    const spatialIndexChildBoxes = this.getSpatialIndexChildBoxes(entity)
+
+    let rootBox: {
+      minX: number
+      minY: number
+      maxX: number
+      maxY: number
+      id: string
+    }
+
+    if (spatialIndexChildBoxes && spatialIndexChildBoxes.length > 0) {
+      const union = unionSpatialQueryItems(spatialIndexChildBoxes)
+      rootBox = {
+        minX: union.minX,
+        minY: union.minY,
+        maxX: union.maxX,
+        maxY: union.maxY,
+        id: entity.objectId
+      }
+    } else if (entity instanceof ThreeRendererGroup && entity.wcsChildBoxes.length > 0) {
+      const union = unionSpatialQueryItems(
+        entity.wcsChildBoxes.map(box => ({
+          minX: box.minX,
+          minY: box.minY,
+          maxX: box.maxX,
+          maxY: box.maxY,
+          id: box.id
+        }))
+      )
+      rootBox = {
+        minX: union.minX,
+        minY: union.minY,
+        maxX: union.maxX,
+        maxY: union.maxY,
+        id: entity.objectId
+      }
+    } else {
+      rootBox = {
+        minX: entity.wcsBbox.min.x,
+        minY: entity.wcsBbox.min.y,
+        maxX: entity.wcsBbox.max.x,
+        maxY: entity.wcsBbox.max.y,
+        id: entity.objectId
+      }
+    }
+
+    // Skip non-finite roots (empty THREE.Box3 → ±Infinity, or NaN after a bad
+    // applyMatrix4). Inserting NaN into RBush poisons all spatial searches.
+    if (isFiniteSpatialBBox(rootBox)) {
+      this._spatialIndex.insert({
+        minX: rootBox.minX,
+        minY: rootBox.minY,
+        maxX: rootBox.maxX,
+        maxY: rootBox.maxY,
+        id: entity.objectId
+      })
+
+      if (spatialIndexChildBoxes && spatialIndexChildBoxes.length > 0) {
+        entity.wcsBbox.min.set(rootBox.minX, rootBox.minY, entity.wcsBbox.min.z)
+        entity.wcsBbox.max.set(rootBox.maxX, rootBox.maxY, entity.wcsBbox.max.z)
+      }
+    }
+
+    // Keep the child-box index via userData so object snap can still resolve gsMark to sub-entities.
+    // ensureChildIndex may still register a finite root from child unions when
+    // the coarse root above was skipped.
+    if (spatialIndexChildBoxes) {
+      this._spatialIndex.ensureChildIndex(
+        entity.objectId,
+        spatialIndexChildBoxes
+      )
+    } else if (entity instanceof ThreeRendererGroup) {
+      // If it is one group, build spatial index for entities in this group.
+      this._spatialIndex.createChildIndex(entity)
+    }
+  }
+
+  /**
+   * Registers a simple axis-aligned WCS box in the spatial index by object id.
+   */
+  private registerSpatialIndexBox(objectId: string, wcsBbox: THREE.Box3) {
+    if (this.skipSpatialIndex) {
+      return
+    }
+    const box = {
+      minX: wcsBbox.min.x,
+      minY: wcsBbox.min.y,
+      maxX: wcsBbox.max.x,
+      maxY: wcsBbox.max.y,
+      id: objectId
+    }
+    if (!isFiniteSpatialBBox(box)) {
+      return
+    }
+    this._spatialIndex.insert(box)
+  }
+}

@@ -1,23 +1,23 @@
 import {
-  type AcApNotification,
-  type AcApNotificationCenter,
-  type AcApNotificationInput,
-  type AcApNotificationSource,
-  acapSetNotificationCenter
+  type ApplicationNotification,
+  type ApplicationNotificationCenter,
+  type ApplicationNotificationInput,
+  type ApplicationNotificationSource,
+  applicationSetNotificationCenter
 } from '@mlightcad/cad-simple-viewer'
 
 import { useNotificationCenter } from '../composable/useNotificationCenter'
 
 /**
  * Adapts the Vue {@link useNotificationCenter} singleton to the
- * {@link AcApNotificationCenter} contract used by cad-simple-viewer.
+ * {@link ApplicationNotificationCenter} contract used by cad-simple-viewer.
  *
  * Calling {@link registerCadViewerNotificationCenter} replaces the built-in DOM
  * notification UI so font alerts appear in the Vue panel.
  *
  * @returns A center adapter that forwards into the Vue notification store.
  */
-export function createCadViewerNotificationCenterAdapter(): AcApNotificationCenter {
+export function createCadViewerNotificationCenterAdapter(): ApplicationNotificationCenter {
   const vue = useNotificationCenter()
 
   return {
@@ -37,7 +37,7 @@ export function createCadViewerNotificationCenterAdapter(): AcApNotificationCent
      * @param notification - Entry fields without `id` / `timestamp`.
      * @returns Assigned notification id.
      */
-    add(notification: AcApNotificationInput) {
+    add(notification: ApplicationNotificationInput) {
       return vue.add(notification)
     },
     /**
@@ -92,12 +92,12 @@ export function createCadViewerNotificationCenterAdapter(): AcApNotificationCent
      * @param predicate - Return `true` for entries that should be removed.
      */
     removeWhere(predicate) {
-      vue.removeWhere(predicate as (n: AcApNotification) => boolean)
+      vue.removeWhere(predicate as (n: ApplicationNotification) => boolean)
     },
     /**
      * @param source - Producer to clear from the active session.
      */
-    removeBySource(source: AcApNotificationSource) {
+    removeBySource(source: ApplicationNotificationSource) {
       vue.removeBySource(source)
     },
     /**
@@ -131,12 +131,12 @@ export function createCadViewerNotificationCenterAdapter(): AcApNotificationCent
  * Registers the Vue notification center as the active host override.
  */
 export function registerCadViewerNotificationCenter() {
-  acapSetNotificationCenter(createCadViewerNotificationCenterAdapter())
+  applicationSetNotificationCenter(createCadViewerNotificationCenterAdapter())
 }
 
 /**
  * Restores the built-in cad-simple-viewer notification center.
  */
 export function unregisterCadViewerNotificationCenter() {
-  acapSetNotificationCenter(null)
+  applicationSetNotificationCenter(null)
 }

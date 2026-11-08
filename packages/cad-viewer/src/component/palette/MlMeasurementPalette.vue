@@ -61,8 +61,8 @@
 
 <script setup lang="ts">
 import type {
-  AcApMeasurementRecord,
-  AcApMeasurementType
+  ApplicationMeasurementRecord,
+  ApplicationMeasurementType
 } from '@mlightcad/cad-simple-viewer'
 import {
   ElButton,
@@ -76,7 +76,7 @@ import { useI18n } from 'vue-i18n'
 
 import { useMeasurement } from '../../composable/useMeasurement'
 
-const FILTER_TYPES: readonly AcApMeasurementType[] = [
+const FILTER_TYPES: readonly ApplicationMeasurementType[] = [
   'distance',
   'angle',
   'area',
@@ -85,7 +85,7 @@ const FILTER_TYPES: readonly AcApMeasurementType[] = [
 ]
 
 const { t } = useI18n()
-const activeFilter = ref<AcApMeasurementType | ''>('')
+const activeFilter = ref<ApplicationMeasurementType | ''>('')
 const { measurements, selectedId, valueById, focus, clearAll } =
   useMeasurement()
 
@@ -96,11 +96,11 @@ const filtered = computed(() => {
   return measurements.value.filter(record => record.type === activeFilter.value)
 })
 
-const handleRowClick = (row: AcApMeasurementRecord) => {
+const handleRowClick = (row: ApplicationMeasurementRecord) => {
   focus(row)
 }
 
-const typeLabel = (type: AcApMeasurementType) => {
+const typeLabel = (type: ApplicationMeasurementType) => {
   switch (type) {
     case 'distance':
       return t('main.toolPalette.measurements.typeValues.distance')

@@ -4,11 +4,11 @@
 
 | Component | Role |
 |---|---|
-| **`AcUiToolbar`** | Full floating viewer toolbar: placement, overflow, sub-toolbars, menus, collapse, open-mode gating |
-| **`AcUiShortCutToolbar`** | Top-right erase bar with an accessory slot and optional collapse |
-| **`AcUiSimpleToolbar`** | Low-level icon strip with overflow “⋯” menu (building block for the shortcut bar) |
+| **`UIToolbar`** | Full floating viewer toolbar: placement, overflow, sub-toolbars, menus, collapse, open-mode gating |
+| **`UIShortCutToolbar`** | Top-right erase bar with an accessory slot and optional collapse |
+| **`UISimpleToolbar`** | Low-level icon strip with overflow “⋯” menu (building block for the shortcut bar) |
 
-Hosts can compose **preset buttons** and layout defaults on top of `AcUiToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
+Hosts can compose **preset buttons** and layout defaults on top of `UIToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
 
 ---
 
@@ -17,42 +17,42 @@ Hosts can compose **preset buttons** and layout defaults on top of `AcUiToolbar`
 ```
 Host (plugin / HTML shell / your app)
         │
-        ├─ builds AcUiToolbarItem[] (+ optional presets / separators)
-        ├─ supplies AcUiToolbarI18n + onCommand
-        └─ optionally acapBindToolbarDocState(toolbar)
+        ├─ builds UIToolbarItem[] (+ optional presets / separators)
+        ├─ supplies UIToolbarI18n + onCommand
+        └─ optionally applicationBindToolbarDocState(toolbar)
                 │
                 ▼
-         AcUiToolbar  ← floating chrome on host / canvas
+         UIToolbar  ← floating chrome on host / canvas
                 │
-                ├─ AcUiDropdownMenu   (childrenUi: 'menu')
-                └─ AcUiSubToolbar    (childrenUi: 'toolbar' | 'sticky-toolbar')
+                ├─ UIDropdownMenu   (childrenUi: 'menu')
+                └─ UISubToolbar    (childrenUi: 'toolbar' | 'sticky-toolbar')
 
 Canvas shortcut chrome (independent):
-  AcUiShortCutToolbar → AcUiSimpleToolbar + accessoryHost
+  UIShortCutToolbar → UISimpleToolbar + accessoryHost
 ```
 
 Key points:
 
-- **UI never imports `AcApDocManager`.** Document / open-mode state is injected via `setDocState` or `acapBindToolbarDocState`.
-- **Commands are strings.** Leaf items with `command` call `onCommand(command)`; the host decides how to execute (typically `AcApDocManager.instance.sendStringToExecute`).
+- **UI never imports `ApplicationDocManager`.** Document / open-mode state is injected via `setDocState` or `applicationBindToolbarDocState`.
+- **Commands are strings.** Leaf items with `command` call `onCommand(command)`; the host decides how to execute (typically `ApplicationDocManager.instance.sendStringToExecute`).
 - **Theme tokens** use `--ml-ui-*` (same as the command line and notification center).
-- **Export surface:** `import { AcUiToolbar, … } from '@mlightcad/cad-simple-viewer'` (re-exported from `src/ui/toolbar`).
+- **Export surface:** `import { UIToolbar, … } from '@mlightcad/cad-simple-viewer'` (re-exported from `src/ui/toolbar`).
 
 ---
 
-## 2. Quick start: mount `AcUiToolbar`
+## 2. Quick start: mount `UIToolbar`
 
 ```ts
 import {
-  AcApDocManager,
-  AcApI18n,
-  AcUiToolbar,
-  acapBindToolbarDocState,
-  type AcUiToolbarItem
+  ApplicationDocManager,
+  ApplicationI18n,
+  UIToolbar,
+  applicationBindToolbarDocState,
+  type UIToolbarItem
 } from '@mlightcad/cad-simple-viewer'
 
 const host = document.getElementById('viewer')!
-const items: AcUiToolbarItem[] = [
+const items: UIToolbarItem[] = [
   {
     id: 'zoom-extents',
     label: 'toolbar.zoomExtent',
@@ -78,20 +78,20 @@ const items: AcUiToolbarItem[] = [
   }
 ]
 
-const toolbar = new AcUiToolbar({
+const toolbar = new UIToolbar({
   host,
   placement: 'right',
   items,
-  i18n: { t: (key, params) => AcApI18n.t(key, params) },
+  i18n: { t: (key, params) => ApplicationI18n.t(key, params) },
   onCommand: command => {
-    AcApDocManager.instance.sendStringToExecute(command)
+    ApplicationDocManager.instance.sendStringToExecute(command)
   },
   collapsible: true,
   overflow: 'menu',
   edgeOffset: 8
 })
 
-const unbind = acapBindToolbarDocState(toolbar)
+const unbind = applicationBindToolbarDocState(toolbar)
 
 // later
 unbind()
@@ -104,7 +104,7 @@ Minimum required mount options:
 |---|---|
 | `host` | Element that receives the toolbar root (usually the canvas container) |
 | `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
-| `items` | Resolved `AcUiToolbarItem[]` (buttons / separators) |
+| `items` | Resolved `UIToolbarItem[]` (buttons / separators) |
 | `i18n` | `{ t(key, params?) }` for labels and tooltips |
 | `onCommand` | Invoked for leaf items that set `command` |
 
@@ -112,7 +112,7 @@ Minimum required mount options:
 
 ## 3. Chrome options
 
-Shared by the main bar and (via inheritance) sub-toolbars. Set on `AcUiToolbarMountOptions` / `AcUiToolbarOptions`:
+Shared by the main bar and (via inheritance) sub-toolbars. Set on `UIToolbarMountOptions` / `UIToolbarOptions`:
 
 | Option | Default | Notes |
 |---|---|---|
@@ -146,10 +146,10 @@ Shared by the main bar and (via inheritance) sub-toolbars. Set on `AcUiToolbarMo
 
 ## 4. Customizing items
 
-### 4.1 Button shape (`AcUiToolbarItem`)
+### 4.1 Button shape (`UIToolbarItem`)
 
 ```ts
-const item: AcUiToolbarItem = {
+const item: UIToolbarItem = {
   id: 'measure',                 // stable DOM / debug id
   label: 'toolbar.measure',      // i18n key
   icon: '<svg>...</svg>',        // string | HTMLElement | () => HTMLElement
@@ -157,7 +157,7 @@ const item: AcUiToolbarItem = {
   // action: () => {},           // custom click (no command)
   // anchorAction: (el) => {},   // popover anchored to the button
   requiresDocument: true,        // default true when command is set
-  minOpenMode: AcEdOpenMode.Write,
+  minOpenMode: EditorOpenMode.Write,
   disabled: false,               // or () => boolean
   childrenUi: 'sticky-toolbar',
   childIcon: 'selected',         // parent icon follows selected child
@@ -205,9 +205,9 @@ Two-state items merge `on` / `off` fields from `getValue()`:
 
 When the submenu depends on the active document (e.g. layouts), attach a **getter** instead of a static array so re-renders always see fresh data. Helpers:
 
-- `acuiCopyDynamicToolbarChildren(item, () => buildChildren())`
-- `acuiIsDynamicToolbarChildren(item)`
-- `acuiPreserveDynamicToolbarChildren(target, source)`
+- `uiCopyDynamicToolbarChildren(item, () => buildChildren())`
+- `uiIsDynamicToolbarChildren(item)`
+- `uiPreserveDynamicToolbarChildren(target, source)`
 
 ### 4.6 Config composition helpers
 
@@ -215,10 +215,10 @@ When building lists from presets / append / exclude, use:
 
 | Helper | Purpose |
 |---|---|
-| `acuiToolbarPreset('zoom')` | `{ preset: 'zoom' }` reference |
-| `acuiExpandToolbarItemConfigs(configs, resolvePreset)` | Expand presets + separators into items |
-| `acuiCreateToolbarSeparator()` | Separator factory |
-| `acuiFilterVisibleToolbarItems(items, openMode)` | Apply open-mode / visibility rules |
+| `uiToolbarPreset('zoom')` | `{ preset: 'zoom' }` reference |
+| `uiExpandToolbarItemConfigs(configs, resolvePreset)` | Expand presets + separators into items |
+| `uiCreateToolbarSeparator()` | Separator factory |
+| `uiFilterVisibleToolbarItems(items, openMode)` | Apply open-mode / visibility rules |
 
 Preset **catalogs** (concrete button definitions for `'select'`, `'measure'`, …) live in host packages, not in the engine.
 
@@ -226,19 +226,19 @@ Preset **catalogs** (concrete button definitions for `'select'`, `'measure'`, �
 
 ## 5. Document state and open mode
 
-Items can require a document and/or a minimum `AcEdOpenMode` (`Read` / `Write`). Drive that state from the host:
+Items can require a document and/or a minimum `EditorOpenMode` (`Read` / `Write`). Drive that state from the host:
 
 ```ts
-import { acapBindToolbarDocState } from '@mlightcad/cad-simple-viewer'
+import { applicationBindToolbarDocState } from '@mlightcad/cad-simple-viewer'
 
 // Automatic: listen to DocManager documentActivated / documentToBeOpened
-const unbind = acapBindToolbarDocState(toolbar)
+const unbind = applicationBindToolbarDocState(toolbar)
 
 // Or manual:
 toolbar.setDocState({
   hasDocument: true,
   isOpening: false,
-  openMode: AcEdOpenMode.Write
+  openMode: EditorOpenMode.Write
 })
 ```
 
@@ -266,17 +266,17 @@ Getters: `placement`, `isCollapsed`, `isVisible`, `replaceOnNested`.
 
 ---
 
-## 7. Shortcut toolbar (`AcUiShortCutToolbar`)
+## 7. Shortcut toolbar (`UIShortCutToolbar`)
 
-Floating **erase** chrome at the top-right of the view container. Created automatically when draw-style / selection accessories need it (`acapGetShortCutToolbar` / install helpers), or mount it yourself:
+Floating **erase** chrome at the top-right of the view container. Created automatically when draw-style / selection accessories need it (`applicationGetShortCutToolbar` / install helpers), or mount it yourself:
 
 ```ts
 import {
-  AcUiShortCutToolbar,
-  AcApSettingManager
+  UIShortCutToolbar,
+  ApplicationSettingManager
 } from '@mlightcad/cad-simple-viewer'
 
-const shortcut = new AcUiShortCutToolbar({
+const shortcut = new UIShortCutToolbar({
   container: view.container,
   collapsible: true,          // default true — shows collapse chevron
   defaultCollapsed: false,
@@ -290,7 +290,7 @@ const shortcut = new AcUiShortCutToolbar({
 })
 
 // Visibility follows settings unless forceVisible: true
-AcApSettingManager.instance.isShowShortCutToolbar = false
+ApplicationSettingManager.instance.isShowShortCutToolbar = false
 ```
 
 ### Customization points
@@ -298,32 +298,32 @@ AcApSettingManager.instance.isShowShortCutToolbar = false
 | API | Purpose |
 |---|---|
 | `setActions` / `setActionState` / `setActionStateProvider` | Wire or refresh erase |
-| `setExtensionItems(items)` | Prepend icon buttons before core actions (`AcUiSimpleToolbarItem[]`) |
+| `setExtensionItems(items)` | Prepend icon buttons before core actions (`UISimpleToolbarItem[]`) |
 | `accessoryHost` | Mount draw-style / selection controls (color, text height) |
 | `setAccessoryActive(true)` | Show the divider between accessory and core |
 | `setTopOffset(px)` | Sit below a status / message bar |
 | `setCollapsed` / `toggleCollapsed` / `isCollapsed` | Collapse chrome |
 | `dispose()` | Tear down |
 
-`AcUiSimpleToolbar` alone is useful when you need a themed icon strip without the shortcut shell (horizontal / vertical, overflow menu, `setItems` / `setExtensionItems` / `updateItem`).
+`UISimpleToolbar` alone is useful when you need a themed icon strip without the shortcut shell (horizontal / vertical, overflow menu, `setItems` / `setExtensionItems` / `updateItem`).
 
 ---
 
 ## 8. Styling and z-index
 
-- Styles are injected by `acuiEnsureToolbarStyles()` (called from `AcUiToolbar`). Classes use the `ml-ex-ui-toolbar*` prefix.
+- Styles are injected by `uiEnsureToolbarStyles()` (called from `UIToolbar`). Classes use the `ml-ex-ui-toolbar*` prefix.
 - Shortcut shell styles use `ml-ui-shortcut-toolbar-shell` / `ml-ui-simple-toolbar*`.
-- Theme: `acedApplyUiTheme` / `resolveUiTheme` (`--ml-ui-bg`, `--ml-ui-border`, `--ml-ui-accent`, …).
-- Shortcut bar z-index: `ML_UI_Z_SHORTCUT_TOOLBAR` in `AcEdUiLayout` (below the notification bell).
+- Theme: `editorApplyUiTheme` / `resolveUiTheme` (`--ml-ui-bg`, `--ml-ui-border`, `--ml-ui-accent`, …).
+- Shortcut bar z-index: `ML_UI_Z_SHORTCUT_TOOLBAR` in `EditorUiLayout` (below the notification bell).
 
 ---
 
 ## 9. Checklist for a custom toolbar
 
 1. Decide mount `host` and `placement`.
-2. Build `AcUiToolbarItem[]` (commands, actions, children, toggles).
+2. Build `UIToolbarItem[]` (commands, actions, children, toggles).
 3. Provide `i18n.t` and `onCommand`.
-4. Call `acapBindToolbarDocState` (or `setDocState`) so open-mode gating works.
+4. Call `applicationBindToolbarDocState` (or `setDocState`) so open-mode gating works.
 5. Optionally enable `collapsible`, tune `overflow` / `size` / `subToolbar`.
 6. Keep the shortcut bar for erase if you hide or omit that command from the main toolbar.
 7. On teardown: unbind doc state and `toolbar.destroy()`.

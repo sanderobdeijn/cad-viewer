@@ -45,13 +45,13 @@ Please refer to [cad-simple-viewer-example](https://github.com/mlight-lee/cad-si
 
 To learn about the built-in notification center (and how to replace the default bell UI while still receiving font-missing alerts), see [docs/notification-center.md](./docs/notification-center.md).
 
-For the plain-DOM toolbar engine (`AcUiToolbar`, shortcut bar, and host customization), see [docs/toolbar.md](./docs/toolbar.md).
+For the plain-DOM toolbar engine (`UIToolbar`, shortcut bar, and host customization), see [docs/toolbar.md](./docs/toolbar.md).
 
 ### Plugins and data sources
 
-- **`pluginManager`** — load command plugins (`AcApPlugin`) via `loadPlugin` / `registerLazyPlugin`.
+- **`pluginManager`** — load command plugins (`ApplicationPlugin`) via `loadPlugin` / `registerLazyPlugin`.
 
-`cad-simple-viewer` always starts from a blank drawing created with `AcApDocManager.newDocument()`; drawings are not loaded from or saved to files. It provides comprehensive support for **modifying drawings in real-time**. You can add, edit, and delete entities within the drawing, and the viewer will automatically update to reflect these changes.
+`cad-simple-viewer` always starts from a blank drawing created with `ApplicationDocManager.newDocument()`; drawings are not loaded from or saved to files. It provides comprehensive support for **modifying drawings in real-time**. You can add, edit, and delete entities within the drawing, and the viewer will automatically update to reflect these changes.
 
 When you modify entities, you're working directly with the underlying drawing database. The viewer automatically detects these changes and updates the display accordingly. This real-time synchronization ensures that:
 
@@ -71,35 +71,35 @@ The viewer ships one MTEXT layout worker. Deploy it next to your app and pass it
 
 ### Core Classes
 
-- `AcApContext` - Main application context
-- `AcApDocManager` - Document management
-- `AcApDocument` - Individual document handling
-- `AcApSettingManager` - Settings management
+- `ApplicationContext` - Main application context
+- `ApplicationDocManager` - Document management
+- `ApplicationDocument` - Individual document handling
+- `ApplicationSettingManager` - Settings management
 
 ### Services
 
-- `AcApEntityService` - Entity selection, transform, and edit helpers
-- `acapRunServiceEdit` - Transactional edits outside command transactions
+- `ApplicationEntityService` - Entity selection, transform, and edit helpers
+- `applicationRunServiceEdit` - Transactional edits outside command transactions
 
 ### Commands
 
-- `AcApOpenCmd` - Open file command
-- `AcApZoomCmd` - Zoom command
-- `AcApPanCmd` - Pan command
-- `AcApSelectCmd` - Selection command
+- `ApplicationOpenCmd` - Open file command
+- `ApplicationZoomCmd` - Zoom command
+- `ApplicationPanCmd` - Pan command
+- `ApplicationSelectCmd` - Selection command
 
 ### Editor Components
 
-- `AcEditor` - Main editor class
-- `AcEdCommandStack` - Command stack management
-- `AcEdSelectionSet` - Selection handling
-- `AcEdInputPoint` - Input point management
+- `Editor` - Main editor class
+- `EditorCommandStack` - Command stack management
+- `EditorSelectionSet` - Selection handling
+- `EditorInputPoint` - Input point management
 
 ### View Components
 
-- `AcTrScene` - Scene management
-- `AcTrLayoutView` - Layout view handling
-- `AcTrView2d` - 2D view management
+- `ThreeRendererScene` - Scene management
+- `ThreeRendererLayoutView` - Layout view handling
+- `ThreeRendererView2d` - 2D view management
 
 ## Role in MLightCAD
 This package acts as the core logic layer, connecting the frontend UI with the rendering engines and managing all document-related operations.

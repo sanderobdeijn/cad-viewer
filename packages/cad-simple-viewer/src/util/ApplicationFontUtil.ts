@@ -1,0 +1,220 @@
+import {
+  type FontInfo,
+  type FontLoadStatus,
+  FontManager,
+  type FontType,
+  type ShxFontData,
+  ShxParserFont
+} from '@mlightcad/mtext-renderer'
+
+import { ApplicationDocManager } from '../app/ApplicationDocManager'
+
+export type {
+  FontInfo,
+  FontLoadStatus,
+  FontType,
+  ShxFontData
+} from '@mlightcad/mtext-renderer'
+export { ShxParserFont } from '@mlightcad/mtext-renderer'
+
+/**
+ * Font helpers for MTEXT and UI (character map, ribbon): wraps the shared
+ * {@link FontManager} cache, SHX parsing ({@link ShxParserFont}), and drawing
+ * font catalog ({@link ApplicationDocManager}).
+ *
+ * @remarks
+ * Keeps UI packages off direct `@mlightcad/mtext-renderer` imports while using
+ * the same global font pipeline as rendering.
+ */
+export class ApplicationFontUtil {
+  /**
+   * @inheritdoc FontManager.isFontLoaded
+   */
+  static isFontLoaded(fontName: string): boolean {
+    return FontManager.instance.isFontLoaded(fontName)
+  }
+
+  /**
+   * @inheritdoc FontManager.getFontType
+   */
+  static getFontType(fontName: string): FontType | undefined {
+    return FontManager.instance.getFontType(fontName)
+  }
+
+  /**
+   * Font name used at render time when the requested font is missing.
+   *
+   * Checks user {@link FontManager.setFontMapping | font mapping} first, then falls
+   * back to {@link FontManager.defaultFonts}.
+   *
+   * @param fontName - Original font name referenced by the drawing.
+   * @returns The loaded font name if available; otherwise the mapped or default replacement.
+   */
+  static getReplacementFontName(fontName: string): string {
+    return FontManager.instance.findAndReplaceFont(fontName)
+  }
+
+  /**
+   * Sorted SHX glyph indices present in the loaded font payload.
+   *
+   * @param fontName - Name as registered in the font manager after load.
+   * @returns Code list, or empty when the font is missing or not SHX.
+   */
+  static getShxCodePoints(fontName: string): number[] {
+    const font = FontManager.instance.getFontByName(fontName, false)
+    if (!font || font.type !== 'shx') return []
+    const data = font.data as ShxFontData
+    const keys = Object.keys(data.content?.data ?? {})
+    return keys
+      .map(k => Number(k))
+      .filter(n => Number.isFinite(n))
+      .sort((a, b) => a - b)
+  }
+
+  /**
+   * Raw SHX font data for UI previews (e.g. character map SVG).
+   *
+   * @param fontName - Name as registered in {@link FontManager}.
+   * @returns Parsed SHX payload, or `undefined` if unavailable or not SHX.
+   */
+  static getLoadedShxFontData(fontName: string): ShxFontData | undefined {
+    const font = FontManager.instance.getFontByName(fontName, false)
+    if (!font || font.type !== 'shx') return undefined
+    return font.data as ShxFontData
+  }
+
+  /**
+   * Creates a SHX parser for inline SVG glyph previews.
+   *
+   * @param data - Parsed SHX payload from {@link getLoadedShxFontData}.
+   */
+  static createShxParserFont(data: ShxFontData): ShxParserFont {
+    return new ShxParserFont(data)
+  }
+
+  /**
+   * Looks up {@link FontInfo} for a display name against the drawing’s available-font
+   * catalog ({@link ApplicationDocManager.instance.avaiableFonts}).
+   *
+   * @remarks
+   * Matching is case-insensitive; the first catalog entry whose `name` array
+   * contains a trimmed, case-insensitive match wins.
+   */
+  static findFontInfoByName(fontName: string): FontInfo | undefined {
+    const list = ApplicationDocManager.instance?.avaiableFonts ?? []
+    const target = fontName.trim().toLowerCase()
+    if (!target) return undefined
+    return list.find(info =>
+      info.name.some(n => n.trim().toLowerCase() === target)
+    )
+  }
+
+  /**
+   * Declared font engine kind from the CAD font catalog only (before or after load).
+   *
+   * @remarks
+   * Use when {@link ApplicationFontUtil} has not yet loaded the font: the catalog still
+   * knows `shx` vs `mesh`. After load, {@link getFontType} is authoritative.
+   */
+  static getCatalogFontType(fontName: string): 'shx' | 'mesh' | undefined {
+    return ApplicationFontUtil.findFontInfoByName(fontName)?.type
+  }
+
+  /**
+   * Loads a font through the same pipeline as MTEXT rendering so binaries are cached
+   * and SHX glyph tables are available.
+   *
+   * @remarks
+   * No-ops when there is no {@link ApplicationDocManager.instance} or the font is already
+   * loaded. Delegates to {@link ApplicationDocManager.loadFonts}.
+   */
+  static async ensureDrawingFontLoaded(fontName: string): Promise<void> {
+    const dm = ApplicationDocManager.instance
+    if (!dm) return
+    if (ApplicationFontUtil.isFontLoaded(fontName)) return
+    await dm.loadFonts([fontName])
+  }
+
+  /**
+   * Parses a user-uploaded font file, registers it for rendering, and stores it
+   * in IndexedDB when font caching is enabled.
+   *
+   * Supported formats: `.shx`, `.ttf`, `.otf`, `.woff`.
+   *
+   * @param data - Font file contents or a browser `File` selected by the user
+   * @param fileName - Font file name when `data` is an `ArrayBuffer`
+   * @param aliases - Optional alias names (e.g. missed drawing font names)
+   * @param encoding - Optional character encoding for SHX bigfonts
+   */
+  static async cacheFont(
+    data: ArrayBuffer | File,
+    fileName?: string,
+    aliases?: string[],
+    encoding?: string
+  ): Promise<FontLoadStatus> {
+    return FontManager.instance.cacheFont(data, fileName, aliases, encoding)
+  }
+
+  /**
+   * Returns a mesh font program from IndexedDB when previously cached for
+   * rendering (or after a prior PDF persist).
+   *
+   * Tries the requested name, catalog file / aliases, then the FontManager
+   * replacement chain. Does not keep a separate in-memory program map —
+   * callers that miss should `fetch` the catalog URL.
+   *
+   * @returns A view over the cached buffer, or `undefined` when not in IDB.
+   */
+  static async getCachedMeshFontProgram(
+    fontName: string
+  ): Promise<Uint8Array | undefined> {
+    const candidates: string[] = [fontName]
+    const info = ApplicationFontUtil.findFontInfoByName(fontName)
+    if (info?.file) {
+      candidates.push(info.file)
+    }
+    for (const name of info?.name ?? []) {
+      candidates.push(name)
+    }
+    const replacement = ApplicationFontUtil.getReplacementFontName(fontName)
+    if (replacement && replacement !== fontName) {
+      candidates.push(replacement)
+      const replacementInfo = ApplicationFontUtil.findFontInfoByName(replacement)
+      if (replacementInfo?.file) {
+        candidates.push(replacementInfo.file)
+      }
+      for (const name of replacementInfo?.name ?? []) {
+        candidates.push(name)
+      }
+    }
+
+    const tried = new Set<string>()
+    for (const candidate of candidates) {
+      const key = candidate.trim().toLowerCase()
+      if (!key || tried.has(key)) {
+        continue
+      }
+      tried.add(key)
+      const buffer =
+        await FontManager.instance.getCachedMeshFontProgram(candidate)
+      if (buffer && buffer.byteLength > 0) {
+        return new Uint8Array(buffer)
+      }
+    }
+    return undefined
+  }
+
+  /**
+   * Writes a mesh font program into IndexedDB for later PDF / render reuse.
+   *
+   * Does not register the face for on-screen rendering. No-op when font
+   * caching is disabled.
+   */
+  static async persistMeshFontProgram(
+    data: ArrayBuffer,
+    fileName: string,
+    aliases?: readonly string[]
+  ): Promise<void> {
+    await FontManager.instance.persistMeshFontProgram(data, fileName, aliases)
+  }
+}

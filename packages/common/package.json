@@ -25,7 +25,7 @@
     "package.json"
   ],
   "sideEffects": [
-    "./lib/AcCmLogUtil.js"
+    "./lib/CommonLogUtil.js"
   ],
   "main": "./dist/common.umd.cjs",
   "module": "./lib/index.js",

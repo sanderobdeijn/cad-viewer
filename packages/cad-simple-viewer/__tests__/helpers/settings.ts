@@ -1,7 +1,7 @@
 import {
-  AcApSettingManager,
-  type AcApSettings
-} from '../../src/app/AcApSettingManager'
+  ApplicationSettingManager,
+  type ApplicationSettings
+} from '../../src/app/ApplicationSettingManager'
 
 /**
  * Gives a test fresh settings in memory: an empty localStorage stub and a new
@@ -10,7 +10,7 @@ import {
  * @param values - Settings the test needs
  * @returns The settings manager
  */
-export function useTestSettings(values: Partial<AcApSettings> = {}) {
+export function useTestSettings(values: Partial<ApplicationSettings> = {}) {
   const store = new Map<string, string>()
   Object.defineProperty(globalThis, 'localStorage', {
     configurable: true,
@@ -21,8 +21,8 @@ export function useTestSettings(values: Partial<AcApSettings> = {}) {
       clear: () => store.clear()
     }
   })
-  AcApSettingManager.resetInstanceForTesting()
-  const settings = AcApSettingManager.instance
+  ApplicationSettingManager.resetInstanceForTesting()
+  const settings = ApplicationSettingManager.instance
   settings.apply(values, { persist: false })
   return settings
 }

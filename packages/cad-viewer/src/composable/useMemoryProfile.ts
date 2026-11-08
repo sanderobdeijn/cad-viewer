@@ -1,32 +1,31 @@
 import {
-  AcApDocManager,
-  AcApMemoryProfiler,
-  type AcApMemorySnapshot,
-  AcTrView2d,
-  formatMemoryBytes
-} from '@mlightcad/cad-simple-viewer'
+  ApplicationDocManager,
+  ApplicationMemoryProfiler,
+  type ApplicationMemorySnapshot,
+  formatMemoryBytes,
+  ThreeRendererView2d} from '@mlightcad/cad-simple-viewer'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useDocument } from './useDocument'
 
 export { formatMemoryBytes }
-export type { AcApMemorySnapshot }
+export type { ApplicationMemorySnapshot }
 
 /** Latest snapshot produced by the MEM command (consumed when the palette mounts). */
-let pendingSnapshot: AcApMemorySnapshot | null = null
+let pendingSnapshot: ApplicationMemorySnapshot | null = null
 
 /**
- * Stores a snapshot collected by {@link AcApMemCmd} for the palette to pick up.
+ * Stores a snapshot collected by {@link ApplicationMemCmd} for the palette to pick up.
  */
-export function publishMemorySnapshot(snapshot: AcApMemorySnapshot): void {
+export function publishMemorySnapshot(snapshot: ApplicationMemorySnapshot): void {
   pendingSnapshot = snapshot
 }
 
 /**
  * Takes any snapshot published by the MEM command (one-shot).
  */
-export function takePublishedMemorySnapshot(): AcApMemorySnapshot | null {
+export function takePublishedMemorySnapshot(): ApplicationMemorySnapshot | null {
   const snapshot = pendingSnapshot
   pendingSnapshot = null
   return snapshot
@@ -38,7 +37,7 @@ export function takePublishedMemorySnapshot(): AcApMemorySnapshot | null {
 export function useMemoryProfile() {
   const { t } = useI18n()
   const { fileName, docTitle } = useDocument()
-  const snapshot = ref<AcApMemorySnapshot | null>(null)
+  const snapshot = ref<ApplicationMemorySnapshot | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -58,10 +57,10 @@ export function useMemoryProfile() {
     return max || 1
   })
 
-  const collectNow = async (): Promise<AcApMemorySnapshot> => {
-    const docManager = AcApDocManager.instance
-    const view = docManager.curView as AcTrView2d
-    return AcApMemoryProfiler.collect(view)
+  const collectNow = async (): Promise<ApplicationMemorySnapshot> => {
+    const docManager = ApplicationDocManager.instance
+    const view = docManager.curView as ThreeRendererView2d
+    return ApplicationMemoryProfiler.collect(view)
   }
 
   /**
@@ -82,7 +81,7 @@ export function useMemoryProfile() {
     loading.value = true
     error.value = null
     try {
-      snapshot.value = await AcApDocManager.instance.withBusyIndicator(
+      snapshot.value = await ApplicationDocManager.instance.withBusyIndicator(
         () => collectNow(),
         t('main.toolPalette.memoryProfile.collecting')
       )

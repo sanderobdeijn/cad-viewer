@@ -1,0 +1,377 @@
+/**
+ * @fileoverview Object model implementation for the AutoCAD Common library.
+ *
+ * This module provides a reactive object model with attribute management,
+ * change tracking, and event notification. Inspired by Backbone.js Model
+ * but with TypeScript support and reduced dependencies.
+ *
+ * @module CommonObject
+ * @version 1.0.0
+ */
+
+import { CommonEventManager } from './CommonEventManager'
+import { clone, defaults, has, isEmpty, isEqual } from './CommonLodashUtils'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type CommonAttributes = Record<string, any>
+
+/**
+ * Options to set attributes of one `CommonObject` instance
+ */
+export interface CommonObjectOptions {
+  silent?: boolean | undefined
+  unset?: boolean | undefined
+}
+
+export type CommonStringKey<T> = keyof T & string
+
+/**
+ * Interface to define arguments of changed event of one `CommonObject` instance
+ */
+export interface CommonObjectChangedEventArgs<T extends CommonAttributes> {
+  object: CommonObject<T>
+  options?: CommonObjectOptions
+}
+
+/**
+ * Interface to define arguments of attribute changed event of one `CommonObject` instance
+ */
+export interface CommonObjectAttributeChangedEventArgs<T extends CommonAttributes>
+  extends CommonObjectChangedEventArgs<T> {
+  attrName?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  attrValue?: any
+}
+
+/**
+ * This class is used to store attributes of one data model. It has the following benifits.
+ * - Get notification when value of one attributes is changed
+ * - Have one `changed` property to store all of changed values
+ * - Store all of states of one model in one key/value object and make it is easy to serialize/deserialize model and model changes
+ *
+ * Actually implementation of this class is based on class Model in Backbone.js. However, Model class in Backbone
+ * is too heavy. So we implement it again based on source code of class Model in Backbone.js. Morever, we want to
+ * keep our library with less external dependencies and don't want to introduce depenedency on Backbone.js.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class CommonObject<T extends CommonAttributes = any> {
+  attributes: Partial<T>
+
+  private _events?: {
+    attrChanged: CommonEventManager<CommonObjectAttributeChangedEventArgs<T>>
+    modelChanged: CommonEventManager<CommonObjectChangedEventArgs<T>>
+  }
+  private _changed?: Partial<T>
+  private _changing: boolean = false
+  private _previousAttributes?: Partial<T>
+  private _pending: boolean = false
+
+  /**
+   * Change-event managers of this object, materialized on first read.
+   *
+   * Reading this property is what "somebody observes this object" means for the
+   * {@link set} fast path: until a listener is registered the underlying
+   * managers (and their listener arrays) are never allocated.
+   */
+  get events(): {
+    attrChanged: CommonEventManager<CommonObjectAttributeChangedEventArgs<T>>
+    modelChanged: CommonEventManager<CommonObjectChangedEventArgs<T>>
+  } {
+    return (this._events ??= {
+      attrChanged: new CommonEventManager<
+        CommonObjectAttributeChangedEventArgs<T>
+      >(),
+      modelChanged: new CommonEventManager<CommonObjectChangedEventArgs<T>>()
+    })
+  }
+
+  /**
+   * Attributes changed during the current change session, materialized on first
+   * read. Stays `undefined` while no tracked write happened, so importing code
+   * that never looks at it pays nothing.
+   */
+  get changed(): Partial<T> {
+    return (this._changed ??= {})
+  }
+
+  /**
+   * Create one object to store attributes. For performance reason, values of attributes passed to constructor
+   * will not be cloned to `attributes` property. So it means that value of `attributes` property in this object
+   * is just a reference to arguments `attributes` passed to constructor.
+   * @param attributes Input attributes to store in this object
+   */
+  constructor(attributes?: Partial<T>, defaultAttrs?: Partial<T>) {
+    const attrs = attributes || {}
+    if (defaultAttrs) {
+      defaults(attrs, defaultAttrs)
+    }
+    this.attributes = attrs
+  }
+
+  /**
+   * Gets the value of an attribute.
+   *
+   * For strongly-typed access to attributes, use the `get` method privately in public getter properties.
+   *
+   * @template A - The key type extending string keys of T.
+   * @param {A} key - The attribute key to retrieve.
+   * @returns {T[A] | undefined} The attribute value or undefined if not set.
+   *
+   * @example
+   * ```typescript
+   * // Get a single attribute value
+   * const name = obj.get('name')
+   * const visible = obj.get('visible')
+   *
+   * // Check if attribute exists
+   * if (obj.get('name') !== undefined) {
+   *   console.log('Name is set')
+   * }
+   *
+   * // For strongly-typed subclasses
+   * get name(): string {
+   *   return super.get("name")
+   * }
+   * ```
+   */
+  get<A extends CommonStringKey<T>>(key: A): T[A] | undefined {
+    return this.attributes[key]
+  }
+
+  /**
+   * Sets one or more attributes on the object.
+   *
+   * For strongly-typed assignment of attributes, use the `set` method privately in public setter properties.
+   * Triggers change events unless the `silent` option is specified.
+   *
+   * @template A - The key type extending string keys of T.
+   * @param {A | Partial<T>} key - The attribute key or an object of key-value pairs.
+   * @param {T[A] | CommonObjectOptions} [val] - The value to set or options when key is an object.
+   * @param {CommonObjectOptions} [options] - Options for the set operation.
+   * @returns {this} The current instance for method chaining.
+   *
+   * @example
+   * ```typescript
+   * // Set a single attribute
+   * obj.set('name', 'MyEntity')
+   *
+   * // Set multiple attributes
+   * obj.set({ name: 'MyEntity', visible: true })
+   *
+   * // Set with options
+   * obj.set('name', 'MyEntity', { silent: true })
+   *
+   * // Unset an attribute
+   * obj.set('name', undefined, { unset: true })
+   *
+   * // For strongly-typed subclasses
+   * set name(value: string) {
+   *   super.set("name", value)
+   * }
+   * ```
+   */
+  set<A extends CommonStringKey<T>>(
+    key: A,
+    val?: T[A],
+    options?: CommonObjectOptions
+  ): this
+  set(key: Partial<T>, options?: CommonObjectOptions): this
+  set<A extends CommonStringKey<T>>(
+    key: A | Partial<T>,
+    val?: T[A] | CommonObjectOptions,
+    options?: CommonObjectOptions
+  ): this {
+    if (key == null) return this
+
+    // Handle both `"key", value` and `{key: value}` -style arguments.
+    let attrs: Partial<T>
+    if (typeof key === 'object') {
+      attrs = key as Partial<T>
+      options = val as CommonObjectOptions
+    } else {
+      attrs = {} as Partial<T>
+      attrs[key] = val as T[A]
+    }
+
+    options || (options = {} as CommonObjectOptions)
+
+    // Extract attributes and options.
+    const unset = options.unset
+    const silent = options.silent
+
+    // Untracked fast path: nobody observes this object's change events, so the
+    // session snapshot (`_previousAttributes` / `changed`), the per-attribute
+    // deep comparisons and the event payloads would all be invisible work.
+    // Write straight to `attributes` instead (see the class doc for the
+    // `hasChanged()` / `previous()` contract narrowing this implies). This
+    // reads the private `_events` field instead of the `events` getter so the
+    // check itself never materializes the managers.
+    const events = this._events
+    if (
+      !unset &&
+      !this._changing &&
+      (events === undefined ||
+        (events.attrChanged.listenerCount === 0 &&
+          events.modelChanged.listenerCount === 0))
+    ) {
+      if (typeof key === 'object') {
+        const directAttrs = key as Partial<T>
+        for (const attr in directAttrs) {
+          this.attributes[attr] = directAttrs[attr]
+        }
+      } else {
+        this.attributes[key] = val as T[A]
+      }
+      return this
+    }
+
+    if (!unset) {
+      // Fast path: when every written value is reference-equal to the current
+      // value, no attribute walk can produce changes. Replicate the session
+      // bookkeeping (snapshot + changed reset) exactly, then return — the
+      // per-attribute deep `isEqual` walks are the only work skipped.
+      let allUnchanged = true
+      for (const attr in attrs) {
+        if (this.attributes[attr] !== attrs[attr]) {
+          allUnchanged = false
+          break
+        }
+      }
+      if (allUnchanged) {
+        if (!this._changing) {
+          this._previousAttributes = clone(this.attributes)
+          this._changed = {}
+        }
+        return this
+      }
+    }
+
+    // `changes` is allocated lazily: sets that change nothing never dispatch.
+    let changes: string[] | null = null
+    const changing = this._changing
+    this._changing = true
+
+    if (!changing) {
+      this._previousAttributes = clone(this.attributes)
+      this._changed = {}
+    }
+
+    const current = this.attributes
+    const changed: Partial<T> = (this._changed ??= {})
+    const prev: Partial<T> = this._previousAttributes ?? ({} as Partial<T>)
+
+    // For each `set` attribute, update or delete the current value.
+    for (const attr in attrs) {
+      val = attrs[attr]
+      if (!unset && current[attr] === val) {
+        // Reference-equal: no write, no change event. `changed` still needs
+        // reconciling against the session snapshot when the attribute was
+        // mutated earlier in this session and set back to its current value.
+        if (prev[attr] === val || isEqual(prev[attr], val)) {
+          delete changed[attr]
+        } else {
+          changed[attr] = val
+        }
+        continue
+      }
+      if (!isEqual(current[attr], val)) (changes || (changes = [])).push(attr)
+      if (!isEqual(prev[attr], val)) {
+        changed[attr] = val
+      } else {
+        delete changed[attr]
+      }
+      unset ? delete current[attr] : (current[attr] = val)
+    }
+
+    // Trigger all relevant attribute changes.
+    if (!silent) {
+      // @ts-expect-error just keep backbone implementation as is
+      if (changes) this._pending = options
+      if (changes) {
+        for (let i = 0; i < changes.length; i++) {
+          this._events?.attrChanged.dispatch({
+            object: this,
+            attrName: changes[i],
+            attrValue: current[changes[i]],
+            options: options
+          })
+        }
+      }
+    }
+
+    // You might be wondering why there's a `while` loop here. Changes can
+    // be recursively nested within `"change"` events.
+    if (changing) return this
+    if (!silent) {
+      while (this._pending) {
+        // @ts-expect-error just keep backbone implementation as is
+        options = this._pending
+        this._pending = false
+        this._events?.modelChanged.dispatch({
+          object: this,
+          options: options
+        })
+      }
+    }
+    this._pending = false
+    this._changing = false
+    return this
+  }
+
+  has(key: CommonStringKey<T>): boolean {
+    return this.get(key) != null
+  }
+
+  /**
+   * Determine if the model has changed since the last `"change"` event.
+   * If you specify an attribute name, determine if that attribute has changed.
+   */
+  hasChanged(key?: CommonStringKey<T>) {
+    if (key == null) return !isEmpty(this._changed)
+    return this._changed ? has(this._changed, key) : false
+  }
+
+  /**
+   * Return an object containing all the attributes that have changed. Useful for determining what parts
+   * of a view need to be updated and/or what attributes need to be persisted to the server.
+   *
+   * Unset attributes will be set to undefined. You can also pass an attributes object to diff against
+   * the model, determining if there *would be* a change.
+   */
+  changedAttributes(diff?: Partial<T>): Partial<T> {
+    if (!diff) {
+      return this.hasChanged() ? clone(this._changed ?? ({} as Partial<T>)) : {}
+    }
+    const old = this._changing ? this._previousAttributes : this.attributes
+    const changed: Partial<T> = {}
+    for (const attr in diff) {
+      const val = diff[attr]
+      if (isEqual(old?.[attr], val)) continue
+      changed[attr] = val
+    }
+    return changed
+  }
+
+  /**
+   * Get the previous value of an attribute, recorded at the time the last `"change"` event was fired.
+   */
+  previous<A extends CommonStringKey<T>>(key: A): T[A] | null | undefined {
+    if (key == null) return null
+    return this._previousAttributes?.[key]
+  }
+
+  /**
+   * Get all of the attributes of the model at the time of the previous `"change"` event.
+   */
+  previousAttributes(): Partial<T> {
+    return clone(this._previousAttributes ?? ({} as Partial<T>))
+  }
+
+  /**
+   * Create a new model with identical attributes to this one.
+   */
+  clone() {
+    const attrs = clone(this.attributes)
+    return new CommonObject(attrs)
+  }
+}

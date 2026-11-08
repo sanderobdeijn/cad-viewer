@@ -1,0 +1,91 @@
+import type { ModelItem } from '@mlightcad/geometry-engine'
+import {
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryTol
+} from '@mlightcad/geometry-engine'
+
+import {
+  EditorSelectionStaticPreviewJig,
+  EditorSelectionTransformPreviewJig
+} from '../../editor/input/EditorSelectionPreviewJig'
+import { EditorBaseView } from '../../editor/view/EditorBaseView'
+import { createRotationMatrix } from '../../util/ApplicationGeTransform'
+
+/**
+ * Static preview jig used while ROTATE asks for supporting inputs such as
+ * reference points. It keeps cloned source entities visible without mutating
+ * database entities.
+ */
+export class ApplicationRotateStaticJig<T> extends EditorSelectionStaticPreviewJig<T> {}
+
+/**
+ * ROTATE preview jig.
+ *
+ * Reuses GPU-resident batched geometry when possible. The legacy transient
+ * clone path publishes once and then updates transforms only.
+ */
+export class ApplicationRotatePreviewJig extends EditorSelectionTransformPreviewJig<number> {
+  private _basePoint: GeometryPoint2d
+  private _lastAngleRad = 0
+  private _referenceAngleDeg: number
+
+  /**
+   * Creates a dynamic ROTATE preview jig.
+   *
+   * @param view - Active editor view that renders transient entities.
+   * @param sourceEntities - Original entities cloned for preview display.
+   * @param basePoint - Rotation base point.
+   * @param referenceAngleDeg - Reference angle in degrees used for reference-based rotation prompts.
+   */
+  constructor(
+    view: EditorBaseView,
+    sourceEntities: ModelItem[],
+    basePoint: GeometryPoint2dLike,
+    referenceAngleDeg = 0
+  ) {
+    super(view, sourceEntities)
+    this._basePoint = new GeometryPoint2d(basePoint)
+    this._referenceAngleDeg = referenceAngleDeg
+  }
+
+  /**
+   * Gets the first transient preview entity required by the jig API.
+   *
+   * @returns First preview entity, or `null` when cloning failed.
+   */
+  get entity() {
+    return this.previewEntities[0] ?? null
+  }
+
+  /**
+   * Applies rotation to the preview overlay or transient clone set.
+   *
+   * @param angleDeg - Current angle input in degrees from the editor prompt.
+   */
+  override update(angleDeg: number) {
+    const angleRad = ((angleDeg - this._referenceAngleDeg) * Math.PI) / 180
+
+    if (this.batchPreview.useBatchPreview) {
+      if (GeometryTol.equalToZero(angleRad - this._lastAngleRad)) return
+      this.batchPreview.updateMatrix(
+        this._view,
+        createRotationMatrix(this._basePoint, angleRad)
+      )
+      this._lastAngleRad = angleRad
+      return
+    }
+
+    this._lastAngleRad = angleRad
+    super.update(angleDeg)
+  }
+
+  protected buildTransforms(angleDeg: number) {
+    const angleRad = ((angleDeg - this._referenceAngleDeg) * Math.PI) / 180
+    const matrix = createRotationMatrix(this._basePoint, angleRad)
+    return this.previewEntries.map(entry => ({
+      objectId: entry.entity.objectId,
+      matrix
+    }))
+  }
+}

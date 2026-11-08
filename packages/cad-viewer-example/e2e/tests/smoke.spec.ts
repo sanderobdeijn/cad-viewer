@@ -4,14 +4,14 @@ async function readNewDrawing(page: Page) {
   return page.evaluate(() => {
     const mgr = (
       window as Window & {
-        AcApDocManager?: {
+        ApplicationDocManager?: {
           instance: {
             curDocument: { docTitle: string; model: { items: unknown[] } }
             curView: { activeLayoutBtrId: string }
           }
         }
       }
-    ).AcApDocManager?.instance
+    ).ApplicationDocManager?.instance
     if (!mgr) return null
     return {
       title: mgr.curDocument.docTitle,
@@ -48,17 +48,17 @@ test('opens straight into a blank drawing', async ({ page }) => {
 test('has no Open command', async ({ page }) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => (window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => (window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   const hasOpen = await page.evaluate(() => {
     const mgr = (
       window as Window & {
-        AcApDocManager?: {
+        ApplicationDocManager?: {
           instance: { lookupGlobalCmd: (name: string) => unknown }
         }
       }
-    ).AcApDocManager?.instance
+    ).ApplicationDocManager?.instance
     return mgr ? mgr.lookupGlobalCmd('open') != null : null
   })
   expect(hasOpen).toBe(false)
@@ -74,7 +74,7 @@ test('shows model space only, without layout, property or Quick Select controls'
 
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
   await expect(page.locator('.ml-cad-container canvas').first()).toBeVisible()
   await expect(page.locator('.ml-layout-tabs')).toHaveCount(0)
@@ -84,11 +84,11 @@ test('shows model space only, without layout, property or Quick Select controls'
   const commands = await page.evaluate(() => {
     const mgr = (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { lookupGlobalCmd: (name: string) => unknown }
         }
       }
-    ).AcApDocManager.instance
+    ).ApplicationDocManager.instance
     return ['properties', 'qselect'].map(
       name => mgr.lookupGlobalCmd(name) != null
     )
@@ -151,7 +151,7 @@ test('resizes the text editor by dragging the divider', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   const editor = page.getByRole('textbox', { name: 'Text editor' })
@@ -196,7 +196,7 @@ test('keeps keystrokes typed in the text editor out of the viewer', async ({
 }) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   const editor = page.getByRole('textbox', { name: 'Text editor' })
@@ -218,7 +218,7 @@ test('draws a line from the ribbon button after using the text editor', async ({
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   await page.getByRole('textbox', { name: 'Text editor' }).fill('text')
@@ -254,7 +254,7 @@ test('stays in English without a language selector', async ({ browser }) => {
 test('has no hatch command or ribbon button', async ({ page }) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   await expect(page.locator('[data-item-id="cmd-hatch"]')).toHaveCount(0)
@@ -270,7 +270,7 @@ test('has no hatch command or ribbon button', async ({ page }) => {
 test('has no revcloud command or ribbon button', async ({ page }) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
 
   await expect(page.locator('[data-item-id="cmd-revcloud"]')).toHaveCount(0)
@@ -300,7 +300,7 @@ for (const command of [
   test(`has no ${command} command or ribbon button`, async ({ page }) => {
     await page.goto('/')
     await page.waitForFunction(
-      () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+      () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
     )
 
     await expect(page.locator(`[data-item-id="cmd-${command}"]`)).toHaveCount(0)

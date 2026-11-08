@@ -5,8 +5,8 @@
  * offline HTML viewer (via {@link AcExHtmlSimpleViewerUi}).
  */
 
-import type { AcEdUiTheme } from '../editor/global/AcEdUiTheme'
-import { AcUiDialog } from './AcUiDialog'
+import type { EditorUiTheme } from '../editor/global/EditorUiTheme'
+import { UIDialog } from './UIDialog'
 
 /** DOM id of tutorial-specific styles. */
 const STYLE_ID = 'ml-ui-touch-point-tutorial-styles'
@@ -61,7 +61,7 @@ const CROSS_ABOVE_TOUCH_PX =
   TOUCH_ZONE_RADIUS + CROSS_ABOVE_CIRCLE_GAP + CROSS_HALF_H
 
 /** Localized strings for the tutorial dialog. */
-export interface AcUiTouchPointTutorialLabels {
+export interface UITouchPointTutorialLabels {
   title: string
   description: string
   snoozeToday: string
@@ -70,30 +70,30 @@ export interface AcUiTouchPointTutorialLabels {
 }
 
 /** Persisted snooze / dismiss preferences. */
-export interface AcUiTouchPointTutorialPrefs {
+export interface UITouchPointTutorialPrefs {
   hideForever: boolean
   snoozeDate: string | null
 }
 
-/** Runtime configuration for {@link AcUiTouchPointTutorial.maybeShow}. */
-export interface AcUiTouchPointTutorialConfig {
+/** Runtime configuration for {@link UITouchPointTutorial.maybeShow}. */
+export interface UITouchPointTutorialConfig {
   /** Backdrop host; defaults to `document.body`. */
   host?: HTMLElement
   /** Theme tokens; defaults to {@link resolveUiTheme} from the host. */
-  theme?: AcEdUiTheme
-  labels: AcUiTouchPointTutorialLabels
+  theme?: EditorUiTheme
+  labels: UITouchPointTutorialLabels
   /** Long-press delay shown in the demo animation (ms). */
   longPressMs: number
-  /** When false, {@link AcUiTouchPointTutorial.maybeShow} is a no-op. */
+  /** When false, {@link UITouchPointTutorial.maybeShow} is a no-op. */
   shouldShow: () => boolean
-  readPrefs: () => AcUiTouchPointTutorialPrefs
-  writePrefs: (prefs: AcUiTouchPointTutorialPrefs) => void
+  readPrefs: () => UITouchPointTutorialPrefs
+  writePrefs: (prefs: UITouchPointTutorialPrefs) => void
 }
 
 /**
  * Returns today's date as `YYYY-MM-DD` in local time.
  */
-export function acuiLocalIsoDate(date: Date = new Date()): string {
+export function uiLocalIsoDate(date: Date = new Date()): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
@@ -103,13 +103,13 @@ export function acuiLocalIsoDate(date: Date = new Date()): string {
 /**
  * Whether the tutorial should be shown from layout + preference state.
  */
-export function acuiShouldShowTouchPointTutorialFromPrefs(
+export function uiShouldShowTouchPointTutorialFromPrefs(
   shouldShowOnMobile: () => boolean,
-  prefs: AcUiTouchPointTutorialPrefs
+  prefs: UITouchPointTutorialPrefs
 ): boolean {
   if (!shouldShowOnMobile()) return false
   if (prefs.hideForever) return false
-  if (prefs.snoozeDate != null && prefs.snoozeDate === acuiLocalIsoDate()) {
+  if (prefs.snoozeDate != null && prefs.snoozeDate === uiLocalIsoDate()) {
     return false
   }
   return true
@@ -118,14 +118,14 @@ export function acuiShouldShowTouchPointTutorialFromPrefs(
 /**
  * Modal tutorial explaining long-press precise point picking on mobile.
  */
-export class AcUiTouchPointTutorial extends AcUiDialog {
-  private static openInstance: AcUiTouchPointTutorial | null = null
+export class UITouchPointTutorial extends UIDialog {
+  private static openInstance: UITouchPointTutorial | null = null
 
-  private readonly config: AcUiTouchPointTutorialConfig
+  private readonly config: UITouchPointTutorialConfig
   private readonly snoozeTodayCheckbox: HTMLInputElement
   private readonly hideForeverCheckbox: HTMLInputElement
 
-  private constructor(config: AcUiTouchPointTutorialConfig) {
+  private constructor(config: UITouchPointTutorialConfig) {
     super({
       host: config.host,
       title: config.labels.title,
@@ -138,13 +138,13 @@ export class AcUiTouchPointTutorial extends AcUiDialog {
       dialogClassName: 'ml-ui-touch-point-tutorial'
     })
     this.config = config
-    AcUiTouchPointTutorial.ensureTutorialStyles(config.longPressMs)
+    UITouchPointTutorial.ensureTutorialStyles(config.longPressMs)
 
     const description = document.createElement('p')
     description.className = 'ml-ui-touch-point-tutorial-desc'
     description.textContent = config.labels.description
     this.bodyEl.appendChild(description)
-    this.bodyEl.appendChild(AcUiTouchPointTutorial.createDemo())
+    this.bodyEl.appendChild(UITouchPointTutorial.createDemo())
 
     const options = document.createElement('div')
     options.className = 'ml-ui-touch-point-tutorial-options'
@@ -192,19 +192,19 @@ export class AcUiTouchPointTutorial extends AcUiDialog {
   }
 
   /**
-   * Opens the tutorial when {@link AcUiTouchPointTutorialConfig.shouldShow} is true.
+   * Opens the tutorial when {@link UITouchPointTutorialConfig.shouldShow} is true.
    */
-  static maybeShow(config: AcUiTouchPointTutorialConfig): Promise<void> {
+  static maybeShow(config: UITouchPointTutorialConfig): Promise<void> {
     if (!config.shouldShow()) return Promise.resolve()
-    AcUiTouchPointTutorial.openInstance?.close()
-    const dialog = new AcUiTouchPointTutorial(config)
-    AcUiTouchPointTutorial.openInstance = dialog
+    UITouchPointTutorial.openInstance?.close()
+    const dialog = new UITouchPointTutorial(config)
+    UITouchPointTutorial.openInstance = dialog
     return dialog.show()
   }
 
   override close(): void {
-    if (AcUiTouchPointTutorial.openInstance === this) {
-      AcUiTouchPointTutorial.openInstance = null
+    if (UITouchPointTutorial.openInstance === this) {
+      UITouchPointTutorial.openInstance = null
     }
     super.close()
   }
@@ -216,7 +216,7 @@ export class AcUiTouchPointTutorial extends AcUiDialog {
     } else if (this.snoozeTodayCheckbox.checked) {
       this.config.writePrefs({
         hideForever: prefs.hideForever,
-        snoozeDate: acuiLocalIsoDate()
+        snoozeDate: uiLocalIsoDate()
       })
     }
     this.close()
@@ -268,51 +268,51 @@ export class AcUiTouchPointTutorial extends AcUiDialog {
   }
 
   private static pctAfter(baseMs: number, deltaMs: number): string {
-    return AcUiTouchPointTutorial.pct(baseMs + deltaMs)
+    return UITouchPointTutorial.pct(baseMs + deltaMs)
   }
 
   private static ensureTutorialStyles(longPressMs: number): void {
     if (document.getElementById(STYLE_ID)) return
 
-    const fingerIn = AcUiTouchPointTutorial.pct(FINGER_APPEAR_MS)
-    const fillIn = AcUiTouchPointTutorial.pct(FINGER_APPEAR_MS + FILL_APPEAR_MS)
+    const fingerIn = UITouchPointTutorial.pct(FINGER_APPEAR_MS)
+    const fillIn = UITouchPointTutorial.pct(FINGER_APPEAR_MS + FILL_APPEAR_MS)
     const ringStart = fillIn
-    const ringEnd = AcUiTouchPointTutorial.pct(
+    const ringEnd = UITouchPointTutorial.pct(
       FINGER_APPEAR_MS + FILL_APPEAR_MS + RING_DRAW_MS
     )
-    const crossIn = AcUiTouchPointTutorial.pct(longPressMs)
-    const snapTopAt = AcUiTouchPointTutorial.pctAfter(
+    const crossIn = UITouchPointTutorial.pct(longPressMs)
+    const snapTopAt = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS
     )
-    const snapCenterAt = AcUiTouchPointTutorial.pctAfter(
+    const snapCenterAt = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + MOVE_TO_SNAP_CENTER_MS
     )
-    const snapCommitAt = AcUiTouchPointTutorial.pctAfter(
+    const snapCommitAt = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + SNAP_BOX_BEFORE_LIFT_MS
     )
-    const crossHoldEnd = AcUiTouchPointTutorial.pctAfter(
+    const crossHoldEnd = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + SNAP_BOX_BEFORE_LIFT_MS + CROSS_GREEN_HOLD_MS
     )
     const returnStart = crossHoldEnd
-    const returnEnd = AcUiTouchPointTutorial.pctAfter(
+    const returnEnd = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + SNAP_BOX_BEFORE_LIFT_MS + CROSS_GREEN_HOLD_MS + RETURN_MS
     )
-    const resetAt = AcUiTouchPointTutorial.pct(DEMO_CYCLE_MS - 400)
-    const fillVisible = AcUiTouchPointTutorial.pctAfter(
+    const resetAt = UITouchPointTutorial.pct(DEMO_CYCLE_MS - 400)
+    const fillVisible = UITouchPointTutorial.pctAfter(
       FINGER_APPEAR_MS + FILL_APPEAR_MS,
       80
     )
-    const crossVisible = AcUiTouchPointTutorial.pctAfter(longPressMs, 60)
-    const snapBoxOn = AcUiTouchPointTutorial.pctAfter(
+    const crossVisible = UITouchPointTutorial.pctAfter(longPressMs, 60)
+    const snapBoxOn = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + 1
     )
-    const crossGreen = AcUiTouchPointTutorial.pctAfter(
+    const crossGreen = UITouchPointTutorial.pctAfter(
       longPressMs,
       MOVE_TO_SNAP_TOP_MS + SNAP_BOX_BEFORE_LIFT_MS + 1
     )

@@ -1,48 +1,48 @@
-export { AcGiArrowType } from './AcGiArrowType'
-export type { AcGiEntity } from './AcGiEntity'
+export { GraphicsInterfaceArrowType } from './GraphicsInterfaceArrowType'
+export type { GraphicsInterfaceEntity } from './GraphicsInterfaceEntity'
 export type {
-  AcGiArrowStyle,
-  AcGiBaseLineStyle,
-  AcGiLineStyle,
-  AcGiLineTypePatternElement
-} from './AcGiLineStyle'
-export { AcGiLineWeight } from './AcGiLineWeight'
-export type { AcGiPointStyle } from './AcGiPointStyle'
+  GraphicsInterfaceArrowStyle,
+  GraphicsInterfaceBaseLineStyle,
+  GraphicsInterfaceLineStyle,
+  GraphicsInterfaceLineTypePatternElement
+} from './GraphicsInterfaceLineStyle'
+export { GraphicsInterfaceLineWeight } from './GraphicsInterfaceLineWeight'
+export type { GraphicsInterfacePointStyle } from './GraphicsInterfacePointStyle'
 export {
-  ACGI_DARK_THEME_FOREGROUND,
-  ACGI_LIGHT_THEME_FOREGROUND,
-  ACGI_MODEL_SPACE_BACKGROUND,
-  ACGI_PAPER_SPACE_BACKGROUND,
-  AcGiContext,
+  GRAPHICS_INTERFACE_DARK_THEME_FOREGROUND,
+  GRAPHICS_INTERFACE_LIGHT_THEME_FOREGROUND,
+  GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND,
+  GRAPHICS_INTERFACE_PAPER_SPACE_BACKGROUND,
+  GraphicsInterfaceContext,
   DEFAULT_ACGI_CONTEXT,
-  acgiContrastingForegroundColor,
-  acgiForegroundColorForBackground,
-  acgiIsLightBackground,
-  acgiResolveSubEntityTraitsRgbFromBackground
-} from './AcGiContext'
-export type { AcGiContextOptions } from './AcGiContext'
-export type { AcGiDirectBatchPrimitive } from './AcGiDirectBatchPrimitive'
-export type { AcGiDrawable } from './AcGiDrawable'
+  graphicsInterfaceContrastingForegroundColor,
+  graphicsInterfaceForegroundColorForBackground,
+  graphicsInterfaceIsLightBackground,
+  graphicsInterfaceResolveSubEntityTraitsRgbFromBackground
+} from './GraphicsInterfaceContext'
+export type { GraphicsInterfaceContextOptions } from './GraphicsInterfaceContext'
+export type { GraphicsInterfaceDirectBatchPrimitive } from './GraphicsInterfaceDirectBatchPrimitive'
+export type { GraphicsInterfaceDrawable } from './GraphicsInterfaceDrawable'
 export {
-  ACGI_DRAW_CIRCLE_SIDES_DRAFT,
-  ACGI_DRAW_CIRCLE_SIDES_HIGH,
-  ACGI_DRAW_CIRCLE_SIDES_STANDARD,
-  acgiDrawCircleSides,
-  acgiDrawTessellateOptions
-} from './AcGiDrawTessellate'
-export type { AcGiFontMapping, AcGiRenderer } from './AcGiRenderer'
-export type { AcGiShapeData } from './AcGiShapeData'
-export type { AcGiStyleType } from './AcGiStyleType'
-export type { AcGiSubEntityTraits } from './AcGiSubEntityTraits'
+  GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT,
+  GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_HIGH,
+  GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_STANDARD,
+  graphicsInterfaceDrawCircleSides,
+  graphicsInterfaceDrawTessellateOptions
+} from './GraphicsInterfaceDrawTessellate'
+export type { GraphicsInterfaceFontMapping, GraphicsInterfaceRenderer } from './GraphicsInterfaceRenderer'
+export type { GraphicsInterfaceShapeData } from './GraphicsInterfaceShapeData'
+export type { GraphicsInterfaceStyleType } from './GraphicsInterfaceStyleType'
+export type { GraphicsInterfaceSubEntityTraits } from './GraphicsInterfaceSubEntityTraits'
 export {
-  AcGiMTextAttachmentPoint,
-  AcGiMTextFlowDirection
-} from './AcGiTextStyle'
-export type { AcGiMTextData, AcGiTextStyle } from './AcGiTextStyle'
+  GraphicsInterfaceMTextAttachmentPoint,
+  GraphicsInterfaceMTextFlowDirection
+} from './GraphicsInterfaceTextStyle'
+export type { GraphicsInterfaceMTextData, GraphicsInterfaceTextStyle } from './GraphicsInterfaceTextStyle'
 export {
-  AcGiDefaultLightingType,
-  AcGiOrthographicType,
-  AcGiRenderMode
-} from './AcGiView'
-export type { AcGiView } from './AcGiView'
-export { AcGiViewport } from './AcGiViewport'
+  GraphicsInterfaceDefaultLightingType,
+  GraphicsInterfaceOrthographicType,
+  GraphicsInterfaceRenderMode
+} from './GraphicsInterfaceView'
+export type { GraphicsInterfaceView } from './GraphicsInterfaceView'
+export { GraphicsInterfaceViewport } from './GraphicsInterfaceViewport'

@@ -35,7 +35,7 @@ The THREE.js renderer employs cutting-edge rendering technologies for exceptiona
 - `src/util/` – Performance-focused utility functions
 
 ## Usage
-Import and use `AcTrRenderer` to render entities using optimized THREE.js rendering with exceptional performance.
+Import and use `ThreeRendererRenderer` to render entities using optimized THREE.js rendering with exceptional performance.
 
 ## Role in MLightCAD
 This package provides the **high-performance** 2D/3D rendering backend for the main application, enabling smooth interactive graphics and advanced visualization for large CAD files.

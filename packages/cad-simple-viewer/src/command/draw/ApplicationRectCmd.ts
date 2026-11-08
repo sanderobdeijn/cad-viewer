@@ -1,0 +1,815 @@
+import {
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  GeometryTol
+} from '@mlightcad/geometry-engine'
+import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
+
+import { ApplicationContext, ApplicationDocManager } from '../../app'
+import {
+  EditorBaseView,
+  EditorCommand,
+  EditorOpenMode,
+  EditorPreviewJig,
+  EditorPromptAngleOptions,
+  EditorPromptDoubleOptions,
+  EditorPromptPointOptions,
+  EditorPromptPointResult,
+  EditorPromptState,
+  EditorPromptStateMachine,
+  EditorPromptStateStep,
+  EditorPromptStatus
+} from '../../editor'
+import { ApplicationI18n } from '../../i18n'
+import { applicationPreviewDrawable } from '../../model/ApplicationItemDrawable'
+
+const FILLET_BULGE_BASE = Math.tan(Math.PI / 8)
+
+type RectKeywordKey =
+  | 'chamfer'
+  | 'fillet'
+  | 'width'
+  | 'area'
+  | 'dimensions'
+  | 'rotation'
+  | 'length'
+  | 'rectWidth'
+
+type RectBuildInput =
+  | {
+      mode: 'corner'
+      secondPoint: GeometryPoint2dLike
+    }
+  | {
+      mode: 'dimensions'
+      length: number
+      width: number
+    }
+
+interface RectSettings {
+  chamferDist1: number
+  chamferDist2: number
+  filletRadius: number
+  width: number
+  rotation: number
+}
+
+interface RectVertex {
+  point: GeometryPoint2d
+  bulge?: number
+}
+
+const DEFAULT_RECT_SETTINGS: RectSettings = {
+  chamferDist1: 0,
+  chamferDist2: 0,
+  filletRadius: 0,
+  width: 0,
+  rotation: 0
+}
+
+function addKeyword(prompt: EditorPromptPointOptions, key: RectKeywordKey) {
+  prompt.keywords.add(
+    ApplicationI18n.t(`jig.rect.keywords.${key}.display`),
+    ApplicationI18n.t(`jig.rect.keywords.${key}.global`),
+    ApplicationI18n.t(`jig.rect.keywords.${key}.local`)
+  )
+}
+
+function addDoubleKeyword(
+  prompt: EditorPromptDoubleOptions,
+  key: RectKeywordKey
+) {
+  prompt.keywords.add(
+    ApplicationI18n.t(`jig.rect.keywords.${key}.display`),
+    ApplicationI18n.t(`jig.rect.keywords.${key}.global`),
+    ApplicationI18n.t(`jig.rect.keywords.${key}.local`)
+  )
+}
+
+function toWorldPoint(
+  origin: GeometryPoint2dLike,
+  local: GeometryPoint2dLike,
+  rotation: number
+) {
+  const cos = Math.cos(rotation)
+  const sin = Math.sin(rotation)
+  return new GeometryPoint2d(
+    origin.x + local.x * cos - local.y * sin,
+    origin.y + local.x * sin + local.y * cos
+  )
+}
+
+function toLocalVector(
+  origin: GeometryPoint2dLike,
+  point: GeometryPoint2dLike,
+  rotation: number
+) {
+  const dx = point.x - origin.x
+  const dy = point.y - origin.y
+  const cos = Math.cos(rotation)
+  const sin = Math.sin(rotation)
+  return new GeometryPoint2d(dx * cos + dy * sin, -dx * sin + dy * cos)
+}
+
+function normalizeNonNegative(value: number | undefined) {
+  if (!Number.isFinite(value ?? NaN)) return 0
+  return Math.max(0, value ?? 0)
+}
+
+function buildSquareVertices(lx: number, ly: number): RectVertex[] {
+  return [
+    { point: new GeometryPoint2d(0, 0) },
+    { point: new GeometryPoint2d(lx, 0) },
+    { point: new GeometryPoint2d(lx, ly) },
+    { point: new GeometryPoint2d(0, ly) }
+  ]
+}
+
+function buildChamferVertices(
+  lx: number,
+  ly: number,
+  distance1: number,
+  distance2: number
+): RectVertex[] {
+  const sx = lx >= 0 ? 1 : -1
+  const sy = ly >= 0 ? 1 : -1
+  const absX = Math.abs(lx)
+  const absY = Math.abs(ly)
+  const d1 = Math.min(normalizeNonNegative(distance1), absX / 2)
+  const d2 = Math.min(normalizeNonNegative(distance2), absY / 2)
+
+  if (GeometryTol.isNonPositive(d1) && GeometryTol.isNonPositive(d2)) {
+    return buildSquareVertices(lx, ly)
+  }
+
+  const c1Out = new GeometryPoint2d(sx * d1, 0)
+  const c1In = new GeometryPoint2d(0, sy * d2)
+  const c2In = new GeometryPoint2d(lx - sx * d1, 0)
+  const c2Out = new GeometryPoint2d(lx, sy * d2)
+  const c3In = new GeometryPoint2d(lx, ly - sy * d2)
+  const c3Out = new GeometryPoint2d(lx - sx * d1, ly)
+  const c4In = new GeometryPoint2d(sx * d1, ly)
+  const c4Out = new GeometryPoint2d(0, ly - sy * d2)
+
+  return [
+    { point: c1Out },
+    { point: c2In },
+    { point: c2Out },
+    { point: c3In },
+    { point: c3Out },
+    { point: c4In },
+    { point: c4Out },
+    { point: c1In }
+  ]
+}
+
+function buildFilletVertices(
+  lx: number,
+  ly: number,
+  radius: number
+): RectVertex[] {
+  const absX = Math.abs(lx)
+  const absY = Math.abs(ly)
+  const r = Math.min(normalizeNonNegative(radius), absX / 2, absY / 2)
+  if (GeometryTol.isNonPositive(r)) return buildSquareVertices(lx, ly)
+
+  const chamferLike = buildChamferVertices(lx, ly, r, r)
+  const orientation = lx * ly >= 0 ? 1 : -1
+  const bulge = orientation * FILLET_BULGE_BASE
+
+  // Arc segments are: c2In->c2Out, c3In->c3Out, c4In->c4Out, c1In->c1Out(closed).
+  // These are represented by bulge on vertices 1, 3, 5, 7 respectively.
+  return chamferLike.map((vertex, index) => ({
+    point: vertex.point,
+    bulge: index % 2 === 1 ? bulge : undefined
+  }))
+}
+
+function resolveRectVertices(
+  lx: number,
+  ly: number,
+  settings: RectSettings
+): RectVertex[] {
+  if (GeometryTol.isPositive(settings.filletRadius)) {
+    return buildFilletVertices(lx, ly, settings.filletRadius)
+  }
+  if (
+    GeometryTol.isPositive(settings.chamferDist1) ||
+    GeometryTol.isPositive(settings.chamferDist2)
+  ) {
+    return buildChamferVertices(
+      lx,
+      ly,
+      settings.chamferDist1,
+      settings.chamferDist2
+    )
+  }
+  return buildSquareVertices(lx, ly)
+}
+
+function updateRect(
+  rect: GeometryPolyline2d,
+  firstPoint: GeometryPoint2dLike,
+  input: RectBuildInput,
+  settings: RectSettings
+) {
+  let lx = 0
+  let ly = 0
+  if (input.mode === 'corner') {
+    const local = toLocalVector(
+      firstPoint,
+      input.secondPoint,
+      settings.rotation
+    )
+    lx = local.x
+    ly = local.y
+  } else {
+    lx = input.length
+    ly = input.width
+  }
+
+  if (GeometryTol.equalToZero(lx) || GeometryTol.equalToZero(ly)) return false
+
+  rect.reset(false)
+  const vertices = resolveRectVertices(lx, ly, settings)
+
+  // Model polylines have no widths, so the width option is not drawn.
+  vertices.forEach((vertex, index) => {
+    const worldPoint = toWorldPoint(firstPoint, vertex.point, settings.rotation)
+    rect.addVertexAt(index, {
+      x: worldPoint.x,
+      y: worldPoint.y,
+      bulge: vertex.bulge
+    })
+  })
+  rect.closed = true
+  return true
+}
+
+/**
+ * Dynamic preview jig for RECT command.
+ */
+export class ApplicationRectJig extends EditorPreviewJig<GeometryPoint2dLike> {
+  /**
+   * Preview polyline entity reused across cursor updates.
+   */
+  private _rect: GeometryPolyline2d
+  private _drawable: GraphicsInterfaceDrawable
+  /**
+   * Fixed first-corner point captured at jig start.
+   */
+  private _firstPoint: GeometryPoint2d
+  /**
+   * Lazily supplies latest rectangle settings (fillet/chamfer/rotation...).
+   */
+  private _settingsProvider: () => RectSettings
+
+  /**
+   * Creates a dynamic rectangle preview jig.
+   *
+   * @param view - Active editor view used to render transient geometry.
+   * @param start - First corner point of the rectangle.
+   * @param settingsProvider - Callback that returns current command settings.
+   */
+  constructor(
+    view: EditorBaseView,
+    start: GeometryPoint2dLike,
+    settingsProvider: () => RectSettings
+  ) {
+    super(view)
+    this._rect = new GeometryPolyline2d()
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._rect
+    })
+    this._firstPoint = new GeometryPoint2d(start)
+    this._settingsProvider = settingsProvider
+  }
+
+  /**
+   * Gets the transient polyline entity displayed by the jig.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * Rebuilds preview geometry from the current cursor point.
+   *
+   * @param secondPoint - Dynamic opposite corner point under the cursor.
+   */
+  update(secondPoint: GeometryPoint2dLike) {
+    updateRect(
+      this._rect,
+      this._firstPoint,
+      { mode: 'corner', secondPoint },
+      this._settingsProvider()
+    )
+  }
+}
+
+/**
+ * Static rectangle preview jig used for non-point prompts (angle/number input).
+ *
+ * The geometry is built once in the constructor and then kept unchanged.
+ *
+ * @typeParam T - Prompt value type that drives this jig instance.
+ */
+class ApplicationRectStaticJig<T> extends EditorPreviewJig<T> {
+  /**
+   * Transient static rectangle entity.
+   */
+  private _rect: GeometryPolyline2d
+  private _drawable: GraphicsInterfaceDrawable
+
+  /**
+   * Creates a static preview jig with precomputed rectangle geometry.
+   *
+   * @param view - Active editor view.
+   * @param firstPoint - Rectangle base corner.
+   * @param input - Rectangle construction input (corner or dimensions).
+   * @param settings - Rectangle style/transform settings.
+   */
+  constructor(
+    view: EditorBaseView,
+    firstPoint: GeometryPoint2dLike,
+    input: RectBuildInput,
+    settings: RectSettings
+  ) {
+    super(view)
+    this._rect = new GeometryPolyline2d()
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._rect
+    })
+    updateRect(this._rect, firstPoint, input, settings)
+  }
+
+  /**
+   * Gets the transient static rectangle entity.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * No-op update hook required by preview jig interface.
+   *
+   * @param _value - Prompt value (unused for static preview).
+   */
+  update(_value: T) {
+    // No-op. Static preview.
+  }
+}
+
+function cloneRectSettings(settings: RectSettings): RectSettings {
+  return {
+    chamferDist1: settings.chamferDist1,
+    chamferDist2: settings.chamferDist2,
+    filletRadius: settings.filletRadius,
+    width: settings.width,
+    rotation: settings.rotation
+  }
+}
+
+function isPositive(value: number | undefined) {
+  return Number.isFinite(value ?? NaN) && GeometryTol.isPositive(value ?? 0)
+}
+
+/**
+ * Command to create one rectangle with AutoCAD-like branching options.
+ */
+export class ApplicationRectCmd extends EditorCommand {
+  /**
+   * Last-used rectangle settings persisted between command invocations.
+   */
+  private static _settings: RectSettings = cloneRectSettings(
+    DEFAULT_RECT_SETTINGS
+  )
+
+  /**
+   * Creates RECT command instance.
+   */
+  constructor() {
+    super()
+    this.mode = EditorOpenMode.Write
+  }
+
+  /**
+   * Command entry point.
+   *
+   * Flow:
+   * 1. Prompt first corner and first-stage options.
+   * 2. Prompt second-corner input, dimensions, or area workflow.
+   * 3. Build final polyline and append it to model space.
+   *
+   * @param context - Current application/document context.
+   */
+  async execute(context: ApplicationContext) {
+    const settings = cloneRectSettings(ApplicationRectCmd._settings)
+
+    const firstPoint = await this.promptFirstCorner(settings)
+    if (!firstPoint) return
+
+    const secondInput = await this.promptSecondInput(
+      context,
+      firstPoint,
+      settings
+    )
+    if (!secondInput) return
+
+    const rect = new GeometryPolyline2d()
+    const isValid = updateRect(rect, firstPoint, secondInput, settings)
+    if (!isValid) {
+      this.warnRectMessage('invalidRect')
+      return
+    }
+
+    context.doc.modelSync.addItems({ kind: 'shape', geometry: rect })
+    ApplicationRectCmd._settings = cloneRectSettings(settings)
+  }
+
+  /**
+   * Emits a warning message for invalid rectangle input.
+   *
+   * @param key - Invalid-input category key under `jig.rect`.
+   */
+  private warnRectMessage(key: string) {
+    this.notify(ApplicationI18n.t(`jig.rect.${key}`), 'warning')
+  }
+
+  /**
+   * Prompts for the first rectangle corner while handling setup keywords.
+   *
+   * Supported options at this step: Chamfer, Fillet, Width.
+   *
+   * @param settings - Mutable settings object updated in-place by options.
+   * @returns First corner point, or `undefined` when user cancels.
+   */
+  private async promptFirstCorner(settings: RectSettings) {
+    while (true) {
+      const prompt = new EditorPromptPointOptions(
+        ApplicationI18n.t('jig.rect.firstPointWithOptions')
+      )
+      addKeyword(prompt, 'chamfer')
+      addKeyword(prompt, 'fillet')
+      addKeyword(prompt, 'width')
+
+      const result = await ApplicationDocManager.instance.editor.getPoint(prompt)
+      if (result.status === EditorPromptStatus.OK) {
+        return result.value!
+      }
+      if (result.status !== EditorPromptStatus.Keyword) return undefined
+
+      const keyword = result.stringResult ?? ''
+      if (keyword === 'Chamfer') {
+        const ok = await this.promptChamfer(settings)
+        if (!ok) return undefined
+      } else if (keyword === 'Fillet') {
+        const ok = await this.promptFillet(settings)
+        if (!ok) return undefined
+      } else if (keyword === 'Width') {
+        const ok = await this.promptWidth(settings)
+        if (!ok) return undefined
+      }
+    }
+  }
+
+  /**
+   * Prompts for rectangle completion input after first corner is known.
+   *
+   * Supports direct opposite corner pick or switching to Area/Dimensions/Rotation
+   * branches through a point-prompt state machine.
+   *
+   * @param context - Current application/document context.
+   * @param firstPoint - First corner point.
+   * @param settings - Mutable rectangle settings used by preview/build.
+   * @returns Final rectangle build input, or `undefined` on cancel.
+   */
+  private async promptSecondInput(
+    context: ApplicationContext,
+    firstPoint: GeometryPoint2dLike,
+    settings: RectSettings
+  ) {
+    let finalInput: RectBuildInput | undefined
+
+    type RectState = EditorPromptState<
+      EditorPromptPointOptions,
+      EditorPromptPointResult
+    >
+    type StepResult = EditorPromptStateStep
+
+    /**
+     * State-machine node that handles the "other corner" prompt step.
+     */
+    class CornerState implements RectState {
+      /**
+       * Creates corner state handler.
+       *
+       * @param cmd - Owning RECT command instance.
+       */
+      constructor(private cmd: ApplicationRectCmd) {}
+
+      /**
+       * Builds the point prompt for second-corner input.
+       *
+       * @returns Configured point prompt with keywords and preview jig.
+       */
+      buildPrompt() {
+        const prompt = new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.rect.otherCornerWithOptions')
+        )
+        addKeyword(prompt, 'area')
+        addKeyword(prompt, 'dimensions')
+        addKeyword(prompt, 'rotation')
+        prompt.useDashedLine = false
+        prompt.useBasePoint = true
+        prompt.basePoint = new GeometryPoint2d(firstPoint)
+        prompt.jig = new ApplicationRectJig(context.view, firstPoint, () => settings)
+        return prompt
+      }
+
+      /**
+       * Handles point/keyword result and drives state transitions.
+       *
+       * @param result - User input result from point prompt.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status === EditorPromptStatus.OK) {
+          finalInput = { mode: 'corner', secondPoint: result.value! }
+          return 'finish'
+        }
+        if (result.status !== EditorPromptStatus.Keyword) return 'finish'
+
+        const keyword = result.stringResult ?? ''
+        if (keyword === 'Rotation') {
+          const ok = await this.cmd.promptRotation(
+            context,
+            firstPoint,
+            settings
+          )
+          if (!ok) return 'finish'
+          return 'continue'
+        }
+        if (keyword === 'Dimensions') {
+          const dims = await this.cmd.promptDimensions(
+            context,
+            firstPoint,
+            settings
+          )
+          if (!dims) return 'finish'
+          finalInput = dims
+          return 'finish'
+        }
+        if (keyword === 'Area') {
+          const dims = await this.cmd.promptArea(context, firstPoint, settings)
+          if (!dims) return 'finish'
+          finalInput = dims
+          return 'finish'
+        }
+        return 'continue'
+      }
+    }
+
+    const machine = new EditorPromptStateMachine<
+      EditorPromptPointOptions,
+      EditorPromptPointResult
+    >()
+    machine.setState(new CornerState(this))
+    await machine.run(prompt => ApplicationDocManager.instance.editor.getPoint(prompt))
+    return finalInput
+  }
+
+  /**
+   * Prompts for a strictly positive numeric value.
+   *
+   * @param message - Prompt message text.
+   * @param jig - Optional preview jig displayed during input.
+   * @returns Positive number, or `undefined` when canceled.
+   */
+  private async promptPositiveDouble(
+    message: string,
+    jig?: EditorPreviewJig<number>
+  ) {
+    while (true) {
+      const prompt = new EditorPromptDoubleOptions(message)
+      prompt.allowNegative = false
+      prompt.allowZero = false
+      if (jig) prompt.jig = jig
+      const result = await ApplicationDocManager.instance.editor.getDouble(prompt)
+      if (result.status !== EditorPromptStatus.OK) return undefined
+      if (isPositive(result.value)) return result.value!
+      this.warnRectMessage('invalidPositive')
+    }
+  }
+
+  /**
+   * Prompts chamfer distances and updates settings.
+   *
+   * Also clears fillet mode, because chamfer and fillet are mutually exclusive.
+   *
+   * @param settings - Mutable rectangle settings.
+   * @returns `true` when values are accepted, otherwise `false`.
+   */
+  private async promptChamfer(settings: RectSettings) {
+    const d1 = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.chamferFirst')
+    )
+    if (!isPositive(d1)) return false
+    const d2 = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.chamferSecond')
+    )
+    if (!isPositive(d2)) return false
+    settings.chamferDist1 = d1!
+    settings.chamferDist2 = d2!
+    settings.filletRadius = 0
+    return true
+  }
+
+  /**
+   * Prompts fillet radius and updates settings.
+   *
+   * Also clears chamfer values, because fillet and chamfer are mutually exclusive.
+   *
+   * @param settings - Mutable rectangle settings.
+   * @returns `true` when value is accepted, otherwise `false`.
+   */
+  private async promptFillet(settings: RectSettings) {
+    const radius = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.filletRadius')
+    )
+    if (!isPositive(radius)) return false
+    settings.filletRadius = radius!
+    settings.chamferDist1 = 0
+    settings.chamferDist2 = 0
+    return true
+  }
+
+  /**
+   * Prompts segment width and updates settings.
+   *
+   * @param settings - Mutable rectangle settings.
+   * @returns `true` when value is accepted, otherwise `false`.
+   */
+  private async promptWidth(settings: RectSettings) {
+    const prompt = new EditorPromptDoubleOptions(
+      ApplicationI18n.t('jig.rect.segmentWidth')
+    )
+    prompt.allowNegative = false
+    prompt.allowZero = true
+    const result = await ApplicationDocManager.instance.editor.getDouble(prompt)
+    if (result.status !== EditorPromptStatus.OK) return false
+    settings.width = normalizeNonNegative(result.value)
+    return true
+  }
+
+  /**
+   * Prompts rectangle rotation angle and updates settings.
+   *
+   * @param context - Current application/document context.
+   * @param firstPoint - First corner used as angle base point.
+   * @param settings - Mutable rectangle settings.
+   * @returns `true` when value is accepted, otherwise `false`.
+   */
+  private async promptRotation(
+    context: ApplicationContext,
+    firstPoint: GeometryPoint2dLike,
+    settings: RectSettings
+  ) {
+    const prompt = new EditorPromptAngleOptions(
+      ApplicationI18n.t('jig.rect.rotationAngle')
+    )
+    prompt.useBasePoint = true
+    prompt.useDashedLine = true
+    prompt.basePoint = new GeometryPoint2d(firstPoint)
+    prompt.allowNegative = true
+    prompt.allowZero = true
+    prompt.jig = new ApplicationRectStaticJig<number>(
+      context.view,
+      firstPoint,
+      { mode: 'dimensions', length: 1, width: 1 },
+      settings
+    )
+    const result = await ApplicationDocManager.instance.editor.getAngle(prompt)
+    if (result.status !== EditorPromptStatus.OK) return false
+    settings.rotation = ((result.value ?? 0) * Math.PI) / 180
+    return true
+  }
+
+  /**
+   * Prompts rectangle length and width explicitly.
+   *
+   * @param context - Current application/document context.
+   * @param firstPoint - First corner point.
+   * @param settings - Mutable rectangle settings.
+   * @returns Dimension-based build input, or `undefined` on cancel.
+   */
+  private async promptDimensions(
+    context: ApplicationContext,
+    firstPoint: GeometryPoint2dLike,
+    settings: RectSettings
+  ) {
+    const seedInput: RectBuildInput = {
+      mode: 'dimensions',
+      length: 1,
+      width: 1
+    }
+    const length = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.dimensionLength'),
+      new ApplicationRectStaticJig<number>(
+        context.view,
+        firstPoint,
+        seedInput,
+        settings
+      )
+    )
+    if (!isPositive(length)) return undefined
+
+    const width = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.dimensionWidth'),
+      new ApplicationRectStaticJig<number>(
+        context.view,
+        firstPoint,
+        { mode: 'dimensions', length: length!, width: 1 },
+        settings
+      )
+    )
+    if (!isPositive(width)) return undefined
+
+    return {
+      mode: 'dimensions',
+      length: length!,
+      width: width!
+    } satisfies RectBuildInput
+  }
+
+  /**
+   * Prompts rectangle area, then asks for either known length or known width.
+   *
+   * @param context - Current application/document context.
+   * @param firstPoint - First corner point.
+   * @param settings - Mutable rectangle settings.
+   * @returns Dimension-based build input derived from area, or `undefined`.
+   */
+  private async promptArea(
+    context: ApplicationContext,
+    firstPoint: GeometryPoint2dLike,
+    settings: RectSettings
+  ) {
+    const area = await this.promptPositiveDouble(
+      ApplicationI18n.t('jig.rect.areaValue'),
+      new ApplicationRectStaticJig<number>(
+        context.view,
+        firstPoint,
+        { mode: 'dimensions', length: 1, width: 1 },
+        settings
+      )
+    )
+    if (!isPositive(area)) return undefined
+
+    const knownPrompt = new EditorPromptDoubleOptions(
+      ApplicationI18n.t('jig.rect.areaLengthOrWidth')
+    )
+    addDoubleKeyword(knownPrompt, 'rectWidth')
+    knownPrompt.allowNegative = false
+    knownPrompt.allowZero = false
+    knownPrompt.jig = new ApplicationRectStaticJig<number>(
+      context.view,
+      firstPoint,
+      { mode: 'dimensions', length: 1, width: 1 },
+      settings
+    )
+
+    const knownResult =
+      await ApplicationDocManager.instance.editor.getDouble(knownPrompt)
+    if (knownResult.status === EditorPromptStatus.Keyword) {
+      if (knownResult.stringResult !== 'Width') return undefined
+      const width = await this.promptPositiveDouble(
+        ApplicationI18n.t('jig.rect.areaSpecifyWidth'),
+        new ApplicationRectStaticJig<number>(
+          context.view,
+          firstPoint,
+          { mode: 'dimensions', length: 1, width: 1 },
+          settings
+        )
+      )
+      if (!isPositive(width)) return undefined
+      return {
+        mode: 'dimensions',
+        length: (area ?? 0) / (width ?? 1),
+        width: width!
+      } satisfies RectBuildInput
+    }
+    if (knownResult.status !== EditorPromptStatus.OK) return undefined
+    if (!isPositive(knownResult.value)) return undefined
+
+    const length = knownResult.value!
+    return {
+      mode: 'dimensions',
+      length,
+      width: (area ?? 0) / length
+    } satisfies RectBuildInput
+  }
+}

@@ -9,28 +9,24 @@ import {
   View
 } from '@element-plus/icons-vue'
 import {
-  AcApAngleUnits,
-  acapCssColor,
-  AcApDocManager,
-  acapDrawStyleKindForCommand,
-  acapGetMeasurementColor,
-  acapGetMeasurementCustomTextHeightWcs,
-  acapGetMeasurementFontSize,
-  acapGetMeasurementTextHeightMode,
-  AcApLinearUnits,
-  AcApQNewCmd,
-  acapScreenPxToWcs,
-  acapSetMeasurementDrawColor,
-  acapSetMeasurementTextHeight,
-  AcApSettingManager,
-  type AcApSettingManagerEventArgs,
-  type AcEdCommandEventArgs,
-  AcEdOpenMode,
-  type AcTrView2d,
-  acuiOpenTextHeightDialog,
-  acuiResolveTextHeightDialogInitials,
-  acuiResolveTextHeightPatch,
+  ApplicationAngleUnits,
+  applicationCssColor,
+  ApplicationDocManager,
+  applicationDrawStyleKindForCommand,
+  applicationGetMeasurementColor,
+  applicationGetMeasurementCustomTextHeightWcs,
+  applicationGetMeasurementFontSize,
+  applicationGetMeasurementTextHeightMode,
+  ApplicationLinearUnits,
+  ApplicationQNewCmd,
+  applicationScreenPxToWcs,
+  applicationSetMeasurementDrawColor,
+  applicationSetMeasurementTextHeight,
+  ApplicationSettingManager,
+  type ApplicationSettingManagerEventArgs,
   applyMeasurementStyleToSelection,
+  type EditorCommandEventArgs,
+  EditorOpenMode,
   getActiveMeasurementStyle,
   getEffectiveMeasurementUnits,
   getMeasurementSnapshot,
@@ -39,9 +35,12 @@ import {
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING,
   refreshMeasurementValueLabels,
   setMeasurementUnitOverride,
-  subscribeMeasurementSelection
-} from '@mlightcad/cad-simple-viewer'
-import { AcCmColor } from '@mlightcad/common'
+  subscribeMeasurementSelection,
+  type ThreeRendererView2d,
+  uiOpenTextHeightDialog,
+  uiResolveTextHeightDialogInitials,
+  uiResolveTextHeightPatch} from '@mlightcad/cad-simple-viewer'
+import { CommonColor } from '@mlightcad/common'
 import {
   FileMenuItemModel,
   MlRibbon,
@@ -111,18 +110,18 @@ const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 const { t, locale } = useI18n()
 const isMeasurementOverlayVisible = ref(true)
-const measurementDrawColor = shallowRef(new AcCmColor())
+const measurementDrawColor = shallowRef(new CommonColor())
 const measurementDrawColorDisplay = ref('#7b8794')
 const measurementTextHeightMode = ref<OverlayTextHeightMode>(
-  acapGetMeasurementTextHeightMode()
+  applicationGetMeasurementTextHeightMode()
 )
 const measurementTextHeightWcs = ref<number | undefined>(
-  acapGetMeasurementCustomTextHeightWcs()
+  applicationGetMeasurementCustomTextHeightWcs()
 )
 let textHeightDialogOpen = false
-const measurementLunits = ref(AcApLinearUnits.Decimal)
+const measurementLunits = ref(ApplicationLinearUnits.Decimal)
 const measurementLuprec = ref(4)
-const measurementAunits = ref(AcApAngleUnits.DecimalDegrees)
+const measurementAunits = ref(ApplicationAngleUnits.DecimalDegrees)
 const measurementAuprec = ref(0)
 const measurementLengthUnit = ref<number>(
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING
@@ -135,7 +134,7 @@ const syncMeasurementVisibility = () => {
 }
 
 /** Updates the measurement unit controls when the unit settings change. */
-const handleSettingChange = (args: AcApSettingManagerEventArgs) => {
+const handleSettingChange = (args: ApplicationSettingManagerEventArgs) => {
   switch (args.key) {
     case 'linearUnits':
     case 'linearPrecision':
@@ -166,7 +165,7 @@ let overlayTabActivationDisposed = false
  * Reads the live CAD + overlay selection for {@link classifyOverlaySelection}.
  */
 const overlaySelectionSnapshot = () => {
-  const view = AcApDocManager.instance?.curView
+  const view = ApplicationDocManager.instance?.curView
   return {
     selectedGroups: view?.htmlTransientManager?.getSelectedGroups(),
     cadEntityCount: view?.selectionSet?.count ?? 0,
@@ -217,8 +216,8 @@ const scheduleActivateRibbonTabForOverlaySelection = () => {
  * Switches to Measurement while a drawing command is active so
  * color / text-height can be changed before the overlay is committed.
  */
-const activateRibbonTabForDrawCommand = (args: AcEdCommandEventArgs) => {
-  const kind = acapDrawStyleKindForCommand(args.command?.globalName)
+const activateRibbonTabForDrawCommand = (args: EditorCommandEventArgs) => {
+  const kind = applicationDrawStyleKindForCommand(args.command?.globalName)
   if (kind === 'measure') {
     activeRibbonTabId.value = 'measurement'
   }
@@ -228,26 +227,26 @@ const activateRibbonTabForDrawCommand = (args: AcEdCommandEventArgs) => {
  * After a measurement draw command ends, restore the tab from the current
  * exclusive overlay selection.
  */
-const activateRibbonTabAfterDrawCommand = (args: AcEdCommandEventArgs) => {
-  if (!acapDrawStyleKindForCommand(args.command?.globalName)) return
+const activateRibbonTabAfterDrawCommand = (args: EditorCommandEventArgs) => {
+  if (!applicationDrawStyleKindForCommand(args.command?.globalName)) return
   lastActivatedMeasurementId = undefined
   scheduleActivateRibbonTabForOverlaySelection()
 }
 
 onMounted(() => {
-  AcApSettingManager.instance.events.modified.addEventListener(
+  ApplicationSettingManager.instance.events.modified.addEventListener(
     handleSettingChange
   )
-  AcApDocManager.instance.editor.events.commandWillStart.addEventListener(
+  ApplicationDocManager.instance.editor.events.commandWillStart.addEventListener(
     activateRibbonTabForDrawCommand
   )
-  AcApDocManager.instance.editor.events.commandEnded.addEventListener(
+  ApplicationDocManager.instance.editor.events.commandEnded.addEventListener(
     syncMeasurementVisibility
   )
-  AcApDocManager.instance.editor.events.commandEnded.addEventListener(
+  ApplicationDocManager.instance.editor.events.commandEnded.addEventListener(
     activateRibbonTabAfterDrawCommand
   )
-  AcApDocManager.instance.events.documentActivated.addEventListener(
+  ApplicationDocManager.instance.events.documentActivated.addEventListener(
     handleDocumentActivated
   )
   unsubscribeMeasurementSelection = subscribeMeasurementSelection(
@@ -261,19 +260,19 @@ onUnmounted(() => {
   overlayTabActivationDisposed = true
   unsubscribeMeasurementSelection?.()
   unsubscribeMeasurementSelection = undefined
-  AcApSettingManager.instance.events.modified.removeEventListener(
+  ApplicationSettingManager.instance.events.modified.removeEventListener(
     handleSettingChange
   )
-  AcApDocManager.instance.editor.events.commandWillStart.removeEventListener(
+  ApplicationDocManager.instance.editor.events.commandWillStart.removeEventListener(
     activateRibbonTabForDrawCommand
   )
-  AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
+  ApplicationDocManager.instance.editor.events.commandEnded.removeEventListener(
     syncMeasurementVisibility
   )
-  AcApDocManager.instance.editor.events.commandEnded.removeEventListener(
+  ApplicationDocManager.instance.editor.events.commandEnded.removeEventListener(
     activateRibbonTabAfterDrawCommand
   )
-  AcApDocManager.instance.events.documentActivated.removeEventListener(
+  ApplicationDocManager.instance.events.documentActivated.removeEventListener(
     handleDocumentActivated
   )
 })
@@ -282,8 +281,8 @@ const syncMeasurementStyleControls = () => {
   const selected = getActiveMeasurementStyle()
   if (selected) {
     measurementDrawColor.value = selected.color.clone()
-    measurementDrawColorDisplay.value = acapCssColor(selected.color)
-    const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
+    measurementDrawColorDisplay.value = applicationCssColor(selected.color)
+    const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
     const measureId = getSelectedMeasurementId()
     const wcs =
       selected.textHeightWcs != null && selected.textHeightWcs > 0
@@ -295,29 +294,29 @@ const syncMeasurementStyleControls = () => {
       wcs != null && wcs > 0
         ? wcs
         : view
-          ? acapScreenPxToWcs(selected.fontSize, view)
+          ? applicationScreenPxToWcs(selected.fontSize, view)
           : undefined
     measurementTextHeightMode.value = 'custom'
     measurementTextHeightWcs.value = resolvedWcs
   } else {
-    const color = acapGetMeasurementColor()
+    const color = applicationGetMeasurementColor()
     measurementDrawColor.value = color.clone()
-    measurementDrawColorDisplay.value = acapCssColor(color)
-    measurementTextHeightMode.value = acapGetMeasurementTextHeightMode()
+    measurementDrawColorDisplay.value = applicationCssColor(color)
+    measurementTextHeightMode.value = applicationGetMeasurementTextHeightMode()
     measurementTextHeightWcs.value =
       measurementTextHeightMode.value === 'custom'
-        ? acapGetMeasurementCustomTextHeightWcs()
+        ? applicationGetMeasurementCustomTextHeightWcs()
         : undefined
   }
   scheduleActivateRibbonTabForOverlaySelection()
 }
 
-const handleMeasurementDrawColorChange = (value?: AcCmColor) => {
+const handleMeasurementDrawColorChange = (value?: CommonColor) => {
   if (!value) return
-  acapSetMeasurementDrawColor(value)
+  applicationSetMeasurementDrawColor(value)
   measurementDrawColor.value = value.clone()
-  measurementDrawColorDisplay.value = acapCssColor(value)
-  const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
+  measurementDrawColorDisplay.value = applicationCssColor(value)
+  const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
   if (view) applyMeasurementStyleToSelection(view, { color: value })
 }
 
@@ -326,38 +325,38 @@ const handleMeasurementDrawColorChange = (value?: AcCmColor) => {
  */
 const handleMeasurementTextHeightClick = async () => {
   if (textHeightDialogOpen) return
-  const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
+  const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
   if (!view) return
   textHeightDialogOpen = true
   try {
     const selected = getActiveMeasurementStyle()
     const hasSelection = selected != null
     const measureId = getSelectedMeasurementId()
-    const fontSizePx = selected?.fontSize ?? acapGetMeasurementFontSize()
+    const fontSizePx = selected?.fontSize ?? applicationGetMeasurementFontSize()
     const selectedTextHeightWcs = hasSelection
       ? (selected?.textHeightWcs ??
         (measureId
           ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
           : undefined))
-      : acapGetMeasurementCustomTextHeightWcs()
-    const initials = acuiResolveTextHeightDialogInitials({
+      : applicationGetMeasurementCustomTextHeightWcs()
+    const initials = uiResolveTextHeightDialogInitials({
       hasSelection,
-      sessionMode: hasSelection ? 'custom' : acapGetMeasurementTextHeightMode(),
+      sessionMode: hasSelection ? 'custom' : applicationGetMeasurementTextHeightMode(),
       fontSizePx,
       selectedTextHeightWcs,
       view
     })
-    const result = await acuiOpenTextHeightDialog({
+    const result = await uiOpenTextHeightDialog({
       view,
       ...initials
     })
     if (!result) return
-    const patch = acuiResolveTextHeightPatch(
+    const patch = uiResolveTextHeightPatch(
       view,
       result,
       initials.initialFontSizePx
     )
-    acapSetMeasurementTextHeight(
+    applicationSetMeasurementTextHeight(
       patch.textHeightMode,
       patch.textHeightMode === 'custom'
         ? (patch.textHeightWcs ?? patch.fontSize)
@@ -380,7 +379,7 @@ const syncMeasurementUnitControls = () => {
 }
 
 const refreshCurrentMeasurementLabels = () => {
-  const view = AcApDocManager.instance?.curView as AcTrView2d | undefined
+  const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
   if (!view) return
   refreshMeasurementValueLabels(view)
 }
@@ -425,18 +424,18 @@ const handleMeasurementLengthUnitChange = (value: number) => {
  */
 const applyOpenModeTabVisibility = (
   tabs: RibbonTabModel[],
-  openMode: AcEdOpenMode
+  openMode: EditorOpenMode
 ): RibbonTabModel[] => {
   return tabs.map(tab => {
     if (tab.contextual) return tab
     const visible =
-      tab.id === 'measurement' ? true : openMode === AcEdOpenMode.Write
+      tab.id === 'measurement' ? true : openMode === EditorOpenMode.Write
     return { ...tab, visible }
   })
 }
 
 const buildBaseTabs = (
-  openMode: AcEdOpenMode,
+  openMode: EditorOpenMode,
   measurementVisible: boolean
 ): RibbonTabModel[] => {
   const ribbonTooltips = {
@@ -1230,18 +1229,18 @@ const handleRibbonItemClick = (payload: {
   if (isRibbonDisabled.value) return
   const command = ribbonData.value.commandByItemId.get(payload.itemId)
   if (!command) return
-  AcApDocManager.instance.sendStringToExecute(command)
+  ApplicationDocManager.instance.sendStringToExecute(command)
 }
 
 const handleFileMenuSelect = async (command: string) => {
   if (isRibbonDisabled.value) return
   if (command === 'QNew') {
-    const cmd = new AcApQNewCmd()
-    cmd.trigger(AcApDocManager.instance.context)
+    const cmd = new ApplicationQNewCmd()
+    cmd.trigger(ApplicationDocManager.instance.context)
   } else if (command === 'DrawingUnits') {
-    AcApDocManager.instance.sendStringToExecute('units')
+    ApplicationDocManager.instance.sendStringToExecute('units')
   } else if (command === 'About') {
-    AcApDocManager.instance.sendStringToExecute('about')
+    ApplicationDocManager.instance.sendStringToExecute('about')
   }
 }
 </script>

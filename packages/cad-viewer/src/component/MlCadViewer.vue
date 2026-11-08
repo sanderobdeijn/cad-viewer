@@ -68,13 +68,13 @@
  * @see {@link https://github.com/mlightcad/cad-viewer/blob/main/packages/cad-viewer/src/component/MlCadViewer.vue | Source Code}
  */
 import {
-  AcApDocManager,
-  AcApOpenDatabaseOptions,
-  AcEdOpenMode,
+  ApplicationDocManager,
+  ApplicationOpenDatabaseOptions,
+  EditorOpenMode,
   eventBus
 } from '@mlightcad/cad-simple-viewer'
 import { log } from '@mlightcad/common'
-import { ACGI_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/graphic-interface'
+import { GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/graphic-interface'
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -120,7 +120,7 @@ interface Props {
   baseUrl?: string
   /**
    * Absolute root URL for user-guide pages (trailing slash optional).
-   * Forwarded to {@link AcApDocManagerOptions.docsBaseUrl} for in-app help links
+   * Forwarded to {@link ApplicationDocManagerOptions.docsBaseUrl} for in-app help links
    * (e.g. mobile magnifier). Defaults to the public mlightcad docs site.
    */
   docsBaseUrl?: string
@@ -151,7 +151,7 @@ interface Props {
   /**
    * Maximum segments used to tessellate a full circle when drawing.
    * Lower values save memory; higher values look smoother.
-   * When omitted, {@link ACGI_DRAW_CIRCLE_SIDES_DRAFT} (50) is used.
+   * When omitted, {@link GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT} (50) is used.
    */
   circleSides?: number
 }
@@ -163,10 +163,10 @@ const props = withDefaults(defineProps<Props>(), {
   useMainThreadDraw: true,
   theme: 'dark',
   progressiveRendering: false,
-  circleSides: ACGI_DRAW_CIRCLE_SIDES_DRAFT
+  circleSides: GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT
 })
 
-const buildOpenOptions = (): AcApOpenDatabaseOptions => ({
+const buildOpenOptions = (): ApplicationOpenDatabaseOptions => ({
   progressiveRendering: props.progressiveRendering,
   circleSides: props.circleSides
 })
@@ -179,7 +179,7 @@ const headerRef = ref<HTMLElement>()
 
 // Referenence to the root element used to switch theme
 // Editor reference that gets updated after initialization
-const editorRef = ref<AcApDocManager | null>(null)
+const editorRef = ref<ApplicationDocManager | null>(null)
 
 // Notification center visibility
 const showNotificationCenter = ref(false)
@@ -195,12 +195,12 @@ const {
   isDocumentOpening,
   openMode: docOpenMode
 } = useDocument()
-const pendingOpenMode = ref<AcEdOpenMode>()
+const pendingOpenMode = ref<EditorOpenMode>()
 const effectiveOpenMode = computed(
   () => pendingOpenMode.value ?? docOpenMode.value
 )
 const isWriteMode = computed(
-  () => effectiveOpenMode.value === AcEdOpenMode.Write
+  () => effectiveOpenMode.value === EditorOpenMode.Write
 )
 const bodyRef = ref<HTMLElement>()
 const SIDE_PANEL_MIN_FRACTION = 0.15
@@ -262,7 +262,7 @@ const bindHeaderObserver = () => {
   updateHeaderHeight()
 }
 
-const beginPendingOpen = (mode: AcEdOpenMode) => {
+const beginPendingOpen = (mode: EditorOpenMode) => {
   pendingOpenMode.value = mode
 }
 
@@ -281,7 +281,7 @@ watch(
   () => props.background,
   newBg => {
     if (newBg != null) {
-      AcApDocManager.instance.curView.backgroundColor = newBg
+      ApplicationDocManager.instance.curView.backgroundColor = newBg
     }
   }
 )
@@ -299,9 +299,9 @@ watch(
  */
 const createInitialDrawing = async () => {
   beginDocumentOpening()
-  beginPendingOpen(AcEdOpenMode.Write)
+  beginPendingOpen(EditorOpenMode.Write)
   try {
-    await AcApDocManager.instance.newDocument(buildOpenOptions())
+    await ApplicationDocManager.instance.newDocument(buildOpenOptions())
   } finally {
     endDocumentOpening()
     endPendingOpen()
@@ -310,7 +310,7 @@ const createInitialDrawing = async () => {
 
 // Component lifecycle: Initialize and create the initial drawing
 onMounted(async () => {
-  beginPendingOpen(AcEdOpenMode.Write)
+  beginPendingOpen(EditorOpenMode.Write)
 
   // Initialize the CAD viewer with the internal canvas
   if (containerRef.value && layoutRef.value) {
@@ -322,8 +322,8 @@ onMounted(async () => {
       autoResize: true,
       useMainThreadDraw: props.useMainThreadDraw
     })
-    // AcApDocManager.instance is guaranteed only after viewer initialization.
-    editorRef.value = AcApDocManager.instance
+    // ApplicationDocManager.instance is guaranteed only after viewer initialization.
+    editorRef.value = ApplicationDocManager.instance
     ensureColorThemeSync()
   } else {
     log.warn('MlCadViewer: containerRef is unavailable on mount')
@@ -336,7 +336,7 @@ onMounted(async () => {
 
   // Apply initial background color if provided
   if (props.background != null) {
-    AcApDocManager.instance.curView.backgroundColor = props.background
+    ApplicationDocManager.instance.curView.backgroundColor = props.background
   }
 
   // Set initial theme from props
@@ -353,7 +353,7 @@ onUnmounted(() => {
 
   headerResizeObserver?.disconnect()
   unregisterCadViewerNotificationCenter()
-  AcApDocManager.instance.destroy()
+  ApplicationDocManager.instance.destroy()
 })
 
 watch(
@@ -371,7 +371,7 @@ watch(
 )
 
 // Toast-only listeners. Notification center entries are written by the shared
-// AcApNotificationEventBridge in cad-simple-viewer.
+// ApplicationNotificationEventBridge in cad-simple-viewer.
 eventBus.on('message', params => {
   ElMessage({
     message: params.message,

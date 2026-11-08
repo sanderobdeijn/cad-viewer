@@ -1,10 +1,10 @@
-import { AcApSettingManager, AcApSettings } from '@mlightcad/cad-simple-viewer'
+import { ApplicationSettingManager, ApplicationSettings } from '@mlightcad/cad-simple-viewer'
 import { reactive } from 'vue'
 
 export function useSettings() {
-  const settings = reactive<AcApSettings>(AcApSettingManager.instance.settings)
+  const settings = reactive<ApplicationSettings>(ApplicationSettingManager.instance.settings)
 
-  AcApSettingManager.instance.events.modified.addEventListener(args => {
+  ApplicationSettingManager.instance.events.modified.addEventListener(args => {
     // @ts-expect-error Hard to describe its type
     settings[args.key] = args.value
   })

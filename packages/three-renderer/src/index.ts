@@ -1,42 +1,42 @@
 import './types/three-material'
 
-export * from './batch/AcTrBatchedGroup'
+export * from './batch/ThreeRendererBatchedGroup'
 export {
   isBatchGeometryActive,
   isBatchGeometryVisible
-} from './batch/AcTrBatchedGeometryInfo'
+} from './batch/ThreeRendererBatchedGeometryInfo'
 export * from './draw'
-export { AcTrBatchedLine } from './batch/AcTrBatchedLine'
-export { AcTrBatchedLine2 } from './batch/AcTrBatchedLine2'
-export { AcTrBatchedMesh } from './batch/AcTrBatchedMesh'
-export { AcTrBatchedPoint } from './batch/AcTrBatchedPoint'
+export { ThreeRendererBatchedLine } from './batch/ThreeRendererBatchedLine'
+export { ThreeRendererBatchedLine2 } from './batch/ThreeRendererBatchedLine2'
+export { ThreeRendererBatchedMesh } from './batch/ThreeRendererBatchedMesh'
+export { ThreeRendererBatchedPoint } from './batch/ThreeRendererBatchedPoint'
 export * from './linetype'
-export * from './object/AcTrObject'
-export * from './object/AcTrEntity'
-export * from './object/AcTrGlyphEntity'
-export * from './object/AcTrLineGeometryBuilder'
-export * from './object/AcTrGroup'
+export * from './object/ThreeRendererObject'
+export * from './object/ThreeRendererEntity'
+export * from './object/ThreeRendererGlyphEntity'
+export * from './object/ThreeRendererLineGeometryBuilder'
+export * from './object/ThreeRendererGroup'
 export * from './html'
-export * from './object/AcTrTransientManager'
-export * from './object/AcTrPreviewOverlayManager'
+export * from './object/ThreeRendererTransientManager'
+export * from './object/ThreeRendererPreviewOverlayManager'
 export * from './renderer'
 export * from './viewport'
-export * from './style/AcTrMaterialMetadata'
-export { AcTrLinePatternShaders } from './style/AcTrLinePatternShaders'
+export * from './style/ThreeRendererMaterialMetadata'
+export { ThreeRendererLinePatternShaders } from './style/ThreeRendererLinePatternShaders'
 export {
-  AcTrStyleManager,
-  type AcTrStyleManagerStats
-} from './style/AcTrStyleManager'
-export { type AcTrMaterialCacheStats } from './style/AcTrMaterialManager'
-export * from './util/AcTrMTextColorUtil'
-export { AcTrMatrixUtil } from './util/AcTrMatrixUtil'
+  ThreeRendererStyleManager,
+  type ThreeRendererStyleManagerStats
+} from './style/ThreeRendererStyleManager'
+export { type ThreeRendererMaterialCacheStats } from './style/ThreeRendererMaterialManager'
+export * from './util/ThreeRendererMTextColorUtil'
+export { ThreeRendererMatrixUtil } from './util/ThreeRendererMatrixUtil'
 export {
   getSceneDrawableUserData,
   markHighlightOverlayGroup,
   patchDrawableMaterialFromCache,
   resolveCachedMaterialRemap,
   syncStyleMaterialIdFromMaterials,
-  type AcTrHighlightOverlayGroup,
-  type AcTrHighlightOverlayGroupUserData
-} from './util/AcTrObjectUserData'
-export { isObjectHierarchyVisible } from './util/AcTrVisibility'
+  type ThreeRendererHighlightOverlayGroup,
+  type ThreeRendererHighlightOverlayGroupUserData
+} from './util/ThreeRendererObjectUserData'
+export { isObjectHierarchyVisible } from './util/ThreeRendererVisibility'

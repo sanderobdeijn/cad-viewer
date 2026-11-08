@@ -1,12 +1,12 @@
 import type {
-  AcUiSubToolbarOptions,
-  AcUiToolbarChromeOptions
+  UISubToolbarOptions,
+  UIToolbarChromeOptions
 } from './types'
 
 /** Resolved toolbar chrome with explicit defaults applied. */
-export type AcUiResolvedToolbarChrome = Required<
+export type UIResolvedToolbarChrome = Required<
   Pick<
-    AcUiToolbarChromeOptions,
+    UIToolbarChromeOptions,
     | 'edgeOffset'
     | 'sideOffset'
     | 'showLabels'
@@ -28,11 +28,11 @@ export type AcUiResolvedToolbarChrome = Required<
  * @param base - Primary toolbar chrome (main toolbar mount options).
  * @param override - Optional sub-toolbar overrides.
  */
-export function acuiResolveToolbarChrome(
-  base: Partial<AcUiToolbarChromeOptions> = {},
-  override?: Partial<AcUiToolbarChromeOptions> &
-    Pick<AcUiSubToolbarOptions, 'replaceOnNested'>
-): AcUiResolvedToolbarChrome {
+export function uiResolveToolbarChrome(
+  base: Partial<UIToolbarChromeOptions> = {},
+  override?: Partial<UIToolbarChromeOptions> &
+    Pick<UISubToolbarOptions, 'replaceOnNested'>
+): UIResolvedToolbarChrome {
   const merged = { ...base, ...override }
   return {
     edgeOffset: merged.edgeOffset ?? 8,

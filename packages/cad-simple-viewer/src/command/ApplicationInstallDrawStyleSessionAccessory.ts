@@ -1,0 +1,223 @@
+import {
+  ApplicationSettingManager,
+  type ApplicationSettingManagerEventArgs
+} from '../app/ApplicationSettingManager'
+import type { EditorCommandStack } from '../editor/command/EditorCommandStack'
+import {
+  EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID,
+  type EditorSessionAccessory
+} from '../editor/command/EditorSessionAccessory'
+import {
+  editorIsMobileOrPadUi,
+  editorSubscribeUiLayout
+} from '../editor/global/EditorUiLayout'
+import {
+  type UIDrawStyleKind,
+  uiResolveDrawStyleKind,
+  uiShouldShowDrawStyleToolbar
+} from '../ui/UIDrawStyle'
+import { UIDrawStyleSessionAccessory } from '../ui/UIDrawStyleSessionAccessory'
+import {
+  EDITOR_SHORTCUT_TOOLBAR_PROVIDER_ID,
+  UIShortCutToolbar
+} from '../ui/UIShortCutToolbar'
+import { applicationDrawStyleKindForCommand } from '../util/ApplicationCommandUtil'
+import type { ThreeRendererView2d } from '../view'
+import type { ApplicationDrawStyleSessionInstallContext } from './ApplicationDrawStyleSession'
+import { applicationBindShortCutToolbarDocState } from './ApplicationShortCutToolbarDocBind'
+import {
+  getSelectedMeasurementId,
+  subscribeMeasurementSelection
+} from './measure/ApplicationMeasurementStore'
+
+/**
+ * Registers draw-style controls, shortcut toolbar, and selection-driven
+ * shortcut embedding for a view.
+ *
+ * Idempotent: safe to call more than once per view.
+ * The provider is stored on {@link EditorBaseView.sessionProviders} under
+ * {@link EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID}.
+ *
+ * @param ctx - View and command stack for this document.
+ * @returns The view's draw-style session accessory host.
+ */
+export function applicationInstallDrawStyleSessionAccessory(
+  ctx: ApplicationDrawStyleSessionInstallContext
+): UIDrawStyleSessionAccessory {
+  const existing = ctx.view.sessionProviders.get<UIDrawStyleSessionAccessory>(
+    EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID
+  )
+  if (existing) return existing
+
+  ensureShortCutToolbar(ctx.view)
+
+  const host = new UIDrawStyleSessionAccessory(ctx.view)
+  host.setSelectionUnsubscribe(
+    bindSelectionSessionAccessory(ctx.view, ctx.commandManager, host)
+  )
+  ctx.view.sessionProviders.set(EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID, host)
+  return host
+}
+
+/**
+ * Returns the draw-style session provider installed for a view, if any.
+ *
+ * @param view - View passed to {@link applicationInstallDrawStyleSessionAccessory}.
+ * @returns The installed host, or `undefined` when not yet installed.
+ */
+export function applicationGetDrawStyleSessionAccessory(
+  view: ThreeRendererView2d
+): UIDrawStyleSessionAccessory | undefined {
+  return view.sessionProviders.get<UIDrawStyleSessionAccessory>(
+    EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID
+  )
+}
+
+/**
+ * Ensures a shortcut toolbar exists on the view container.
+ */
+function ensureShortCutToolbar(view: ThreeRendererView2d): UIShortCutToolbar {
+  const existing = view.sessionProviders.get<UIShortCutToolbar>(
+    EDITOR_SHORTCUT_TOOLBAR_PROVIDER_ID
+  )
+  if (existing) return existing
+  const toolbar = new UIShortCutToolbar({ container: view.container })
+  const unbindDoc = applicationBindShortCutToolbarDocState(toolbar)
+  const originalDispose = toolbar.dispose.bind(toolbar)
+  toolbar.dispose = () => {
+    unbindDoc()
+    originalDispose()
+  }
+  view.sessionProviders.set(EDITOR_SHORTCUT_TOOLBAR_PROVIDER_ID, toolbar)
+  return toolbar
+}
+
+/**
+ * Keeps draw-style controls embedded in the shortcut toolbar.
+ *
+ * Mounts the shared draw-style controls into {@link UIShortCutToolbar.accessoryHost}
+ * when a measurement overlay is selected (no draw command running), or when a
+ * draw command is active on **desktop** layout. Phone and pad draw commands use
+ * the session-panel accessory slot instead; this binder clears the shortcut
+ * accessory in those cases so controls can remount on the panel.
+ * Never uses the desktop top-center selection chrome.
+ *
+ * @param view - View whose selection accessory is updated.
+ * @param commandManager - Stack used to detect an active draw command.
+ * @param host - Draw-style controls host that builds the accessory.
+ * @returns Cleanup that unsubscribes stores/settings and clears the accessory.
+ */
+function bindSelectionSessionAccessory(
+  view: ThreeRendererView2d,
+  commandManager: EditorCommandStack,
+  host: UIDrawStyleSessionAccessory
+): () => void {
+  const shortcut = ensureShortCutToolbar(view)
+  let selectionMounted = false
+  let selectionInner: EditorSessionAccessory | null = null
+
+  const unmountSelection = () => {
+    if (!selectionMounted) return
+    selectionInner?.unmount()
+    selectionInner = null
+    selectionMounted = false
+    shortcut.setAccessoryActive(false)
+  }
+
+  const mountSelection = () => {
+    if (selectionMounted) return
+    selectionInner = host.createSessionAccessory()
+    selectionInner.mount({
+      host: shortcut.accessoryHost,
+      type: 'desktop',
+      view
+    })
+    selectionMounted = true
+    shortcut.setAccessoryActive(true)
+  }
+
+  /** Syncs active kind and selection accessory visibility from current state. */
+  const sync = () => {
+    const kind = resolveKind(commandManager)
+    host.setActiveKind(kind)
+
+    // Never use legacy desktop selection chrome.
+    view.selectionSessionAccessory = null
+    // Prefer the shared controls slot over icon-button extensions.
+    shortcut.setExtensionItems([])
+
+    const commandActive =
+      applicationDrawStyleKindForCommand(commandManager.activeCommand?.globalName) !=
+      null
+
+    const selected = getSelectedMeasurementId() != null
+
+    // Desktop draw commands share the shortcut slot with selection styling.
+    // Phone/pad draw commands use the session panel — clear the shortcut slot
+    // so the shared controls row can remount there (and remount on shortcut
+    // after the command ends, only when an overlay stays selected).
+    const showOnShortcut =
+      shortcut.isVisible &&
+      kind != null &&
+      uiShouldShowDrawStyleToolbar(kind) &&
+      ((commandActive && !editorIsMobileOrPadUi()) ||
+        (!commandActive && selected))
+
+    if (showOnShortcut) {
+      mountSelection()
+    } else {
+      unmountSelection()
+    }
+  }
+
+  const offMeasure = subscribeMeasurementSelection(sync)
+  const onSettingsModified = (args: ApplicationSettingManagerEventArgs) => {
+    if (args.key === 'isShowRibbon' || args.key === 'isShowShortCutToolbar') {
+      sync()
+    }
+  }
+  const onCommandWillStart = () => sync()
+  const onCommandEnded = () => {
+    // `activeCommand` is cleared after `commandEnded` in runActive; defer remount.
+    queueMicrotask(() => sync())
+  }
+  const offLayout = editorSubscribeUiLayout(() => sync())
+  ApplicationSettingManager.instance.events.modified.addEventListener(
+    onSettingsModified
+  )
+  view.editor.events.commandWillStart.addEventListener(onCommandWillStart)
+  view.editor.events.commandEnded.addEventListener(onCommandEnded)
+  sync()
+
+  return () => {
+    offMeasure()
+    offLayout()
+    ApplicationSettingManager.instance.events.modified.removeEventListener(
+      onSettingsModified
+    )
+    view.editor.events.commandWillStart.removeEventListener(onCommandWillStart)
+    view.editor.events.commandEnded.removeEventListener(onCommandEnded)
+    unmountSelection()
+    shortcut.setExtensionItems([])
+    if (view.selectionSessionAccessory) {
+      view.selectionSessionAccessory = null
+    }
+  }
+}
+
+/**
+ * Resolves the draw-style session kind from the active command and overlay selection.
+ *
+ * @param commandManager - Stack whose active command may own measure.
+ * @returns `'measure'`, or `undefined` when the accessory should hide.
+ */
+function resolveKind(
+  commandManager: EditorCommandStack
+): UIDrawStyleKind | undefined {
+  return uiResolveDrawStyleKind({
+    commandKind: applicationDrawStyleKindForCommand(
+      commandManager.activeCommand?.globalName
+    ),
+    measurementSelected: getSelectedMeasurementId() != null
+  })
+}

@@ -9,7 +9,7 @@ export {
   resolveLinetypeEmbeddedText,
   syncComplexLineTypeGlyphs,
   syncDrawSharedGlyphGroup
-} from './AcTrComplexLineBuilder'
+} from './ThreeRendererComplexLineBuilder'
 export {
   COMPLEX_LTYPE_ABSOLUTE_ROTATION,
   COMPLEX_LTYPE_SHAPE,
@@ -22,8 +22,8 @@ export {
   normalizeComplexPatternElement,
   walkLineType,
   uprightLinetypeAngle,
-  type AcTrComplexPatternElement,
-  type AcTrLineWalkPlacement,
-  type AcTrLineWalkPoint,
-  type AcTrLineWalkResult
-} from './AcTrLineTypeWalker'
+  type ThreeRendererComplexPatternElement,
+  type ThreeRendererLineWalkPlacement,
+  type ThreeRendererLineWalkPoint,
+  type ThreeRendererLineWalkResult
+} from './ThreeRendererLineTypeWalker'

@@ -23,33 +23,33 @@ import {
   ICON_ZOOM_WINDOW
 } from '@mlightcad/cad-simple-viewer/icons'
 
-import { acapSvgIcon } from './acapSvgIcon'
+import { applicationSvgIcon } from './applicationSvgIcon'
 
-export const select = acapSvgIcon(ICON_SELECT, 'IconSelect')
-export const pan = acapSvgIcon(ICON_PAN, 'IconPan')
-export const zoomToExtent = acapSvgIcon(ICON_ZOOM_EXTENT, 'IconZoomToExtent')
-export const zoomToBox = acapSvgIcon(ICON_ZOOM_WINDOW, 'IconZoomToBox')
-export const switchBg = acapSvgIcon(ICON_SWITCH_BG, 'IconSwitchBg')
-export const measure = acapSvgIcon(ICON_MEASURE, 'IconMeasure')
-export const measureDistance = acapSvgIcon(
+export const select = applicationSvgIcon(ICON_SELECT, 'IconSelect')
+export const pan = applicationSvgIcon(ICON_PAN, 'IconPan')
+export const zoomToExtent = applicationSvgIcon(ICON_ZOOM_EXTENT, 'IconZoomToExtent')
+export const zoomToBox = applicationSvgIcon(ICON_ZOOM_WINDOW, 'IconZoomToBox')
+export const switchBg = applicationSvgIcon(ICON_SWITCH_BG, 'IconSwitchBg')
+export const measure = applicationSvgIcon(ICON_MEASURE, 'IconMeasure')
+export const measureDistance = applicationSvgIcon(
   ICON_MEASURE_DISTANCE,
   'IconMeasureDistance'
 )
-export const measureContinuous = acapSvgIcon(
+export const measureContinuous = applicationSvgIcon(
   ICON_MEASURE_CONTINUOUS,
   'IconMeasureContinuous'
 )
-export const measureAngle = acapSvgIcon(ICON_MEASURE_ANGLE, 'IconMeasureAngle')
-export const measureArea = acapSvgIcon(ICON_MEASURE_AREA, 'IconMeasureArea')
-export const measureArc = acapSvgIcon(ICON_MEASURE_ARC, 'IconMeasureArc')
-export const measurePoint = acapSvgIcon(ICON_MEASURE_POINT, 'IconMeasurePoint')
-export const clearMeasurements = acapSvgIcon(
+export const measureAngle = applicationSvgIcon(ICON_MEASURE_ANGLE, 'IconMeasureAngle')
+export const measureArea = applicationSvgIcon(ICON_MEASURE_AREA, 'IconMeasureArea')
+export const measureArc = applicationSvgIcon(ICON_MEASURE_ARC, 'IconMeasureArc')
+export const measurePoint = applicationSvgIcon(ICON_MEASURE_POINT, 'IconMeasurePoint')
+export const clearMeasurements = applicationSvgIcon(
   ICON_CLEAR_MEASUREMENTS,
   'IconClearMeasurements'
 )
-export const importIcon = acapSvgIcon(ICON_MARKUP_IMPORT, 'IconImport')
-export const exportIcon = acapSvgIcon(ICON_MARKUP_EXPORT, 'IconExport')
-export const measurementPanel = acapSvgIcon(
+export const importIcon = applicationSvgIcon(ICON_MARKUP_IMPORT, 'IconImport')
+export const exportIcon = applicationSvgIcon(ICON_MARKUP_EXPORT, 'IconExport')
+export const measurementPanel = applicationSvgIcon(
   ICON_MEASUREMENT_PANEL,
   'IconMeasurementPanel'
 )

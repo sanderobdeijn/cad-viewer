@@ -5,12 +5,12 @@
  * @packageDocumentation
  */
 
-import type { AcEdOpenMode } from '../../editor/view/AcEdOpenMode'
+import type { EditorOpenMode } from '../../editor/view/EditorOpenMode'
 import {
-  acuiIsDynamicToolbarChildren,
-  acuiIsToolbarSeparatorItem
+  uiIsDynamicToolbarChildren,
+  uiIsToolbarSeparatorItem
 } from './toolbarItemUtils'
-import type { AcUiToolbarItem } from './types'
+import type { UIToolbarItem } from './types'
 
 /**
  * Returns whether a toolbar item should be shown for the given document open mode.
@@ -18,9 +18,9 @@ import type { AcUiToolbarItem } from './types'
  * @param item - Toolbar item to test.
  * @param openMode - Current document open mode.
  */
-export function acuiIsToolbarItemVisible(
-  item: AcUiToolbarItem,
-  openMode: AcEdOpenMode
+export function uiIsToolbarItemVisible(
+  item: UIToolbarItem,
+  openMode: EditorOpenMode
 ): boolean {
   if (item.minOpenMode == null) return true
   return openMode >= item.minOpenMode
@@ -32,10 +32,10 @@ export function acuiIsToolbarItemVisible(
  * @param item - Item that may define a `toggle` configuration.
  * @returns Item with effective label, icon, command, and action from the active branch.
  */
-export function acuiResolveEffectiveToolbarItem(
-  item: AcUiToolbarItem
-): AcUiToolbarItem {
-  if (acuiIsToolbarSeparatorItem(item)) return item
+export function uiResolveEffectiveToolbarItem(
+  item: UIToolbarItem
+): UIToolbarItem {
+  if (uiIsToolbarSeparatorItem(item)) return item
   if (!item.toggle) return item
   const active = item.toggle.getValue()
   const branch = active ? item.toggle.on : item.toggle.off
@@ -53,10 +53,10 @@ export function acuiResolveEffectiveToolbarItem(
  * @param item - Parent item with `children`.
  * @param activeChildId - Runtime-selected child id, if any.
  */
-export function acuiResolveSelectedChildItem(
-  item: AcUiToolbarItem,
+export function uiResolveSelectedChildItem(
+  item: UIToolbarItem,
   activeChildId?: string
-): AcUiToolbarItem | undefined {
+): UIToolbarItem | undefined {
   if (!item.children?.length) return undefined
 
   const candidates = [activeChildId, item.selectedChildId].filter(
@@ -73,25 +73,25 @@ export function acuiResolveSelectedChildItem(
 /**
  * Applies parent-button display fields for submenu parents.
  *
- * When {@link AcUiToolbarItem.childIcon} is `'selected'`, the parent icon is
+ * When {@link UIToolbarItem.childIcon} is `'selected'`, the parent icon is
  * taken from the active submenu child while the parent label is unchanged.
  *
  * @param item - Parent toolbar item (may include `children`).
  * @param activeChildId - Runtime-selected child id, if any.
  */
-export function acuiResolveParentToolbarDisplay(
-  item: AcUiToolbarItem,
+export function uiResolveParentToolbarDisplay(
+  item: UIToolbarItem,
   activeChildId?: string
-): AcUiToolbarItem {
-  const effective = acuiResolveEffectiveToolbarItem(item)
+): UIToolbarItem {
+  const effective = uiResolveEffectiveToolbarItem(item)
   if (effective.childIcon !== 'selected' || !effective.children?.length) {
     return effective
   }
 
-  const child = acuiResolveSelectedChildItem(effective, activeChildId)
+  const child = uiResolveSelectedChildItem(effective, activeChildId)
   if (!child) return effective
 
-  const resolvedChild = acuiResolveEffectiveToolbarItem(child)
+  const resolvedChild = uiResolveEffectiveToolbarItem(child)
   return {
     ...effective,
     icon: resolvedChild.icon ?? effective.icon
@@ -104,8 +104,8 @@ export function acuiResolveParentToolbarDisplay(
  * @param item - Toolbar item to inspect.
  * @returns `requiresDocument` when set, otherwise `true` when `command` is set.
  */
-export function acuiItemRequiresDocument(item: AcUiToolbarItem): boolean {
-  if (acuiIsToolbarSeparatorItem(item)) return false
+export function uiItemRequiresDocument(item: UIToolbarItem): boolean {
+  if (uiIsToolbarSeparatorItem(item)) return false
   if (item.requiresDocument != null) return item.requiresDocument
   return Boolean(item.command || item.anchorAction)
 }
@@ -115,7 +115,7 @@ export function acuiItemRequiresDocument(item: AcUiToolbarItem): boolean {
  *
  * @param item - Toolbar item with optional static or dynamic `disabled`.
  */
-export function acuiIsToolbarItemDisabled(item: AcUiToolbarItem): boolean {
+export function uiIsToolbarItemDisabled(item: UIToolbarItem): boolean {
   if (item.disabled == null) return false
   return typeof item.disabled === 'function' ? item.disabled() : item.disabled
 }
@@ -129,31 +129,31 @@ export function acuiIsToolbarItemDisabled(item: AcUiToolbarItem): boolean {
  * @param items - Root toolbar items.
  * @param openMode - Current document open mode.
  */
-export function acuiFilterVisibleToolbarItems(
-  items: AcUiToolbarItem[],
-  openMode: AcEdOpenMode
-): AcUiToolbarItem[] {
+export function uiFilterVisibleToolbarItems(
+  items: UIToolbarItem[],
+  openMode: EditorOpenMode
+): UIToolbarItem[] {
   return items
     .filter(
       item =>
-        acuiIsToolbarSeparatorItem(item) ||
-        acuiIsToolbarItemVisible(item, openMode)
+        uiIsToolbarSeparatorItem(item) ||
+        uiIsToolbarItemVisible(item, openMode)
     )
     .map(item => {
       if (
-        acuiIsToolbarSeparatorItem(item) ||
-        acuiIsDynamicToolbarChildren(item) ||
+        uiIsToolbarSeparatorItem(item) ||
+        uiIsDynamicToolbarChildren(item) ||
         !item.children?.length
       ) {
         return item
       }
-      const children = acuiFilterVisibleToolbarItems(item.children, openMode)
+      const children = uiFilterVisibleToolbarItems(item.children, openMode)
       return { ...item, children }
     })
     .filter(item => {
-      if (acuiIsToolbarSeparatorItem(item)) return true
+      if (uiIsToolbarSeparatorItem(item)) return true
       return (
-        acuiIsDynamicToolbarChildren(item) ||
+        uiIsDynamicToolbarChildren(item) ||
         !item.children ||
         item.children.length > 0 ||
         item.command ||

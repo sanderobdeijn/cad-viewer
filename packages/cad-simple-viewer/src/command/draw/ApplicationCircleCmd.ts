@@ -1,0 +1,635 @@
+import {
+  GeometryCircularArc2d,
+  GeometryPoint2d,
+  GeometryPoint2dLike
+} from '@mlightcad/geometry-engine'
+import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
+
+import { ApplicationContext, ApplicationDocManager } from '../../app'
+import {
+  EditorBaseView,
+  EditorCommand,
+  EditorOpenMode,
+  EditorPreviewJig,
+  EditorPromptDistanceOptions,
+  EditorPromptPointOptions,
+  EditorPromptPointResult,
+  EditorPromptState,
+  EditorPromptStateMachine,
+  EditorPromptStateStep,
+  EditorPromptStatus
+} from '../../editor'
+import { ApplicationI18n } from '../../i18n'
+import { applicationPreviewDrawable } from '../../model/ApplicationItemDrawable'
+
+interface CircleDefinition {
+  center: GeometryPoint2dLike
+  radius: number
+}
+
+type CircleKeywordKey = 'threeP' | 'twoP' | 'diameter'
+
+function createFallbackCircle(point: GeometryPoint2dLike): CircleDefinition {
+  return {
+    center: { x: point.x, y: point.y },
+    radius: 1e-6
+  }
+}
+
+function addKeyword(
+  prompt: EditorPromptPointOptions | EditorPromptDistanceOptions,
+  key: CircleKeywordKey
+) {
+  prompt.keywords.add(
+    ApplicationI18n.t(`jig.circle.keywords.${key}.display`),
+    ApplicationI18n.t(`jig.circle.keywords.${key}.global`),
+    ApplicationI18n.t(`jig.circle.keywords.${key}.local`)
+  )
+}
+
+/** Returns a full circle. */
+function createCircle(center: GeometryPoint2dLike, radius: number) {
+  return GeometryCircularArc2d.fromMathAngles(center, radius, 0, 0, false)
+}
+
+function applyCircleDefinition(
+  circle: GeometryCircularArc2d,
+  definition: CircleDefinition
+) {
+  circle.center = definition.center
+  circle.radius = definition.radius
+}
+
+function toCircleDefinition(
+  arc: GeometryCircularArc2d | null
+): CircleDefinition | undefined {
+  if (!arc) return undefined
+  return {
+    center: { x: arc.center.x, y: arc.center.y },
+    radius: arc.radius
+  }
+}
+
+function createCircleFromCenterRadius(
+  center: GeometryPoint2dLike,
+  radius: number
+): CircleDefinition | undefined {
+  return toCircleDefinition(
+    GeometryCircularArc2d.tryCreateCircle(center, radius)
+  )
+}
+
+function createCircleFromTwoPoints(
+  first: GeometryPoint2dLike,
+  second: GeometryPoint2dLike
+): CircleDefinition | undefined {
+  return toCircleDefinition(
+    GeometryCircularArc2d.tryCreateCircleByDiameter(first, second)
+  )
+}
+
+function createCircleFromThreePoints(
+  p1: GeometryPoint2dLike,
+  p2: GeometryPoint2dLike,
+  p3: GeometryPoint2dLike
+): CircleDefinition | undefined {
+  return toCircleDefinition(
+    GeometryCircularArc2d.tryCreateCircleByThreePoints(p1, p2, p3)
+  )
+}
+
+/**
+ * Dynamic radius preview jig used by center-based circle workflows.
+ */
+export class ApplicationCircleJig extends EditorPreviewJig<number> {
+  /**
+   * Transient circle entity reused during radius preview.
+   */
+  private _circle: GeometryCircularArc2d
+  private _drawable: GraphicsInterfaceDrawable
+
+  /**
+   * Creates a circle jig.
+   *
+   * @param view - The associated view
+   */
+  constructor(view: EditorBaseView, center: GeometryPoint2dLike) {
+    super(view)
+    this._circle = createCircle(center, 0)
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._circle
+    })
+  }
+
+  /**
+   * Gets transient circle entity displayed by the jig.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * Updates preview radius.
+   *
+   * @param radius - Dynamic radius value from prompt input.
+   */
+  update(radius: number) {
+    this._circle.radius = radius
+  }
+}
+
+/**
+ * Dynamic point-based circle preview jig used by 2P/3P workflows.
+ */
+class ApplicationCircleDynamicJig extends EditorPreviewJig<GeometryPoint2dLike> {
+  /**
+   * Transient circle entity reused across cursor updates.
+   */
+  private _circle: GeometryCircularArc2d
+  private _drawable: GraphicsInterfaceDrawable
+  /**
+   * Callback that maps cursor point to circle definition.
+   */
+  private _builder: (point: GeometryPoint2dLike) => CircleDefinition | undefined
+
+  /**
+   * Creates dynamic circle preview jig.
+   *
+   * @param view - Active editor view.
+   * @param builder - Cursor point to circle definition resolver.
+   * @param fallback - Initial valid fallback circle.
+   */
+  constructor(
+    view: EditorBaseView,
+    builder: (point: GeometryPoint2dLike) => CircleDefinition | undefined,
+    fallback: CircleDefinition
+  ) {
+    super(view)
+    this._circle = createCircle(fallback.center, fallback.radius)
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._circle
+    })
+    this._builder = builder
+  }
+
+  /**
+   * Gets transient circle entity displayed by the jig.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * Recomputes preview circle from current cursor point.
+   *
+   * @param point - Current cursor/input point.
+   */
+  update(point: GeometryPoint2dLike) {
+    const definition = this._builder(point)
+    if (!definition) return
+    applyCircleDefinition(this._circle, definition)
+  }
+}
+
+/**
+ * Command to create one circle.
+ */
+export class ApplicationCircleCmd extends EditorCommand {
+  /**
+   * Creates CIRCLE command instance.
+   */
+  constructor() {
+    super()
+    this.mode = EditorOpenMode.Write
+  }
+
+  /**
+   * Command entry point.
+   *
+   * Supports center/radius, center/diameter, two-point and three-point
+   * circle creation through a prompt state machine.
+   *
+   * @param context - Current application/document context.
+   */
+  async execute(context: ApplicationContext) {
+    let circle: CircleDefinition | undefined
+
+    type CircleState = EditorPromptState<
+      EditorPromptPointOptions,
+      EditorPromptPointResult
+    >
+    type StepResult = EditorPromptStateStep
+
+    /**
+     * State-machine entry node:
+     * pick center point directly, or switch to 2P/3P branches.
+     */
+    class EntryState implements CircleState {
+      /**
+       * Creates entry state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param machine - Prompt state machine used for state transitions.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private machine: EditorPromptStateMachine<
+          EditorPromptPointOptions,
+          EditorPromptPointResult
+        >
+      ) {}
+
+      /**
+       * Builds first prompt for center-or-options input.
+       *
+       * @returns Configured point prompt with `3P` and `2P` keywords.
+       */
+      buildPrompt() {
+        const prompt = new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.centerOrOptions')
+        )
+        addKeyword(prompt, 'threeP')
+        addKeyword(prompt, 'twoP')
+        return prompt
+      }
+
+      /**
+       * Handles entry step result and dispatches to selected branch.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status === EditorPromptStatus.OK) {
+          circle = await this.cmd.runCenterFlow(context, result.value!)
+          return 'finish'
+        }
+        if (result.status !== EditorPromptStatus.Keyword) return 'finish'
+
+        const keyword = result.stringResult ?? ''
+        if (keyword === '3P') {
+          this.machine.setState(
+            new ThreePointFirstState(this.cmd, this.machine)
+          )
+          return 'continue'
+        }
+        if (keyword === '2P') {
+          this.machine.setState(new TwoPointFirstState(this.cmd, this.machine))
+          return 'continue'
+        }
+        return 'finish'
+      }
+    }
+
+    /**
+     * State-machine node for selecting first point in 2P workflow.
+     */
+    class TwoPointFirstState implements CircleState {
+      /**
+       * Creates 2P first-point state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param machine - Prompt state machine used for state transitions.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private machine: EditorPromptStateMachine<
+          EditorPromptPointOptions,
+          EditorPromptPointResult
+        >
+      ) {}
+
+      /**
+       * Builds prompt for first 2P endpoint.
+       *
+       * @returns Configured point prompt.
+       */
+      buildPrompt() {
+        return new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.twoPointFirst')
+        )
+      }
+
+      /**
+       * Handles first 2P point and moves to second-point state.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status !== EditorPromptStatus.OK) return 'finish'
+        this.machine.setState(new TwoPointSecondState(this.cmd, result.value!))
+        return 'continue'
+      }
+    }
+
+    /**
+     * State-machine node for second point in 2P workflow.
+     */
+    class TwoPointSecondState implements CircleState {
+      /**
+       * Creates 2P second-point state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param firstPoint - First 2P endpoint captured in previous step.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private firstPoint: GeometryPoint2dLike
+      ) {}
+
+      /**
+       * Builds prompt for second 2P endpoint with dynamic preview.
+       *
+       * @returns Configured point prompt.
+       */
+      buildPrompt() {
+        const prompt = new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.twoPointSecond')
+        )
+        prompt.useBasePoint = true
+        prompt.useDashedLine = true
+        prompt.basePoint = new GeometryPoint2d(this.firstPoint)
+        prompt.jig = new ApplicationCircleDynamicJig(
+          context.view,
+          point => createCircleFromTwoPoints(this.firstPoint, point),
+          createFallbackCircle(this.firstPoint)
+        )
+        return prompt
+      }
+
+      /**
+       * Handles second 2P point and finalizes circle output.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status === EditorPromptStatus.OK) {
+          circle = this.cmd.createFromTwoPoints(this.firstPoint, result.value!)
+        }
+        return 'finish'
+      }
+    }
+
+    /**
+     * State-machine node for selecting first point in 3P workflow.
+     */
+    class ThreePointFirstState implements CircleState {
+      /**
+       * Creates 3P first-point state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param machine - Prompt state machine used for state transitions.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private machine: EditorPromptStateMachine<
+          EditorPromptPointOptions,
+          EditorPromptPointResult
+        >
+      ) {}
+
+      /**
+       * Builds prompt for first 3P point.
+       *
+       * @returns Configured point prompt.
+       */
+      buildPrompt() {
+        return new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.threePointFirst')
+        )
+      }
+
+      /**
+       * Handles first 3P point and advances to second-point state.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status !== EditorPromptStatus.OK) return 'finish'
+        this.machine.setState(
+          new ThreePointSecondState(this.cmd, this.machine, result.value!)
+        )
+        return 'continue'
+      }
+    }
+
+    /**
+     * State-machine node for selecting second point in 3P workflow.
+     */
+    class ThreePointSecondState implements CircleState {
+      /**
+       * Creates 3P second-point state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param machine - Prompt state machine used for state transitions.
+       * @param firstPoint - First 3P point captured in previous step.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private machine: EditorPromptStateMachine<
+          EditorPromptPointOptions,
+          EditorPromptPointResult
+        >,
+        private firstPoint: GeometryPoint2dLike
+      ) {}
+
+      /**
+       * Builds prompt for second 3P point.
+       *
+       * @returns Configured point prompt.
+       */
+      buildPrompt() {
+        const prompt = new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.threePointSecond')
+        )
+        prompt.useBasePoint = true
+        prompt.useDashedLine = true
+        prompt.basePoint = new GeometryPoint2d(this.firstPoint)
+        return prompt
+      }
+
+      /**
+       * Handles second 3P point and advances to third-point state.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status !== EditorPromptStatus.OK) return 'finish'
+        this.machine.setState(
+          new ThreePointThirdState(this.cmd, this.firstPoint, result.value!)
+        )
+        return 'continue'
+      }
+    }
+
+    /**
+     * State-machine node for selecting final point in 3P workflow.
+     */
+    class ThreePointThirdState implements CircleState {
+      /**
+       * Creates 3P third-point state handler.
+       *
+       * @param cmd - Owning CIRCLE command instance.
+       * @param firstPoint - First 3P point.
+       * @param secondPoint - Second 3P point.
+       */
+      constructor(
+        private cmd: ApplicationCircleCmd,
+        private firstPoint: GeometryPoint2dLike,
+        private secondPoint: GeometryPoint2dLike
+      ) {}
+
+      /**
+       * Builds prompt for final 3P point with dynamic preview.
+       *
+       * @returns Configured point prompt.
+       */
+      buildPrompt() {
+        const prompt = new EditorPromptPointOptions(
+          ApplicationI18n.t('jig.circle.threePointThird')
+        )
+        prompt.useBasePoint = true
+        prompt.useDashedLine = true
+        prompt.basePoint = new GeometryPoint2d(this.secondPoint)
+        prompt.jig = new ApplicationCircleDynamicJig(
+          context.view,
+          point =>
+            createCircleFromThreePoints(
+              this.firstPoint,
+              this.secondPoint,
+              point
+            ),
+          createFallbackCircle(this.firstPoint)
+        )
+        return prompt
+      }
+
+      /**
+       * Handles final 3P point and finalizes circle output.
+       *
+       * @param result - Point prompt result.
+       * @returns State-machine step result.
+       */
+      async handleResult(result: EditorPromptPointResult): Promise<StepResult> {
+        if (result.status === EditorPromptStatus.OK) {
+          circle = this.cmd.createFromThreePoints(
+            this.firstPoint,
+            this.secondPoint,
+            result.value!
+          )
+        }
+        return 'finish'
+      }
+    }
+
+    const machine = new EditorPromptStateMachine<
+      EditorPromptPointOptions,
+      EditorPromptPointResult
+    >()
+    machine.setState(new EntryState(this, machine))
+    await machine.run(prompt => ApplicationDocManager.instance.editor.getPoint(prompt))
+
+    if (!circle) return
+    context.doc.modelSync.addItems({
+      kind: 'shape',
+      geometry: createCircle(circle.center, circle.radius)
+    })
+  }
+
+  /**
+   * Runs center-based workflow:
+   * center -> radius OR center -> diameter.
+   *
+   * @param context - Current application/document context.
+   * @param center - Picked center point.
+   * @returns Resolved circle definition, or `undefined` on cancel/invalid input.
+   */
+  private async runCenterFlow(
+    context: ApplicationContext,
+    center: GeometryPoint2dLike
+  ) {
+    const radiusPrompt = new EditorPromptDistanceOptions(
+      ApplicationI18n.t('jig.circle.radiusOrDiameter')
+    )
+    addKeyword(radiusPrompt, 'diameter')
+    radiusPrompt.allowZero = false
+    radiusPrompt.useBasePoint = true
+    radiusPrompt.useDashedLine = true
+    radiusPrompt.basePoint = new GeometryPoint2d(center)
+    radiusPrompt.jig = new ApplicationCircleJig(context.view, center)
+    const radiusResult =
+      await ApplicationDocManager.instance.editor.getDistance(radiusPrompt)
+    if (radiusResult.status === EditorPromptStatus.OK) {
+      return createCircleFromCenterRadius(center, radiusResult.value ?? 0)
+    }
+    if (
+      radiusResult.status === EditorPromptStatus.Keyword &&
+      radiusResult.stringResult === 'Diameter'
+    ) {
+      return await this.promptDiameterCircle(context, center)
+    }
+    return undefined
+  }
+
+  /**
+   * Prompts diameter input in center-based workflow.
+   *
+   * @param context - Current application/document context.
+   * @param center - Circle center point.
+   * @returns Circle definition, or `undefined` when canceled/invalid.
+   */
+  private async promptDiameterCircle(
+    context: ApplicationContext,
+    center: GeometryPoint2dLike
+  ) {
+    const diameterPrompt = new EditorPromptDistanceOptions(
+      ApplicationI18n.t('jig.circle.diameter')
+    )
+    diameterPrompt.allowZero = false
+    diameterPrompt.useBasePoint = true
+    diameterPrompt.useDashedLine = true
+    diameterPrompt.basePoint = new GeometryPoint2d(center)
+    diameterPrompt.jig = new ApplicationCircleJig(context.view, center)
+    const diameterResult =
+      await ApplicationDocManager.instance.editor.getDistance(diameterPrompt)
+    if (diameterResult.status !== EditorPromptStatus.OK) return undefined
+    const radius = (diameterResult.value ?? 0) / 2
+    return createCircleFromCenterRadius(center, radius)
+  }
+
+  /**
+   * Creates circle definition from two points.
+   *
+   * @param first - First point of diameter.
+   * @param second - Second point of diameter.
+   * @returns Circle definition, or `undefined` when points are invalid.
+   */
+  private createFromTwoPoints(
+    first: GeometryPoint2dLike,
+    second: GeometryPoint2dLike
+  ) {
+    return createCircleFromTwoPoints(first, second)
+  }
+
+  /**
+   * Creates circle definition from three points.
+   *
+   * @param p1 - First point on circle.
+   * @param p2 - Second point on circle.
+   * @param p3 - Third point on circle.
+   * @returns Circle definition, or `undefined` when points are degenerate.
+   */
+  private createFromThreePoints(
+    p1: GeometryPoint2dLike,
+    p2: GeometryPoint2dLike,
+    p3: GeometryPoint2dLike
+  ) {
+    return createCircleFromThreePoints(p1, p2, p3)
+  }
+}

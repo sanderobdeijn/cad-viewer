@@ -1,3 +1,3 @@
-export * from './AcEdKeywordSession'
-export * from './AcEdInputSession'
-export * from './AcEdPromptInputSession'
+export * from './EditorKeywordSession'
+export * from './EditorInputSession'
+export * from './EditorPromptInputSession'

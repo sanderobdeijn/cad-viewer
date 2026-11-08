@@ -1,3 +1,3 @@
-export * from './AcApPlugin'
-export * from './AcApPluginManager'
-export * from './AcApLazyPluginRegistration'
+export * from './ApplicationPlugin'
+export * from './ApplicationPluginManager'
+export * from './ApplicationLazyPluginRegistration'

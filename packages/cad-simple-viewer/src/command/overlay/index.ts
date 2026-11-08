@@ -2,12 +2,12 @@
  * Shared overlay entity protocol, canvas helpers, and HTML grip host for
  * measure composites.
  *
- * Live jig previews (`AcApHtmlLivePreview`) are NOT re-exported here: that
+ * Live jig previews (`ApplicationHtmlLivePreview`) are NOT re-exported here: that
  * module pulls in `@mlightcad/three-renderer` as a value dependency. Import it
- * from `./AcApHtmlLivePreview` so light grip helpers stay loadable under jsdom.
+ * from `./ApplicationHtmlLivePreview` so light grip helpers stay loadable under jsdom.
  */
 
-export * from './AcApOverlayDrawUtil'
-export * from './AcApOverlayEntity'
-export * from './AcApOverlayGripHost'
-export * from './AcApOverlaySerializable'
+export * from './ApplicationOverlayDrawUtil'
+export * from './ApplicationOverlayEntity'
+export * from './ApplicationOverlayGripHost'
+export * from './ApplicationOverlaySerializable'

@@ -1,0 +1,466 @@
+import { CommonColor } from '@mlightcad/common'
+import {
+  ColorSettings,
+  createDefaultColorSettings,
+  DefaultFontsPreset,
+  FontManager,
+  type MemoryUsageReport,
+  MTextData,
+  MTextObject,
+  RenderMode,
+  ShapeData,
+  StyleManager,
+  TextStyle,
+  UnifiedRenderer
+} from '@mlightcad/mtext-renderer'
+import * as THREE from 'three'
+
+import { ThreeRendererStyleManager } from '../style/ThreeRendererStyleManager'
+import { ThreeRendererSubEntityTraitsUtil } from '../util'
+
+class ThreeRendererMTextStyleManager implements StyleManager {
+  public unsupportedTextStyles: Record<string, number> = {}
+  private _styleManager: ThreeRendererStyleManager
+
+  constructor(styeManager: ThreeRendererStyleManager) {
+    this._styleManager = styeManager
+  }
+
+  getMeshBasicMaterial(traits: ColorSettings): THREE.Material {
+    const entityTraits = ThreeRendererSubEntityTraitsUtil.createTraitsForMText(
+      traits,
+      this._styleManager.currentBackgroundColor
+    )
+    const { layerColor, layerColorRgb } = this.resolveLayerSwatch(traits)
+    // Route MText glyph fills through the dedicated helper so their
+    // linework-tier `drawOrder` semantics stay explicit even though
+    // they are rasterized as meshes.
+    return this._styleManager.getMTextFillMaterial(
+      entityTraits,
+      layerColor,
+      layerColorRgb
+    )
+  }
+
+  getLineBasicMaterial(traits: ColorSettings): THREE.Material {
+    const entityTraits = ThreeRendererSubEntityTraitsUtil.createTraitsForMText(
+      traits,
+      this._styleManager.currentBackgroundColor
+    )
+    const { layerColor, layerColorRgb } = this.resolveLayerSwatch(traits)
+    return this._styleManager.getLineMaterial(
+      entityTraits,
+      true,
+      undefined,
+      layerColor,
+      layerColorRgb
+    )
+  }
+
+  /**
+   * Inline `\C256` / entity ByLayer carry the resolved layer swatch on
+   * {@link ColorSettings.byLayerColor}. Pass it into material *creation*
+   * so ByLayer glyphs are not born white — never mutate a shared cached
+   * material after the fact (that recolours unrelated glyphs).
+   */
+  private resolveLayerSwatch(traits: ColorSettings): {
+    layerColor?: CommonColor
+    layerColorRgb?: number
+  } {
+    if (traits.color.aci !== 256) {
+      return {}
+    }
+    const rgb = traits.byLayerColor
+    if (typeof rgb !== 'number') {
+      return {}
+    }
+    return {
+      layerColor: new CommonColor().setRGBValue(rgb),
+      layerColorRgb: rgb
+    }
+  }
+}
+
+/**
+ * Singleton class for managing MText rendering using WebWorkerRenderer
+ */
+export class ThreeRendererMTextRenderer {
+  private static _instance: ThreeRendererMTextRenderer | null = null
+  private _workerUrl?: string | URL
+  private _renderer?: UnifiedRenderer
+  private _fontUrl?: string
+  private _renderMode?: RenderMode
+  private _styleManager?: ThreeRendererStyleManager
+  private _defaultFonts?: DefaultFontsPreset | string | readonly string[]
+  private _lazyFontLoading?: boolean
+  private _awaitFontsBeforeDraw?: boolean
+  /**
+   * Fonts successfully pushed into the active worker pool (or main renderer)
+   * via {@link loadFonts}. Cleared when the unified renderer is destroyed.
+   */
+  private _rendererLoadedFonts = new Set<string>()
+
+  private constructor() {
+    // Do nothing for now
+  }
+
+  /**
+   * Get the singleton instance of ThreeRendererMTextRenderer
+   */
+  public static getInstance(): ThreeRendererMTextRenderer {
+    if (!ThreeRendererMTextRenderer._instance) {
+      ThreeRendererMTextRenderer._instance = new ThreeRendererMTextRenderer()
+    }
+    return ThreeRendererMTextRenderer._instance
+  }
+
+  /**
+   * Override text renderer's default style manager with cad-viewer's style manager so
+   * that cad-viewer's style manager can manage materials used by texts too.
+   * @param value - New style manager
+   */
+  overrideStyleManager(value: ThreeRendererStyleManager) {
+    this._styleManager = value
+    // Apply immediately when the unified renderer already exists (e.g. re-init
+    // or late override). Otherwise reconstruct would keep DefaultStyleManager
+    // materials without `isForeground` tracking.
+    if (this._renderer) {
+      const styleManager = new ThreeRendererMTextStyleManager(value)
+      this._renderer.setStyleManager(styleManager)
+    }
+  }
+
+  /**
+   * Set URL to load fonts
+   * @param value - URL to load fonts
+   */
+  setFontUrl(value: string) {
+    this._fontUrl = value
+    void this.applyFontUrl()
+  }
+
+  /**
+   * Set render mode to use by mtext renderer
+   * @param mode - Render mode
+   */
+  setRenderMode(mode: RenderMode) {
+    this._renderMode = mode
+    if (this._renderer) {
+      this._renderer.setDefaultMode(mode)
+      this.applyFontUrl()
+    }
+  }
+
+  /**
+   * Current MText render mode (`worker` by default until {@link setRenderMode}).
+   */
+  getRenderMode(): RenderMode {
+    return this._renderMode ?? 'worker'
+  }
+
+  /**
+   * Sets the default text and symbol font fallback chains on the active renderer
+   * and syncs them to Web Workers.
+   *
+   * @param fonts - A preset name, a single font name, or an ordered list of font names
+   */
+  async setDefaultFonts(
+    fonts: DefaultFontsPreset | string | readonly string[]
+  ): Promise<void> {
+    this._defaultFonts = fonts
+    await this.applyDefaultFonts()
+  }
+
+  /**
+   * Mirrors {@link FontManager.lazyFontLoading} onto the main thread and worker pool.
+   */
+  async setLazyFontLoading(enabled: boolean): Promise<void> {
+    this._lazyFontLoading = enabled
+    FontManager.instance.lazyFontLoading = enabled
+    await this.applyLazyFontLoading()
+  }
+
+  /**
+   * When true with lazy loading, {@link asyncRenderMText} / {@link asyncRenderShape}
+   * wait for referenced fonts before building glyph geometry.
+   */
+  async setAwaitFontsBeforeDraw(enabled: boolean): Promise<void> {
+    this._awaitFontsBeforeDraw = enabled
+    FontManager.instance.awaitFontsBeforeDraw = enabled
+    await this.applyAwaitFontsBeforeDraw()
+  }
+
+  /**
+   * Loads fonts into the active renderer (main thread and/or worker pool).
+   *
+   * Skips faces already synced into this renderer session so open-time
+   * preload (and later background fallback loads) do not re-parse large mesh
+   * fonts into every worker.
+   *
+   * Use for style faces and for fallback faces that
+   * {@link FontManager.awaitFontsBeforeDraw} only requests in the background —
+   * e.g. {@link FontManager.getFontsToLoad} — so glyph draw does not bake
+   * permanent '?' placeholders.
+   *
+   * @returns Names that were actually sent to the renderer this call.
+   */
+  async loadFonts(
+    fonts: readonly string[],
+    options?: { scope?: 'one' | 'all' }
+  ): Promise<string[]> {
+    this.ensureRendererCreated()
+    if (!this._renderer || fonts.length === 0) {
+      return []
+    }
+    const pending = fonts.filter(name => {
+      const key = normalizeRendererFontKey(name)
+      return !!key && !this._rendererLoadedFonts.has(key)
+    })
+    if (pending.length === 0) {
+      return []
+    }
+    await this._renderer.loadFonts(pending, options)
+    for (const name of pending) {
+      const key = normalizeRendererFontKey(name)
+      if (key) {
+        this._rendererLoadedFonts.add(key)
+      }
+    }
+    return pending
+  }
+
+  /**
+   * Fonts already synced into the active renderer via {@link loadFonts}.
+   * Useful for OPENPERF / diagnostics.
+   */
+  getRendererLoadedFontCount(): number {
+    return this._rendererLoadedFonts.size
+  }
+
+  /**
+   * Replaces session-scoped missed-font bookkeeping on the main thread and workers.
+   */
+  async replaceMissedFonts(fonts: Record<string, number>): Promise<void> {
+    if (this._renderer) {
+      await this._renderer.replaceMissedFonts(fonts)
+      return
+    }
+    FontManager.instance.replaceMissedFonts(fonts)
+  }
+
+  /** Clears session-scoped missed-font bookkeeping on the main thread and workers. */
+  async clearMissedFonts(): Promise<void> {
+    await this.replaceMissedFonts({})
+  }
+
+  /**
+   * Render MText using the current mode asynchronously
+   */
+  async asyncRenderMText(
+    mtextContent: MTextData,
+    textStyle: TextStyle,
+    colorSettings: ColorSettings = createDefaultColorSettings()
+  ): Promise<MTextObject> {
+    if (!this._renderer) {
+      throw new Error('ThreeRendererMTextRenderer not initialized!')
+    }
+    const mtext = await this._renderer!.asyncRenderMText(
+      mtextContent,
+      textStyle,
+      colorSettings
+    )
+    return mtext
+  }
+
+  /**
+   * Render MText using the current mode synchronously
+   */
+  syncRenderMText(
+    mtextContent: MTextData,
+    textStyle: TextStyle,
+    colorSettings: ColorSettings = createDefaultColorSettings()
+  ): MTextObject {
+    this.ensureRendererCreated()
+    if (!this._renderer) {
+      throw new Error('ThreeRendererMTextRenderer not initialized!')
+    }
+    const mtext = this._renderer.syncRenderMText(
+      mtextContent,
+      textStyle,
+      colorSettings
+    )
+    return mtext
+  }
+
+  async asyncRenderShape(
+    shapeContent: ShapeData,
+    textStyle: TextStyle,
+    colorSettings: ColorSettings = createDefaultColorSettings()
+  ): Promise<MTextObject> {
+    if (!this._renderer) {
+      throw new Error('ThreeRendererMTextRenderer not initialized!')
+    }
+    return this._renderer.asyncRenderShape(
+      shapeContent,
+      textStyle,
+      colorSettings
+    )
+  }
+
+  syncRenderShape(
+    shapeContent: ShapeData,
+    textStyle: TextStyle,
+    colorSettings: ColorSettings = createDefaultColorSettings()
+  ): MTextObject {
+    this.ensureRendererCreated()
+    if (!this._renderer) {
+      throw new Error('ThreeRendererMTextRenderer not initialized!')
+    }
+    return this._renderer.syncRenderShape(
+      shapeContent,
+      textStyle,
+      colorSettings
+    )
+  }
+
+  /**
+   * Initialize the renderer.
+   *
+   * When render mode is `main`, the unified renderer is created without
+   * eagerly spawning web workers. The worker URL is still stored so worker
+   * mode can be enabled later if needed.
+   *
+   * @param workerUrl - URL to the worker script used when render mode is `worker`
+   */
+  initialize(workerUrl?: string | URL): void {
+    if (workerUrl !== undefined) {
+      this._workerUrl = workerUrl
+    }
+
+    if (this._renderer) {
+      this._renderer.destroy()
+      this._renderer = undefined
+    }
+    this._rendererLoadedFonts.clear()
+
+    const mode = this._renderMode ?? 'worker'
+    const workerConfig = this._workerUrl ? { workerUrl: this._workerUrl } : {}
+
+    if (mode === 'worker') {
+      if (!this._workerUrl) {
+        throw new Error(
+          'ThreeRendererMTextRenderer worker URL is required for worker render mode'
+        )
+      }
+      this._renderer = new UnifiedRenderer('worker', workerConfig)
+    } else {
+      this._renderer = new UnifiedRenderer('main', workerConfig)
+    }
+
+    if (this._renderMode) {
+      this._renderer.setDefaultMode(this._renderMode)
+    }
+
+    void this.applyFontUrl()
+    void this.applyDefaultFonts()
+    void this.applyLazyFontLoading()
+    void this.applyAwaitFontsBeforeDraw()
+    if (this._styleManager) {
+      const styleManager = new ThreeRendererMTextStyleManager(this._styleManager)
+      this._renderer.setStyleManager(styleManager)
+    }
+  }
+
+  /**
+   * Estimates memory used by mtext-renderer (loaded fonts, caches, workers).
+   *
+   * Prefers {@link UnifiedRenderer.estimateMemoryUsage} when the renderer is
+   * initialized; otherwise falls back to the main-thread {@link FontManager}.
+   */
+  async estimateMemoryUsage(): Promise<MemoryUsageReport> {
+    if (this._renderer) {
+      return this._renderer.estimateMemoryUsage()
+    }
+
+    const mainThread = FontManager.instance.estimateMemoryUsage({ id: 'main' })
+    return {
+      collectedAt: Date.now(),
+      totalEstimatedBytes: mainThread.totalEstimatedBytes,
+      mainThread,
+      workers: [],
+      indexedDbFontCache: {
+        fontCount: 0,
+        totalBytes: 0,
+        fonts: []
+      }
+    }
+  }
+
+  /**
+   * Dispose of the renderer and reset cached configuration.
+   */
+  dispose(): void {
+    if (this._renderer) {
+      this._renderer.destroy()
+      this._renderer = undefined
+    }
+    this._rendererLoadedFonts.clear()
+    this._workerUrl = undefined
+    this._renderMode = undefined
+    this._defaultFonts = undefined
+    this._lazyFontLoading = undefined
+    this._awaitFontsBeforeDraw = undefined
+  }
+
+  /**
+   * Dispose and discard the singleton instance.
+   */
+  public static resetInstance(): void {
+    ThreeRendererMTextRenderer.getInstance().dispose()
+    ThreeRendererMTextRenderer._instance = null
+  }
+
+  private ensureRendererCreated() {
+    if (!this._renderer && this._workerUrl) {
+      this.initialize(this._workerUrl)
+    }
+  }
+
+  private async applyFontUrl() {
+    if (this._renderer && this._fontUrl) {
+      await this._renderer.setFontUrl(this._fontUrl)
+    }
+  }
+
+  private async applyDefaultFonts() {
+    if (this._renderer && this._defaultFonts !== undefined) {
+      await this._renderer.setDefaultFonts(this._defaultFonts)
+    }
+  }
+
+  private async applyLazyFontLoading() {
+    if (this._renderer && this._lazyFontLoading !== undefined) {
+      await this._renderer.setLazyFontLoading(this._lazyFontLoading)
+    }
+  }
+
+  private async applyAwaitFontsBeforeDraw() {
+    if (this._renderer && this._awaitFontsBeforeDraw !== undefined) {
+      await this._renderer.setAwaitFontsBeforeDraw(this._awaitFontsBeforeDraw)
+    }
+  }
+}
+
+function normalizeRendererFontKey(fontName: string): string {
+  if (fontName == null) return ''
+  let name = String(fontName).trim()
+  if (!name) return ''
+  const dotIndex = name.lastIndexOf('.')
+  if (
+    dotIndex > 0 &&
+    (dotIndex === name.length - 4 || dotIndex === name.length - 5)
+  ) {
+    name = name.substring(0, dotIndex)
+  }
+  return name.toLowerCase()
+}

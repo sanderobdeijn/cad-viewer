@@ -1,6 +1,6 @@
 import {
-  AcApDocManager,
-  type AcApMeasurementRecord,
+  ApplicationDocManager,
+  type ApplicationMeasurementRecord,
   clearLayoutMeasurements,
   focusMeasurement,
   getMeasurementValueText,
@@ -15,12 +15,12 @@ import { onMounted, onUnmounted, ref } from 'vue'
  * Reactive bridge from the measurement store to Vue UI.
  */
 export function useMeasurement() {
-  const measurements = ref<AcApMeasurementRecord[]>([])
+  const measurements = ref<ApplicationMeasurementRecord[]>([])
   const selectedId = ref<string | undefined>()
   const valueById = ref<Record<string, string>>({})
 
   const refresh = () => {
-    const view = AcApDocManager.instance.curView
+    const view = ApplicationDocManager.instance.curView
     const list = view ? listLayoutMeasurements(view) : []
     measurements.value = list
     selectedId.value = getSelectedMeasurementId()
@@ -38,25 +38,25 @@ export function useMeasurement() {
     refresh()
     unsubscribeList = subscribeMeasurements(refresh)
     unsubscribeSelection = subscribeMeasurementSelection(refresh)
-    AcApDocManager.instance.events.documentActivated.addEventListener(refresh)
+    ApplicationDocManager.instance.events.documentActivated.addEventListener(refresh)
   })
 
   onUnmounted(() => {
     unsubscribeList?.()
     unsubscribeSelection?.()
-    AcApDocManager.instance.events.documentActivated.removeEventListener(
+    ApplicationDocManager.instance.events.documentActivated.removeEventListener(
       refresh
     )
   })
 
-  const focus = (record: AcApMeasurementRecord) => {
-    const view = AcApDocManager.instance.curView
+  const focus = (record: ApplicationMeasurementRecord) => {
+    const view = ApplicationDocManager.instance.curView
     if (!view) return
     focusMeasurement(view, record)
   }
 
   const clearAll = () => {
-    const view = AcApDocManager.instance.curView
+    const view = ApplicationDocManager.instance.curView
     if (!view) return
     clearLayoutMeasurements(view)
   }

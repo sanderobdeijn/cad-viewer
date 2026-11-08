@@ -1,13 +1,13 @@
-export * from './AcEdCommand'
-export * from './AcEdCommandStack'
+export * from './EditorCommand'
+export * from './EditorCommandStack'
 export type {
-  AcEdDrawStyleSessionHost,
-  AcEdSessionAccessory,
-  AcEdSessionAccessoryEventArgs,
-  AcEdSessionAccessoryHostInfo,
-  AcEdSessionAccessoryOptions,
-  AcEdSessionAccessorySlot
-} from './AcEdSessionAccessory'
-export { ACED_DRAW_STYLE_SESSION_PROVIDER_ID } from './AcEdSessionAccessory'
-export { AcEdSessionProviderRegistry } from './AcEdSessionProviderRegistry'
-export { AcEdSessionAccessoryMountSkippedError } from './AcEdCommand'
+  EditorDrawStyleSessionHost,
+  EditorSessionAccessory,
+  EditorSessionAccessoryEventArgs,
+  EditorSessionAccessoryHostInfo,
+  EditorSessionAccessoryOptions,
+  EditorSessionAccessorySlot
+} from './EditorSessionAccessory'
+export { EDITOR_DRAW_STYLE_SESSION_PROVIDER_ID } from './EditorSessionAccessory'
+export { EditorSessionProviderRegistry } from './EditorSessionProviderRegistry'
+export { EditorSessionAccessoryMountSkippedError } from './EditorCommand'

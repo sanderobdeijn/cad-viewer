@@ -17,9 +17,9 @@ const drawnItems = (page: Page) =>
   page.evaluate(() => {
     const sync = (
       window as Window & {
-        AcApDocManager?: { instance: { curDocument: { modelSync: ModelSync } } }
+        ApplicationDocManager?: { instance: { curDocument: { modelSync: ModelSync } } }
       }
-    ).AcApDocManager!.instance.curDocument.modelSync
+    ).ApplicationDocManager!.instance.curDocument.modelSync
     return sync
       .drawables(sync.model.items.map(item => item.id))
       .map(drawable => {
@@ -83,7 +83,7 @@ const expectEditorValue = (editor: Locator, expected: string | RegExp) => {
 const openDrawing = async (page: Page) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
   await page.waitForTimeout(1500)
 }
@@ -146,11 +146,11 @@ test('moves a drawn shape through the UI', async ({ page }) => {
   await page.evaluate(() =>
     (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curView: { zoomToFitDrawing: () => void } }
         }
       }
-    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+    ).ApplicationDocManager.instance.curView.zoomToFitDrawing()
   )
   await page.waitForTimeout(500)
 
@@ -257,11 +257,11 @@ test('updates the drawing when the text in the editor is edited', async ({
   await page.evaluate(() =>
     (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curView: { zoomToFitDrawing: () => void } }
         }
       }
-    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+    ).ApplicationDocManager.instance.curView.zoomToFitDrawing()
   )
   await page.waitForTimeout(500)
   const fullLine = await settledDrawnPixels(page)
@@ -312,11 +312,11 @@ test('edits the arcs of a polyline in the text editor', async ({ page }) => {
   await page.evaluate(() =>
     (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curView: { zoomToFitDrawing: () => void } }
         }
       }
-    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+    ).ApplicationDocManager.instance.curView.zoomToFitDrawing()
   )
   await page.waitForTimeout(500)
   const withArc = await settledDrawnPixels(page)
@@ -431,8 +431,8 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
   }
   const measurementGroups = () =>
     page.evaluate(() => {
-      const manager = (window as unknown as { AcApDocManager: Manager })
-        .AcApDocManager.instance
+      const manager = (window as unknown as { ApplicationDocManager: Manager })
+        .ApplicationDocManager.instance
       return manager.curView.htmlTransientManager
         .groupsOnLayer('measurement')
         .map(group => group.id)
@@ -443,8 +443,8 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
   await page.keyboard.press('Escape')
   await page.evaluate(() =>
     (
-      window as unknown as { AcApDocManager: Manager }
-    ).AcApDocManager.instance.curView.zoomToFitDrawing()
+      window as unknown as { ApplicationDocManager: Manager }
+    ).ApplicationDocManager.instance.curView.zoomToFitDrawing()
   )
   await page.waitForTimeout(500)
   await run(page, 'measuredistance', '0,0', '100,0')
@@ -458,13 +458,13 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
 
   // Dragging a grip replaces the measurement under the same id.
   await page.evaluate(id => {
-    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+    const ht = (window as unknown as { ApplicationDocManager: Manager }).ApplicationDocManager
       .instance.curView.htmlTransientManager
     ht.selectGroup(id)
   }, id)
   await page.waitForTimeout(200)
   const grip = await page.evaluate(id => {
-    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+    const ht = (window as unknown as { ApplicationDocManager: Manager }).ApplicationDocManager
       .instance.curView.htmlTransientManager
     const group = ht.groupsOnLayer('measurement').find(g => g.id === id)!
     return group.children
@@ -496,7 +496,7 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
 
   // Delete removes it for good.
   await page.evaluate(id => {
-    const ht = (window as unknown as { AcApDocManager: Manager }).AcApDocManager
+    const ht = (window as unknown as { ApplicationDocManager: Manager }).ApplicationDocManager
       .instance.curView.htmlTransientManager
     ht.selectGroup(id)
   }, id)

@@ -1,4 +1,4 @@
-import { AcCmErrors } from '@mlightcad/common'
+import { CommonErrors } from '@mlightcad/common'
 
 import {
   GeometryBox2d,
@@ -93,7 +93,7 @@ export class GeometryEllipseArc2d extends GeometryCurve2d {
     return this._majorAxisRadius
   }
   set majorAxisRadius(value: number) {
-    if (value < 0) throw AcCmErrors.ILLEGAL_PARAMETERS
+    if (value < 0) throw CommonErrors.ILLEGAL_PARAMETERS
     this._majorAxisRadius = value
     this._boundingBoxNeedsUpdate = true
   }
@@ -105,7 +105,7 @@ export class GeometryEllipseArc2d extends GeometryCurve2d {
     return this._minorAxisRadius
   }
   set minorAxisRadius(value: number) {
-    if (value < 0) throw AcCmErrors.ILLEGAL_PARAMETERS
+    if (value < 0) throw CommonErrors.ILLEGAL_PARAMETERS
     this._minorAxisRadius = value
     this._boundingBoxNeedsUpdate = true
   }

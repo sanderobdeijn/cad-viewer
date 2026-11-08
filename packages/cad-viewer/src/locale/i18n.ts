@@ -1,4 +1,4 @@
-import { AcApI18n } from '@mlightcad/cad-simple-viewer'
+import { ApplicationI18n } from '@mlightcad/cad-simple-viewer'
 import { createI18n } from 'vue-i18n'
 
 import enCommand from './en/command'
@@ -15,11 +15,11 @@ const messages = {
   }
 }
 
-AcApI18n.mergeLocaleMessage('en', messages.en)
+ApplicationI18n.mergeLocaleMessage('en', messages.en)
 
 export const i18n = createI18n({
   legacy: false,
-  messages: AcApI18n.messages,
+  messages: ApplicationI18n.messages,
   locale: 'en',
   fallbackLocale: 'en',
   allowComposition: true,
@@ -27,10 +27,10 @@ export const i18n = createI18n({
 })
 
 /**
- * vue-i18n follows {@link AcApI18n} — never the other way around.
- * All locale changes must go through {@link AcApI18n.setCurrentLocale}.
+ * vue-i18n follows {@link ApplicationI18n} — never the other way around.
+ * All locale changes must go through {@link ApplicationI18n.setCurrentLocale}.
  */
-AcApI18n.events.localeChanged.addEventListener(args => {
+ApplicationI18n.events.localeChanged.addEventListener(args => {
   i18n.global.locale.value = args.new
 })
 

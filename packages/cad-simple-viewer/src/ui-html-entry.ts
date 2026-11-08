@@ -10,82 +10,82 @@
  */
 
 export {
-  acedApplyCanvasTouchCalloutStyles,
-  acedClearDomSelection,
-  acedGuardCanvasTouchCallout
-} from './editor/input/ui/AcEdCanvasTouchCalloutGuard'
-export { AcEdEntityPickCancelChrome } from './editor/input/ui/AcEdEntityPickCancelChrome'
+  editorApplyCanvasTouchCalloutStyles,
+  editorClearDomSelection,
+  editorGuardCanvasTouchCallout
+} from './editor/input/ui/EditorCanvasTouchCalloutGuard'
+export { EditorEntityPickCancelChrome } from './editor/input/ui/EditorEntityPickCancelChrome'
 export {
-  ACED_TOUCH_POINT_LONG_PRESS_MS,
-  ACED_TOUCH_POINT_MOVE_CANCEL_PX
-} from './editor/input/ui/AcEdTouchPointTiming'
+  EDITOR_TOUCH_POINT_LONG_PRESS_MS,
+  EDITOR_TOUCH_POINT_MOVE_CANCEL_PX
+} from './editor/input/ui/EditorTouchPointTiming'
 export {
-  acedIsMobileOrPadUi,
-  acedIsMobileUiLayout
-} from './editor/global/AcEdUiLayout'
-export { AcUiAciColorDialog } from './ui/AcUiAciColorDialog'
+  editorIsMobileOrPadUi,
+  editorIsMobileUiLayout
+} from './editor/global/EditorUiLayout'
+export { UIAciColorDialog } from './ui/UIAciColorDialog'
 export type {
-  AcUiAciColorDialogLabels,
-  AcUiAciColorDialogOptions
-} from './ui/AcUiAciColorDialog'
-export { AcUiFullscreenPanel } from './ui/AcUiFullscreenPanel'
+  UIAciColorDialogLabels,
+  UIAciColorDialogOptions
+} from './ui/UIAciColorDialog'
+export { UIFullscreenPanel } from './ui/UIFullscreenPanel'
 export type {
-  AcUiFullscreenPanelLabels,
-  AcUiFullscreenPanelOptions
-} from './ui/AcUiFullscreenPanel'
-export { AcUiHelpPanel } from './ui/AcUiHelpPanel'
+  UIFullscreenPanelLabels,
+  UIFullscreenPanelOptions
+} from './ui/UIFullscreenPanel'
+export { UIHelpPanel } from './ui/UIHelpPanel'
 export type {
-  AcUiHelpPanelLabels,
-  AcUiHelpPanelOptions,
-  AcUiHelpPanelShowOptions
-} from './ui/AcUiHelpPanel'
-export { AcUiMobileSessionPanel } from './ui/AcUiMobileSessionPanel'
+  UIHelpPanelLabels,
+  UIHelpPanelOptions,
+  UIHelpPanelShowOptions
+} from './ui/UIHelpPanel'
+export { UIMobileSessionPanel } from './ui/UIMobileSessionPanel'
 export type {
-  AcUiMobileSessionPanelLabels,
-  AcUiMobileSessionPanelOptions,
-  AcUiMobileSessionPanelState,
-  AcUiMobileSessionPanelCallbacks,
-  AcUiMobileSessionKeyword,
-  AcUiMobileSessionMetricTexts
-} from './ui/AcUiMobileSessionPanel'
-export { AcUiShortCutToolbar } from './ui/AcUiShortCutToolbar'
+  UIMobileSessionPanelLabels,
+  UIMobileSessionPanelOptions,
+  UIMobileSessionPanelState,
+  UIMobileSessionPanelCallbacks,
+  UIMobileSessionKeyword,
+  UIMobileSessionMetricTexts
+} from './ui/UIMobileSessionPanel'
+export { UIShortCutToolbar } from './ui/UIShortCutToolbar'
 export type {
-  AcUiShortCutToolbarActionState,
-  AcUiShortCutToolbarOptions
-} from './ui/AcUiShortCutToolbar'
-export { AcUiSimpleToolbar } from './ui/AcUiSimpleToolbar'
-export type { AcUiSimpleToolbarItem } from './ui/AcUiSimpleToolbar'
-export { AcEdOpenMode } from './editor/view/AcEdOpenMode'
-export { AcUiToolbar } from './ui/toolbar/AcUiToolbar'
-export type { AcUiToolbarMountOptions } from './ui/toolbar/AcUiToolbar'
+  UIShortCutToolbarActionState,
+  UIShortCutToolbarOptions
+} from './ui/UIShortCutToolbar'
+export { UISimpleToolbar } from './ui/UISimpleToolbar'
+export type { UISimpleToolbarItem } from './ui/UISimpleToolbar'
+export { EditorOpenMode } from './editor/view/EditorOpenMode'
+export { UIToolbar } from './ui/toolbar/UIToolbar'
+export type { UIToolbarMountOptions } from './ui/toolbar/UIToolbar'
 export {
-  acuiEnsureToolbarStyles,
-  acuiRemoveToolbarStylesIfUnused
-} from './ui/toolbar/AcUiToolbarStyles'
-export { acuiCopyDynamicToolbarChildren } from './ui/toolbar/toolbarItemUtils'
+  uiEnsureToolbarStyles,
+  uiRemoveToolbarStylesIfUnused
+} from './ui/toolbar/UIToolbarStyles'
+export { uiCopyDynamicToolbarChildren } from './ui/toolbar/toolbarItemUtils'
 export type {
-  AcUiToolbarDocState,
-  AcUiToolbarI18n,
-  AcUiToolbarItem,
-  AcUiToolbarPlacement,
-  AcUiToolbarChildrenUi
+  UIToolbarDocState,
+  UIToolbarI18n,
+  UIToolbarItem,
+  UIToolbarPlacement,
+  UIToolbarChildrenUi
 } from './ui/toolbar/types'
-export { AcUiTextHeightDialog } from './ui/AcUiTextHeightDialog'
+export { UITextHeightDialog } from './ui/UITextHeightDialog'
 export type {
-  AcUiTextHeightDialogLabels,
-  AcUiTextHeightDialogOptions,
-  AcUiTextHeightDialogResult,
-  AcUiTextHeightMode
-} from './ui/AcUiTextHeightDialog'
+  UITextHeightDialogLabels,
+  UITextHeightDialogOptions,
+  UITextHeightDialogResult,
+  UITextHeightMode
+} from './ui/UITextHeightDialog'
 export {
-  acuiLocalIsoDate,
-  acuiShouldShowTouchPointTutorialFromPrefs,
-  AcUiTouchPointTutorial
+  uiLocalIsoDate,
+  uiShouldShowTouchPointTutorialFromPrefs,
+  UITouchPointTutorial
 } from './ui/touch-point-tutorial'
 export type {
-  AcUiTouchPointTutorialConfig,
-  AcUiTouchPointTutorialLabels,
-  AcUiTouchPointTutorialPrefs
+  UITouchPointTutorialConfig,
+  UITouchPointTutorialLabels,
+  UITouchPointTutorialPrefs
 } from './ui/touch-point-tutorial'
 export {
   createIconElement,

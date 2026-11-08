@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-import { AcApSettingManager } from '@mlightcad/cad-simple-viewer'
+import { ApplicationSettingManager } from '@mlightcad/cad-simple-viewer'
 import { ElButton, ElCol, ElRow } from 'element-plus'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -92,7 +92,7 @@ const icons = [
 
 const reset = () => {
   currentPointStyleIndex.value =
-    AcApSettingManager.instance.get('pointDisplayMode')
+    ApplicationSettingManager.instance.get('pointDisplayMode')
 }
 reset()
 
@@ -108,7 +108,7 @@ const handleSelectPointStyle = (rowIndex: number, colIndex: number) => {
 }
 
 const handleConfirm = () => {
-  AcApSettingManager.instance.set(
+  ApplicationSettingManager.instance.set(
     'pointDisplayMode',
     currentPointStyleIndex.value
   )

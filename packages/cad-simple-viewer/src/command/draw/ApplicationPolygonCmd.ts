@@ -1,0 +1,468 @@
+import {
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  GeometryPolyline2d,
+  GeometryTol
+} from '@mlightcad/geometry-engine'
+import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
+
+import { ApplicationContext, ApplicationDocManager } from '../../app'
+import {
+  EditorBaseView,
+  EditorCommand,
+  EditorOpenMode,
+  EditorPreviewJig,
+  EditorPromptPointOptions,
+  EditorPromptStatus,
+  EditorPromptStringOptions
+} from '../../editor'
+import { ApplicationI18n } from '../../i18n'
+import { applicationPreviewDrawable } from '../../model/ApplicationItemDrawable'
+
+const MIN_SIDES = 3
+const MAX_SIDES = 1024
+
+type PolygonMode = 'Inscribed' | 'Circumscribed'
+type PolygonKeywordKey = 'edge' | 'inscribed' | 'circumscribed'
+type PolygonInvalidKey = 'sides' | 'radius' | 'edge'
+
+function distance2d(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
+  return Math.hypot(p2.x - p1.x, p2.y - p1.y)
+}
+
+function updatePolylineVertices(
+  polyline: GeometryPolyline2d,
+  vertices: GeometryPoint2d[]
+) {
+  polyline.reset(false)
+  vertices.forEach((point, index) =>
+    polyline.addVertexAt(index, { x: point.x, y: point.y, bulge: 0 })
+  )
+  polyline.closed = true
+}
+
+function buildPolygonFromCenter(
+  center: GeometryPoint2dLike,
+  sides: number,
+  point: GeometryPoint2dLike,
+  mode: PolygonMode
+) {
+  const inputRadius = distance2d(center, point)
+  if (GeometryTol.isNonPositive(inputRadius)) return undefined
+
+  const step = (Math.PI * 2) / sides
+  const baseAngle = Math.atan2(point.y - center.y, point.x - center.x)
+  const circumRadius =
+    mode === 'Inscribed' ? inputRadius : inputRadius / Math.cos(Math.PI / sides)
+  if (!Number.isFinite(circumRadius) || GeometryTol.isNonPositive(circumRadius))
+    return undefined
+
+  const firstVertexAngle =
+    mode === 'Inscribed' ? baseAngle : baseAngle + step / 2
+
+  const vertices: GeometryPoint2d[] = []
+  for (let i = 0; i < sides; i++) {
+    const angle = firstVertexAngle + i * step
+    vertices.push(
+      new GeometryPoint2d(
+        center.x + circumRadius * Math.cos(angle),
+        center.y + circumRadius * Math.sin(angle)
+      )
+    )
+  }
+
+  return vertices
+}
+
+function buildPolygonFromEdge(
+  firstPoint: GeometryPoint2dLike,
+  secondPoint: GeometryPoint2dLike,
+  sides: number
+) {
+  const dx = secondPoint.x - firstPoint.x
+  const dy = secondPoint.y - firstPoint.y
+  const edgeLength = Math.hypot(dx, dy)
+  if (GeometryTol.isNonPositive(edgeLength)) return undefined
+
+  const step = (Math.PI * 2) / sides
+  const vertices: GeometryPoint2d[] = [
+    new GeometryPoint2d(firstPoint),
+    new GeometryPoint2d(secondPoint)
+  ]
+
+  let currentX = secondPoint.x
+  let currentY = secondPoint.y
+  let edgeX = dx
+  let edgeY = dy
+
+  for (let i = 2; i < sides; i++) {
+    const rotatedX = edgeX * Math.cos(step) - edgeY * Math.sin(step)
+    const rotatedY = edgeX * Math.sin(step) + edgeY * Math.cos(step)
+    currentX += rotatedX
+    currentY += rotatedY
+    vertices.push(new GeometryPoint2d(currentX, currentY))
+    edgeX = rotatedX
+    edgeY = rotatedY
+  }
+
+  return vertices
+}
+
+/**
+ * Dynamic preview jig for center-based polygon creation.
+ */
+class ApplicationPolygonCenterJig extends EditorPreviewJig<GeometryPoint2dLike> {
+  /**
+   * Transient polygon polyline shown during preview.
+   */
+  private _polyline: GeometryPolyline2d
+  private _drawable: GraphicsInterfaceDrawable
+  /**
+   * Fixed polygon center point.
+   */
+  private _center: GeometryPoint2dLike
+  /**
+   * Number of polygon sides.
+   */
+  private _sides: number
+  /**
+   * Provides current center-based construction mode.
+   */
+  private _modeProvider: () => PolygonMode
+
+  /**
+   * Creates center-mode polygon preview jig.
+   *
+   * @param view - Active editor view.
+   * @param center - Polygon center point.
+   * @param sides - Number of polygon sides.
+   * @param modeProvider - Callback for current inscribed/circumscribed mode.
+   */
+  constructor(
+    view: EditorBaseView,
+    center: GeometryPoint2dLike,
+    sides: number,
+    modeProvider: () => PolygonMode
+  ) {
+    super(view)
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
+    this._center = center
+    this._sides = sides
+    this._modeProvider = modeProvider
+  }
+
+  /**
+   * Gets transient polygon entity used by this jig.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * Rebuilds preview polygon from cursor radius point.
+   *
+   * @param point - Current cursor point.
+   */
+  update(point: GeometryPoint2dLike) {
+    const vertices = buildPolygonFromCenter(
+      this._center,
+      this._sides,
+      point,
+      this._modeProvider()
+    )
+    if (!vertices) return
+    updatePolylineVertices(this._polyline, vertices)
+  }
+}
+
+/**
+ * Dynamic preview jig for edge-based polygon creation.
+ */
+class ApplicationPolygonEdgeJig extends EditorPreviewJig<GeometryPoint2dLike> {
+  /**
+   * Transient polygon polyline shown during edge preview.
+   */
+  private _polyline: GeometryPolyline2d
+  private _drawable: GraphicsInterfaceDrawable
+  /**
+   * Fixed first endpoint of the polygon edge.
+   */
+  private _firstPoint: GeometryPoint2dLike
+  /**
+   * Number of polygon sides.
+   */
+  private _sides: number
+
+  /**
+   * Creates edge-mode polygon preview jig.
+   *
+   * @param view - Active editor view.
+   * @param firstPoint - First endpoint of the seed edge.
+   * @param sides - Number of polygon sides.
+   */
+  constructor(
+    view: EditorBaseView,
+    firstPoint: GeometryPoint2dLike,
+    sides: number
+  ) {
+    super(view)
+    this._polyline = new GeometryPolyline2d()
+    this._drawable = applicationPreviewDrawable({
+      kind: 'shape',
+      geometry: this._polyline
+    })
+    this._firstPoint = firstPoint
+    this._sides = sides
+  }
+
+  /**
+   * Gets transient polygon entity used by this jig.
+   */
+  get entity(): GraphicsInterfaceDrawable {
+    return this._drawable
+  }
+
+  /**
+   * Rebuilds preview polygon from current second edge point.
+   *
+   * @param secondPoint - Current cursor point for edge endpoint.
+   */
+  update(secondPoint: GeometryPoint2dLike) {
+    const vertices = buildPolygonFromEdge(
+      this._firstPoint,
+      secondPoint,
+      this._sides
+    )
+    if (!vertices) return
+    updatePolylineVertices(this._polyline, vertices)
+  }
+}
+
+/**
+ * Command to create one regular polygon.
+ *
+ * AutoCAD-like flow:
+ * - Enter number of sides (3-1024)
+ * - Specify center point or [Edge]
+ * - Center branch: specify radius point, with [Inscribed/Circumscribed] switch
+ * - Edge branch: specify first and second endpoints of one edge
+ */
+export class ApplicationPolygonCmd extends EditorCommand {
+  /**
+   * Last accepted side count used as default for next command run.
+   */
+  private static _lastSides = 4
+
+  /**
+   * Creates POLYGON command instance.
+   */
+  constructor() {
+    super()
+    this.mode = EditorOpenMode.Write
+  }
+
+  /**
+   * Command entry point.
+   *
+   * @param context - Current application/document context.
+   */
+  async execute(context: ApplicationContext) {
+    const sides = await this.promptSides()
+    if (sides == null) return
+
+    const centerOrEdgePrompt = new EditorPromptPointOptions(
+      ApplicationI18n.t('jig.polygon.centerOrEdge')
+    )
+    this.addKeyword(centerOrEdgePrompt, 'edge')
+    const centerOrEdgeResult =
+      await ApplicationDocManager.instance.editor.getPoint(centerOrEdgePrompt)
+
+    if (centerOrEdgeResult.status === EditorPromptStatus.Keyword) {
+      if (centerOrEdgeResult.stringResult === 'Edge') {
+        await this.runEdgeFlow(context, sides)
+      }
+      return
+    }
+
+    if (centerOrEdgeResult.status !== EditorPromptStatus.OK) return
+    await this.runCenterFlow(context, sides, centerOrEdgeResult.value!)
+  }
+
+  /**
+   * Adds one localized keyword to a point prompt.
+   *
+   * @param prompt - Target prompt object.
+   * @param key - Keyword translation key suffix.
+   */
+  private addKeyword(prompt: EditorPromptPointOptions, key: PolygonKeywordKey) {
+    prompt.keywords.add(
+      ApplicationI18n.t(`jig.polygon.keywords.${key}.display`),
+      ApplicationI18n.t(`jig.polygon.keywords.${key}.global`),
+      ApplicationI18n.t(`jig.polygon.keywords.${key}.local`)
+    )
+  }
+
+  /**
+   * Appends final polygon entity to model space.
+   *
+   * @param context - Current application/document context.
+   * @param vertices - Polygon vertex list in world coordinates.
+   */
+  private appendPolygon(context: ApplicationContext, vertices: GeometryPoint2d[]) {
+    const polygon = new GeometryPolyline2d()
+    updatePolylineVertices(polygon, vertices)
+    context.doc.modelSync.addItems({ kind: 'shape', geometry: polygon })
+  }
+
+  /**
+   * Emits warning message for invalid polygon input.
+   *
+   * @param key - Invalid-input category.
+   */
+  private warnInvalidInput(key: PolygonInvalidKey) {
+    this.notify(ApplicationI18n.t(`jig.polygon.invalid.${key}`), 'warning')
+  }
+
+  /**
+   * Prompts and validates polygon side count.
+   *
+   * @returns Valid side count, or `undefined` on cancel.
+   */
+  private async promptSides() {
+    while (true) {
+      const defaultSides = ApplicationPolygonCmd._lastSides
+      const sidesPrompt = new EditorPromptStringOptions(
+        ApplicationI18n.t('jig.polygon.numberOfSides')
+      )
+      sidesPrompt.allowEmpty = true
+      sidesPrompt.allowSpaces = false
+      sidesPrompt.defaultValue = String(defaultSides)
+      sidesPrompt.useDefaultValue = true
+      const sidesResult =
+        await ApplicationDocManager.instance.editor.getString(sidesPrompt)
+      if (sidesResult.status !== EditorPromptStatus.OK) return undefined
+
+      const rawInput = (sidesResult.stringResult ?? '').trim()
+      const rawValue = rawInput === '' ? defaultSides : Number(rawInput)
+      if (
+        Number.isInteger(rawValue) &&
+        rawValue >= MIN_SIDES &&
+        rawValue <= MAX_SIDES
+      ) {
+        ApplicationPolygonCmd._lastSides = rawValue
+        return rawValue
+      }
+
+      this.warnInvalidInput('sides')
+    }
+  }
+
+  /**
+   * Runs center-based polygon flow.
+   *
+   * @param context - Current application/document context.
+   * @param sides - Number of polygon sides.
+   * @param center - Picked polygon center point.
+   */
+  private async runCenterFlow(
+    context: ApplicationContext,
+    sides: number,
+    center: GeometryPoint2dLike
+  ) {
+    let mode: PolygonMode = 'Inscribed'
+
+    while (true) {
+      const radiusPrompt = new EditorPromptPointOptions(
+        ApplicationI18n.t('jig.polygon.radiusOrType')
+      )
+      this.addKeyword(radiusPrompt, 'inscribed')
+      this.addKeyword(radiusPrompt, 'circumscribed')
+      radiusPrompt.useDashedLine = true
+      radiusPrompt.useBasePoint = true
+      radiusPrompt.basePoint = new GeometryPoint2d(center)
+      radiusPrompt.jig = new ApplicationPolygonCenterJig(
+        context.view,
+        center,
+        sides,
+        () => mode
+      )
+
+      const radiusResult =
+        await ApplicationDocManager.instance.editor.getPoint(radiusPrompt)
+      if (radiusResult.status === EditorPromptStatus.Keyword) {
+        const keyword = radiusResult.stringResult ?? ''
+        if (keyword === 'Inscribed') {
+          mode = 'Inscribed'
+          continue
+        }
+        if (keyword === 'Circumscribed') {
+          mode = 'Circumscribed'
+          continue
+        }
+        return
+      }
+
+      if (radiusResult.status !== EditorPromptStatus.OK) return
+      const vertices = buildPolygonFromCenter(
+        center,
+        sides,
+        radiusResult.value!,
+        mode
+      )
+      if (!vertices) {
+        this.warnInvalidInput('radius')
+        continue
+      }
+
+      this.appendPolygon(context, vertices)
+      return
+    }
+  }
+
+  /**
+   * Runs edge-based polygon flow.
+   *
+   * @param context - Current application/document context.
+   * @param sides - Number of polygon sides.
+   */
+  private async runEdgeFlow(context: ApplicationContext, sides: number) {
+    const firstEdgePrompt = new EditorPromptPointOptions(
+      ApplicationI18n.t('jig.polygon.edgeStart')
+    )
+    const firstEdgeResult =
+      await ApplicationDocManager.instance.editor.getPoint(firstEdgePrompt)
+    if (firstEdgeResult.status !== EditorPromptStatus.OK) return
+    const firstPoint = firstEdgeResult.value!
+
+    const secondEdgePrompt = new EditorPromptPointOptions(
+      ApplicationI18n.t('jig.polygon.edgeEnd')
+    )
+    secondEdgePrompt.useDashedLine = true
+    secondEdgePrompt.useBasePoint = true
+    secondEdgePrompt.basePoint = new GeometryPoint2d(firstPoint)
+    secondEdgePrompt.jig = new ApplicationPolygonEdgeJig(
+      context.view,
+      firstPoint,
+      sides
+    )
+    const secondEdgeResult =
+      await ApplicationDocManager.instance.editor.getPoint(secondEdgePrompt)
+    if (secondEdgeResult.status !== EditorPromptStatus.OK) return
+
+    const vertices = buildPolygonFromEdge(
+      firstPoint,
+      secondEdgeResult.value!,
+      sides
+    )
+    if (!vertices) {
+      this.warnInvalidInput('edge')
+      return
+    }
+
+    this.appendPolygon(context, vertices)
+  }
+}

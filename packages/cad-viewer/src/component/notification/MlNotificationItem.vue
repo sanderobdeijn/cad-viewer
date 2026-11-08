@@ -57,7 +57,7 @@ import {
   SuccessFilled,
   WarningFilled
 } from '@element-plus/icons-vue'
-import { acapFormatMessageHtml } from '@mlightcad/cad-simple-viewer'
+import { applicationFormatMessageHtml } from '@mlightcad/cad-simple-viewer'
 import { ElButton, ElIcon } from 'element-plus'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -82,7 +82,7 @@ const { t } = useI18n()
 
 const formattedMessage = computed(() =>
   props.notification.message
-    ? acapFormatMessageHtml(props.notification.message)
+    ? applicationFormatMessageHtml(props.notification.message)
     : ''
 )
 

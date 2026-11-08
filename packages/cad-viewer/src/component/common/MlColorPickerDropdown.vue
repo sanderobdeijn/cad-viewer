@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/common'
+import { CommonColor } from '@mlightcad/common'
 import { ElPopover } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 
@@ -41,7 +41,7 @@ import MlColorPickerTabs from './MlColorPickerTabs.vue'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: AcCmColor
+    modelValue?: CommonColor
     displayColor?: string
     disabled?: boolean
     teleported?: boolean
@@ -59,8 +59,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:modelValue': [value: AcCmColor | undefined]
-  change: [value: AcCmColor | undefined]
+  'update:modelValue': [value: CommonColor | undefined]
+  change: [value: CommonColor | undefined]
   close: []
 }>()
 
@@ -69,7 +69,7 @@ const colorPopoverVisible = ref(false)
 const cssColor = computed(() => {
   if (props.displayColor) return props.displayColor
   if (props.modelValue?.cssColor) return props.modelValue.cssColor
-  const color = new AcCmColor()
+  const color = new CommonColor()
   color.setByLayer()
   return color.cssColor || '#ffffff'
 })
@@ -80,7 +80,7 @@ const resolvedPopperClass = computed(() => {
     .join(' ')
 })
 
-function onColorChange(color: AcCmColor | undefined) {
+function onColorChange(color: CommonColor | undefined) {
   emit('update:modelValue', color)
   emit('change', color)
   if (props.closeOnChange) {

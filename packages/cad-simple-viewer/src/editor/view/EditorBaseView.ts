@@ -1,0 +1,1294 @@
+import { CommonEventManager } from '@mlightcad/common'
+import {
+  GeometryBox2d,
+  GeometryBox3d,
+  GeometryMatrix3d,
+  GeometryPoint2d,
+  GeometryPoint2dLike,
+  type ModelItem
+} from '@mlightcad/geometry-engine'
+import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
+import { debounce } from 'lodash-es'
+
+import type { ThreeRendererSpatialSearchOptions } from '../../spatialIndex/ThreeRendererSpatialIndex'
+import type {
+  EditorSessionAccessory,
+  EditorSessionAccessoryHostInfo
+} from '../command/EditorSessionAccessory'
+import { EditorSessionProviderRegistry } from '../command/EditorSessionProviderRegistry'
+import { EditorCorsorType, EditorSelectionSet } from '../input'
+import { Editor } from '../input/Editor'
+import {
+  type EditorOsnapPoint,
+  EditorOsnapResolver
+} from '../input/EditorOsnapResolver'
+import { EditorMarkerManager } from '../input/marker'
+import {
+  editorDisposeMobileSnapLoupe,
+  editorHideMobileSnapLoupe,
+  editorRefreshMobileSnapLoupe
+} from '../input/ui/EditorMobileSnapLoupe'
+import { EditorHoverController } from './EditorHoverController'
+import {
+  EditorSelectionAction,
+  resolveSelectionActionFromEvent
+} from './EditorSelectionAction'
+import {
+  EditorSpatialQueryResultItemEx,
+  isEffectiveSpatialQueryHit
+} from './EditorSpatialQueryResult'
+import { EditorViewMode } from './EditorViewMode'
+
+export { EditorViewMode } from './EditorViewMode'
+
+/**
+ * Interface to define arguments of mouse event events.
+ */
+export interface EditorMouseEventArgs {
+  /**
+   * X coordinate value of current mouse in the world coordinate system
+   */
+  x: number
+  /**
+   * Y coordinate value of current mouse in the world coordinate system
+   */
+  y: number
+}
+
+/**
+ * Interface to define arguments of view resized events.
+ */
+export interface EditorViewResizedEventArgs {
+  /**
+   * New width of the resized view.
+   */
+  width: number
+  /**
+   * New height of the resized view.
+   */
+  height: number
+}
+
+/**
+ * Interface to define arguments of hover events.
+ */
+export interface EditorViewHoverEventArgs {
+  /**
+   * X coordinate value of current mouse in the screen coordinate system
+   */
+  x: number
+  /**
+   * Y coordinate value of current mouse in the screen coordinate system
+   */
+  y: number
+  /**
+   * Object id of the hovered entity
+   */
+  id: string
+}
+
+/**
+ * Screen-fixed snap-loupe overlay: CSS rectangle on the canvas plus the
+ * world box shown inside it.
+ */
+export interface EditorSnapLoupeViewState {
+  /** Canvas-local left of the loupe (CSS pixels). */
+  x: number
+  /** Canvas-local top of the loupe (CSS pixels). */
+  y: number
+  /** Width and height of the square loupe (CSS pixels). */
+  size: number
+  /** World-space box mapped onto the loupe. */
+  viewBox: GeometryBox2d
+}
+
+/**
+ * Interface to define arguments of render frame events.
+ */
+export interface EditorViewRenderFrameEventArgs {
+  /**
+   * The renderer used for rendering the frame
+   */
+  render: unknown
+  /**
+   * The camera used for rendering the frame
+   */
+  camera: unknown
+}
+
+/**
+ * Selection box interaction mode.
+ */
+export type EditorSelectionMode = 'window' | 'crossing'
+
+export type { EditorSelectionAction } from './EditorSelectionAction'
+export {
+  resolvePointerSelectionAction,
+  resolveSelectionActionFromEvent
+} from './EditorSelectionAction'
+
+/**
+ * One unresolved external reference reported by the viewer.
+ */
+export interface EditorMissedXref {
+  /** Block table record name of the xref */
+  name: string
+  /** Saved path from the drawing (may be empty if the converter did not provide it) */
+  pathName: string
+  /** True when the xref is an overlay reference */
+  isOverlay: boolean
+}
+
+/**
+ * Represents missed data when rendering entities in the drawing
+ */
+export interface EditorMissedData {
+  fonts: Record<string, number>
+  /** Unresolved external references in the drawing */
+  xrefs: EditorMissedXref[]
+}
+
+/**
+ * Type of callback function used to calculate size of canvas when window resized
+ */
+export type EditorCalculateSizeCallback = () => { width: number; height: number }
+
+/**
+ * Abstract base class for all CAD view implementations.
+ *
+ * This class provides the foundation for rendering and interacting with CAD drawings.
+ * It manages:
+ * - Canvas and viewport dimensions
+ * - Mouse event handling and coordinate conversion
+ * - Entity selection and highlighting
+ * - View modes (selection, pan, etc.)
+ * - Spatial queries for entity picking
+ * - Hover/unhover detection with timing
+ *
+ * Concrete implementations must provide specific rendering logic and coordinate
+ * transformations appropriate for their rendering technology (e.g., Three.js, SVG).
+ *
+ * ## Key Responsibilities
+ * - **Input Management**: Handles mouse events and user interactions
+ * - **Selection**: Manages selected entities and visual feedback
+ * - **Coordinate Systems**: Converts between screen and world coordinates
+ * - **Spatial Queries**: Finds entities at specific locations
+ * - **View State**: Tracks current position, zoom, and view mode
+ *
+ * @example
+ * ```typescript
+ * class MyView extends EditorBaseView {
+ *   // Implement required abstract methods
+ *   get missedData() { return { fonts: {}, xrefs: [] }; }
+ *   get mode() { return this._mode; }
+ *   set mode(value) { this._mode = value; }
+ *   // ... other abstract methods
+ * }
+ *
+ * const view = new MyView(canvasElement);
+ * view.events.mouseMove.addEventListener(args => {
+ *   console.log('Mouse at world coords:', args.x, args.y);
+ * });
+ * ```
+ */
+export abstract class EditorBaseView {
+  /** Current viewport width in pixels */
+  private _width: number
+  /** Current viewport height in pixels */
+  private _height: number
+  /** Optional callback to calculate canvas size on resize */
+  private _calculateSizeCallback?: EditorCalculateSizeCallback
+  /** Bounding box of all entities in the view */
+  private _bbox: GeometryBox3d
+  /** Current mouse position in world coordinates */
+  private _curPos: GeometryPoint2d
+  /**
+   * Current mouse position in canvas-local screen coordinates (pixels).
+   *
+   * This value is derived from viewport/client mouse coordinates by subtracting
+   * the canvas bounding-rect origin (`viewportToCanvas`).
+   */
+  private _curMousePos: GeometryPoint2d
+  /**
+   * True after at least one mouse or pointer sample has updated
+   * {@link curMousePos}. Touch devices never fire `mousemove` until a finger
+   * is down, so the default `(0, 0)` must not be treated as a real cursor.
+   */
+  private _hasCursorPos = false
+  /** Set of currently selected entities */
+  private _selectionSet: EditorSelectionSet
+  /**
+   * When false, pointer hover and click/box gestures do not select or
+   * highlight CAD entities. Measurement overlays can still be picked.
+   */
+  private _entitySelectionEnabled = true
+
+  /** Input manager for handling user interactions */
+  private _editor: Editor
+  /** Size of selection box in pixels for entity picking */
+  private _selectionBoxSize: number
+
+  /**
+   * Controller responsible for all hover-related behavior in this view.
+   *
+   * This includes:
+   * - Delayed hover detection while the mouse is stationary
+   * - Pause-based hover confirmation
+   * - Tracking the currently hovered entity
+   * - Dispatching hover and unhover events
+   *
+   * Extracted into a separate class to keep `EditorBaseView` focused on
+   * view lifecycle and input routing rather than interaction timing logic.
+   */
+  private _hoverController: EditorHoverController
+
+  /** Resolves object snap points using this view's pick and coordinate APIs. */
+  private _osnapResolver: EditorOsnapResolver
+
+  /** OSNAP markers shown while dragging overlay measurement grips. */
+  private _overlayGripOsnapMarkers: EditorMarkerManager | null = null
+  /** Last object snap acquired during {@link resolveOverlayGripPoint}, if any. */
+  private _lastOverlayGripOsnap: EditorOsnapPoint | null = null
+
+  /** The HTML canvas element for rendering */
+  protected _canvas: HTMLCanvasElement
+
+  /** The HTML element to contain this view */
+  protected _container: HTMLElement
+
+  /** Disconnects container/parent {@link ResizeObserver} on dispose. */
+  private _resizeObserver?: ResizeObserver
+
+  /**
+   * Aborts canvas DOM listeners registered in the base constructor.
+   * Subclasses may abort their own controllers independently.
+   */
+  private readonly _domAbortController = new AbortController()
+
+  /** True after {@link dispose} has run; further dispose calls are no-ops. */
+  private _baseDisposed = false
+
+  /**
+   * Long-lived session UI providers for this view (draw-style, etc.).
+   * Feature installs register here; mountable accessories are minted on demand.
+   */
+  readonly sessionProviders = new EditorSessionProviderRegistry()
+
+  /** Events fired by the view for various interactions */
+  public readonly events = {
+    /** Fired when mouse moves over the view */
+    mouseMove: new CommonEventManager<EditorMouseEventArgs>(),
+    /** Fired when the view is resized */
+    viewResize: new CommonEventManager<EditorViewResizedEventArgs>(),
+    /** Fired when the view camera is changed */
+    viewChanged: new CommonEventManager<void>(),
+    /** Fired when mouse hovers over an entity */
+    hover: new CommonEventManager<EditorViewHoverEventArgs>(),
+    /** Fired when mouse stops hovering over an entity */
+    unhover: new CommonEventManager<EditorViewHoverEventArgs>(),
+    /** Fired when a frame is rendered */
+    renderFrame: new CommonEventManager<EditorViewRenderFrameEventArgs>()
+  }
+
+  /**
+   * Creates a new base view instance.
+   *
+   * Sets up the canvas, initializes internal state, and registers event listeners
+   * for mouse interactions and container resize events.
+   *
+   * @param canvas - The HTML canvas element to render into
+   * @param container - The HTML element to contain this viewer. The canvas element
+   * must be children element of container element.
+   */
+  constructor(canvas: HTMLCanvasElement, container: HTMLElement) {
+    this._container = container
+    this._canvas = canvas
+    const rect = canvas.getBoundingClientRect()
+    this._bbox = new GeometryBox3d()
+    this._width = rect.width
+    this._height = rect.height
+    this._curPos = new GeometryPoint2d()
+    this._curMousePos = new GeometryPoint2d()
+    this._hasCursorPos = false
+    this._selectionSet = new EditorSelectionSet()
+    this._editor = new Editor(this)
+    this._osnapResolver = new EditorOsnapResolver(this)
+    const domSignal = this._domAbortController.signal
+    this._canvas.addEventListener(
+      'mousemove',
+      event => this.onMouseMove(event),
+      { signal: domSignal }
+    )
+    // Touch does not fire `mousemove`. Keep cursor (and therefore the next
+    // point-prompt preview) in sync with the finger, otherwise `curMousePos`
+    // stays at canvas (0, 0) — the top-left of the view. Mouse already has
+    // `mousemove`; do not also handle pointer events or hover runs twice.
+    this._canvas.addEventListener(
+      'pointerdown',
+      event => {
+        if (event.pointerType === 'touch') this.onMouseMove(event)
+      },
+      { signal: domSignal }
+    )
+    this._canvas.addEventListener(
+      'pointermove',
+      event => {
+        if (event.pointerType === 'touch') this.onMouseMove(event)
+      },
+      { signal: domSignal }
+    )
+    this._canvas.addEventListener(
+      'mousedown',
+      event => {
+        if (event.button === 1) {
+          // Middle mouse button (button === 1)
+          this._editor.setCursor(EditorCorsorType.Grab)
+        }
+      },
+      { signal: domSignal }
+    )
+    this._canvas.addEventListener(
+      'mouseup',
+      event => {
+        if (event.button === 1) {
+          // Middle mouse button (button === 1)
+          this._editor.restoreCursor()
+        }
+      },
+      { signal: domSignal }
+    )
+
+    const debouncedWindowResize = debounce(() => this.onWindowResize(), 0, {
+      leading: false,
+      trailing: true
+    })
+    const resizeObserver = new ResizeObserver(debouncedWindowResize)
+    resizeObserver.observe(this._container)
+    const containerParent = this._container.parentElement
+    if (containerParent) {
+      resizeObserver.observe(containerParent)
+    }
+    this._resizeObserver = resizeObserver
+
+    this._selectionBoxSize = 4
+
+    // Initialize hover/unhover handler
+    this._hoverController = new EditorHoverController(
+      this,
+      this.events.hover,
+      this.events.unhover
+    )
+  }
+
+  /**
+   * Releases base-view DOM observers, hover timers, and the editor UI.
+   *
+   * Safe to call more than once. Subclasses that override dispose must call
+   * `super.dispose()` so the ResizeObserver and canvas listeners are cleared.
+   */
+  dispose() {
+    if (this._baseDisposed) return
+    this._baseDisposed = true
+    this._domAbortController.abort()
+    this._resizeObserver?.disconnect()
+    this._resizeObserver = undefined
+    this._hoverController.dispose()
+    editorDisposeMobileSnapLoupe(this)
+    this._overlayGripOsnapMarkers?.clear()
+    this._overlayGripOsnapMarkers = null
+    this._editor.dispose()
+  }
+
+  /**
+   * Gets the input manager for handling user interactions.
+   *
+   * The editor provides high-level methods for getting user input like
+   * point selection, entity selection, and cursor management.
+   *
+   * @returns The editor instance
+   */
+  get editor() {
+    return this._editor
+  }
+
+  /**
+   * Active mount target for session accessories (desktop slot or mobile panel).
+   */
+  get sessionAccessoryHost(): EditorSessionAccessoryHostInfo {
+    return this._editor.inputManager.sessionAccessoryHost
+  }
+
+  /**
+   * Selection-driven session accessory shown when no command accessory is mounted.
+   */
+  get selectionSessionAccessory(): EditorSessionAccessory | null {
+    return this._editor.inputManager.selectionSessionAccessory
+  }
+
+  /**
+   * Updates the selection-driven session accessory forwarded to the input manager.
+   *
+   * @param value - Accessory to show on selection, or `null` to clear.
+   */
+  set selectionSessionAccessory(value: EditorSessionAccessory | null) {
+    this._editor.inputManager.selectionSessionAccessory = value
+  }
+
+  /**
+   * Gets the size of the selection box used for entity picking.
+   *
+   * This determines how close the mouse needs to be to an entity
+   * to select it, measured in screen pixels.
+   *
+   * @returns Selection box size in pixels
+   */
+  get selectionBoxSize() {
+    return this._selectionBoxSize
+  }
+
+  /**
+   * Sets the size of the selection box used for entity picking.
+   *
+   * @param value - Selection box size in pixels
+   */
+  set selectionBoxSize(value: number) {
+    this._selectionBoxSize = value
+  }
+
+  /**
+   * Gets information about missing data during rendering.
+   *
+   * This includes fonts that couldn't be loaded and images that are
+   * missing or inaccessible. Implementations should track and report
+   * this information to help users understand rendering issues.
+   *
+   * @returns Object containing missing fonts and images
+   */
+  abstract get missedData(): EditorMissedData
+
+  /**
+   * Gets the current view mode.
+   *
+   * The view mode determines how the view responds to user interactions:
+   * - SELECTION: Click to select entities
+   * - PAN: Click and drag to pan the view
+   *
+   * @returns The current view mode
+   */
+  abstract get mode(): EditorViewMode
+
+  /**
+   * Sets the current view mode.
+   *
+   * @param value - The view mode to set
+   */
+  abstract set mode(value: EditorViewMode)
+
+  /**
+   * Gets the center point of the current view in world coordinates.
+   *
+   * @returns The view center point
+   */
+  abstract get center(): GeometryPoint2d
+
+  /**
+   * Sets the center point of the current view in world coordinates.
+   *
+   * @param value - The new center point
+   */
+  abstract set center(value: GeometryPoint2d)
+
+  /**
+   * Converts a point from screen coordinates to world coordinates.
+   *
+   * The screen coordinate system has its origin at the top-left corner
+   * of the canvas, with Y increasing downward. World coordinates use the
+   * CAD coordinate system with Y typically increasing upward.
+   *
+   * @param point - Point in screen coordinates
+   * @returns Point in world coordinates
+   *
+   * @example
+   * ```typescript
+   * const screenPoint = { x: 100, y: 200 }; // 100px right, 200px down
+   * const worldPoint = view.screenToWorld(screenPoint);
+   * console.log('World coordinates:', worldPoint.x, worldPoint.y);
+   * ```
+   */
+  abstract screenToWorld(point: GeometryPoint2dLike): GeometryPoint2d
+
+  /**
+   * Converts a point from world coordinates to screen coordinates.
+   *
+   * This is the inverse of `screenToWorld()`, converting from the CAD world
+   * coordinate system to screen pixel coordinates.
+   *
+   * @param point - Point in world coordinates
+   * @returns Point in screen coordinates
+   *
+   * @example
+   * ```typescript
+   * const worldPoint = new GeometryPoint2d(10, 20); // CAD coordinates
+   * const screenPoint = view.worldToScreen(worldPoint);
+   * console.log('Screen position:', screenPoint.x, screenPoint.y);
+   * ```
+   */
+  abstract worldToScreen(point: GeometryPoint2dLike): GeometryPoint2d
+
+  /**
+   * Zooms the view to fit the specified bounding box with optional margin.
+   *
+   * This method adjusts the view's center and zoom level so that the entire
+   * specified bounding box is visible within the viewport. The margin parameter
+   * adds extra space around the bounding box to provide visual padding.
+   *
+   * @param box - The bounding box to zoom to, in world coordinates
+   * @param margin - Additional margin around the bounding box (in world units)
+   */
+  abstract zoomTo(box: GeometryBox2d, margin: number): void
+
+  /**
+   * Returns the axis-aligned world XY extents of drawable geometry in the
+   * active layout.
+   *
+   * Prefer this over database header `EXTMIN`/`EXTMAX` (`database.extents`)
+   * for framing and export: real DWGs often ship stale header boxes that are
+   * many times larger than the geometry that is actually drawn.
+   *
+   * @returns Drawable extents, or `undefined` when the scene has no geometry.
+   */
+  abstract getDrawingExtents(): GeometryBox2d | undefined
+
+  /**
+   * Zooms the view to fit all visible entities in the current drawing.
+   *
+   * This method automatically calculates the bounding box of all entities
+   * currently displayed in the view and adjusts the view's center and zoom
+   * level to show the entire scene. This is useful for getting an overview
+   * of the entire drawing or after loading new content.
+   *
+   * This function takes effect only if the current view has finished rendering
+   * all entities. When opening a file, progressive Rendering is used to render
+   * entities incrementally. So this function will wait until all of entities
+   * rendered or a timeout occurs.
+   *
+   * @param timeout - Maximum time (ms) to wait before executing zoom to fit
+   * action. Default: 0 (no timeout).
+   */
+  abstract zoomToFitDrawing(timeout?: number): void
+
+  /**
+   * Zooms to the dominant geometry cluster, peeling far outlier entities.
+   *
+   * Falls back to {@link zoomToFitDrawing} when clustering cannot produce a
+   * tighter box (empty scene, too few boxes, or no outliers).
+   *
+   * @param timeout - Maximum time (ms) to wait for entity conversion. Default: 0.
+   * @returns Resolves when the zoom has been applied (or skipped if still waiting
+   *   was cancelled — currently always resolves after the fit action runs).
+   */
+  abstract zoomToSmartExtents(timeout?: number): void | Promise<void>
+
+  /**
+   * Moves the current view to the specified 2D point at the given scale.
+   *
+   * @param point - Target location in world coordinates to fly the view to.
+   * @param scale - The optional target zoom scale to apply after the transition.
+   * If not specified, the scale will not change.
+   */
+  abstract flyTo(point: GeometryPoint2dLike, scale?: number): void
+
+  /**
+   * Gets the background color of the view.
+   *
+   * The color is represented as a 24-bit hexadecimal RGB number, for example
+   * `0x000000` for black or `0xffffff` for white.
+   */
+  abstract get backgroundColor(): number
+
+  /**
+   * Sets the background color of the view.
+   *
+   * @param value - The background color as a 24-bit hexadecimal RGB number
+   */
+  abstract set backgroundColor(value: number)
+
+  /**
+   * Search entities intersected or contained in the specified bounding box.
+   * @param box Input the query bounding box
+   * @returns Return query results
+   */
+  abstract search(
+    box: GeometryBox2d | GeometryBox3d,
+    options?: ThreeRendererSpatialSearchOptions
+  ): EditorSpatialQueryResultItemEx[]
+
+  /**
+   * Picks entities that intersect a hit-region centered at the specified point
+   * in world coordinates.
+   *
+   * The hit-region is defined as a square (or bounding box) centered at the
+   * input point, whose half-size is determined by the `hitRadius` parameter.
+   * Only entities whose geometry intersects this region are returned.
+   *
+   * @param point The center point of the hit-region in world coordinates.
+   * If omitted, the current cursor position is used.
+   *
+   * @param hitRadius The half-width (in pixel size) of the hit-region around
+   * the point. It will be converted on one value in the world
+   * coordinate 'wcsHitRadius' and creates a square bounding box:
+   * [point.x ± wcsHitRadius, point.y ± wcsHitRadius].
+   * A larger value increases the pick sensitivity. If omitted, a reasonable
+   * default is used.
+   *
+   * @returns Return query results representing the entities that intersect
+   * the hit-region.
+   */
+  abstract pick(
+    point?: GeometryPoint2dLike,
+    hitRadius?: number,
+    pickOneOnly?: boolean
+  ): EditorSpatialQueryResultItemEx[]
+
+  /**
+   * Select entities intersected with the specified bounding box in the world
+   * coordinate system, add them to the current selection set, and highlight
+   * them.
+   * @param box Input one bounding box in the world coordinate system.
+   */
+  abstract selectByBox(box: GeometryBox2d): void
+
+  /**
+   * Select entities intersected with the specified point in the world coordinate
+   * system, add them to the current selection set, and highlight them.
+   * @param box Input one point in the world coordinate system.
+   */
+  abstract select(point?: GeometryPoint2dLike): void
+
+  /**
+   * Clear the scene
+   */
+  abstract clear(): void
+
+  /**
+   * Adds model space and the one layer that items are drawn on, if missing.
+   */
+  abstract addModelSpace(): void
+
+  /**
+   * Add the specified transient entity or entities in the current scene.
+   * @param entity Input one or multiple transient entities
+   */
+  abstract addTransientEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+
+  /**
+   * Remove the specified transient entity or entities in the current scene.
+   * @param entity Input the object id of one transient entity
+   */
+  abstract removeTransientEntity(objectId: string): void
+
+  /**
+   * Returns true when batched GPU-resident preview can be created for all ids.
+   *
+   * @param entityIds - Database object ids to include in the preview overlay
+   */
+  abstract canCreateEntityPreview(entityIds: string[]): boolean
+
+  /**
+   * Creates one batched preview overlay for command jigs.
+   *
+   * @param entityIds - Database object ids to include in the preview overlay
+   * @returns Preview handle id, or `null` when preview creation failed
+   */
+  abstract createEntityPreview(entityIds: string[]): string | null
+
+  /**
+   * Updates the world transform of one batched preview overlay.
+   *
+   * @param handleId - Preview handle returned by {@link createEntityPreview}
+   * @param matrix - World transform to apply to the preview geometry
+   */
+  abstract updateEntityPreview(handleId: string, matrix: GeometryMatrix3d): void
+
+  /**
+   * Removes one batched preview overlay.
+   *
+   * @param handleId - Preview handle returned by {@link createEntityPreview}
+   */
+  abstract removeEntityPreview(handleId: string): void
+
+  /**
+   * Updates world transforms on existing transient preview entities without
+   * reconverting database entities on every cursor move.
+   */
+  abstract updateTransientPreviewTransforms(
+    transforms: ReadonlyArray<{
+      objectId: string
+      matrix: GeometryMatrix3d
+    }>
+  ): void
+
+  /**
+   * Looks up the item with this id in the model of the document on screen.
+   * The application sets it when it shows a document in this view.
+   */
+  itemLookup: (id: string) => ModelItem | undefined = () => undefined
+
+  /**
+   * Add the specified entity or entities in drawing database into the current scene
+   * and draw it or them
+   * @param entity Input one or multiple entities to add into the current scene
+   */
+  abstract addEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+
+  /**
+   * Remove the specified entity or entities from current drawing database and current scene
+   * and draw it or them
+   * @param entity Input one or multiple entities to remove
+   */
+  abstract removeEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+
+  /**
+   * Update the specified entity or entities
+   * @param entity Input the entity or entities to update
+   */
+  abstract updateEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+
+  /**
+   * Returns true when the entity is already present in the scene.
+   */
+  hasEntity(_objectId: string): boolean {
+    return false
+  }
+
+  /**
+   * Applies a visibility-only scene update without rebuilding geometry.
+   */
+  updateEntityVisibility(_entity: GraphicsInterfaceDrawable): boolean {
+    return false
+  }
+
+  /**
+   * Updates scene visibility for one entity without changing the database.
+   */
+  setEntitySceneVisible(_objectId: string, _visible: boolean): boolean {
+    return false
+  }
+
+  /**
+   * Returns the current scene visibility for one entity.
+   */
+  getEntityVisible(_objectId: string): boolean | undefined {
+    return undefined
+  }
+
+  /**
+   * Adds an empty layout to the current scene
+   * @param layoutBtrId Id of the block table record of the layout
+   */
+  abstract addLayout(layoutBtrId: string): void
+
+  /**
+   * Select the specified entities
+   */
+  abstract highlight(ids: string[]): void
+  /**
+   * Unhighlight the specified entities
+   */
+  abstract unhighlight(ids: string[]): void
+
+  /**
+   * Called when hovering the specified entity
+   */
+  abstract onHover(id: string): void
+
+  /**
+   * Called when unhovering the specified entity
+   */
+  abstract onUnhover(id: string): void
+
+  /**
+   * Temporarily switches the view mode, executes an action, then restores
+   * the previous mode — even if the action throws.
+   *
+   * This is the mode-level counterpart of {@link Editor.withCursor} and
+   * follows the same save → set → restore pattern.
+   *
+   * @param mode - The temporary view mode to apply
+   * @param action - The async (or sync) action to run under the temporary mode
+   * @returns The value returned by the action
+   *
+   * @example
+   * ```typescript
+   * await view.withMode(EditorViewMode.SELECTION, async () => {
+   *   const pt = await view.editor.getPoint('Pick a point')
+   * })
+   * // view.mode is restored to whatever it was before
+   * ```
+   */
+  async withMode<T>(
+    mode: EditorViewMode,
+    action: () => Promise<T> | T
+  ): Promise<T> {
+    const previousMode = this.mode
+    this.mode = mode
+    try {
+      return await Promise.resolve(action())
+    } finally {
+      this.mode = previousMode
+    }
+  }
+
+  /**
+   * Set cursor type of this view
+   * @param cursorType Input cursor type
+   */
+  setCursor(cursorType: EditorCorsorType) {
+    this._editor.setCursor(cursorType)
+  }
+
+  /**
+   * Returns selection mode based on drag direction in canvas coordinates.
+   * Left-to-right = window selection, right-to-left = crossing selection.
+   */
+  getSelectionMode(
+    startCanvas: GeometryPoint2dLike,
+    endCanvas: GeometryPoint2dLike
+  ): EditorSelectionMode {
+    return endCanvas.x >= startCanvas.x ? 'window' : 'crossing'
+  }
+
+  /**
+   * Returns the selection action based on modifier keys.
+   * Shift: remove, Ctrl/Cmd: add, default: replace.
+   */
+  getSelectionActionFromEvent(
+    e: MouseEvent,
+    defaultAction: EditorSelectionAction = 'replace'
+  ): EditorSelectionAction {
+    return resolveSelectionActionFromEvent(e, defaultAction)
+  }
+
+  /**
+   * Determine whether a drag is effectively a click.
+   */
+  isSelectionClick(
+    startCanvas: GeometryPoint2dLike,
+    endCanvas: GeometryPoint2dLike,
+    threshold: number = 2
+  ) {
+    const dx = endCanvas.x - startCanvas.x
+    const dy = endCanvas.y - startCanvas.y
+    return Math.hypot(dx, dy) < threshold
+  }
+
+  /**
+   * Returns preview styles for selection rectangle.
+   */
+  getSelectionPreviewStyle(
+    mode: EditorSelectionMode,
+    action: EditorSelectionAction
+  ) {
+    const windowLine = 'var(--ml-ui-canvas-line, #00ff5a)'
+    const crossingLine = 'var(--ml-ui-accent-alt, #00d1ff)'
+    const removeLine = 'var(--ml-ui-danger, #ff4d4f)'
+    const lineColor =
+      action === 'remove'
+        ? removeLine
+        : mode === 'window'
+          ? windowLine
+          : crossingLine
+    const background =
+      'var(--ml-ui-canvas-fill-mix, var(--ml-ui-canvas-fill, rgba(64, 158, 255, 0.12)))'
+    const borderStyle = mode === 'window' ? 'solid' : 'dashed'
+    return { borderStyle, lineColor, background }
+  }
+
+  /**
+   * Applies selection based on action.
+   */
+  applySelection(ids: string[], action: EditorSelectionAction) {
+    if (!this.entitySelectionEnabled) return
+    if (action === 'replace') {
+      this.selectionSet.clear()
+      const unique = ids.filter(id => !this.selectionSet.has(id))
+      if (unique.length > 0) this.selectionSet.add(unique)
+      return
+    }
+
+    if (ids.length === 0) return
+
+    if (action === 'add') {
+      const unique = ids.filter(id => !this.selectionSet.has(id))
+      if (unique.length > 0) this.selectionSet.add(unique)
+    } else {
+      const existing = ids.filter(id => this.selectionSet.has(id))
+      if (existing.length > 0) this.selectionSet.delete(existing)
+    }
+  }
+
+  /**
+   * Select entities by box with window/crossing behavior.
+   */
+  selectByBoxWithMode(
+    box: GeometryBox2d,
+    mode: EditorSelectionMode,
+    action: EditorSelectionAction = 'add'
+  ) {
+    const ids = this.collectSelectionIdsByBox(box, mode)
+    this.applySelection(ids, action)
+  }
+
+  /**
+   * Collects ids using window or crossing selection rules.
+   *
+   * Crossing hits come from entity AABBs in the spatial index. Long polylines
+   * can therefore match a pick rectangle that sits in empty interior space.
+   * Subclasses with access to the drawing database should override
+   * {@link refineCrossingSelectionHits} to drop those false positives.
+   */
+  protected collectSelectionIdsByBox(
+    box: GeometryBox2d,
+    mode: EditorSelectionMode
+  ) {
+    const results = this.search(box, { selectionMode: mode }).filter(
+      isEffectiveSpatialQueryHit
+    )
+    if (mode === 'crossing') {
+      return this.refineCrossingSelectionHits(box, results)
+    }
+    return results.map(item => item.id)
+  }
+
+  /**
+   * Optional crossing-selection refinement after the spatial query.
+   *
+   * Default keeps the AABB hits unchanged. {@link ThreeRendererView2d} overrides this
+   * to test curve geometry against the pick box.
+   */
+  protected refineCrossingSelectionHits(
+    _box: GeometryBox2d,
+    results: EditorSpatialQueryResultItemEx[]
+  ): string[] {
+    return results.map(item => item.id)
+  }
+
+  /**
+   * Set callback function used to calculate size of canvas when window resized
+   * @param value Input callback function
+   */
+  setCalculateSizeCallback(value: EditorCalculateSizeCallback) {
+    this._calculateSizeCallback = value
+  }
+
+  /**
+   * Width of canvas (not width of window) in pixel
+   */
+  get width() {
+    return this._width
+  }
+  set width(value: number) {
+    this._width = value
+  }
+
+  /**
+   * Height of canvas (not height of window) in pixel
+   */
+  get height() {
+    return this._height
+  }
+  set height(value: number) {
+    this._height = value
+  }
+
+  /**
+   * The bounding box to include all entities in this viewer
+   */
+  get bbox() {
+    return this._bbox
+  }
+
+  /**
+   * The canvas HTML element used by this view
+   */
+  get canvas() {
+    return this._canvas
+  }
+
+  /**
+   * The HTML element to contain this view
+   */
+  get container() {
+    return this._container
+  }
+
+  /**
+   * Converts a viewport/client-space point (e.g. MouseEvent.clientX/Y)
+   * into canvas-local coordinates.
+   */
+  viewportToCanvas(point: GeometryPoint2dLike): GeometryPoint2d {
+    const rect = this._canvas.getBoundingClientRect()
+    return new GeometryPoint2d(point.x - rect.left, point.y - rect.top)
+  }
+
+  /**
+   * Converts canvas-local coordinates into viewport/client-space coordinates.
+   */
+  canvasToViewport(point: GeometryPoint2dLike): GeometryPoint2d {
+    const rect = this._canvas.getBoundingClientRect()
+    return new GeometryPoint2d(point.x + rect.left, point.y + rect.top)
+  }
+
+  /**
+   * Converts canvas-local coordinates into container-local coordinates.
+   *
+   * This is useful for DOM overlays mounted in `container` while CAD APIs
+   * return screen points in canvas space.
+   */
+  canvasToContainer(point: GeometryPoint2dLike): GeometryPoint2d {
+    const canvasRect = this._canvas.getBoundingClientRect()
+    const containerRect = this._container.getBoundingClientRect()
+    return new GeometryPoint2d(
+      point.x + (canvasRect.left - containerRect.left),
+      point.y + (canvasRect.top - containerRect.top)
+    )
+  }
+
+  /**
+   * Converts a viewport/client-space point into container-local coordinates.
+   */
+  viewportToContainer(point: GeometryPoint2dLike): GeometryPoint2d {
+    const containerRect = this._container.getBoundingClientRect()
+    return new GeometryPoint2d(
+      point.x - containerRect.left,
+      point.y - containerRect.top
+    )
+  }
+
+  get aspect() {
+    return this._width / this._height
+  }
+
+  /**
+   * Postion of current mouse in world coordinate system
+   */
+  get curPos() {
+    return this._curPos
+  }
+
+  /**
+   * Current mouse position in canvas-local screen coordinates (pixels).
+   *
+   * Note: this is NOT viewport/client coordinates; use `canvasToViewport()`
+   * when browser-viewport coordinates are required by DOM APIs.
+   */
+  get curMousePos() {
+    return this._curMousePos
+  }
+
+  /**
+   * Whether {@link curMousePos} has been set by a real pointer sample.
+   *
+   * @returns False until the first mouse or pointer event on the canvas.
+   */
+  get hasCursorPos() {
+    return this._hasCursorPos
+  }
+
+  /**
+   * Marks {@link curMousePos} as stale so the next point prompt does not
+   * treat a leftover touch sample as a live cursor.
+   *
+   * Touch picking commits on `pointerup`. The finger position must not seed
+   * the following prompt's jig (that would draw a short segment next to the
+   * pick). The next real pointer sample sets this flag again.
+   */
+  clearCursorPos() {
+    this._hasCursorPos = false
+  }
+
+  /**
+   * The selection set in current view.
+   */
+  get selectionSet() {
+    return this._selectionSet
+  }
+
+  /**
+   * Whether CAD entities can be selected and hover-highlighted.
+   *
+   * Measurement overlays are unaffected. Default is `true`.
+   */
+  get entitySelectionEnabled() {
+    return this._entitySelectionEnabled
+  }
+  set entitySelectionEnabled(value: boolean) {
+    if (this._entitySelectionEnabled === value) return
+    this._entitySelectionEnabled = value
+    if (!value) {
+      this.clearHover()
+      this.selectionSet.clear()
+    }
+  }
+
+  /**
+   * Object snap resolver scoped to this view.
+   */
+  get osnapResolver() {
+    return this._osnapResolver
+  }
+
+  /**
+   * Enables or disables camera pan/zoom (OrbitControls) for this view.
+   * Default is a no-op; {@link ThreeRendererView2d} toggles the active layout controls.
+   *
+   * @param _enabled - When false, the user cannot pan or zoom this view.
+   */
+  setNavigationEnabled(_enabled: boolean): void {
+    // Optional; 2D view overrides this.
+  }
+
+  /**
+   * Shows or hides the screen-fixed snap loupe overlay viewport.
+   * Pass `null` to hide. Default is a no-op.
+   *
+   * @param _state - Loupe screen rectangle and world box, or `null` to hide.
+   */
+  setSnapLoupe(_state: EditorSnapLoupeViewState | null): void {
+    // Optional; 2D view overrides this.
+  }
+
+  /**
+   * Resolves a world XY cursor through object snap and updates overlay grip
+   * snap markers. Used by HTML overlay endpoint drags (measure).
+   *
+   * @param cursor - Raw world XY under the pointer.
+   * @param lastPoint - Grip origin passed to the osnap resolver as lastPoint.
+   * @returns Snapped world XY, or `cursor` when nothing is in aperture.
+   */
+  resolveOverlayGripPoint(
+    cursor: { x: number; y: number },
+    lastPoint?: { x: number; y: number }
+  ): { x: number; y: number } {
+    const cursorWcs = { x: cursor.x, y: cursor.y }
+    this._overlayGripOsnapMarkers ??= new EditorMarkerManager(this)
+    const snapPoint = this._osnapResolver.resolve({
+      cursorWcs,
+      lastPoint: lastPoint ? { x: lastPoint.x, y: lastPoint.y } : cursorWcs
+    })
+    this._lastOverlayGripOsnap = snapPoint ?? null
+    this._overlayGripOsnapMarkers.setHintMarkers(
+      EditorOsnapResolver.displayCenterMarks(
+        this._osnapResolver.acquiredCenterMarks,
+        snapPoint
+      )
+    )
+    if (snapPoint) {
+      this._overlayGripOsnapMarkers.showOrRepositionMarker(
+        snapPoint,
+        EditorOsnapResolver.osnapModeToMarkerType(snapPoint.type)
+      )
+      return { x: snapPoint.x, y: snapPoint.y }
+    }
+    this._overlayGripOsnapMarkers.hideMarker()
+    return { x: cursor.x, y: cursor.y }
+  }
+
+  /**
+   * Last object snap from {@link resolveOverlayGripPoint}, or `null` when the
+   * cursor is not within aperture of any snap.
+   */
+  get lastOverlayGripOsnap(): EditorOsnapPoint | null {
+    return this._lastOverlayGripOsnap
+  }
+
+  /**
+   * Shows or repositions the shared mobile snap loupe around a client sample.
+   * Used by overlay grip drag and point pick on phone/pad.
+   *
+   * @param clientX - Sample X in viewport/client CSS pixels.
+   * @param clientY - Sample Y in viewport/client CSS pixels.
+   * @param snap - Active object snap in world space, if any.
+   */
+  refreshMobileSnapLoupe(
+    clientX: number,
+    clientY: number,
+    snap?: { x: number; y: number; type: number } | null
+  ): void {
+    editorRefreshMobileSnapLoupe(this, clientX, clientY, snap)
+  }
+
+  /**
+   * Hides the shared mobile snap loupe for this view.
+   */
+  hideMobileSnapLoupe(): void {
+    editorHideMobileSnapLoupe(this)
+  }
+
+  /**
+   * Hides overlay grip snap markers and clears acquired centers.
+   */
+  clearOverlayGripOsnap(): void {
+    this._lastOverlayGripOsnap = null
+    this._overlayGripOsnapMarkers?.clear()
+    this._osnapResolver.clearAcquiredCenters()
+  }
+
+  /**
+   * Updates {@link width} / {@link height} from the size callback or canvas
+   * client size without notifying listeners. Subclasses that must sync
+   * projection (camera frustum, renderer buffer) before notifying should call
+   * this first, then dispatch {@link events.viewResize} themselves.
+   */
+  protected refreshViewSize() {
+    if (this._calculateSizeCallback) {
+      const { width, height } = this._calculateSizeCallback()
+      this._width = Math.max(1, Math.floor(width))
+      this._height = Math.max(1, Math.floor(height))
+    } else {
+      this._width = Math.max(1, Math.floor(this._canvas.clientWidth))
+      this._height = Math.max(1, Math.floor(this._canvas.clientHeight))
+    }
+  }
+
+  protected onWindowResize() {
+    this.refreshViewSize()
+    this.events.viewResize.dispatch({
+      width: this._width,
+      height: this._height
+    })
+  }
+
+  /**
+   * Clears the current hover state and cancels all hover-related timers.
+   */
+  protected clearHover() {
+    this._hoverController.clear()
+  }
+
+  /**
+   * Pointer sample handler. Updates canvas-local and world cursor from mouse
+   * or touch coordinates.
+   *
+   * @param event - Mouse or pointer event with client coordinates.
+   */
+  private onMouseMove(event: MouseEvent | PointerEvent) {
+    // Keep one canonical conversion path for all view input code.
+    this._hasCursorPos = true
+    this._curMousePos = this.viewportToCanvas({
+      x: event.clientX,
+      y: event.clientY
+    })
+    const wcsPos = this.screenToWorld(this._curMousePos)
+    this._curPos.copy(wcsPos)
+    this.events.mouseMove.dispatch({ x: wcsPos.x, y: wcsPos.y })
+
+    // Hover handler
+    if (this.entitySelectionEnabled && this.mode == EditorViewMode.SELECTION) {
+      // If it is in “input acquisition” mode, disable hover behavior
+      if (!this._editor.isActive) {
+        this._hoverController.handleMouseMove(wcsPos.x, wcsPos.y)
+      }
+    }
+  }
+}

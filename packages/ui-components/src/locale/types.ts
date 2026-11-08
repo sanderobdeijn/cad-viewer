@@ -1,6 +1,6 @@
 import type { DockSide } from '../composables/types'
 
-/** Locale id shipped with this library. Same as cad-viewer's `AcApLocale`. */
+/** Locale id shipped with this library. Same as cad-viewer's `ApplicationLocale`. */
 export type MlLocaleName = 'en'
 
 /** Locale id accepted by `setLocale` / `provideLocale` / plugin `locale`. */

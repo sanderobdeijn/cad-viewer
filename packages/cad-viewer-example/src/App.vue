@@ -28,15 +28,15 @@
 
 <script setup lang="ts">
 import {
-  AcApDocManager,
-  type AcApModelSync,
-  AcApSettingManager
+  ApplicationDocManager,
+  type ApplicationModelSync,
+  ApplicationSettingManager
 } from '@mlightcad/cad-simple-viewer'
 import { MlCadViewer } from '@mlightcad/cad-viewer'
 import { ref } from 'vue'
 
 // Keep this example's prefs under its own storage key on localhost.
-AcApSettingManager.configure({
+ApplicationSettingManager.configure({
   storageKey: 'mlightcad.settings.cad-viewer'
 })
 
@@ -52,7 +52,7 @@ const APPLY_DELAY_MS = 300
 const editorText = ref('')
 const editorError = ref('')
 
-let modelSync: AcApModelSync | undefined
+let modelSync: ApplicationModelSync | undefined
 let shownModelText = ''
 let updateScheduled = false
 let applyTimer: ReturnType<typeof setTimeout> | undefined
@@ -112,14 +112,14 @@ const onModelChanged = ({ model }: { model: { toString(): string } }) => {
 /** Shows the model of the document on screen and follows its changes. */
 const followActiveDocument = () => {
   modelSync?.events.modelChanged.removeEventListener(onModelChanged)
-  modelSync = AcApDocManager.instance.curDocument.modelSync
+  modelSync = ApplicationDocManager.instance.curDocument.modelSync
   modelSync.events.modelChanged.addEventListener(onModelChanged)
   showModel(modelSync.model)
 }
 
 const onCreate = () => {
   followActiveDocument()
-  AcApDocManager.instance.events.documentActivated.addEventListener(
+  ApplicationDocManager.instance.events.documentActivated.addEventListener(
     followActiveDocument
   )
   exposeForTests()
@@ -128,11 +128,11 @@ const onCreate = () => {
 const exposeForTests = () => {
   if (import.meta.env.DEV) {
     const testWindow = window as Window & {
-      AcApDocManager?: typeof AcApDocManager
-      AcApSettingManager?: typeof AcApSettingManager
+      ApplicationDocManager?: typeof ApplicationDocManager
+      ApplicationSettingManager?: typeof ApplicationSettingManager
     }
-    testWindow.AcApDocManager = AcApDocManager
-    testWindow.AcApSettingManager = AcApSettingManager
+    testWindow.ApplicationDocManager = ApplicationDocManager
+    testWindow.ApplicationSettingManager = ApplicationSettingManager
   }
 }
 </script>

@@ -1,4 +1,4 @@
-import { AcCmErrors } from '@mlightcad/common'
+import { CommonErrors } from '@mlightcad/common'
 
 import {
   GeometryBox2d,
@@ -120,7 +120,7 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
         ? this._mirrorAngle(GeometryMathUtil.normalizeAngle(d as number))
         : GeometryMathUtil.normalizeAngle(d as number)
     } else {
-      throw AcCmErrors.ILLEGAL_PARAMETERS
+      throw CommonErrors.ILLEGAL_PARAMETERS
     }
   }
 
@@ -378,7 +378,7 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
     p3: GeometryPoint2dLike
   ) {
     const arc = geometryTryCreateArcByThreePoints(p1, p2, p3)
-    if (!arc) throw AcCmErrors.ILLEGAL_PARAMETERS
+    if (!arc) throw CommonErrors.ILLEGAL_PARAMETERS
     this.center = arc.center
     this.radius = arc.radius
     this._clockwise = arc._clockwise

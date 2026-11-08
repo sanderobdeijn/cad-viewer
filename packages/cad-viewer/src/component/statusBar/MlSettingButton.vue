@@ -49,7 +49,7 @@
 
 <script lang="ts" setup>
 import { Check, Setting } from '@element-plus/icons-vue'
-import { AcApSettingManager, AcApSettings } from '@mlightcad/cad-simple-viewer'
+import { ApplicationSettingManager, ApplicationSettings } from '@mlightcad/cad-simple-viewer'
 import {
   ElButton,
   ElDropdown,
@@ -65,25 +65,25 @@ const { t } = useI18n()
 const features = useSettings()
 const { isSmallViewport } = useIsMobile()
 
-const handleCommand = (command: keyof AcApSettings) => {
+const handleCommand = (command: keyof ApplicationSettings) => {
   if (command == 'isShowCoordinate') {
     features.isShowCoordinate = !features.isShowCoordinate
-    AcApSettingManager.instance.isShowCoordinate = features.isShowCoordinate
+    ApplicationSettingManager.instance.isShowCoordinate = features.isShowCoordinate
   } else if (command == 'isShowCommandLine') {
     features.isShowCommandLine = !features.isShowCommandLine
-    AcApSettingManager.instance.isShowCommandLine = features.isShowCommandLine
+    ApplicationSettingManager.instance.isShowCommandLine = features.isShowCommandLine
   } else if (command == 'isShowEntityInfo') {
     features.isShowEntityInfo = !features.isShowEntityInfo
-    AcApSettingManager.instance.isShowEntityInfo = features.isShowEntityInfo
+    ApplicationSettingManager.instance.isShowEntityInfo = features.isShowEntityInfo
   } else if (command == 'isShowRibbon') {
     features.isShowRibbon = !features.isShowRibbon
-    AcApSettingManager.instance.isShowRibbon = features.isShowRibbon
+    ApplicationSettingManager.instance.isShowRibbon = features.isShowRibbon
   } else if (command == 'isShowToolbar') {
     features.isShowToolbar = !features.isShowToolbar
-    AcApSettingManager.instance.isShowToolbar = features.isShowToolbar
+    ApplicationSettingManager.instance.isShowToolbar = features.isShowToolbar
   } else if (command == 'isShowStats') {
     features.isShowStats = !features.isShowStats
-    AcApSettingManager.instance.isShowStats = features.isShowStats
+    ApplicationSettingManager.instance.isShowStats = features.isShowStats
   }
 }
 </script>

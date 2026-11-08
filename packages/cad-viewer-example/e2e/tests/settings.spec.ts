@@ -7,7 +7,7 @@ type Settings = { get(key: string): unknown }
 const openDrawing = async (page: Page) => {
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as Window & { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
   await page.waitForTimeout(1500)
 }
@@ -28,9 +28,9 @@ const setting = (page: Page, key: string) =>
     key =>
       (
         window as unknown as {
-          AcApSettingManager: { instance: Settings }
+          ApplicationSettingManager: { instance: Settings }
         }
-      ).AcApSettingManager.instance.get(key),
+      ).ApplicationSettingManager.instance.get(key),
     key
   )
 
@@ -38,14 +38,14 @@ const view = (page: Page) =>
   page.evaluate(() => {
     const mgr = (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: {
             curView: { backgroundColor: number }
             curDocument: { model: { items: unknown[] } }
           }
         }
       }
-    ).AcApDocManager.instance
+    ).ApplicationDocManager.instance
     return {
       background: mgr.curView.backgroundColor,
       items: mgr.curDocument.model.items.length
@@ -99,14 +99,14 @@ test('switches the background and keeps the drawing on regen', async ({
   const drawn = await page.evaluate(() => {
     const mgr = (
       window as unknown as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: {
             curView: { hasEntity(id: string): boolean }
             curDocument: { model: { items: { id: string }[] } }
           }
         }
       }
-    ).AcApDocManager.instance
+    ).ApplicationDocManager.instance
     return mgr.curDocument.model.items.every(item =>
       mgr.curView.hasEntity(item.id)
     )

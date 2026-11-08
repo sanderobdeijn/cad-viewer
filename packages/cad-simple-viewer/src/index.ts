@@ -11,5 +11,5 @@ export * from './model'
 export {
   MTextColor,
   MTextParagraphAlignment,
-  MTextParagraphAlignment as AcGiTextParagraphAlignment
+  MTextParagraphAlignment as GraphicsInterfaceTextParagraphAlignment
 } from '@mlightcad/mtext-parser'

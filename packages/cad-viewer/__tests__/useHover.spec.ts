@@ -55,7 +55,7 @@ const mockDocManager = {
 }
 
 jest.mock('@mlightcad/cad-simple-viewer', () => ({
-  AcApDocManager: {
+  ApplicationDocManager: {
     instance: mockDocManager
   }
 }))

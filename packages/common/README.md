@@ -27,53 +27,53 @@ npm install @mlightcad/common
 ## Key Classes
 
 ### Color Management
-- **AcCmColor**: Represents colors in AutoCAD format with support for color indices and RGB values
-- **AcCmColorUtil**: Utility functions for color conversion and manipulation
+- **CommonColor**: Represents colors in AutoCAD format with support for color indices and RGB values
+- **CommonColorUtil**: Utility functions for color conversion and manipulation
 
 ### Event System
-- **AcCmEventDispatcher**: Dispatches events to registered listeners
-- **AcCmEventManager**: Manages event registration and dispatching across the application
+- **CommonEventDispatcher**: Dispatches events to registered listeners
+- **CommonEventManager**: Manages event registration and dispatching across the application
 
 ### Logging and Utilities
-- **AcCmLogUtil**: Structured logging with different log levels (debug, info, warn, error)
-- **AcCmStringUtil**: String manipulation and formatting utilities
-- **AcCmErrors**: Error handling and custom error types
+- **CommonLogUtil**: Structured logging with different log levels (debug, info, warn, error)
+- **CommonStringUtil**: String manipulation and formatting utilities
+- **CommonErrors**: Error handling and custom error types
 
 ### Performance and Tasks
-- **AcCmPerformanceCollector**: Collects and analyzes performance metrics
-- **AcCmTaskScheduler**: Manages background tasks and scheduling
+- **CommonPerformanceCollector**: Collects and analyzes performance metrics
+- **CommonTaskScheduler**: Manages background tasks and scheduling
 
 ### File Loading
-- **AcCmFileLoader**: Handles asynchronous file loading with progress tracking
-- **AcCmLoadingManager**: Manages multiple file loading operations
-- **AcCmLoader**: Base class for implementing custom file loaders
+- **CommonFileLoader**: Handles asynchronous file loading with progress tracking
+- **CommonLoadingManager**: Manages multiple file loading operations
+- **CommonLoader**: Base class for implementing custom file loaders
 
 ### Base Classes
-- **AcCmObject**: Base class for common objects with event handling capabilities
+- **CommonObject**: Base class for common objects with event handling capabilities
 
 ## Usage Examples
 
 ### Color Management
 ```typescript
-import { AcCmColor, AcCmColorUtil } from '@mlightcad/common';
+import { CommonColor, CommonColorUtil } from '@mlightcad/common';
 
 // Create a color from AutoCAD color index
-const color = new AcCmColor(1); // Red
+const color = new CommonColor(1); // Red
 
 // Create a color from RGB values
-const rgbColor = new AcCmColor(255, 0, 0);
+const rgbColor = new CommonColor(255, 0, 0);
 
 // Convert between formats
-const rgb = AcCmColorUtil.toRgb(color);
-const index = AcCmColorUtil.toColorIndex(rgbColor);
+const rgb = CommonColorUtil.toRgb(color);
+const index = CommonColorUtil.toColorIndex(rgbColor);
 ```
 
 ### Event Handling
 ```typescript
-import { AcCmEventManager, AcCmEventDispatcher } from '@mlightcad/common';
+import { CommonEventManager, CommonEventDispatcher } from '@mlightcad/common';
 
 // Create an event dispatcher
-const dispatcher = new AcCmEventDispatcher();
+const dispatcher = new CommonEventDispatcher();
 
 // Register an event listener
 dispatcher.addEventListener('fileLoaded', (event) => {
@@ -86,23 +86,23 @@ dispatcher.dispatchEvent('fileLoaded', { fileName: 'drawing.dwg' });
 
 ### Logging
 ```typescript
-import { AcCmLogUtil } from '@mlightcad/common';
+import { CommonLogUtil } from '@mlightcad/common';
 
 // Configure logging
-AcCmLogUtil.setLevel('info');
+CommonLogUtil.setLevel('info');
 
 // Log messages
-AcCmLogUtil.info('Application started');
-AcCmLogUtil.warn('Deprecated feature used');
-AcCmLogUtil.error('Failed to load file', error);
+CommonLogUtil.info('Application started');
+CommonLogUtil.warn('Deprecated feature used');
+CommonLogUtil.error('Failed to load file', error);
 ```
 
 ### File Loading
 ```typescript
-import { AcCmFileLoader, AcCmLoadingManager } from '@mlightcad/common';
+import { CommonFileLoader, CommonLoadingManager } from '@mlightcad/common';
 
 // Create a file loader
-const loader = new AcCmFileLoader();
+const loader = new CommonFileLoader();
 
 // Load a file with progress tracking
 loader.load('drawing.dwg', {
@@ -118,7 +118,7 @@ loader.load('drawing.dwg', {
 });
 
 // Use loading manager for multiple files
-const manager = new AcCmLoadingManager();
+const manager = new CommonLoadingManager();
 manager.addLoader(loader);
 manager.start();
 ```

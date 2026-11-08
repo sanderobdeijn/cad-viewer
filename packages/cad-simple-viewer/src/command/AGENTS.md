@@ -18,32 +18,32 @@ A typical command consists of:
 
 ```typescript
 import { GeometryLine2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
-import type { AcGiDrawable } from '@mlightcad/graphic-interface'
+import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
 
-import { AcApContext, AcApDocManager } from '../app'
+import { ApplicationContext, ApplicationDocManager } from '../app'
 import {
-  AcEdBaseView,
-  AcEdCommand,
-  AcEdOpenMode,
-  AcEdPreviewJig,
-  AcEdPromptPointOptions
+  EditorBaseView,
+  EditorCommand,
+  EditorOpenMode,
+  EditorPreviewJig,
+  EditorPromptPointOptions
 } from '../editor'
-import { AcApI18n } from '../i18n'
-import { acapPreviewDrawable } from '../model'
+import { ApplicationI18n } from '../i18n'
+import { applicationPreviewDrawable } from '../model'
 
 // Jig class for real-time preview (optional)
-export class AcAp[CommandName]Jig extends AcEdPreviewJig<GeometryPoint2dLike> {
+export class AcAp[CommandName]Jig extends EditorPreviewJig<GeometryPoint2dLike> {
   private _line: GeometryLine2d
-  private _drawable: AcGiDrawable
+  private _drawable: GraphicsInterfaceDrawable
 
-  constructor(view: AcEdBaseView, start: GeometryPoint2dLike) {
+  constructor(view: EditorBaseView, start: GeometryPoint2dLike) {
     super(view)
     // Build the geometry and the drawable that previews it
     this._line = new GeometryLine2d(start, start)
-    this._drawable = acapPreviewDrawable({ kind: 'shape', geometry: this._line })
+    this._drawable = applicationPreviewDrawable({ kind: 'shape', geometry: this._line })
   }
 
-  get entity(): AcGiDrawable {
+  get entity(): GraphicsInterfaceDrawable {
     return this._drawable
   }
 
@@ -56,13 +56,13 @@ export class AcAp[CommandName]Jig extends AcEdPreviewJig<GeometryPoint2dLike> {
 /**
  * Command to create [description].
  */
-export class AcAp[CommandName]Cmd extends AcEdCommand {
+export class AcAp[CommandName]Cmd extends EditorCommand {
   constructor() {
     super()
-    this.mode = AcEdOpenMode.Write // Set the appropriate open mode
+    this.mode = EditorOpenMode.Write // Set the appropriate open mode
   }
 
-  async execute(context: AcApContext) {
+  async execute(context: ApplicationContext) {
     // Command implementation
   }
 }
@@ -70,7 +70,7 @@ export class AcAp[CommandName]Cmd extends AcEdCommand {
 
 ## Step 3: Implement the Command Logic
 
-1. **Prompt for user input** using prompt options like `AcEdPromptPointOptions`, `AcEdPromptDistanceOptions`, etc.
+1. **Prompt for user input** using prompt options like `EditorPromptPointOptions`, `EditorPromptDistanceOptions`, etc.
 2. **Handle user input** in an async function
 3. **Build the geometry** once all required input is collected
 4. **Add it as an item** to the document's model
@@ -78,21 +78,21 @@ export class AcAp[CommandName]Cmd extends AcEdCommand {
 ### Example: Point-based Command
 
 ```typescript
-async execute(context: AcApContext) {
+async execute(context: ApplicationContext) {
   // Get first point
-  const firstPointPrompt = new AcEdPromptPointOptions(
-    AcApI18n.t('jig.[command].firstPoint')
+  const firstPointPrompt = new EditorPromptPointOptions(
+    ApplicationI18n.t('jig.[command].firstPoint')
   )
-  const firstPoint = await AcApDocManager.instance.editor.getPoint(firstPointPrompt)
+  const firstPoint = await ApplicationDocManager.instance.editor.getPoint(firstPointPrompt)
 
   // Get subsequent points
-  const nextPointPrompt = new AcEdPromptPointOptions(
-    AcApI18n.t('jig.[command].nextPoint')
+  const nextPointPrompt = new EditorPromptPointOptions(
+    ApplicationI18n.t('jig.[command].nextPoint')
   )
   nextPointPrompt.useDashedLine = true
   nextPointPrompt.useBasePoint = true
   nextPointPrompt.jig = new AcAp[CommandName]Jig(context.view, firstPoint)
-  const nextPoint = await AcApDocManager.instance.editor.getPoint(nextPointPrompt)
+  const nextPoint = await ApplicationDocManager.instance.editor.getPoint(nextPointPrompt)
 
   // Add the item to the document's model
   context.doc.modelSync.addItems({
@@ -126,7 +126,7 @@ async execute(context: AcApContext) {
 
 ## Step 5: Register the Command
 
-Add the command to the `registerCommands` method in `src/app/AcApDocManager.ts`:
+Add the command to the `registerCommands` method in `src/app/ApplicationDocManager.ts`:
 
 1. **Import the command** in the imports section
 2. **Register the command** in the `registerCommands` method
@@ -142,7 +142,7 @@ export {
 
 // Register
 register.addCommand(
-  AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+  EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
   '[command]',
   '[command]',
   new AcAp[CommandName]Cmd()
@@ -155,10 +155,10 @@ CAD Viewer supports AutoCAD-style command aliases. You can register aliases when
 
 ```typescript
 register.addCommand(
-  AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+  EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
   'line',
   'line',
-  new AcApLineCmd(),
+  new ApplicationLineCmd(),
   ['L', 'LN'] // alias
 )
 ```
@@ -170,10 +170,10 @@ Alias behavior:
 3. Alias cannot conflict with existing global/local command names.
 4. Command lookup and prefix search both support alias matching.
 
-You can also configure aliases globally when creating `AcApDocManager`:
+You can also configure aliases globally when creating `ApplicationDocManager`:
 
 ```typescript
-AcApDocManager.createInstance({
+ApplicationDocManager.createInstance({
   commandAliases: {
     LINE: ['L', 'LN'],
     CIRCLE: 'C'

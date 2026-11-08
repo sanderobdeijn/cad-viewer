@@ -1,4 +1,4 @@
-import { AcCmErrors } from '@mlightcad/common'
+import { CommonErrors } from '@mlightcad/common'
 
 import { GeometryMathUtil } from '../util/GeometryMathUtil'
 import { GeometryMatrix2d } from './GeometryMatrix2d'
@@ -70,7 +70,7 @@ export class GeometryVector2d {
       return
     }
 
-    throw AcCmErrors.ILLEGAL_PARAMETERS
+    throw CommonErrors.ILLEGAL_PARAMETERS
   }
 
   /**

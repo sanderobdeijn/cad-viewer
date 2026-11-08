@@ -1,9 +1,9 @@
 import {
-  ACAP_UNTITLED_DOC_TITLE,
-  AcApDocManager,
-  AcApDocument,
-  AcApDocumentEventArgs,
-  AcEdOpenMode
+  APPLICATION_UNTITLED_DOC_TITLE,
+  ApplicationDocManager,
+  ApplicationDocument,
+  ApplicationDocumentEventArgs,
+  EditorOpenMode
 } from '@mlightcad/cad-simple-viewer'
 import {
   computed,
@@ -27,7 +27,7 @@ export interface UseDocumentReturn {
   /**
    * Whether a document open operation is currently in progress.
    *
-   * Becomes `true` when {@link AcApDocManager.events.documentToBeOpened} fires
+   * Becomes `true` when {@link ApplicationDocManager.events.documentToBeOpened} fires
    * or when {@link beginDocumentOpening} is called manually, and becomes
    * `false` when the document is activated, opening fails, or
    * {@link endDocumentOpening} is called manually.
@@ -38,15 +38,15 @@ export interface UseDocumentReturn {
    * Current or pending document access mode.
    *
    * During an open request this reflects the mode carried by
-   * {@link AcApDocumentEventArgs.mode} from `documentToBeOpened`. After
-   * activation it mirrors {@link AcApDocument.openMode}.
+   * {@link ApplicationDocumentEventArgs.mode} from `documentToBeOpened`. After
+   * activation it mirrors {@link ApplicationDocument.openMode}.
    */
-  openMode: DeepReadonly<Ref<AcEdOpenMode>>
+  openMode: DeepReadonly<Ref<EditorOpenMode>>
 
   /**
    * File name of the active document.
    *
-   * Mirrors {@link AcApDocument.fileName}. Empty for a new untitled document
+   * Mirrors {@link ApplicationDocument.fileName}. Empty for a new untitled document
    * that has not been saved or opened from disk.
    */
   fileName: DeepReadonly<Ref<string>>
@@ -54,8 +54,8 @@ export interface UseDocumentReturn {
   /**
    * Display title of the active document.
    *
-   * Mirrors {@link AcApDocument.docTitle}. For a new document this is
-   * {@link ACAP_UNTITLED_DOC_TITLE} until a file is opened.
+   * Mirrors {@link ApplicationDocument.docTitle}. For a new document this is
+   * {@link APPLICATION_UNTITLED_DOC_TITLE} until a file is opened.
    */
   docTitle: DeepReadonly<Ref<string>>
 
@@ -64,14 +64,14 @@ export interface UseDocumentReturn {
    *
    * Resolves to {@link docTitle} when present, otherwise falls back to
    * {@link fileName}. When the document is unsaved, localizes
-   * {@link ACAP_UNTITLED_DOC_TITLE} via `main.document.untitled`.
+   * {@link APPLICATION_UNTITLED_DOC_TITLE} via `main.document.untitled`.
    */
   displayName: ComputedRef<string>
 
   /**
    * Marks the viewer as entering a document open operation.
    *
-   * Prefer relying on {@link AcApDocManager.events.documentToBeOpened} when
+   * Prefer relying on {@link ApplicationDocManager.events.documentToBeOpened} when
    * possible. Call this manually only for open flows that bypass the manager
    * events but still need UI affordances such as disabling the ribbon.
    */
@@ -80,7 +80,7 @@ export interface UseDocumentReturn {
   /**
    * Marks the viewer as leaving a document open operation.
    *
-   * Prefer relying on {@link AcApDocManager.events.documentActivated} or the
+   * Prefer relying on {@link ApplicationDocManager.events.documentActivated} or the
    * `failed-to-open-file` event. Call this manually to pair with
    * {@link beginDocumentOpening} in custom open handlers.
    */
@@ -92,22 +92,22 @@ export interface UseDocumentReturn {
 const isDocumentOpening = ref(false)
 
 /** Shared current or pending document access mode. */
-const openMode = ref<AcEdOpenMode>(AcEdOpenMode.Read)
+const openMode = ref<EditorOpenMode>(EditorOpenMode.Read)
 
-/** Shared active document file name sourced from {@link AcApDocument.fileName}. */
+/** Shared active document file name sourced from {@link ApplicationDocument.fileName}. */
 const fileName = ref('')
 
-/** Shared active document title sourced from {@link AcApDocument.docTitle}. */
+/** Shared active document title sourced from {@link ApplicationDocument.docTitle}. */
 const docTitle = ref('')
 
 /**
  * Resolves the user-facing document label from raw title and file name.
  *
- * @param title - {@link AcApDocument.docTitle}
- * @param name - {@link AcApDocument.fileName}
+ * @param title - {@link ApplicationDocument.docTitle}
+ * @param name - {@link ApplicationDocument.fileName}
  */
 function resolveDisplayName(title: string, name: string): string {
-  if (title === ACAP_UNTITLED_DOC_TITLE && !name) {
+  if (title === APPLICATION_UNTITLED_DOC_TITLE && !name) {
     return i18n.global.t('main.document.untitled')
   }
   return title || name
@@ -125,33 +125,33 @@ const displayName = computed(() => {
 let isBound = false
 
 /** Manager instance that {@link isBound} listeners are attached to. */
-let boundManager: AcApDocManager | null = null
+let boundManager: ApplicationDocManager | null = null
 
-/** Polling timer used while waiting for {@link AcApDocManager.instance}. */
+/** Polling timer used while waiting for {@link ApplicationDocManager.instance}. */
 let retryTimer: ReturnType<typeof setInterval> | undefined
 
 /**
- * Returns the existing {@link AcApDocManager} singleton without throwing.
+ * Returns the existing {@link ApplicationDocManager} singleton without throwing.
  *
  * Useful before the viewer finishes initialization, when
- * {@link AcApDocManager.instance} is not yet available.
+ * {@link ApplicationDocManager.instance} is not yet available.
  *
  * @returns The initialized manager, or `null` when the viewer has not been created
  */
-function getExistingDocManager(): AcApDocManager | null {
-  const singleton = AcApDocManager as unknown as {
-    _instance?: AcApDocManager
+function getExistingDocManager(): ApplicationDocManager | null {
+  const singleton = ApplicationDocManager as unknown as {
+    _instance?: ApplicationDocManager
   }
   return singleton._instance ?? null
 }
 
 /**
- * Copies document metadata from {@link AcApDocument} into the shared reactive refs.
+ * Copies document metadata from {@link ApplicationDocument} into the shared reactive refs.
  *
  * @param doc - Document to read from. When omitted, the currently active
- *   document from {@link AcApDocManager.curDocument} is used.
+ *   document from {@link ApplicationDocManager.curDocument} is used.
  */
-function syncFromDocument(doc?: AcApDocument) {
+function syncFromDocument(doc?: ApplicationDocument) {
   const document = doc ?? getExistingDocManager()?.curDocument
   if (!document) return
 
@@ -175,27 +175,27 @@ function endDocumentOpening() {
 }
 
 /**
- * Handles {@link AcApDocManager.events.documentToBeOpened}.
+ * Handles {@link ApplicationDocManager.events.documentToBeOpened}.
  *
  * Starts the opening state early and applies the requested open mode from the
  * event payload so UI can react before activation completes.
  *
  * @param args - Document lifecycle event arguments emitted by the manager
  */
-function onDocumentToBeOpened(args: AcApDocumentEventArgs) {
+function onDocumentToBeOpened(args: ApplicationDocumentEventArgs) {
   beginDocumentOpening()
   openMode.value = args.mode
 }
 
 /**
- * Handles {@link AcApDocManager.events.documentActivated}.
+ * Handles {@link ApplicationDocManager.events.documentActivated}.
  *
  * Ends the opening state and synchronizes file name, title, and open mode
  * from the activated document.
  *
  * @param args - Document lifecycle event arguments emitted by the manager
  */
-function onDocumentActivated(args: AcApDocumentEventArgs) {
+function onDocumentActivated(args: ApplicationDocumentEventArgs) {
   endDocumentOpening()
   syncFromDocument(args.doc)
 }
@@ -224,7 +224,7 @@ function unbind() {
 }
 
 /**
- * Attempts to connect lifecycle listeners to {@link AcApDocManager.instance}.
+ * Attempts to connect lifecycle listeners to {@link ApplicationDocManager.instance}.
  *
  * On success, the current document state is synchronized immediately and
  * listeners are registered for future open, activation, and failure events.
@@ -261,7 +261,7 @@ function tryBind() {
  * Ensures lifecycle listeners are bound, polling until the viewer exists.
  *
  * This is invoked synchronously from {@link useDocument} and again on mount
- * for components created before {@link AcApDocManager.createInstance}.
+ * for components created before {@link ApplicationDocManager.createInstance}.
  */
 function ensureBound() {
   if (tryBind() || retryTimer) return
@@ -275,7 +275,7 @@ function ensureBound() {
  * Tracks the active CAD document and its open lifecycle for UI consumers.
  *
  * This composable centralizes reactive document metadata from
- * {@link AcApDocManager} and {@link AcApDocument}, including:
+ * {@link ApplicationDocManager} and {@link ApplicationDocument}, including:
  * - Current or pending document open mode
  * - Whether a document open operation is in progress
  * - Current document file name and display title

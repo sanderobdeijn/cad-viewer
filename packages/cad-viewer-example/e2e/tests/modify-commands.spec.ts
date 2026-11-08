@@ -16,29 +16,29 @@ const modelText = (page: Page) =>
   page.evaluate(() =>
     (
       window as never as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curDocument: { model: { toString(): string } } }
         }
       }
-    ).AcApDocManager.instance.curDocument.model.toString()
+    ).ApplicationDocManager.instance.curDocument.model.toString()
   )
 
 const ids = (page: Page) =>
   page.evaluate(() =>
     (
       window as never as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curDocument: { model: { items: { id: string }[] } } }
         }
       }
-    ).AcApDocManager.instance.curDocument.model.items.map(item => item.id)
+    ).ApplicationDocManager.instance.curDocument.model.items.map(item => item.id)
   )
 
 const select = (page: Page, selected: string[]) =>
   page.evaluate(selected => {
     const view = (
       window as never as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: {
             curView: {
               selectionSet: { clear(): void; add(ids: string[]): void }
@@ -46,7 +46,7 @@ const select = (page: Page, selected: string[]) =>
           }
         }
       }
-    ).AcApDocManager.instance.curView
+    ).ApplicationDocManager.instance.curView
     view.selectionSet.clear()
     view.selectionSet.add(selected)
   }, selected)
@@ -55,7 +55,7 @@ const toPage = (page: Page, point: { x: number; y: number }) =>
   page.evaluate(point => {
     const view = (
       window as never as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: {
             curView: {
               worldToScreen(p: unknown): { x: number; y: number }
@@ -64,7 +64,7 @@ const toPage = (page: Page, point: { x: number; y: number }) =>
           }
         }
       }
-    ).AcApDocManager.instance.curView
+    ).ApplicationDocManager.instance.curView
     return view.canvasToViewport(view.worldToScreen(point))
   }, point)
 
@@ -75,7 +75,7 @@ test('moves, copies, rotates, offsets, erases and drags grips through the model'
   page.on('pageerror', error => errors.push(error.message))
   await page.goto('/')
   await page.waitForFunction(
-    () => !!(window as never as { AcApDocManager?: unknown }).AcApDocManager
+    () => !!(window as never as { ApplicationDocManager?: unknown }).ApplicationDocManager
   )
   await page.waitForTimeout(1500)
 
@@ -110,11 +110,11 @@ test('moves, copies, rotates, offsets, erases and drags grips through the model'
   await page.evaluate(() =>
     (
       window as never as {
-        AcApDocManager: {
+        ApplicationDocManager: {
           instance: { curView: { selectionSet: { clear(): void } } }
         }
       }
-    ).AcApDocManager.instance.curView.selectionSet.clear()
+    ).ApplicationDocManager.instance.curView.selectionSet.clear()
   )
   await run(page, 'offset', '5')
   const onLine = await toPage(page, { x: 10, y: 50 })

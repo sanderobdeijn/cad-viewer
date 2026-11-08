@@ -8,8 +8,8 @@
 
 <script lang="ts" setup>
 import {
-  AcApSettingManager,
-  type AcApSettings
+  ApplicationSettingManager,
+  type ApplicationSettings
 } from '@mlightcad/cad-simple-viewer'
 import { computed, ref, watch } from 'vue'
 
@@ -19,10 +19,10 @@ import MlToggleButton, { type MlIconType } from './MlToggleButton.vue'
 
 /** A setting that is on or off, or a number where `disabledValue` is off. */
 type ToggleSetting = {
-  [K in keyof AcApSettings]: AcApSettings[K] extends number | boolean
+  [K in keyof ApplicationSettings]: ApplicationSettings[K] extends number | boolean
     ? K
     : never
-}[keyof AcApSettings]
+}[keyof ApplicationSettings]
 
 interface Props {
   setting: ToggleSetting
@@ -46,7 +46,7 @@ const props = withDefaults(defineProps<Props>(), {
 const settings = useSettings()
 const lastEnabledValue = ref(
   props.rememberLastEnabled
-    ? Number(AcApSettingManager.instance.get(props.setting))
+    ? Number(ApplicationSettingManager.instance.get(props.setting))
     : props.enabledValue
 )
 
@@ -79,7 +79,7 @@ const isEnabled = computed(() => {
 })
 
 const toggleSetting = () => {
-  const manager = AcApSettingManager.instance
+  const manager = ApplicationSettingManager.instance
   const current = manager.get(props.setting)
   if (typeof current === 'boolean') {
     manager.set(props.setting, !current as never)

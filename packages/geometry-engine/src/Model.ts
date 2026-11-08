@@ -1,4 +1,4 @@
-import { AcCmEventManager } from '@mlightcad/common'
+import { CommonEventManager } from '@mlightcad/common'
 
 import {
   GeometryCircularArc2d,
@@ -365,9 +365,9 @@ const KIND_ORDER: ModelItemKind[] = ['shape', 'point', 'dimension']
 export class Model {
   /** Events fired when items are added, changed or removed */
   readonly events = {
-    itemAdded: new AcCmEventManager<ModelItemEventArgs>(),
-    itemModified: new AcCmEventManager<ModelItemEventArgs>(),
-    itemRemoved: new AcCmEventManager<ModelItemEventArgs>()
+    itemAdded: new CommonEventManager<ModelItemEventArgs>(),
+    itemModified: new CommonEventManager<ModelItemEventArgs>(),
+    itemRemoved: new CommonEventManager<ModelItemEventArgs>()
   }
 
   private readonly _items = new Map<string, ModelItem>()

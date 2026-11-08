@@ -1,9 +1,9 @@
 import type {
-  AcUiToolbarChildrenUi,
-  AcUiToolbarItem,
-  AcUiToolbarItemConfig,
-  AcUiToolbarPresetRef,
-  AcUiToolbarSeparator
+  UIToolbarChildrenUi,
+  UIToolbarItem,
+  UIToolbarItemConfig,
+  UIToolbarPresetRef,
+  UIToolbarSeparator
 } from './types'
 
 /**
@@ -11,30 +11,30 @@ import type {
  *
  * @param item - Parent toolbar item.
  */
-export function acuiResolveToolbarChildrenUi(
-  item: AcUiToolbarItem
-): AcUiToolbarChildrenUi {
+export function uiResolveToolbarChildrenUi(
+  item: UIToolbarItem
+): UIToolbarChildrenUi {
   return item.childrenUi ?? 'menu'
 }
 
 /** Returns whether {@link childrenUi} is an icon sub-toolbar (sticky or dismissible). */
-export function acuiIsToolbarChildrenStrip(
-  childrenUi: AcUiToolbarChildrenUi
+export function uiIsToolbarChildrenStrip(
+  childrenUi: UIToolbarChildrenUi
 ): boolean {
   return childrenUi === 'toolbar' || childrenUi === 'sticky-toolbar'
 }
 
 /** Returns whether a toolbar config entry is a visual separator. */
-export function acuiIsToolbarSeparatorItem(
-  item: AcUiToolbarItemConfig
-): item is AcUiToolbarSeparator {
+export function uiIsToolbarSeparatorItem(
+  item: UIToolbarItemConfig
+): item is UIToolbarSeparator {
   return 'type' in item && item.type === 'separator'
 }
 
 /** Returns whether a toolbar config entry references a built-in preset button. */
-export function acuiIsToolbarPresetRef(
-  item: AcUiToolbarItemConfig
-): item is AcUiToolbarPresetRef {
+export function uiIsToolbarPresetRef(
+  item: UIToolbarItemConfig
+): item is UIToolbarPresetRef {
   return 'preset' in item && typeof item.preset === 'string'
 }
 
@@ -46,7 +46,7 @@ export function acuiIsToolbarPresetRef(
  *
  * @param item - Toolbar item to inspect.
  */
-export function acuiIsDynamicToolbarChildren(item: AcUiToolbarItem): boolean {
+export function uiIsDynamicToolbarChildren(item: UIToolbarItem): boolean {
   return (
     typeof Object.getOwnPropertyDescriptor(item, 'children')?.get === 'function'
   )
@@ -59,10 +59,10 @@ export function acuiIsDynamicToolbarChildren(item: AcUiToolbarItem): boolean {
  * @param getChildren - Factory invoked on each `children` access.
  * @returns `item` with a live `children` getter.
  */
-export function acuiCopyDynamicToolbarChildren(
-  item: AcUiToolbarItem,
-  getChildren: () => AcUiToolbarItem[]
-): AcUiToolbarItem {
+export function uiCopyDynamicToolbarChildren(
+  item: UIToolbarItem,
+  getChildren: () => UIToolbarItem[]
+): UIToolbarItem {
   Object.defineProperty(item, 'children', {
     configurable: true,
     enumerable: true,
@@ -78,40 +78,40 @@ export function acuiCopyDynamicToolbarChildren(
  * @param source - Original item that may define a children getter.
  * @returns Whether a getter was copied.
  */
-export function acuiPreserveDynamicToolbarChildren(
-  target: AcUiToolbarItem,
-  source: AcUiToolbarItem
+export function uiPreserveDynamicToolbarChildren(
+  target: UIToolbarItem,
+  source: UIToolbarItem
 ): boolean {
   const descriptor = Object.getOwnPropertyDescriptor(source, 'children')
   if (typeof descriptor?.get !== 'function') return false
-  acuiCopyDynamicToolbarChildren(target, descriptor.get)
+  uiCopyDynamicToolbarChildren(target, descriptor.get)
   return true
 }
 
 /** Returns whether a resolved toolbar item list includes the given button id. */
-export function acuiToolbarItemsIncludeItem(
-  items: AcUiToolbarItem[],
+export function uiToolbarItemsIncludeItem(
+  items: UIToolbarItem[],
   itemId: string
 ): boolean {
   return items.some(item => {
-    if (acuiIsToolbarSeparatorItem(item)) return false
+    if (uiIsToolbarSeparatorItem(item)) return false
     if (item.id === itemId) return true
     return item.children
-      ? acuiToolbarItemsIncludeItem(item.children, itemId)
+      ? uiToolbarItemsIncludeItem(item.children, itemId)
       : false
   })
 }
 
 /** Registers button items (and nested children) in a preset lookup map. */
-export function acuiIndexToolbarItems(
-  items: AcUiToolbarItem[],
-  map: Map<string, AcUiToolbarItem>
+export function uiIndexToolbarItems(
+  items: UIToolbarItem[],
+  map: Map<string, UIToolbarItem>
 ): void {
   for (const item of items) {
-    if (acuiIsToolbarSeparatorItem(item)) continue
+    if (uiIsToolbarSeparatorItem(item)) continue
     map.set(item.id, item)
-    if (!acuiIsDynamicToolbarChildren(item) && item.children?.length) {
-      acuiIndexToolbarItems(item.children, map)
+    if (!uiIsDynamicToolbarChildren(item) && item.children?.length) {
+      uiIndexToolbarItems(item.children, map)
     }
   }
 }
@@ -122,28 +122,28 @@ export function acuiIndexToolbarItems(
  * @param items - Raw toolbar configuration entries.
  * @param presets - Built-in items keyed by id.
  */
-export function acuiExpandToolbarItemConfigs(
-  items: AcUiToolbarItemConfig[],
-  presets: Map<string, AcUiToolbarItem>
-): AcUiToolbarItem[] {
+export function uiExpandToolbarItemConfigs(
+  items: UIToolbarItemConfig[],
+  presets: Map<string, UIToolbarItem>
+): UIToolbarItem[] {
   return items.flatMap(item => {
-    const expanded = acuiExpandToolbarItemConfig(item, presets)
+    const expanded = uiExpandToolbarItemConfig(item, presets)
     return expanded ? [expanded] : []
   })
 }
 
-function acuiExpandToolbarItemConfig(
-  item: AcUiToolbarItemConfig,
-  presets: Map<string, AcUiToolbarItem>
-): AcUiToolbarItem | null {
-  if (acuiIsToolbarSeparatorItem(item)) {
+function uiExpandToolbarItemConfig(
+  item: UIToolbarItemConfig,
+  presets: Map<string, UIToolbarItem>
+): UIToolbarItem | null {
+  if (uiIsToolbarSeparatorItem(item)) {
     return {
       type: 'separator',
       id: item.id ?? `separator-${Math.random().toString(36).slice(2, 9)}`
     }
   }
 
-  if (acuiIsToolbarPresetRef(item)) {
+  if (uiIsToolbarPresetRef(item)) {
     const preset = presets.get(item.preset)
     if (!preset) {
       console.warn(
@@ -151,18 +151,18 @@ function acuiExpandToolbarItemConfig(
       )
       return null
     }
-    return acuiCloneToolbarItem(preset)
+    return uiCloneToolbarItem(preset)
   }
 
-  const buttonItem = item as AcUiToolbarItem
-  if (acuiIsDynamicToolbarChildren(buttonItem)) {
-    return acuiCloneToolbarItem(buttonItem)
+  const buttonItem = item as UIToolbarItem
+  if (uiIsDynamicToolbarChildren(buttonItem)) {
+    return uiCloneToolbarItem(buttonItem)
   }
   if (buttonItem.children?.length) {
     return {
       ...buttonItem,
-      children: acuiExpandToolbarItemConfigs(
-        buttonItem.children as AcUiToolbarItemConfig[],
+      children: uiExpandToolbarItemConfigs(
+        buttonItem.children as UIToolbarItemConfig[],
         presets
       )
     }
@@ -171,9 +171,9 @@ function acuiExpandToolbarItemConfig(
   return buttonItem
 }
 
-function acuiCloneToolbarItem(item: AcUiToolbarItem): AcUiToolbarItem {
-  const clone: AcUiToolbarItem = { ...item, children: item.children }
-  if (acuiPreserveDynamicToolbarChildren(clone, item)) {
+function uiCloneToolbarItem(item: UIToolbarItem): UIToolbarItem {
+  const clone: UIToolbarItem = { ...item, children: item.children }
+  if (uiPreserveDynamicToolbarChildren(clone, item)) {
     return clone
   }
   if (!item.children?.length) {
@@ -181,6 +181,6 @@ function acuiCloneToolbarItem(item: AcUiToolbarItem): AcUiToolbarItem {
   }
   return {
     ...clone,
-    children: item.children.map(child => acuiCloneToolbarItem(child))
+    children: item.children.map(child => uiCloneToolbarItem(child))
   }
 }

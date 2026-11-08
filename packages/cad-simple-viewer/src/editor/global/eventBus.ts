@@ -1,8 +1,8 @@
 import mitt, { type Emitter } from 'mitt'
 
-import { AcEdMessageType } from '../input/ui/AcEdMessageType'
+import { EditorMessageType } from '../input/ui/EditorMessageType'
 
-export interface AcEdFontNotLoadedInfo {
+export interface EditorFontNotLoadedInfo {
   /** Font name */
   fontName: string
   /** URL where the font was attempted to be loaded from */
@@ -22,14 +22,14 @@ export interface AcEdFontNotLoadedInfo {
  * - **User Messages**: `message`
  * - **Busy Indicator**: `busy-indicator`
  */
-export type AcEdBusyIndicatorEventArgs = {
+export type EditorBusyIndicatorEventArgs = {
   /** Whether the busy overlay should be visible */
   visible: boolean
   /** Optional message text displayed with the spinner */
   message?: string
 }
 
-export type AcEdEvents = {
+export type EditorEvents = {
   /** Emitted to request opening a font file dialog for IndexedDB caching */
   'cache-font': {}
   /** Emitted when the user selects a font file in the cache-font dialog */
@@ -41,7 +41,7 @@ export type AcEdEvents = {
     /** The message text to display */
     message: string
     /** The severity/type of the message */
-    type: AcEdMessageType
+    type: EditorMessageType
   }
   /** Emitted when some fonts can not be found in font repository */
   'fonts-not-found': {
@@ -49,7 +49,7 @@ export type AcEdEvents = {
   }
   /** Emitted when some fonts fails to load */
   'fonts-not-loaded': {
-    fonts: AcEdFontNotLoadedInfo[]
+    fonts: EditorFontNotLoadedInfo[]
   }
   /** Emitted when the available fonts list cannot be retrieved */
   'failed-to-get-avaiable-fonts': {
@@ -66,7 +66,7 @@ export type AcEdEvents = {
   /** Emitted after missing resource caches change and UI state should refresh */
   'missed-data-changed': {}
   /** Emitted when the application busy indicator is shown or hidden */
-  'busy-indicator': AcEdBusyIndicatorEventArgs
+  'busy-indicator': EditorBusyIndicatorEventArgs
 }
 
 /**
@@ -94,4 +94,4 @@ export type AcEdEvents = {
  * });
  * ```
  */
-export const eventBus: Emitter<AcEdEvents> = mitt<AcEdEvents>()
+export const eventBus: Emitter<EditorEvents> = mitt<EditorEvents>()

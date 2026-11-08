@@ -5,53 +5,53 @@
  * @packageDocumentation
  */
 
-export type { AcUiResolvedToolbarChrome } from './resolveToolbarChrome'
-export { acuiResolveToolbarChrome } from './resolveToolbarChrome'
+export type { UIResolvedToolbarChrome } from './resolveToolbarChrome'
+export { uiResolveToolbarChrome } from './resolveToolbarChrome'
 export {
-  acuiFilterVisibleToolbarItems,
-  acuiIsToolbarItemDisabled,
-  acuiIsToolbarItemVisible,
-  acuiItemRequiresDocument,
-  acuiResolveEffectiveToolbarItem,
-  acuiResolveParentToolbarDisplay,
-  acuiResolveSelectedChildItem
+  uiFilterVisibleToolbarItems,
+  uiIsToolbarItemDisabled,
+  uiIsToolbarItemVisible,
+  uiItemRequiresDocument,
+  uiResolveEffectiveToolbarItem,
+  uiResolveParentToolbarDisplay,
+  uiResolveSelectedChildItem
 } from './resolveToolbarItemState'
 export {
-  acuiCopyDynamicToolbarChildren,
-  acuiExpandToolbarItemConfigs,
-  acuiIndexToolbarItems,
-  acuiIsDynamicToolbarChildren,
-  acuiIsToolbarChildrenStrip,
-  acuiIsToolbarPresetRef,
-  acuiIsToolbarSeparatorItem,
-  acuiPreserveDynamicToolbarChildren,
-  acuiResolveToolbarChildrenUi,
-  acuiToolbarItemsIncludeItem
+  uiCopyDynamicToolbarChildren,
+  uiExpandToolbarItemConfigs,
+  uiIndexToolbarItems,
+  uiIsDynamicToolbarChildren,
+  uiIsToolbarChildrenStrip,
+  uiIsToolbarPresetRef,
+  uiIsToolbarSeparatorItem,
+  uiPreserveDynamicToolbarChildren,
+  uiResolveToolbarChildrenUi,
+  uiToolbarItemsIncludeItem
 } from './toolbarItemUtils'
 export type {
-  AcUiSubToolbarOptions,
-  AcUiSubToolbarPosition,
-  AcUiToolbarChildIconMode,
-  AcUiToolbarChildrenUi,
-  AcUiToolbarChromeOptions,
-  AcUiToolbarDocState,
-  AcUiToolbarI18n,
-  AcUiToolbarItem,
-  AcUiToolbarItemConfig,
-  AcUiToolbarOptions,
-  AcUiToolbarOverflow,
-  AcUiToolbarPlacement,
-  AcUiToolbarPresetRef,
-  AcUiToolbarSeparator,
-  AcUiToolbarSize
+  UISubToolbarOptions,
+  UISubToolbarPosition,
+  UIToolbarChildIconMode,
+  UIToolbarChildrenUi,
+  UIToolbarChromeOptions,
+  UIToolbarDocState,
+  UIToolbarI18n,
+  UIToolbarItem,
+  UIToolbarItemConfig,
+  UIToolbarOptions,
+  UIToolbarOverflow,
+  UIToolbarPlacement,
+  UIToolbarPresetRef,
+  UIToolbarSeparator,
+  UIToolbarSize
 } from './types'
-export { AcUiDropdownMenu } from './AcUiDropdownMenu'
-export { AcUiSubToolbar } from './AcUiSubToolbar'
-export type { AcUiSubToolbarMountOptions } from './AcUiSubToolbar'
-export { AcUiToolbar } from './AcUiToolbar'
-export type { AcUiToolbarMountOptions } from './AcUiToolbar'
+export { UIDropdownMenu } from './UIDropdownMenu'
+export { UISubToolbar } from './UISubToolbar'
+export type { UISubToolbarMountOptions } from './UISubToolbar'
+export { UIToolbar } from './UIToolbar'
+export type { UIToolbarMountOptions } from './UIToolbar'
 export {
-  acuiEnsureToolbarStyles,
-  acuiRemoveToolbarStylesIfUnused
-} from './AcUiToolbarStyles'
-export { acuiComputeWrapPackSlot } from './acuiWrapPackLayout'
+  uiEnsureToolbarStyles,
+  uiRemoveToolbarStylesIfUnused
+} from './UIToolbarStyles'
+export { uiComputeWrapPackSlot } from './uiWrapPackLayout'

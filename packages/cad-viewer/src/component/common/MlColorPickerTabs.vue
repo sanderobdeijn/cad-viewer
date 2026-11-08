@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import 'element-plus/es/components/color-picker-panel/style/css'
 
-import { AcCmColor } from '@mlightcad/common'
+import { CommonColor } from '@mlightcad/common'
 import { ElTabPane, ElTabs } from 'element-plus'
 import ElColorPickerPanel from 'element-plus/es/components/color-picker-panel/index'
 import { ref, watch } from 'vue'
@@ -34,7 +34,7 @@ type TabPosition = 'top' | 'right' | 'bottom' | 'left'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: AcCmColor
+    modelValue?: CommonColor
     tabPosition?: TabPosition
   }>(),
   {
@@ -44,8 +44,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:modelValue': [value: AcCmColor | undefined]
-  change: [value: AcCmColor | undefined]
+  'update:modelValue': [value: CommonColor | undefined]
+  change: [value: CommonColor | undefined]
 }>()
 
 const { t } = useI18n()
@@ -67,7 +67,7 @@ watch(
 
 watch(hexColor, nextHexRaw => {
   if (syncingFromProps.value || activeTab.value !== 'rgb') return
-  const color = new AcCmColor()
+  const color = new CommonColor()
   color.setRGBFromCss(nextHexRaw)
   emitColor(color)
 })
@@ -76,19 +76,19 @@ function onAciChange(value: number | null) {
   const index = value ?? 256
   aciIndex.value = index
   activeTab.value = 'aci'
-  const color = new AcCmColor()
+  const color = new CommonColor()
   if (index === 256) color.setByLayer()
   else if (index === 0) color.setByBlock()
   else color.colorIndex = index
   emitColor(color)
 }
 
-function emitColor(color: AcCmColor | undefined) {
+function emitColor(color: CommonColor | undefined) {
   emit('update:modelValue', color)
   emit('change', color)
 }
 
-function updateFromColor(color: AcCmColor | undefined) {
+function updateFromColor(color: CommonColor | undefined) {
   if (!color) {
     activeTab.value = 'aci'
     aciIndex.value = 256

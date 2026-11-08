@@ -86,11 +86,11 @@
 
 <script setup lang="ts">
 import {
-  AcApCacheFontCmd,
-  AcApDocManager,
-  type AcApFontInfo,
-  AcApFontUtil,
-  AcApSettingManager,
+  ApplicationCacheFontCmd,
+  ApplicationDocManager,
+  type ApplicationFontInfo,
+  ApplicationFontUtil,
+  ApplicationSettingManager,
   eventBus} from '@mlightcad/cad-simple-viewer'
 import {
   ElButton,
@@ -109,7 +109,7 @@ const { t } = useI18n()
 const { fonts: fontMapping } = useMissedData()
 
 const fontFileInput = ref<HTMLInputElement | null>(null)
-const availableFontInfos = ref<AcApFontInfo[]>([])
+const availableFontInfos = ref<ApplicationFontInfo[]>([])
 const matchFontType = ref(true)
 const applying = ref(false)
 const pendingFontMissed = ref<string | null>(null)
@@ -137,7 +137,7 @@ const canApply = computed(() => {
 
 const refreshAvailableFonts = async () => {
   availableFontInfos.value =
-    (await AcApDocManager.instance.getAvaiableFonts()) ?? []
+    (await ApplicationDocManager.instance.getAvaiableFonts()) ?? []
 }
 
 onMounted(() => {
@@ -157,13 +157,13 @@ watch(matchFontType, enabled => {
 
 const getMissedFontType = (missedFont: string): 'shx' | 'mesh' | undefined => {
   return (
-    AcApFontUtil.getCatalogFontType(missedFont) ??
-    AcApFontUtil.getFontType(missedFont)
+    ApplicationFontUtil.getCatalogFontType(missedFont) ??
+    ApplicationFontUtil.getFontType(missedFont)
   )
 }
 
 const addLocalCachedFont = (fontName: string) => {
-  const type = AcApFontUtil.getFontType(fontName)
+  const type = ApplicationFontUtil.getFontType(fontName)
   if (!type) return
   if (localCachedFonts.value.some(font => font.name === fontName)) return
   localCachedFonts.value.push({ name: fontName, type })
@@ -216,7 +216,7 @@ const handleFontFileChange = async () => {
   }
 
   try {
-    const status = await AcApCacheFontCmd.cacheFontFile(file, {
+    const status = await ApplicationCacheFontCmd.cacheFontFile(file, {
       aliases: [missedFont],
       notify: false
     })
@@ -244,8 +244,8 @@ const handleFontFileChange = async () => {
 const handleApply = async () => {
   applying.value = true
   try {
-    const docManager = AcApDocManager.instance
-    const settingManager = AcApSettingManager.instance
+    const docManager = ApplicationDocManager.instance
+    const settingManager = ApplicationSettingManager.instance
     const nextFontMapping = { ...settingManager.fontMapping }
     const fontsToLoad = new Set<string>()
     let replacedFont = false

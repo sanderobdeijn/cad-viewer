@@ -1,6 +1,6 @@
 import {
-  AcApDocManager,
-  AcEdSelectionEventArgs
+  ApplicationDocManager,
+  EditorSelectionEventArgs
 } from '@mlightcad/cad-simple-viewer'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -9,26 +9,26 @@ export function useSelectionSet() {
   const added = ref<string[]>([])
   const removed = ref<string[]>([])
 
-  const selectionAdded = (args: AcEdSelectionEventArgs) => {
+  const selectionAdded = (args: EditorSelectionEventArgs) => {
     added.value = args.ids
-    selectionSet.value = AcApDocManager.instance.curView.selectionSet.ids
+    selectionSet.value = ApplicationDocManager.instance.curView.selectionSet.ids
   }
 
-  const selectionRemoved = (args: AcEdSelectionEventArgs) => {
+  const selectionRemoved = (args: EditorSelectionEventArgs) => {
     removed.value = args.ids
-    selectionSet.value = AcApDocManager.instance.curView.selectionSet.ids
+    selectionSet.value = ApplicationDocManager.instance.curView.selectionSet.ids
   }
 
   /** Register event listeners when the component mounts */
   onMounted(() => {
-    const events = AcApDocManager.instance.curView.selectionSet.events
+    const events = ApplicationDocManager.instance.curView.selectionSet.events
     events.selectionAdded.addEventListener(selectionAdded)
     events.selectionRemoved.addEventListener(selectionRemoved)
   })
 
   /** Unregister event listeners when the component unmounts */
   onUnmounted(() => {
-    const events = AcApDocManager.instance.curView.selectionSet.events
+    const events = ApplicationDocManager.instance.curView.selectionSet.events
     events.selectionAdded.removeEventListener(selectionAdded)
     events.selectionRemoved.removeEventListener(selectionRemoved)
   })

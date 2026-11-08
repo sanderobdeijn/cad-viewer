@@ -3,20 +3,20 @@ import '../style/style.css'
 import '../style/index.scss'
 
 import {
-  AcApDocManager,
-  AcApDocManagerOptions
+  ApplicationDocManager,
+  ApplicationDocManagerOptions
 } from '@mlightcad/cad-simple-viewer'
 
 import { registerCadViewerNotificationCenter } from './cadViewerNotificationCenter'
 import { registerCmds, registerDialogs } from './register'
 
 /** Options for {@link initializeCadViewer}. */
-export type InitializeCadViewerOptions = AcApDocManagerOptions
+export type InitializeCadViewerOptions = ApplicationDocManagerOptions
 
 export const initializeCadViewer = (
   options: InitializeCadViewerOptions = {}
 ) => {
-  AcApDocManager.createInstance({
+  ApplicationDocManager.createInstance({
     ...options,
     // Keep the shared event bridge; Vue panel replaces the built-in DOM UI.
     notificationCenter: {

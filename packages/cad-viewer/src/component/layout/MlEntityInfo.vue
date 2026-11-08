@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcApDocManager, itemTypeName } from '@mlightcad/cad-simple-viewer'
+import { ApplicationDocManager, itemTypeName } from '@mlightcad/cad-simple-viewer'
 import { ElCard, ElCol, ElRow, ElText } from 'element-plus'
 import { ComponentPublicInstance, computed, nextTick, ref, watch } from 'vue'
 
@@ -45,7 +45,7 @@ const visible = computed(
     hovered.value &&
     info.value.type !== '' &&
     features.isShowEntityInfo &&
-    !AcApDocManager.instance.editor.isActive
+    !ApplicationDocManager.instance.editor.isActive
 )
 
 watch(visible, async val => {

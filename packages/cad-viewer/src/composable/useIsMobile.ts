@@ -1,5 +1,5 @@
 import {
-  acedIsMobileOrPadUi,
+  editorIsMobileOrPadUi,
   ML_UI_COARSE_POINTER_MEDIA_QUERY,
   ML_UI_COMPACT_MEDIA_QUERY,
   ML_UI_MOBILE_MEDIA_QUERY
@@ -50,7 +50,7 @@ export function useIsMobile() {
     // and primary-pointer type can.
     void isCompactViewport.value
     void isCoarsePointer.value
-    return acedIsMobileOrPadUi()
+    return editorIsMobileOrPadUi()
   })
 
   return { isMobile, isMobileOrPad, isSmallViewport }

@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/common'
+import { CommonColor } from '@mlightcad/common'
 import { computed, shallowRef, watch } from 'vue'
 
 import { MlBaseDialog, MlColorPickerTabs } from '../common'
@@ -30,7 +30,7 @@ const props = defineProps<{
  */
 const emit = defineEmits<{
   (e: 'update:modelValue', v: boolean): void
-  (e: 'ok', v: AcCmColor): void
+  (e: 'ok', v: CommonColor): void
   (e: 'cancel', v: undefined): void
 }>()
 
@@ -42,8 +42,8 @@ const visible = computed({
   set: v => emit('update:modelValue', v)
 })
 
-const selectedColor = shallowRef<AcCmColor | undefined>(
-  props.color ? (AcCmColor.fromString(props.color) ?? undefined) : undefined
+const selectedColor = shallowRef<CommonColor | undefined>(
+  props.color ? (CommonColor.fromString(props.color) ?? undefined) : undefined
 )
 
 // Watch for changes to color
@@ -51,7 +51,7 @@ watch(
   () => props.color,
   newColor => {
     selectedColor.value = newColor
-      ? (AcCmColor.fromString(newColor) ?? undefined)
+      ? (CommonColor.fromString(newColor) ?? undefined)
       : undefined
   }
 )
@@ -64,7 +64,7 @@ function handleOk() {
     emit('ok', selectedColor.value)
     return
   }
-  const fallback = new AcCmColor()
+  const fallback = new CommonColor()
   fallback.setByLayer()
   emit('ok', fallback)
 }

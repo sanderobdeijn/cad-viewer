@@ -1,0 +1,709 @@
+import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+import * as THREE from 'three'
+
+const _vector1 = /*@__PURE__*/ new THREE.Vector3()
+const _vector2 = /*@__PURE__*/ new THREE.Vector3()
+
+/**
+ * Internal utility class to handle buffer geometry.
+ * @internal
+ */
+export class ThreeRendererBufferGeometryUtil {
+  /**
+   * Release memeory occupied by buffer geometry
+   * @param geometry
+   */
+  public static release(geometry: THREE.BufferGeometry) {
+    geometry.index = null
+    geometry.attributes = {}
+  }
+
+  /**
+   * Convert an indexed geometry to a non-indexed geometry. Can be used for dashed line style.
+   */
+  public static toNonIndexed(
+    geometry: THREE.BufferGeometry
+  ): THREE.BufferGeometry {
+    if (!geometry.index) {
+      return geometry
+    }
+
+    const newGeometry = new THREE.BufferGeometry()
+    const indexBuffer = geometry.index
+    for (const name in geometry.attributes) {
+      newGeometry.setAttribute(
+        name,
+        ThreeRendererBufferGeometryUtil.createGeometryAttributeByIndex(
+          geometry.attributes[name] as THREE.BufferAttribute,
+          indexBuffer
+        )
+      )
+    }
+
+    return newGeometry
+  }
+
+  public static createGeometryAttributeByIndex(
+    attribute: THREE.BufferAttribute,
+    indexBuffer: THREE.BufferAttribute
+  ) {
+    const count = indexBuffer.count
+    const itemSize = attribute.itemSize
+    const TypedArray = attribute.array.constructor as {
+      new (length: number): typeof attribute.array
+    }
+    const array = new TypedArray(count * itemSize)
+
+    for (let i = 0; i < count; i++) {
+      const index = indexBuffer.getX(i)
+      const attributeIndex = index * itemSize
+      for (let k = 0; k < itemSize; k++) {
+        array[i * itemSize + k] = attribute.array[attributeIndex + k]
+      }
+    }
+
+    return new THREE.BufferAttribute(array, itemSize, attribute.normalized)
+  }
+
+  /**
+   * Converts InterleavedBufferAttribute to BufferAttribute, because mergeGeometries doesn't support InterleavedBufferAttribute.
+   * If it is supported by Three.js one day, we should remove this method.
+   */
+  public static tryConvertInterleavedBufferAttributes(
+    geometry: THREE.BufferGeometry
+  ) {
+    if (!geometry || !geometry.attributes) {
+      return
+    }
+    Object.keys(geometry.attributes).forEach(key => {
+      const val = geometry.attributes[key]
+      if (val instanceof THREE.InterleavedBufferAttribute) {
+        const bufferAttr = val.clone() // returns THREE.BufferAttribute
+        geometry.attributes[key] = bufferAttr
+      }
+    })
+  }
+
+  static createBufferGeometryByPoints(points: GeometryPoint2dLike[]) {
+    const geometry = new THREE.BufferGeometry()
+    const position = new Float32Array(points.length * 3)
+    const indices = new Uint16Array((points.length - 1) * 2)
+    points.forEach((point, index) => {
+      let startIndex = index * 3
+      position[startIndex] = point.x
+      position[startIndex + 1] = point.y
+      position[startIndex + 2] = 0
+      if (index > 0) {
+        startIndex = (index - 1) * 2
+        indices[startIndex] = index - 1
+        indices[startIndex + 1] = index
+      }
+    })
+    geometry.setAttribute(
+      'position',
+      new THREE.Float32BufferAttribute(position, 3)
+    )
+    geometry.setIndex(new THREE.Uint16BufferAttribute(indices, 1))
+    return geometry
+  }
+
+  /**
+   * Rebuilds `lineDistance` for non-indexed {@link THREE.LineSegments} geometry.
+   *
+   * Uses only complete vertex pairs so the attribute length always matches
+   * `position.count`. Call after sanitizing or rebasing segment positions.
+   *
+   * When an existing `lineDistance` attribute is present, each segment pair keeps
+   * its start phase and only the end value is updated from the new length. That
+   * preserves entity-local dash phases after GroupCompactor merges (each leaf
+   * starts at 0). A full chain restart (`0, d0, d0, d0+d1, ...`) is used only
+   * when building distances from scratch — chaining across merged independent
+   * segments would push later entities into linetype gaps (A4107 WSP connectors).
+   */
+  static recomputeLineDistanceForLineSegments(
+    geometry: THREE.BufferGeometry,
+    worldMatrix?: THREE.Matrix4
+  ) {
+    let positionAttribute = geometry.getAttribute(
+      'position'
+    ) as THREE.BufferAttribute
+    if (!positionAttribute || positionAttribute.count < 2) {
+      geometry.deleteAttribute('lineDistance')
+      return
+    }
+
+    const vertexCount = positionAttribute.count - (positionAttribute.count % 2)
+    if (vertexCount === 0) {
+      geometry.deleteAttribute('lineDistance')
+      return
+    }
+
+    if (vertexCount < positionAttribute.count) {
+      const trimmed = new Float32Array(vertexCount * positionAttribute.itemSize)
+      trimmed.set(
+        (positionAttribute.array as THREE.TypedArray).subarray(
+          0,
+          trimmed.length
+        )
+      )
+      geometry.setAttribute(
+        'position',
+        new THREE.BufferAttribute(trimmed, positionAttribute.itemSize)
+      )
+      positionAttribute = geometry.getAttribute(
+        'position'
+      ) as THREE.BufferAttribute
+    }
+
+    const existing = geometry.getAttribute('lineDistance') as
+      | THREE.BufferAttribute
+      | undefined
+    const preserveStarts = !!existing && existing.count >= vertexCount
+
+    const lineDistances = new Float32Array(vertexCount)
+    for (let i = 0; i < vertexCount; i += 2) {
+      if (worldMatrix) {
+        _vector1
+          .fromBufferAttribute(positionAttribute, i)
+          .applyMatrix4(worldMatrix)
+        _vector2
+          .fromBufferAttribute(positionAttribute, i + 1)
+          .applyMatrix4(worldMatrix)
+      } else {
+        _vector1.fromBufferAttribute(positionAttribute, i)
+        _vector2.fromBufferAttribute(positionAttribute, i + 1)
+      }
+
+      const start = preserveStarts
+        ? existing!.getX(i)
+        : i === 0
+          ? 0
+          : lineDistances[i - 1]
+      lineDistances[i] = start
+      lineDistances[i + 1] = start + _vector1.distanceTo(_vector2)
+    }
+
+    geometry.setAttribute(
+      'lineDistance',
+      new THREE.Float32BufferAttribute(lineDistances, 1)
+    )
+  }
+
+  /**
+   * Whether one material's shader consumes the per-vertex `lineDistance`
+   * attribute (pattern/dashed linetype shader materials). Thin solid lines
+   * and wide lines never read it, so their geometries skip the attribute.
+   */
+  static hasPatternLineShader(material: THREE.Material): boolean {
+    return (
+      material instanceof THREE.ShaderMaterial &&
+      // Match the pattern-shader attribute, not LineMaterial's `vLineDistance`.
+      material.vertexShader.includes('attribute float lineDistance')
+    )
+  }
+
+  /**
+   * Adds a per-vertex cumulative `lineDistance` attribute to one standalone
+   * line geometry when `material` is a pattern shader that consumes it and the
+   * geometry does not carry the attribute yet.
+   *
+   * Used after material rebinds swap a dash-capable material onto a geometry
+   * authored for a solid material (solid lines skip lineDistance to save
+   * ~25% of line vertex memory).
+   *
+   * @param geometry - Line geometry mutated in place.
+   * @param material - One material or material array to inspect.
+   * @returns `true` when the attribute was added.
+   */
+  static ensureLineDistance(
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material | THREE.Material[]
+  ): boolean {
+    if (geometry.hasAttribute('lineDistance')) {
+      return false
+    }
+    const primary = Array.isArray(material) ? material[0] : material
+    if (!primary || !ThreeRendererBufferGeometryUtil.hasPatternLineShader(primary)) {
+      return false
+    }
+    ThreeRendererBufferGeometryUtil.computeSegmentLineDistances(geometry)
+    return geometry.hasAttribute('lineDistance')
+  }
+
+  /**
+   * Computes per-vertex cumulative `lineDistance` for line-segment geometry.
+   *
+   * Distances accumulate along segment pairs starting from zero, so each
+   * geometry (one packed entity) gets an entity-local dash phase. Indexed
+   * geometry follows index pairs; non-indexed geometry follows consecutive
+   * vertex pairs. Unlike {@link recomputeLineDistanceForLineSegments} this
+   * never trims vertices or drops the attribute, which keeps batch slot
+   * reservations and the batch attribute contract intact.
+   *
+   * @param geometry - Line-segment geometry mutated in place.
+   */
+  static computeSegmentLineDistances(geometry: THREE.BufferGeometry) {
+    const positionAttribute = geometry.getAttribute('position') as
+      | THREE.BufferAttribute
+      | undefined
+    if (!positionAttribute) {
+      geometry.deleteAttribute('lineDistance')
+      return
+    }
+    if (positionAttribute.count < 2) {
+      geometry.setAttribute(
+        'lineDistance',
+        new THREE.Float32BufferAttribute(
+          new Float32Array(positionAttribute.count),
+          1
+        )
+      )
+      return
+    }
+
+    const lineDistances = new Float32Array(positionAttribute.count)
+    const index = geometry.getIndex()
+    let accumulated = 0
+
+    if (index) {
+      // Degenerate padding pairs may trail the real segments inside the index
+      // buffer (e.g. a two-vertex line backed by a four-slot index array).
+      // The first segment touching a vertex defines its distance so those
+      // padding pairs cannot overwrite real segment distances.
+      const written = new Uint8Array(positionAttribute.count)
+      for (let i = 0; i + 1 < index.count; i += 2) {
+        const a = index.getX(i)
+        const b = index.getX(i + 1)
+        if (a >= positionAttribute.count || b >= positionAttribute.count) {
+          continue
+        }
+        if (!written[a]) {
+          lineDistances[a] = accumulated
+          written[a] = 1
+        }
+        _vector1.fromBufferAttribute(positionAttribute, a)
+        _vector2.fromBufferAttribute(positionAttribute, b)
+        accumulated += _vector1.distanceTo(_vector2)
+        if (!written[b]) {
+          lineDistances[b] = accumulated
+          written[b] = 1
+        }
+      }
+    } else {
+      const vertexCount =
+        positionAttribute.count - (positionAttribute.count % 2)
+      for (let i = 0; i < vertexCount; i += 2) {
+        lineDistances[i] = accumulated
+        _vector1.fromBufferAttribute(positionAttribute, i)
+        _vector2.fromBufferAttribute(positionAttribute, i + 1)
+        accumulated += _vector1.distanceTo(_vector2)
+        lineDistances[i + 1] = accumulated
+      }
+    }
+
+    geometry.setAttribute(
+      'lineDistance',
+      new THREE.Float32BufferAttribute(lineDistances, 1)
+    )
+  }
+
+  // Calculates line distances in world space
+  static computeLineDistance(line: THREE.Line) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isLineSegments = (line as any).isLineSegments === true
+    let geometry = line.geometry
+    const worldMatrix = line.matrixWorld
+    // Converts an indexed geometry to an non-indexed geometry
+    if (geometry.index) {
+      geometry = ThreeRendererBufferGeometryUtil.toNonIndexed(geometry)
+    }
+
+    // TODO: geometry may be referenced by multiple objects.
+    if (geometry.index === null) {
+      const positionAttribute = geometry.attributes
+        .position as THREE.BufferAttribute
+      if (!positionAttribute || positionAttribute.count === 0) {
+        return
+      }
+
+      if (isLineSegments) {
+        ThreeRendererBufferGeometryUtil.recomputeLineDistanceForLineSegments(
+          geometry,
+          worldMatrix
+        )
+      } else {
+        const lineDistances: number[] = []
+        lineDistances[0] = 0
+        for (let i = 1, l = positionAttribute.count; i < l; i++) {
+          _vector1
+            .fromBufferAttribute(positionAttribute, i - 1)
+            .applyMatrix4(worldMatrix)
+          _vector2
+            .fromBufferAttribute(positionAttribute, i)
+            .applyMatrix4(worldMatrix)
+
+          lineDistances[i] = lineDistances[i - 1]
+          lineDistances[i] += _vector1.distanceTo(_vector2)
+        }
+
+        geometry.setAttribute(
+          'lineDistance',
+          new THREE.Float32BufferAttribute(lineDistances, 1)
+        )
+      }
+
+      line.geometry.dispose()
+      line.geometry = geometry
+    }
+  }
+
+  static computeLineDistances(object: THREE.Object3D) {
+    object.traverse((object: THREE.Object3D) => {
+      let obj = object as any //eslint-disable-line
+      if (obj.isLine && obj.material instanceof THREE.ShaderMaterial) {
+        this.computeLineDistance(obj)
+      }
+    })
+  }
+
+  /**
+   * Apply translation and rotation around z-axis to 2d points in the specified buffer geometry
+   * @param geometry Input buffer geoemtry to apply translation and rotation
+   * @param translation Input translation to apply
+   * @param rotationZ Input roatation (in radians) around z-axis to apply
+   * @param scale Input scale factor
+   */
+  static apply2dTransform(
+    geometry: THREE.BufferGeometry,
+    translation: THREE.Vector2,
+    rotationZ: number = 0,
+    scale: number = 1
+  ) {
+    const positionAttribute = geometry.attributes.position // Access vertex positions
+    const itemSize = positionAttribute.itemSize
+    const array = positionAttribute.array // Direct access to Float32Array for faster processing
+
+    if (rotationZ != 0) {
+      const cosAngle = Math.cos(rotationZ)
+      const sinAngle = Math.sin(rotationZ)
+
+      // Loop through all vertex positions (x, y) in the array
+      for (let i = 0; i < array.length; i += itemSize) {
+        const x = array[i]
+        const y = array[i + 1]
+
+        // Apply 2D rotation around Z-axis
+        const xNew = x * cosAngle - y * sinAngle
+        const yNew = x * sinAngle + y * cosAngle
+
+        // Apply translation
+        array[i] = xNew * scale + translation.x // Update x coordinate
+        array[i + 1] = yNew * scale + translation.y // Update y coordinate
+        // No need to modify array[i + 2], which is z (remains 0)
+      }
+    } else {
+      // Loop through all vertex positions (x, y) in the array
+      for (let i = 0; i < array.length; i += itemSize) {
+        // Apply translation
+        array[i] = array[i] * scale + translation.x // Update x coordinate
+        array[i + 1] += array[i + 1] * scale + translation.y // Update y coordinate
+        // No need to modify array[i + 2], which is z (remains 0)
+      }
+    }
+
+    // Mark the position attribute as needing update
+    positionAttribute.needsUpdate = true
+
+    return geometry
+  }
+
+  /**
+   * Apply translation and rotation to 2d points in the specified buffer geometry
+   * @param geometry Input buffer geoemtry to apply translation and rotation
+   * @param translation Input translation to apply
+   * @param rotation Input roatation (in radians) around x-axis, y-axis, and z-axis
+   */
+  static apply3dTransform(
+    geometry: THREE.BufferGeometry,
+    translation: THREE.Vector3,
+    rotation: THREE.Vector3
+  ) {
+    const positionAttribute = geometry.attributes.position // Access vertex positions
+    const itemSize = positionAttribute.itemSize
+    const array = positionAttribute.array // Direct access to Float32Array for faster processing
+
+    const cosX = Math.cos(rotation.x)
+    const sinX = Math.sin(rotation.x)
+
+    const cosY = Math.cos(rotation.y)
+    const sinY = Math.sin(rotation.y)
+
+    const cosZ = Math.cos(rotation.z)
+    const sinZ = Math.sin(rotation.z)
+
+    // Loop through all vertex positions (x, y, z) in the array
+    for (let i = 0; i < array.length; i += itemSize) {
+      let x = array[i]
+      let y = array[i + 1]
+      let z = array[i + 2]
+
+      // Rotation around X-axis
+      let yNew = y * cosX - z * sinX
+      let zNew = y * sinX + z * cosX
+      y = yNew
+      z = zNew
+
+      // Rotation around Y-axis
+      let xNew = x * cosY + z * sinY
+      zNew = -x * sinY + z * cosY
+      x = xNew
+      z = zNew
+
+      // Rotation around Z-axis
+      xNew = x * cosZ - y * sinZ
+      yNew = x * sinZ + y * cosZ
+      x = xNew
+      y = yNew
+
+      // Apply translation
+      array[i] = x + translation.x // Update x coordinate
+      array[i + 1] = y + translation.y // Update y coordinate
+      array[i + 2] = z + translation.z // Update z coordinate
+    }
+
+    // Mark the position attribute as needing update
+    positionAttribute.needsUpdate = true
+
+    return geometry
+  }
+
+  /**
+   * Returns true when all coordinates of a 3D point are finite.
+   */
+  static isFinitePoint(point: GeometryPoint2dLike | null | undefined): boolean {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y)
+  }
+
+  /**
+   * Returns true when every value in the geometry position attribute is finite.
+   */
+  static hasFinitePositions(
+    geometry: THREE.BufferGeometry | null | undefined
+  ): boolean {
+    const position = geometry?.getAttribute('position')
+    if (!position || position.count === 0) {
+      return true
+    }
+
+    const array = position.array as ArrayLike<number>
+    for (let index = 0; index < array.length; index++) {
+      if (!Number.isFinite(array[index])) {
+        return false
+      }
+    }
+    return true
+  }
+
+  /**
+   * Computes a bounding box only when position data is finite.
+   *
+   * Returns null for invalid geometry instead of letting THREE.js warn on NaN
+   * inputs during CAD file conversion.
+   */
+  static safeComputeBoundingBox(
+    geometry: THREE.BufferGeometry,
+    target?: THREE.Box3
+  ): THREE.Box3 | null {
+    if (!ThreeRendererBufferGeometryUtil.hasFinitePositions(geometry)) {
+      geometry.boundingBox = null
+      return null
+    }
+
+    if (target) {
+      geometry.boundingBox = target
+    }
+    geometry.computeBoundingBox()
+
+    const box = geometry.boundingBox
+    if (
+      !box ||
+      !Number.isFinite(box.min.x) ||
+      !Number.isFinite(box.min.y) ||
+      !Number.isFinite(box.min.z) ||
+      !Number.isFinite(box.max.x) ||
+      !Number.isFinite(box.max.y) ||
+      !Number.isFinite(box.max.z)
+    ) {
+      geometry.boundingBox = null
+      return null
+    }
+
+    return box
+  }
+
+  /**
+   * Computes a bounding sphere only when position data is finite.
+   *
+   * Returns null for invalid geometry instead of letting THREE.js warn on NaN
+   * inputs during CAD file conversion.
+   */
+  static safeComputeBoundingSphere(
+    geometry: THREE.BufferGeometry,
+    target?: THREE.Sphere
+  ): THREE.Sphere | null {
+    const box = ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(geometry)
+    if (!box) {
+      geometry.boundingSphere = null
+      return null
+    }
+
+    const sphere = target ?? new THREE.Sphere()
+    box.getBoundingSphere(sphere)
+    geometry.boundingSphere = sphere
+    return sphere
+  }
+
+  /**
+   * Drops indexed primitives that reference vertices with non-finite coordinates.
+   *
+   * @returns `true` when at least one primitive remains.
+   */
+  static sanitizeGeometryPositions(
+    geometry: THREE.BufferGeometry,
+    indexStride: 2 | 3 = 2
+  ): boolean {
+    const position = geometry.getAttribute('position') as
+      | THREE.BufferAttribute
+      | undefined
+    if (!position || position.count === 0) {
+      return false
+    }
+
+    if (ThreeRendererBufferGeometryUtil.hasFinitePositions(geometry)) {
+      return true
+    }
+
+    const isFiniteVertex = (vertex: number) => {
+      const base = vertex * position.itemSize
+      for (let component = 0; component < position.itemSize; component++) {
+        if (!Number.isFinite(position.array[base + component])) {
+          return false
+        }
+      }
+      return true
+    }
+
+    const index = geometry.getIndex()
+    if (!index) {
+      if (geometry.hasAttribute('lineDistance')) {
+        const segmentPositions: number[] = []
+        for (let vertex = 0; vertex + 1 < position.count; vertex += 2) {
+          if (!isFiniteVertex(vertex) || !isFiniteVertex(vertex + 1)) {
+            continue
+          }
+          const base1 = vertex * position.itemSize
+          const base2 = (vertex + 1) * position.itemSize
+          for (let component = 0; component < position.itemSize; component++) {
+            segmentPositions.push(position.array[base1 + component])
+          }
+          for (let component = 0; component < position.itemSize; component++) {
+            segmentPositions.push(position.array[base2 + component])
+          }
+        }
+        if (segmentPositions.length === 0) {
+          return false
+        }
+        geometry.setAttribute(
+          'position',
+          new THREE.Float32BufferAttribute(segmentPositions, position.itemSize)
+        )
+        ThreeRendererBufferGeometryUtil.recomputeLineDistanceForLineSegments(geometry)
+        return true
+      }
+
+      const validVertices: number[] = []
+      for (let vertex = 0; vertex < position.count; vertex++) {
+        if (isFiniteVertex(vertex)) {
+          validVertices.push(vertex)
+        }
+      }
+      if (validVertices.length === 0) {
+        return false
+      }
+      const array = new Float32Array(validVertices.length * position.itemSize)
+      validVertices.forEach((vertex, targetVertex) => {
+        const sourceBase = vertex * position.itemSize
+        const targetBase = targetVertex * position.itemSize
+        for (let component = 0; component < position.itemSize; component++) {
+          array[targetBase + component] = position.array[sourceBase + component]
+        }
+      })
+      geometry.setAttribute(
+        'position',
+        new THREE.BufferAttribute(array, position.itemSize)
+      )
+      return true
+    }
+
+    const validIndices: number[] = []
+    for (
+      let offset = 0;
+      offset + indexStride <= index.count;
+      offset += indexStride
+    ) {
+      let valid = true
+      for (let component = 0; component < indexStride; component++) {
+        if (!isFiniteVertex(index.getX(offset + component))) {
+          valid = false
+          break
+        }
+      }
+      if (valid) {
+        for (let component = 0; component < indexStride; component++) {
+          validIndices.push(index.getX(offset + component))
+        }
+      }
+    }
+
+    if (validIndices.length === 0) {
+      return false
+    }
+
+    const IndexArray = validIndices.some(index => index > 65535)
+      ? Uint32Array
+      : Uint16Array
+    geometry.setIndex(
+      new THREE.BufferAttribute(new IndexArray(validIndices), 1)
+    )
+    return true
+  }
+
+  /**
+   * Applies a matrix to geometry positions without triggering THREE.js NaN
+   * bounding-box warnings on corrupt CAD vertex data.
+   *
+   * @returns `false` when no finite positions remain after sanitization.
+   */
+  static safeApplyMatrix4(
+    geometry: THREE.BufferGeometry,
+    matrix: THREE.Matrix4,
+    indexStride: 2 | 3 = 2
+  ): boolean {
+    geometry.boundingBox = null
+    geometry.boundingSphere = null
+    if (
+      !ThreeRendererBufferGeometryUtil.sanitizeGeometryPositions(geometry, indexStride)
+    ) {
+      return false
+    }
+
+    const position = geometry.getAttribute('position') as THREE.BufferAttribute
+    for (let vertex = 0; vertex < position.count; vertex++) {
+      _vector1.fromBufferAttribute(position, vertex)
+      _vector1.applyMatrix4(matrix)
+      position.setXYZ(vertex, _vector1.x, _vector1.y, _vector1.z)
+    }
+    position.needsUpdate = true
+    return true
+  }
+}

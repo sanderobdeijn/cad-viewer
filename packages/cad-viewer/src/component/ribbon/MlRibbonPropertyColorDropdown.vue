@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor } from '@mlightcad/common'
+import { CommonColor } from '@mlightcad/common'
 
 import { color as colorIcon } from '../../svg'
 import MlColorDropdown from '../common/MlColorDropdown.vue'
@@ -27,7 +27,7 @@ import MlRibbonPropertyField from './MlRibbonPropertyField.vue'
  */
 interface RibbonPropertyColorDropdownProps {
   /** Active entity color mirrored from the current document state. */
-  modelValue?: AcCmColor
+  modelValue?: CommonColor
   /** Disables edits when the ribbon or current document is unavailable. */
   disabled?: boolean
   /** Resolved swatch color used when symbolic CAD colors need a concrete preview. */
@@ -41,6 +41,6 @@ interface RibbonPropertyColorDropdownProps {
 defineProps<RibbonPropertyColorDropdownProps>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: AcCmColor | undefined): void
+  (e: 'update:modelValue', value: CommonColor | undefined): void
 }>()
 </script>

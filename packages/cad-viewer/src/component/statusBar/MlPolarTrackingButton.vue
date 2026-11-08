@@ -41,7 +41,7 @@
 <script lang="ts" setup>
 import { ArrowDown, Check } from '@element-plus/icons-vue'
 import {
-  AcApSettingManager,
+  ApplicationSettingManager,
   POLARMODE_POLAR_TRACKING,
   togglePolarTracking as togglePolarTrackingSetting
 } from '@mlightcad/cad-simple-viewer'
@@ -91,7 +91,7 @@ const togglePolarTracking = () => {
 }
 
 const setPolarang = (increment: number) => {
-  AcApSettingManager.instance.set('polarAngle', increment)
+  ApplicationSettingManager.instance.set('polarAngle', increment)
 }
 
 const handleCommand = (command: number) => {

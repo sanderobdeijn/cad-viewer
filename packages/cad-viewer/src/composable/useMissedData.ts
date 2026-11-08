@@ -1,6 +1,6 @@
 import {
-  AcApDocManager,
-  AcApSettingManager,
+  ApplicationDocManager,
+  ApplicationSettingManager,
   eventBus
 } from '@mlightcad/cad-simple-viewer'
 import { reactive } from 'vue'
@@ -26,10 +26,10 @@ let initialized = false
 
 function syncFromCurrentView(): void {
   try {
-    const view = AcApDocManager.instance?.curView
+    const view = ApplicationDocManager.instance?.curView
     if (!view) return
 
-    const storedFontMapping = AcApSettingManager.instance.fontMapping
+    const storedFontMapping = ApplicationSettingManager.instance.fontMapping
 
     fontMapping.clear()
     for (const missedFont of Object.keys(view.missedData.fonts ?? {})) {
@@ -44,7 +44,7 @@ function ensureInitialized(): void {
   if (initialized) return
   initialized = true
 
-  AcApDocManager.instance.events.documentActivated.addEventListener(() => {
+  ApplicationDocManager.instance.events.documentActivated.addEventListener(() => {
     fontMapping.clear()
     syncFromCurrentView()
     // Refresh notification center (font-missed) for the newly active document.

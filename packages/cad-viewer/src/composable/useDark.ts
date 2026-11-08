@@ -1,22 +1,22 @@
 import {
-  type AcApColorTheme,
-  AcApSettingManager,
-  acedApplyUiTheme} from '@mlightcad/cad-simple-viewer'
+  type ApplicationColorTheme,
+  ApplicationSettingManager,
+  editorApplyUiTheme} from '@mlightcad/cad-simple-viewer'
 import { computed, ref } from 'vue'
 
-const currentTheme = ref<AcApColorTheme>('dark')
+const currentTheme = ref<ApplicationColorTheme>('dark')
 let isThemeSyncInitialized = false
 
-function applyThemeToDom(theme: AcApColorTheme) {
+function applyThemeToDom(theme: ApplicationColorTheme) {
   if (typeof document === 'undefined') return
 
   const html = document.documentElement
   html.classList.toggle('dark', theme === 'dark')
   // Keep simple-viewer chrome tokens (--ml-ui-*) and theme subscribers in sync.
-  acedApplyUiTheme(theme, html)
+  editorApplyUiTheme(theme, html)
 }
 
-function updateCurrentTheme(theme: AcApColorTheme) {
+function updateCurrentTheme(theme: ApplicationColorTheme) {
   currentTheme.value = theme
   applyThemeToDom(theme)
 }
@@ -26,19 +26,19 @@ export function ensureColorThemeSync() {
   if (isThemeSyncInitialized) return
   isThemeSyncInitialized = true
 
-  const settings = AcApSettingManager.instance
+  const settings = ApplicationSettingManager.instance
   updateCurrentTheme(settings.get('colorTheme'))
   settings.events.modified.addEventListener(args => {
     if (args.key === 'colorTheme') {
-      updateCurrentTheme(args.value as AcApColorTheme)
+      updateCurrentTheme(args.value as ApplicationColorTheme)
     }
   })
 }
 
-export function setColorTheme(theme: AcApColorTheme) {
+export function setColorTheme(theme: ApplicationColorTheme) {
   updateCurrentTheme(theme)
   ensureColorThemeSync()
-  const settings = AcApSettingManager.instance
+  const settings = ApplicationSettingManager.instance
   if (settings.get('colorTheme') !== theme) {
     settings.set('colorTheme', theme)
   }

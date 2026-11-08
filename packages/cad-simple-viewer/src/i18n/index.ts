@@ -1,11 +1,11 @@
-import { AcEdCommandStack } from '../editor'
-import { AcApI18n, type AcApLocale, type AcApLocaleChangedEventArgs } from './AcApI18n'
+import { EditorCommandStack } from '../editor'
+import { ApplicationI18n, type ApplicationLocale, type ApplicationLocaleChangedEventArgs } from './ApplicationI18n'
 import enCommand from './en/command'
 import enJig from './en/jig'
 import enMain from './en/main'
 
 // Register core locale messages
-AcApI18n.mergeLocaleMessage('en', {
+ApplicationI18n.mergeLocaleMessage('en', {
   command: enCommand,
   jig: enJig,
   main: enMain
@@ -13,15 +13,15 @@ AcApI18n.mergeLocaleMessage('en', {
 
 export const cmdDescription = (groupName: string, cmdName: string) => {
   const key = `command.${groupName}.${cmdName}`
-  return AcApI18n.t(key)
+  return ApplicationI18n.t(key)
 }
 
 export const sysCmdDescription = (name: string) => {
-  return cmdDescription(AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME, name)
+  return cmdDescription(EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME, name)
 }
 
 export const userCmdDescription = (name: string) => {
-  return cmdDescription(AcEdCommandStack.DEFAUT_COMMAND_GROUP_NAME, name)
+  return cmdDescription(EditorCommandStack.DEFAUT_COMMAND_GROUP_NAME, name)
 }
 
-export { AcApI18n, type AcApLocale, type AcApLocaleChangedEventArgs }
+export { ApplicationI18n, type ApplicationLocale, type ApplicationLocaleChangedEventArgs }

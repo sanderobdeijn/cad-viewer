@@ -1,12 +1,12 @@
-import { AcApDocManager, AcEdCommandStack } from '@mlightcad/cad-simple-viewer'
+import { ApplicationDocManager, EditorCommandStack } from '@mlightcad/cad-simple-viewer'
 import { markRaw } from 'vue'
 
 import {
-  AcApDrawingUnitsCmd,
-  AcApMeasurementPanelCmd,
-  AcApMemCmd,
-  AcApMissedDataCmd,
-  AcApPointStyleCmd
+  ApplicationDrawingUnitsCmd,
+  ApplicationMeasurementPanelCmd,
+  ApplicationMemCmd,
+  ApplicationMissedDataCmd,
+  ApplicationPointStyleCmd
 } from '../command'
 import { MlDrawingUnitsDlg, MlPointStyleDlg } from '../component'
 import { useDialogManager } from '../composable'
@@ -14,36 +14,36 @@ import { useDialogManager } from '../composable'
 let isCommandRegistered = false
 export const registerCmds = () => {
   if (!isCommandRegistered) {
-    const register = AcApDocManager.instance.commandManager
+    const register = ApplicationDocManager.instance.commandManager
     register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'md',
       'md',
-      new AcApMissedDataCmd()
+      new ApplicationMissedDataCmd()
     )
     register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'pttype',
       'pttype',
-      new AcApPointStyleCmd()
+      new ApplicationPointStyleCmd()
     )
     register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'units',
       'units',
-      new AcApDrawingUnitsCmd()
+      new ApplicationDrawingUnitsCmd()
     )
     register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'measurementpanel',
       'measurementpanel',
-      new AcApMeasurementPanelCmd()
+      new ApplicationMeasurementPanelCmd()
     )
     register.addCommand(
-      AcEdCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
+      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'mem',
       'mem',
-      new AcApMemCmd(),
+      new ApplicationMemCmd(),
       'memstat'
     )
     isCommandRegistered = true

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 /**
- * Vertical main toolbar for cad-viewer, backed by shared {@link AcUiToolbar}.
+ * Vertical main toolbar for cad-viewer, backed by shared {@link UIToolbar}.
  */
 import {
-  acapBindToolbarDocState,
-  AcApDocManager,
-  AcApI18n,
-  AcUiToolbar,
-  type AcUiToolbarItem,
+  applicationBindToolbarDocState,
+  ApplicationDocManager,
+  ApplicationI18n,
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
@@ -28,8 +26,9 @@ import {
   ICON_ZOOM_ORIGINAL,
   ICON_ZOOM_SMART,
   ICON_ZOOM_WINDOW,
-  isMeasurementVisible
-} from '@mlightcad/cad-simple-viewer'
+  isMeasurementVisible,
+  UIToolbar,
+  type UIToolbarItem} from '@mlightcad/cad-simple-viewer'
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useDocument, useSettings } from '../../composable'
@@ -38,7 +37,7 @@ const features = useSettings()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 
 const hostRef = ref<HTMLElement | null>(null)
-let toolbar: AcUiToolbar | undefined
+let toolbar: UIToolbar | undefined
 let unbindDoc: (() => void) | undefined
 
 const measurementVisible = ref(isMeasurementVisible())
@@ -47,10 +46,10 @@ const syncMeasurementVisibility = () => {
   measurementVisible.value = isMeasurementVisible()
 }
 
-/** Prefer AcApI18n; keys are resolved at runtime by AcUiToolbar. */
+/** Prefer ApplicationI18n; keys are resolved at runtime by UIToolbar. */
 const i18n = {
   // eslint-disable-next-line @intlify/vue-i18n/no-dynamic-keys -- toolbar label keys are data-driven
-  t: (key: string) => AcApI18n.t(key)
+  t: (key: string) => ApplicationI18n.t(key)
 }
 
 const handleLocaleChanged = () => {
@@ -58,13 +57,13 @@ const handleLocaleChanged = () => {
   toolbar?.refreshLocale()
 }
 
-const toolbarSeparator = (): AcUiToolbarItem => ({
+const toolbarSeparator = (): UIToolbarItem => ({
   id: `separator-${Math.random().toString(36).slice(2, 8)}`,
   type: 'separator'
 })
 
-const buildItems = (): AcUiToolbarItem[] => {
-  const items: AcUiToolbarItem[] = [
+const buildItems = (): UIToolbarItem[] => {
+  const items: UIToolbarItem[] = [
     {
       id: 'select',
       label: 'main.verticalToolbar.select.text',
@@ -216,20 +215,20 @@ const buildItems = (): AcUiToolbarItem[] => {
 const ensureToolbar = () => {
   const host = hostRef.value
   if (!host || toolbar) return
-  toolbar = new AcUiToolbar({
+  toolbar = new UIToolbar({
     host,
     placement: 'right',
-    // Match AcUiShortCutToolbar shell `right: 12px`.
+    // Match UIShortCutToolbar shell `right: 12px`.
     edgeOffset: 12,
     items: buildItems(),
     i18n,
     collapsible: true,
     onCommand: command => {
       if (isDocumentOpening.value || !command) return
-      AcApDocManager.instance.sendStringToExecute(command)
+      ApplicationDocManager.instance.sendStringToExecute(command)
     }
   })
-  unbindDoc = acapBindToolbarDocState(toolbar)
+  unbindDoc = applicationBindToolbarDocState(toolbar)
   // Re-measure after the host has a real canvas-sized box (see host CSS note).
   void nextTick(() => {
     toolbar?.refresh()
@@ -248,10 +247,10 @@ const refreshToolbarItems = () => {
 }
 
 onMounted(() => {
-  const docs = AcApDocManager.instance
+  const docs = ApplicationDocManager.instance
   docs.editor.events.commandEnded.addEventListener(syncMeasurementVisibility)
   docs.events.documentActivated.addEventListener(syncMeasurementVisibility)
-  AcApI18n.events.localeChanged.addEventListener(handleLocaleChanged)
+  ApplicationI18n.events.localeChanged.addEventListener(handleLocaleChanged)
   syncMeasurementVisibility()
 
   if (features.isShowToolbar) {
@@ -260,10 +259,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  const docs = AcApDocManager.instance
+  const docs = ApplicationDocManager.instance
   docs.editor.events.commandEnded.removeEventListener(syncMeasurementVisibility)
   docs.events.documentActivated.removeEventListener(syncMeasurementVisibility)
-  AcApI18n.events.localeChanged.removeEventListener(handleLocaleChanged)
+  ApplicationI18n.events.localeChanged.removeEventListener(handleLocaleChanged)
   destroyToolbar()
 })
 

@@ -1,2 +1,2 @@
-export * from './AcEdMarker'
-export * from './AcEdOSnapMarkerManager'
+export * from './EditorMarker'
+export * from './EditorOSnapMarkerManager'

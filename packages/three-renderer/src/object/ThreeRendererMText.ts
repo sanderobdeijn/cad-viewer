@@ -1,0 +1,160 @@
+import {
+  GraphicsInterfaceMTextData,
+  GraphicsInterfaceSubEntityTraits,
+  GraphicsInterfaceTextStyle
+} from '@mlightcad/graphic-interface'
+import { MTextData, MTextObject } from '@mlightcad/mtext-renderer'
+
+import { ThreeRendererMTextRenderer } from '../renderer/ThreeRendererMTextRenderer'
+import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
+import { resolveMTextRenderRoot } from '../util/ThreeRendererObjectUserData'
+import { ThreeRendererGlyphEntity } from './ThreeRendererGlyphEntity'
+
+/**
+ * Display object for a CAD MTEXT entity rendered through the mtext-renderer.
+ */
+export class ThreeRendererMText extends ThreeRendererGlyphEntity {
+  /** Source MTEXT data from the CAD database. */
+  private _text: GraphicsInterfaceMTextData
+
+  /**
+   * Creates an MTEXT display object.
+   *
+   * @param text MTEXT content and placement from the CAD database.
+   * @param traits CAD sub-entity traits used to resolve color and layer behavior.
+   * @param style Text style applied by the mtext-renderer.
+   * @param context Active renderer context that owns style and batching policy.
+   * @param delay When `true`, skips the initial draw so callers can finish setup first.
+   */
+  constructor(
+    text: GraphicsInterfaceMTextData,
+    traits: GraphicsInterfaceSubEntityTraits,
+    style: GraphicsInterfaceTextStyle,
+    context: ThreeRendererRenderContext,
+    _delay: boolean = false
+  ) {
+    super(context, traits, { ...style })
+    this._text = text
+    // Geometry is built by syncDraw/asyncDraw in ThreeRendererView2d / ThreeRendererGroup so
+    // font-awaiting asyncDraw can run without blocking other entity converts.
+  }
+
+  /**
+   * Builds renderer input with Z flattened for the 2D plan-view camera.
+   *
+   * Orthographic views use a narrow near/far band around the camera. MTEXT
+   * often carries large DWG elevations while linework/symbols on the same
+   * layer may sit at Z=0, so preserving insertion Z would depth-clip glyphs
+   * even though the label's XY is inside the viewport.
+   *
+   * @returns MTEXT payload suitable for the mtext-renderer.
+   */
+  private toPlanViewMTextData(): MTextData {
+    const source = this._text as MTextData
+    const position = source.position
+    return {
+      ...source,
+      position: {
+        x: position.x,
+        y: position.y,
+        z: 0
+      }
+    }
+  }
+
+  /**
+   * Key for sharing mesh buffers across identical complex-linetype TEXT labels.
+   * Placement is applied via this object's transform, not baked into the key.
+   */
+  get linetypeGlyphShareKey(): string {
+    return [
+      this._text.text,
+      this._text.height,
+      this._style.font ?? '',
+      this._style.extendedFont ?? '',
+      this._style.widthFactor ?? 1,
+      this._text.widthFactor ?? 1
+    ].join('\0')
+  }
+
+  /** @inheritdoc */
+  protected override contentShareKey(): string {
+    return this.linetypeGlyphShareKey
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected override getDrawPosition() {
+    // Complex-linetype labels store WCS placement on this.position.
+    const textPos = this._text.position
+    if (
+      textPos &&
+      textPos.x === 0 &&
+      textPos.y === 0 &&
+      (this.position.x !== 0 || this.position.y !== 0 || this.position.z !== 0)
+    ) {
+      return {
+        x: this.position.x,
+        y: this.position.y,
+        z: this.position.z
+      }
+    }
+    return textPos
+  }
+
+  /**
+   * Annotative MTEXT must stay unbatched so paper-space viewports can rescale
+   * individual drawables for the active annotation scale.
+   */
+  override resolveDrawMode() {
+    if ((this.userData as { annotationScale?: unknown }).annotationScale) {
+      return 'unbatch'
+    }
+    return super.resolveDrawMode()
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected override renderSync(renderer: ThreeRendererMTextRenderer) {
+    return renderer.syncRenderMText(
+      this.toPlanViewMTextData(),
+      this._style,
+      this._colorSettings
+    )
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected override async renderAsync(renderer: ThreeRendererMTextRenderer) {
+    const rendered = await renderer.asyncRenderMText(
+      this.toPlanViewMTextData(),
+      this._style,
+      this._colorSettings
+    )
+    return rendered
+  }
+
+  /**
+   * Copies annotation-scale metadata onto the rendered glyph root so it
+   * survives unbatched cloning into the scene graph.
+   */
+  protected override attachRendered(rendered: MTextObject) {
+    super.attachRendered(rendered)
+    const annotationScale = (this.userData as { annotationScale?: unknown })
+      .annotationScale
+    if (!annotationScale) return
+    const root = resolveMTextRenderRoot(rendered)
+    ;(root.userData as { annotationScale?: unknown }).annotationScale =
+      annotationScale
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected override describeRenderFailure() {
+    return `mtext '${this._text.text}'`
+  }
+}

@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { AcCmColor, AcCmColorMethod, AcCmColorUtil } from '@mlightcad/common'
+import { CommonColor, CommonColorMethod, CommonColorUtil } from '@mlightcad/common'
 import { ElOption, ElSelect } from 'element-plus'
 import { type Component, computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -85,18 +85,18 @@ defineOptions({
 })
 
 const props = defineProps<{
-  modelValue: AcCmColor | undefined
+  modelValue: CommonColor | undefined
   disabled?: boolean
   displayColor?: string
   leadingIcon?: string | Component
   placeholder?: string
   onCustomColorSelected?: (
-    oldColor: AcCmColor | undefined
-  ) => AcCmColor | undefined | Promise<AcCmColor | undefined>
+    oldColor: CommonColor | undefined
+  ) => CommonColor | undefined | Promise<CommonColor | undefined>
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', v: AcCmColor | undefined): void
+  (e: 'update:modelValue', v: CommonColor | undefined): void
 }>()
 
 const { t } = useI18n()
@@ -161,7 +161,7 @@ async function onChange(key: string) {
   emit('update:modelValue', c)
 }
 
-function handleDialogOk(c: AcCmColor) {
+function handleDialogOk(c: CommonColor) {
   if (props.disabled) return
   emit('update:modelValue', c)
   selectedKey.value = colorToKey(c)
@@ -171,18 +171,18 @@ function handleDialogCancel() {
   selectedKey.value = colorToKey(props.modelValue)
 }
 
-function namedRibbonAciKey(c: AcCmColor): string | undefined {
+function namedRibbonAciKey(c: CommonColor): string | undefined {
   let index: number | undefined
   if (c.isByACI) index = c.colorIndex
   else if (c.isByColor && c.RGB != null) {
-    index = AcCmColorUtil.getIndexByColor(c.RGB)
+    index = CommonColorUtil.getIndexByColor(c.RGB)
   }
   if (index == null) return undefined
   const key = `aci-${index}`
   return defaultItems.some(item => item.key === key) ? key : undefined
 }
 
-function colorToKey(c?: AcCmColor): string {
+function colorToKey(c?: CommonColor): string {
   if (!c) return ''
   if (c.isByLayer) return 'bylayer'
   if (c.isByBlock) return 'byblock'
@@ -193,8 +193,8 @@ function colorToKey(c?: AcCmColor): string {
   return ''
 }
 
-function keyToColor(key: string): AcCmColor {
-  const c = new AcCmColor()
+function keyToColor(key: string): CommonColor {
+  const c = new CommonColor()
   if (key === 'bylayer') c.setByLayer()
   else if (key === 'byblock') c.setByBlock()
   else if (key.startsWith('aci-')) c.colorIndex = Number(key.substring(4))
@@ -210,7 +210,7 @@ function keyToDisplayColor(key: string) {
   if (key === 'bylayer') return '#7b8794'
   if (key === 'byblock') return '#a0a8b8'
   if (key.startsWith('aci-')) {
-    const cm = new AcCmColor(AcCmColorMethod.ByACI, Number(key.substring(4)))
+    const cm = new CommonColor(CommonColorMethod.ByACI, Number(key.substring(4)))
     return cm.cssColor ?? ''
   }
   if (key.startsWith('rgb-')) {

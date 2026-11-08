@@ -4,8 +4,8 @@
 
 <script setup lang="ts">
 import {
-  type AcUiAciIndexPicker,
-  acuiCreateAciIndexPicker
+  type UIAciIndexPicker,
+  uiCreateAciIndexPicker
 } from '@mlightcad/cad-simple-viewer'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,11 +18,11 @@ const props = defineProps({
 
 const { t } = useI18n()
 const hostRef = ref<HTMLElement | null>(null)
-let picker: AcUiAciIndexPicker | null = null
+let picker: UIAciIndexPicker | null = null
 
 onMounted(() => {
   if (!hostRef.value) return
-  picker = acuiCreateAciIndexPicker({
+  picker = uiCreateAciIndexPicker({
     labels: {
       index: t('main.colorIndexPicker.colorIndex'),
       rgb: t('main.colorIndexPicker.rgb'),
