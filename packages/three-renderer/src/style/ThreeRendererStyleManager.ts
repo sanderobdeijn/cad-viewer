@@ -37,13 +37,8 @@ export interface ThreeRendererStyleManagerStats {
  */
 export class ThreeRendererStyleManager {
   public options: ThreeRendererStyleManagerOptions = {
-    // cameraZoomUniform: 1.0,
-    ltscale: 1.0,
-    celtscale: 1.0,
-    viewportScaleUniform: 1.0,
     resolution: new THREE.Vector2(1, 1),
     showLineWeight: false,
-    linePatternShaderBroken: false,
     currentBackgroundColor: GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND
   }
   private pointMgr: ThreeRendererPointMaterialManager
@@ -78,7 +73,7 @@ export class ThreeRendererStyleManager {
   }
 
   /**
-   * Returns a basic or shader line material depending on the lineType.
+   * Returns a thin or lineweight line material.
    *
    * @param traits - Current entity traits.
    * @param basicMaterialOnly - The flag whether to search and return the basic material only
@@ -86,24 +81,12 @@ export class ThreeRendererStyleManager {
   getLineMaterial(
     traits: GraphicsInterfaceSubEntityTraits,
     basicMaterialOnly?: boolean,
-    fatLines?: boolean,
     layerColor?: CommonColor,
     layerColorRgb?: number
   ): THREE.Material {
-    if (fatLines) {
-      return this.lineMgr.getMaterial(
-        traits,
-        { fatLines: true },
-        layerColorRgb,
-        layerColor
-      )!
-    }
-    const hasLinePattern = !!(
-      traits.lineType.pattern && traits.lineType.pattern.length > 0
-    )
     const showLineWeight =
       this.options.showLineWeight || this._forceShowLineWeight
-    const forceBasicMaterial = !showLineWeight && !hasLinePattern
+    const forceBasicMaterial = !showLineWeight
     return this.lineMgr.getMaterial(
       traits,
       {

@@ -1,9 +1,5 @@
 import * as THREE from 'three'
 
-import {
-  asyncDrawSharedGlyphGroup,
-  syncDrawSharedGlyphGroup
-} from '../linetype/ThreeRendererComplexLineBuilder'
 import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
 import { ThreeRendererEntity } from './ThreeRendererEntity'
 import { ThreeRendererGlyphEntity } from './ThreeRendererGlyphEntity'
@@ -193,31 +189,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
   }
 
   /**
-   * Groups handle-less complex-linetype glyphs that can share one mesh.
-   *
-   * Real TEXT/MTEXT/SHAPE entities keep their database handle and are drawn
-   * individually. Generated linetype symbols have no handle.
-   *
-   * @returns True when `child` was added to a shared group.
-   */
-  private bucketSharedLinetypeGlyph(
-    child: ThreeRendererEntity,
-    shared: Map<string, ThreeRendererGlyphEntity[]>
-  ): boolean {
-    if (child.objectId || !(child instanceof ThreeRendererGlyphEntity)) {
-      return false
-    }
-    const key = child.glyphStyleShareKey
-    const bucket = shared.get(key)
-    if (bucket) {
-      bucket.push(child)
-    } else {
-      shared.set(key, [child])
-    }
-    return true
-  }
-
-  /**
    * Finishes deferred geometry for tracked entities, then refreshes
    * spatial-index bounds.
    *
@@ -228,12 +199,8 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
    */
   override syncDraw(): void {
     const sourceEntities = new Set(this.getSourceEntities())
-    const shared = new Map<string, ThreeRendererGlyphEntity[]>()
     const finalizeDeferredEntity = (child: ThreeRendererEntity) => {
       if (child.hasDrawableGeometry()) {
-        return
-      }
-      if (this.bucketSharedLinetypeGlyph(child, shared)) {
         return
       }
       child.syncDraw()
@@ -252,9 +219,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
       }
       finalizeDeferredEntity(child)
     })
-    for (const group of shared.values()) {
-      syncDrawSharedGlyphGroup(group)
-    }
     this.refreshWcsChildBoxesFromChildren()
   }
 
@@ -284,7 +248,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
       (this.renderContext.yieldDuringAsyncDraw ? 32 : Number.POSITIVE_INFINITY)
     const sourceEntities = this.getSourceEntities()
     const tasks: Array<() => Promise<void>> = []
-    const shared = new Map<string, ThreeRendererGlyphEntity[]>()
     const seen = new Set<ThreeRendererEntity>()
     const enqueue = (child: ThreeRendererEntity) => {
       if (seen.has(child)) {
@@ -292,9 +255,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
       }
       seen.add(child)
       if (child.hasDrawableGeometry()) {
-        return
-      }
-      if (this.bucketSharedLinetypeGlyph(child, shared)) {
         return
       }
       tasks.push(() => child.asyncDraw())
@@ -307,9 +267,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
     // leaves.
     this.enqueuePendingGlyphEntitiesFromTree(this, enqueue)
 
-    for (const group of shared.values()) {
-      tasks.push(() => asyncDrawSharedGlyphGroup(group))
-    }
     if (tasks.length === 0) {
       return
     }

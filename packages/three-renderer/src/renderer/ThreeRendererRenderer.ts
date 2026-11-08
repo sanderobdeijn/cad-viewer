@@ -21,7 +21,6 @@ import { FontManager } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 
 import type { ThreeRendererBatchDrawPolicy } from '../draw/ThreeRendererBatchDrawPolicy'
-import { isComplexLineType } from '../linetype'
 import {
   ThreeRendererEntity,
   ThreeRendererGroup,
@@ -37,7 +36,6 @@ import {
   buildOffsetRingCenterline,
   buildOffsetRingDirectGeometry
 } from '../object/ThreeRendererLineGeometryBuilder'
-import { ThreeRendererLinePatternShaderProbe } from '../style/ThreeRendererLinePatternShaderProbe'
 import { ThreeRendererMaterialManager } from '../style/ThreeRendererMaterialManager'
 import { ThreeRendererSubEntityTraitsUtil } from '../util'
 import { ThreeRendererCamera } from '../viewport/ThreeRendererCamera'
@@ -209,31 +207,11 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    */
   static readonly DEFAULT_EXPORT_VIEWPORT = { width: 1920, height: 1080 }
 
-  constructor(
-    renderer: THREE.WebGLRenderer,
-    options?: {
-      /**
-       * Skip {@link ThreeRendererLinePatternShaderProbe} (requires a real GPU).
-       * Used by {@link createForExport}.
-       */
-      skipShaderProbe?: boolean
-      /**
-       * When `skipShaderProbe` is true, seed
-       * {@link ThreeRendererStyleManagerOptions.linePatternShaderBroken}.
-       * Defaults to `false` (shader path available) so export matches a
-       * probe-passing browser GPU.
-       */
-      linePatternShaderBroken?: boolean
-    }
-  ) {
+  constructor(renderer: THREE.WebGLRenderer) {
     this._renderer = renderer
     this._context = new ThreeRendererRenderContext()
     const size = renderer.getSize(new THREE.Vector2())
     this._context.styleManager.updateLineResolution(size.x, size.y)
-    this._context.styleManager.options.linePatternShaderBroken =
-      options?.skipShaderProbe === true
-        ? (options.linePatternShaderBroken ?? false)
-        : !ThreeRendererLinePatternShaderProbe.test(renderer)
     ThreeRendererMTextRenderer.getInstance().overrideStyleManager(
       this._context.styleManager
     )
@@ -250,9 +228,7 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    * Builds a renderer that can run `worldDraw` / direct-batch capture without
    * a browser, canvas, or WebGL context.
    *
-   * Geometry construction never calls `render` / viewport APIs. Line-pattern
-   * materials use the shader path (`linePatternShaderBroken = false`) so
-   * exported pattern metadata matches a healthy browser GPU.
+   * Geometry construction never calls `render` / viewport APIs.
    */
   static createForExport(options?: {
     width?: number
@@ -261,10 +237,7 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
     const width = options?.width ?? ThreeRendererRenderer.DEFAULT_EXPORT_VIEWPORT.width
     const height =
       options?.height ?? ThreeRendererRenderer.DEFAULT_EXPORT_VIEWPORT.height
-    return new ThreeRendererRenderer(createExportWebGlStub(width, height), {
-      skipShaderProbe: true,
-      linePatternShaderBroken: false
-    })
+    return new ThreeRendererRenderer(createExportWebGlStub(width, height))
   }
 
   /**
@@ -537,20 +510,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   }
 
   /**
-   * Sets global ltscale
-   */
-  set ltscale(scale: number) {
-    this._context.styleManager.options.ltscale = scale
-  }
-
-  /**
-   * Sets global celtscale
-   */
-  set celtscale(scale: number) {
-    this._context.styleManager.options.celtscale = scale
-  }
-
-  /**
    * Fonts list which can't be found
    */
   get missedFonts() {
@@ -715,10 +674,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    */
   lineSegments(array: Float32Array, itemSize: number, indices: Uint16Array) {
     if (this._directCapture !== 'off') {
-      if (isComplexLineType(this._subEntityTraits.lineType.pattern)) {
-        this.missDirectCapture()
-        return this.createDirectCapturePlaceholder() as ThreeRendererLineSegments
-      }
       if (
         this.tryCaptureDirectPayload({
           kind: 'lineSegments',
@@ -883,10 +838,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   private linePoints(points: GeometryPoint2dLike[]) {
     if (this._directCapture !== 'off') {
       if (points.length < 2) {
-        this.missDirectCapture()
-        return this.createDirectCapturePlaceholder()
-      }
-      if (isComplexLineType(this._subEntityTraits.lineType.pattern)) {
         this.missDirectCapture()
         return this.createDirectCapturePlaceholder()
       }

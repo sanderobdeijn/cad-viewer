@@ -51,7 +51,6 @@ class ThreeRendererMTextStyleManager implements StyleManager {
     return this._styleManager.getLineMaterial(
       entityTraits,
       true,
-      undefined,
       layerColor,
       layerColorRgb
     )

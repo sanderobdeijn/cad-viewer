@@ -1,22 +1,6 @@
 import * as THREE from 'three'
 
 export interface ThreeRendererStyleManagerOptions {
-  // /** Uniform used by line and hatch shaders to support zoom-dependent effects. */
-  // cameraZoomUniform: number
-
-  /**
-   * Global ltscale
-   */
-  ltscale: number
-  /**
-   * Global celtscale
-   */
-  celtscale: number
-
-  /** Uniform that accounts for viewport scale in line-pattern rendering. */
-  viewportScaleUniform: number
-
-
   /**
    * Viewport size used by fat-line materials.
    */
@@ -29,20 +13,6 @@ export interface ThreeRendererStyleManagerOptions {
    * - `false`: force basic line materials with 1px width
    */
   showLineWeight: boolean
-
-  /**
-   * Whether the active GPU/driver cannot render the custom line-pattern
-   * shader on native `gl.LINES`.
-   *
-   * Set automatically by `ThreeRendererLinePatternShaderProbe` during renderer
-   * initialization. When `true`, patterned (dashed/dot-dash) lines are
-   * rendered via `LineMaterial` on `LineSegments2` (triangle-quad meshes)
-   * instead of the custom shader on native lines, because some drivers
-   * (e.g. integrated AMD Radeon via ANGLE/Direct3D 11) produce zero
-   * fragments for that combination. On healthy GPUs this stays `false`
-   * and the original high-fidelity linetype shader is used.
-   */
-  linePatternShaderBroken: boolean
 
   /**
    * Current canvas background colour, as a 24-bit RGB number.

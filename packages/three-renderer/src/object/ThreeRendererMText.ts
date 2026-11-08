@@ -63,26 +63,6 @@ export class ThreeRendererMText extends ThreeRendererGlyphEntity {
   }
 
   /**
-   * Key for sharing mesh buffers across identical complex-linetype TEXT labels.
-   * Placement is applied via this object's transform, not baked into the key.
-   */
-  get linetypeGlyphShareKey(): string {
-    return [
-      this._text.text,
-      this._text.height,
-      this._style.font ?? '',
-      this._style.extendedFont ?? '',
-      this._style.widthFactor ?? 1,
-      this._text.widthFactor ?? 1
-    ].join('\0')
-  }
-
-  /** @inheritdoc */
-  protected override contentShareKey(): string {
-    return this.linetypeGlyphShareKey
-  }
-
-  /**
    * @inheritdoc
    */
   protected override getDrawPosition() {

@@ -6,20 +6,11 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 
 import { resolveAnchorFromBox } from '../draw/ThreeRendererBatchDrawPolicy'
 import type { ThreeRendererDrawMode } from '../draw/ThreeRendererDrawMode'
-import {
-  asyncComplexLineTypeGlyphs,
-  buildComplexLineTypeGeometry,
-  hasPendingComplexLineTypeGlyphs,
-  isComplexLineType,
-  syncComplexLineTypeGlyphs
-} from '../linetype'
 import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
 import { getSceneDrawableUserData,ThreeRendererBufferGeometryUtil } from '../util'
 import { ThreeRendererEntity } from './ThreeRendererEntity'
 
 export class ThreeRendererLineSegments extends ThreeRendererEntity {
-  private _hasComplexGlyphs = false
-
   constructor(
     array: Float32Array,
     itemSize: number,
@@ -28,15 +19,6 @@ export class ThreeRendererLineSegments extends ThreeRendererEntity {
     context: ThreeRendererRenderContext
   ) {
     super(context)
-
-    if (
-      isComplexLineType(traits.lineType.pattern) &&
-      this.buildComplexFromSegments(array, itemSize, indices, traits, context)
-    ) {
-      this._hasComplexGlyphs = hasPendingComplexLineTypeGlyphs(this)
-      this.finalizeLeafDrawables()
-      return
-    }
 
     const material = this.styleManager.getLineMaterial(traits)
     const box = new THREE.Box3()
@@ -77,13 +59,6 @@ export class ThreeRendererLineSegments extends ThreeRendererEntity {
       )
 
       const line = new LineSegments2(lineGeometry, material)
-      // Dashed LineMaterial requires per-instance line distances on the
-      // geometry to render the dash pattern (patterned lines fall back to
-      // dashed LineMaterial when the custom linetype shader is unusable,
-      // see ThreeRendererLineMaterialManager.createDashedFatLineMaterial).
-      if (material.dashed) {
-        line.computeLineDistances()
-      }
       line.position.set(localOrigin.x, localOrigin.y, localOrigin.z)
       getSceneDrawableUserData(line).styleMaterialId = material.id
       this.add(line)
@@ -108,96 +83,14 @@ export class ThreeRendererLineSegments extends ThreeRendererEntity {
 
     const line = new THREE.LineSegments(geometry, material)
     line.position.set(localOrigin.x, localOrigin.y, localOrigin.z)
-    ThreeRendererBufferGeometryUtil.computeLineDistances(line)
     this.add(line)
     this.finalizeLeafDrawables()
-  }
-
-  get hasComplexLinetypeGlyphs(): boolean {
-    return this._hasComplexGlyphs || hasPendingComplexLineTypeGlyphs(this)
-  }
-
-  /**
-   * Stroke children attach immediately while glyph shells stay empty until
-   * sync/async draw. Report not-yet-drawable so {@link ThreeRendererGroup} still
-   * finalizes this entity (and refreshes bbox) instead of skipping it.
-   */
-  override hasDrawableGeometry(): boolean {
-    if (hasPendingComplexLineTypeGlyphs(this)) {
-      return false
-    }
-    return super.hasDrawableGeometry()
-  }
-
-  override syncDraw(): void {
-    if (!this.hasComplexLinetypeGlyphs) {
-      return
-    }
-    syncComplexLineTypeGlyphs(this)
-  }
-
-  override async asyncDraw(): Promise<void> {
-    if (!this.hasComplexLinetypeGlyphs) {
-      return
-    }
-    await asyncComplexLineTypeGlyphs(this)
   }
 
   override resolveDrawMode(): ThreeRendererDrawMode {
     return this.batchDrawPolicy.resolveDrawMode({
       anchor: resolveAnchorFromBox(this.wcsBbox)
     })
-  }
-
-  private buildComplexFromSegments(
-    array: Float32Array,
-    itemSize: number,
-    indices: Uint16Array,
-    traits: GraphicsInterfaceSubEntityTraits,
-    context: ThreeRendererRenderContext
-  ): boolean {
-    // Each index pair is walked independently, so the dash phase restarts per
-    // segment. Continuous polylines should use line strips (`lines()`), not
-    // disjoint lineSegments, when complex linetype phase continuity matters.
-    const segmentCount = Math.floor(indices.length / 2)
-    let builtAny = false
-    const unionBox = new THREE.Box3()
-
-    for (let i = 0; i < segmentCount; i++) {
-      const i1 = indices[i * 2]
-      const i2 = indices[i * 2 + 1]
-      const base1 = i1 * itemSize
-      const base2 = i2 * itemSize
-      const points = [
-        {
-          x: array[base1],
-          y: array[base1 + 1],
-          z: array[base1 + 2] ?? 0
-        },
-        {
-          x: array[base2],
-          y: array[base2 + 1],
-          z: array[base2 + 2] ?? 0
-        }
-      ]
-      const shell = new ThreeRendererEntity(context)
-      if (buildComplexLineTypeGeometry(shell, points, traits, context)) {
-        builtAny = true
-        while (shell.children.length > 0) {
-          const child = shell.children[0]
-          shell.remove(child)
-          this.add(child)
-        }
-        if (!shell.wcsBbox.isEmpty()) {
-          unionBox.union(shell.wcsBbox)
-        }
-      }
-    }
-
-    if (builtAny && !unionBox.isEmpty()) {
-      this.wcsBbox = unionBox
-    }
-    return builtAny
   }
 
   private setBoundingBox(

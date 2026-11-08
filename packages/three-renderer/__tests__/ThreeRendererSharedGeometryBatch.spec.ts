@@ -257,23 +257,4 @@ describe('ThreeRendererBatchedGroup shared template geometry', () => {
 
     expect(findSharedBatch(group)).toBeUndefined()
   })
-
-  it('bakes a scaled dashed fat line so dash length stays in world units', () => {
-    const geometry = new LineSegmentsGeometry()
-    geometry.setPositions([0, 0, 0, 10, 0, 0])
-    const material = new LineMaterial({
-      color: 0xffffff,
-      dashed: true,
-      linewidth: 1
-    })
-    const line = new LineSegments2(geometry, material)
-    line.scale.set(2, 2, 2)
-    line.updateMatrixWorld(true)
-    getSceneDrawableUserData(line).sharesTemplateGeometry = true
-
-    const group = new ThreeRendererBatchedGroup()
-    group.addEntity(createEntity('insert-a', line))
-
-    expect(findSharedBatch(group)).toBeUndefined()
-  })
 })

@@ -94,9 +94,6 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
     )
     ensureSlotIdAttribute(this.geometry, this._maxSegmentCount)
     this._copyStaticAttributes(reference)
-    if (this._isDashedMaterial()) {
-      this._ensureDistanceAttributes()
-    }
     this._geometryInitialized = true
   }
 
@@ -114,111 +111,12 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
       if (
         key === 'instanceStart' ||
         key === 'instanceEnd' ||
-        key === 'slotId' ||
-        // Dash distance storage is batch-sized and managed separately
-        // (see _ensureDistanceAttributes / _writeSlotDistances).
-        key === 'instanceDistanceStart' ||
-        key === 'instanceDistanceEnd'
+        key === 'slotId'
       ) {
         continue
       }
       dstGeometry.setAttribute(key, reference.getAttribute(key).clone())
     }
-  }
-
-  /** Whether the batch material renders a dash pattern (dashed lines). */
-  private _isDashedMaterial(): boolean {
-    return (this.material as LineMaterial | undefined)?.dashed === true
-  }
-
-  /**
-   * Allocates `instanceDistanceStart`/`instanceDistanceEnd` storage sized to
-   * the packed segment capacity. Dashed {@link LineMaterial} requires these
-   * attributes to render dash patterns; solid batches skip them entirely.
-   */
-  private _ensureDistanceAttributes() {
-    const geometry = this.geometry as LineSegmentsGeometry
-    if (geometry.getAttribute('instanceDistanceStart')) {
-      return
-    }
-    const distances = new Float32Array(this._maxSegmentCount * 2)
-    const buffer = new THREE.InstancedInterleavedBuffer(distances, 2, 1)
-    geometry.setAttribute(
-      'instanceDistanceStart',
-      new THREE.InterleavedBufferAttribute(buffer, 1, 0)
-    )
-    geometry.setAttribute(
-      'instanceDistanceEnd',
-      new THREE.InterleavedBufferAttribute(buffer, 1, 1)
-    )
-  }
-
-  /**
-   * Allocates dash-distance storage when this batch's material is dashed,
-   * then rebuilds every active slot from zero.
-   *
-   * Used after a layer rebind swaps a dashed {@link LineMaterial} onto a
-   * wide-line batch that was packed as solid lines.
-   */
-  ensureDashDistances() {
-    if (!this._isDashedMaterial() || !this._geometryInitialized) {
-      return
-    }
-    this._ensureDistanceAttributes()
-    for (let i = 0; i < this._geometryCount; i++) {
-      const info = this._geometryInfo[i]
-      if (!info || !isBatchGeometryActive(info.flags) || info.vertexCount < 1) {
-        continue
-      }
-      this._writeSlotDistances(
-        info.vertexStart,
-        info.vertexCount,
-        info.reservedVertexCount
-      )
-    }
-  }
-
-  /**
-   * Writes entity-local dash distances for one packed slot.
-   *
-   * Segments inside the slot chain, so one polyline keeps a continuous
-   * pattern. The slot itself always starts at 0: continuing from the
-   * previous entity pushes later lines into linetype gaps (the same rule
-   * as {@link ThreeRendererBatchedLine.ensureLineDistanceAttribute}).
-   * Reserved padding past `segmentCount` is cleared.
-   */
-  private _writeSlotDistances(
-    segmentStart: number,
-    segmentCount: number,
-    reservedCount: number
-  ) {
-    const distanceStart = this.geometry.getAttribute(
-      'instanceDistanceStart'
-    ) as THREE.InterleavedBufferAttribute | undefined
-    const distanceEnd = this.geometry.getAttribute('instanceDistanceEnd') as
-      | THREE.InterleavedBufferAttribute
-      | undefined
-    if (!distanceStart || !distanceEnd) {
-      return
-    }
-    const instanceStart = this.geometry.getAttribute('instanceStart')
-    const instanceEnd = this.geometry.getAttribute('instanceEnd')
-    let cumulative = 0
-    for (let i = 0; i < segmentCount; i++) {
-      const index = segmentStart + i
-      _segmentStart.fromBufferAttribute(instanceStart, index)
-      _segmentEnd.fromBufferAttribute(instanceEnd, index)
-      distanceStart.setX(index, cumulative)
-      cumulative += _segmentStart.distanceTo(_segmentEnd)
-      distanceEnd.setX(index, cumulative)
-    }
-    for (let i = segmentCount; i < reservedCount; i++) {
-      const index = segmentStart + i
-      distanceStart.setX(index, 0)
-      distanceEnd.setX(index, 0)
-    }
-    distanceStart.data.needsUpdate = true
-    distanceEnd.data.needsUpdate = true
   }
 
   private _validateGeometry(geometry: LineSegmentsGeometry) {
@@ -430,15 +328,6 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
       geometryId
     )
 
-    // This slot's dash phase starts at 0. Neighboring entities keep theirs.
-    if (this._isDashedMaterial()) {
-      this._writeSlotDistances(
-        segmentStart,
-        segmentCount,
-        geometryInfo.reservedVertexCount
-      )
-    }
-
     return geometryId
   }
 
@@ -492,17 +381,6 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
     const instanceEnd = this.geometry.getAttribute('instanceEnd')
     instanceStart.needsUpdate = true
     instanceEnd.needsUpdate = true
-
-    // Compaction moves slots. Each entity still restarts its own dash phase.
-    if (this._isDashedMaterial()) {
-      for (const { info } of entries) {
-        this._writeSlotDistances(
-          info.vertexStart,
-          info.vertexCount,
-          info.reservedVertexCount
-        )
-      }
-    }
 
     syncBatchDrawVisibilityAfterOptimize(this.geometry, this._geometryInfo)
 
@@ -753,23 +631,6 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
     const newPacked = this._getPackedSegmentArray()
     copyArrayContents(oldPacked, newPacked)
     this._copyStaticAttributes(oldGeometry)
-    if (this._isDashedMaterial()) {
-      // Dash distance storage is not cloned with static attributes; rebuild
-      // it at the new capacity and copy the existing chain over.
-      const oldDistanceStart = oldGeometry.getAttribute(
-        'instanceDistanceStart'
-      ) as THREE.InterleavedBufferAttribute | undefined
-      this._ensureDistanceAttributes()
-      if (oldDistanceStart && oldDistanceStart.data?.array) {
-        const newDistanceStart = this.geometry.getAttribute(
-          'instanceDistanceStart'
-        ) as THREE.InterleavedBufferAttribute
-        const dst = newDistanceStart.data.array as Float32Array
-        const src = oldDistanceStart.data.array as Float32Array
-        dst.set(src.subarray(0, Math.min(src.length, dst.length)))
-        newDistanceStart.data.needsUpdate = true
-      }
-    }
     const slotIdAttr = ensureSlotIdAttribute(this.geometry, maxSegmentCount)
     if (oldSlotIdArray) {
       ;(slotIdAttr.array as Float32Array).set(
@@ -796,11 +657,6 @@ export class ThreeRendererBatchedLine2 extends ThreeRendererBatchedLine2Base {
       true
     )
     const object = new LineSegments2(geometry, this.material as LineMaterial)
-    // Sub-geometry is one entity. Recompute its own phase; the batch buffer's
-    // distance attributes are capacity-sized and are not sliced here.
-    if (this._isDashedMaterial()) {
-      object.computeLineDistances()
-    }
     object.position.copy(this.position)
     object.updateMatrix()
     object.updateMatrixWorld(true)

@@ -12,7 +12,6 @@ import {
 } from '@mlightcad/graphic-interface'
 import { FontManager } from '@mlightcad/mtext-renderer'
 import {
-  hasPendingComplexLineTypeGlyphs,
   setAcTrDrawOrderZAllocator,
   ThreeRendererEntity,
   ThreeRendererGlyphEntity,
@@ -1368,20 +1367,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * Sets global ltscale
-   */
-  set ltscale(scale: number) {
-    this._renderer.ltscale = scale
-  }
-
-  /**
-   * Sets global celtscale
-   */
-  set celtscale(scale: number) {
-    this._renderer.celtscale = scale
-  }
-
-  /**
    * @inheritdoc
    */
   screenToWorld(point: GeometryPoint2dLike): GeometryPoint2d {
@@ -2687,7 +2672,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   /**
    * Finishes geometry for a converted entity.
    *
-   * Glyph entities, complex-linetype lines, and groups use
+   * Glyph entities and groups use
    * {@link ThreeRendererEntity.asyncDraw} so {@link FontManager.awaitFontsBeforeDraw}
    * can wait for fonts without relying on a full-scene regen. Other entities
    * keep the sync finalize path.
@@ -2703,7 +2688,6 @@ export class ThreeRendererView2d extends EditorBaseView {
         isGroup && this.groupHasPendingGlyphGeometry(threeEntity)
       const needsGlyphDraw =
         groupPending ||
-        hasPendingComplexLineTypeGlyphs(threeEntity) ||
         (threeEntity instanceof ThreeRendererGlyphEntity &&
           !threeEntity.hasDrawableGeometry())
 
@@ -2717,12 +2701,6 @@ export class ThreeRendererView2d extends EditorBaseView {
         if (!groupPending) {
           return
         }
-        await threeEntity.asyncDraw()
-        return
-      }
-      // Complex TEXT/SHAPE linetypes attach stroke children immediately while
-      // glyph shells still need asyncDraw — do not treat stroke children as done.
-      if (hasPendingComplexLineTypeGlyphs(threeEntity)) {
         await threeEntity.asyncDraw()
         return
       }
@@ -2744,7 +2722,7 @@ export class ThreeRendererView2d extends EditorBaseView {
     if (threeEntity instanceof ThreeRendererGroup) {
       return this.groupHasPendingGlyphGeometry(threeEntity)
     }
-    return hasPendingComplexLineTypeGlyphs(threeEntity)
+    return false
   }
 
   private clearFontLoadedRedrawTimer() {

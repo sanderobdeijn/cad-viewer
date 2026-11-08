@@ -4,7 +4,6 @@ import {
   GraphicsInterfaceSubEntityTraits
 } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
@@ -681,14 +680,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         // Each batch keeps a private material clone so highlight-mask uniforms
         // never leak across containers that share the same style cache entry.
         batch.material = this.createOwnedBatchMaterial(material)
-        if (batch instanceof ThreeRendererBatchedLine) {
-          // A layer rebind may swap a dash-capable material onto a batch whose
-          // packed geometry skipped the lineDistance attribute; arm it before
-          // the next draw so dashed linetypes render correctly.
-          batch.ensureLineDistanceAttribute()
-        } else if (batch instanceof ThreeRendererBatchedLine2) {
-          batch.ensureDashDistances()
-        }
       }
       if (material.id !== oldId) {
         group.delete(oldId)
@@ -708,11 +699,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         const drawable = object as THREE.Mesh | THREE.Line | THREE.LineSegments
         drawable.material = material
         drawableUserData.styleMaterialId = material.id
-        // Same arming as the batched path above: a cache-push rebind may swap
-        // a dash-capable material onto solid-authored unbatched geometry
-        // before syncAppearanceFromRecord's layer rebind runs (and that rebind
-        // early-returns when the material is already the new instance).
-        this.ensureUnbatchedLineDistance(drawable, material)
       }
     })
   }
@@ -913,7 +899,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     if (Array.isArray(currentMaterial)) {
       drawable.material = currentMaterial.map(rebindSingle)
       syncStyleMaterialIdFromMaterials(drawableUserData, drawable.material)
-      this.ensureUnbatchedLineDistance(drawable, drawable.material)
       return
     }
 
@@ -921,36 +906,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     if (rebound !== currentMaterial) {
       drawable.material = rebound
       syncStyleMaterialIdFromMaterials(drawableUserData, rebound)
-    }
-    // Always arm: updateMaterial may already have swapped the material to the
-    // dash-capable instance, in which case rebound === currentMaterial and the
-    // geometry still lacks lineDistance until we ensure it here.
-    this.ensureUnbatchedLineDistance(drawable, drawable.material)
-  }
-
-  /**
-   * Adds `lineDistance` to an unbatched line geometry when a rebind swapped a
-   * dash-capable pattern material onto geometry authored for a solid material.
-   */
-  private ensureUnbatchedLineDistance(
-    drawable: THREE.Mesh | THREE.Line | THREE.LineSegments,
-    material: THREE.Material | THREE.Material[]
-  ) {
-    // Duck-type across duplicate three.js copies (mtext-renderer vs app).
-    if (isThreeLineSegments(drawable)) {
-      ThreeRendererBufferGeometryUtil.ensureLineDistance(drawable.geometry, material)
-      return
-    }
-    if (!isThreeLineSegments2(drawable)) {
-      return
-    }
-    const primary = Array.isArray(material) ? material[0] : material
-    if (
-      primary &&
-      (primary as { dashed?: boolean }).dashed === true &&
-      !drawable.geometry.getAttribute('instanceDistanceStart')
-    ) {
-      drawable.computeLineDistances()
     }
   }
 
@@ -1420,9 +1375,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         )
     )
 
-    if (geometry.hasAttribute('lineDistance')) {
-      ThreeRendererBufferGeometryUtil.recomputeLineDistanceForLineSegments(geometry)
-    }
     const geometryId = batchedLine.addGeometry(geometry, -1, -1, worldOffset)
     batchedLine.setGeometryInfo(geometryId, { objectId: options.objectId })
 
@@ -2143,9 +2095,8 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   /**
    * Places a template leaf into a shared-geometry batch.
    *
-   * Returns null when the leaf is not a shared template, when a mirrored mesh
-   * must be baked so face winding can flip, or when a dashed linetype is
-   * scaled and must be baked so dash length stays in world units.
+   * Returns null when the leaf is not a shared template, or when a mirrored
+   * mesh must be baked so face winding can flip.
    *
    * @param object - Drawable leaf that aliases template geometry.
    * @param objectId - Database id of the owning entity.
@@ -2168,7 +2119,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     if (!geometry.getAttribute('position')?.count) return null
 
     object.updateWorldMatrix(true, false)
-    if (this.mustBakeSharedDrawable(object, kind, geometry)) return null
+    if (this.mustBakeSharedDrawable(object, kind)) return null
 
     const matrixWorld = object.matrixWorld.clone()
     if ((getMaterialMetadata(material).drawOrder ?? 0) >= 0) {
@@ -2194,29 +2145,18 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
    *
    * Mirrored meshes reverse triangle winding. Instancing keeps {@link THREE.FrontSide}
    * and the fill disappears; the vertex-batch path swaps in the back-side material.
-   * Dash lengths live in geometry space, so a scaled instance must be baked or the
-   * pattern stretches with it.
    *
    * @param object - Drawable whose world matrix is current.
    * @param kind - Primitive family selected for this leaf.
-   * @param geometry - Template geometry, possibly carrying dash distances.
    * @returns `true` when the caller should fall through to vertex packing.
    */
   private mustBakeSharedDrawable(
     object: THREE.Object3D,
-    kind: ThreeRendererSharedGeometryKind,
-    geometry: THREE.BufferGeometry
+    kind: ThreeRendererSharedGeometryKind
   ) {
     const material = (object as THREE.Mesh).material
     if (Array.isArray(material)) return true
-    if (kind === 'mesh' && object.matrixWorld.determinant() < 0) return true
-    const dashed =
-      kind === 'line2'
-        ? (material as LineMaterial).dashed === true
-        : geometry.getAttribute('lineDistance') != null
-    if (!dashed) return false
-    const scale = uniformColumnScale(object.matrixWorld)
-    return scale == null || Math.abs(scale - 1) > 1e-4
+    return kind === 'mesh' && object.matrixWorld.determinant() < 0
   }
 
   private sharedGeometryKind(
@@ -2340,9 +2280,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     ) {
       geometry.dispose()
       return null
-    }
-    if (geometry.hasAttribute('lineDistance')) {
-      ThreeRendererBufferGeometryUtil.recomputeLineDistanceForLineSegments(geometry)
     }
     const geometryId = batchedLine.addGeometry(geometry, -1, -1, worldOffset)
     batchedLine.setGeometryInfo(geometryId, userData)
@@ -3240,27 +3177,6 @@ function hasPreviewDrawableGeometry(
   object: THREE.Object3D
 ): object is THREE.Object3D & { geometry: THREE.BufferGeometry } {
   return 'geometry' in object && object.geometry != null
-}
-
-/**
- * Returns the column length of a transform when x/y/z scales match.
- *
- * Non-uniform scales return null so dashed linetypes can be baked instead of
- * instanced (dash length lives in geometry space).
- *
- * @param matrix - World matrix of one drawable.
- * @returns Uniform scale, or null when the 3×3 is not a similarity.
- */
-function uniformColumnScale(matrix: THREE.Matrix4): number | null {
-  const e = matrix.elements
-  const sx = Math.hypot(e[0], e[1], e[2])
-  const sy = Math.hypot(e[4], e[5], e[6])
-  const sz = Math.hypot(e[8], e[9], e[10])
-  const max = Math.max(sx, sy, sz)
-  const min = Math.min(sx, sy, sz)
-  if (max === 0) return null
-  if ((max - min) / max > 1e-4) return null
-  return sx
 }
 
 const _v1 = /*@__PURE__*/ new THREE.Vector3()

@@ -107,37 +107,6 @@ export abstract class ThreeRendererGlyphEntity extends ThreeRendererEntity {
   }
 
   /**
-   * Groups identical complex-linetype glyphs so one mesh can be shared.
-   *
-   * Includes color and layer because shared leaves also share materials.
-   * Placement is not part of the key.
-   */
-  get glyphStyleShareKey(): string {
-    return `${this.colorShareToken()}\0${this.contentShareKey()}`
-  }
-
-  /**
-   * Content identity for {@link glyphStyleShareKey}, without placement.
-   */
-  protected contentShareKey(): string {
-    return this.constructor.name
-  }
-
-  /**
-   * Stable color token for glyph mesh sharing.
-   */
-  private colorShareToken(): string {
-    const color = this._entityTraits.color
-    if (color.isByLayer) {
-      return `L:${this._entityTraits.layer ?? ''}`
-    }
-    if (color.isByBlock) {
-      return 'B'
-    }
-    return `C:${color.colorIndex ?? ''}:${color.RGB ?? ''}`
-  }
-
-  /**
    * Returns the insertion point used to resolve batch versus unbatch placement.
    *
    * @returns World-space insertion point for this glyph entity.
@@ -241,51 +210,6 @@ export abstract class ThreeRendererGlyphEntity extends ThreeRendererEntity {
           mesh.geometry.dispose()
         }
       })
-    }
-  }
-
-  /**
-   * Copies drawable leaves from a template drawn at the identity transform,
-   * aliasing buffer geometry. Caller must set this object's placement.
-   */
-  adoptSharedGeometryFrom(template: ThreeRendererGlyphEntity): void {
-    while (this.children.length > 0) {
-      this.remove(this.children[0])
-    }
-    this._rendered = undefined
-    for (const child of template.children) {
-      const clonedChild = child.clone(false)
-      if ('geometry' in clonedChild) {
-        getSceneDrawableUserData(clonedChild).sharesTemplateGeometry = true
-      }
-      this.add(clonedChild)
-    }
-    this.traverse(object => {
-      getSceneDrawableUserData(object).bboxIntersectionCheck = true
-    })
-    this.updateMatrixWorld(true)
-    const box = new THREE.Box3()
-    const childBox = new THREE.Box3()
-    this.traverse(object => {
-      if (object === this) {
-        return
-      }
-      const mesh = object as THREE.Mesh
-      if (!mesh.geometry) {
-        return
-      }
-      const boundingBox = ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(
-        mesh.geometry as THREE.BufferGeometry
-      )
-      if (!boundingBox) {
-        return
-      }
-      object.updateMatrixWorld(true)
-      childBox.copy(boundingBox).applyMatrix4(object.matrixWorld)
-      box.union(childBox)
-    })
-    if (!box.isEmpty()) {
-      this.wcsBbox = box
     }
   }
 

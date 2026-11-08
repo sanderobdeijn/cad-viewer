@@ -7,20 +7,13 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 
 import { resolveAnchorFromBox } from '../draw/ThreeRendererBatchDrawPolicy'
 import type { ThreeRendererDrawMode } from '../draw/ThreeRendererDrawMode'
-import {
-  asyncComplexLineTypeGlyphs,
-  buildComplexLineTypeGeometry,
-  hasPendingComplexLineTypeGlyphs,
-  syncComplexLineTypeGlyphs
-} from '../linetype'
 import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
-import { getSceneDrawableUserData,ThreeRendererBufferGeometryUtil } from '../util'
+import { getSceneDrawableUserData } from '../util'
 import { ThreeRendererEntity } from './ThreeRendererEntity'
 import { buildLineGeometry } from './ThreeRendererLineGeometryBuilder'
 
 export class ThreeRendererLine extends ThreeRendererEntity {
   public geometry: THREE.BufferGeometry | LineSegmentsGeometry
-  private _hasComplexGlyphs = false
 
   constructor(
     points: GeometryPoint2dLike[],
@@ -32,13 +25,6 @@ export class ThreeRendererLine extends ThreeRendererEntity {
 
     if (points.length < 2) {
       this.geometry = new THREE.BufferGeometry()
-      return
-    }
-
-    if (buildComplexLineTypeGeometry(this, points, traits, context)) {
-      this._hasComplexGlyphs = hasPendingComplexLineTypeGlyphs(this)
-      this.geometry = new THREE.BufferGeometry()
-      this.finalizeLeafDrawables()
       return
     }
 
@@ -56,16 +42,10 @@ export class ThreeRendererLine extends ThreeRendererEntity {
     this.wcsBbox = built.wcsBbox
 
     if (built.kind === 'fat') {
-      const fatMaterial = material as LineMaterial
       const line = new LineSegments2(
         built.geometry as LineSegmentsGeometry,
-        fatMaterial
+        material as LineMaterial
       )
-      // Dashed LineMaterial requires per-instance line distances on the
-      // geometry to render the dash pattern.
-      if (fatMaterial.dashed) {
-        line.computeLineDistances()
-      }
       line.position.copy(built.worldOffset)
       getSceneDrawableUserData(line).styleMaterialId = material.id
       this.add(line)
@@ -78,43 +58,8 @@ export class ThreeRendererLine extends ThreeRendererEntity {
       material
     )
     line.position.copy(built.worldOffset)
-    ThreeRendererBufferGeometryUtil.computeLineDistances(line)
     this.add(line)
     this.finalizeLeafDrawables()
-  }
-
-  /**
-   * True when this line was expanded from a complex TEXT/SHAPE linetype and
-   * still has (or had) glyph children that need sync/async draw.
-   */
-  get hasComplexLinetypeGlyphs(): boolean {
-    return this._hasComplexGlyphs || hasPendingComplexLineTypeGlyphs(this)
-  }
-
-  /**
-   * Stroke children attach immediately while glyph shells stay empty until
-   * sync/async draw. Report not-yet-drawable so {@link ThreeRendererGroup} still
-   * finalizes this line (and refreshes bbox) instead of skipping it.
-   */
-  override hasDrawableGeometry(): boolean {
-    if (hasPendingComplexLineTypeGlyphs(this)) {
-      return false
-    }
-    return super.hasDrawableGeometry()
-  }
-
-  override syncDraw(): void {
-    if (!this.hasComplexLinetypeGlyphs) {
-      return
-    }
-    syncComplexLineTypeGlyphs(this)
-  }
-
-  override async asyncDraw(): Promise<void> {
-    if (!this.hasComplexLinetypeGlyphs) {
-      return
-    }
-    await asyncComplexLineTypeGlyphs(this)
   }
 
   override resolveDrawMode(): ThreeRendererDrawMode {
