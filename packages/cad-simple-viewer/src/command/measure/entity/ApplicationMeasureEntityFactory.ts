@@ -1,4 +1,4 @@
-import { deserializeMeasurementStyle } from '../ApplicationMeasurementSidecar'
+import { deserializeMeasurementStyle } from '../ApplicationMeasurementRecordStyle'
 import type { ApplicationMeasurementRecord } from '../ApplicationMeasurementTypes'
 import { ApplicationMeasureAngleEntity } from './ApplicationMeasureAngleEntity'
 import { ApplicationMeasureArcEntity } from './ApplicationMeasureArcEntity'
@@ -8,7 +8,7 @@ import type { ApplicationMeasureEntity } from './ApplicationMeasureEntity'
 import { ApplicationMeasurePointEntity } from './ApplicationMeasurePointEntity'
 
 /**
- * Creates a concrete measure entity from a sidecar / store record (deserialize).
+ * Creates a concrete measure entity from a store record (deserialize).
  *
  * Pair with {@link ApplicationMeasureEntity.toRecord} for the serialize half of the
  * overlay persistence protocol. Deserializes the record's style and dispatches

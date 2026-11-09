@@ -157,9 +157,3 @@ describe('EditorCommandStack — command exclusivity', () => {
     expect(stack.activeCommand).toBeNull()
   })
 })
-
-describe('EditorCommand.sessionAccessory', () => {
-  test('defaults to null', () => {
-    expect(new DummyCommand().sessionAccessory).toBeNull()
-  })
-})

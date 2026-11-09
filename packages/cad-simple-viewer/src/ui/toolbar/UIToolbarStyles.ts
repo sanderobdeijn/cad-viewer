@@ -1,9 +1,6 @@
 /**
  * Toolbar / sub-toolbar / dropdown styles for {@link UIToolbar}.
  *
- * Kept separate from plugin dock/layer chrome so the offline HTML viewer-runtime
- * can inject only toolbar CSS via {@link ui-html-entry}.
- *
  * @module UIToolbarStyles
  * @packageDocumentation
  */

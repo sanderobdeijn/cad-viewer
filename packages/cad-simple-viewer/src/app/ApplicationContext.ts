@@ -2,9 +2,7 @@ import { CommonEventManager } from '@mlightcad/common'
 import { ModelItemEventArgs } from '@mlightcad/geometry-engine'
 
 import { EditorBaseView } from '../editor/view/EditorBaseView'
-import { ThreeRendererView2d } from '../view'
 import { ApplicationDocument } from './ApplicationDocument'
-import { ApplicationSettingManager } from './ApplicationSettingManager'
 
 /**
  * Application context that binds a CAD document with its associated view.
@@ -18,9 +16,7 @@ import { ApplicationSettingManager } from './ApplicationSettingManager'
  * - System variable changes (like point display mode)
  * - Entity selection and highlighting
  *
- * Call {@link dispose} when the document is closed. Use {@link suspend} /
- * {@link resume} when parking an inactive document so its model events do
- * not mutate the shared view while another document is on screen.
+ * Call {@link dispose} when the document is closed.
  *
  * @example
  * ```typescript
@@ -37,7 +33,7 @@ export class ApplicationContext {
   private _view: EditorBaseView
   /** The document containing the drawing model */
   private _doc: ApplicationDocument
-  /** When false, model and selection listeners no-op (inactive MDI session). */
+  /** When false, model and selection listeners no-op (after dispose). */
   private _active = true
   /** Unbind functions registered in the constructor. */
   private readonly _disposers: Array<() => void> = []
@@ -90,28 +86,6 @@ export class ApplicationContext {
       this.view.removeEntity(sync.createDrawable(item))
     })
 
-    // Set point display mode / size and line weight display.
-    bind(ApplicationSettingManager.instance.events.modified, args => {
-      if (args.key === 'pointDisplayMode' || args.key === 'pointDisplaySize') {
-        if (!this._active) return
-        const settings = ApplicationSettingManager.instance
-        ;(this._view as ThreeRendererView2d).rerenderPoints(
-          settings.get('pointDisplayMode'),
-          settings.get('pointDisplaySize')
-        )
-      } else if (args.key === 'lineWeightDisplay') {
-        if (!this._active) return
-        const currentView = this._view as ThreeRendererView2d
-        const showLineWeight = !!args.value
-        if (currentView.renderer.showLineWeight !== showLineWeight) {
-          currentView.renderer.showLineWeight = showLineWeight
-          // Existing line objects may need different geometry/material classes.
-          // Redraw to rebuild scene content using the new display mode.
-          void this.regen()
-        }
-      }
-    })
-
     // Show their grip points when entities are selected
     bind(view.selectionSet.events.selectionAdded, args => {
       if (!this._active) return
@@ -148,21 +122,6 @@ export class ApplicationContext {
    */
   get isActive() {
     return this._active
-  }
-
-  /**
-   * Stops forwarding model events to the view (document is no longer on screen).
-   */
-  suspend() {
-    this._active = false
-  }
-
-  /**
-   * Resumes forwarding model events after {@link suspend}.
-   */
-  resume() {
-    this._active = true
-    this.bindEntityLookup()
   }
 
   /**

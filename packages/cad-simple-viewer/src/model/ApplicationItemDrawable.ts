@@ -13,7 +13,6 @@ import {
   type GraphicsInterfaceRenderer
 } from '@mlightcad/graphic-interface'
 
-import { ApplicationSettingManager } from '../app/ApplicationSettingManager'
 import {
   type ApplicationItemContents,
   type ApplicationPointDisplay,
@@ -21,14 +20,11 @@ import {
   itemDirectBatchPrimitive
 } from './ApplicationItemGeometry'
 
-/** How points are drawn, from the point style settings. */
-export const applicationPointDisplay = (): ApplicationPointDisplay => {
-  const settings = ApplicationSettingManager.instance
-  return {
-    displayMode: settings.get('pointDisplayMode'),
-    displaySize: settings.get('pointDisplaySize')
-  }
-}
+/** How points are drawn: as a dot of the default size. */
+export const applicationPointDisplay = (): ApplicationPointDisplay => ({
+  displayMode: 0,
+  displaySize: 0
+})
 
 let previewCount = 0
 

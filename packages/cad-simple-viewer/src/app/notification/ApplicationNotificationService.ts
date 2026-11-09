@@ -32,7 +32,7 @@ export interface ApplicationNotificationServiceOptions {
   /**
    * Corner for the built-in notification bell.
    *
-   * When omitted: phone uses `top-right` (below the shortcut toolbar); pad and
+   * When omitted: `bottom-right`.
    * desktop use `bottom-right`. Pass a value to override, or call
    * {@link applicationSetNotificationUiPlacement} later.
    */
@@ -89,8 +89,6 @@ class ApplicationNotificationService {
         () => this.center
       )
       this._bridge.install()
-    } else {
-      this._center.setActiveSession(docManager.activeSessionId)
     }
 
     if (!this._isCustom && this._showDefaultUi) {
@@ -153,9 +151,6 @@ class ApplicationNotificationService {
 
     this._center = center
     this._isCustom = true
-    if (this._docManager) {
-      this._center.setActiveSession(this._docManager.activeSessionId)
-    }
   }
 
   /**
@@ -173,9 +168,6 @@ class ApplicationNotificationService {
     this._defaultStore = new ApplicationNotificationStore()
     this._center = this._defaultStore
     this._isCustom = false
-    if (this._docManager) {
-      this._center.setActiveSession(this._docManager.activeSessionId)
-    }
     if (this._showDefaultUi) {
       this.mountDefaultUi()
     }

@@ -59,19 +59,32 @@ test('changes settings by the names of the old system variables', async ({
   page.on('pageerror', error => errors.push(error.message))
   await openDrawing(page)
 
-  await run(page, 'pdmode', '3')
-  expect(await setting(page, 'pointDisplayMode')).toBe(3)
-
   await run(page, 'orthomode', '1')
   expect(await setting(page, 'orthoMode')).toBe(1)
-
-  await run(page, 'lwdisplay', 'on')
-  expect(await setting(page, 'lineWeightDisplay')).toBe(true)
 
   await run(page, 'colortheme', 'light')
   expect(await setting(page, 'colorTheme')).toBe('light')
   await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
 
+  expect(errors).toEqual([])
+})
+
+test('starts a new drawing with the new command', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await openDrawing(page)
+  const editor = page.getByLabel('Text editor')
+
+  await run(page, 'line', '0,0', '100,50', '')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(/Line/)
+
+  await run(page, 'qnew')
+  await expect(editor).toHaveValue('')
+
+  await run(page, 'line', '0,0', '10,10', '')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveValue(/Line/)
   expect(errors).toEqual([])
 })
 

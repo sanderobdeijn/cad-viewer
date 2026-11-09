@@ -23,32 +23,9 @@ export interface ApplicationSettings {
   isShowToolbar: boolean
   /** Whether the floating shortcut toolbar (erase) is visible */
   isShowShortCutToolbar: boolean
-  /** Whether performance statistics are displayed */
-  isShowStats: boolean
   /** Object snap modes */
   osnapModes: number
-  /** When true, never show the mobile precise point-pick tutorial again. */
-  hideTouchPointTutorial: boolean
-  /**
-   * ISO date (`YYYY-MM-DD`) for which the tutorial is snoozed via
-   * "don't remind me today". Cleared automatically when the date passes.
-   */
-  touchPointTutorialSnoozeDate: string | null
-  /**
-   * When true (default), touch long-press point picks use a simulated mouse
-   * crosshair above the finger so the fingertip does not obscure the sample.
-   * When false, the pick sample is the finger contact. In both modes a long
-   * press still shows the magnifier loupe around the active sample.
-   */
-  useSimulatedMouseOnTouch: boolean
 
-  /** Point display style, as the old `PDMODE` system variable */
-  pointDisplayMode: number
-  /**
-   * Point display size, as `PDSIZE`: positive in drawing units, negative as a
-   * percentage of the view, zero for the default size
-   */
-  pointDisplaySize: number
   /** Linear unit format, as `LUNITS` (`ApplicationLinearUnits`) */
   linearUnits: number
   /** Decimal places of lengths, as `LUPREC` */
@@ -91,10 +68,6 @@ export interface ApplicationSettings {
   colorTheme: ApplicationColorTheme
   /** Model space background as `0xRRGGBB`, as `MODELBKCOLOR` */
   modelBackgroundColor: number
-  /** Colour of measurements as `0xRRGGBB`, as `MEASUREMENTCOLOR` */
-  measurementColor: number
-  /** Whether line weights are drawn, as `LWDISPLAY` */
-  lineWeightDisplay: boolean
   /** Whether opening a file is profiled, as `OPENPROF` */
   openProfile: boolean
 }
@@ -107,8 +80,6 @@ export type ApplicationColorTheme = 'dark' | 'light'
  * the system variable they replace.
  */
 export const APPLICATION_SETTING_COMMANDS = {
-  PDMODE: 'pointDisplayMode',
-  PDSIZE: 'pointDisplaySize',
   LUNITS: 'linearUnits',
   LUPREC: 'linearPrecision',
   AUNITS: 'angularUnits',
@@ -129,7 +100,6 @@ export const APPLICATION_SETTING_COMMANDS = {
   PICKBOX: 'pickBox',
   SHORTCUTMENU: 'shortcutMenu',
   COLORTHEME: 'colorTheme',
-  LWDISPLAY: 'lineWeightDisplay',
   OPENPROF: 'openProfile'
 } as const satisfies Record<string, keyof ApplicationSettings>
 
@@ -167,7 +137,6 @@ const DEFAULT_VALUES: ApplicationSettings = {
   isShowRibbon: true,
   isShowToolbar: true,
   isShowShortCutToolbar: true,
-  isShowStats: false,
   osnapModes: applicationOsnapModesToMask([
     ApplicationOsnapMode.EndPoint,
     ApplicationOsnapMode.MidPoint,
@@ -176,11 +145,6 @@ const DEFAULT_VALUES: ApplicationSettings = {
     ApplicationOsnapMode.Intersection,
     ApplicationOsnapMode.Nearest
   ]),
-  hideTouchPointTutorial: false,
-  touchPointTutorialSnoozeDate: null,
-  useSimulatedMouseOnTouch: true,
-  pointDisplayMode: 0,
-  pointDisplaySize: 0,
   linearUnits: 2,
   linearPrecision: 4,
   angularUnits: 0,
@@ -202,8 +166,6 @@ const DEFAULT_VALUES: ApplicationSettings = {
   shortcutMenu: 0,
   colorTheme: 'dark',
   modelBackgroundColor: 0x000000,
-  measurementColor: 0x60a5fa,
-  lineWeightDisplay: false,
   openProfile: false
 }
 
@@ -656,24 +618,6 @@ export class ApplicationSettingManager<T extends ApplicationSettings = Applicati
    */
   set isShowShortCutToolbar(value: boolean) {
     this.set('isShowShortCutToolbar', value)
-  }
-
-  /**
-   * Gets whether performance statistics are displayed.
-   *
-   * @returns True if stats should be shown
-   */
-  get isShowStats() {
-    return this.get('isShowStats')
-  }
-
-  /**
-   * Sets whether performance statistics are displayed.
-   *
-   * @param value - True to show stats
-   */
-  set isShowStats(value: boolean) {
-    this.set('isShowStats', value)
   }
 
   /**

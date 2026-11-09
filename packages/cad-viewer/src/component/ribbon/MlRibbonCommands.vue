@@ -10,37 +10,21 @@ import {
 } from '@element-plus/icons-vue'
 import {
   ApplicationAngleUnits,
-  applicationCssColor,
   ApplicationDocManager,
   applicationDrawStyleKindForCommand,
-  applicationGetMeasurementColor,
-  applicationGetMeasurementCustomTextHeightWcs,
-  applicationGetMeasurementFontSize,
-  applicationGetMeasurementTextHeightMode,
   ApplicationLinearUnits,
-  ApplicationQNewCmd,
-  applicationScreenPxToWcs,
-  applicationSetMeasurementDrawColor,
-  applicationSetMeasurementTextHeight,
   ApplicationSettingManager,
   type ApplicationSettingManagerEventArgs,
-  applyMeasurementStyleToSelection,
   type EditorCommandEventArgs,
   EditorOpenMode,
-  getActiveMeasurementStyle,
   getEffectiveMeasurementUnits,
-  getMeasurementSnapshot,
   getSelectedMeasurementId,
   isMeasurementVisible,
   MEASUREMENT_LENGTH_UNIT_FOLLOW_DRAWING,
   refreshMeasurementValueLabels,
   setMeasurementUnitOverride,
-  subscribeMeasurementSelection,
-  type ThreeRendererView2d,
-  uiOpenTextHeightDialog,
-  uiResolveTextHeightDialogInitials,
-  uiResolveTextHeightPatch} from '@mlightcad/cad-simple-viewer'
-import { CommonColor } from '@mlightcad/common'
+  type ThreeRendererView2d
+} from '@mlightcad/cad-simple-viewer'
 import {
   FileMenuItemModel,
   MlRibbon,
@@ -49,7 +33,7 @@ import {
   RibbonLocaleTexts,
   RibbonTabModel
 } from '@mlightcad/ribbon'
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useDocument } from '../../composable'
@@ -84,41 +68,21 @@ import {
 } from '../../svg'
 import {
   clearMeasurements,
-  exportIcon,
-  importIcon,
   measureAngle,
   measureArc,
   measureArea,
   measureContinuous,
   measureDistance,
-  measurementPanel,
   measurePoint
 } from '../../svg/toolbarIcons'
 import MlRibbonFileName from './MlRibbonFileName.vue'
 import MlRibbonMeasurementUnitsPanel from './MlRibbonMeasurementUnitsPanel.vue'
-import MlRibbonPropertyColorDropdown from './MlRibbonPropertyColorDropdown.vue'
-import MlRibbonTextHeightButton from './MlRibbonTextHeightButton.vue'
 import { classifyOverlaySelection } from './overlaySelectionKind'
-
-/** Shared control width for color / text-height in overlay Style panels. */
-const OVERLAY_STYLE_CONTROL_WIDTH = '120px'
-
-/** Authoring mode for overlay text height (Fit to screen vs world height). */
-type OverlayTextHeightMode = 'adaptive' | 'custom'
 
 const ribbonContainerRef = ref<HTMLElement>()
 const { isDocumentOpening, openMode: docOpenMode } = useDocument()
 const { t, locale } = useI18n()
 const isMeasurementOverlayVisible = ref(true)
-const measurementDrawColor = shallowRef(new CommonColor())
-const measurementDrawColorDisplay = ref('#7b8794')
-const measurementTextHeightMode = ref<OverlayTextHeightMode>(
-  applicationGetMeasurementTextHeightMode()
-)
-const measurementTextHeightWcs = ref<number | undefined>(
-  applicationGetMeasurementCustomTextHeightWcs()
-)
-let textHeightDialogOpen = false
 const measurementLunits = ref(ApplicationLinearUnits.Decimal)
 const measurementLuprec = ref(4)
 const measurementAunits = ref(ApplicationAngleUnits.DecimalDegrees)
@@ -152,11 +116,9 @@ const handleSettingChange = (args: ApplicationSettingManagerEventArgs) => {
 const handleDocumentActivated = () => {
   lastActivatedMeasurementId = undefined
   syncMeasurementVisibility()
-  syncMeasurementStyleControls()
   syncMeasurementUnitControls()
 }
 
-let unsubscribeMeasurementSelection: (() => void) | undefined
 let lastActivatedMeasurementId: string | undefined
 let overlayTabActivationScheduled = false
 let overlayTabActivationDisposed = false
@@ -249,17 +211,11 @@ onMounted(() => {
   ApplicationDocManager.instance.events.documentActivated.addEventListener(
     handleDocumentActivated
   )
-  unsubscribeMeasurementSelection = subscribeMeasurementSelection(
-    syncMeasurementStyleControls
-  )
-  syncMeasurementStyleControls()
   handleDocumentActivated()
 })
 
 onUnmounted(() => {
   overlayTabActivationDisposed = true
-  unsubscribeMeasurementSelection?.()
-  unsubscribeMeasurementSelection = undefined
   ApplicationSettingManager.instance.events.modified.removeEventListener(
     handleSettingChange
   )
@@ -276,98 +232,6 @@ onUnmounted(() => {
     handleDocumentActivated
   )
 })
-
-const syncMeasurementStyleControls = () => {
-  const selected = getActiveMeasurementStyle()
-  if (selected) {
-    measurementDrawColor.value = selected.color.clone()
-    measurementDrawColorDisplay.value = applicationCssColor(selected.color)
-    const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
-    const measureId = getSelectedMeasurementId()
-    const wcs =
-      selected.textHeightWcs != null && selected.textHeightWcs > 0
-        ? selected.textHeightWcs
-        : measureId
-          ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-          : undefined
-    const resolvedWcs =
-      wcs != null && wcs > 0
-        ? wcs
-        : view
-          ? applicationScreenPxToWcs(selected.fontSize, view)
-          : undefined
-    measurementTextHeightMode.value = 'custom'
-    measurementTextHeightWcs.value = resolvedWcs
-  } else {
-    const color = applicationGetMeasurementColor()
-    measurementDrawColor.value = color.clone()
-    measurementDrawColorDisplay.value = applicationCssColor(color)
-    measurementTextHeightMode.value = applicationGetMeasurementTextHeightMode()
-    measurementTextHeightWcs.value =
-      measurementTextHeightMode.value === 'custom'
-        ? applicationGetMeasurementCustomTextHeightWcs()
-        : undefined
-  }
-  scheduleActivateRibbonTabForOverlaySelection()
-}
-
-const handleMeasurementDrawColorChange = (value?: CommonColor) => {
-  if (!value) return
-  applicationSetMeasurementDrawColor(value)
-  measurementDrawColor.value = value.clone()
-  measurementDrawColorDisplay.value = applicationCssColor(value)
-  const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
-  if (view) applyMeasurementStyleToSelection(view, { color: value })
-}
-
-/**
- * Opens the shared text-height dialog for Measurement overlays.
- */
-const handleMeasurementTextHeightClick = async () => {
-  if (textHeightDialogOpen) return
-  const view = ApplicationDocManager.instance?.curView as ThreeRendererView2d | undefined
-  if (!view) return
-  textHeightDialogOpen = true
-  try {
-    const selected = getActiveMeasurementStyle()
-    const hasSelection = selected != null
-    const measureId = getSelectedMeasurementId()
-    const fontSizePx = selected?.fontSize ?? applicationGetMeasurementFontSize()
-    const selectedTextHeightWcs = hasSelection
-      ? (selected?.textHeightWcs ??
-        (measureId
-          ? getMeasurementSnapshot(measureId)?.style.textHeightWcs
-          : undefined))
-      : applicationGetMeasurementCustomTextHeightWcs()
-    const initials = uiResolveTextHeightDialogInitials({
-      hasSelection,
-      sessionMode: hasSelection ? 'custom' : applicationGetMeasurementTextHeightMode(),
-      fontSizePx,
-      selectedTextHeightWcs,
-      view
-    })
-    const result = await uiOpenTextHeightDialog({
-      view,
-      ...initials
-    })
-    if (!result) return
-    const patch = uiResolveTextHeightPatch(
-      view,
-      result,
-      initials.initialFontSizePx
-    )
-    applicationSetMeasurementTextHeight(
-      patch.textHeightMode,
-      patch.textHeightMode === 'custom'
-        ? (patch.textHeightWcs ?? patch.fontSize)
-        : patch.fontSize
-    )
-    applyMeasurementStyleToSelection(view, patch)
-    syncMeasurementStyleControls()
-  } finally {
-    textHeightDialogOpen = false
-  }
-}
 
 const syncMeasurementUnitControls = () => {
   const units = getEffectiveMeasurementUnits()
@@ -484,8 +348,6 @@ const buildBaseTabs = (
     measureArc: t('main.verticalToolbar.measureArc.description'),
     measurePoint: t('main.verticalToolbar.measurePoint.description'),
     clearMeasurements: t('main.verticalToolbar.clearMeasurements.description'),
-    measurementImport: t('main.verticalToolbar.measurementImport.description'),
-    measurementExport: t('main.verticalToolbar.measurementExport.description'),
     hideMeasurements: t('main.verticalToolbar.hideMeasurements.description'),
     showMeasurements: t('main.verticalToolbar.showMeasurements.description')
   }
@@ -540,14 +402,6 @@ const buildBaseTabs = (
       props: { icon: measurePoint }
     },
     {
-      id: 'cmd-tool-measurement-panel',
-      type: 'button',
-      label: t('main.verticalToolbar.measurementPanel.text'),
-      tooltip: t('main.verticalToolbar.measurementPanel.description'),
-      size: 'large',
-      props: { icon: measurementPanel }
-    },
-    {
       id: 'cmd-tool-measurement-vis',
       type: 'toggle',
       label: t('main.verticalToolbar.showMeasurements.text'),
@@ -569,66 +423,12 @@ const buildBaseTabs = (
 
   const measurementManageItems: RibbonItemModel[] = [
     {
-      id: 'cmd-tool-measurement-import',
-      type: 'button',
-      label: t('main.verticalToolbar.measurementImport.text'),
-      tooltip: verticalToolbarDescriptions.measurementImport,
-      size: 'small',
-      props: { icon: importIcon }
-    },
-    {
-      id: 'cmd-tool-measurement-export',
-      type: 'button',
-      label: t('main.verticalToolbar.measurementExport.text'),
-      tooltip: verticalToolbarDescriptions.measurementExport,
-      size: 'small',
-      props: { icon: exportIcon }
-    },
-    {
       id: 'cmd-tool-clear-measurements',
       type: 'button',
       label: t('main.verticalToolbar.clearMeasurements.text'),
       tooltip: verticalToolbarDescriptions.clearMeasurements,
       size: 'small',
       props: { icon: clearMeasurements }
-    }
-  ]
-
-  const measurementStyleItems: RibbonItemModel[] = [
-    {
-      id: 'measurement-draw-color',
-      type: 'custom',
-      size: 'small',
-      tooltip: t('main.verticalToolbar.measurementColor.description'),
-      props: {
-        component: MlRibbonPropertyColorDropdown,
-        componentProps: {
-          modelValue: measurementDrawColor.value,
-          displayColor: measurementDrawColorDisplay.value,
-          placeholder: t('main.ribbon.property.color'),
-          controlWidth: OVERLAY_STYLE_CONTROL_WIDTH,
-          'onUpdate:modelValue': handleMeasurementDrawColorChange
-        }
-      }
-    },
-    {
-      id: 'measurement-draw-text-height',
-      type: 'custom',
-      size: 'small',
-      tooltip: t('main.verticalToolbar.measurementFontSize.description'),
-      props: {
-        component: MlRibbonTextHeightButton,
-        componentProps: {
-          mode: measurementTextHeightMode.value,
-          textHeightWcs: measurementTextHeightWcs.value,
-          fitLabel: t('main.verticalToolbar.measurementFontSize.fit'),
-          wcsLabel: t('main.verticalToolbar.measurementFontSize.wcs'),
-          placeholder: t('main.verticalToolbar.measurementFontSize.text'),
-          ariaLabel: t('main.verticalToolbar.measurementFontSize.description'),
-          controlWidth: OVERLAY_STYLE_CONTROL_WIDTH,
-          onClick: handleMeasurementTextHeightClick
-        }
-      }
     }
   ]
 
@@ -648,19 +448,6 @@ const buildBaseTabs = (
           layout: 'column',
           rows: 3,
           items: measurementManageItems
-        }
-      ]
-    },
-    {
-      id: 'measurement-style',
-      title: t('main.ribbon.group.style'),
-      orientation: 'row',
-      collections: [
-        {
-          id: 'measurement-style-main',
-          layout: 'column',
-          rows: 3,
-          items: measurementStyleItems
         }
       ]
     },
@@ -1111,11 +898,7 @@ const ribbonData = computed(() => {
   locale.value
   const openMode = docOpenMode.value
   const measurementVisible = isMeasurementOverlayVisible.value
-  // Track measurement draw style so Measurement ribbon controls refresh.
-  measurementDrawColor.value
-  measurementDrawColorDisplay.value
-  measurementTextHeightMode.value
-  measurementTextHeightWcs.value
+  // Track measurement units so the Measurement ribbon controls refresh.
   measurementLunits.value
   measurementLuprec.value
   measurementAunits.value
@@ -1167,10 +950,7 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-tool-measure-area', 'measurearea')
   commandByItemId.set('cmd-tool-measure-arc', 'measurearc')
   commandByItemId.set('cmd-tool-measure-point', 'measurepoint')
-  commandByItemId.set('cmd-tool-measurement-panel', 'measurementpanel')
   commandByItemId.set('cmd-tool-measurement-vis', 'measurementvis')
-  commandByItemId.set('cmd-tool-measurement-import', 'measurementimport')
-  commandByItemId.set('cmd-tool-measurement-export', 'measurementexport')
   commandByItemId.set('cmd-tool-clear-measurements', 'clearmeasurements')
 
   const tabs: RibbonTabModel[] = buildBaseTabs(openMode, measurementVisible)
@@ -1206,11 +986,6 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
       label: t('main.mainMenu.drawingUnits')
     }
   ]
-  items.push({
-    id: 'About',
-    label: t('main.mainMenu.about'),
-    divided: true
-  })
   return items
 })
 
@@ -1235,12 +1010,9 @@ const handleRibbonItemClick = (payload: {
 const handleFileMenuSelect = async (command: string) => {
   if (isRibbonDisabled.value) return
   if (command === 'QNew') {
-    const cmd = new ApplicationQNewCmd()
-    cmd.trigger(ApplicationDocManager.instance.context)
+    ApplicationDocManager.instance.sendStringToExecute('qnew')
   } else if (command === 'DrawingUnits') {
     ApplicationDocManager.instance.sendStringToExecute('units')
-  } else if (command === 'About') {
-    ApplicationDocManager.instance.sendStringToExecute('about')
   }
 }
 </script>

@@ -12,7 +12,7 @@ import { ApplicationMeasureDrawCmd } from './ApplicationMeasureDrawCmd'
 import { ApplicationMeasurePointEntity } from './entity'
 
 /**
- * Commit a coordinate measurement overlay (also used when importing a sidecar).
+ * Commit a coordinate measurement overlay.
  */
 export function placePointMeasurement(
   view: ThreeRendererView2d,

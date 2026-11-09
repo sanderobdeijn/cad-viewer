@@ -88,7 +88,6 @@ import {
 import { MlDialogManager } from './common'
 import { MlEntityInfo, MlToolBars } from './layout'
 import { MlNotificationCenter } from './notification'
-import { MlPaletteManager } from './palette'
 import { MlRibbonCommands } from './ribbon'
 import { MlStatusBar } from './statusBar'
 
@@ -108,12 +107,6 @@ const emit = defineEmits<{
 interface Props {
   /** Background color as 24-bit hexadecimal RGB number (e.g., 0x000000) */
   background?: number
-  /**
-   * Absolute root URL for user-guide pages (trailing slash optional).
-   * Forwarded to {@link ApplicationDocManagerOptions.docsBaseUrl} for in-app help links
-   * (e.g. mobile magnifier). Defaults to the public mlightcad docs site.
-   */
-  docsBaseUrl?: string
   /** Initial theme of the viewer */
   theme?: 'light' | 'dark'
   /**
@@ -142,7 +135,6 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   background: undefined,
-  docsBaseUrl: undefined,
   theme: 'dark',
   progressiveRendering: false,
   circleSides: GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT
@@ -298,7 +290,6 @@ onMounted(async () => {
     initializeCadViewer({
       container: containerRef.value,
       busyIndicatorHost: layoutRef.value,
-      docsBaseUrl: props.docsBaseUrl,
       autoResize: true
     })
     // ApplicationDocManager.instance is guaranteed only after viewer initialization.
@@ -422,8 +413,6 @@ const closeNotificationCenter = () => {
             <!-- Toolbar with common CAD operations (zoom, pan, select, etc.) -->
             <ml-tool-bars v-if="editorRef" />
 
-            <!-- Entity properties palette for controlling entity visibility and properties -->
-            <ml-palette-manager v-if="editorRef" />
 
             <!-- Dialog manager for modal dialogs and settings -->
             <ml-dialog-manager v-if="editorRef" />
@@ -531,32 +520,11 @@ const closeNotificationCenter = () => {
   outline: none;
 }
 
-@media (max-width: 767px) {
-  .ml-cad-body {
-    flex-direction: column;
-  }
-
-  .ml-cad-side-panel {
-    flex: 0 0 35%;
-  }
-
-  .ml-cad-side-panel-divider {
-    display: none;
-  }
-}
-
 .ml-cad-footer {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 6;
-}
-
-/* Mobile command chrome is position:fixed over the canvas; hide the
-   status-bar footer so ✓ / × receive taps instead of the footer. */
-.ml-cad-layout:has(.ml-mobile-cmd-active) .ml-cad-footer {
-  visibility: hidden;
-  pointer-events: none;
 }
 </style>

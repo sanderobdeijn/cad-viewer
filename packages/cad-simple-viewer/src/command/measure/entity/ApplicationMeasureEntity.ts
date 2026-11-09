@@ -14,7 +14,7 @@ import {
   applicationSeedOverlaySizesFromWcs
 } from '../../overlay'
 import { hitTestMeasurementGeometry } from '../ApplicationMeasurementGeometry'
-import { serializeMeasurementStyle } from '../ApplicationMeasurementSidecar'
+import { serializeMeasurementStyle } from '../ApplicationMeasurementRecordStyle'
 import {
   type ApplicationMeasurementGroupExtras,
   commitMeasurementGroup,
@@ -22,7 +22,7 @@ import {
 } from '../ApplicationMeasurementStore'
 import type {
   ApplicationMeasurementRecord,
-  ApplicationMeasurementSidecarStyle
+  ApplicationMeasurementRecordStyle
 } from '../ApplicationMeasurementTypes'
 
 /**
@@ -50,11 +50,11 @@ export interface ApplicationMeasureEntityOptions {
   layoutId?: string
   /** Visual style (color, line weight, font size) for CAD and HTML overlays. */
   style: ApplicationMeasurementStyle
-  /** World-space badge height from sidecar import (optional). */
+  /** World-space badge height from the record (optional). */
   textHeightWcs?: number
-  /** World-space stroke width from sidecar import (optional). */
+  /** World-space stroke width from the record (optional). */
   strokeWidthWcs?: number
-  /** World-space arrow-head length from sidecar import (optional). */
+  /** World-space arrow-head length from the record (optional). */
   arrowSizeWcs?: number
 }
 
@@ -90,15 +90,15 @@ export abstract class ApplicationMeasureEntity
 {
   /** Visual style applied to HTML badges/dots and canvas strokes. */
   protected readonly style: ApplicationMeasurementStyle
-  /** Stable measurement id used for HTML group, store, and sidecar records. */
+  /** Stable measurement id used for HTML group, and store records. */
   protected readonly entityId: string
   /** Optional layout override from construction options. */
   protected readonly layoutIdOption: string | undefined
-  /** Imported world-space badge height (sidecar). */
+  /** Imported world-space badge height. */
   protected readonly textHeightWcs?: number
-  /** Imported world-space stroke width (sidecar). */
+  /** Imported world-space stroke width. */
   protected readonly strokeWidthWcs?: number
-  /** Imported world-space arrow-head length (sidecar). */
+  /** Imported world-space arrow-head length. */
   protected readonly arrowSizeWcs?: number
 
   /**
@@ -146,7 +146,7 @@ export abstract class ApplicationMeasureEntity
    *
    * @param layoutId - Optional layout BTR id written onto the record
    * @param view - Optional view used to convert screen style to WCS
-   * @returns Sidecar-ready measurement record
+   * @returns Measurement record
    */
   abstract toRecord(layoutId?: string, view?: ThreeRendererView2d): ApplicationMeasurementRecord
 
@@ -248,8 +248,8 @@ export abstract class ApplicationMeasureEntity
     return this.layoutIdOption ?? view.activeLayoutBtrId
   }
 
-  /** Sidecar style including world-space sizes at the current view. */
-  protected serializeStyle(view?: ThreeRendererView2d): ApplicationMeasurementSidecarStyle {
+  /** Record style including world-space sizes at the current view. */
+  protected serializeStyle(view?: ThreeRendererView2d): ApplicationMeasurementRecordStyle {
     return serializeMeasurementStyle(this.style, view)
   }
 
@@ -284,11 +284,11 @@ export abstract class ApplicationMeasureEntity
     elements: readonly ThreeRendererHtmlElement[],
     canvases: readonly HTMLElement[] = []
   ): void {
-    const sidecar = this.serializeStyle(view)
+    const recordStyle = this.serializeStyle(view)
     applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: this.textHeightWcs ?? sidecar.textHeightWcs,
+      textHeightWcs: this.textHeightWcs ?? recordStyle.textHeightWcs,
       strokeWidthWcs: this.strokeWidthWcs,
-      arrowSizeWcs: this.arrowSizeWcs ?? sidecar.arrowSizeWcs,
+      arrowSizeWcs: this.arrowSizeWcs ?? recordStyle.arrowSizeWcs,
       fontSizePx: this.style.fontSize,
       strokeScreenPx: applicationMeasurementCanvasLineWidth(this.style.lineWeight),
       elements,

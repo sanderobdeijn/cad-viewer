@@ -446,40 +446,6 @@ describe('ThreeRendererLayout spatial index', () => {
     ])
   })
 
-  it('refreshes point spatial-index boxes after PDSIZE rerender', () => {
-    const layout = new ThreeRendererLayout()
-
-    const point = createEntity('point-1')
-    point.wcsBbox = new THREE.Box3(
-      new THREE.Vector3(100, 200, 0),
-      new THREE.Vector3(100, 200, 0)
-    )
-    layout.addEntity(point)
-
-    const farPick = {
-      min: { x: 101.5, y: 198.5 },
-      max: { x: 102.5, y: 201.5 }
-    } as unknown as import('@mlightcad/geometry-engine').GeometryBox2d
-    expect(layout.search(farPick).some(hit => hit.id === 'point-1')).toBe(false)
-
-    mockCollectPointObjectWorldBoxes.mockImplementation(
-      (out: Map<string, THREE.Box3> = new Map()) => {
-        out.set(
-          'point-1',
-          new THREE.Box3(
-            new THREE.Vector3(98, 198, 0),
-            new THREE.Vector3(102, 202, 0)
-          )
-        )
-        return out
-      }
-    )
-
-    layout.rerenderPoints(35, 2)
-
-    expect(mockRerenderPoints).toHaveBeenCalledWith(35, 2)
-    expect(layout.search(farPick).some(hit => hit.id === 'point-1')).toBe(true)
-  })
 })
 
 describe('ThreeRendererLayout entity preview helpers', () => {

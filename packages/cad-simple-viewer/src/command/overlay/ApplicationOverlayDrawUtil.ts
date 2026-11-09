@@ -197,7 +197,7 @@ export function applicationBaseZoomFromWcsSize(
 }
 
 /**
- * Seeds HTML overlays and canvases from sidecar world-space sizes so import
+ * Seeds HTML overlays and canvases from stored world-space sizes so a rebuild
  * matches creation scale regardless of the current camera zoom.
  */
 export function applicationSeedOverlaySizesFromWcs(
@@ -267,47 +267,6 @@ export function applicationSeedOverlaySizesFromWcs(
     const sized = el as { setFontSize?: (size: number) => void }
     sized.setFontSize?.(fontSizePx)
     if (el.scaleWithView) el.baseZoom = baseZoom
-  }
-}
-
-/**
- * Keeps live draw-preview overlays sized for the active text-height mode.
- *
- * - `'custom'`: seed {@link ThreeRendererHtmlElement.baseZoom} from WCS so capsules
- *   scale with camera zoom during drawing.
- * - `'adaptive'` (or missing WCS): disable view sync so size stays constant
- *   in screen pixels while drawing.
- */
-export function applicationSyncLiveOverlayTextHeight(
-  view: EditorBaseView,
-  elements: readonly ThreeRendererHtmlElement[],
-  style: {
-    fontSize?: number
-    textHeightMode?: 'adaptive' | 'custom'
-    textHeightWcs?: number
-  }
-): void {
-  const fontSize =
-    style.fontSize != null && style.fontSize > 0 ? style.fontSize : 0
-  const custom =
-    style.textHeightMode === 'custom' &&
-    style.textHeightWcs != null &&
-    style.textHeightWcs > 0 &&
-    fontSize > 0
-  if (custom) {
-    for (const el of elements) {
-      el.scaleWithView = true
-    }
-    applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: style.textHeightWcs,
-      fontSizePx: fontSize,
-      elements
-    })
-    return
-  }
-  for (const el of elements) {
-    el.scaleWithView = false
-    el.baseZoom = undefined
   }
 }
 

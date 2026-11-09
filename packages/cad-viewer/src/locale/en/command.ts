@@ -7,13 +7,6 @@ export default {
     properties: {
       description: 'Entity properties palette'
     },
-    mem: {
-      description:
-        'Opens the Memory profile palette to analyze drawing memory usage'
-    },
-    pttype: {
-      description: 'Specifies the display style and size of point objects'
-    },
     qselect: {
       description:
         'Creates a selection set by filtering objects with type and property conditions'

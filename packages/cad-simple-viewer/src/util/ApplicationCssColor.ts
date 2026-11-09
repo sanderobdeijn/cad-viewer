@@ -61,7 +61,7 @@ export function parseCssToAcCmColor(
   }
 }
 
-/** Stable `#rrggbb` for sidecar JSON (avoids `rgb()` round-trip issues). */
+/** Stable `#rrggbb` for stored records (avoids `rgb()` round-trip issues). */
 export function commonColorToCssHex(color: CommonColor): string {
   const byte = (n: number | undefined) =>
     Math.max(0, Math.min(255, Math.round(n ?? 0)))

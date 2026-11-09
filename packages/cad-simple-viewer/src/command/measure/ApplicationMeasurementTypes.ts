@@ -1,5 +1,5 @@
 import type { GraphicsInterfaceLineWeight } from '@mlightcad/graphic-interface'
-/** Measurement kinds that can be persisted in a sidecar JSON file. */
+/** Measurement kinds. */
 export type ApplicationMeasurementType =
   | 'distance'
   | 'angle'
@@ -7,14 +7,14 @@ export type ApplicationMeasurementType =
   | 'arc'
   | 'point'
 
-/** 2D world point stored in a measurement sidecar. */
+/** 2D world point stored in a measurement record. */
 export interface ApplicationMeasurementPoint2d {
   x: number
   y: number
 }
 
-/** Drawing style stored in the sidecar (CSS-friendly + world-space sizes). */
-export interface ApplicationMeasurementSidecarStyle {
+/** Drawing style stored in the record (CSS-friendly + world-space sizes). */
+export interface ApplicationMeasurementRecordStyle {
   color: string
   /** Always hairline (`0`) on write; legacy non-zero values are ignored on parse. */
   lineWeight: GraphicsInterfaceLineWeight
@@ -63,7 +63,7 @@ export interface ApplicationMeasurementArcGeometry {
   /**
    * Point on the measured sweep. Distinguishes the major arc from the
    * complementary minor arc after a JSON round-trip. Omitted in legacy
-   * sidecars, which always restore the shorter arc.
+   * records, which always restore the shorter arc.
    */
   through?: ApplicationMeasurementPoint2d
 }
@@ -80,18 +80,11 @@ export type ApplicationMeasurementGeometry =
   | ApplicationMeasurementArcGeometry
   | ApplicationMeasurementPointGeometry
 
-/** One committed measurement in a sidecar file. */
+/** One committed measurement. */
 export interface ApplicationMeasurementRecord {
   id: string
   type: ApplicationMeasurementType
   layoutId?: string
-  style: ApplicationMeasurementSidecarStyle
+  style: ApplicationMeasurementRecordStyle
   geometry: ApplicationMeasurementGeometry
-}
-
-/** Sidecar JSON document for measurement overlays. */
-export interface ApplicationMeasurementSidecarFile {
-  version: 1
-  drawingName?: string
-  measurements: ApplicationMeasurementRecord[]
 }

@@ -1,9 +1,7 @@
 import { CommonColor } from '@mlightcad/common'
 import type { ThreeRendererHtmlGroup } from '@mlightcad/three-renderer'
 
-import { stringifyMeasurementSidecar } from '../src/command/measure/ApplicationMeasurementSidecar'
 import {
-  applyMeasurementStyle,
   collectMeasurementRecords,
   commitMeasurementGroup,
   MEASUREMENT_LAYER,
@@ -90,36 +88,6 @@ describe('ApplicationMeasurementStore hairline stroke', () => {
     resetMeasurementSession()
   })
 
-  it('always exports hairline and omits strokeWidthWcs', () => {
-    const { view, manager } = createView()
-    const group = makeGroup('hairline-edit')
-    const color = new CommonColor()
-    color.setRGB(10, 20, 30)
-    commitMeasurementGroup(view, group, {
-      style: {
-        color,
-        lineWeight: OVERLAY_HAIRLINE_LINE_WEIGHT,
-        fontSize: MEASUREMENT_FONT_SIZE
-      },
-      snapshot: hairlineSnapshot(group.id)
-    })
-    expect(manager.getGroup('hairline-edit')).toBe(group)
-
-    applyMeasurementStyle(view, group, { fontSize: 16 })
-
-    const [record] = collectMeasurementRecords(view)
-    expect(record?.style.lineWeight).toBe(0)
-    expect(record?.style.strokeWidthWcs).toBeUndefined()
-    expect(record?.style.fontSize).toBe(16)
-
-    const json = stringifyMeasurementSidecar({
-      version: 1,
-      measurements: collectMeasurementRecords(view)
-    })
-    expect(json).not.toMatch(/"strokeWidthWcs"\s*:/)
-    expect(json).toMatch(/"lineWeight"\s*:\s*0/)
-  })
-
   it('does not invent a 0 WCS stroke for a hairline snapshot', () => {
     const { view } = createView()
     const group = makeGroup('hairline-commit')
@@ -149,87 +117,4 @@ describe('ApplicationMeasurementStore hairline stroke', () => {
     expect(record?.style.strokeWidthWcs).toBeUndefined()
   })
 
-  it('scales arrowSizeWcs when font size changes', () => {
-    const { view } = createView()
-    const group = makeGroup('arrow-scale')
-    const color = new CommonColor()
-    color.setRGB(8, 232, 222)
-    commitMeasurementGroup(view, group, {
-      style: {
-        color,
-        lineWeight: OVERLAY_HAIRLINE_LINE_WEIGHT,
-        fontSize: 12
-      },
-      snapshot: {
-        id: group.id,
-        type: 'distance',
-        style: {
-          color: 'rgb(8,232,222)',
-          lineWeight: OVERLAY_HAIRLINE_LINE_WEIGHT,
-          fontSize: 12,
-          textHeightWcs: 1.2,
-          arrowSizeWcs: 0.9
-        },
-        geometry: {
-          type: 'distance',
-          start: { x: 0, y: 0 },
-          end: { x: 10, y: 0 }
-        }
-      }
-    })
-
-    applyMeasurementStyle(view, group, { fontSize: 24 })
-
-    const [record] = collectMeasurementRecords(view)
-    expect(record?.style.fontSize).toBe(24)
-    expect(record?.style.arrowSizeWcs).toBeCloseTo(1.8)
-    expect(record?.style.textHeightWcs).toBeCloseTo(2.4)
-  })
-
-  it('keeps a Fit-to-screen clamped fontSize after a color-only restyle', () => {
-    const { view } = createView()
-    const group = makeGroup('clamp-preserve')
-    const badge = {
-      setColor: jest.fn(),
-      setFontSize: jest.fn()
-    }
-    ;(group as unknown as { children: unknown[] }).children = [badge]
-    const color = new CommonColor()
-    color.setRGB(8, 232, 222)
-    const clampedFont = 7
-    commitMeasurementGroup(view, group, {
-      style: {
-        color,
-        lineWeight: OVERLAY_HAIRLINE_LINE_WEIGHT,
-        fontSize: clampedFont,
-        textHeightMode: 'adaptive',
-        textHeightWcs: 0.7
-      },
-      snapshot: {
-        id: group.id,
-        type: 'distance',
-        style: {
-          color: 'rgb(8,232,222)',
-          lineWeight: OVERLAY_HAIRLINE_LINE_WEIGHT,
-          fontSize: clampedFont,
-          textHeightWcs: 0.7,
-          arrowSizeWcs: 0.5
-        },
-        geometry: {
-          type: 'distance',
-          start: { x: 0, y: 0 },
-          end: { x: 2, y: 0 }
-        }
-      }
-    })
-
-    const nextColor = new CommonColor()
-    nextColor.setRGB(255, 0, 0)
-    applyMeasurementStyle(view, group, { color: nextColor })
-
-    expect(badge.setFontSize).toHaveBeenCalledWith(clampedFont)
-    const [record] = collectMeasurementRecords(view)
-    expect(record?.style.fontSize).toBe(clampedFont)
-    expect(record?.style.textHeightWcs).toBeCloseTo(0.7)
-  })
 })

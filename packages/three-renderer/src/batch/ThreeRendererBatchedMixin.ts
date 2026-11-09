@@ -874,7 +874,7 @@ export function createAcTrBatchedMixin<
      * costs little memory and keeps later aggregate / raycast queries O(slots)
      * instead of O(vertices).
      *
-     * {@link ThreeRendererBatchedLine} and {@link ThreeRendererBatchedLine2} override this to
+     * {@link ThreeRendererBatchedLine} override this to
      * scan the packed vertex array instead. A large drawing can pack hundreds
      * of thousands of 2-vertex slots, and retaining one `Box3` per slot would
      * stay resident for the rest of the session (~100MB at ~234B each).
@@ -961,7 +961,7 @@ export function createAcTrBatchedMixin<
      * Scanning every packed vertex on each aggregate rebuild would be slower
      * for high-vertex mesh slots.
      *
-     * {@link ThreeRendererBatchedLine} / {@link ThreeRendererBatchedLine2} override it to build a
+     * {@link ThreeRendererBatchedLine} override it to build a
      * single aggregate AABB from one packed-array min/max pass and take its
      * circumsphere. Line slots are tiny, so a full-buffer scan is cheaper than
      * one `Box3` + `Sphere.union` per slot, and no per-slot bounds object is

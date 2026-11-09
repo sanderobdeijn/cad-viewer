@@ -26,37 +26,6 @@ class MeasureDrawStub extends ApplicationMeasureDrawCmd {
 }
 
 describe('ApplicationMeasureDrawCmd', () => {
-  it('sets Read mode and binds the draw-style session accessory', () => {
-    const container = { parentElement: null } as unknown as HTMLElement
-    const accessory = {
-      id: 'draw-style',
-      mount: jest.fn(),
-      unmount: jest.fn()
-    }
-    const setActiveKind = jest.fn()
-    const host = {
-      setActiveKind,
-      createSessionAccessory: () => accessory
-    }
-    const providers = new Map<string, unknown>([['draw-style', host]])
-    const view = {
-      container,
-      sessionProviders: {
-        get: <T>(id: string) => providers.get(id) as T | undefined
-      }
-    }
-    const cmd = new MeasureDrawStub()
-    cmd.globalName = 'measuredistance'
-    expect(cmd.mode).toBe(EditorOpenMode.Read)
-    expect(cmd.sessionAccessory?.id).toBe('draw-style')
-    cmd.sessionAccessory!.mount({
-      host: container,
-      type: 'desktop',
-      view: view as never
-    })
-    expect(setActiveKind).toHaveBeenCalledWith('measure')
-    expect(accessory.mount).toHaveBeenCalled()
-  })
 
   it('runs the body in selection mode with a crosshair cursor', async () => {
     const withCursor = jest.fn(async (_type, fn: () => Promise<void>) => {

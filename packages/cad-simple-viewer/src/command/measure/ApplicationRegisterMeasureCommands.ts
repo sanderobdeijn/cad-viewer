@@ -1,29 +1,30 @@
-import type { ApplicationSystemCommandRegistrar } from '../ApplicationDrawStyleSession'
-import {
-  type ApplicationDrawStyleSessionInstallContext,
-  applicationInstallDrawStyleSessionAccessory
-} from '../ApplicationDrawStyleSession'
+import type { EditorCommand } from '../../editor/command/EditorCommand'
 import { ApplicationClearMeasurementsCmd } from './ApplicationClearMeasurementsCmd'
 import { ApplicationMeasureAngleCmd } from './ApplicationMeasureAngleCmd'
 import { ApplicationMeasureArcCmd } from './ApplicationMeasureArcCmd'
 import { ApplicationMeasureAreaCmd } from './ApplicationMeasureAreaCmd'
 import { ApplicationMeasureContinuousCmd } from './ApplicationMeasureContinuousCmd'
 import { ApplicationMeasureDistanceCmd } from './ApplicationMeasureDistanceCmd'
-import { ApplicationMeasurementExportCmd } from './ApplicationMeasurementImportExportCmd'
-import { ApplicationMeasurementImportCmd } from './ApplicationMeasurementImportExportCmd'
 import { ApplicationMeasurementVisibilityCmd } from './ApplicationMeasurementVisibilityCmd'
 import { ApplicationMeasurePointCmd } from './ApplicationMeasurePointCmd'
 
 /**
- * Registers measurement commands and installs the shared draw-style session
- * accessory for the view (idempotent).
+ * Registers a built-in system command with resolved aliases.
+ *
+ * @param cmdGlobalName - Global (English) command name.
+ * @param cmdLocalName - Localized command name.
+ * @param cmd - Command instance to register.
  */
-export function registerMeasureCommands(
-  addSystemCommand: ApplicationSystemCommandRegistrar,
-  installCtx: ApplicationDrawStyleSessionInstallContext
-): void {
-  applicationInstallDrawStyleSessionAccessory(installCtx)
+export type ApplicationSystemCommandRegistrar = (
+  cmdGlobalName: string,
+  cmdLocalName: string,
+  cmd: EditorCommand
+) => void
 
+/** Registers the measurement commands. */
+export function registerMeasureCommands(
+  addSystemCommand: ApplicationSystemCommandRegistrar
+): void {
   addSystemCommand(
     'measuredistance',
     'measuredistance',
@@ -47,15 +48,5 @@ export function registerMeasureCommands(
     'measurementvis',
     'measurementvis',
     new ApplicationMeasurementVisibilityCmd()
-  )
-  addSystemCommand(
-    'measurementexport',
-    'measurementexport',
-    new ApplicationMeasurementExportCmd()
-  )
-  addSystemCommand(
-    'measurementimport',
-    'measurementimport',
-    new ApplicationMeasurementImportCmd()
   )
 }

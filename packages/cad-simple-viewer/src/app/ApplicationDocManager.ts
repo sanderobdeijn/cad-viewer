@@ -1,17 +1,14 @@
 import { CommonEventManager, log } from '@mlightcad/common'
 
 import {
-  ApplicationAboutCmd,
   ApplicationArcCmd,
   ApplicationCircleCmd,
-  ApplicationCloseCmd,
   ApplicationCopyCmd,
   ApplicationDimLinearCmd,
   ApplicationEllipseCmd,
   ApplicationEraseCmd,
   ApplicationHideObjectsCmd,
   ApplicationLineCmd,
-  ApplicationLogCmd,
   ApplicationMoveCmd,
   ApplicationOffsetCmd,
   ApplicationPanCmd,
@@ -29,7 +26,6 @@ import {
   ApplicationZoomCmd,
   resetMeasurementSession
 } from '../command'
-import { applicationGetDrawStyleSessionAccessory } from '../command/ApplicationDrawStyleSession'
 import { registerMeasureCommands } from '../command/measure/ApplicationRegisterMeasureCommands'
 import {
   EditorCalculateSizeCallback,
@@ -43,11 +39,9 @@ import { ThreeRendererView2d } from '../view'
 import { ApplicationBusyIndicator } from './ApplicationBusyIndicator'
 import { applicationBindCommandServices } from './ApplicationCommandServices'
 import { ApplicationContext } from './ApplicationContext'
-import { ApplicationDocSession } from './ApplicationDocSession'
-import { APPLICATION_DEFAULT_DOCS_BASE_URL, applicationSetDocsBaseUrl } from './ApplicationDocsUrl'
 import { ApplicationDocument } from './ApplicationDocument'
 import { ApplicationOpenDatabaseOptions } from './ApplicationOpenDatabaseOptions'
-import { APPLICATION_SETTING_COMMANDS, ApplicationSettingManager } from './ApplicationSettingManager'
+import { APPLICATION_SETTING_COMMANDS } from './ApplicationSettingManager'
 import {
   applicationDisposeNotificationService,
   applicationInstallNotificationService,
@@ -134,20 +128,6 @@ export interface ApplicationDocManagerOptions {
   busyIndicatorHost?: HTMLElement
 
   /**
-   * Absolute root URL for user-guide pages (trailing slash optional).
-   * Used by {@link applicationDocsUrl} for in-app help links (e.g. mobile magnifier).
-   * Defaults to {@link APPLICATION_DEFAULT_DOCS_BASE_URL} when omitted.
-   *
-   * @example
-   * ```typescript
-   * ApplicationDocManager.createInstance({
-   *   docsBaseUrl: 'https://example.com/my-product/docs/'
-   * })
-   * ```
-   */
-  docsBaseUrl?: string
-
-  /**
    * Optional command alias overrides.
    *
    * Key is command global name, value is one alias or alias list.
@@ -166,7 +146,7 @@ export interface ApplicationDocManagerOptions {
   /**
    * Built-in notification center.
    *
-   * Notifications are scoped per document session (MDI). The default DOM UI is
+   * The default DOM UI is
    * positioned relative to the canvas host, not the browser window.
    *
    * - omitted / `true`: install event bridge + default DOM bell UI
@@ -187,7 +167,7 @@ export interface ApplicationDocManagerOptions {
         /**
          * Corner for the built-in notification bell.
          *
-         * When omitted: phone `top-right`, pad / desktop `bottom-right`.
+         * When omitted: `bottom-right`.
          * Change later with {@link applicationSetNotificationUiPlacement}.
          */
         placement?: UINotificationBellPlacement
@@ -206,19 +186,10 @@ export interface ApplicationDocManagerOptions {
  * The manager follows a singleton pattern to ensure only one instance manages the application state.
  */
 export class ApplicationDocManager {
-  /** Open document sessions (MDI). The shared view shows {@link _activeSession}. */
-  private _sessions: ApplicationDocSession[] = []
-  /** Session currently bound to the shared view and working database. */
-  private _activeSession!: ApplicationDocSession
-  /** View created at construct time (left pane in split layout). */
+  /** The document and the view it is drawn in. */
+  private _context!: ApplicationContext
+  /** View created at construct time. */
   private _mainView!: ThreeRendererView2d
-  /**
-   * Optional second canvas for split comparison. Each document keeps its
-   * scene on its own renderer — scenes are never moved between views.
-   */
-  private _splitView?: ThreeRendererView2d
-  /** Monotonic id suffix for {@link ApplicationDocSession.id}. */
-  private _nextSessionId = 1
   /** Host element for the busy overlay (e.g. HTML export spinner). */
   private _busyIndicatorHost: HTMLElement
   /** Busy overlay for long-running command operations */
@@ -248,7 +219,6 @@ export class ApplicationDocManager {
     /** Fired when a document becomes active */
     documentActivated: new CommonEventManager<ApplicationDocumentEventArgs>(),
     /** Fired before a document is activated */
-    documentToBeActivated: new CommonEventManager<ApplicationDocumentEventArgs>(),
     /** Fired before a document is closed and destroyed */
     documentToBeDestroyed: new CommonEventManager<ApplicationDocumentEventArgs>(),
     /** Fired after a document has been closed */
@@ -265,7 +235,6 @@ export class ApplicationDocManager {
    * @private
    */
   private constructor(options: ApplicationDocManagerOptions = {}) {
-    applicationSetDocsBaseUrl(options.docsBaseUrl ?? APPLICATION_DEFAULT_DOCS_BASE_URL)
     this._commandAliasOverrides = this.normalizeCommandAliasConfig(
       options.commandAliases
     )
@@ -303,12 +272,7 @@ export class ApplicationDocManager {
       calculateSizeCallback: callback
     })
     this._mainView = view
-    const context = new ApplicationContext(view, doc)
-    this._activeSession = new ApplicationDocSession(
-      `doc-${this._nextSessionId++}`,
-      context
-    )
-    this._sessions = [this._activeSession]
+    this._context = new ApplicationContext(view, doc)
 
     this._commandManager = new EditorCommandStack()
     this.registerCommands()
@@ -381,24 +345,15 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Destroy the view and close all documents
+   * Destroy the view and close the document
    */
   async destroy() {
     // Abort progressive convert before documents go away so in-flight
     // entity commits do not read a torn-down singleton.
     this._mainView.abortConversion()
-    this._splitView?.abortConversion()
 
-    for (const session of [...this._sessions]) {
-      session.context.dispose()
-      session.doc.destroy()
-      if (session.viewState) {
-        this.curView.disposeSessionState(session.viewState)
-      }
-    }
-    this._sessions = []
-    this._splitView?.dispose()
-    this._splitView = undefined
+    this._context.dispose()
+    this._context.doc.destroy()
     this._mainView.dispose()
     applicationDisposeNotificationService()
     ApplicationDocManager._instance = undefined
@@ -412,52 +367,11 @@ export class ApplicationDocManager {
    * @returns The current application context
    */
   get context() {
-    return this._activeSession.context
-  }
-
-  /**
-   * Open document sessions in tab order.
-   */
-  get documents(): ApplicationDocument[] {
-    return this._sessions.map(session => session.doc)
-  }
-
-  /**
-   * Number of open documents.
-   */
-  get documentCount() {
-    return this._sessions.length
-  }
-
-  /**
-   * Session id of the active document, for host UI tabs.
-   */
-  get activeSessionId() {
-    return this._activeSession.id
-  }
-
-  /**
-   * Returns the document at `index`, or undefined when out of range.
-   *
-   * @param index - Zero-based tab order.
-   */
-  document(index: number): ApplicationDocument | undefined {
-    return this._sessions[index]?.doc
-  }
-
-  /**
-   * Finds the session that owns `doc`.
-   *
-   * @param doc - Document to look up.
-   */
-  sessionFor(doc: ApplicationDocument): ApplicationDocSession | undefined {
-    return this._sessions.find(session => session.doc === doc)
+    return this._context
   }
 
   /**
    * Gets the currently open CAD document.
-   *
-   * Same as {@link mdiActiveDocument} — the document bound to the shared view.
    *
    * @returns The current document instance
    */
@@ -466,195 +380,10 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Gets the currently active document.
-   *
-   * @returns The current active document
-   */
-  get mdiActiveDocument() {
-    return this._activeSession.doc
-  }
-
-  /**
-   * Makes `doc` the command target.
-   *
-   * When both documents already have their own canvas (split view), scenes
-   * stay in place. When they share one canvas (tab MDI), the current scene is
-   * parked and the target is restored.
-   *
-   * @param doc - Document to activate.
-   * @returns `false` when `doc` is not an open session.
-   */
-  async activateDocument(doc: ApplicationDocument): Promise<boolean> {
-    const session = this.sessionFor(doc)
-    if (!session) {
-      return false
-    }
-    if (session === this._activeSession) {
-      return true
-    }
-
-    const targetView = session.context.view as ThreeRendererView2d
-    const currentView = this._activeSession.context.view as ThreeRendererView2d
-    await this._commandManager.cancelActive()
-    this.events.documentToBeActivated.dispatch({
-      doc,
-      mode: doc.openMode
-    })
-    if (targetView === currentView) {
-      this.parkActiveSession()
-      this._activeSession = session
-      session.context.resume()
-      if (session.viewState) {
-        this.curView.restoreSessionState(session.viewState)
-        session.viewState = undefined
-      }
-    } else {
-      this._activeSession.context.suspend()
-      this._activeSession = session
-      session.context.resume()
-    }
-    this.setActiveLayout()
-    this.curView.syncDisplaySettings()
-    this.events.documentActivated.dispatch({
-      doc,
-      mode: doc.openMode
-    })
-    this.syncBusyIndicatorHost()
-    return true
-  }
-
-  /**
-   * Canvas created with {@link createInstance} (left pane in a split layout).
+   * Canvas created with {@link createInstance}.
    */
   get mainView(): ThreeRendererView2d {
     return this._mainView
-  }
-
-  /**
-   * Second canvas created by {@link ensureSplitView}, if any.
-   */
-  get splitView(): ThreeRendererView2d | undefined {
-    return this._splitView
-  }
-
-  /**
-   * Creates a second WebGL view in `container` for side-by-side comparison.
-   *
-   * Each document is converted into one view and stays there. Use
-   * {@link openDocument}'s `view` argument to open a file into this canvas,
-   * and {@link activateDocument} to choose which side receives commands.
-   *
-   * @param container - Host element for the second canvas.
-   */
-  ensureSplitView(container: HTMLElement): ThreeRendererView2d {
-    if (!this._splitView) {
-      this._splitView = new ThreeRendererView2d({
-        container,
-        calculateSizeCallback: () => ({
-          width: Math.max(1, container.clientWidth),
-          height: Math.max(1, container.clientHeight)
-        })
-      })
-    } else if (this._splitView.container !== container) {
-      container.appendChild(this._splitView.container)
-    }
-    return this._splitView
-  }
-
-  /**
-   * @deprecated Use {@link ensureSplitView} and open each file into its own view.
-   *
-   * @param container - Host element for the second canvas.
-   */
-  attachSatelliteView(container: HTMLElement, _doc?: ApplicationDocument): boolean {
-    this.ensureSplitView(container)
-    return true
-  }
-
-  /**
-   * @deprecated Split canvases keep rendering; there is nothing to detach.
-   */
-  detachSatelliteView() {
-    return
-  }
-
-  /**
-   * Document currently shown on the split canvas, if a session is bound to it.
-   */
-  get satelliteDocument(): ApplicationDocument | undefined {
-    if (!this._splitView) {
-      return undefined
-    }
-    return this._sessions.find(
-      session => session.context.view === this._splitView
-    )?.doc
-  }
-
-  /**
-   * Closes `doc`, or the active document when omitted.
-   *
-   * Closing the last document replaces it with a new untitled drawing.
-   *
-   * @param doc - Document to close; defaults to {@link curDocument}.
-   * @returns `false` when `doc` is not an open session.
-   */
-  async closeDocument(doc?: ApplicationDocument): Promise<boolean> {
-    const target = doc ?? this.curDocument
-    const session = this.sessionFor(target)
-    if (!session) {
-      return false
-    }
-
-    await this._commandManager.cancelActive()
-    this.events.documentToBeDestroyed.dispatch({
-      doc: target,
-      mode: target.openMode
-    })
-
-    const wasActive = session === this._activeSession
-    const index = this._sessions.indexOf(session)
-
-    if (this._sessions.length === 1) {
-      this.resetActiveSessionToUntitled(session)
-      this.events.documentDestroyed.dispatch({
-        doc: target,
-        mode: target.openMode
-      })
-      this.events.documentCreated.dispatch({
-        doc: this.curDocument,
-        mode: this.curDocument.openMode
-      })
-      this.events.documentActivated.dispatch({
-        doc: this.curDocument,
-        mode: this.curDocument.openMode
-      })
-      return true
-    }
-
-    if (wasActive) {
-      this.parkActiveSession()
-    }
-
-    session.context.dispose()
-    target.destroy()
-    const closedView = session.context.view as ThreeRendererView2d
-    if (session.viewState) {
-      closedView.disposeSessionState(session.viewState)
-      session.viewState = undefined
-    } else {
-      closedView.clear()
-    }
-    this._sessions.splice(index, 1)
-    this.events.documentDestroyed.dispatch({
-      doc: target,
-      mode: target.openMode
-    })
-
-    if (wasActive) {
-      const next = this._sessions[Math.min(index, this._sessions.length - 1)]
-      await this.activateDocument(next.doc)
-    }
-    return true
   }
 
   /**
@@ -685,13 +414,6 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Color / font-size session accessory for measurement drawing.
-   */
-  get drawStyleSessionAccessory() {
-    return applicationGetDrawStyleSessionAccessory(this._mainView)
-  }
-
-  /**
    * Creates a blank drawing in a new document session (or reuses the current
    * unused Untitled). The new drawing is presented as unsaved.
    *
@@ -708,13 +430,13 @@ export class ApplicationDocManager {
       ...options,
       mode: EditorOpenMode.Write
     })
-    const created = await this.ensureOpenSession()
-    this.onBeforeOpenDocument(openOptions, !created)
+    const replaced = !this.curDocument.isReusableUntitled
+    if (replaced) {
+      this.resetDrawing()
+    }
+    this.onBeforeOpenDocument(openOptions, !replaced)
     const isSuccess = await this.context.doc.createNewDrawing(openOptions)
     this.onAfterOpenDocument(isSuccess, openOptions)
-    if (!isSuccess && created) {
-      await this.closeFailedOpenSession()
-    }
     return isSuccess
   }
 
@@ -827,24 +549,18 @@ export class ApplicationDocManager {
       )
     }
 
-    addSystemCommand('about', 'about', new ApplicationAboutCmd())
     addSystemCommand('arc', 'arc', new ApplicationArcCmd())
     addSystemCommand('circle', 'circle', new ApplicationCircleCmd())
-    addSystemCommand('close', 'close', new ApplicationCloseCmd())
     addSystemCommand('ellipse', 'ellipse', new ApplicationEllipseCmd())
     addSystemCommand('erase', 'erase', new ApplicationEraseCmd())
     addSystemCommand('hideobjects', 'hideobjects', new ApplicationHideObjectsCmd())
     addSystemCommand('dimlinear', 'dimlinear', new ApplicationDimLinearCmd())
-    registerMeasureCommands(addSystemCommand, {
-      view: this._mainView,
-      commandManager: this._commandManager
-    })
+    registerMeasureCommands(addSystemCommand)
     addSystemCommand('line', 'line', new ApplicationLineCmd())
     addSystemCommand('copy', 'copy', new ApplicationCopyCmd())
     addSystemCommand('move', 'move', new ApplicationMoveCmd())
     addSystemCommand('offset', 'offset', new ApplicationOffsetCmd())
     addSystemCommand('rotate', 'rotate', new ApplicationRotateCmd())
-    addSystemCommand('log', 'log', new ApplicationLogCmd())
     addSystemCommand('pan', 'pan', new ApplicationPanCmd())
     addSystemCommand('point', 'point', new ApplicationPointCmd())
     addSystemCommand('polygon', 'polygon', new ApplicationPolygonCmd())
@@ -1058,8 +774,7 @@ export class ApplicationDocManager {
     await this._commandManager.cancelActive()
 
     // markActive must run before trigger(): the first getPoint prompt is
-    // opened synchronously until the first await, and the mobile session
-    // accessory reads commandManager.activeCommand.
+    // opened synchronously until the first await.
     await this._commandManager.runActive(cmd, this.curView, async () => {
       try {
         await cmd.trigger(this.context)
@@ -1181,16 +896,14 @@ export class ApplicationDocManager {
       this.regen()
       return
     }
-    const session = this._activeSession
-    const view = session.context.view as ThreeRendererView2d
-    session.doc.destroy()
+    const doc = this.curDocument
+    const view = this.curView
+    doc.destroy()
     view.addModelSpace()
     this.setActiveLayout(view)
     view.syncDisplaySettings()
-    view.renderer.showLineWeight =
-      ApplicationSettingManager.instance.get('lineWeightDisplay')
     this.events.documentActivated.dispatch({
-      doc: session.doc,
+      doc,
       mode: this.getDocumentEventMode(options)
     })
     if (options?.progressiveRendering ?? false) {
@@ -1263,9 +976,7 @@ export class ApplicationDocManager {
   /**
    * Moves busy/open-file overlays onto `host`.
    *
-   * In split view the host is overridden to the canvas being opened or focused.
-   *
-   * @param host - Default overlay parent when not in split view.
+   * @param host - Overlay parent.
    */
   setBusyIndicatorHost(host: HTMLElement): void {
     this._busyIndicatorHost = host
@@ -1273,13 +984,10 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Pins the busy overlay to the active canvas when a split view exists.
+   * Moves the busy overlay to its host.
    */
   private syncBusyIndicatorHost(): void {
-    const host = this._splitView
-      ? this.curView.container
-      : this._busyIndicatorHost
-    this._busyIndicator.setHost(host)
+    this._busyIndicator.setHost(this._busyIndicatorHost)
   }
 
   /**
@@ -1314,87 +1022,30 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Parks the live view onto the active session so another document can take the canvas.
+   * Replaces the drawing with a new, empty one in the same view.
    */
-  private parkActiveSession() {
-    this._activeSession.context.suspend()
-    this._activeSession.viewState = this.curView.captureSessionState()
-  }
-
-  /**
-   * Reuses an Untitled on `targetView` when it has no file identity and no
-   * entities; otherwise creates a new session on that view.
-   *
-   * When `targetView` is a different canvas (split comparison), the current
-   * view keeps rendering — GPU scenes are never moved between renderers.
-   *
-   * @param targetView - Canvas that will receive the open; defaults to {@link curView}.
-   * @returns True when a new session was created.
-   */
-  private async ensureOpenSession(targetView?: ThreeRendererView2d): Promise<boolean> {
-    const view = targetView ?? this.curView
-
-    if (view === this.curView && this.curDocument.isReusableUntitled) {
-      return false
-    }
-
-    const occupant = this._sessions.find(
-      session => session.context.view === view
-    )
-    if (occupant?.doc.isReusableUntitled) {
-      if (occupant !== this._activeSession) {
-        await this.activateDocument(occupant.doc)
-      }
-      return false
-    }
-
-    await this._commandManager.cancelActive()
-    this._activeSession.context.suspend()
-    if (view === this.curView) {
-      this._activeSession.viewState = this.curView.beginNewSession()
-    }
-
+  private resetDrawing() {
+    const oldDoc = this.curDocument
+    this.events.documentToBeDestroyed.dispatch({
+      doc: oldDoc,
+      mode: oldDoc.openMode
+    })
+    oldDoc.modelSync.dispose()
+    resetMeasurementSession()
+    const view = this.curView
+    view.clear()
+    view.addModelSpace()
+    this._context.dispose()
+    oldDoc.destroy()
+    this.events.documentDestroyed.dispatch({
+      doc: oldDoc,
+      mode: oldDoc.openMode
+    })
     const doc = new ApplicationDocument()
-    const context = new ApplicationContext(view, doc)
-    const session = new ApplicationDocSession(`doc-${this._nextSessionId++}`, context)
-    this._sessions.push(session)
-    this._activeSession = session
+    this._context = new ApplicationContext(view, doc)
     this.events.documentCreated.dispatch({
       doc,
       mode: doc.openMode
     })
-    return true
-  }
-
-  /**
-   * Drops a session created for an open that failed before activation completed.
-   */
-  private async closeFailedOpenSession() {
-    if (this._sessions.length <= 1) {
-      return
-    }
-    await this.closeDocument(this.curDocument)
-  }
-
-  /**
-   * Replaces the last remaining session with a fresh Untitled drawing.
-   *
-   * @param session - The only remaining session to recycle.
-   */
-  private resetActiveSessionToUntitled(session: ApplicationDocSession) {
-    const oldDoc = session.doc
-    resetMeasurementSession()
-    this.curView.clear()
-    this.curView.addModelSpace()
-    session.context.dispose()
-    oldDoc.destroy()
-    const doc = new ApplicationDocument()
-    const context = new ApplicationContext(this.curView, doc)
-    const replacement = new ApplicationDocSession(
-      `doc-${this._nextSessionId++}`,
-      context
-    )
-    this._sessions = [replacement]
-    this._activeSession = replacement
   }
 }

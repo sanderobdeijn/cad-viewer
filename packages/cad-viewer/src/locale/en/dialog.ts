@@ -4,10 +4,6 @@ export default {
     cancel: 'Cancel',
     apply: 'Apply'
   },
-  pointStyleDlg: {
-    title: 'Point Style',
-    pointSize: 'Point Size:'
-  },
   drawingUnitsDlg: {
     title: 'Drawing Units',
     lengthSection: 'Length',
@@ -63,11 +59,6 @@ export default {
       _23: 'US Survey Yard',
       _24: 'US Survey Mile'
     }
-  },
-  colorPickerDlg: {
-    title: 'Select Color',
-    aciTabTitle: 'Color Index',
-    rgbTabTitle: 'True Color'
   },
   textStyleDlg: {
     title: 'Text Style',

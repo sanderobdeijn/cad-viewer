@@ -35,7 +35,6 @@ import {
 } from '../overlay/ApplicationHtmlLivePreview'
 import {
   APPLICATION_OVERLAY_ARROW_SIZE_PX,
-  applicationSyncLiveOverlayTextHeight
 } from '../overlay/ApplicationOverlayDrawUtil'
 import { ApplicationMeasureDrawCmd } from './ApplicationMeasureDrawCmd'
 import { MEASUREMENT_LIVE_LAYER } from './ApplicationMeasurementStore'
@@ -49,7 +48,7 @@ function calcDist(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike): number {
 }
 
 /**
- * Commit a distance measurement overlay (also used when importing a sidecar).
+ * Commit a distance measurement overlay.
  */
 export function placeDistanceMeasurement(
   view: ThreeRendererView2d,
@@ -94,11 +93,6 @@ export class ApplicationMeasureDistanceJig extends EditorPreviewJig<GeometryPoin
       fontSize: applicationGetMeasurementFontSize()
     })
     this._htManager.add(this._badge)
-    applicationSyncLiveOverlayTextHeight(
-      this._view,
-      [this._badge],
-      applicationGetCurrentMeasurementStyle()
-    )
     // `add()` applies layout visibility and would force the empty capsule on.
     this._badge.object.visible = false
 
@@ -165,10 +159,6 @@ export class ApplicationMeasureDistanceJig extends EditorPreviewJig<GeometryPoin
       )
     })
     this._badge.setFontSize(fontSize)
-    applicationSyncLiveOverlayTextHeight(this._view, [this._badge], {
-      ...style,
-      fontSize
-    })
     this._badge.setText(label)
     this._badge.setPosition({
       x: (this._p1.x + p2.x) / 2,

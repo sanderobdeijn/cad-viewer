@@ -126,7 +126,7 @@ export class ApplicationMeasureDistanceEntity extends ApplicationMeasureEntity {
   }
 
   /**
-   * Serializes this distance measurement to a store/sidecar record.
+   * Serializes this distance measurement to a store record.
    *
    * @param layoutId - Optional layout BTR id written onto the record
    * @param view - Optional view used to convert screen style to WCS
@@ -195,7 +195,7 @@ export class ApplicationMeasureDistanceEntity extends ApplicationMeasureEntity {
     })
     const label = formatMeasurementLength(dist)
     // Fit-to-screen: shrink the capsule when it would cover more than half the
-    // segment so both side lines stay visible. Sidecar / custom WCS is kept.
+    // segment so both side lines stay visible. A custom WCS size is kept.
     const importedTextHeight =
       this.textHeightWcs != null && this.textHeightWcs > 0
         ? this.textHeightWcs
@@ -203,24 +203,16 @@ export class ApplicationMeasureDistanceEntity extends ApplicationMeasureEntity {
     let badgeFontSize = this.style.fontSize
     let textHeightWcs = importedTextHeight
     if (importedTextHeight == null) {
-      if (
-        this.style.textHeightMode === 'custom' &&
-        this.style.textHeightWcs != null &&
-        this.style.textHeightWcs > 0
-      ) {
-        textHeightWcs = this.style.textHeightWcs
-      } else {
-        badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
-          label,
-          this.style,
-          applicationScreenSegmentLengthPx(
-            p => view.worldToScreen(p),
-            live.start,
-            live.end
-          )
+      badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
+        label,
+        this.style,
+        applicationScreenSegmentLengthPx(
+          p => view.worldToScreen(p),
+          live.start,
+          live.end
         )
-        textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
-      }
+      )
+      textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
     }
     // Keep endpoint arrows in proportion when Fit-to-screen font is clamped.
     let arrowSizeWcs =
@@ -243,9 +235,9 @@ export class ApplicationMeasureDistanceEntity extends ApplicationMeasureEntity {
       layer: MEASUREMENT_LAYER,
       fontSize: badgeFontSize
     })
-    const sidecar = this.serializeStyle(view)
+    const recordStyle = this.serializeStyle(view)
     applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: textHeightWcs ?? sidecar.textHeightWcs,
+      textHeightWcs: textHeightWcs ?? recordStyle.textHeightWcs,
       strokeWidthWcs: this.strokeWidthWcs,
       arrowSizeWcs,
       fontSizePx: badgeFontSize,

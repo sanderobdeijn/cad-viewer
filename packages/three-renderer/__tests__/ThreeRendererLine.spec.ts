@@ -28,7 +28,7 @@ function findLargeCoordinateLineDrawable(group: ThreeRendererBatchedGroup) {
     if (drawable) {
       return
     }
-    if (child instanceof THREE.LineSegments || child instanceof LineSegments2) {
+    if (child instanceof THREE.LineSegments) {
       if (Math.abs(child.position.x) >= RTE_REBASE_THRESHOLD) {
         drawable = child
       }
@@ -71,8 +71,7 @@ describe('ThreeRendererLine', () => {
         { x: 10, y: 0 }
       ],
       defaultTraits,
-      context,
-      false
+      context
     )
 
     expect(line.resolveDrawMode()).toBe('unbatch')
@@ -89,8 +88,7 @@ describe('ThreeRendererLine', () => {
         { x: 10, y: 0 }
       ],
       defaultTraits,
-      context,
-      false
+      context
     )
 
     expect(line.resolveDrawMode()).toBe('batch')
@@ -144,8 +142,7 @@ describe('ThreeRendererLine wcsBbox', () => {
         { x: 13, y: 14 }
       ],
       defaultTraits,
-      new ThreeRendererRenderContext(),
-      false
+      new ThreeRendererRenderContext()
     )
 
     expectWcsBboxCloseTo(line.wcsBbox, [3, 4, 0], [13, 14, 0])

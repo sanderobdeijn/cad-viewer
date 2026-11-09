@@ -1,13 +1,10 @@
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import {
   batchOriginOffsetDistance,
   canMergeIntoBatchOrigin
 } from '../draw/ThreeRendererBatchDrawPolicy'
-import { ThreeRendererPointSymbolCreator } from '../geometry/ThreeRendererPointSymbolCreator'
 import { ThreeRendererEntity } from '../object'
 import {
   getMaterialMetadata,
@@ -31,7 +28,6 @@ import {
   type ThreeRendererHighlightOverlayGroup} from '../util/ThreeRendererObjectUserData'
 import {
   isThreeLineSegments,
-  isThreeLineSegments2,
   isThreeMesh,
   isThreePoints
 } from '../util/ThreeRendererThreeObjectGuards'
@@ -42,7 +38,6 @@ import {
   type ThreeRendererBatchHighlightState} from './highlight'
 import { ThreeRendererBatchGeometryUserData } from './ThreeRendererBatchedGeometryInfo'
 import { ThreeRendererBatchedLine } from './ThreeRendererBatchedLine'
-import { ThreeRendererBatchedLine2 } from './ThreeRendererBatchedLine2'
 import { ThreeRendererBatchedMesh } from './ThreeRendererBatchedMesh'
 import { ThreeRendererBatchedPoint } from './ThreeRendererBatchedPoint'
 import {
@@ -100,7 +95,6 @@ function applyDrawOrderZ(
  */
 export type ThreeRendererBatchedObject =
   | ThreeRendererBatchedLine
-  | ThreeRendererBatchedLine2
   | ThreeRendererBatchedMesh
 
 /**
@@ -114,7 +108,6 @@ export type ThreeRendererBatchedObject =
  */
 type ThreeRendererOriginBatch =
   | ThreeRendererBatchedLine
-  | ThreeRendererBatchedLine2
   | ThreeRendererBatchedMesh
   | ThreeRendererBatchedPoint
 
@@ -300,12 +293,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
    */
   private _lineWithIndexBatches: ThreeRendererOriginBatchMap<ThreeRendererBatchedLine>
   /**
-   * Batched line map for wide lines rendered as THREE.LineSegments2.
-   * - the key is material id
-   * - the value is one or more batched line2 containers split by world origin
-   */
-  private _line2Batches: ThreeRendererOriginBatchMap<ThreeRendererBatchedLine2>
-  /**
    * Batched mesh map for meshes without vertex index.
    * - the key is material id
    * - the value is one or more batched meshes split by world origin
@@ -388,7 +375,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     this._pointSymbolBatches = new Map()
     this._lineBatches = new Map()
     this._lineWithIndexBatches = new Map()
-    this._line2Batches = new Map()
     this._meshBatches = new Map()
     this._meshWithIndexBatches = new Map()
     this._entitiesMap = new Map()
@@ -447,14 +433,11 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         },
         nonIndexed: {
           count:
-            this.countBatchContainers(this._lineBatches) +
-            this.countBatchContainers(this._line2Batches),
+            this.countBatchContainers(this._lineBatches),
           geometrySize:
-            this.getBatchedGeometrySize(this._lineBatches) +
-            this.getBatchedGeometrySize(this._line2Batches),
+            this.getBatchedGeometrySize(this._lineBatches),
           mappingSize:
-            this.getBatchedGeometryMappingSize(this._lineBatches) +
-            this.getBatchedGeometryMappingSize(this._line2Batches)
+            this.getBatchedGeometryMappingSize(this._lineBatches)
         }
       },
       point: {
@@ -492,82 +475,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Rebuilds point-symbol batches for a new point display mode and size.
-   *
-   * @param displayMode - `PDMODE` value.
-   * @param displaySize - `PDSIZE` value used to scale unit symbol templates.
-   */
-  rerenderPoints(displayMode: number, displaySize: number = 0) {
-    const creator = ThreeRendererPointSymbolCreator.instance
-    const pointSymbol = creator.create(displayMode, { x: 0, y: 0 }, displaySize)
-
-    if (pointSymbol.line) {
-      this._pointSymbolBatches.forEach(batches => {
-        batches.forEach(item => {
-          item.resetGeometry(displayMode, displaySize)
-        })
-      })
-    }
-
-    const isShowPoint = pointSymbol.point != null
-    this._pointBatches.forEach(batches => {
-      batches.forEach(item => {
-        item.visible = isShowPoint
-      })
-    })
-  }
-
-  /**
-   * Collects world-space AABBs for point and point-symbol batch slots.
-   *
-   * Used after {@link rerenderPoints} so layouts can refresh spatial-index
-   * boxes when `PDMODE` / `PDSIZE` change marker size.
-   *
-   * @param out - Map of object id to world AABB; values are unioned when the
-   *   same id appears in multiple slots.
-   * @returns The same map instance passed in {@link out}.
-   */
-  collectPointObjectWorldBoxes(
-    out: Map<string, THREE.Box3> = new Map()
-  ): Map<string, THREE.Box3> {
-    const scratch = new THREE.Box3()
-
-    const absorbBatch = (batch: ThreeRendererBatchedLine | ThreeRendererBatchedPoint) => {
-      batch.updateMatrixWorld(true)
-      for (let i = 0; i < batch.geometryCount; i++) {
-        let info: { objectId?: string; vertexCount: number }
-        try {
-          info = batch.getGeometryAt(i)
-        } catch {
-          continue
-        }
-        if (!info.objectId || info.vertexCount <= 0) {
-          continue
-        }
-        if (!batch.getBoundingBoxAt(i, scratch)) {
-          continue
-        }
-        scratch.applyMatrix4(batch.matrixWorld)
-        const existing = out.get(info.objectId)
-        if (existing) {
-          existing.union(scratch)
-        } else {
-          out.set(info.objectId, scratch.clone())
-        }
-      }
-    }
-
-    this._pointSymbolBatches.forEach(batches => {
-      batches.forEach(absorbBatch)
-    })
-    this._pointBatches.forEach(batches => {
-      batches.forEach(absorbBatch)
-    })
-
-    return out
-  }
-
-  /**
    * Computes axis-aligned bounds from packed batch vertex data and visible
    * unbatched drawables. Prefer this over entity-level bounding boxes when
    * framing the view — it reflects what is actually rendered in GPU buffers.
@@ -592,7 +499,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
 
     unionBatchMap(this._lineBatches)
     unionBatchMap(this._lineWithIndexBatches)
-    unionBatchMap(this._line2Batches)
     unionBatchMap(this._meshBatches)
     unionBatchMap(this._meshWithIndexBatches)
     unionBatchMap(this._pointBatches)
@@ -909,19 +815,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         )
         // The leaf itself is instanced, but complex linetypes hang off it as
         // children and still need their own slots.
-      } else if (isThreeLineSegments2(object)) {
-        // Duck-type across duplicate three.js copies.
-        // `instanceof` silently drops glyph LineSegments/Meshes — see
-        // ThreeRendererThreeObjectGuards.
-        const item = this.addLine2(object, {
-          objectId,
-          bboxIntersectionCheck: bboxIntersectionCheck
-        })
-        if (item) {
-          appendedSlots.push(item)
-          this.applyBatchSlotVisibility(item, entityVisible && object.visible)
-        }
-        return
       } else if (isThreeLineSegments(object)) {
         const item = this.addLine(object, {
           position: drawableUserData.position,
@@ -1016,50 +909,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     )
 
     const geometryId = batchedLine.addGeometry(geometry, -1, -1, worldOffset)
-    batchedLine.setGeometryInfo(geometryId, { objectId: options.objectId })
-
-    const item: ThreeRendererEntityInBatchedObject = {
-      batchedObjectId: batchedLine.id,
-      batchId: geometryId
-    }
-    // Visible was already gated above; remaining cases are visible.
-    this.registerDirectAppend(options.objectId, item, true)
-    return true
-  }
-
-  /**
-   * Appends pre-built fat-line geometry directly into a `LineSegments2` batch
-   * without creating a temporary {@link LineSegments2} / `ThreeRendererLine`.
-   *
-   * Geometry must already be in local coordinates relative to `worldOffset`.
-   * The caller must dispose the geometry afterward.
-   *
-   * @returns `false` when `visible` is false or append fails.
-   */
-  appendLine2Geometry(
-    geometry: LineSegmentsGeometry,
-    material: THREE.Material,
-    worldOffset: THREE.Vector3,
-    options: ThreeRendererDirectAppendOptions
-  ): boolean {
-    if (options.visible === false) {
-      return false
-    }
-
-    applyDrawOrderZ(worldOffset, material)
-
-    const batchedLine = this.resolveOriginBatch(
-      this._line2Batches,
-      material.id,
-      worldOffset,
-      () =>
-        new ThreeRendererBatchedLine2(
-          ThreeRendererBatchedGroup.INITIAL_LINE_VERTEX_CAPACITY,
-          this.createOwnedBatchMaterial(material)
-        )
-    )
-
-    const geometryId = batchedLine.addGeometry(geometry, -1, worldOffset)
     batchedLine.setGeometryInfo(geometryId, { objectId: options.objectId })
 
     const item: ThreeRendererEntityInBatchedObject = {
@@ -1549,7 +1398,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     return [
       this._lineBatches,
       this._lineWithIndexBatches,
-      this._line2Batches,
       this._meshBatches,
       this._meshWithIndexBatches,
       this._pointBatches,
@@ -1616,7 +1464,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         overlayUserData.objectId = objectId
         overlayUserData.batchedObjectId = item.batchedObjectId
         overlayUserData.disposeGeometryOnRemove =
-          batchedObject instanceof ThreeRendererBatchedLine2 ||
           batchedObject instanceof ThreeRendererSharedGeometryBatch
         overlayUserData.previewDrawable = options.mode === 'preview'
         object.renderOrder = containerGroup.renderOrder
@@ -1802,7 +1649,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   private sharedGeometryKind(
     object: THREE.Object3D
   ): ThreeRendererSharedGeometryKind | null {
-    if (isThreeLineSegments2(object)) return 'line2'
     if (isThreeLineSegments(object)) return 'line'
     if (isThreeMesh(object)) return 'mesh'
     if (isThreePoints(object)) return 'points'
@@ -1922,48 +1768,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
       return null
     }
     const geometryId = batchedLine.addGeometry(geometry, -1, -1, worldOffset)
-    batchedLine.setGeometryInfo(geometryId, userData)
-    geometry.dispose()
-
-    return {
-      batchedObjectId: batchedLine.id,
-      batchId: geometryId
-    }
-  }
-
-  /**
-   * Adds one `LineSegments2` object into wide-line batch.
-   */
-  private addLine2(
-    object: LineSegments2,
-    userData: ThreeRendererBatchGeometryUserData
-  ): ThreeRendererEntityInBatchedObject | null {
-    const material = object.material as THREE.Material
-    const worldOffset = new THREE.Vector3().setFromMatrixPosition(
-      object.matrixWorld
-    )
-    applyDrawOrderZ(worldOffset, material)
-    const batchedLine = this.resolveOriginBatch(
-      this._line2Batches,
-      material.id,
-      worldOffset,
-      () =>
-        new ThreeRendererBatchedLine2(
-          ThreeRendererBatchedGroup.INITIAL_LINE_VERTEX_CAPACITY,
-          this.createOwnedBatchMaterial(material)
-        )
-    )
-
-    const matrixNoTranslation = object.matrixWorld.clone()
-    matrixNoTranslation.setPosition(0, 0, 0)
-    const geometry = this.cloneLineSegments2Geometry(
-      object,
-      matrixNoTranslation
-    )
-    if (!geometry) {
-      return null
-    }
-    const geometryId = batchedLine.addGeometry(geometry, -1, worldOffset)
     batchedLine.setGeometryInfo(geometryId, userData)
     geometry.dispose()
 
@@ -2458,9 +2262,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   private getDrawableGeometry(
     object: THREE.Object3D
   ): THREE.BufferGeometry | undefined {
-    if (object instanceof LineSegments2) {
-      return object.geometry as THREE.BufferGeometry
-    }
     if (
       object instanceof THREE.Mesh ||
       object instanceof THREE.LineSegments ||
@@ -2527,60 +2328,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     cloned.matrix.copy(source.matrixWorld)
     cloned.matrixWorld.copy(source.matrixWorld)
     cloned.matrixWorldNeedsUpdate = false
-  }
-
-  /**
-   * Clones `LineSegments2` geometry and bakes non-translation transforms.
-   */
-  private cloneLineSegments2Geometry(
-    object: LineSegments2,
-    transform: THREE.Matrix4
-  ): LineSegmentsGeometry | null {
-    const source = object.geometry as LineSegmentsGeometry
-    const instanceStart = source.getAttribute('instanceStart')
-    const instanceEnd = source.getAttribute('instanceEnd')
-    const count = instanceStart.count
-    const segmentPositions: number[] = []
-
-    for (let i = 0; i < count; i++) {
-      _v1.fromBufferAttribute(instanceStart, i).applyMatrix4(transform)
-      _v2.fromBufferAttribute(instanceEnd, i).applyMatrix4(transform)
-      if (
-        !Number.isFinite(_v1.x) ||
-        !Number.isFinite(_v1.y) ||
-        !Number.isFinite(_v1.z) ||
-        !Number.isFinite(_v2.x) ||
-        !Number.isFinite(_v2.y) ||
-        !Number.isFinite(_v2.z)
-      ) {
-        continue
-      }
-      segmentPositions.push(_v1.x, _v1.y, _v1.z, _v2.x, _v2.y, _v2.z)
-    }
-
-    if (segmentPositions.length < 6) {
-      return null
-    }
-
-    const geometry = new LineSegmentsGeometry()
-    geometry.setPositions(new Float32Array(segmentPositions))
-    if (source.hasAttribute('instanceColorStart')) {
-      geometry.setAttribute(
-        'instanceColorStart',
-        source.getAttribute('instanceColorStart').clone()
-      )
-      geometry.setAttribute(
-        'instanceColorEnd',
-        source.getAttribute('instanceColorEnd').clone()
-      )
-    }
-    // Note: dash distance attributes are not cloned here. The wide-line
-    // batch (ThreeRendererBatchedLine2) owns distance maintenance and restarts the
-    // dash phase at each packed entity, which also covers geometries
-    // entering via appendLine2Geometry.
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(geometry)
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingSphere(geometry)
-    return geometry
   }
 
   /**
@@ -2725,9 +2472,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
    * Returns true when object should be counted as line-like for stats.
    */
   private isLineObject(object: THREE.Object3D): boolean {
-    if (object instanceof THREE.Line) return true
-    return !!(object as THREE.Object3D & { isLineSegments2?: boolean })
-      .isLineSegments2
+    return object instanceof THREE.Line
   }
 
   /**
@@ -2744,7 +2489,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
 /**
  * Disposes one preview subset tree created by {@link ThreeRendererBatchedGroup.createPreviewSubset}.
  *
- * Shared batch template buffers are never disposed. Overlay clones (Line2
+ * Shared batch template buffers are never disposed. Overlay clones (
  * sub-geometry and shared-instance previews) are released with the subset.
  *
  * @param group - Preview subset root group to dispose
@@ -2810,6 +2555,5 @@ function hasPreviewDrawableGeometry(
 }
 
 const _v1 = /*@__PURE__*/ new THREE.Vector3()
-const _v2 = /*@__PURE__*/ new THREE.Vector3()
 const _intersectBox = /*@__PURE__*/ new THREE.Box3()
 const _intersectScratchBox = /*@__PURE__*/ new THREE.Box3()

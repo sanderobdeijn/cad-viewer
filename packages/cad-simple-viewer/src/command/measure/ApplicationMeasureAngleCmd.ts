@@ -29,7 +29,6 @@ import {
   ApplicationHtmlLivePreview,
   applicationStrokeLiveSegment
 } from '../overlay/ApplicationHtmlLivePreview'
-import { applicationSyncLiveOverlayTextHeight } from '../overlay/ApplicationOverlayDrawUtil'
 import { ApplicationMeasureDrawCmd } from './ApplicationMeasureDrawCmd'
 import { MEASUREMENT_LIVE_LAYER } from './ApplicationMeasurementStore'
 import { ApplicationMeasureAngleEntity } from './entity'
@@ -51,7 +50,7 @@ function calcAngleDeg(
 }
 
 /**
- * Commit an angle measurement overlay (also used when importing a sidecar).
+ * Commit an angle measurement overlay.
  */
 export function placeAngleMeasurement(
   view: ThreeRendererView2d,
@@ -157,11 +156,6 @@ class ApplicationMeasureAngleJig extends EditorPreviewJig<GeometryPoint2dLike> {
       transform: 'translate(-50%, calc(-50% - 30px))'
     })
     this._htManager.add(this._badge)
-    applicationSyncLiveOverlayTextHeight(
-      this._view,
-      [this._badge],
-      applicationGetCurrentMeasurementStyle()
-    )
     this._badge.object.visible = false
 
     this._preview = new ApplicationHtmlLivePreview(
@@ -216,10 +210,6 @@ class ApplicationMeasureAngleJig extends EditorPreviewJig<GeometryPoint2dLike> {
       )
     )
     this._badge.setFontSize(fontSize)
-    applicationSyncLiveOverlayTextHeight(this._view, [this._badge], {
-      ...style,
-      fontSize
-    })
     this._badge.setText(label)
     this._badge.setPosition(this._vertex)
     this._badge.object.visible = true

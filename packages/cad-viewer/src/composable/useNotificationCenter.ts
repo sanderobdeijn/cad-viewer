@@ -31,97 +31,50 @@ export function groupNotifications(
 }
 
 /**
- * Singleton service that stores notifications **per document session** (MDI).
+ * Singleton service that stores notifications.
  *
- * {@link useNotificationCenter} exposes only the active session's list as Vue
- * refs so the panel and status-bar badge update when switching documents.
+ * {@link useNotificationCenter} exposes the list as Vue refs so the panel and
+ * status-bar badge update.
  */
 class NotificationCenter {
-  private buckets = ref<Record<string, Notification[]>>({})
-  private activeSessionId = ref<string | null>(null)
+  private items = ref<Notification[]>([])
   private nextId = 1
 
-  private listFor(sessionId: string | null): Notification[] {
-    if (sessionId == null) return []
-    return this.buckets.value[sessionId] ?? []
-  }
-
-  private setList(sessionId: string, list: Notification[]) {
-    const next = { ...this.buckets.value }
-    if (list.length === 0) {
-      delete next[sessionId]
-    } else {
-      next[sessionId] = list
-    }
-    this.buckets.value = next
-  }
-
   get allNotifications() {
-    return computed(() => this.listFor(this.activeSessionId.value))
+    return computed(() => this.items.value)
   }
 
   get unreadCount() {
-    return computed(() => this.listFor(this.activeSessionId.value).length)
+    return computed(() => this.items.value.length)
   }
 
   get hasNotifications() {
-    return computed(() => this.listFor(this.activeSessionId.value).length > 0)
+    return computed(() => this.items.value.length > 0)
   }
 
-  setActiveSession(sessionId: string | null) {
-    this.activeSessionId.value = sessionId
-  }
-
-  clearSession(sessionId: string) {
-    if (!(sessionId in this.buckets.value)) return
-    const next = { ...this.buckets.value }
-    delete next[sessionId]
-    this.buckets.value = next
-  }
-
-  /**
-   * Clears every session bucket. Used when the viewer unmounts so a remount
-   * with reused session ids (e.g. `doc-1`) does not show stale alerts.
-   */
+  /** Clears every notification and resets ids when the viewer unmounts. */
   dispose() {
-    this.buckets.value = {}
-    this.activeSessionId.value = null
+    this.items.value = []
     this.nextId = 1
   }
 
   add(notification: Omit<Notification, 'id' | 'timestamp'>) {
-    const sessionId = notification.sessionId ?? this.activeSessionId.value
-    if (sessionId == null) {
-      return ''
-    }
-
     const newNotification: Notification = {
       ...notification,
-      sessionId,
       id: `notification-${this.nextId++}`,
       timestamp: new Date()
     }
 
-    this.setList(sessionId, [newNotification, ...this.listFor(sessionId)])
+    this.items.value = [newNotification, ...this.items.value]
     return newNotification.id
   }
 
   remove(id: string) {
-    for (const sessionId of Object.keys(this.buckets.value)) {
-      const list = this.buckets.value[sessionId]
-      const index = list.findIndex(n => n.id === id)
-      if (index < 0) continue
-      const next = list.slice()
-      next.splice(index, 1)
-      this.setList(sessionId, next)
-      return
-    }
+    this.removeWhere(notification => notification.id === id)
   }
 
   clear() {
-    const sessionId = this.activeSessionId.value
-    if (sessionId == null) return
-    this.clearSession(sessionId)
+    this.items.value = []
   }
 
   clearAll() {
@@ -129,12 +82,7 @@ class NotificationCenter {
   }
 
   removeWhere(predicate: (notification: Notification) => boolean) {
-    const sessionId = this.activeSessionId.value
-    if (sessionId == null) return
-    const list = this.listFor(sessionId)
-    const next = list.filter(notification => !predicate(notification))
-    if (next.length === list.length) return
-    this.setList(sessionId, next)
+    this.items.value = this.items.value.filter(n => !predicate(n))
   }
 
   removeBySource(source: NotificationSource) {
@@ -192,9 +140,6 @@ export function useNotificationCenter() {
     notifications: notificationCenter.allNotifications,
     unreadCount: notificationCenter.unreadCount,
     hasNotifications: notificationCenter.hasNotifications,
-    setActiveSession:
-      notificationCenter.setActiveSession.bind(notificationCenter),
-    clearSession: notificationCenter.clearSession.bind(notificationCenter),
     dispose: notificationCenter.dispose.bind(notificationCenter),
     add: notificationCenter.add.bind(notificationCenter),
     remove: notificationCenter.remove.bind(notificationCenter),

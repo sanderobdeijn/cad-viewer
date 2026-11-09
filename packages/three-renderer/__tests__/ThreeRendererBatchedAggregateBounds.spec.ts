@@ -1,10 +1,7 @@
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { isBatchGeometryActive } from '../src/batch/ThreeRendererBatchedGeometryInfo'
 import { ThreeRendererBatchedLine } from '../src/batch/ThreeRendererBatchedLine'
-import { ThreeRendererBatchedLine2 } from '../src/batch/ThreeRendererBatchedLine2'
 import { ThreeRendererBatchedMesh } from '../src/batch/ThreeRendererBatchedMesh'
 import { ThreeRendererBatchedPoint } from '../src/batch/ThreeRendererBatchedPoint'
 
@@ -88,19 +85,6 @@ const SEGMENTS: Array<[number, number, number, number]> = (() => {
   }
   return segments
 })()
-
-function buildLine2Batch() {
-  const batch = new ThreeRendererBatchedLine2(1000, new LineMaterial())
-  SEGMENTS.forEach(([x, y, dx, dy], index) => {
-    const geometry = new LineSegmentsGeometry()
-    const z = index % 3 === 0 ? 0 : index
-    geometry.setPositions([x, y, z, x + dx, y + dy, z])
-    batch.addGeometry(geometry)
-    internalsOf(batch)._geometryInfo[index].objectId = `e${index}`
-  })
-  batch.updateMatrixWorld(true)
-  return batch
-}
 
 function buildLineBatch() {
   const batch = new ThreeRendererBatchedLine(1000, 2000, new THREE.LineBasicMaterial())
@@ -238,22 +222,6 @@ function referenceUnionBox(batch: unknown, ids: ReadonlySet<string> | null) {
 }
 
 describe('batched aggregate bounds equivalence (P1-3)', () => {
-  it('Line2 per-slot bounds equal the cached implementation', () => {
-    const batch = buildLine2Batch()
-    const internals = internalsOf(batch)
-    const scratch = new THREE.Box3()
-    const cached = new THREE.Box3()
-
-    for (let i = 0; i < internals._geometryCount; i++) {
-      expect(internals.computeBoundingBoxAt(i, scratch)).not.toBeNull()
-      expect(cachedBoundsOf(batch).getBoundingBoxAt(i, cached)).not.toBeNull()
-      expect(scratch.min.toArray()).toEqual(cached.min.toArray())
-      expect(scratch.max.toArray()).toEqual(cached.max.toArray())
-    }
-
-    // Only the explicit cached queries above materialize slot boxes.
-    expect(countMaterializedSlotBoxes(batch)).toBe(internals._geometryCount)
-  })
 
   it('Line per-slot bounds equal the cached implementation', () => {
     const batch = buildLineBatch()
@@ -269,18 +237,6 @@ describe('batched aggregate bounds equivalence (P1-3)', () => {
     }
   })
 
-  it('Line2 aggregate box union is bitwise identical to the pre-fix loop', () => {
-    const actual = buildLine2Batch()
-    const reference = buildLine2Batch()
-    const actualBox = new THREE.Box3()
-    actual.unionActiveVisibleBoundingBoxInto(actualBox)
-    const referenceBox = referenceUnionBox(reference, null)
-
-    expect(actualBox.min.toArray()).toEqual(referenceBox.min.toArray())
-    expect(actualBox.max.toArray()).toEqual(referenceBox.max.toArray())
-    expect(countMaterializedSlotBoxes(actual)).toBe(0)
-  })
-
   it('Line aggregate box union is bitwise identical to the pre-fix loop', () => {
     const actual = buildLineBatch()
     const reference = buildLineBatch()
@@ -291,64 +247,6 @@ describe('batched aggregate bounds equivalence (P1-3)', () => {
     expect(actualBox.min.toArray()).toEqual(referenceBox.min.toArray())
     expect(actualBox.max.toArray()).toEqual(referenceBox.max.toArray())
     expect(countMaterializedSlotBoxes(actual)).toBe(0)
-  })
-
-  it('respects excludeObjectIds exactly like the pre-fix loop', () => {
-    const actual = buildLine2Batch()
-    const reference = buildLine2Batch()
-    const excludeObjectIds = new Set(['e0', 'e1', 'e7'])
-    const actualBox = new THREE.Box3()
-    actual.unionActiveVisibleBoundingBoxInto(actualBox, { excludeObjectIds })
-    const referenceBox = referenceUnionBox(reference, excludeObjectIds)
-
-    expect(actualBox.min.toArray()).toEqual(referenceBox.min.toArray())
-    expect(actualBox.max.toArray()).toEqual(referenceBox.max.toArray())
-    expect(countMaterializedSlotBoxes(actual)).toBe(0)
-  })
-
-  it('includes only the requested object ids without caching slot boxes', () => {
-    const batch = buildLine2Batch()
-    const included = new THREE.Box3()
-    batch.unionActiveVisibleBoundingBoxInto(included, {
-      includeObjectIds: new Set(['e0'])
-    })
-
-    const expected = referenceSlotBox(batch, 0, new THREE.Box3())
-    expected.applyMatrix4(internalsOf(batch).matrixWorld)
-    expect(included.min.toArray()).toEqual(expected.min.toArray())
-    expect(included.max.toArray()).toEqual(expected.max.toArray())
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-  })
-
-  it('Line2 aggregate sphere encloses every active vertex and stays tight', () => {
-    const batch = buildLine2Batch()
-    const internals = internalsOf(batch)
-    batch.computeBoundingSphere()
-    const actual = internals.boundingSphere!
-
-    const vertices = collectActiveVertices(batch)
-    expect(vertices.length).toBe(SEGMENTS.length * 2)
-    for (const vertex of vertices) {
-      // 1e-6 relative slack absorbs radius rounding at 1e7 coordinates; the
-      // sphere is derived from the very same float values.
-      expect(actual.center.distanceTo(vertex)).toBeLessThanOrEqual(
-        actual.radius * (1 + 1e-6)
-      )
-    }
-
-    // The pre-fix union-of-per-slot-spheres is also a valid enclosure here, so
-    // both bounds can be compared fairly: the new circumsphere is within a few
-    // percent of the old one (measured 1.0277× on this dataset) and always
-    // encloses the same vertex set.
-    const reference = referenceAggregateSphere(batch, (id, target) =>
-      cachedBoundsOf(batch).getBoundingBoxAt(id, target)
-    )
-    const referenceMaxDistance = vertices.reduce(
-      (max, vertex) => Math.max(max, reference.center.distanceTo(vertex)),
-      0
-    )
-    expect(referenceMaxDistance).toBeLessThanOrEqual(reference.radius)
-    expect(actual.radius).toBeLessThanOrEqual(reference.radius * 1.1)
   })
 
   it('Line aggregate sphere encloses every active vertex and stays tight', () => {
@@ -407,25 +305,6 @@ describe('batched aggregate bounds equivalence (P1-3)', () => {
     )
   })
 
-  it('keeps slot boxes unmaterialized across aggregate queries and picking', () => {
-    const batch = buildLine2Batch()
-    batch.computeBoundingSphere()
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-
-    const box = new THREE.Box3()
-    batch.unionActiveVisibleBoundingBoxInto(box)
-    expect(box.isEmpty()).toBe(false)
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-
-    const raycaster = new THREE.Raycaster(
-      new THREE.Vector3(0, 0, 1000),
-      new THREE.Vector3(0, 0, -1)
-    )
-    const hits: THREE.Intersection[] = []
-    batch.raycast(raycaster, hits)
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-  })
-
   /**
    * Cost shape of one layout-fit recompute (P1-4): the box union performs one
    * `Box3.applyMatrix4` per active visible slot — the dominant term the report
@@ -433,91 +312,6 @@ describe('batched aggregate bounds equivalence (P1-3)', () => {
    * longer calls this at all (it unions one entity box per appended entity into
    * the running O(1) box); only the terminal fit still does.
    */
-  it('performs one Box3.applyMatrix4 per active visible slot on the box path', () => {
-    const batch = buildLine2Batch()
-    const target = new THREE.Box3()
-    const spy = jest.spyOn(THREE.Box3.prototype, 'applyMatrix4')
-    try {
-      spy.mockClear()
-      batch.unionActiveVisibleBoundingBoxInto(target)
-      expect(spy).toHaveBeenCalledTimes(SEGMENTS.length)
-    } finally {
-      spy.mockRestore()
-    }
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-  })
-
-  it('falls back to the generic path for non-interleaved Line2 attributes', () => {
-    const batch = new ThreeRendererBatchedLine2(10, new LineMaterial())
-    // Seed one slot via the normal interleaved path (handles origin rebase),
-    // then replace the packed attributes with non-interleaved buffers so the
-    // fallback scan runs. Start sits outside the end-point envelope so a
-    // max-only-on-end bug would shrink the aggregate sphere.
-    const seed = new LineSegmentsGeometry()
-    seed.setPositions([0, 0, 0, 1, 0, 0])
-    batch.addGeometry(seed)
-
-    batch.geometry.setAttribute(
-      'instanceStart',
-      new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 100, 0, 50, 0, 0]),
-        3
-      )
-    )
-    batch.geometry.setAttribute(
-      'instanceEnd',
-      new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 0, 0, 50, 0, 0]),
-        3
-      )
-    )
-    internalsOf(batch)._geometryInfo[0].vertexCount = 2
-
-    const local = internalsOf(batch).computeBoundingBoxAt(0, new THREE.Box3())
-    const cached = cachedBoundsOf(batch).getBoundingBoxAt(0, new THREE.Box3())
-    expect(local).not.toBeNull()
-    expect(cached).not.toBeNull()
-    expect(local!.min.toArray()).toEqual(cached!.min.toArray())
-    expect(local!.max.toArray()).toEqual(cached!.max.toArray())
-    expect(local!.max.y).toBe(100)
-
-    // Clear the box that getBoundingBoxAt just cached so the aggregate path
-    // cannot cheat by reading it back.
-    internalsOf(batch)._geometryInfo[0].boundingBox = null
-
-    batch.computeBoundingSphere()
-    const sphere = internalsOf(batch).boundingSphere!
-    for (const vertex of collectActiveVertices(batch)) {
-      expect(sphere.center.distanceTo(vertex)).toBeLessThanOrEqual(
-        sphere.radius * (1 + 1e-6)
-      )
-    }
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-  })
-
-  it('does not rematerialize slot boxes on bboxIntersectionCheck picks', () => {
-    const batch = buildLine2Batch()
-    internalsOf(batch)._geometryInfo[0].bboxIntersectionCheck = true
-    const spy = jest.spyOn(batch, 'getBoundingBoxAt')
-
-    const raycaster = new THREE.Raycaster(
-      new THREE.Vector3(0, 0, 1000),
-      new THREE.Vector3(0, 0, -1)
-    )
-    batch.raycast(raycaster, [])
-
-    expect(spy).not.toHaveBeenCalled()
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-    spy.mockRestore()
-  })
-
-  it('getObjectAt fills bounds without caching a slot Box3', () => {
-    const batch = buildLine2Batch()
-    const object = batch.getObjectAt(0)
-    expect(object.geometry.boundingBox).not.toBeNull()
-    expect(object.geometry.boundingSphere).not.toBeNull()
-    expect(countMaterializedSlotBoxes(batch)).toBe(0)
-  })
 
   /**
    * The "same extents → keep the aggregate bounds" fast path used to depend on

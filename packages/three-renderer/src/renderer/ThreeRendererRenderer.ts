@@ -187,8 +187,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   constructor(renderer: THREE.WebGLRenderer) {
     this._renderer = renderer
     this._context = new ThreeRendererRenderContext()
-    const size = renderer.getSize(new THREE.Vector2())
-    this._context.styleManager.updateLineResolution(size.x, size.y)
     this._subEntityTraits = ThreeRendererSubEntityTraitsUtil.createDefaultTraits()
   }
 
@@ -332,14 +330,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
 
   setSize(width: number, height: number) {
     this._renderer.setSize(width, height)
-    this._context.styleManager.updateLineResolution(width, height)
-  }
-
-  /**
-   * Updates wide-line shader resolution without resizing the canvas.
-   */
-  updateLineResolution(width: number, height: number) {
-    this._context.styleManager.updateLineResolution(width, height)
   }
 
   /**
@@ -468,34 +458,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    */
   get internalRenderer() {
     return this._renderer
-  }
-
-  /**
-   * Gets whether entity lineweights are displayed.
-   */
-  get showLineWeight() {
-    return this._context.styleManager.showLineWeight
-  }
-
-  /**
-   * Sets whether entity lineweights are displayed.
-   *
-   * When disabled, line entities are rendered with basic 1px materials.
-   */
-  set showLineWeight(value: boolean) {
-    this._context.styleManager.showLineWeight = value
-  }
-
-  /**
-   * Whether the next line conversion should honor entity lineweights even
-   * when {@link showLineWeight} (LWDISPLAY) is off.
-   */
-  get forceShowLineWeight() {
-    return this._context.styleManager.forceShowLineWeight
-  }
-
-  set forceShowLineWeight(value: boolean) {
-    this._context.styleManager.forceShowLineWeight = value
   }
 
   /**
@@ -734,7 +696,7 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
     if (points.length < 2) {
       return this.createEntity()
     }
-    return new ThreeRendererLine(points, this._subEntityTraits, this._context, false)
+    return new ThreeRendererLine(points, this._subEntityTraits, this._context)
   }
 
   /**

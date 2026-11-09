@@ -25,7 +25,6 @@ import { ThreeRendererView2d } from '../../view'
 import {
   applicationOverlayDash,
   applicationScaledOverlayLineWidth,
-  applicationSyncLiveOverlayTextHeight
 } from '../overlay/ApplicationOverlayDrawUtil'
 import { ApplicationMeasureDrawCmd } from './ApplicationMeasureDrawCmd'
 import { MEASUREMENT_LIVE_LAYER } from './ApplicationMeasurementStore'
@@ -101,7 +100,7 @@ function centroid(pts: GeometryPoint2dLike[]): { x: number; y: number } {
 }
 
 /**
- * Commit an area measurement overlay (also used when importing a sidecar).
+ * Commit an area measurement overlay.
  */
 export function placeAreaMeasurement(
   view: ThreeRendererView2d,
@@ -158,7 +157,6 @@ export class ApplicationMeasureAreaCmd extends ApplicationMeasureDrawCmd {
       fontSize: style.fontSize
     })
     htManagerLive.add(liveBadge)
-    applicationSyncLiveOverlayTextHeight(context.view, [liveBadge], style)
     liveBadge.object.visible = false
 
     const drawPolygon = (cursor?: GeometryPoint2dLike) => {
@@ -284,10 +282,6 @@ export class ApplicationMeasureAreaCmd extends ApplicationMeasureDrawCmd {
                 )
               )
               liveBadge.setFontSize(fontSize)
-              applicationSyncLiveOverlayTextHeight(context.view, [liveBadge], {
-                ...liveStyle,
-                fontSize
-              })
               liveBadge.setText(label)
               liveBadge.setPosition(centroid(tempPts))
               liveBadge.object.visible = true

@@ -142,36 +142,6 @@ describe('applyBatchSlotDrawVisibility', () => {
     expect(isBatchGeometryVisible(flags)).toBe(true)
   })
 
-  it('collapses and restores wide-line segment geometry', () => {
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute(
-      'instanceStart',
-      new THREE.Float32BufferAttribute([0, 0, 0, 2, 0, 0], 3)
-    )
-    geometry.setAttribute(
-      'instanceEnd',
-      new THREE.Float32BufferAttribute([1, 0, 0, 3, 0, 0], 3)
-    )
-
-    const info = createIndexedSlotInfo({
-      indexStart: -1,
-      indexCount: 0,
-      reservedIndexCount: 0,
-      vertexStart: 0,
-      vertexCount: 2
-    })
-
-    applyBatchSlotDrawVisibility(geometry, info, false, 'line2')
-    expect(Array.from(geometry.getAttribute('instanceEnd').array)).toEqual([
-      0, 0, 0, 2, 0, 0
-    ])
-
-    applyBatchSlotDrawVisibility(geometry, info, true, 'line2')
-    expect(Array.from(geometry.getAttribute('instanceEnd').array)).toEqual([
-      1, 0, 0, 3, 0, 0
-    ])
-  })
-
   it('re-collapses hidden slots after optimize moves buffer ranges', () => {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute(

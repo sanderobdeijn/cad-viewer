@@ -38,7 +38,7 @@ export function registerMeasurementPublish(fn: MeasurementPublishFn): void {
  * has not been called yet.
  *
  * @param view - Host view for the measurement overlays.
- * @param record - Updated store/sidecar record to publish.
+ * @param record - Updated store record to publish.
  */
 export function republishMeasurement(
   view: EditorBaseView,

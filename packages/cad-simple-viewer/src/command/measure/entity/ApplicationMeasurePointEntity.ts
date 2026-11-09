@@ -78,7 +78,7 @@ export class ApplicationMeasurePointEntity extends ApplicationMeasureEntity {
   }
 
   /**
-   * Serializes this point measurement to a store/sidecar record.
+   * Serializes this point measurement to a store record.
    *
    * @param layoutId - Optional layout BTR id written onto the record
    * @param view - Optional view used to convert screen style to WCS

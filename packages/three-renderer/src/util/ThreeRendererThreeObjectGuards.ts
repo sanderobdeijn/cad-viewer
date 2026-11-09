@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 
 /**
  * Duck-typed Three.js object guards.
@@ -18,7 +17,6 @@ type ThreeFlagObject = THREE.Object3D & {
   isLineSegments?: boolean
   isLineLoop?: boolean
   isPoints?: boolean
-  isLineSegments2?: boolean
   geometry?: unknown
   material?: unknown
 }
@@ -50,13 +48,6 @@ export function isThreeLine(object: THREE.Object3D): object is THREE.Line {
 export function isThreePoints(object: THREE.Object3D): object is THREE.Points {
   const o = object as ThreeFlagObject
   return o.isPoints === true || object.type === 'Points'
-}
-
-export function isThreeLineSegments2(
-  object: THREE.Object3D
-): object is LineSegments2 {
-  const o = object as ThreeFlagObject
-  return o.isLineSegments2 === true || object instanceof LineSegments2
 }
 
 export function isThreeBufferGeometry(

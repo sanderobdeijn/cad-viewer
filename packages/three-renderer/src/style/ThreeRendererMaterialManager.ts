@@ -6,20 +6,12 @@ import {
 } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 
-import { ThreeRendererCommonUtil, ThreeRendererMaterialUtil } from '../util'
+import { ThreeRendererMaterialUtil } from '../util'
 import {
   getMaterialMetadata,
   setMaterialMetadata
 } from './ThreeRendererMaterialMetadata'
 import { ThreeRendererStyleManagerOptions } from './ThreeRendererStyleManagerOptions'
-
-/** Diagnostic snapshot of one material cache. */
-export interface ThreeRendererMaterialCacheStats {
-  /** Number of cached materials. */
-  count: number
-  /** Approximate JS-heap bytes (sampled × count). */
-  estimatedBytes: number
-}
 
 /**
  * Valid material side values for cache partitioning.
@@ -62,26 +54,6 @@ export abstract class ThreeRendererMaterialManager<T> {
 
   constructor(options: ThreeRendererStyleManagerOptions) {
     this.options = options
-  }
-
-  /**
-   * Returns cache cardinality and a sampled memory estimate for diagnostics.
-   */
-  getStats(): ThreeRendererMaterialCacheStats {
-    const keys = Object.keys(this.cache)
-    const count = keys.length
-    if (count === 0) {
-      return { count: 0, estimatedBytes: 0 }
-    }
-    const sampleKey = keys[0]
-    const sampleBytes = ThreeRendererCommonUtil.estimateObjectSize(this.cache[sampleKey])
-    const traitsBytes = ThreeRendererCommonUtil.estimateObjectSize(
-      this.keyToTraits[sampleKey]
-    )
-    return {
-      count,
-      estimatedBytes: (sampleBytes + traitsBytes) * count
-    }
   }
 
   /**

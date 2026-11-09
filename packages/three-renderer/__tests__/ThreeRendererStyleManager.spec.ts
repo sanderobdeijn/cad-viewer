@@ -1,7 +1,6 @@
 import { CommonColor } from '@mlightcad/common'
 import { GraphicsInterfaceLineWeight } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 
 import { getMaterialMetadata } from '../src/style/ThreeRendererMaterialMetadata'
 import { ThreeRendererStyleManager } from '../src/style/ThreeRendererStyleManager'
@@ -70,17 +69,4 @@ describe('ThreeRendererStyleManager', () => {
     expect(material.color.getHex()).toBe(0x808080)
   })
 
-  it('uses fat line materials when forceShowLineWeight is on even if LWDISPLAY is off', () => {
-    const styleManager = new ThreeRendererStyleManager()
-    const traits = ThreeRendererSubEntityTraitsUtil.createDefaultTraits()
-    traits.lineWeight = GraphicsInterfaceLineWeight.LineWeight211
-
-    const hairline = styleManager.getLineMaterial(traits)
-    expect(hairline).toBeInstanceOf(THREE.LineBasicMaterial)
-
-    styleManager.forceShowLineWeight = true
-    const fat = styleManager.getLineMaterial(traits)
-    expect(fat).toBeInstanceOf(LineMaterial)
-    expect((fat as LineMaterial).linewidth).toBeCloseTo(211 / 40)
-  })
 })

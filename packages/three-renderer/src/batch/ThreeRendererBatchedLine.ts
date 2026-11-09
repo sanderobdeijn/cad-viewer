@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 
-import { ThreeRendererPointSymbolCreator } from '../geometry/ThreeRendererPointSymbolCreator'
 import { ThreeRendererBufferGeometryUtil } from '../util/ThreeRendererBufferGeometryUtil'
 import type { ThreeRendererBatchedContainerUserData } from '../util/ThreeRendererObjectUserData'
 import { syncBatchDrawVisibilityAfterOptimize } from './drawVisibility'
@@ -55,7 +54,6 @@ const ThreeRendererBatchedLineBase = createAcTrBatchedMixin<ThreeRendererBatched
  * AABB — hollow shapes must not be selectable via their bounding box interior.
  *
  * @see {@link ThreeRendererBatchedMesh} for mesh batching.
- * @see {@link ThreeRendererBatchedLine2} for wide-line (`Line2`) batching.
  */
 export class ThreeRendererBatchedLine extends ThreeRendererBatchedLineBase {
   /** Typed container metadata attached to the batch object. */
@@ -245,45 +243,6 @@ export class ThreeRendererBatchedLine extends ThreeRendererBatchedLineBase {
       })
     })
     return userData
-  }
-
-  /**
-   * Rebuilds point-symbol batched line geometry for a new point display mode.
-   *
-   * Backs up entity metadata via {@link getUserData}, clears the batch with
-   * {@link reset}, then recreates line geometries from stored point positions
-   * using {@link ThreeRendererPointSymbolCreator}.
-   *
-   * @param displayMode - Point style mode passed to the symbol creator.
-   * @param displaySize - Point display size (`PDSIZE`) used to scale symbols.
-   */
-  resetGeometry(displayMode: number, displaySize: number = 0) {
-    // Backup user data
-    const userData = this.getUserData()
-
-    // Reset states
-    this.reset()
-
-    const creator = ThreeRendererPointSymbolCreator.instance
-    userData.forEach(item => {
-      if (item.position) {
-        const geometry = creator.create(displayMode, item.position, displaySize)
-        if (geometry.line) {
-          const worldOffset = new THREE.Vector3(
-            item.position.x,
-            item.position.y,
-            0
-          )
-          const geometryId = this.addGeometry(
-            geometry.line,
-            -1,
-            -1,
-            worldOffset
-          )
-          this.setGeometryInfo(geometryId, item)
-        }
-      }
-    })
   }
 
   /**

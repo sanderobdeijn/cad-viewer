@@ -164,7 +164,7 @@ export class ApplicationMeasureArcEntity extends ApplicationMeasureEntity {
   }
 
   /**
-   * Serializes this arc measurement to a store/sidecar record.
+   * Serializes this arc measurement to a store record.
    *
    * @param layoutId - Optional layout BTR id written onto the record
    * @param view - Optional view used to convert screen style to WCS
@@ -266,25 +266,17 @@ export class ApplicationMeasureArcEntity extends ApplicationMeasureEntity {
     let badgeFontSize = this.style.fontSize
     let textHeightWcs = importedTextHeight
     if (importedTextHeight == null) {
-      if (
-        this.style.textHeightMode === 'custom' &&
-        this.style.textHeightWcs != null &&
-        this.style.textHeightWcs > 0
-      ) {
-        textHeightWcs = this.style.textHeightWcs
-      } else {
-        badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
-          label,
-          this.style,
-          applicationScreenArcLengthPx(
-            p => view.worldToScreen(p),
-            { x: live.geom.cx, y: live.geom.cy },
-            live.geom.r,
-            arcLen
-          )
+      badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
+        label,
+        this.style,
+        applicationScreenArcLengthPx(
+          p => view.worldToScreen(p),
+          { x: live.geom.cx, y: live.geom.cy },
+          live.geom.r,
+          arcLen
         )
-        textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
-      }
+      )
+      textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
     }
     const badge = new ThreeRendererHtmlBadge({
       id: `${this.entityId}-badge`,
@@ -297,11 +289,11 @@ export class ApplicationMeasureArcEntity extends ApplicationMeasureEntity {
     const overlayElements = dotThrough
       ? [dot1, dotThrough, dot2, badge]
       : [dot1, dot2, badge]
-    const sidecar = this.serializeStyle(view)
+    const recordStyle = this.serializeStyle(view)
     applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: textHeightWcs ?? sidecar.textHeightWcs,
+      textHeightWcs: textHeightWcs ?? recordStyle.textHeightWcs,
       strokeWidthWcs: this.strokeWidthWcs,
-      arrowSizeWcs: this.arrowSizeWcs ?? sidecar.arrowSizeWcs,
+      arrowSizeWcs: this.arrowSizeWcs ?? recordStyle.arrowSizeWcs,
       fontSizePx: badgeFontSize,
       strokeScreenPx: applicationMeasurementCanvasLineWidth(this.style.lineWeight),
       elements: overlayElements,

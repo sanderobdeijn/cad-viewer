@@ -4,7 +4,6 @@ import {
   GeometryVector2d
 } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 
 import { ThreeRendererMaterialManager } from '../style/ThreeRendererMaterialManager'
 import { ThreeRendererCamera } from '../viewport/ThreeRendererCamera'
@@ -27,8 +26,6 @@ export interface ThreeRendererEntityPreviewOptions {
   backgroundColor?: number
   /** Background alpha; defaults to {@link ThreeRendererRenderer.clearAlpha}. */
   backgroundAlpha?: number
-  /** When true, only preview-cloned line materials receive export resolution. */
-  localLineResolutionOnly?: boolean
   /**
    * Called after WebGL state is restored. Use this to repaint the interactive
    * view when capture temporarily adjusts renderer uniforms or canvas state.
@@ -63,7 +60,6 @@ interface ThreeRendererEntityPreviewRendererState {
   autoClear: boolean
   cameraZoom: number
   viewportSize?: { width: number; height: number }
-  localLineResolutionOnly?: boolean
 }
 
 /**
@@ -141,11 +137,7 @@ export class ThreeRendererEntityPreview {
       // Match PNG export: force 1:1 pixels while reading from a render target.
       webgl.setPixelRatio(1)
       renderer.autoClear = true
-      if (!options.localLineResolutionOnly) {
-        renderer.updateLineResolution(width, height)
-      }
       renderer.setClearColor(backgroundColor, backgroundAlpha)
-      ThreeRendererEntityPreview.syncDrawableLineResolution(drawable, width, height)
 
       renderTarget = new THREE.WebGLRenderTarget(width, height, {
         minFilter: THREE.LinearFilter,
@@ -343,53 +335,6 @@ export class ThreeRendererEntityPreview {
   }
 
   /**
-   * Updates wide-line resolution uniforms on one preview drawable subtree.
-   *
-   * @param object - Preview drawable root rendered offscreen
-   * @param width - Output width in pixels
-   * @param height - Output height in pixels
-   */
-  static syncLineMaterialsResolution(
-    object: THREE.Object3D,
-    width: number,
-    height: number
-  ) {
-    ThreeRendererEntityPreview.syncDrawableLineResolution(object, width, height)
-  }
-
-  /**
-   * Updates wide-line shader resolution on preview-cloned materials only.
-   *
-   * @param object - Preview drawable root rendered offscreen
-   * @param width - Output width in pixels
-   * @param height - Output height in pixels
-   */
-  private static syncDrawableLineResolution(
-    object: THREE.Object3D,
-    width: number,
-    height: number
-  ) {
-    const resolution = new THREE.Vector2(width, height)
-    object.traverse(child => {
-      const materials = (child as THREE.Mesh).material
-      if (!materials) {
-        return
-      }
-      if (Array.isArray(materials)) {
-        materials.forEach(material => {
-          if (material instanceof LineMaterial) {
-            material.resolution.copy(resolution)
-          }
-        })
-        return
-      }
-      if (materials instanceof LineMaterial) {
-        materials.resolution.copy(resolution)
-      }
-    })
-  }
-
-  /**
    * Captures renderer and WebGL state before offscreen preview rendering.
    *
    * @param renderer - CAD renderer wrapper whose flags must be restored later
@@ -414,8 +359,7 @@ export class ThreeRendererEntityPreview {
       clearAlpha: webgl.getClearAlpha(),
       autoClear: renderer.autoClear,
       cameraZoom: ThreeRendererMaterialManager.CameraZoomUniform.value,
-      viewportSize: options.viewportSize,
-      localLineResolutionOnly: options.localLineResolutionOnly
+      viewportSize: options.viewportSize
     }
   }
 
@@ -438,8 +382,6 @@ export class ThreeRendererEntityPreview {
 
     if (state.viewportSize) {
       renderer.setSize(state.viewportSize.width, state.viewportSize.height)
-    } else if (!state.localLineResolutionOnly) {
-      renderer.updateLineResolution(state.size.x, state.size.y)
     }
 
     renderer.syncCameraZoom(state.cameraZoom)

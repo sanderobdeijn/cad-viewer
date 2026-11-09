@@ -1,13 +1,10 @@
 import { GraphicsInterfaceSubEntityTraits } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { resolveAnchorFromBox } from '../draw/ThreeRendererBatchDrawPolicy'
 import type { ThreeRendererDrawMode } from '../draw/ThreeRendererDrawMode'
 import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
-import { getSceneDrawableUserData,ThreeRendererBufferGeometryUtil } from '../util'
+import { ThreeRendererBufferGeometryUtil } from '../util'
 import { ThreeRendererEntity } from './ThreeRendererEntity'
 
 export class ThreeRendererLineSegments extends ThreeRendererEntity {
@@ -28,43 +25,6 @@ export class ThreeRendererLineSegments extends ThreeRendererEntity {
     }
 
     const localOrigin = box.getCenter(new THREE.Vector3())
-
-    if (material instanceof LineMaterial) {
-      const segmentCount = Math.floor(indices.length / 2)
-      const segmentPositions = new Float32Array(segmentCount * 6)
-      for (let i = 0, pos = 0; i < segmentCount; i++) {
-        const i1 = indices[i * 2]
-        const i2 = indices[i * 2 + 1]
-        const base1 = i1 * itemSize
-        const base2 = i2 * itemSize
-        segmentPositions[pos++] = array[base1] - localOrigin.x
-        segmentPositions[pos++] = array[base1 + 1] - localOrigin.y
-        segmentPositions[pos++] = (array[base1 + 2] ?? 0) - localOrigin.z
-        segmentPositions[pos++] = array[base2] - localOrigin.x
-        segmentPositions[pos++] = array[base2 + 1] - localOrigin.y
-        segmentPositions[pos++] = (array[base2 + 2] ?? 0) - localOrigin.z
-      }
-
-      const lineGeometry = new LineSegmentsGeometry()
-      lineGeometry.setPositions(segmentPositions)
-      ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(
-        lineGeometry as unknown as THREE.BufferGeometry
-      )
-      ThreeRendererBufferGeometryUtil.safeComputeBoundingSphere(
-        lineGeometry as unknown as THREE.BufferGeometry
-      )
-      this.setBoundingBox(
-        lineGeometry as unknown as THREE.BufferGeometry,
-        localOrigin
-      )
-
-      const line = new LineSegments2(lineGeometry, material)
-      line.position.set(localOrigin.x, localOrigin.y, localOrigin.z)
-      getSceneDrawableUserData(line).styleMaterialId = material.id
-      this.add(line)
-      this.finalizeLeafDrawables()
-      return
-    }
 
     const rebased = new Float32Array(array.length)
     for (let i = 0; i < array.length; i += itemSize) {

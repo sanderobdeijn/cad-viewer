@@ -20,8 +20,7 @@ function createLine(
       { x: end.x, y: end.y }
     ],
     defaultTraits,
-    context,
-    false
+    context
   )
   line.updateMatrixWorld(true)
   return line

@@ -11,37 +11,10 @@ import {
 import * as THREE from 'three'
 
 import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
-import {
-  type ThreeRendererEntityPreviewRootOptions,
-  ThreeRendererLayout,
-  ThreeRendererLayoutStats
-} from './ThreeRendererLayout'
+import { type ThreeRendererEntityPreviewRootOptions, ThreeRendererLayout } from './ThreeRendererLayout'
 
 /** Layout search order when building entity preview geometry. */
 export type ThreeRendererEntityPreviewScope = 'active-first' | 'all'
-
-export interface ThreeRendererSceneStats {
-  layouts: ThreeRendererLayoutStats[]
-  summary: {
-    layoutCount: number
-    entityCount: number
-    totalSize: {
-      line: number
-      mesh: number
-      point: number
-      unbatched: number
-      geometry: number
-      mapping: number
-      unbatchedCount: number
-      unbatchedByType: {
-        line: number
-        mesh: number
-        point: number
-        other: number
-      }
-    }
-  }
-}
 
 /**
  * Three.js scene manager for CAD drawings with hierarchical organization.
@@ -207,59 +180,6 @@ export class ThreeRendererScene {
       return this._layouts.get(this._modelSpaceBtrId)!
     }
     return undefined
-  }
-
-  /**
-   * The statistics of this scene
-   */
-  get stats(): ThreeRendererSceneStats {
-    const layouts: ThreeRendererLayoutStats[] = []
-    let entityCount = 0
-    let lineSize = 0
-    let meshSize = 0
-    let pointSize = 0
-    let unbatchedSize = 0
-    let geometrySize = 0
-    let mappingSize = 0
-    let unbatchedCount = 0
-    const unbatchedByType = {
-      line: 0,
-      mesh: 0,
-      point: 0,
-      other: 0
-    }
-    this._layouts.forEach(layout => layouts.push(layout.stats))
-    layouts.forEach(layout => {
-      entityCount += layout.summary.entityCount
-      lineSize += layout.summary.totalSize.line
-      meshSize += layout.summary.totalSize.mesh
-      pointSize += layout.summary.totalSize.point
-      unbatchedSize += layout.summary.totalSize.unbatched
-      geometrySize += layout.summary.totalSize.geometry
-      mappingSize += layout.summary.totalSize.mapping
-      unbatchedCount += layout.summary.totalSize.unbatchedCount
-      unbatchedByType.line += layout.summary.totalSize.unbatchedByType.line
-      unbatchedByType.mesh += layout.summary.totalSize.unbatchedByType.mesh
-      unbatchedByType.point += layout.summary.totalSize.unbatchedByType.point
-      unbatchedByType.other += layout.summary.totalSize.unbatchedByType.other
-    })
-    return {
-      layouts,
-      summary: {
-        layoutCount: layouts.length,
-        entityCount,
-        totalSize: {
-          line: lineSize,
-          mesh: meshSize,
-          point: pointSize,
-          unbatched: unbatchedSize,
-          geometry: geometrySize,
-          mapping: mappingSize,
-          unbatchedCount,
-          unbatchedByType
-        }
-      }
-    }
   }
 
   /**

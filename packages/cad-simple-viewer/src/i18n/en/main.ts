@@ -53,76 +53,10 @@ export default {
       systemInfo: 'System Info'
     }
   },
-  progress: {
-    start: 'Start parsing file ...',
-    parse: 'Parsing file ...',
-    ltype: 'Parsing line types ...',
-    style: 'Parsing text syltes ...',
-    dimstyle: 'Parsing dimension styles ...',
-    vport: 'Parsing viewports ...',
-    blockrecord: 'Parsing block record ...',
-    header: 'Parsing header ...',
-    block: 'Parsing blocks ...',
-    entity: 'Parsing entities ...',
-    object: 'Parsing named dictionaries ...',
-    rendering: 'Rendering drawing ...',
-    end: 'Finished!'
-  },
-  about: {
-    title: 'About',
-    close: 'Close',
-    product: 'CAD Viewer',
-    tagline: 'High-performance web CAD editor.',
-    website: 'Website',
-    docs: 'Documentation',
-    repository: 'GitHub',
-    copyright: '© {year} mlightcad. All rights reserved.',
-    ok: 'OK'
-  },
-  drawStyle: {
-    color: 'Color',
-    fontSize: 'Text height'
-  },
   shortCutToolbar: {
     more: 'More',
     erase: 'Delete',
     collapse: 'Collapse toolbar',
     expand: 'Expand toolbar'
-  },
-  textHeight: {
-    title: 'Text Height',
-    close: 'Close',
-    ok: 'OK',
-    cancel: 'Cancel',
-    adaptive: 'Fit to screen',
-    custom: 'Custom text height',
-    customPlaceholder: 'World height',
-    fromScreen: 'From screen size',
-    fromScreenHint:
-      'Enter how large the text should look on screen at the current zoom. It is converted to a fixed world-space height that stays constant when you zoom later.',
-    screenPxPlaceholder: 'Font size',
-    screenUnit: 'px',
-    convert: 'Convert'
-  },
-  entityPick: {
-    cancel: 'Cancel selection'
-  },
-  colorPicker: {
-    title: 'Select Color',
-    close: 'Close',
-    ok: 'OK',
-    cancel: 'Cancel',
-    index: 'Color Index: ',
-    rgb: 'RGB: ',
-    input: 'Color',
-    inputPlaceholder: '1-255 or #RRGGBB'
-  },
-  touchPointTutorial: {
-    title: 'How to pick points precisely?',
-    description:
-      'Long-press on the screen for about 0.5 seconds. A cross appears above your finger and follows as you move, snapping to geometry for more accurate picks.',
-    snoozeToday: 'Don\'t remind me today',
-    hideForever: 'Don\'t remind me again',
-    ok: 'Got it'
   }
 }

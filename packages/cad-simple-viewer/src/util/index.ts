@@ -1,4 +1,3 @@
-export * from './ApplicationAciPalette'
 export * from './ApplicationCommandUtil'
 export * from './ApplicationCssColor'
 export * from './ApplicationDrawingExtents'

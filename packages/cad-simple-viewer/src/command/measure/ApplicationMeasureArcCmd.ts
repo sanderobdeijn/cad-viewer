@@ -36,7 +36,6 @@ import {
   applicationStrokeLivePolyline,
   applicationStrokeLiveSegment
 } from '../overlay/ApplicationHtmlLivePreview'
-import { applicationSyncLiveOverlayTextHeight } from '../overlay/ApplicationOverlayDrawUtil'
 import {
   inwardLockAlignment,
   isBetterLockCandidate,
@@ -188,7 +187,7 @@ function pickCircleGeomAtPoint(
 }
 
 /**
- * Commit an arc-length measurement overlay (also used when importing a sidecar).
+ * Commit an arc-length measurement overlay.
  */
 export function placeArcMeasurement(
   view: ThreeRendererView2d,
@@ -316,11 +315,6 @@ class ApplicationArcLockedEndJig extends EditorPreviewJig<GeometryPoint2dLike> {
       fontSize: applicationGetMeasurementFontSize()
     })
     this._htManager.add(this._badge)
-    applicationSyncLiveOverlayTextHeight(
-      this._view,
-      [this._badge],
-      applicationGetCurrentMeasurementStyle()
-    )
     this._badge.object.visible = false
 
     this._preview = new ApplicationHtmlLivePreview(
@@ -420,10 +414,6 @@ class ApplicationArcLockedEndJig extends EditorPreviewJig<GeometryPoint2dLike> {
       )
     )
     this._badge.setFontSize(fontSize)
-    applicationSyncLiveOverlayTextHeight(this._view, [this._badge], {
-      ...style,
-      fontSize
-    })
     this._badge.setText(label)
     this._badge.setPosition(sweep.through)
     this._badge.object.visible = true
@@ -529,11 +519,6 @@ class ApplicationMeasureArcEndJig extends EditorPreviewJig<GeometryPoint2dLike> 
       fontSize: applicationGetMeasurementFontSize()
     })
     this._htManager.add(this._badge)
-    applicationSyncLiveOverlayTextHeight(
-      this._view,
-      [this._badge],
-      applicationGetCurrentMeasurementStyle()
-    )
     this._badge.object.visible = false
 
     this._preview = new ApplicationHtmlLivePreview(
@@ -602,10 +587,6 @@ class ApplicationMeasureArcEndJig extends EditorPreviewJig<GeometryPoint2dLike> 
       )
     )
     this._badge.setFontSize(fontSize)
-    applicationSyncLiveOverlayTextHeight(this._view, [this._badge], {
-      ...style,
-      fontSize
-    })
     this._badge.setText(label)
     this._badge.setPosition(arc.midPoint)
     this._badge.object.visible = true

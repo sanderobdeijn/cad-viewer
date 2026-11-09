@@ -17,7 +17,7 @@ function findLargeCoordinateLineDrawable(group: ThreeRendererBatchedGroup) {
     if (drawable) {
       return
     }
-    if (child instanceof THREE.LineSegments || child instanceof LineSegments2) {
+    if (child instanceof THREE.LineSegments) {
       if (Math.abs(child.position.x) >= RTE_REBASE_THRESHOLD) {
         drawable = child
       }

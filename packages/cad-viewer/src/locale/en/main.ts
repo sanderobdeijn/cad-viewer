@@ -16,12 +16,8 @@ export default {
       utilities: 'Utilities',
       annotation: 'Annotation',
       measurement: 'Measurement',
-      style: 'Style',
       lengthUnits: 'Length Units',
       angleUnits: 'Angle Units'
-    },
-    property: {
-      color: 'Color'
     },
     arc: {
       threePoint: '3-Point',
@@ -160,38 +156,14 @@ export default {
       text: 'Point',
       description: 'Measures the X/Y coordinates of a picked point'
     },
-    measurementPanel: {
-      text: 'Panel',
-      description: 'Open the measurement palette'
-    },
     clearMeasurements: {
       text: 'Clear',
       description: 'Removes all measurements from the current layout'
-    },
-    measurementImport: {
-      text: 'Import',
-      description: 'Import measurements from a sidecar JSON file'
-    },
-    measurementExport: {
-      text: 'Export',
-      description: 'Export measurements to a sidecar JSON file'
     },
     pan: {
       text: 'Pan',
       description:
         'Shifts the view without changing the viewing direction or magnification'
-    },
-    measurementColor: {
-      text: 'Color',
-      description:
-        'Set the color for the selected measurement, or for measurements you add next'
-    },
-    measurementFontSize: {
-      text: 'Text height',
-      description:
-        'Open text height settings for the selected measurement, or for measurements you add next',
-      fit: 'Fit',
-      wcs: 'WCS'
     },
     showMeasurements: {
       text: 'Show',
@@ -253,9 +225,6 @@ export default {
       insertion: 'Insertion',
       nearest: 'Nearest'
     },
-    pointStyle: {
-      tooltip: 'Modify point style'
-    },
     fullScreen: {
       on: 'Turn off full screen mode',
       off: 'Turn on full screen mode'
@@ -263,10 +232,6 @@ export default {
     dynamicInput: {
       on: 'Turn off dynamic input',
       off: 'Turn on dynamic input'
-    },
-    lineWidth: {
-      on: 'Hide line widths',
-      off: 'Show line widths'
     },
     orthoMode: {
       on: 'Turn off ortho mode',
@@ -286,83 +251,6 @@ export default {
     export: {
       tooltip: 'Export image as PNG'
     }
-  },
-  toolPalette: {
-    measurements: {
-      tab: 'Measure',
-      title: 'Measurements',
-      empty: 'No measurements yet',
-      type: 'Type',
-      value: 'Value',
-      filterAll: 'All',
-      delete: 'Delete',
-      clear: 'Clear all',
-      typeValues: {
-        distance: 'Distance',
-        angle: 'Angle',
-        area: 'Area',
-        arc: 'Arc',
-        point: 'XY'
-      }
-    },
-    memoryProfile: {
-      tab: 'Memory',
-      title: 'Memory Profile',
-      refresh: 'Refresh',
-      collecting: 'Analyzing memory ...',
-      showPie: 'Show summary chart',
-      hidePie: 'Hide summary chart',
-      collectedAt: 'Collected at {time}',
-      heapUsed: 'JS heap {used} / {total}',
-      estimateNote:
-        'Geometry sizes come from buffer byteLength. Other categories are estimated.',
-      estimated: 'est.',
-      pieTotal: 'Accounted',
-      pieAriaLabel: 'Memory breakdown by category',
-      empty: 'No data',
-      materialPoint: 'Point',
-      materialLine: 'Line',
-      materialFill: 'Fill',
-      materialTotal: 'Total',
-      categories: {
-        heap: 'JS Heap',
-        geometry: 'Geometry',
-        mapping: 'Mapping',
-        spatial: 'Spatial Index',
-        materials: 'Materials'
-      },
-      tabs: {
-        geometry: 'Geometry',
-        spatial: 'Spatial',
-        materials: 'Materials'
-      },
-      columns: {
-        layout: 'Layout',
-        geometry: 'Geometry',
-        mapping: 'Mapping',
-        entities: 'Entities',
-        rootItems: 'Root',
-        childItems: 'Children',
-        estimated: 'Est. size',
-        type: 'Type',
-        count: 'Count',
-        category: 'Category'
-      }
-    }
-  },
-  colorDropdown: {
-    custom: 'Custom'
-  },
-  colorIndexPicker: {
-    color: 'Color: ',
-    colorIndex: 'Color Index: ',
-    inputPlaceholder: '0-256, BYLAYER, BYBLOCK',
-    rgb: 'RGB: '
-  },
-  ribbonProperty: {
-    color: 'Color',
-    lineType: 'Linetype',
-    lineWeight: 'Lineweight'
   },
   message: {
     fetchingDrawingFile: 'Fetching file ...'

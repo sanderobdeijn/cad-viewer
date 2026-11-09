@@ -1,6 +1,4 @@
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { RTE_REBASE_THRESHOLD } from '../src/draw/ThreeRendererBatchDrawPolicy'
 import { buildLineGeometry } from '../src/object/ThreeRendererLineGeometryBuilder'
@@ -40,26 +38,6 @@ describe('buildLineGeometry', () => {
     expect(position.getX(1)).toBeCloseTo(5)
     expect(built.wcsBbox.min.x).toBeCloseTo(0)
     expect(built.wcsBbox.max.x).toBeCloseTo(10)
-  })
-
-  it('builds fat LineSegmentsGeometry for LineMaterial', () => {
-    const material = new LineMaterial({ color: 0xffffff, linewidth: 1 })
-    const built = buildLineGeometry(
-      [
-        { x: 0, y: 0 },
-        { x: 4, y: 0 }
-      ],
-      material
-    )
-
-    expect(built).not.toBeNull()
-    if (!built) return
-    expect(built.kind).toBe('fat')
-    expect(built.geometry).toBeInstanceOf(LineSegmentsGeometry)
-    expect(built.worldOffset.x).toBeCloseTo(2)
-    expect(built.wcsBbox.min.x).toBeCloseTo(0)
-    expect(built.wcsBbox.max.x).toBeCloseTo(4)
-    material.dispose()
   })
 
   it('keeps wcsBbox in world coordinates for large drawings', () => {

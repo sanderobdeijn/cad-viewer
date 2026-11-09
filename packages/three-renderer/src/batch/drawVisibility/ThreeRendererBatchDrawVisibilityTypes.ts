@@ -48,10 +48,8 @@ export type ThreeRendererBatchDrawVisibilityInfo = ThreeRendererVertexBatchGeome
  *   {@link THREE.LineSegments} / {@link THREE.Mesh} batches).
  * - `'vertex'` — geometry is drawn from contiguous vertex ranges without
  *   indices (non-indexed lines and points).
- * - `'line2'` — geometry stores wide-line segments in `instanceStart` /
- *   `instanceEnd` attributes ({@link ThreeRendererBatchedLine2} batches).
  *
  * When omitted at call sites, {@link resolveBatchDrawVisibilityMode} infers
  * the mode from the buffer layout.
  */
-export type ThreeRendererBatchDrawVisibilityMode = 'indexed' | 'vertex' | 'line2'
+export type ThreeRendererBatchDrawVisibilityMode = 'indexed' | 'vertex'

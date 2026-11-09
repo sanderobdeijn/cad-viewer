@@ -12,7 +12,6 @@ import type {
   ThreeRendererBatchDrawVisibilityMode
 } from './ThreeRendererBatchDrawVisibilityTypes'
 import { ThreeRendererIndexedBatchDrawVisibilityStrategy } from './ThreeRendererIndexedBatchDrawVisibilityStrategy'
-import { ThreeRendererLine2BatchDrawVisibilityStrategy } from './ThreeRendererLine2BatchDrawVisibilityStrategy'
 import { ThreeRendererVertexBatchDrawVisibilityStrategy } from './ThreeRendererVertexBatchDrawVisibilityStrategy'
 
 /**
@@ -24,8 +23,7 @@ class ThreeRendererBatchDrawVisibility {
     ThreeRendererBatchDrawVisibilityStrategy
   > = {
     indexed: new ThreeRendererIndexedBatchDrawVisibilityStrategy(),
-    vertex: new ThreeRendererVertexBatchDrawVisibilityStrategy(),
-    line2: new ThreeRendererLine2BatchDrawVisibilityStrategy()
+    vertex: new ThreeRendererVertexBatchDrawVisibilityStrategy()
   }
 
   /**

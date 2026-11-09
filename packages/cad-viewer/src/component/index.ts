@@ -1,6 +1,5 @@
 export * from './common'
 export * from './dialog'
-export * from './palette'
 export * from './layout'
 export * from './ribbon'
 export * from './notification'

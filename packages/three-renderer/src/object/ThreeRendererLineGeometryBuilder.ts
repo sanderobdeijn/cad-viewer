@@ -8,7 +8,6 @@ import {
   GraphicsInterfaceSubEntityTraits
 } from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -17,10 +16,10 @@ import { ThreeRendererBufferGeometryUtil } from '../util'
 import { ThreeRendererPolygon } from './ThreeRendererPolygon'
 
 /** Which batch container the built line geometry should append into. */
-export type ThreeRendererLineGeometryKind = 'basic' | 'fat'
+export type ThreeRendererLineGeometryKind = 'basic'
 
 /** Entity kind for generalized direct-batch metadata. */
-export type ThreeRendererDirectEntityKind = 'lineBasic' | 'lineFat' | 'point' | 'mesh'
+export type ThreeRendererDirectEntityKind = 'lineBasic' | 'point' | 'mesh'
 
 /**
  * Local-space geometry ready for {@link ThreeRendererBatchedGroup} append or
@@ -385,32 +384,26 @@ function buildSmallFillLoopMesh(
 }
 
 /**
- * Returns true for pattern-linetype shader materials that cannot direct-batch.
- * {@link LineMaterial} (wide lines) is allowed.
+ * Returns true for shader materials that cannot direct-batch.
  *
  * @param material - Material resolved for the entity draw.
- * @returns `true` when the material is a non-`LineMaterial` shader and must
- *   fall back to the legacy drawable path.
+ * @returns `true` when the material is a shader and must use the drawable path.
  */
 export function isDirectBatchRejectedMaterial(
   material: THREE.Material
 ): boolean {
-  return (
-    material instanceof THREE.ShaderMaterial &&
-    !(material instanceof LineMaterial)
-  )
+  return material instanceof THREE.ShaderMaterial
 }
 
 /**
  * Builds rebased line geometry from world-space points and a resolved material.
  *
  * Vertices are stored relative to the point-cloud bounding-box center
- * (`worldOffset`) so float32 batch buffers stay precise. Fat lines
- * (`LineMaterial`) produce `LineSegmentsGeometry`; all other materials produce
- * indexed `BufferGeometry` for `THREE.LineSegments`.
+ * (`worldOffset`) so float32 batch buffers stay precise. The result is indexed
+ * `BufferGeometry` for `THREE.LineSegments`.
  *
  * @param points - World-space polyline vertices (at least two).
- * @param material - Resolved line material; `LineMaterial` selects fat geometry.
+ * @param material - Resolved line material.
  * @returns Built local-space geometry, or `null` when fewer than two points
  *   are provided.
  */
@@ -426,36 +419,6 @@ export function buildLineGeometry(
   const maxVertexCount = points.length
 
   const wcsBbox = computeWcsBboxFromPoints(points)
-
-  if (material instanceof LineMaterial) {
-    const segmentPositions = new Float32Array((maxVertexCount - 1) * 6)
-    for (let i = 0, pos = 0; i < maxVertexCount - 1; i++) {
-      const p1 = points[i]
-      const p2 = points[i + 1]
-      segmentPositions[pos++] = p1.x - worldOffset.x
-      segmentPositions[pos++] = p1.y - worldOffset.y
-      segmentPositions[pos++] = -worldOffset.z
-      segmentPositions[pos++] = p2.x - worldOffset.x
-      segmentPositions[pos++] = p2.y - worldOffset.y
-      segmentPositions[pos++] = -worldOffset.z
-    }
-
-    const geometry = new LineSegmentsGeometry()
-    geometry.setPositions(segmentPositions)
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(
-      geometry as unknown as THREE.BufferGeometry
-    )
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingSphere(
-      geometry as unknown as THREE.BufferGeometry
-    )
-    return {
-      kind: 'fat',
-      geometry,
-      worldOffset,
-      wcsBbox,
-      material
-    }
-  }
 
   const vertices = new Float32Array(maxVertexCount * 3)
   // Exactly one index pair per polyline edge. Allocating maxVertexCount*2 left a
@@ -921,39 +884,6 @@ export function buildLineSegmentsGeometry(
 
   const worldOffset = box.getCenter(new THREE.Vector3())
   const wcsBbox = box.clone()
-
-  if (material instanceof LineMaterial) {
-    const segmentCount = filteredIndices.length / 2
-    const segmentPositions = new Float32Array(segmentCount * 6)
-    for (let i = 0, pos = 0; i < segmentCount; i++) {
-      const i1 = filteredIndices[i * 2]
-      const i2 = filteredIndices[i * 2 + 1]
-      const base1 = i1 * itemSize
-      const base2 = i2 * itemSize
-      segmentPositions[pos++] = array[base1] - worldOffset.x
-      segmentPositions[pos++] = array[base1 + 1] - worldOffset.y
-      segmentPositions[pos++] = (array[base1 + 2] ?? 0) - worldOffset.z
-      segmentPositions[pos++] = array[base2] - worldOffset.x
-      segmentPositions[pos++] = array[base2 + 1] - worldOffset.y
-      segmentPositions[pos++] = (array[base2 + 2] ?? 0) - worldOffset.z
-    }
-
-    const geometry = new LineSegmentsGeometry()
-    geometry.setPositions(segmentPositions)
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingBox(
-      geometry as unknown as THREE.BufferGeometry
-    )
-    ThreeRendererBufferGeometryUtil.safeComputeBoundingSphere(
-      geometry as unknown as THREE.BufferGeometry
-    )
-    return {
-      kind: 'lineFat',
-      geometry,
-      worldOffset,
-      wcsBbox,
-      material
-    }
-  }
 
   const rebased = new Float32Array(array.length)
   for (let i = 0; i < array.length; i += itemSize) {

@@ -22,8 +22,7 @@ function createLine(
       { x: end.x, y: end.y }
     ],
     defaultTraits,
-    context,
-    false
+    context
   )
   line.objectId = objectId
   return line

@@ -11,11 +11,6 @@ import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
 import { debounce } from 'lodash-es'
 
 import type { ThreeRendererSpatialSearchOptions } from '../../spatialIndex/ThreeRendererSpatialIndex'
-import type {
-  EditorSessionAccessory,
-  EditorSessionAccessoryHostInfo
-} from '../command/EditorSessionAccessory'
-import { EditorSessionProviderRegistry } from '../command/EditorSessionProviderRegistry'
 import { EditorCorsorType, EditorSelectionSet } from '../input'
 import { Editor } from '../input/Editor'
 import {
@@ -23,11 +18,6 @@ import {
   EditorOsnapResolver
 } from '../input/EditorOsnapResolver'
 import { EditorMarkerManager } from '../input/marker'
-import {
-  editorDisposeMobileSnapLoupe,
-  editorHideMobileSnapLoupe,
-  editorRefreshMobileSnapLoupe
-} from '../input/ui/EditorMobileSnapLoupe'
 import { EditorHoverController } from './EditorHoverController'
 import {
   EditorSelectionAction,
@@ -85,21 +75,6 @@ export interface EditorViewHoverEventArgs {
    * Object id of the hovered entity
    */
   id: string
-}
-
-/**
- * Screen-fixed snap-loupe overlay: CSS rectangle on the canvas plus the
- * world box shown inside it.
- */
-export interface EditorSnapLoupeViewState {
-  /** Canvas-local left of the loupe (CSS pixels). */
-  x: number
-  /** Canvas-local top of the loupe (CSS pixels). */
-  y: number
-  /** Width and height of the square loupe (CSS pixels). */
-  size: number
-  /** World-space box mapped onto the loupe. */
-  viewBox: GeometryBox2d
 }
 
 /**
@@ -246,12 +221,6 @@ export abstract class EditorBaseView {
   /** True after {@link dispose} has run; further dispose calls are no-ops. */
   private _baseDisposed = false
 
-  /**
-   * Long-lived session UI providers for this view (draw-style, etc.).
-   * Feature installs register here; mountable accessories are minted on demand.
-   */
-  readonly sessionProviders = new EditorSessionProviderRegistry()
-
   /** Events fired by the view for various interactions */
   public readonly events = {
     /** Fired when mouse moves over the view */
@@ -295,24 +264,6 @@ export abstract class EditorBaseView {
     this._canvas.addEventListener(
       'mousemove',
       event => this.onMouseMove(event),
-      { signal: domSignal }
-    )
-    // Touch does not fire `mousemove`. Keep cursor (and therefore the next
-    // point-prompt preview) in sync with the finger, otherwise `curMousePos`
-    // stays at canvas (0, 0) — the top-left of the view. Mouse already has
-    // `mousemove`; do not also handle pointer events or hover runs twice.
-    this._canvas.addEventListener(
-      'pointerdown',
-      event => {
-        if (event.pointerType === 'touch') this.onMouseMove(event)
-      },
-      { signal: domSignal }
-    )
-    this._canvas.addEventListener(
-      'pointermove',
-      event => {
-        if (event.pointerType === 'touch') this.onMouseMove(event)
-      },
       { signal: domSignal }
     )
     this._canvas.addEventListener(
@@ -371,7 +322,6 @@ export abstract class EditorBaseView {
     this._resizeObserver?.disconnect()
     this._resizeObserver = undefined
     this._hoverController.dispose()
-    editorDisposeMobileSnapLoupe(this)
     this._overlayGripOsnapMarkers?.clear()
     this._overlayGripOsnapMarkers = null
     this._editor.dispose()
@@ -387,29 +337,6 @@ export abstract class EditorBaseView {
    */
   get editor() {
     return this._editor
-  }
-
-  /**
-   * Active mount target for session accessories (desktop slot or mobile panel).
-   */
-  get sessionAccessoryHost(): EditorSessionAccessoryHostInfo {
-    return this._editor.inputManager.sessionAccessoryHost
-  }
-
-  /**
-   * Selection-driven session accessory shown when no command accessory is mounted.
-   */
-  get selectionSessionAccessory(): EditorSessionAccessory | null {
-    return this._editor.inputManager.selectionSessionAccessory
-  }
-
-  /**
-   * Updates the selection-driven session accessory forwarded to the input manager.
-   *
-   * @param value - Accessory to show on selection, or `null` to clear.
-   */
-  set selectionSessionAccessory(value: EditorSessionAccessory | null) {
-    this._editor.inputManager.selectionSessionAccessory = value
   }
 
   /**
@@ -1063,12 +990,7 @@ export abstract class EditorBaseView {
   }
 
   /**
-   * Marks {@link curMousePos} as stale so the next point prompt does not
-   * treat a leftover touch sample as a live cursor.
-   *
-   * Touch picking commits on `pointerup`. The finger position must not seed
-   * the following prompt's jig (that would draw a short segment next to the
-   * pick). The next real pointer sample sets this flag again.
+   * Marks {@link curMousePos} as stale until the next pointer sample.
    */
   clearCursorPos() {
     this._hasCursorPos = false
@@ -1116,16 +1038,6 @@ export abstract class EditorBaseView {
   }
 
   /**
-   * Shows or hides the screen-fixed snap loupe overlay viewport.
-   * Pass `null` to hide. Default is a no-op.
-   *
-   * @param _state - Loupe screen rectangle and world box, or `null` to hide.
-   */
-  setSnapLoupe(_state: EditorSnapLoupeViewState | null): void {
-    // Optional; 2D view overrides this.
-  }
-
-  /**
    * Resolves a world XY cursor through object snap and updates overlay grip
    * snap markers. Used by HTML overlay endpoint drags (measure).
    *
@@ -1167,29 +1079,6 @@ export abstract class EditorBaseView {
    */
   get lastOverlayGripOsnap(): EditorOsnapPoint | null {
     return this._lastOverlayGripOsnap
-  }
-
-  /**
-   * Shows or repositions the shared mobile snap loupe around a client sample.
-   * Used by overlay grip drag and point pick on phone/pad.
-   *
-   * @param clientX - Sample X in viewport/client CSS pixels.
-   * @param clientY - Sample Y in viewport/client CSS pixels.
-   * @param snap - Active object snap in world space, if any.
-   */
-  refreshMobileSnapLoupe(
-    clientX: number,
-    clientY: number,
-    snap?: { x: number; y: number; type: number } | null
-  ): void {
-    editorRefreshMobileSnapLoupe(this, clientX, clientY, snap)
-  }
-
-  /**
-   * Hides the shared mobile snap loupe for this view.
-   */
-  hideMobileSnapLoupe(): void {
-    editorHideMobileSnapLoupe(this)
   }
 
   /**

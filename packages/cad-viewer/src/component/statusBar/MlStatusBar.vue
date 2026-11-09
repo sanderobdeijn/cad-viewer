@@ -8,7 +8,7 @@
     <div class="ml-status-bar-right">
       <el-button-group class="ml-status-bar-right-button-group">
         <el-button
-          v-if="features.isShowCoordinate && !isMobile"
+          v-if="features.isShowCoordinate"
           class="ml-status-bar-current-pos"
           >{{ posText }}</el-button
         >
@@ -18,7 +18,6 @@
           :toggle-dark="props.toggleDark"
         />
         <ml-full-screen-button />
-        <ml-point-style-button />
         <ml-osnap-button />
         <ml-setting-toggle-button
           setting="orthoMode"
@@ -31,16 +30,6 @@
         />
         <ml-polar-tracking-button />
         <ml-setting-toggle-button
-          setting="lineWeightDisplay"
-          :on-icon="lineWidth"
-          :off-icon="lineWidth"
-          :on-tooltip="t('main.statusBar.lineWidth.on')"
-          :off-tooltip="t('main.statusBar.lineWidth.off')"
-          on-color="var(--el-color-primary)"
-          off-color="var(--el-text-color-regular)"
-        />
-        <ml-setting-toggle-button
-          v-if="!isMobileOrPad"
           setting="dynamicInputMode"
           :on-icon="dynamicInput"
           :off-icon="dynamicInput"
@@ -65,15 +54,13 @@ import { useI18n } from 'vue-i18n'
 import {
   useCurrentPos,
   useDocument,
-  useIsMobile,
   useSettings
 } from '../../composable'
-import { dynamicInput, lineWidth, orthoMode } from '../../svg'
+import { dynamicInput, orthoMode } from '../../svg'
 import { MlSettingToggleButton } from '../common'
 import MlFullScreenButton from './MlFullScreenButton.vue'
 import MlNotificationButton from './MlNotificationButton.vue'
 import MlOsnapButton from './MlOsnapButton.vue'
-import MlPointStyleButton from './MlPointStyleButton.vue'
 import MlPolarTrackingButton from './MlPolarTrackingButton.vue'
 import MlSettingButton from './MlSettingButton.vue'
 import MlThemeButton from './MlThemeButton.vue'
@@ -86,7 +73,6 @@ const props = defineProps<{
 const { text: posText } = useCurrentPos(ApplicationDocManager.instance.curView)
 const features = useSettings()
 const { isDocumentOpening } = useDocument()
-const { isMobile, isMobileOrPad } = useIsMobile()
 const { t } = useI18n()
 const isStatusBarDisabled = computed(() => isDocumentOpening.value)
 

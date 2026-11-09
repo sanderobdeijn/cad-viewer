@@ -13,7 +13,6 @@ This module doesn't depend on any UI framework and doesn't provide any UI except
 - Optimized integration with rendering engines
 - Performance-focused settings and context management
 - Framework-agnostic design for maximum flexibility
-- Mobile-ready layout and touch gestures for phones and tablets
 
 ## When Should You Choose cad-simple-viewer?
 

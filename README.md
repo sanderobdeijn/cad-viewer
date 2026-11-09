@@ -25,7 +25,6 @@ Geometry processing and rendering happen directly in the browser, which makes ca
 - **Enhanced data security** - Files never leave your device, ensuring complete privacy
 - **Easy integration** - No server setup or backend infrastructure needed
 - Modular architecture for seamless third-party integration
-- **Mobile layout & touch** — Responsive phone/tablet UI and touch gestures (pinch-to-zoom, single-finger pan, tap to select) built into `@mlightcad/cad-simple-viewer`, so mobile browsers work without a separate app
 - Offline and online editing workflows
 - THREE.js 3D rendering engines with advanced optimization techniques
 - Designed for extensibility and integration with platforms like CMS, Notion, and WeChat
@@ -73,10 +72,6 @@ New to CAD Viewer? The **[User Guide](https://mlightcad.com/cad-viewer/docs/)** 
 - **Pan**: Hold middle mouse button and drag
 - **Erase**: Select entities and press `Del` key
 
-### Pad/Mobile Browser Operations
-- **Select**: Tap on entities
-- **Zoom**: Pinch with two fingers
-- **Pan**: Single-finger drag
 
 ## Performance
 
@@ -140,7 +135,6 @@ Legend:
 
 #### Display Controls
 
-* [x] Lineweight display
 * [ ] Linetype scaling
 * [x] Background / theme switching
 
@@ -273,7 +267,6 @@ Legend:
 ### Platform Targets
 
 * [ ] WeChat Mini Program viewer
-* [x] Mobile browser support (responsive layout & touch)
 
 ### Documentation & Community
 

@@ -43,11 +43,6 @@ export interface ApplicationNotification {
   timeout?: number
   /** Producer used for grouping and selective removal. */
   source?: ApplicationNotificationSource
-  /**
-   * {@link ApplicationDocSession.id} of the document this notification belongs to.
-   * Assigned by the store when omitted (uses the active session).
-   */
-  sessionId?: string
 }
 
 /**
@@ -58,16 +53,14 @@ export type ApplicationNotificationInput = Omit<ApplicationNotification, 'id' | 
 /**
  * Host-replaceable notification center API.
  *
- * Notifications are **per document session** (MDI). {@link notifications} and
- * {@link unreadCount} always reflect the active session set via
- * {@link setActiveSession}. Hosts such as `cad-viewer` can call
+ * Hosts such as `cad-viewer` can call
  * {@link applicationSetNotificationCenter} to supply their own UI while reusing the
  * shared event bridge.
  */
 export interface ApplicationNotificationCenter {
-  /** Notifications for the active document session only. */
+  /** All notifications. */
   readonly notifications: readonly ApplicationNotification[]
-  /** Number of notifications in the active session (same as list length). */
+  /** Number of notifications (same as list length). */
   readonly unreadCount: number
   /**
    * Inserts a notification into the resolved session bucket.
@@ -149,20 +142,7 @@ export interface ApplicationNotificationCenter {
    */
   removeBySource(source: ApplicationNotificationSource): void
   /**
-   * Switches which document's list is exposed via {@link notifications}.
-   * Called by the event bridge on document activate.
-   *
-   * @param sessionId - Active {@link ApplicationDocSession.id}, or `null` when none.
-   */
-  setActiveSession(sessionId: string | null): void
-  /**
-   * Drops all notifications for a closed document session.
-   *
-   * @param sessionId - Session whose bucket should be deleted.
-   */
-  clearSession(sessionId: string): void
-  /**
-   * Subscribe to list / active-session changes. Returns an unsubscribe function.
+   * Subscribe to list changes. Returns an unsubscribe function.
    * Optional for custom centers that do not need observation.
    *
    * @param listener - Callback invoked after any mutating change.

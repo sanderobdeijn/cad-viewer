@@ -14,61 +14,29 @@ function makeNotification(
   }
 }
 
-describe('ApplicationNotificationStore (per-session)', () => {
-  it('keeps separate lists per session and exposes only the active one', () => {
+describe('ApplicationNotificationStore', () => {
+  it('lists notifications newest first', () => {
     const store = new ApplicationNotificationStore()
-    store.setActiveSession('doc-1')
     store.warning('A', undefined, { source: 'example' })
-    store.setActiveSession('doc-2')
     store.warning('B', undefined, { source: 'example' })
 
-    expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('B')
-    expect(store.notifications[0].sessionId).toBe('doc-2')
-
-    store.setActiveSession('doc-1')
-    expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('A')
+    expect(store.notifications.map(n => n.title)).toEqual(['B', 'A'])
   })
 
-  it('clear() only clears the active session', () => {
+  it('removes by id and clears', () => {
     const store = new ApplicationNotificationStore()
-    store.setActiveSession('doc-1')
-    store.info('one')
-    store.setActiveSession('doc-2')
+    const id = store.info('one')
     store.info('two')
+    store.remove(id)
+    expect(store.notifications.map(n => n.title)).toEqual(['two'])
     store.clear()
-
-    expect(store.notifications).toHaveLength(0)
-    store.setActiveSession('doc-1')
-    expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('one')
-  })
-
-  it('clearSession drops a closed document bucket', () => {
-    const store = new ApplicationNotificationStore()
-    store.setActiveSession('doc-1')
-    store.info('one')
-    store.clearSession('doc-1')
     expect(store.notifications).toHaveLength(0)
   })
 
-  it('dispose clears all buckets so remounted session ids start empty', () => {
+  it('dispose clears notifications', () => {
     const store = new ApplicationNotificationStore()
-    store.setActiveSession('doc-1')
     store.warning('stale')
     store.dispose()
-
-    store.setActiveSession('doc-1')
-    expect(store.notifications).toHaveLength(0)
-    expect(store.info('fresh')).not.toBe('')
-    expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('fresh')
-  })
-
-  it('ignores add when no active session and no sessionId', () => {
-    const store = new ApplicationNotificationStore()
-    expect(store.info('orphan')).toBe('')
     expect(store.notifications).toHaveLength(0)
   })
 })

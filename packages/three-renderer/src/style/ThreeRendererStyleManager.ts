@@ -7,18 +7,8 @@ import * as THREE from 'three'
 
 import { ThreeRendererFillMaterialManager } from './ThreeRendererFillMaterialManager'
 import { ThreeRendererLineMaterialManager } from './ThreeRendererLineMaterialManager'
-import { ThreeRendererMaterialCacheStats } from './ThreeRendererMaterialManager'
 import { ThreeRendererPointMaterialManager } from './ThreeRendererPointMaterialManager'
 import { ThreeRendererStyleManagerOptions } from './ThreeRendererStyleManagerOptions'
-
-/** Aggregated material-cache stats across point / line / fill managers. */
-export interface ThreeRendererStyleManagerStats {
-  point: ThreeRendererMaterialCacheStats
-  line: ThreeRendererMaterialCacheStats
-  fill: ThreeRendererMaterialCacheStats
-  totalCount: number
-  totalEstimatedBytes: number
-}
 
 /**
  * Central style/material access point for the CAD viewer.
@@ -36,20 +26,11 @@ export interface ThreeRendererStyleManagerStats {
  */
 export class ThreeRendererStyleManager {
   public options: ThreeRendererStyleManagerOptions = {
-    resolution: new THREE.Vector2(1, 1),
-    showLineWeight: false,
     currentBackgroundColor: GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND
   }
   private pointMgr: ThreeRendererPointMaterialManager
   private lineMgr: ThreeRendererLineMaterialManager
   private fillMgr: ThreeRendererFillMaterialManager
-  /**
-   * When true, fat-line materials are used even if {@link showLineWeight}
-   * (LWDISPLAY) is off. Overlay transients (measurement) set this
-   * for the duration of conversion so ribbon lineweight is visible.
-   */
-  private _forceShowLineWeight = false
-
   constructor() {
     this.pointMgr = new ThreeRendererPointMaterialManager(this.options)
     this.lineMgr = new ThreeRendererLineMaterialManager(this.options)
@@ -75,44 +56,9 @@ export class ThreeRendererStyleManager {
    * Returns a thin or lineweight line material.
    *
    * @param traits - Current entity traits.
-   * @param basicMaterialOnly - The flag whether to search and return the basic material only
    */
-  getLineMaterial(
-    traits: GraphicsInterfaceSubEntityTraits,
-    basicMaterialOnly?: boolean
-  ): THREE.Material {
-    const showLineWeight =
-      this.options.showLineWeight || this._forceShowLineWeight
-    const forceBasicMaterial = !showLineWeight
-    return this.lineMgr.getMaterial(traits, {
-      basicMaterialOnly: basicMaterialOnly || forceBasicMaterial
-    })!
-  }
-
-  /**
-   * Gets whether lineweights are currently displayed.
-   */
-  get showLineWeight(): boolean {
-    return this.options.showLineWeight
-  }
-
-  /**
-   * Sets whether lineweights are displayed.
-   */
-  set showLineWeight(value: boolean) {
-    this.options.showLineWeight = value
-  }
-
-  /**
-   * Whether overlay conversion should honor entity lineweights even when
-   * {@link showLineWeight} is false.
-   */
-  get forceShowLineWeight(): boolean {
-    return this._forceShowLineWeight
-  }
-
-  set forceShowLineWeight(value: boolean) {
-    this._forceShowLineWeight = value
+  getLineMaterial(traits: GraphicsInterfaceSubEntityTraits): THREE.Material {
+    return this.lineMgr.getMaterial(traits, {})!
   }
 
   /**
@@ -178,25 +124,4 @@ export class ThreeRendererStyleManager {
     this.fillMgr.dispose()
   }
 
-  /**
-   * Returns aggregated material-cache stats for memory diagnostics.
-   */
-  getStats(): ThreeRendererStyleManagerStats {
-    const point = this.pointMgr.getStats()
-    const line = this.lineMgr.getStats()
-    const fill = this.fillMgr.getStats()
-    return {
-      point,
-      line,
-      fill,
-      totalCount: point.count + line.count + fill.count,
-      totalEstimatedBytes:
-        point.estimatedBytes + line.estimatedBytes + fill.estimatedBytes
-    }
-  }
-
-  updateLineResolution(width: number, height: number): void {
-    this.options.resolution.set(width, height)
-    this.lineMgr.updateResolution()
-  }
 }

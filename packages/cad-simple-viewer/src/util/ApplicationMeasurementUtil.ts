@@ -1,7 +1,6 @@
 import { CommonColor, CommonColorMethod } from '@mlightcad/common'
 import { GraphicsInterfaceLineWeight } from '@mlightcad/graphic-interface'
 
-import { ApplicationSettingManager } from '../app/ApplicationSettingManager'
 import { commonColorToCssHex, parseCssToAcCmColor } from './ApplicationCssColor'
 
 /**
@@ -17,108 +16,36 @@ export const MEASUREMENT_LINE_WEIGHT = OVERLAY_HAIRLINE_LINE_WEIGHT
 /** Factory default screen font size (CSS px) for measurement badges. */
 export const MEASUREMENT_FONT_SIZE = 13
 
-/** Authoring mode for measurement text height. */
-export type ApplicationTextHeightMode = 'adaptive' | 'custom'
-
-/** Session draw color for newly created measurements (undefined = use sysvar). */
-let measurementDrawColor: CommonColor | undefined
-
-/** Session draw font size for newly created measurement badges. */
-let measurementDrawFontSize = MEASUREMENT_FONT_SIZE
-
-/** Session text-height authoring mode. */
-let measurementTextHeightMode: ApplicationTextHeightMode = 'adaptive'
-
-/** Session custom WCS text height when mode is `'custom'`. */
-let measurementCustomTextHeightWcs: number | undefined
-
 /** Visual style stored on a committed measurement group. */
 export interface ApplicationMeasurementStyle {
   color: CommonColor
   lineWeight: GraphicsInterfaceLineWeight
   fontSize: number
-  /** Authoring mode; omitted means adaptive (legacy). */
-  textHeightMode?: ApplicationTextHeightMode
-  /** World-space text height when {@link textHeightMode} is `'custom'`. */
+  /** World-space text height, once one has been baked in. */
   textHeightWcs?: number
 }
 
-/** Returns the current measurement overlay color (session override or the measurement colour setting). */
+/** Colour of measurement overlays as `0xRRGGBB`. */
+const MEASUREMENT_COLOR = 0x60a5fa
+
+/** Returns the colour of measurement overlays. */
 export function applicationGetMeasurementColor(): CommonColor {
-  if (measurementDrawColor) return measurementDrawColor.clone()
   const color = new CommonColor(CommonColorMethod.ByColor)
-  color.setRGBValue(ApplicationSettingManager.instance.get('measurementColor'))
+  color.setRGBValue(MEASUREMENT_COLOR)
   return color
 }
 
-/** Current font size (CSS px) used when drawing measurement badges. */
+/** Font size (CSS px) of measurement badges. */
 export function applicationGetMeasurementFontSize(): number {
-  return measurementDrawFontSize
+  return MEASUREMENT_FONT_SIZE
 }
 
-/** Update the session measurement draw color (affects current/future measurements). */
-export function applicationSetMeasurementDrawColor(color: CommonColor): void {
-  measurementDrawColor = color.clone()
-}
-
-/** Update the session measurement draw font size (CSS px). */
-export function applicationSetMeasurementDrawFontSize(size: number): void {
-  if (!Number.isFinite(size) || size <= 0) return
-  measurementDrawFontSize = size
-  measurementTextHeightMode = 'adaptive'
-  measurementCustomTextHeightWcs = undefined
-}
-
-/** Current measurement text-height authoring mode. */
-export function applicationGetMeasurementTextHeightMode(): ApplicationTextHeightMode {
-  return measurementTextHeightMode
-}
-
-/** Custom WCS text height for the measurement draw session, if any. */
-export function applicationGetMeasurementCustomTextHeightWcs(): number | undefined {
-  return measurementCustomTextHeightWcs
-}
-
-/**
- * Sets adaptive (screen) or custom (WCS) text height for new measurements.
- *
- * @param mode - Authoring mode.
- * @param value - Font size px when adaptive; WCS height when custom.
- */
-export function applicationSetMeasurementTextHeight(
-  mode: ApplicationTextHeightMode,
-  value: number
-): void {
-  if (!Number.isFinite(value) || value <= 0) return
-  measurementTextHeightMode = mode
-  if (mode === 'adaptive') {
-    measurementDrawFontSize = value
-    measurementCustomTextHeightWcs = undefined
-    return
-  }
-  measurementCustomTextHeightWcs = value
-}
-
-/** Restore factory session measurement draw style (tests / document reset). */
-export function applicationResetMeasurementDrawStyle(): void {
-  measurementDrawColor = undefined
-  measurementDrawFontSize = MEASUREMENT_FONT_SIZE
-  measurementTextHeightMode = 'adaptive'
-  measurementCustomTextHeightWcs = undefined
-}
-
-/** Build a style object from the current measurement draw color / font size. */
+/** Returns the style of newly drawn measurements. */
 export function applicationGetCurrentMeasurementStyle(): ApplicationMeasurementStyle {
   return {
     color: applicationGetMeasurementColor(),
     lineWeight: MEASUREMENT_LINE_WEIGHT,
-    fontSize: applicationGetMeasurementFontSize(),
-    textHeightMode: measurementTextHeightMode,
-    ...(measurementTextHeightMode === 'custom' &&
-    measurementCustomTextHeightWcs != null &&
-    measurementCustomTextHeightWcs > 0
-      ? { textHeightWcs: measurementCustomTextHeightWcs }
-      : {})
+    fontSize: MEASUREMENT_FONT_SIZE
   }
 }
 
@@ -130,7 +57,6 @@ export function applicationCloneMeasurementStyle(
     color: style.color.clone(),
     lineWeight: style.lineWeight,
     fontSize: style.fontSize,
-    textHeightMode: style.textHeightMode,
     textHeightWcs: style.textHeightWcs
   }
 }
@@ -153,7 +79,7 @@ export function applicationColorToCssAlpha(c: CommonColor, alpha: number): strin
   return `rgba(${c.red}, ${c.green}, ${c.blue}, ${alpha})`
 }
 
-/** Converts an CommonColor to a CSS hex color string for overlays / sidecars. */
+/** Converts an CommonColor to a CSS hex color string for overlays. */
 export function applicationCssColor(c: CommonColor): string {
   return commonColorToCssHex(c)
 }

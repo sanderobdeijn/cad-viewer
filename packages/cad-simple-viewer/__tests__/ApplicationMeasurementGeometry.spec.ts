@@ -1,6 +1,5 @@
 import {
   hitTestMeasurementGeometry,
-  measurementFocusBox,
   measurementGeometryBounds
 } from '../src/command/measure/ApplicationMeasurementGeometry'
 import type { ApplicationMeasurementGeometry } from '../src/command/measure/ApplicationMeasurementTypes'
@@ -180,38 +179,5 @@ describe('measurementGeometryBounds', () => {
     expect(box!.min.y).toBe(-25)
     expect(box!.max.x).toBe(25)
     expect(box!.max.y).toBe(25)
-  })
-})
-
-describe('measurementFocusBox', () => {
-  const clientToWorld = (clientX: number, clientY: number) => ({
-    x: clientX / 10,
-    y: -clientY / 10
-  })
-
-  it('pads a coordinate point when no overlay rect is available', () => {
-    const box = measurementFocusBox(
-      { type: 'point', position: { x: 5, y: 7 } },
-      [],
-      clientToWorld
-    )
-    expect(box).toBeDefined()
-    expect(box!.min.x).toBe(4)
-    expect(box!.min.y).toBe(6)
-    expect(box!.max.x).toBe(6)
-    expect(box!.max.y).toBe(8)
-  })
-
-  it('unions the coordinate capsule so zoom frames the badge, not the point', () => {
-    const box = measurementFocusBox(
-      { type: 'point', position: { x: 5, y: 7 } },
-      [{ left: 40, top: 20, right: 120, bottom: 50 }],
-      clientToWorld
-    )
-    expect(box).toBeDefined()
-    expect(box!.min.x).toBe(4)
-    expect(box!.min.y).toBe(-5)
-    expect(box!.max.x).toBe(12)
-    expect(box!.max.y).toBe(7)
   })
 })

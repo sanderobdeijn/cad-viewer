@@ -22,13 +22,13 @@ export function createCadViewerNotificationCenterAdapter(): ApplicationNotificat
 
   return {
     /**
-     * Active-session notifications from the Vue store.
+     * Notifications from the Vue store.
      */
     get notifications() {
       return vue.notifications.value
     },
     /**
-     * Active-session unread count from the Vue store.
+     * Unread count from the Vue store.
      */
     get unreadCount() {
       return vue.unreadCount.value
@@ -101,19 +101,7 @@ export function createCadViewerNotificationCenterAdapter(): ApplicationNotificat
       vue.removeBySource(source)
     },
     /**
-     * @param sessionId - Active document session id, or `null`.
-     */
-    setActiveSession(sessionId) {
-      vue.setActiveSession(sessionId)
-    },
-    /**
-     * @param sessionId - Closed session whose bucket should be dropped.
-     */
-    clearSession(sessionId) {
-      vue.clearSession(sessionId)
-    },
-    /**
-     * Clears every Vue store bucket (viewer unmount / remount safety).
+     * Clears the Vue store (viewer unmount / remount safety).
      */
     dispose() {
       vue.dispose()

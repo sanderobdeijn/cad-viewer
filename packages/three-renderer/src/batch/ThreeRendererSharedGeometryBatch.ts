@@ -1,6 +1,4 @@
 import * as THREE from 'three'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { ThreeRendererBufferGeometryUtil, ThreeRendererMaterialUtil } from '../util'
 import {
@@ -13,11 +11,9 @@ import type { ThreeRendererBatchHighlightKind } from './highlight'
 /**
  * Drawable families that can share one template geometry across instances.
  *
- * Hairlines, meshes, and points are GPU-instanced. Fat lines (`LineSegments2`)
- * already use segment instancing, so each instance keeps its own object and only
- * the geometry buffer is shared.
+ * Hairlines, meshes, and points are GPU-instanced.
  */
-export type ThreeRendererSharedGeometryKind = 'line' | 'mesh' | 'points' | 'line2'
+export type ThreeRendererSharedGeometryKind = 'line' | 'mesh' | 'points'
 
 const INITIAL_CAPACITY = 32
 
@@ -54,7 +50,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
   private readonly _origin: THREE.Vector3
   private readonly _localBox = new THREE.Box3()
   private _drawable: InstancedDrawable | null = null
-  private _line2Objects: Array<LineSegments2 | null> = []
   private _capacity = 0
   private _count = 0
   private _alive!: Uint8Array
@@ -96,9 +91,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     this._raycastScratch = this.createDrawable(geometry, material)
     this._raycastScratch.matrixAutoUpdate = false
     this._raycastScratch.frustumCulled = false
-    if (kind === 'line2') {
-      return
-    }
     this._drawable = this.createInstanced(geometry, material, INITIAL_CAPACITY)
     this._capacity = INITIAL_CAPACITY
     this._alive = new Uint8Array(INITIAL_CAPACITY)
@@ -156,13 +148,11 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     this._bboxOnly[index] = bboxOnly ? 1 : 0
     this._objectIds[index] = objectId
     this.writeRelative(index, matrixWorld)
-    if (this.kind === 'line2') {
-      this._line2Objects[index] = this.createLine2(index)
-    } else if (this._drawable) {
+    if (this._drawable) {
       this._drawable.count = this._count
     }
     if (bboxOnly) {
-      const target = this._line2Objects[index] ?? this._drawable
+      const target = this._drawable
       if (target) {
         getSceneDrawableUserData(target).bboxIntersectionCheck = true
       }
@@ -181,9 +171,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     }
     const attribute = this._drawable?.instanceMatrix
     if (!attribute) {
-      const line = this._line2Objects[geometryId]
-      if (line) line.visible = value
-      if (!value) this.removeHighlight(geometryId)
       return this
     }
     const offset = geometryId * 16
@@ -211,9 +198,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
    */
   getVisibleAt(geometryId: number) {
     if (!this.isAlive(geometryId)) return false
-    if (this.kind === 'line2') {
-      return this._line2Objects[geometryId]?.visible !== false
-    }
     return !this._hiddenMatrices.has(geometryId)
   }
 
@@ -229,12 +213,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     this._selected.delete(geometryId)
     this._hovered.delete(geometryId)
     this.removeHighlight(geometryId)
-    const line = this._line2Objects[geometryId]
-    if (line) {
-      line.geometry = null as unknown as LineSegmentsGeometry
-      line.removeFromParent()
-      this._line2Objects[geometryId] = null
-    }
   }
 
   /** Shared geometry is not packed, so there is nothing to compact. */
@@ -292,14 +270,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
         point: hit.clone(),
         object: this
       })
-      return
-    }
-    if (this.kind === 'line2') {
-      const line = this._line2Objects[geometryId]
-      if (!line) return
-      line.updateWorldMatrix(true, false)
-      const hits = raycaster.intersectObject(line, false)
-      for (let i = 0; i < hits.length; i++) intersects.push(hits[i])
       return
     }
     const scratch = this._raycastScratch
@@ -375,12 +345,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
       this.disposeOverlay(highlight)
     }
     this._highlights.clear()
-    for (const line of this._line2Objects) {
-      if (!line) continue
-      line.geometry = null as unknown as LineSegmentsGeometry
-      line.removeFromParent()
-    }
-    this._line2Objects = []
     if (this._drawable) {
       this._drawable.removeFromParent()
       const drawable = this._drawable as unknown as {
@@ -401,11 +365,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
       this._drawable.material = material
     }
     ;(this._raycastScratch as THREE.Mesh).material = material
-    for (const line of this._line2Objects) {
-      if (line) {
-        ;(line as unknown as THREE.Mesh).material = material
-      }
-    }
   }
 
   private isAlive(index: number) {
@@ -413,12 +372,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
   }
 
   private ensureCapacity(needed: number) {
-    if (this.kind === 'line2' && this._alive == null) {
-      this._capacity = INITIAL_CAPACITY
-      this._alive = new Uint8Array(this._capacity)
-      this._bboxOnly = new Uint8Array(this._capacity)
-      this._cpuRelative = new Float32Array(this._capacity * 16)
-    }
     if (needed <= this._capacity) return
     let next = Math.max(this._capacity, INITIAL_CAPACITY)
     while (next < needed) next *= 2
@@ -500,21 +453,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     this.composeLocalMatrix(index, _local)
     this.updateWorldMatrix(true, false)
     return target.multiplyMatrices(this.matrixWorld, _local)
-  }
-
-  private createLine2(index: number) {
-    this.composeLocalMatrix(index, _full)
-    const line = new LineSegments2(
-      this._geometry as LineSegmentsGeometry,
-      this._material as never
-    )
-    line.matrix.copy(_full)
-    line.matrixAutoUpdate = false
-    line.matrixWorldNeedsUpdate = true
-    line.frustumCulled = false
-    getSceneDrawableUserData(line).sharesTemplateGeometry = true
-    this.add(line)
-    return line
   }
 
   private syncHighlight(index: number) {
@@ -605,12 +543,6 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
   ) {
     if (this.kind === 'mesh') return new THREE.Mesh(geometry, material)
     if (this.kind === 'points') return new THREE.Points(geometry, material)
-    if (this.kind === 'line2') {
-      return new LineSegments2(
-        geometry as LineSegmentsGeometry,
-        material as never
-      )
-    }
     return new THREE.LineSegments(geometry, material)
   }
 }

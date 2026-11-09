@@ -137,16 +137,14 @@ export function applicationClampMeasureBadgeFontSize(
 }
 
 /**
- * Fit-to-screen only: clamp badge font so the capsule stays within half the
- * segment. Custom (WCS) heights are left unchanged.
+ * Clamp badge font so the capsule stays within half the segment.
  */
 export function applicationAdaptiveMeasureBadgeFontSize(
   text: string,
-  style: { fontSize: number; textHeightMode?: 'adaptive' | 'custom' },
+  style: { fontSize: number },
   lineLengthScreenPx: number,
   options?: ApplicationMeasureBadgeFontOptions
 ): number {
-  if (style.textHeightMode === 'custom') return style.fontSize
   return applicationClampMeasureBadgeFontSize(
     text,
     style.fontSize,

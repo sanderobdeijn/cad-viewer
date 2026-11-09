@@ -90,7 +90,7 @@ function prepareMeasureCanvas(
  * @param arrowSizeWcs - Optional imported world-space arrow-head length
  *
  * Arrow heads at both endpoints freeze the jig's screen size as WCS on first
- * paint (or use imported `arrowSizeWcs` from a sidecar), then scale with camera
+ * paint (or use a stored `arrowSizeWcs`), then scale with camera
  * zoom. Live jigs use {@link applicationOverlayArrowSize} instead so the head stays
  * a constant CSS size while placing.
  */
@@ -247,7 +247,7 @@ export function drawMeasureAreaOnCanvas(
  *
  * When `through` is given, the sweep that contains it is drawn (including
  * major arcs over 180 degrees). Otherwise the shorter screen-space arc is
- * used so legacy sidecar records without a through point keep their previous
+ * used so records without a through point keep their previous
  * look.
  *
  * @param ctx - Overlay context in CSS pixels

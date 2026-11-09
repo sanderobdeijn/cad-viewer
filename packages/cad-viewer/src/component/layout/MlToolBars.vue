@@ -9,8 +9,6 @@ import {
   ICON_ANNOTATION_HIDE,
   ICON_ANNOTATION_SHOW,
   ICON_CLEAR_MEASUREMENTS,
-  ICON_MARKUP_EXPORT,
-  ICON_MARKUP_IMPORT,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
   ICON_MEASURE_ARC,
@@ -18,7 +16,6 @@ import {
   ICON_MEASURE_CONTINUOUS,
   ICON_MEASURE_DISTANCE,
   ICON_MEASURE_POINT,
-  ICON_MEASUREMENT_PANEL,
   ICON_PAN,
   ICON_SELECT,
   ICON_SWITCH_BG,
@@ -56,11 +53,6 @@ const handleLocaleChanged = () => {
   // vue-i18n is synced first (listener registered in locale/i18n.ts at module load).
   toolbar?.refreshLocale()
 }
-
-const toolbarSeparator = (): UIToolbarItem => ({
-  id: `separator-${Math.random().toString(36).slice(2, 8)}`,
-  type: 'separator'
-})
 
 const buildItems = (): UIToolbarItem[] => {
   const items: UIToolbarItem[] = [
@@ -159,12 +151,6 @@ const buildItems = (): UIToolbarItem[] => {
           command: 'measurepoint'
         },
         {
-          id: 'measurement-panel',
-          label: 'main.verticalToolbar.measurementPanel.text',
-          icon: ICON_MEASUREMENT_PANEL,
-          command: 'measurementpanel'
-        },
-        {
           id: 'measurement-vis',
           label: measurementVisible.value
             ? 'main.verticalToolbar.hideMeasurements.text'
@@ -190,19 +176,6 @@ const buildItems = (): UIToolbarItem[] => {
           label: 'main.verticalToolbar.clearMeasurements.text',
           icon: ICON_CLEAR_MEASUREMENTS,
           command: 'clearmeasurements'
-        },
-        toolbarSeparator(),
-        {
-          id: 'measurement-import',
-          label: 'main.verticalToolbar.measurementImport.text',
-          icon: ICON_MARKUP_IMPORT,
-          command: 'measurementimport'
-        },
-        {
-          id: 'measurement-export',
-          label: 'main.verticalToolbar.measurementExport.text',
-          icon: ICON_MARKUP_EXPORT,
-          command: 'measurementexport'
         }
       ]
     }

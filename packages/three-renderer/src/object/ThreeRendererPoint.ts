@@ -53,7 +53,7 @@ export class ThreeRendererPoint extends ThreeRendererEntity {
     if (pointSymbol.line) {
       const geometry = pointSymbol.line
       this.unionWorldBoundingBox(geometry, point)
-      const material = this.styleManager.getLineMaterial(traits, true)
+      const material = this.styleManager.getLineMaterial(traits)
       const lineSegmentsObj = new THREE.LineSegments(geometry, material)
       lineSegmentsObj.position.set(point.x, point.y, 0)
       const lineDrawable = getSceneDrawableUserData(lineSegmentsObj)

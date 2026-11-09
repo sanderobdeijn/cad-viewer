@@ -2,7 +2,6 @@ import { CommonEventManager } from '@mlightcad/common'
 
 import { ApplicationDocManager } from '../../app'
 import { EditorCommand } from '../command'
-import type { EditorSessionAccessoryEventArgs } from '../command/EditorSessionAccessory'
 import { EditorBaseView } from '../view/EditorBaseView'
 import { EditorCorsorType, EditorCursorManager } from './EditorCursorManager'
 import { EditorInputModifiers } from './EditorInputModifiers'
@@ -39,9 +38,6 @@ export interface EditorCommandEventArgs {
   /** The command instance involved in the event */
   command: EditorCommand
 }
-
-/** Re-export of session-accessory event payload for editor consumers. */
-export type { EditorSessionAccessoryEventArgs }
 
 /**
  * Advanced input handler for CAD operations providing high-level user interaction methods.
@@ -89,19 +85,7 @@ export class Editor {
     /** Fired just before the command starts executing */
     commandWillStart: new CommonEventManager<EditorCommandEventArgs>(),
     /** Fired after the command finishes executing */
-    commandEnded: new CommonEventManager<EditorCommandEventArgs>(),
-    /** Fired just before a session accessory is mounted */
-    beforeMountSessionAccessory:
-      new CommonEventManager<EditorSessionAccessoryEventArgs>(),
-    /** Fired after a session accessory has been mounted */
-    afterMountSessionAccessory:
-      new CommonEventManager<EditorSessionAccessoryEventArgs>(),
-    /** Fired just before a session accessory is unmounted */
-    beforeUnmountSessionAccessory:
-      new CommonEventManager<EditorSessionAccessoryEventArgs>(),
-    /** Fired after a session accessory has been unmounted */
-    afterUnmountSessionAccessory:
-      new CommonEventManager<EditorSessionAccessoryEventArgs>()
+    commandEnded: new CommonEventManager<EditorCommandEventArgs>()
   }
 
   /**
@@ -115,7 +99,7 @@ export class Editor {
     this._inputManager = new EditorInputManager(view, this.events)
   }
 
-  /** Input manager for prompts, mobile chrome, and session accessories. */
+  /** Input manager for prompts. */
   get inputManager() {
     return this._inputManager
   }
@@ -167,7 +151,7 @@ export class Editor {
   }
 
   /**
-   * Tears down the input manager (command line, mobile chrome, accessories).
+   * Tears down the input manager (command line, accessories).
    *
    * Safe to call more than once.
    */

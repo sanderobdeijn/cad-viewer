@@ -1,4 +1,3 @@
-import type { CommonColor } from '@mlightcad/common'
 import type { ThreeRendererHtmlGroup } from '@mlightcad/three-renderer'
 
 import {
@@ -8,26 +7,19 @@ import {
 } from '../../util/ApplicationMeasurementUnits'
 import {
   applicationCloneMeasurementStyle,
-  applicationMeasurementCanvasLineWidth,
   type ApplicationMeasurementStyle,
-  MEASUREMENT_FONT_SIZE,
   MEASUREMENT_LINE_WEIGHT
 } from '../../util/ApplicationMeasurementUtil'
 import type { ThreeRendererView2d } from '../../view'
 import {
   APPLICATION_OVERLAY_ARROW_SIZE_PX,
-  applicationScaleWcsWithFont,
-  applicationScreenPxToWcs,
-  applicationSeedOverlaySizesFromWcs
+  applicationScreenPxToWcs
 } from '../overlay/ApplicationOverlayDrawUtil'
-import {
-  hitTestMeasurementGeometry,
-  measurementFocusBox
-} from './ApplicationMeasurementGeometry'
-import { serializeMeasurementStyle } from './ApplicationMeasurementSidecar'
+import { hitTestMeasurementGeometry } from './ApplicationMeasurementGeometry'
+import { serializeMeasurementStyle } from './ApplicationMeasurementRecordStyle'
 import type {
   ApplicationMeasurementRecord,
-  ApplicationMeasurementSidecarStyle
+  ApplicationMeasurementRecordStyle
 } from './ApplicationMeasurementTypes'
 
 /** HTML transient layer for committed measurement overlays. */
@@ -116,13 +108,6 @@ export function getSelectedMeasurementId(): string | undefined {
   return selectedMeasurementId
 }
 
-/** Style of the currently selected measurement, if any. */
-export function getActiveMeasurementStyle(): ApplicationMeasurementStyle | undefined {
-  return selectedMeasurementId
-    ? getMeasurementStyle(selectedMeasurementId)
-    : undefined
-}
-
 /** Notify when the selected measurement group changes. */
 export function subscribeMeasurementSelection(
   listener: MeasurementSelectionListener
@@ -182,229 +167,8 @@ export function getMeasurementValueText(id: string): string {
   return formatMeasurementValue(extras.value)
 }
 
-/**
- * Select a measurement and zoom the view to its geometry plus HTML overlays.
- *
- * Coordinate measurements include the badge (capsule) so the camera frames
- * the label instead of zooming onto the point. Zooming to a 1-unit pad around
- * the point would scale the WCS-sized capsule over the canvas and steal
- * pointer events.
- */
-export function focusMeasurement(
-  view: ThreeRendererView2d,
-  record: ApplicationMeasurementRecord
-): void {
-  const box = measurementFocusBox(
-    record.geometry,
-    collectMeasurementOverlayRects(view, record.id),
-    (clientX, clientY) => {
-      const canvas = view.viewportToCanvas({ x: clientX, y: clientY })
-      return view.screenToWorld(canvas)
-    }
-  )
-  if (!box) return
-  view.zoomTo(box, 1.5)
-  view.htmlTransientManager.selectGroup(record.id)
-}
-
-/** Badge / callout client rects; skip endpoint grips that sit on geometry. */
-function collectMeasurementOverlayRects(
-  view: ThreeRendererView2d,
-  id: string
-): Array<{ left: number; top: number; right: number; bottom: number }> {
-  const group = view.htmlTransientManager.getGroup(id)
-  if (!group) return []
-  const rects: Array<{
-    left: number
-    top: number
-    right: number
-    bottom: number
-  }> = []
-  for (const child of group.children) {
-    const el = child.element
-    if (
-      el.classList.contains('ml-html-dot') ||
-      el.classList.contains('ml-html-grip')
-    ) {
-      continue
-    }
-    const rect = el.getBoundingClientRect()
-    if (rect.width <= 0 && rect.height <= 0) continue
-    rects.push(rect)
-  }
-  return rects
-}
-
 function rememberStyle(id: string, style: ApplicationMeasurementStyle): void {
   stylesById.set(id, applicationCloneMeasurementStyle(style))
-}
-
-/**
- * Apply a style patch to one measurement group (HTML badges/dots and canvases).
- * Wrap with {@link runMeasurementEdit} from UI.
- *
- * Color and font size are independent: changing one does not rewrite the
- * other's world-space size from the current camera zoom. Overlay strokes stay
- * hairline ({@link MEASUREMENT_LINE_WEIGHT}); strokeWidthWcs is never written.
- */
-export function applyMeasurementStyle(
-  view: ThreeRendererView2d,
-  group: ThreeRendererHtmlGroup,
-  patch: Partial<
-    Pick<
-      ApplicationMeasurementStyle,
-      'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'
-    >
-  >
-): void {
-  const prev = stylesById.get(group.id)
-  const color = patch.color?.clone() ?? prev?.color.clone()
-  if (!color) return
-  const next: ApplicationMeasurementStyle = {
-    color,
-    lineWeight: MEASUREMENT_LINE_WEIGHT,
-    fontSize: patch.fontSize ?? prev?.fontSize ?? MEASUREMENT_FONT_SIZE,
-    textHeightMode: patch.textHeightMode ?? prev?.textHeightMode ?? 'adaptive',
-    textHeightWcs:
-      patch.textHeightWcs ??
-      (patch.textHeightMode === 'custom' ? undefined : prev?.textHeightWcs)
-  }
-  if (next.textHeightMode === 'custom' && patch.textHeightWcs != null) {
-    next.textHeightWcs = patch.textHeightWcs
-  }
-  const fontSizeChanged =
-    (patch.fontSize != null &&
-      (prev == null || patch.fontSize !== prev.fontSize)) ||
-    (patch.textHeightWcs != null &&
-      (prev == null || patch.textHeightWcs !== prev.textHeightWcs)) ||
-    (patch.textHeightMode != null &&
-      (prev == null || patch.textHeightMode !== prev.textHeightMode))
-
-  rememberStyle(group.id, next)
-  const extras = extrasById.get(group.id)
-  if (extras) {
-    extras.style = applicationCloneMeasurementStyle(next)
-    if (extras.snapshot) {
-      const prevSnap = extras.snapshot.style
-      const base = serializeMeasurementStyle(next)
-      const textHeightWcs =
-        next.textHeightMode === 'custom' &&
-        next.textHeightWcs != null &&
-        next.textHeightWcs > 0
-          ? next.textHeightWcs
-          : resolveUpdatedTextHeightWcs(
-              view,
-              next.fontSize,
-              prev?.fontSize,
-              prevSnap.textHeightWcs,
-              fontSizeChanged
-            )
-      const prevFont = prev?.fontSize ?? MEASUREMENT_FONT_SIZE
-      const arrowSizeWcs = applicationScaleWcsWithFont(
-        prevSnap.arrowSizeWcs,
-        prevFont,
-        next.fontSize
-      )
-      extras.snapshot = {
-        ...extras.snapshot,
-        style: {
-          ...base,
-          textHeightWcs,
-          ...(arrowSizeWcs != null && arrowSizeWcs > 0 ? { arrowSizeWcs } : {})
-        }
-      }
-    }
-  }
-
-  if (fontSizeChanged) {
-    const snap = extrasById.get(group.id)?.snapshot?.style
-    applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: snap?.textHeightWcs,
-      arrowSizeWcs: snap?.arrowSizeWcs,
-      fontSizePx: next.fontSize,
-      strokeScreenPx: applicationMeasurementCanvasLineWidth(MEASUREMENT_LINE_WEIGHT),
-      elements: [...(group.children ?? [])],
-      canvases: (group.canvases ?? []).map(c => c.canvas)
-    })
-  }
-
-  paintMeasurementGroup(view, group, next)
-}
-
-/**
- * Scale or recompute text height WCS when font size changes; otherwise keep.
- */
-function resolveUpdatedTextHeightWcs(
-  view: ThreeRendererView2d,
-  nextFontSize: number,
-  prevFontSize: number | undefined,
-  prevTextHeightWcs: number | undefined,
-  fontSizeChanged: boolean
-): number {
-  if (
-    fontSizeChanged &&
-    prevTextHeightWcs != null &&
-    prevTextHeightWcs > 0 &&
-    prevFontSize != null &&
-    prevFontSize > 0
-  ) {
-    return prevTextHeightWcs * (nextFontSize / prevFontSize)
-  }
-  if (
-    fontSizeChanged ||
-    prevTextHeightWcs == null ||
-    !(prevTextHeightWcs > 0)
-  ) {
-    return applicationScreenPxToWcs(nextFontSize, view)
-  }
-  return prevTextHeightWcs
-}
-
-/**
- * Apply a style patch to every selected measurement group.
- */
-export function applyMeasurementStyleToSelection(
-  view: ThreeRendererView2d,
-  patch: Partial<
-    Pick<
-      ApplicationMeasurementStyle,
-      'color' | 'fontSize' | 'textHeightMode' | 'textHeightWcs'
-    >
-  >
-): void {
-  const groups = view.htmlTransientManager
-    .getSelectedGroups()
-    .filter(group => group.layer === MEASUREMENT_LAYER)
-  if (groups.length === 0) return
-  runMeasurementEdit(() => {
-    for (const group of groups) {
-      applyMeasurementStyle(view, group, patch)
-    }
-  })
-}
-
-function paintMeasurementGroup(
-  view: ThreeRendererView2d,
-  group: ThreeRendererHtmlGroup,
-  style: ApplicationMeasurementStyle
-): void {
-  for (const child of group.children) {
-    const colorful = child as {
-      setColor?: (color: CommonColor) => void
-      setFontSize?: (size: number) => void
-    }
-    colorful.setColor?.(style.color)
-    colorful.setFontSize?.(style.fontSize)
-  }
-  if (style.fontSize > 0) {
-    for (const overlay of group.canvases ?? []) {
-      overlay.canvas.style.fontSize = `${style.fontSize}px`
-    }
-  }
-
-  const extras = extrasById.get(group.id)
-  extras?.redraw?.(style)
-  view.isHtmlDirty = true
 }
 
 /**
@@ -439,7 +203,7 @@ export function collectMeasurementRecords(
     if (!extras?.snapshot) continue
     const live = extras.style ?? stylesById.get(group.id)
     const snapStyle = extras.snapshot.style
-    let style: ApplicationMeasurementSidecarStyle
+    let style: ApplicationMeasurementRecordStyle
     if (live) {
       // Keep live color / fontSize, force hairline lineWeight, preserve
       // creation-time textHeightWcs / arrowSizeWcs from the snapshot. Never
@@ -583,7 +347,7 @@ export function getMeasurementGeometry(
   return extrasById.get(id)?.snapshot?.geometry
 }
 
-/** Full sidecar snapshot for a committed measurement, if available. */
+/** Full record snapshot for a committed measurement, if available. */
 export function getMeasurementSnapshot(
   id: string
 ): ApplicationMeasurementRecord | undefined {

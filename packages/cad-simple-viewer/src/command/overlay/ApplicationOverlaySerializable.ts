@@ -11,7 +11,7 @@
  */
 export interface ApplicationOverlaySerializable<TRecord> {
   /**
-   * Build a sidecar / store snapshot of this overlay.
+   * Build a store snapshot of this overlay.
    *
    * @returns Domain record ready for persistence or store upsert.
    */

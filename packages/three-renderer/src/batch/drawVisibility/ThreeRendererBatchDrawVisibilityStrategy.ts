@@ -62,12 +62,6 @@ export abstract class ThreeRendererBatchDrawVisibilityStrategy {
 export function resolveBatchDrawVisibilityMode(
   geometry: THREE.BufferGeometry
 ): ThreeRendererBatchDrawVisibilityMode {
-  if (
-    geometry.getAttribute('instanceStart') &&
-    geometry.getAttribute('instanceEnd')
-  ) {
-    return 'line2'
-  }
   if (geometry.getIndex()) {
     return 'indexed'
   }

@@ -14,11 +14,6 @@ import {
   type ApplicationNotificationGroup
 } from '../app/notification/ApplicationNotificationTypes'
 import {
-  editorGetUiLayout,
-  editorSubscribeUiLayout,
-  type EditorUiLayoutKind,
-  ML_UI_SESSION_PANEL_INSET,
-  ML_UI_SESSION_PANEL_WIDTH,
   ML_UI_Z_NOTIFICATION
 } from '../editor/global/EditorUiLayout'
 import {
@@ -46,8 +41,7 @@ const FALLBACK_TOP_BELOW_SHORTCUT_PX = 12 + 40 + SHORTCUT_CLEARANCE_PX
 /**
  * Corner placement for the built-in notification bell.
  *
- * Panel presentation still follows layout kind (phone / pad sheet vs desktop
- * popover); this only controls where the bell sits on the canvas host.
+ * Only controls where the bell sits on the canvas host.
  */
 export type UINotificationBellPlacement =
   | 'bottom-right'
@@ -58,8 +52,7 @@ export type UINotificationBellPlacement =
 /** Options for {@link UIDefaultNotificationUi}. */
 export interface UIDefaultNotificationUiOptions {
   /**
-   * Explicit bell corner. When omitted, phone uses `top-right` (below the
-   * shortcut toolbar) and pad / desktop use `bottom-right`.
+   * Explicit bell corner. When omitted, the bell uses `bottom-right`.
    */
   placement?: UINotificationBellPlacement
 }
@@ -85,13 +78,11 @@ export class UIDefaultNotificationUi {
   private readonly _center: ApplicationNotificationCenter
   /** Absolute overlay root covering the host. */
   private readonly _root: HTMLDivElement
-  /** Full-host dismiss button shown behind phone / pad sheets. */
-  private readonly _backdrop: HTMLButtonElement
   /** Badge-bearing bell button. */
   private readonly _bell: HTMLButtonElement
   /** Unread count badge on the bell. */
   private readonly _badge: HTMLSpanElement
-  /** Notification list panel / phone sheet. */
+  /** Notification list panel. */
   private readonly _panel: HTMLDivElement
   /** Scrollable list body inside the panel. */
   private readonly _list: HTMLDivElement
@@ -101,8 +92,6 @@ export class UIDefaultNotificationUi {
   private _expandedGroups = new Set<string>()
   /** Whether the list panel is currently open. */
   private _panelOpen = false
-  /** Latest UI layout kind from {@link editorGetUiLayout}. */
-  private _layoutKind: EditorUiLayoutKind = 'desktop'
   /** Explicit placement override; `undefined` means layout-based default. */
   private _placement?: UINotificationBellPlacement
   /** Unsubscribe callbacks for center / theme / layout subscriptions. */
@@ -137,12 +126,6 @@ export class UIDefaultNotificationUi {
     this._root.className = ROOT_CLASS
     this._root.hidden = true
 
-    this._backdrop = document.createElement('button')
-    this._backdrop.type = 'button'
-    this._backdrop.className = `${ROOT_CLASS}__backdrop`
-    this._backdrop.hidden = true
-    this._backdrop.setAttribute('aria-label', 'Close notifications')
-    this._backdrop.addEventListener('click', () => this.setPanelOpen(false))
 
     this._bell = document.createElement('button')
     this._bell.type = 'button'
@@ -178,22 +161,17 @@ export class UIDefaultNotificationUi {
     this._list.className = `${ROOT_CLASS}__list`
 
     this._panel.append(header, this._list)
-    this._root.append(this._backdrop, this._bell, this._panel)
+    this._root.append(this._bell, this._panel)
     this._host.appendChild(this._root)
 
     this.applyTheme()
-    this.applyLayout(editorGetUiLayout())
+    this.applyLayout()
     this.refreshChromeLabels()
 
     this._unsubs.push(
       this._center.subscribe?.(() => this.render()) ?? (() => undefined)
     )
     this._unsubs.push(editorSubscribeUiTheme(() => this.applyTheme()))
-    this._unsubs.push(
-      editorSubscribeUiLayout(kind => {
-        this.applyLayout(kind)
-      })
-    )
 
     this._onDocPointer = (event: Event) => {
       if (!this._panelOpen) return
@@ -234,15 +212,14 @@ export class UIDefaultNotificationUi {
   /**
    * Sets or clears the bell corner placement.
    *
-   * Pass `undefined` to restore layout-based defaults (phone `top-right`,
-   * pad / desktop `bottom-right`).
+   * Pass `undefined` to restore the `bottom-right` default.
    *
    * @param placement - Corner placement, or `undefined` for auto.
    */
   setPlacement(placement: UINotificationBellPlacement | undefined) {
     if (this._placement === placement) return
     this._placement = placement
-    this.applyLayout(this._layoutKind)
+    this.applyLayout()
   }
 
   /**
@@ -255,17 +232,11 @@ export class UIDefaultNotificationUi {
   /**
    * Updates layout modifier classes and repositions top-anchored chrome.
    *
-   * @param kind - Responsive layout kind (`phone` / `pad` / `desktop`).
    */
-  private applyLayout(kind: EditorUiLayoutKind) {
-    this._layoutKind = kind
+  private applyLayout() {
     const placement = this.resolvePlacement()
     const topAnchor = isTopPlacement(placement)
     const rightSide = isRightPlacement(placement)
-    this._root.classList.toggle(`${ROOT_CLASS}--phone`, kind === 'phone')
-    this._root.classList.toggle(`${ROOT_CLASS}--pad`, kind === 'pad')
-    this._root.classList.toggle(`${ROOT_CLASS}--desktop`, kind === 'desktop')
-    this._root.classList.toggle(`${ROOT_CLASS}--sheet`, usesSheetPanel(kind))
     this._root.classList.toggle(`${ROOT_CLASS}--top-anchor`, topAnchor)
     this._root.classList.toggle(`${ROOT_CLASS}--bottom-anchor`, !topAnchor)
     this._root.classList.toggle(`${ROOT_CLASS}--right`, rightSide)
@@ -279,7 +250,7 @@ export class UIDefaultNotificationUi {
    */
   private resolvePlacement(): UINotificationBellPlacement {
     if (this._placement) return this._placement
-    return this._layoutKind === 'phone' ? 'top-right' : 'bottom-right'
+    return 'bottom-right'
   }
 
   /**
@@ -296,24 +267,14 @@ export class UIDefaultNotificationUi {
     this._root.style.bottom = ''
     this._root.style.left = ''
 
-    // Sheet panels (phone / pad) are positioned by CSS, not under the bell.
-    if (usesSheetPanel(this._layoutKind)) {
-      this._panel.style.top = ''
-      this._panel.style.right = ''
-      this._panel.style.left = ''
-      this._panel.style.bottom = ''
-    }
-
     if (!isTopPlacement(this.resolvePlacement())) {
       this._bell.style.top = ''
       this._bell.style.right = ''
       this._bell.style.bottom = ''
       this._bell.style.left = ''
-      if (!usesSheetPanel(this._layoutKind)) {
-        this._panel.style.top = ''
-        this._panel.style.right = ''
-        this._panel.style.left = ''
-      }
+      this._panel.style.top = ''
+      this._panel.style.right = ''
+      this._panel.style.left = ''
       return
     }
 
@@ -347,16 +308,14 @@ export class UIDefaultNotificationUi {
     }
 
     // Desktop popover under the bell when top-placed via API.
-    if (!usesSheetPanel(this._layoutKind)) {
-      this._panel.style.top = `${top + 44}px`
-      this._panel.style.bottom = 'auto'
-      if (rightSide) {
-        this._panel.style.right = edge
-        this._panel.style.left = 'auto'
-      } else {
-        this._panel.style.left = edge
-        this._panel.style.right = 'auto'
-      }
+    this._panel.style.top = `${top + 44}px`
+    this._panel.style.bottom = 'auto'
+    if (rightSide) {
+      this._panel.style.right = edge
+      this._panel.style.left = 'auto'
+    } else {
+      this._panel.style.left = edge
+      this._panel.style.right = 'auto'
     }
   }
 
@@ -407,9 +366,6 @@ export class UIDefaultNotificationUi {
     const hasMessages = this._center.notifications.length > 0
     this._root.hidden = !hasMessages
     this._panel.hidden = !hasMessages || !this._panelOpen
-    const showBackdrop =
-      hasMessages && this._panelOpen && usesSheetPanel(this._layoutKind)
-    this._backdrop.hidden = !showBackdrop
     this._bell.setAttribute('aria-expanded', String(this._panelOpen))
     if (hasMessages) {
       this.scheduleReposition()
@@ -550,15 +506,6 @@ export class UIDefaultNotificationUi {
 }
 
 /**
- * Whether the layout uses a top sheet panel (phone full-bleed / pad session width).
- *
- * @param kind - Current UI layout kind.
- */
-function usesSheetPanel(kind: EditorUiLayoutKind): boolean {
-  return kind === 'phone' || kind === 'pad'
-}
-
-/**
  * @param placement - Bell placement.
  * @returns `true` when the bell is top-anchored.
  */
@@ -652,23 +599,11 @@ function ensureStyles() {
   pointer-events: none;
 }
 .${ROOT_CLASS}[hidden],
-.${ROOT_CLASS}__backdrop[hidden],
 .${ROOT_CLASS}__panel[hidden] {
   display: none !important;
 }
 .${ROOT_CLASS} > * {
   pointer-events: auto;
-}
-.${ROOT_CLASS}__backdrop {
-  /* Cover the canvas host only — not the full browser viewport. */
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-  background: var(--ml-ui-overlay);
 }
 .${ROOT_CLASS}__bell {
   position: absolute;
@@ -720,53 +655,25 @@ function ensureStyles() {
   box-shadow: var(--ml-ui-shadow);
   overflow: hidden;
 }
-.${ROOT_CLASS}--bottom-anchor.${ROOT_CLASS}--right:not(.${ROOT_CLASS}--sheet) .${ROOT_CLASS}__panel {
+.${ROOT_CLASS}--bottom-anchor.${ROOT_CLASS}--right .${ROOT_CLASS}__panel {
   right: 12px;
   bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 44px);
   width: min(360px, calc(100% - 24px));
   max-height: min(420px, 60%);
   border-radius: 8px;
 }
-.${ROOT_CLASS}--bottom-anchor.${ROOT_CLASS}--left:not(.${ROOT_CLASS}--sheet) .${ROOT_CLASS}__panel {
+.${ROOT_CLASS}--bottom-anchor.${ROOT_CLASS}--left .${ROOT_CLASS}__panel {
   left: 12px;
   bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 44px);
   width: min(360px, calc(100% - 24px));
   max-height: min(420px, 60%);
   border-radius: 8px;
 }
-.${ROOT_CLASS}--top-anchor:not(.${ROOT_CLASS}--sheet) .${ROOT_CLASS}__panel {
+.${ROOT_CLASS}--top-anchor .${ROOT_CLASS}__panel {
   /* top/left/right set inline under the bell */
   width: min(360px, calc(100% - 24px));
   max-height: min(420px, 55%);
   border-radius: 8px;
-}
-.${ROOT_CLASS}--phone.${ROOT_CLASS}--sheet .${ROOT_CLASS}__panel {
-  /* Sheet spans the canvas host, not the browser viewport. */
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-height: min(55%, 420px);
-  border-radius: 0 0 12px 12px;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.${ROOT_CLASS}--pad.${ROOT_CLASS}--sheet .${ROOT_CLASS}__panel {
-  /* Same top-sheet interaction as phone; width matches pad session panel.
-   * Cap against the canvas host (100%), not the browser viewport (100vw),
-   * so a narrow host inside a wide window does not overflow the drawing area. */
-  top: 0;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
-  width: ${ML_UI_SESSION_PANEL_WIDTH}px;
-  max-width: calc(100% - ${ML_UI_SESSION_PANEL_INSET}px);
-  max-height: min(55%, 420px);
-  border-radius: 0 0 12px 12px;
-  border-top: none;
-  padding-top: env(safe-area-inset-top, 0px);
 }
 .${ROOT_CLASS}__header {
   display: flex;

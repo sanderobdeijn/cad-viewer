@@ -1,8 +1,5 @@
 export default {
   ACAD: {
-    about: {
-      description: 'Displays information about mlightcad'
-    },
     acadver: {
       description: 'Stores the drawing database version identifier (read-only)'
     },
@@ -129,23 +126,11 @@ export default {
       description:
         'Sets the display precision for linear units, used together with LUNITS'
     },
-    lwdisplay: {
-      description: 'Controls whether lineweights are displayed in the drawing'
-    },
     clearmeasurements: {
       description: 'Removes all measurements from the current layout'
     },
     measurementvis: {
       description: 'Shows or hides measurements on the current layout'
-    },
-    measurementpanel: {
-      description: 'Opens the measurement palette'
-    },
-    measurementexport: {
-      description: 'Exports measurements to a sidecar JSON file'
-    },
-    measurementimport: {
-      description: 'Imports measurements from a sidecar JSON file'
     },
     measurearea: {
       description:
@@ -200,12 +185,6 @@ export default {
       description:
         'Sets the background color of the paper-space (layout) drawing area'
     },
-    pdmode: {
-      description: 'Controls how POINT entities are displayed'
-    },
-    pdsize: {
-      description: 'Sets the display size for POINT entities'
-    },
     pickbox: {
       description:
         'Sets the size (in pixels) of the selection box used to pick objects'
@@ -232,9 +211,6 @@ export default {
     },
     qnew: {
       description: 'Starts a new drawing'
-    },
-    close: {
-      description: 'Closes the current drawing'
     },
     rectang: {
       description: 'Creates a rectangle by specifying two opposite corners'

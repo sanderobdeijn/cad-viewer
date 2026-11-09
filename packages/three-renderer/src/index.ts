@@ -7,7 +7,6 @@ export {
 } from './batch/ThreeRendererBatchedGeometryInfo'
 export * from './draw'
 export { ThreeRendererBatchedLine } from './batch/ThreeRendererBatchedLine'
-export { ThreeRendererBatchedLine2 } from './batch/ThreeRendererBatchedLine2'
 export { ThreeRendererBatchedMesh } from './batch/ThreeRendererBatchedMesh'
 export { ThreeRendererBatchedPoint } from './batch/ThreeRendererBatchedPoint'
 export * from './object/ThreeRendererObject'
@@ -21,11 +20,7 @@ export * from './object/ThreeRendererPreviewOverlayManager'
 export * from './renderer'
 export * from './viewport'
 export * from './style/ThreeRendererMaterialMetadata'
-export {
-  ThreeRendererStyleManager,
-  type ThreeRendererStyleManagerStats
-} from './style/ThreeRendererStyleManager'
-export { type ThreeRendererMaterialCacheStats } from './style/ThreeRendererMaterialManager'
+export { ThreeRendererStyleManager } from './style/ThreeRendererStyleManager'
 export { ThreeRendererMatrixUtil } from './util/ThreeRendererMatrixUtil'
 export {
   getSceneDrawableUserData,

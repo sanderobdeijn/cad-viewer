@@ -104,7 +104,7 @@ export class ApplicationMeasureAreaEntity extends ApplicationMeasureEntity {
   }
 
   /**
-   * Serializes this area measurement to a store/sidecar record.
+   * Serializes this area measurement to a store record.
    *
    * @param layoutId - Optional layout BTR id written onto the record
    * @param view - Optional view used to convert screen style to WCS
@@ -161,20 +161,12 @@ export class ApplicationMeasureAreaEntity extends ApplicationMeasureEntity {
     let badgeFontSize = this.style.fontSize
     let textHeightWcs = importedTextHeight
     if (importedTextHeight == null) {
-      if (
-        this.style.textHeightMode === 'custom' &&
-        this.style.textHeightWcs != null &&
-        this.style.textHeightWcs > 0
-      ) {
-        textHeightWcs = this.style.textHeightWcs
-      } else {
-        badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
-          label,
-          this.style,
-          applicationScreenAreaBadgeRefLengthPx(p => view.worldToScreen(p), live)
-        )
-        textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
-      }
+      badgeFontSize = applicationAdaptiveMeasureBadgeFontSize(
+        label,
+        this.style,
+        applicationScreenAreaBadgeRefLengthPx(p => view.worldToScreen(p), live)
+      )
+      textHeightWcs = applicationScreenPxToWcs(badgeFontSize, view)
     }
     const badge = new ThreeRendererHtmlBadge({
       id: `${this.entityId}-badge`,
@@ -193,11 +185,11 @@ export class ApplicationMeasureAreaEntity extends ApplicationMeasureEntity {
           layer: MEASUREMENT_LAYER
         })
     )
-    const sidecar = this.serializeStyle(view)
+    const recordStyle = this.serializeStyle(view)
     applicationSeedOverlaySizesFromWcs(view, {
-      textHeightWcs: textHeightWcs ?? sidecar.textHeightWcs,
+      textHeightWcs: textHeightWcs ?? recordStyle.textHeightWcs,
       strokeWidthWcs: this.strokeWidthWcs,
-      arrowSizeWcs: this.arrowSizeWcs ?? sidecar.arrowSizeWcs,
+      arrowSizeWcs: this.arrowSizeWcs ?? recordStyle.arrowSizeWcs,
       fontSizePx: badgeFontSize,
       strokeScreenPx: applicationMeasurementCanvasLineWidth(this.style.lineWeight),
       elements: [badge, ...dots],

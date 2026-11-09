@@ -8,40 +8,23 @@ import type {
 /**
  * In-memory notification store used by the built-in DOM notification UI and as
  * a reference implementation for custom centers.
- *
- * Notifications are kept in per-session buckets. {@link notifications} /
- * {@link unreadCount} / mutation helpers (except {@link clearSession} and
- * {@link remove} by id) operate on the active session.
  */
 export class ApplicationNotificationStore implements ApplicationNotificationCenter {
-  /** Per-session notification lists keyed by {@link ApplicationDocSession.id}. */
-  private readonly _buckets = new Map<string, ApplicationNotification[]>()
-  /** Session currently exposed via {@link notifications}. */
-  private _activeSessionId: string | null = null
+  /** Notifications, newest first. */
+  private _items: ApplicationNotification[] = []
   /** Monotonic counter used to allocate notification ids. */
   private _nextId = 1
   /** Observers notified after any mutating change. */
   private readonly _listeners = new Set<() => void>()
 
-  /**
-   * Notifications for the active document session only.
-   */
+  /** All notifications. */
   get notifications(): readonly ApplicationNotification[] {
-    return this.activeList()
+    return this._items
   }
 
-  /**
-   * Number of notifications in the active session.
-   */
+  /** Number of notifications. */
   get unreadCount(): number {
-    return this.activeList().length
-  }
-
-  /**
-   * Currently active session id, or `null` when none is set.
-   */
-  get activeSessionId(): string | null {
-    return this._activeSessionId
+    return this._items.length
   }
 
   /**
@@ -67,91 +50,24 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Returns the mutable list for the active session, or an empty array.
-   */
-  private activeList(): ApplicationNotification[] {
-    if (this._activeSessionId == null) return []
-    return this._buckets.get(this._activeSessionId) ?? []
-  }
-
-  /**
-   * Replaces the active session's list, deleting the bucket when empty.
-   *
-   * @param list - Next notification list for the active session.
-   */
-  private setActiveList(list: ApplicationNotification[]) {
-    if (this._activeSessionId == null) return
-    if (list.length === 0) {
-      this._buckets.delete(this._activeSessionId)
-    } else {
-      this._buckets.set(this._activeSessionId, list)
-    }
-  }
-
-  /**
-   * Resolves which session bucket an add should target.
-   *
-   * @param explicit - Optional `sessionId` from the input payload.
-   * @returns Session id, or `null` when neither explicit nor active is set.
-   */
-  private resolveSessionId(explicit?: string): string | null {
-    return explicit ?? this._activeSessionId
-  }
-
-  /**
-   * Switches which document's list is exposed via {@link notifications}.
-   *
-   * @param sessionId - Active session id, or `null` when none.
-   */
-  setActiveSession(sessionId: string | null): void {
-    if (this._activeSessionId === sessionId) return
-    this._activeSessionId = sessionId
-    this.emitChange()
-  }
-
-  /**
-   * Drops all notifications for a closed document session.
-   *
-   * @param sessionId - Session whose bucket should be deleted.
-   */
-  clearSession(sessionId: string): void {
-    if (!this._buckets.has(sessionId)) {
-      if (this._activeSessionId === sessionId) {
-        this.emitChange()
-      }
-      return
-    }
-    this._buckets.delete(sessionId)
-    this.emitChange()
-  }
-
-  /**
-   * Inserts a notification into the resolved session bucket (newest first).
+   * Inserts a notification (newest first).
    *
    * @param notification - Entry fields without `id` / `timestamp`.
-   * @returns The assigned id, or `''` when no session could be resolved.
+   * @returns The assigned id.
    */
   add(notification: ApplicationNotificationInput): string {
-    const sessionId = this.resolveSessionId(notification.sessionId)
-    if (sessionId == null) {
-      // No active document yet — drop rather than creating an orphan bucket.
-      return ''
-    }
-
     const entry: ApplicationNotification = {
       ...notification,
-      sessionId,
       id: `notification-${this._nextId++}`,
       timestamp: new Date()
     }
-    const list = this._buckets.get(sessionId) ?? []
-    this._buckets.set(sessionId, [entry, ...list])
+    this._items = [entry, ...this._items]
     this.emitChange()
     return entry.id
   }
 
   /**
-   * Adds an `info` notification to the active (or explicit) session.
+   * Adds an `info` notification.
    *
    * @param title - Headline text.
    * @param message - Optional body.
@@ -167,7 +83,7 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Adds a `warning` notification to the active (or explicit) session.
+   * Adds a `warning` notification.
    *
    * @param title - Headline text.
    * @param message - Optional body.
@@ -205,7 +121,7 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Adds a `success` notification to the active (or explicit) session.
+   * Adds a `success` notification.
    *
    * @param title - Headline text.
    * @param message - Optional body.
@@ -221,50 +137,35 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Removes a notification by id from any session bucket.
+   * Removes a notification by id.
    *
    * @param id - Notification id previously returned by {@link add}.
    */
   remove(id: string): void {
-    for (const [sessionId, list] of this._buckets) {
-      const next = list.filter(n => n.id !== id)
-      if (next.length === list.length) continue
-      if (next.length === 0) {
-        this._buckets.delete(sessionId)
-      } else {
-        this._buckets.set(sessionId, next)
-      }
-      this.emitChange()
-      return
-    }
+    this.removeWhere(notification => notification.id === id)
   }
 
-  /**
-   * Clears notifications for the active session only.
-   */
+  /** Clears all notifications. */
   clear(): void {
-    if (this._activeSessionId == null) return
-    if (!this._buckets.has(this._activeSessionId)) return
-    this._buckets.delete(this._activeSessionId)
+    if (this._items.length === 0) return
+    this._items = []
     this.emitChange()
   }
 
   /**
-   * Removes notifications matching a predicate from the active session.
+   * Removes notifications matching a predicate.
    *
    * @param predicate - Return `true` for entries that should be removed.
    */
   removeWhere(predicate: (notification: ApplicationNotification) => boolean): void {
-    const list = this.activeList()
-    if (list.length === 0) return
-    const next = list.filter(n => !predicate(n))
-    if (next.length === list.length) return
-    this.setActiveList(next)
+    const next = this._items.filter(n => !predicate(n))
+    if (next.length === this._items.length) return
+    this._items = next
     this.emitChange()
   }
 
   /**
-   * Removes all active-session notifications with the given source.
+   * Removes all notifications with the given source.
    *
    * @param source - Producer to clear.
    */
@@ -273,11 +174,10 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Clears listeners, all session buckets, and the active session pointer.
+   * Clears listeners and notifications.
    */
   dispose(): void {
     this._listeners.clear()
-    this._buckets.clear()
-    this._activeSessionId = null
+    this._items = []
   }
 }

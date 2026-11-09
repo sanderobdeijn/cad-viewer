@@ -8,9 +8,6 @@ import {
   applicationGetMeasurementColor,
   applicationGetMeasurementFontSize,
   applicationMeasurementCanvasLineWidth,
-  applicationResetMeasurementDrawStyle,
-  applicationSetMeasurementDrawColor,
-  applicationSetMeasurementDrawFontSize,
   MEASUREMENT_FONT_SIZE,
   MEASUREMENT_LINE_WEIGHT
 } from '../src/util/ApplicationMeasurementUtil'
@@ -21,39 +18,10 @@ describe('ApplicationMeasurementUtil', () => {
     useTestSettings()
   })
 
-  afterEach(() => {
-    applicationResetMeasurementDrawStyle()
-  })
-
   it('defaults to hairline line weight and factory font size', () => {
     expect(MEASUREMENT_LINE_WEIGHT).toBe(0)
     expect(applicationGetMeasurementFontSize()).toBe(MEASUREMENT_FONT_SIZE)
     expect(applicationGetCurrentMeasurementStyle().lineWeight).toBe(0)
-  })
-
-  it('stores session draw color and font size for later measurements', () => {
-    const color = new CommonColor()
-    color.setRGB(10, 20, 30)
-    applicationSetMeasurementDrawColor(color)
-    applicationSetMeasurementDrawFontSize(18)
-
-    const drawn = applicationGetMeasurementColor()
-    expect(drawn.red).toBe(10)
-    expect(drawn.green).toBe(20)
-    expect(drawn.blue).toBe(30)
-    expect(applicationGetMeasurementFontSize()).toBe(18)
-
-    const style = applicationGetCurrentMeasurementStyle()
-    expect(style.fontSize).toBe(18)
-    expect(style.lineWeight).toBe(MEASUREMENT_LINE_WEIGHT)
-    expect(style.color.red).toBe(10)
-  })
-
-  it('ignores non-positive font sizes', () => {
-    applicationSetMeasurementDrawFontSize(16)
-    applicationSetMeasurementDrawFontSize(0)
-    applicationSetMeasurementDrawFontSize(-4)
-    expect(applicationGetMeasurementFontSize()).toBe(16)
   })
 
   it('maps CAD line weight 070 to a 2.5px canvas stroke', () => {
@@ -93,7 +61,7 @@ describe('applicationCssToMeasurementColor', () => {
     expect(custom.blue).toBe(56)
   })
 
-  it('parses rgb() without spaces (sidecar export form)', () => {
+  it('parses rgb() without spaces ', () => {
     const color = applicationCssToMeasurementColor('rgb(96,165,250)')
     expect(color.red).toBe(96)
     expect(color.green).toBe(165)

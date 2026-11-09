@@ -1,6 +1,5 @@
 import {
   ThreeRendererBaseView,
-  ThreeRendererOverlayViewport,
   ThreeRendererRenderer
 } from '@mlightcad/three-renderer'
 import { AxesGizmo, ObjectPosition } from '@mlightcad/three-viewcube'
@@ -33,8 +32,6 @@ export class ThreeRendererLayoutView extends ThreeRendererBaseView {
   private _axesGizmo: AxesGizmo
   /** The current view mode (selection, pan, etc.) */
   private _mode: EditorViewMode
-  /** Screen-fixed overlay viewport (snap loupe, etc.). */
-  private readonly _overlayViewport: ThreeRendererOverlayViewport
 
   /**
    * Construct one instance of this class.
@@ -54,7 +51,6 @@ export class ThreeRendererLayoutView extends ThreeRendererBaseView {
     this._layoutBtrId = layoutBtrId
     this._mode = EditorViewMode.SELECTION
     this._axesGizmo = this.createAxesGizmo()
-    this._overlayViewport = new ThreeRendererOverlayViewport(renderer)
   }
 
   /**
@@ -88,15 +84,6 @@ export class ThreeRendererLayoutView extends ThreeRendererBaseView {
   }
 
   /**
-   * Screen-fixed overlay viewport drawn after the layout.
-   *
-   * @returns The overlay used for the snap loupe and similar HUD viewports.
-   */
-  get overlayViewport(): ThreeRendererOverlayViewport {
-    return this._overlayViewport
-  }
-
-  /**
    * The internal THREE camera used by this layout view.
    */
   get internalCamera() {
@@ -127,7 +114,6 @@ export class ThreeRendererLayoutView extends ThreeRendererBaseView {
   render(scene: ThreeRendererScene) {
     this._renderer.clear()
     const needsRedraw = this._renderer.render(scene.internalScene, this._camera)
-    this.drawOverlay(scene)
     this._axesGizmo?.update()
     return needsRedraw
   }
@@ -151,15 +137,4 @@ export class ThreeRendererLayoutView extends ThreeRendererBaseView {
     return axesGizmo
   }
 
-  /**
-   * Draws the screen-fixed overlay viewport (magnified snap loupe) on top of
-   * the main layout.
-   *
-   * @param scene - Scene containing the layout.
-   */
-  private drawOverlay(scene: ThreeRendererScene) {
-    const overlay = this._overlayViewport
-    if (!overlay.visible) return
-    overlay.render(scene.internalScene, this._height)
-  }
 }

@@ -13,7 +13,6 @@
     "build": "vue-tsc && vite build",
     "clean": "rimraf dist lib tsconfig.tsbuildinfo",
     "dev": "vite",
-    "dev:local-ui-components": "vite --mode local-ui-components",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",

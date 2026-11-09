@@ -5,13 +5,6 @@
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item
-            :icon="features.isShowStats ? Check : ''"
-            command="isShowStats"
-          >
-            {{ t('main.statusBar.setting.stats') }}
-          </el-dropdown-item>
-          <el-dropdown-item
-            v-if="!isSmallViewport"
             :icon="features.isShowCommandLine ? Check : ''"
             command="isShowCommandLine"
           >
@@ -59,11 +52,10 @@ import {
 } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 
-import { useIsMobile, useSettings } from '../../composable'
+import { useSettings } from '../../composable'
 
 const { t } = useI18n()
 const features = useSettings()
-const { isSmallViewport } = useIsMobile()
 
 const handleCommand = (command: keyof ApplicationSettings) => {
   if (command == 'isShowCoordinate') {
@@ -81,9 +73,6 @@ const handleCommand = (command: keyof ApplicationSettings) => {
   } else if (command == 'isShowToolbar') {
     features.isShowToolbar = !features.isShowToolbar
     ApplicationSettingManager.instance.isShowToolbar = features.isShowToolbar
-  } else if (command == 'isShowStats') {
-    features.isShowStats = !features.isShowStats
-    ApplicationSettingManager.instance.isShowStats = features.isShowStats
   }
 }
 </script>

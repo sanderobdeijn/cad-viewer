@@ -86,7 +86,7 @@ function buildFromCapture(
   const traits = renderer.subEntityTraits
 
   if (payload.kind === 'lineStrip') {
-    const material = renderer.styleManager.getLineMaterial(traits, false)
+    const material = renderer.styleManager.getLineMaterial(traits)
     if (isDirectBatchRejectedMaterial(material)) {
       return null
     }
@@ -95,7 +95,7 @@ function buildFromCapture(
       return null
     }
     return {
-      kind: line.kind === 'fat' ? 'lineFat' : 'lineBasic',
+      kind: 'lineBasic',
       geometry: line.geometry,
       worldOffset: line.worldOffset,
       wcsBbox: line.wcsBbox,
@@ -104,7 +104,7 @@ function buildFromCapture(
   }
 
   if (payload.kind === 'lineSegments') {
-    const material = renderer.styleManager.getLineMaterial(traits, false)
+    const material = renderer.styleManager.getLineMaterial(traits)
     return buildLineSegmentsGeometry(
       payload.array,
       payload.itemSize,

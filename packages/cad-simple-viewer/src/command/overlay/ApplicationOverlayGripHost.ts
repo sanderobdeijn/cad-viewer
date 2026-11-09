@@ -61,27 +61,6 @@ interface ApplicationOverlayOsnapView {
   ) => { x: number; y: number }
   clearOverlayGripOsnap?: () => void
   lastOverlayGripOsnap?: { x: number; y: number; type: number } | null
-  refreshMobileSnapLoupe?: (
-    clientX: number,
-    clientY: number,
-    snap?: { x: number; y: number; type: number } | null
-  ) => void
-  hideMobileSnapLoupe?: () => void
-}
-
-/**
- * Refreshes the shared mobile snap loupe for an osnap grip drag sample.
- */
-function applicationRefreshOverlayGripSnapLoupe(
-  view: ThreeRendererView2d,
-  ev: PointerEvent
-): void {
-  const osnapView = view as ThreeRendererView2d & ApplicationOverlayOsnapView
-  osnapView.refreshMobileSnapLoupe?.(
-    ev.clientX,
-    ev.clientY,
-    osnapView.lastOverlayGripOsnap ?? null
-  )
 }
 
 /**
@@ -194,9 +173,6 @@ function setOverlayGripsDragging(dragging: boolean, root: ParentNode): void {
  * Move / up listeners attach to `window` so CSS2D repositioning does not lose
  * events.
  *
- * On phone/pad touch, osnap grips also drive the shared mobile snap loupe so
- * the user can see the magnified sample while moving an endpoint.
- *
  * @param options - Handle element and drag callbacks.
  * @returns Cleanup that removes listeners and cancels an in-progress drag.
  */
@@ -250,20 +226,12 @@ export function applicationBindOverlayPointerDrag(
     const startX = e.clientX
     const startY = e.clientY
     let dragging = false
-    /** Touch + osnap: show the shared mobile snap loupe while dragging. */
-    const showSnapLoupe = useOsnap && e.pointerType === 'touch'
     const lastPoint = applicationPointerEventToOverlayWorld(view, e)
     const osnapView = view as ThreeRendererView2d & ApplicationOverlayOsnapView
 
     const resolveWorld = (ev: PointerEvent): ApplicationOverlayPoint2d => {
       if (!useOsnap) return applicationPointerEventToOverlayWorld(view, ev)
       return applicationPointerEventToOverlayWorldMaybeOsnap(view, ev, lastPoint)
-    }
-
-    const hideSnapLoupe = () => {
-      if (showSnapLoupe) {
-        ;(view as ThreeRendererView2d & ApplicationOverlayOsnapView).hideMobileSnapLoupe?.()
-      }
     }
 
     const detach = () => {
@@ -309,16 +277,12 @@ export function applicationBindOverlayPointerDrag(
         onDragStart?.()
       }
       onMove(resolveWorld(ev), ev)
-      if (showSnapLoupe) {
-        applicationRefreshOverlayGripSnapLoupe(view, ev)
-      }
       view.isHtmlDirty = true
     }
 
     const onPointerUp = (ev: PointerEvent) => {
       if (ev.pointerId !== pointerId) return
       detach()
-      hideSnapLoupe()
       if (useOsnap && dragging) {
         if (typeof osnapView.clearOverlayGripOsnap === 'function') {
           osnapView.clearOverlayGripOsnap()
@@ -334,7 +298,6 @@ export function applicationBindOverlayPointerDrag(
 
     detachActiveDrag?.()
     detachActiveDrag = () => {
-      hideSnapLoupe()
       restoreGrips()
       detach()
     }

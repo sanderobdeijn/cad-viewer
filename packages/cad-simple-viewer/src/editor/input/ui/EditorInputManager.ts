@@ -4,17 +4,7 @@ import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import { ApplicationDocManager, ApplicationSettingManager } from '../../../app'
 import { ApplicationI18n } from '../../../i18n'
 import { itemTypeName } from '../../../model/ApplicationItemDrawable'
-import { UITouchPointTutorialDialog } from '../../../ui/UITouchPointTutorialDialog'
 import { applicationDrawingFormatter } from '../../../util/units/ApplicationDrawingFormatter'
-import type {
-  EditorSessionAccessory,
-  EditorSessionAccessoryHostInfo
-} from '../../command/EditorSessionAccessory'
-import {
-  editorIsMobileUiLayout,
-  editorShouldHideDesktopCommandLine,
-  editorSubscribeUiLayout
-} from '../../global/EditorUiLayout'
 import type { EditorBaseView } from '../../view'
 import type { Editor } from '../Editor'
 import { EditorInputModifiers } from '../EditorInputModifiers'
@@ -57,7 +47,6 @@ import {
 } from '../prompt'
 import { EditorPromptInputMode } from '../session/EditorPromptInputSession'
 import { EditorCommandLine } from './EditorCommandLine'
-import { EditorEntityPickCancelChrome } from './EditorEntityPickCancelChrome'
 import { EditorFloatingInput } from './EditorFloatingInput'
 import {
   EditorFloatingInputBoxCount,
@@ -67,23 +56,7 @@ import {
   EditorFloatingInputRawData
 } from './EditorFloatingInputTypes'
 import { EditorFloatingMessage } from './EditorFloatingMessage'
-import { editorInteractionStrategy } from './EditorInteractionStrategy'
 import { EditorMessageType } from './EditorMessageType'
-import { editorAttachMobileBoxGesture } from './EditorMobileBoxGesture'
-import {
-  EditorMobileCommandChrome,
-  type EditorMobileKeywordChip
-} from './EditorMobileCommandChrome'
-import {
-  editorComputeSessionMetrics,
-  type EditorMobileSessionMetrics
-} from './EditorMobileSessionMetrics'
-import { EditorSessionAccessoryController } from './EditorSessionAccessoryController'
-import {
-  editorIsTouchDerivedMouseEvent,
-  editorIsTouchLongPressContextMenu,
-  editorShouldIgnoreCompatMouse
-} from './EditorTouchPointSession'
 
 /**
  * Internal control-flow error used to propagate keyword picks out of
@@ -147,24 +120,13 @@ export class EditorInputManager {
 
   /** Command line UI component */
   private _commandLine: EditorCommandLine
-  /** Phone/pad prompt bar + session panel (hidden on desktop). */
-  private _mobileChrome: EditorMobileCommandChrome
-  /** Top-right X shown during mobile entity picks (below message bar). */
-  private _entityPickCancel: EditorEntityPickCancelChrome | null = null
-  /** Desktop/mobile session accessory host resolution and selection mounts. */
-  private readonly _sessionAccessoryController: EditorSessionAccessoryController
-  /** Unsubscribes layout media-query listeners. */
-  private _unsubscribeUiLayout?: () => void
   /** Setting-manager listener for command-line visibility. */
   private readonly _onSettingsModified = () => {
     this.syncDesktopCommandLineVisibility()
   }
-  /** Clears leftover mobile chrome when a command ends. */
+  /** Clears confirmed-point marks when a command ends. */
   private readonly _onCommandEnded = () => {
     this.clearConfirmedPointMarks()
-    if (this._mobileChrome.isOpen) {
-      this.endMobilePrompt()
-    }
   }
   private _disposed = false
   /** Editor event bus used to unregister dispose-time listeners. */
@@ -222,42 +184,22 @@ export class EditorInputManager {
     }
     const commandLine = new EditorCommandLine(this.view.container)
     this._commandLine = commandLine
-    this._mobileChrome = new EditorMobileCommandChrome(this.view.container)
-    this._sessionAccessoryController = new EditorSessionAccessoryController({
-      view: this.view,
-      getMobileChrome: () => this._mobileChrome,
-      isMobilePromptOpen: () => this._mobileChrome.isOpen,
-      getEditorEvents: () => editorEvents
-    })
-    this._sessionAccessoryController.bindEditorEvents()
     this.syncDesktopCommandLineVisibility()
     ApplicationSettingManager.instance.events.modified.addEventListener(
       this._onSettingsModified
     )
-    this._unsubscribeUiLayout = editorSubscribeUiLayout(() => {
-      this.syncDesktopCommandLineVisibility()
-      if (
-        !editorInteractionStrategy().point.usesSessionChrome &&
-        this._mobileChrome.isOpen
-      ) {
-        this._mobileChrome.hide()
-      }
-      this._sessionAccessoryController.remountActiveSessionAccessory()
-    })
     this.view.events.viewChanged.addEventListener(
       this._boundRepositionConfirmedPointMarks
     )
     this.view.events.viewResize.addEventListener(
       this._boundRepositionConfirmedPointMarks
     )
-    // Safety net: if a prompt failed to clean up, close the mobile session
-    // panel when the command finishes so the bottom chrome cannot linger.
-    // Also clear confirmed-point plus marks for the finished command.
+    // Clear confirmed-point plus marks for the finished command.
     editorEvents.commandEnded.addEventListener(this._onCommandEnded)
   }
 
   /**
-   * Releases command-line / mobile chrome DOM and global listeners.
+   * Releases command-line DOM and global listeners.
    *
    * Safe to call more than once.
    */
@@ -266,14 +208,9 @@ export class EditorInputManager {
     this._disposed = true
     this.cancelActiveInput()
     this.clearConfirmedPointMarks()
-    this.hideEntityPickCancel()
-    this._entityPickCancel?.dispose()
-    this._entityPickCancel = null
     ApplicationSettingManager.instance.events.modified.removeEventListener(
       this._onSettingsModified
     )
-    this._unsubscribeUiLayout?.()
-    this._unsubscribeUiLayout = undefined
     this.view.events.viewChanged.removeEventListener(
       this._boundRepositionConfirmedPointMarks
     )
@@ -281,40 +218,7 @@ export class EditorInputManager {
       this._boundRepositionConfirmedPointMarks
     )
     this._editorEvents.commandEnded.removeEventListener(this._onCommandEnded)
-    this._sessionAccessoryController.dispose()
-    this._mobileChrome.dispose()
     this._commandLine.dispose()
-  }
-
-  /**
-   * Whether the phone/pad bottom session panel is open for the current prompt.
-   */
-  get isMobilePromptOpen(): boolean {
-    return this._mobileChrome.isOpen
-  }
-
-  /** Mobile session panel chrome. */
-  get mobileChrome(): EditorMobileCommandChrome {
-    return this._mobileChrome
-  }
-
-  /** Active mount target for session accessories. */
-  get sessionAccessoryHost(): EditorSessionAccessoryHostInfo {
-    return this._sessionAccessoryController.sessionAccessoryHost
-  }
-
-  /** Selection-driven accessory shown when no command accessory is mounted. */
-  get selectionSessionAccessory(): EditorSessionAccessory | null {
-    return this._sessionAccessoryController.selectionSessionAccessory
-  }
-
-  /**
-   * Updates the selection-driven accessory on the session accessory controller.
-   *
-   * @param value - Accessory to show on selection, or `null` to clear.
-   */
-  set selectionSessionAccessory(value: EditorSessionAccessory | null) {
-    this._sessionAccessoryController.selectionSessionAccessory = value
   }
 
   /**
@@ -372,129 +276,7 @@ export class EditorInputManager {
    * Shows or hides the desktop command line according to settings and layout.
    */
   private syncDesktopCommandLineVisibility(): void {
-    const hide = editorShouldHideDesktopCommandLine(this.active)
-    this._commandLine.visible =
-      !hide && ApplicationSettingManager.instance.isShowCommandLine
-  }
-
-  /**
-   * Visible keyword chips for the mobile session panel.
-   */
-  private mobileKeywordChips(
-    options: EditorPromptOptions<unknown>
-  ): EditorMobileKeywordChip[] {
-    return (options.keywords?.toArray() ?? [])
-      .filter(kw => kw.visible)
-      .map(kw => ({
-        displayName: kw.displayName,
-        globalName: kw.globalName,
-        enabled: kw.enabled
-      }))
-  }
-
-  /**
-   * Opens the mobile command chrome for the current prompt when on phone/pad.
-   */
-  private beginMobilePrompt(args: {
-    prompt: string
-    keywords?: EditorMobileKeywordChip[]
-    allowNone: boolean
-    showMetrics: boolean
-    showStringInput?: boolean
-    stringValue?: string
-    stringPlaceholder?: string
-    touchPointTutorial?: boolean
-    onConfirm: () => void
-    onCancel: () => void
-    onKeyword: (globalName: string) => void
-  }): void {
-    this.syncDesktopCommandLineVisibility()
-    if (!editorInteractionStrategy().point.usesSessionChrome) return
-    this._mobileChrome.show(
-      {
-        prompt: args.prompt,
-        keywords: args.keywords ?? [],
-        allowNone: args.allowNone,
-        showMetrics: args.showMetrics,
-        showStringInput: args.showStringInput,
-        stringValue: args.stringValue,
-        stringPlaceholder: args.stringPlaceholder
-      },
-      {
-        onConfirm: args.onConfirm,
-        onCancel: args.onCancel,
-        onKeyword: args.onKeyword
-      }
-    )
-    this._sessionAccessoryController.remountActiveSessionAccessory()
-    if (args.touchPointTutorial) {
-      void UITouchPointTutorialDialog.maybeShow(this.view.container)
-    }
-  }
-
-  /** Closes the mobile command chrome and restores desktop CLI visibility. */
-  private endMobilePrompt(): void {
-    this._mobileChrome.hide()
-    this.syncDesktopCommandLineVisibility()
-    this._sessionAccessoryController.remountActiveSessionAccessory()
-  }
-
-  /**
-   * Shows the top-right entity-pick cancel button on mobile layouts only.
-   *
-   * @param onCancel - Invoked when the user taps X.
-   */
-  private showEntityPickCancel(onCancel: () => void): void {
-    if (!editorIsMobileUiLayout()) {
-      this.hideEntityPickCancel()
-      return
-    }
-    if (!this._entityPickCancel) {
-      this._entityPickCancel = new EditorEntityPickCancelChrome({
-        container: this.view.container,
-        onCancel: () => this._entityPickCancelOnCancel?.(),
-        label: ApplicationI18n.t('main.entityPick.cancel'),
-        topOffsetPx: 48
-      })
-    } else {
-      this._entityPickCancel.setLabel(ApplicationI18n.t('main.entityPick.cancel'))
-    }
-    this._entityPickCancelOnCancel = onCancel
-    this._entityPickCancel.show()
-  }
-
-  /** Hides the mobile entity-pick cancel button. */
-  private hideEntityPickCancel(): void {
-    this._entityPickCancelOnCancel = null
-    this._entityPickCancel?.hide()
-  }
-
-  /** Latest cancel callback for {@link _entityPickCancel}. */
-  private _entityPickCancelOnCancel: (() => void) | null = null
-
-  /**
-   * Pushes live length/angle/Δ values into the mobile session panel.
-   */
-  private pushMobileMetrics(
-    cursor: GeometryPoint2dLike,
-    basePoint?: GeometryPoint2dLike | null
-  ): void {
-    if (!this._mobileChrome.isOpen) return
-    const metrics: EditorMobileSessionMetrics = editorComputeSessionMetrics(
-      cursor,
-      basePoint
-    )
-    // A zero-length rubber-band (cursor still on lastPoint after lift / before
-    // the next press) must not wipe the previous readout.
-    if (metrics.hasBasePoint && metrics.length === 0) return
-    this._mobileChrome.setMetrics(metrics, {
-      length: this.formatNumber(metrics.length, 'distance'),
-      angle: this.formatNumber(metrics.angleDeg, 'angle'),
-      dx: this.formatNumber(metrics.dx, 'point'),
-      dy: this.formatNumber(metrics.dy, 'point'),
-      x: this.formatNumber(metrics.x, 'point'),
-      y: this.formatNumber(metrics.y, 'point')
-    })
+    this._commandLine.visible = ApplicationSettingManager.instance.isShowCommandLine
   }
 
   /**
@@ -1010,8 +792,7 @@ export class EditorInputManager {
       inputCount: 1,
       promptOptions: options,
       handler,
-      getDynamicValue,
-      showMetrics: false
+      getDynamicValue
     })
   }
 
@@ -1086,7 +867,6 @@ export class EditorInputManager {
           floatingInput?.setBasePoint(firstPoint, {
             showBaseLineOnly: !options.useDashedLine
           })
-          this._mobileChrome.update({ showMetrics: true })
           return false
         }
         return true
@@ -1282,9 +1062,7 @@ export class EditorInputManager {
           promptOptions: options,
           handler,
           getDynamicValue,
-          showMetrics: false,
-          showStringInput: true,
-          // String value comes from the session panel / typed boxes, not picks.
+          // String value comes from the typed boxes, not picks.
           allowPickCommit: false
         })
       },
@@ -1326,31 +1104,13 @@ export class EditorInputManager {
               this._activeRejector = null
             }
             this._commandLine.cancelActiveSession()
-            this.endMobilePrompt()
             action()
           }
           const rejector = (err?: Error) => {
             finish(() => reject(err ?? new Error('cancelled')))
           }
           this._activeRejector = rejector
-          // Pad hides the desktop CLI only while a prompt session is active.
           this.active = true
-
-          this.beginMobilePrompt({
-            prompt: options.getDisplayMessage(),
-            keywords: this.mobileKeywordChips(options),
-            allowNone: options.allowNone,
-            showMetrics: false,
-            onConfirm: () => {
-              if (options.allowNone) {
-                rejector(new EditorNoneInputError())
-              }
-            },
-            onCancel: () => rejector(),
-            onKeyword: globalName => {
-              finish(() => resolve(globalName))
-            }
-          })
 
           this._commandLine.getKeywords(options, true).then(
             result => {
@@ -1425,7 +1185,6 @@ export class EditorInputManager {
           let startCanvas: GeometryPoint2dLike | null = null
           let previewEl: HTMLDivElement | null = null
           let lastDragEvent: MouseEvent | null = null
-          let disposeGesture: (() => void) | null = null
 
           const updateSelectionPreview = (
             clientX: number,
@@ -1487,9 +1246,6 @@ export class EditorInputManager {
             previewEl?.remove()
             keywordSession?.cancel()
             this._commandLine.clear()
-            this.endMobilePrompt()
-            disposeGesture?.()
-            disposeGesture = null
             this.view.setNavigationEnabled(true)
 
             document.removeEventListener('keydown', keyHandler)
@@ -1504,21 +1260,6 @@ export class EditorInputManager {
             this.view.events.viewResize.removeEventListener(onViewChanged)
           }
           this._activeRejector = rejector
-
-          this.beginMobilePrompt({
-            prompt: options.getDisplayMessage(),
-            keywords: this.mobileKeywordChips(options),
-            allowNone: true,
-            showMetrics: false,
-            onConfirm: () => {
-              cleanup()
-              resolve([...selected])
-            },
-            onCancel: () => rejector(),
-            onKeyword: globalName => {
-              rejector(new EditorKeywordInputError(globalName))
-            }
-          })
 
           keywordSession?.promise.then(keyword => {
             if (settled) return
@@ -1598,14 +1339,6 @@ export class EditorInputManager {
             this.view.container.appendChild(previewEl)
           }
 
-          const clearBoxPreview = () => {
-            previewEl?.remove()
-            previewEl = null
-            lastDragEvent = null
-            startWcs = null
-            startCanvas = null
-          }
-
           const mouseDown = (e: MouseEvent) => {
             if (e.button === 2) {
               if (this.shouldUseRightClickEnter()) {
@@ -1616,26 +1349,12 @@ export class EditorInputManager {
               return
             }
             if (e.button !== 0) return
-            if (
-              editorIsTouchDerivedMouseEvent(e) ||
-              editorShouldIgnoreCompatMouse()
-            ) {
-              return
-            }
-
             beginPreview(e.clientX, e.clientY)
           }
 
           const mouseMove = (e: MouseEvent) => {
             if (e.buttons !== 1) return
             if (!startWcs || !previewEl || !startCanvas) return
-            if (
-              editorIsTouchDerivedMouseEvent(e) ||
-              editorShouldIgnoreCompatMouse()
-            ) {
-              return
-            }
-
             lastDragEvent = e
             updateSelectionPreview(
               e.clientX,
@@ -1647,13 +1366,6 @@ export class EditorInputManager {
           const mouseUp = (e: MouseEvent) => {
             if (e.button !== 0) return
             if (!startWcs || !startCanvas) return
-            if (
-              editorIsTouchDerivedMouseEvent(e) ||
-              editorShouldIgnoreCompatMouse()
-            ) {
-              return
-            }
-
             const endCanvas = clientToCanvas(e.clientX, e.clientY)
             const endWcs = this.view.screenToWorld(endCanvas)
             const isClick = this.view.isSelectionClick(startCanvas, endCanvas)
@@ -1665,43 +1377,6 @@ export class EditorInputManager {
             startWcs = null
             startCanvas = null
           }
-
-          disposeGesture = editorAttachMobileBoxGesture({
-            element: this.view.canvas,
-            setNavigationEnabled: enabled => {
-              this.view.setNavigationEnabled(enabled)
-            },
-            onActivate: (clientX, clientY) => {
-              beginPreview(clientX, clientY)
-              lastDragEvent = null
-              updateSelectionPreview(clientX, clientY, 'add')
-            },
-            onMove: (clientX, clientY) => {
-              updateSelectionPreview(clientX, clientY, 'add')
-            },
-            onBoxEnd: (clientX, clientY, moved) => {
-              if (!startWcs || !startCanvas) {
-                clearBoxPreview()
-                return
-              }
-              const endCanvas = clientToCanvas(clientX, clientY)
-              const endWcs = this.view.screenToWorld(endCanvas)
-              previewEl?.remove()
-              previewEl = null
-              lastDragEvent = null
-              applySelectionAt(endCanvas, endWcs, 'add', !moved)
-              startWcs = null
-              startCanvas = null
-            },
-            onTap: (clientX, clientY) => {
-              const endCanvas = clientToCanvas(clientX, clientY)
-              const endWcs = this.view.screenToWorld(endCanvas)
-              applySelectionAt(endCanvas, endWcs, 'add', true)
-            },
-            onAbort: () => {
-              clearBoxPreview()
-            }
-          })
 
           document.addEventListener('keydown', keyHandler)
           this.view.canvas.addEventListener('mousedown', mouseDown)
@@ -1775,27 +1450,8 @@ export class EditorInputManager {
             floatingMessage?.dispose()
             keywordSession?.cancel()
             this._commandLine.clear()
-            this.hideEntityPickCancel()
-            this.endMobilePrompt()
           }
           this._activeRejector = rejector
-
-          this.beginMobilePrompt({
-            prompt: options.getDisplayMessage(),
-            keywords: this.mobileKeywordChips(options),
-            allowNone: options.allowNone,
-            showMetrics: false,
-            onConfirm: () => {
-              if (!options.allowNone) return
-              cleanup()
-              resolve(null)
-            },
-            onCancel: () => rejector(),
-            onKeyword: globalName => {
-              rejector(new EditorKeywordInputError(globalName))
-            }
-          })
-          this.showEntityPickCancel(() => rejector())
 
           keywordSession?.promise.then(keyword => {
             if (settled) return
@@ -1886,9 +1542,7 @@ export class EditorInputManager {
   /**
    * Prompt the user to specify a rectangular box by selecting two corners.
    *
-   * Desktop: two chained point prompts with a live HTML overlay preview.
-   * Phone/pad: the mobile {@link editorInteractionStrategy} uses long-press
-   * (~1s) + drag on touch, and click-drag or two clicks on mouse.
+   * Uses two chained point prompts with a live HTML overlay preview.
    *
    * @param options - Box prompt options controlling corner messages, preview behavior, and keywords
    * @returns A prompt result containing the final 2D box, cancel status, or keyword
@@ -1896,13 +1550,7 @@ export class EditorInputManager {
   async getBox(options: EditorPromptBoxOptions): Promise<EditorPromptBoxResult> {
     return this.executePrompt(
       () =>
-        editorInteractionStrategy().acquireBox(
-          {
-            acquireTwoPointBox: opts => this.getBoxViaTwoPoints(opts),
-            acquireHoldDragBox: opts => this.getBoxViaHoldDrag(opts)
-          },
-          options
-        ),
+        this.getBoxViaTwoPoints(options),
       value => value,
       status => new EditorPromptBoxResult(status)
     )
@@ -1971,248 +1619,6 @@ export class EditorInputManager {
   }
 
   /**
-   * Phone/pad box acquisition: long-press locks corner 1, drag, release for
-   * corner 2. Mouse still works via click-drag or two clicks.
-   * Preview uses window/crossing styles by drag direction.
-   */
-  private getBoxViaHoldDrag(
-    options: EditorPromptBoxOptions
-  ): Promise<EditorPromptBoxResult> {
-    return new Promise<EditorPromptBoxResult>((resolve, reject) => {
-      this.active = true
-      const message =
-        options.firstCornerMessage ||
-        ApplicationI18n.t('main.inputManager.firstCorner')
-      const keywordSession = this.startKeywordSession(options, true)
-      if (!keywordSession) {
-        this._commandLine.setPrompt(message)
-      }
-
-      const floatingMessage = new EditorFloatingMessage(this.view, {
-        parent: this.view.canvas,
-        message
-      })
-
-      let startWcs: GeometryPoint2dLike | null = null
-      let startCanvas: GeometryPoint2dLike | null = null
-      let previewEl: HTMLDivElement | null = null
-      let settled = false
-      let disposeGesture: (() => void) | null = null
-      let firstCornerLocked = false
-      let lastMouse: { clientX: number; clientY: number } | null = null
-
-      const clearPreview = () => {
-        previewEl?.remove()
-        previewEl = null
-      }
-
-      const resetBox = () => {
-        clearPreview()
-        startWcs = null
-        startCanvas = null
-        firstCornerLocked = false
-        lastMouse = null
-      }
-
-      const clientToCanvas = (clientX: number, clientY: number) =>
-        this.view.viewportToCanvas({ x: clientX, y: clientY })
-
-      const updatePreview = (clientX: number, clientY: number) => {
-        if (!startWcs || !previewEl || !startCanvas) return
-        const curCanvas = clientToCanvas(clientX, clientY)
-        const curWcs = this.view.screenToWorld(curCanvas)
-        const p1 = this.view.worldToScreen(startWcs)
-        const p2 = this.view.worldToScreen(curWcs)
-        const mode = this.view.getSelectionMode(startCanvas, curCanvas)
-        const style = this.view.getSelectionPreviewStyle(mode, 'add')
-        Object.assign(previewEl.style, {
-          left: `${Math.min(p1.x, p2.x)}px`,
-          top: `${Math.min(p1.y, p2.y)}px`,
-          width: `${Math.abs(p1.x - p2.x)}px`,
-          height: `${Math.abs(p1.y - p2.y)}px`,
-          borderStyle: style.borderStyle,
-          background: style.background
-        })
-        previewEl.style.setProperty('--line-color', style.lineColor)
-      }
-
-      const beginPreview = (clientX: number, clientY: number) => {
-        const canvas = clientToCanvas(clientX, clientY)
-        startCanvas = canvas
-        startWcs = this.view.screenToWorld(canvas)
-        firstCornerLocked = false
-        lastMouse = { clientX, clientY }
-        clearPreview()
-        previewEl = document.createElement('div')
-        previewEl.className = 'ml-jig-preview-rect'
-        this.view.container.appendChild(previewEl)
-        updatePreview(clientX, clientY)
-      }
-
-      const commitBoxIfMoved = (clientX: number, clientY: number) => {
-        if (!startWcs || !startCanvas) return false
-        const endCanvas = clientToCanvas(clientX, clientY)
-        if (this.view.isSelectionClick(startCanvas, endCanvas)) return false
-        const endWcs = this.view.screenToWorld(endCanvas)
-        const box = new GeometryBox2d()
-          .expandByPoint(startWcs)
-          .expandByPoint(endWcs)
-        cleanup()
-        resolve(new EditorPromptBoxResult(EditorPromptStatus.OK, box))
-        return true
-      }
-
-      const rejector = (err?: Error) => {
-        cleanup()
-        reject(err ?? new Error('cancelled'))
-      }
-
-      const cleanup = () => {
-        if (settled) return
-        settled = true
-        this.active = false
-        if (this._activeRejector === rejector) {
-          this._activeRejector = null
-        }
-        disposeGesture?.()
-        disposeGesture = null
-        resetBox()
-        floatingMessage.dispose()
-        keywordSession?.cancel()
-        this._commandLine.clear()
-        this.endMobilePrompt()
-        this.view.setNavigationEnabled(true)
-        document.removeEventListener('keydown', keyHandler)
-        this.view.canvas.removeEventListener('mousedown', mouseDown)
-        this.view.canvas.removeEventListener('mousemove', mouseMove)
-        this.view.canvas.removeEventListener('mouseup', mouseUp)
-        this.view.canvas.removeEventListener('contextmenu', contextMenuHandler)
-        this.view.events.viewChanged.removeEventListener(onViewChanged)
-        this.view.events.viewResize.removeEventListener(onViewChanged)
-      }
-      this._activeRejector = rejector
-
-      this.beginMobilePrompt({
-        prompt: options.getDisplayMessage(),
-        keywords: this.mobileKeywordChips(options),
-        allowNone: options.allowNone,
-        showMetrics: false,
-        onConfirm: () => {
-          if (options.allowNone) {
-            cleanup()
-            resolve(new EditorPromptBoxResult(EditorPromptStatus.None))
-          }
-        },
-        onCancel: () => rejector(),
-        onKeyword: globalName => {
-          rejector(new EditorKeywordInputError(globalName))
-        }
-      })
-
-      keywordSession?.promise.then(keyword => {
-        if (settled) return
-        if (!keyword) {
-          rejector()
-          return
-        }
-        rejector(new EditorKeywordInputError(keyword))
-      })
-
-      const keyHandler = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          rejector()
-          return
-        }
-        if (e.key === 'Enter' && options.allowNone) {
-          cleanup()
-          resolve(new EditorPromptBoxResult(EditorPromptStatus.None))
-        }
-      }
-      document.addEventListener('keydown', keyHandler)
-
-      const contextMenuHandler = (e: MouseEvent) => {
-        if (this.shouldUseRightClickEnter()) {
-          e.preventDefault()
-        }
-      }
-
-      const isCompatMouse = (e: MouseEvent) =>
-        editorIsTouchDerivedMouseEvent(e) || editorShouldIgnoreCompatMouse()
-
-      const mouseDown = (e: MouseEvent) => {
-        if (e.button === 2) {
-          if (this.shouldUseRightClickEnter() && options.allowNone) {
-            e.preventDefault()
-            cleanup()
-            resolve(new EditorPromptBoxResult(EditorPromptStatus.None))
-          }
-          return
-        }
-        if (e.button !== 0) return
-        if (isCompatMouse(e)) return
-        if (firstCornerLocked) return
-        this.view.setNavigationEnabled(false)
-        beginPreview(e.clientX, e.clientY)
-      }
-
-      const mouseMove = (e: MouseEvent) => {
-        if (!startWcs || !previewEl || !startCanvas) return
-        if (isCompatMouse(e)) return
-        if (e.buttons !== 1 && !firstCornerLocked) return
-        lastMouse = { clientX: e.clientX, clientY: e.clientY }
-        updatePreview(e.clientX, e.clientY)
-      }
-
-      const mouseUp = (e: MouseEvent) => {
-        if (e.button !== 0) return
-        if (!startWcs || !startCanvas) return
-        if (isCompatMouse(e)) return
-        if (commitBoxIfMoved(e.clientX, e.clientY)) return
-        firstCornerLocked = true
-      }
-
-      const onViewChanged = () => {
-        if (lastMouse && startWcs && previewEl) {
-          updatePreview(lastMouse.clientX, lastMouse.clientY)
-        }
-      }
-
-      disposeGesture = editorAttachMobileBoxGesture({
-        element: this.view.canvas,
-        setNavigationEnabled: enabled => {
-          this.view.setNavigationEnabled(enabled)
-        },
-        onActivate: (clientX, clientY) => {
-          beginPreview(clientX, clientY)
-          lastMouse = null
-          updatePreview(clientX, clientY)
-        },
-        onMove: (clientX, clientY) => {
-          updatePreview(clientX, clientY)
-        },
-        onBoxEnd: (clientX, clientY, moved) => {
-          if (!startWcs || !startCanvas) return
-          if (!moved) {
-            resetBox()
-            return
-          }
-          commitBoxIfMoved(clientX, clientY)
-        },
-        onAbort: () => {
-          resetBox()
-        }
-      })
-
-      this.view.canvas.addEventListener('mousedown', mouseDown)
-      this.view.canvas.addEventListener('mousemove', mouseMove)
-      this.view.canvas.addEventListener('mouseup', mouseUp)
-      this.view.canvas.addEventListener('contextmenu', contextMenuHandler)
-      this.view.events.viewChanged.addEventListener(onViewChanged)
-      this.view.events.viewResize.addEventListener(onViewChanged)
-    })
-  }
-
-  /**
    * Shared point input logic used by getPoint() and getBox(). Accepts "x,y"
    * typed input OR mouse click.
    *
@@ -2277,7 +1683,7 @@ export class EditorInputManager {
   ): boolean {
     const override = options.showConfirmedPointMark
     if (override !== undefined) return override
-    return editorInteractionStrategy().point.showsConfirmedPointMarks
+    return false
   }
 
   /**
@@ -2613,9 +2019,6 @@ export class EditorInputManager {
     drawPreview?: EditorFloatingInputDrawPreviewCallback
     onCommit?: EditorFloatingInputCommitCallback<T>
     onFloatingInputCreated?: (input: EditorFloatingInput<T>) => void
-    showMetrics?: boolean
-    /** Session-panel text field instead of X/Y metrics (mobile string prompts). */
-    showStringInput?: boolean
     /** When false, canvas pick does not commit (string prompts). */
     allowPickCommit?: boolean
   }): Promise<T> {
@@ -2655,24 +2058,9 @@ export class EditorInputManager {
       const defaultBehavior = this.resolvePromptDefaultValue(
         options.promptOptions
       )
-      const showStringInput =
-        options.showStringInput === true &&
-        editorInteractionStrategy().point.usesSessionChrome
-      const showMetrics = showStringInput
-        ? false
-        : (options.showMetrics ??
-          (options.inputCount === 2 || basePoint != null))
       const allowPickCommit = options.allowPickCommit !== false
 
-      const getDynamicValue: EditorFloatingInputDynamicValueCallback<T> = pos => {
-        if (!showStringInput) {
-          this.pushMobileMetrics(
-            pos,
-            basePoint ?? floatingInput.sessionBasePoint
-          )
-        }
-        return options.getDynamicValue(pos)
-      }
+      const getDynamicValue = options.getDynamicValue
 
       const floatingInput = new EditorFloatingInput(this.view, {
         parent: this.view.canvas,
@@ -2733,7 +2121,6 @@ export class EditorInputManager {
         floatingInput.dispose()
         promptInputSession.cancel()
         this._commandLine.clear()
-        this.endMobilePrompt()
       }
 
       const resolver = (value: T) => {
@@ -2756,45 +2143,6 @@ export class EditorInputManager {
         rejector(new EditorKeywordInputError(keyword))
       }
 
-      const commitMobileString = () => {
-        const raw = this._mobileChrome.getStringValue()
-        if (!raw.trim() && defaultBehavior.useDefaultValue) {
-          resolver(defaultBehavior.defaultValue as T)
-          return
-        }
-        const parsed = options.handler.parse(raw)
-        if (parsed != null) {
-          resolver(parsed)
-          return
-        }
-        // Invalid: keep the session open and refocus the field.
-        this._mobileChrome.focusStringInput()
-      }
-
-      this.beginMobilePrompt({
-        prompt: options.promptOptions.getDisplayMessage(),
-        keywords: this.mobileKeywordChips(
-          options.promptOptions as EditorPromptOptions<unknown>
-        ),
-        allowNone,
-        showMetrics,
-        showStringInput,
-        stringValue:
-          showStringInput && defaultBehavior.useDefaultValue
-            ? String(defaultBehavior.defaultValue ?? '')
-            : undefined,
-        touchPointTutorial: !showStringInput,
-        onConfirm: () => {
-          if (showStringInput) {
-            commitMobileString()
-          } else {
-            noneRejector()
-          }
-        },
-        onCancel: () => rejector(),
-        onKeyword: keywordRejector
-      })
-
       const escHandler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           rejector()
@@ -2808,16 +2156,6 @@ export class EditorInputManager {
         }
       }
       const contextMenuHandler = (e: MouseEvent) => {
-        // Phone long-press synthesizes contextmenu while the snap loupe is
-        // opening. That is not right-click Enter — swallowing it would
-        // cancel the measure / point prompt as soon as the loupe appears.
-        if (
-          editorIsTouchLongPressContextMenu(e) ||
-          editorInteractionStrategy().point.swallowsPromptContextMenu
-        ) {
-          e.preventDefault()
-          return
-        }
         if (!this.shouldUseRightClickEnter()) return
         e.preventDefault()
         noneRejector()
@@ -2827,10 +2165,7 @@ export class EditorInputManager {
       document.addEventListener('keyup', modifierHandler)
       this.view.canvas.addEventListener('contextmenu', contextMenuHandler)
       // showAt() expects viewport coordinates; curMousePos is canvas-local.
-      // On touch, skip the dummy canvas-(0,0) seed until a real pointer sample.
-      // Also skip leftover finger coords after a touch pick — those seed a
-      // short jig segment on the next measure-distance prompt.
-      if (this.view.hasCursorPos && !editorShouldIgnoreCompatMouse()) {
+      if (this.view.hasCursorPos) {
         floatingInput.showAt(this.view.canvasToViewport(this.view.curMousePos))
       } else {
         floatingInput.showAt({ x: 0, y: 0 })

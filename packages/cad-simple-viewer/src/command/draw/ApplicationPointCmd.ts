@@ -16,7 +16,6 @@ import { ApplicationI18n } from '../../i18n'
  * - Prompt for a point.
  * - Add one point to the drawing immediately after each confirmed point.
  * - Continue prompting until the user cancels the command.
- * - Point display is controlled by the current `PDMODE` and `PDSIZE`.
  */
 export class ApplicationPointCmd extends EditorCommand {
   constructor() {

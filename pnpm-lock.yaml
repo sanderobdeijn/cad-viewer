@@ -167,9 +167,6 @@ importers:
       '@mlightcad/three-renderer':
         specifier: workspace:*
         version: link:../three-renderer
-      '@mlightcad/ui-components':
-        specifier: ^0.1.11
-        version: 0.1.11(element-plus@2.13.6(typescript@5.9.3)(vue@3.5.31(typescript@5.9.3)))(vue@3.5.31(typescript@5.9.3))
       '@vitejs/plugin-vue':
         specifier: ^6.0.8
         version: 6.0.8(vite@6.4.3(@types/node@24.12.4)(sass@1.98.0)(yaml@2.8.3))(vue@3.5.31(typescript@5.9.3))
@@ -1770,12 +1767,6 @@ packages:
     resolution: {integrity: sha512-oGWC+NrfgfHyCGtO/3NGC3M91qrj9Y1cOVaRKGALEicqCJYg7M4fKUbuag2rCNZLml1BdhpS9JMTZyfbYeAO7Q==}
     peerDependencies:
       three: ^0.186.1
-
-  '@mlightcad/ui-components@0.1.11':
-    resolution: {integrity: sha512-9za8wiknHdx2XJ50ETK/rElHnZcgSSOFnofea4nGOl1GjGFPRhjl98+8Bmzynv9r1zsNwRw/D1gU6ylTws6Prg==}
-    peerDependencies:
-      element-plus: ^2.12.0
-      vue: ^3.4.21
 
   '@napi-rs/wasm-runtime@0.2.4':
     resolution: {integrity: sha512-9zESzOO5aDByvhIAsOy9TbpZ0Ur2AJbUI7UT73kcUTS2mxAMHOBaa1st/jAymNoCtvrit99kkzT1FZuXVcgfIQ==}
@@ -7196,11 +7187,6 @@ snapshots:
   '@mlightcad/three-viewcube@0.0.9(three@0.186.1)':
     dependencies:
       three: 0.186.1
-
-  '@mlightcad/ui-components@0.1.11(element-plus@2.13.6(typescript@5.9.3)(vue@3.5.31(typescript@5.9.3)))(vue@3.5.31(typescript@5.9.3))':
-    dependencies:
-      element-plus: 2.13.6(typescript@5.9.3)(vue@3.5.31(typescript@5.9.3))
-      vue: 3.5.31(typescript@5.9.3)
 
   '@napi-rs/wasm-runtime@0.2.4':
     dependencies:

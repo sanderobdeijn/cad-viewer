@@ -1,7 +1,4 @@
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { ThreeRendererBatchedGroup } from '../src/batch/ThreeRendererBatchedGroup'
 import { ThreeRendererEntity } from '../src/object/ThreeRendererEntity'
@@ -42,20 +39,6 @@ function createRectangleLineSegments(): THREE.LineSegments {
   return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial())
 }
 
-function createRectangleLineSegments2(): LineSegments2 {
-  const geometry = new LineSegmentsGeometry()
-  geometry.setPositions([
-    0, 0, 0, 100, 0, 0, 100, 0, 0, 100, 80, 0, 100, 80, 0, 0, 80, 0, 0, 80, 0, 0,
-    0, 0
-  ])
-  const material = new LineMaterial({
-    color: 0xffffff,
-    linewidth: 1,
-    resolution: new THREE.Vector2(800, 600)
-  })
-  return new LineSegments2(geometry, material)
-}
-
 function createOrthoRaycaster(
   x: number,
   y: number,
@@ -83,14 +66,4 @@ describe('ThreeRendererBatchedLine / ThreeRendererBatchedLine2 pick', () => {
     expect(group.isIntersectWith('rect-1', onEdge)).toBe(true)
   })
 
-  it('does not select a hollow LineSegments2 rectangle via its bounding-box interior', () => {
-    const group = new ThreeRendererBatchedGroup()
-    group.addEntity(createEntity('rect-2', createRectangleLineSegments2()))
-
-    const interior = createOrthoRaycaster(50, 40)
-    expect(group.isIntersectWith('rect-2', interior)).toBe(false)
-
-    const onEdge = createOrthoRaycaster(50, 0)
-    expect(group.isIntersectWith('rect-2', onEdge)).toBe(true)
-  })
 })

@@ -1,14 +1,12 @@
 import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
 import {
   ThreeRendererBatchedGroup,
-  ThreeRendererBatchedGroupStats,
   ThreeRendererDirectEntityMeta,
   ThreeRendererEntity,
   ThreeRendererEntityPreview,
   ThreeRendererGroup
 } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { EditorSpatialQueryResultItem } from '../editor'
 import { unionSpatialQueryItems } from '../editor/view/EditorSpatialQueryResult'
@@ -27,45 +25,6 @@ export interface ThreeRendererEntityPreviewRootOptions {
   missingEntity?: 'fail' | 'skip'
   /** When true, every requested id must exist in this layout. */
   requireAllEntities?: boolean
-}
-
-/**
- * Interface representing statistics for a layout.
- * Provides detailed information about the layout's content including
- * batch statistics and memory usage breakdown.
- */
-export interface ThreeRendererLayoutStats {
-  /** Statistics of the batch group that holds the layout's entities */
-  batch: ThreeRendererBatchedGroupStats
-  /** Summary statistics for the entire layout */
-  summary: {
-    /** Total number of entities in the layout */
-    entityCount: number
-    /** Memory usage breakdown by object type */
-    totalSize: {
-      /** Memory used by line geometries (bytes) */
-      line: number
-      /** Memory used by mesh geometries (bytes) */
-      mesh: number
-      /** Memory used by point geometries (bytes) */
-      point: number
-      /** Memory used by unbatched geometries (bytes) */
-      unbatched: number
-      /** Total geometry memory usage (bytes) */
-      geometry: number
-      /** Memory used by entity mappings (bytes) */
-      mapping: number
-      /** Number of unbatched objects */
-      unbatchedCount: number
-      /** Unbatched object count by type */
-      unbatchedByType: {
-        line: number
-        mesh: number
-        point: number
-        other: number
-      }
-    }
-  }
 }
 
 /**
@@ -226,41 +185,6 @@ export class ThreeRendererLayout {
   }
 
   /**
-   * Approximate spatial-index memory / cardinality stats for this layout.
-   */
-  get spatialIndexStats() {
-    return this._spatialIndex.getStats()
-  }
-
-  /**
-   * The statistics of this layout.
-   * Provides detailed information about memory usage and entity counts.
-   */
-  get stats(): ThreeRendererLayoutStats {
-    const batch = this._batch.stats
-    return {
-      batch,
-      summary: {
-        entityCount: this.entityCount,
-        totalSize: {
-          line:
-            batch.line.indexed.geometrySize + batch.line.nonIndexed.geometrySize,
-          mesh:
-            batch.mesh.indexed.geometrySize + batch.mesh.nonIndexed.geometrySize,
-          point:
-            batch.point.indexed.geometrySize +
-            batch.point.nonIndexed.geometrySize,
-          unbatched: batch.unbatched.geometrySize,
-          geometry: batch.summary.totalGeometrySize,
-          mapping: batch.summary.totalMappingSize,
-          unbatchedCount: batch.unbatched.count,
-          unbatchedByType: { ...batch.unbatched.byType }
-        }
-      }
-    }
-  }
-
-  /**
    * Clears all entities from the layout.
    * Clears the batch group, resets the bounding box, and clears the spatial index.
    *
@@ -274,49 +198,6 @@ export class ThreeRendererLayout {
     this._extentExcludedObjectIds.clear()
     this._spatialIndex.clear()
     return this
-  }
-
-  /**
-   * Re-render points with latest point style settings.
-   * Updates the visual representation of all point entities and refreshes spatial-index boxes so enlarged markers stay selectable.
-   *
-   * @param displayMode - Input display mode of points
-   * @param displaySize - Input display size of points (`PDSIZE`)
-   */
-  rerenderPoints(displayMode: number, displaySize: number = 0) {
-    this._batch.rerenderPoints(displayMode, displaySize)
-    this.refreshPointSpatialIndexes()
-  }
-
-  /**
-   * Syncs root spatial-index boxes with point / point-symbol batch AABBs after
-   * a `PDMODE` / `PDSIZE` refresh.
-   *
-   * Pure point entities replace their root box. Groups that own a
-   * child index only expand so coarse bounds are never shrunk to the
-   * point-symbol subset.
-   */
-  private refreshPointSpatialIndexes() {
-    const boxes = this._batch.collectPointObjectWorldBoxes(new Map())
-
-    boxes.forEach((box, objectId) => {
-      if (this._spatialIndex.hasChildIndex(objectId)) {
-        const existing = this._spatialIndex.getRootById(objectId)
-        if (existing) {
-          this._spatialIndex.insert({
-            id: objectId,
-            minX: Math.min(existing.minX, box.min.x),
-            minY: Math.min(existing.minY, box.min.y),
-            maxX: Math.max(existing.maxX, box.max.x),
-            maxY: Math.max(existing.maxY, box.max.y)
-          })
-          return
-        }
-      }
-      this.registerSpatialIndexBox(objectId, box)
-    })
-    // Point symbol AABBs feed smart extents; discard any cached fit.
-    this.clearSmartExtentsCache()
   }
 
   /**
@@ -687,13 +568,6 @@ export class ThreeRendererLayout {
       position: meta.position
     }
     switch (meta.kind) {
-      case 'lineFat':
-        return this._batch.appendLine2Geometry(
-          meta.geometry as LineSegmentsGeometry,
-          meta.material,
-          meta.worldOffset,
-          options
-        )
       case 'lineBasic':
         return this._batch.appendLineGeometry(
           meta.geometry as THREE.BufferGeometry,

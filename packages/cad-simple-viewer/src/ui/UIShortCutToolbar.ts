@@ -68,28 +68,6 @@ const SHELL_CSS = `
     flex: 0 0 auto;
     max-width: none;
   }
-  .ml-ui-shortcut-accessory {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex: 0 0 auto;
-  }
-  .ml-ui-shortcut-accessory:empty {
-    display: none;
-  }
-  .ml-ui-shortcut-divider {
-    display: none;
-    width: 1px;
-    align-self: stretch;
-    margin: 2px 0;
-    background: var(--ml-ui-border, #dcdfe6);
-    flex: 0 0 auto;
-  }
-  .ml-ui-shortcut-toolbar-shell.has-accessory .ml-ui-shortcut-divider {
-    display: block;
-  }
-  .ml-ui-shortcut-toolbar-shell.is-collapsed .ml-ui-shortcut-accessory,
-  .ml-ui-shortcut-toolbar-shell.is-collapsed .ml-ui-shortcut-divider,
   .ml-ui-shortcut-toolbar-shell.is-collapsed .ml-ui-simple-toolbar {
     display: none !important;
   }
@@ -137,26 +115,6 @@ const SHELL_CSS = `
   }
   .ml-ui-shortcut-toolbar-shell.is-collapsed .ml-ui-shortcut-collapse-sep {
     display: none;
-  }
-  /* Match simple-toolbar icon buttons: no permanent outer frame. */
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__controls {
-    gap: 4px;
-  }
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__swatch,
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__text-height {
-    width: var(--ml-ui-simple-toolbar-btn-size, 32px);
-    height: var(--ml-ui-simple-toolbar-btn-size, 32px);
-    border: 1px solid transparent;
-    border-radius: 4px;
-    background: transparent;
-  }
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__swatch:hover,
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__text-height:hover {
-    background: var(--ml-ui-accent-soft, rgba(64, 158, 255, 0.12));
-    border-color: var(--ml-ui-border, #dcdfe6);
-  }
-  .ml-ui-shortcut-accessory .ml-draw-style-toolbar__swatch-fill {
-    margin: 0 auto;
   }
 `
 
@@ -228,9 +186,7 @@ export class UIShortCutToolbar {
   readonly shell: HTMLDivElement
 
   /** Mount point for selection draw-style controls (left of core buttons). */
-  readonly accessoryHost: HTMLDivElement
 
-  private readonly divider: HTMLDivElement
   private readonly collapseSep: HTMLDivElement | null
   private readonly collapseButton: HTMLButtonElement | null
   private readonly toolbar: UISimpleToolbar
@@ -268,13 +224,6 @@ export class UIShortCutToolbar {
       this.shell.style.top = `${options.topOffsetPx}px`
     }
     options.container.appendChild(this.shell)
-
-    this.accessoryHost = document.createElement('div')
-    this.accessoryHost.className = 'ml-ui-shortcut-accessory'
-    this.divider = document.createElement('div')
-    this.divider.className = 'ml-ui-shortcut-divider'
-    this.divider.setAttribute('aria-hidden', 'true')
-    this.shell.append(this.accessoryHost, this.divider)
 
     this.toolbar = new UISimpleToolbar({
       host: this.shell,
@@ -372,16 +321,6 @@ export class UIShortCutToolbar {
    */
   get isVisible(): boolean {
     return !this.shell.hidden
-  }
-
-  /**
-   * Marks whether {@link accessoryHost} currently hosts draw-style controls.
-   * Drives the divider between accessory and core buttons.
-   *
-   * @param active - True when draw-style is mounted in the slot.
-   */
-  setAccessoryActive(active: boolean): void {
-    this.shell.classList.toggle('has-accessory', active)
   }
 
   /**

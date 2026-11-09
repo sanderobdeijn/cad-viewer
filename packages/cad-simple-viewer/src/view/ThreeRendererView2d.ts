@@ -20,25 +20,18 @@ import {
 } from '@mlightcad/three-renderer'
 import { ThreeRendererMatrixUtil } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
-import Stats from 'three/examples/jsm/libs/stats.module'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 import { ApplicationDocManager, ApplicationSettingManager } from '../app'
 import { ApplicationZoomCmd } from '../command/ApplicationZoomCmd'
 import { notifyMeasurementLayoutChanged } from '../command/measure/ApplicationMeasurementStore'
 import {
-  editorAttachMobileBoxGesture,
   EditorBaseView,
   EditorCalculateSizeCallback,
   EditorConditionWaiter,
   EditorCorsorType,
   EditorGripManager,
-  editorGuardCanvasTouchCallout,
-  editorInteractionStrategy,
-  editorIsTouchDerivedMouseEvent,
   EditorSelectionAction,
-  editorShouldIgnoreCompatMouse,
-  EditorSnapLoupeViewState,
   EditorSpatialQueryResultItem,
   EditorSpatialQueryResultItemEx,
   EditorViewMode,
@@ -76,7 +69,6 @@ import { ThreeRendererLayoutViewManager } from './ThreeRendererLayoutViewManager
 import { sortPickResults } from './ThreeRendererPickResultUtil'
 import { ThreeRendererProgressiveOpenFitController } from './ThreeRendererProgressiveOpenFitController'
 import { ThreeRendererScene } from './ThreeRendererScene'
-import type { ThreeRendererViewSessionState } from './ThreeRendererViewSessionState'
 import { ThreeRendererWorkSlice } from './ThreeRendererWorkSlice'
 
 /**
@@ -147,8 +139,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   private _isDirty: boolean
   /** Flag indicating if CSS2D / HTML overlays need a CSS2DRenderer pass */
   private _htmlDirty: boolean
-  /** Performance monitoring statistics display */
-  private _stats: Stats
   /** The number of entities waiting for processing */
   private _numOfEntitiesToProcess: number
   /** CSS2D renderer for HTML transient overlays */
@@ -259,10 +249,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   private _gripManager: EditorGripManager
   /** Global keyboard shortcuts for the view (erase, etc.). */
   private _keyHandler: EditorViewKeyHandler
-  /** Removes iOS canvas long-press callout listeners registered in the constructor. */
-  private _disposeCanvasTouchCallout: (() => void) | undefined
-  /** Removes mobile long-press box-selection gesture listeners. */
-  private _disposeMobileBoxGesture: (() => void) | undefined
   /**
    * Aborts canvas / document DOM listeners registered on this view.
    * Custom singleton listeners are removed explicitly in {@link dispose}.
@@ -353,15 +339,7 @@ export class ThreeRendererView2d extends EditorBaseView {
     renderer.domElement.style.display = 'block'
     renderer.domElement.style.maxWidth = '100%'
     renderer.domElement.style.maxHeight = '100%'
-    // Keep one-finger picks (measure snap loupe) from being stolen by the
-    // browser scroll / long-press copy-selection callout (especially iOS).
-    const disposeCanvasTouchCallout = editorGuardCanvasTouchCallout(
-      renderer.domElement,
-      container
-    )
-
     super(renderer.domElement, container)
-    this._disposeCanvasTouchCallout = disposeCanvasTouchCallout
     const onProgressiveInput = () => this.noteProgressiveUserInput()
     // Pointer and wheel both claim shortcut focus so erase still works
     // after zooming without a prior click, without stealing focus from host
@@ -414,20 +392,11 @@ export class ThreeRendererView2d extends EditorBaseView {
     // Initialize background color through setter to keep renderer/cursor in sync.
     this.backgroundColor =
       mergedOptions.background ?? GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND
-    // During main-view construction the manager singleton is not published yet,
-    // so treat a missing manager as "this is the primary canvas".
-    this._stats = this.createStats(
-      ApplicationSettingManager.instance.isShowStats &&
-        (ApplicationDocManager.tryGetInstance() == null || this.isActiveManagedView())
-    )
-
     // The background setting drives the canvas clear colour and ACI-7
     // inversion. `colorTheme` only affects UI chrome — see `useDark` /
     // `EditorUiTheme`, not the renderer foreground.
     this._onSettingsModified = args => {
-      if (args.key == 'isShowStats') {
-        this.toggleStatsVisibility(this._stats, args.value as boolean)
-      } else if (args.key === 'modelBackgroundColor') {
+      if (args.key === 'modelBackgroundColor') {
         this.applyCanvasBackground(readBackgroundColor())
       }
     }
@@ -445,13 +414,6 @@ export class ThreeRendererView2d extends EditorBaseView {
 
     const canHandleSelectionGesture = () => {
       return this.mode === EditorViewMode.SELECTION && canHandleIdlePointer()
-    }
-
-    const canHandleMobileBoxGesture = () => {
-      return (
-        canHandleIdlePointer() &&
-        editorInteractionStrategy().canIdleTouchBox(this.mode)
-      )
     }
 
     const clearSelectionPreview = () => {
@@ -566,10 +528,6 @@ export class ThreeRendererView2d extends EditorBaseView {
       e => {
         if (e.button !== 0) return
         if (!canHandleSelectionGesture()) return
-        if (editorIsTouchDerivedMouseEvent(e) || editorShouldIgnoreCompatMouse()) {
-          return
-        }
-
         beginSelectionPreview(e.clientX, e.clientY)
       },
       { signal: viewDomSignal }
@@ -585,10 +543,6 @@ export class ThreeRendererView2d extends EditorBaseView {
         ) {
           return
         }
-        if (editorIsTouchDerivedMouseEvent(e) || editorShouldIgnoreCompatMouse()) {
-          return
-        }
-
         updateSelectionPreview(
           e.clientX,
           e.clientY,
@@ -606,10 +560,6 @@ export class ThreeRendererView2d extends EditorBaseView {
           return
         }
         if (!selectionStartWcs || !selectionStartCanvas) return
-        if (editorIsTouchDerivedMouseEvent(e) || editorShouldIgnoreCompatMouse()) {
-          return
-        }
-
         const endCanvas = this.viewportToCanvas({
           x: e.clientX,
           y: e.clientY
@@ -624,35 +574,6 @@ export class ThreeRendererView2d extends EditorBaseView {
       },
       { signal: viewDomSignal }
     )
-
-    this._disposeMobileBoxGesture = editorAttachMobileBoxGesture({
-      element: this.canvas,
-      shouldStart: () => canHandleMobileBoxGesture(),
-      setNavigationEnabled: enabled => {
-        this.setNavigationEnabled(enabled)
-      },
-      onActivate: (clientX, clientY) => {
-        beginSelectionPreview(clientX, clientY)
-        updateSelectionPreview(clientX, clientY)
-      },
-      onMove: (clientX, clientY) => {
-        updateSelectionPreview(clientX, clientY)
-      },
-      onBoxEnd: (clientX, clientY, moved) => {
-        finishSelection(clientX, clientY, 'replace', !moved)
-      },
-      onTap: (clientX, clientY) => {
-        selectionStartCanvas = this.viewportToCanvas({
-          x: clientX,
-          y: clientY
-        })
-        selectionStartWcs = this.screenToWorld(selectionStartCanvas)
-        finishSelection(clientX, clientY, 'replace', true)
-      },
-      onAbort: () => {
-        resetSelectionDrag()
-      }
-    })
 
     // When using OrbitControls in THREE.js, it attaches its own event listeners to the DOM elements,
     // such as the canvas or the entire document. This can interfere with other event listeners you
@@ -673,7 +594,7 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._css2dRenderer.domElement.style.top = '0px'
     this._css2dRenderer.domElement.style.left = '0px'
     this._css2dRenderer.domElement.style.pointerEvents = 'none'
-    // Below command line / mobile chrome / dialogs; above the WebGL canvas.
+    // Below command line and dialogs; above the WebGL canvas.
     this._css2dRenderer.domElement.style.zIndex = String(
       ML_UI_Z_CANVAS_HTML_OVERLAY
     )
@@ -755,25 +676,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   override setNavigationEnabled(enabled: boolean) {
     const layoutView = this.activeLayoutView
     if (layoutView) layoutView.enabled = enabled
-  }
-
-  /**
-   * Shows or hides the screen-fixed snap loupe overlay viewport.
-   *
-   * @param state - Loupe screen rectangle and world box, or `null` to hide.
-   */
-  override setSnapLoupe(state: EditorSnapLoupeViewState | null) {
-    const overlay = this.activeLayoutView?.overlayViewport
-    if (!overlay) return
-    if (!state) {
-      overlay.visible = false
-      this._isDirty = true
-      return
-    }
-    overlay.setScreenRect(state.x, state.y, state.size, state.size)
-    overlay.setViewBox(state.viewBox)
-    overlay.visible = true
-    this._isDirty = true
   }
 
   /**
@@ -1112,13 +1014,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * The statistics of the current scene
-   */
-  get stats() {
-    return this._scene.stats
-  }
-
-  /**
    * CAD scene graph used for rendering and HTML export.
    */
   get cadScene() {
@@ -1172,19 +1067,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   zoomTo(box: GeometryBox2d, margin: number = 1.1) {
     this.activeLayoutView.zoomTo(box, margin)
     this._isDirty = true
-  }
-
-  /**
-   * Re-render points with latest point style settings
-   * @param displayMode Input display mode of points
-   * @param displaySize Input display size of points (`PDSIZE`)
-   */
-  rerenderPoints(displayMode: number, displaySize: number = 0) {
-    const activeLayout = this._scene.activeLayout
-    if (activeLayout) {
-      activeLayout.rerenderPoints(displayMode, displaySize)
-      this._isDirty = true
-    }
   }
 
   /**
@@ -1432,35 +1314,27 @@ export class ThreeRendererView2d extends EditorBaseView {
   addTransientEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]) {
     const entities = Array.isArray(entity) ? entity : [entity]
     const epoch = this._convertEpoch
-    // Overlay transients (measurement / jigs) must honor entity
-    // lineweight even when LWDISPLAY is off; otherwise ribbon style is a no-op.
-    const previousForce = this._renderer.forceShowLineWeight
-    this._renderer.forceShowLineWeight = true
-    try {
-      for (let i = 0; i < entities.length; ++i) {
-        const entity = entities[i]
-        const threeEntity: ThreeRendererEntity | null = this.drawEntity(entity, true)
-        if (threeEntity) {
-          threeEntity.objectId = entity.objectId
-          void threeEntity
-            .asyncDraw()
-            .then(() => {
-              // Drop stale transients started before clear()/regen invalidated the view.
-              if (epoch !== this._convertEpoch) {
-                threeEntity.dispose()
-                return
-              }
-              this._scene.addTransientEntity(threeEntity)
-              this._isDirty = true
-            })
-            .catch(error => {
-              log.error('[ThreeRendererView2d] Transient entity geometry failed:', error)
+    for (let i = 0; i < entities.length; ++i) {
+      const entity = entities[i]
+      const threeEntity: ThreeRendererEntity | null = this.drawEntity(entity, true)
+      if (threeEntity) {
+        threeEntity.objectId = entity.objectId
+        void threeEntity
+          .asyncDraw()
+          .then(() => {
+            // Drop stale transients started before clear()/regen invalidated the view.
+            if (epoch !== this._convertEpoch) {
               threeEntity.dispose()
-            })
-        }
+              return
+            }
+            this._scene.addTransientEntity(threeEntity)
+            this._isDirty = true
+          })
+          .catch(error => {
+            log.error('[ThreeRendererView2d] Transient entity geometry failed:', error)
+            threeEntity.dispose()
+          })
       }
-    } finally {
-      this._renderer.forceShowLineWeight = previousForce
     }
   }
 
@@ -1768,84 +1642,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * Captures GPU/camera/selection state so another document can occupy this view.
-   *
-   * @returns Parked state owned by {@link ApplicationDocSession} until restore.
-   */
-  captureSessionState(): ThreeRendererViewSessionState {
-    return {
-      scene: this._scene,
-      layoutViewManager: this._layoutViewManager,
-      initializedLayouts: this._initializedLayouts,
-      externallyFramedLayouts: this._externallyFramedLayouts,
-      loadingLayouts: this._loadingLayouts,
-      selectionIds: this.selectionSet.ids
-    }
-  }
-
-  /**
-   * Restores a parked document onto this shared view without disposing the renderer.
-   *
-   * @param state - Snapshot previously returned by {@link captureSessionState} or {@link beginNewSession}.
-   */
-  restoreSessionState(state: ThreeRendererViewSessionState): void {
-    this._convertEpoch++
-    this.cancelOpenLineworkFrame()
-    this._convertQueue.length = 0
-    this._numOfEntitiesToProcess = 0
-    this._claimedConvertObjectIds.clear()
-    this._entityConvertGeneration.clear()
-    this._scene = state.scene
-    this._layoutViewManager = state.layoutViewManager
-    this._initializedLayouts = state.initializedLayouts
-    this._externallyFramedLayouts = state.externallyFramedLayouts
-    this._loadingLayouts = state.loadingLayouts
-    this._layoutViewManager.resize(this.width, this.height)
-    this.selectionSet.clear()
-    if (state.selectionIds.length > 0) {
-      this.selectionSet.add(state.selectionIds)
-    }
-    this._isDirty = true
-  }
-
-  /**
-   * Detaches the current scene and installs an empty one for a newly opened document.
-   *
-   * @returns Parked state of the previous document.
-   */
-  beginNewSession(): ThreeRendererViewSessionState {
-    const parked = this.captureSessionState()
-    this._convertEpoch++
-    this.cancelOpenLineworkFrame()
-    this._convertQueue.length = 0
-    this._numOfEntitiesToProcess = 0
-    this._claimedConvertObjectIds.clear()
-    this._entityConvertGeneration.clear()
-    this._scene = this.createScene()
-    this._layoutViewManager = new ThreeRendererLayoutViewManager()
-    this._initializedLayouts = new Set()
-    this._externallyFramedLayouts = new Set()
-    this._loadingLayouts = new Set()
-    this.selectionSet.clear()
-    this._isDirty = true
-    return parked
-  }
-
-  /**
-   * Disposes GPU resources for a parked session that is being closed.
-   *
-   * @param state - Parked snapshot to discard.
-   */
-  disposeSessionState(state: ThreeRendererViewSessionState): void {
-    state.scene.clear()
-    state.layoutViewManager = new ThreeRendererLayoutViewManager()
-    state.initializedLayouts.clear()
-    state.externallyFramedLayouts.clear()
-    state.loadingLayouts.clear()
-    state.selectionIds = []
-  }
-
-  /**
    * True when this view is the document manager's live canvas.
    * Satellite/preview views must ignore global shortcuts and layout switches.
    * Returns false when no manager exists so post-destroy key handlers do not
@@ -2102,12 +1898,8 @@ export class ThreeRendererView2d extends EditorBaseView {
     // Stop convert before tearing down documents/singletons that commit paths read.
     this.abortConversion()
 
-    this._disposeCanvasTouchCallout?.()
-    this._disposeCanvasTouchCallout = undefined
     this._disposeProgressiveInputWatch?.()
     this._disposeProgressiveInputWatch = undefined
-    this._disposeMobileBoxGesture?.()
-    this._disposeMobileBoxGesture = undefined
     this._viewDomAbort.abort()
 
     if (this._onTextSynced) {
@@ -2144,7 +1936,6 @@ export class ThreeRendererView2d extends EditorBaseView {
 
     this.canvas.remove()
     this._css2dRenderer.domElement.remove()
-    this._stats.dom.remove()
 
     // Editor / command line / ResizeObserver (after canvas/CSS2D removed).
     super.dispose()
@@ -2167,20 +1958,6 @@ export class ThreeRendererView2d extends EditorBaseView {
 
   protected createScene() {
     return new ThreeRendererScene()
-  }
-
-  private createStats(show?: boolean) {
-    const stats = new Stats()
-    document.body.appendChild(stats.dom)
-
-    // Show Stats component at the right-bottom corner of the window
-    const statsDom = stats.dom
-    statsDom.style.position = 'fixed'
-    statsDom.style.inset = 'unset'
-    statsDom.style.bottom = '30px'
-    statsDom.style.right = '0px'
-    this.toggleStatsVisibility(stats, show)
-    return stats
   }
 
   protected onWindowResize() {
@@ -2257,7 +2034,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     if (this.internalCamera && (this._isDirty || this._htmlDirty)) {
       this._css2dRenderer.render(this._scene.internalScene, this.internalCamera)
     }
-    this._stats?.update()
     // Do not re-dirty every frame during progressive open — paint is throttled
     // from geometry batches to keep total open time down. Counter hitting 0
     // still forces a final dirty in decreaseNumOfEntitiesToProcess().
@@ -2298,19 +2074,6 @@ export class ThreeRendererView2d extends EditorBaseView {
       this._layoutViewManager.add(layoutView)
     }
     return layoutView
-  }
-
-  /**
-   * Show or hide stats component
-   * @param show If it is true, show stats component. Otherwise, hide stats component.
-   * Default value is false.
-   */
-  private toggleStatsVisibility(stats: Stats, show?: boolean) {
-    if (show) {
-      stats.dom.style.display = 'block' // Show the stats
-    } else {
-      stats.dom.style.display = 'none' // Hide the stats
-    }
   }
 
   private drawEntity(entity: GraphicsInterfaceDrawable, delay?: boolean) {

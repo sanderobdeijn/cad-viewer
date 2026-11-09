@@ -33,7 +33,6 @@ import {
 } from '../overlay/ApplicationHtmlLivePreview'
 import {
   APPLICATION_OVERLAY_ARROW_SIZE_PX,
-  applicationSyncLiveOverlayTextHeight
 } from '../overlay/ApplicationOverlayDrawUtil'
 import { placeDistanceMeasurement } from './ApplicationMeasureDistanceCmd'
 import { ApplicationMeasureDrawCmd } from './ApplicationMeasureDrawCmd'
@@ -136,9 +135,6 @@ export class ApplicationMeasureContinuousJig extends EditorPreviewJig<GeometryPo
       })
     })
     this.syncBadges(vertices, style.fontSize)
-    if (this._badges.length > 0) {
-      applicationSyncLiveOverlayTextHeight(this._view, this._badges, style)
-    }
   }
 
   /**
@@ -173,7 +169,6 @@ export class ApplicationMeasureContinuousJig extends EditorPreviewJig<GeometryPo
         fontSize
       })
       this._htManager.add(badge)
-      applicationSyncLiveOverlayTextHeight(this._view, [badge], style)
       this._badges.push(badge)
     }
     while (this._badges.length > needed) {
@@ -197,10 +192,6 @@ export class ApplicationMeasureContinuousJig extends EditorPreviewJig<GeometryPo
         applicationScreenSegmentLengthPx(p => this._view.worldToScreen(p), a, b)
       )
       badge.setFontSize(clamped)
-      applicationSyncLiveOverlayTextHeight(this._view, [badge], {
-        ...style,
-        fontSize: clamped
-      })
       badge.setText(label)
       badge.setPosition(midOf(a, b))
       badge.object.visible = true

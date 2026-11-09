@@ -165,11 +165,11 @@ describe('ApplicationSettingManager layers', () => {
   it('migrates isShowMainMenu on load and rewrites storage', () => {
     ls.setItem(
       'settings',
-      JSON.stringify({ isShowMainMenu: false, isShowStats: true })
+      JSON.stringify({ isShowMainMenu: false, isShowCommandLine: false })
     )
     const settings = ApplicationSettingManager.instance
     expect(settings.isShowRibbon).toBe(false)
-    expect(settings.isShowStats).toBe(true)
+    expect(settings.isShowCommandLine).toBe(false)
 
     const stored = JSON.parse(ls.getItem('settings')!) as Record<
       string,
@@ -177,7 +177,7 @@ describe('ApplicationSettingManager layers', () => {
     >
     expect(stored.isShowRibbon).toBe(false)
     expect(stored.isShowMainMenu).toBeUndefined()
-    expect(stored.isShowStats).toBe(true)
+    expect(stored.isShowCommandLine).toBe(false)
   })
 
   it('property setters persist by default', () => {

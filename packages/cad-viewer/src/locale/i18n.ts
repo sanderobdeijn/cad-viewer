@@ -40,36 +40,4 @@ export const entityName = (type: string) => {
   return t(key, type, { missingWarn: false })
 }
 
-export const colorName = (colorKeyName: string) => {
-  const value = colorKeyName.trim()
-
-  // Numeric values are AutoCAD Color Index (ACI) values.
-  // They are identifiers, not locale message keys.
-  if (/^\d+$/.test(value)) {
-    return value
-  }
-
-  if (value === 'ByLayer' || value === 'ByBlock') {
-    return value
-  }
-
-  const t = i18n.global.t
-  const key = 'entity.color.' + value.toLowerCase()
-  return t(key, value, {
-    missingWarn: false,
-    fallbackWarn: false
-  })
-}
-export const toolPaletteTitle = (name: string) => {
-  const t = i18n.global.t
-  const key = `main.toolPalette.${name}.title`
-  return t(key, name, { missingWarn: false })
-}
-
-export const toolPaletteTabName = (name: string) => {
-  const t = i18n.global.t
-  const key = `main.toolPalette.${name}.tab`
-  return t(key, name, { missingWarn: false })
-}
-
 export default i18n

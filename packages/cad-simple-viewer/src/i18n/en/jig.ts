@@ -219,11 +219,6 @@ export default {
   measurePoint: {
     point: 'Specify point'
   },
-  measurement: {
-    import: {
-      chooseFile: 'Choose a measurement sidecar JSON file'
-    }
-  },
   move: {
     basePointOrDisplacement: 'Specify base point or',
     secondPointOrDisplacement: 'Specify second point or',

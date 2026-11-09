@@ -1,12 +1,8 @@
 import * as THREE from 'three'
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
-import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import { copyArrayContents } from '../src/batch/ThreeRendererBatchedGeometryInfo'
 import { ThreeRendererBatchedGroup } from '../src/batch/ThreeRendererBatchedGroup'
 import { ThreeRendererBatchedLine } from '../src/batch/ThreeRendererBatchedLine'
-import { ThreeRendererBatchedLine2 } from '../src/batch/ThreeRendererBatchedLine2'
 import {
   ThreeRendererBatchHighlightState,
   BATCH_SLOT_ID_ATTRIBUTE
@@ -36,8 +32,7 @@ function createBatchedLineEntity(objectId: string) {
       { x: 100, y: 0 }
     ],
     defaultTraits,
-    context,
-    false
+    context
   )
   const entity = new ThreeRendererEntity(context)
   entity.objectId = objectId
@@ -288,37 +283,6 @@ describe('ThreeRendererBatchedGroup slot-mask highlight', () => {
     group.unselect('unbatched-1')
     expect(clonedLine.material).toBe(material)
     expect(getObjectUserData(clonedLine).originalMaterial).toBeUndefined()
-  })
-
-  it('stores Line2 slotId as an instanced attribute per segment', () => {
-    const group = new ThreeRendererBatchedGroup()
-    const geometry = new LineSegmentsGeometry()
-    geometry.setPositions([0, 0, 0, 100, 0, 0, 100, 0, 0, 160, -20, 0])
-    const line2 = new LineSegments2(
-      geometry,
-      new LineMaterial({
-        color: 0xffffff,
-        linewidth: 2,
-        resolution: new THREE.Vector2(800, 600)
-      })
-    )
-    const entity = new ThreeRendererEntity(new ThreeRendererRenderContext())
-    entity.objectId = '927'
-    entity.visible = true
-    entity.add(line2)
-    group.addEntity(entity)
-
-    let batched: ThreeRendererBatchedLine2 | undefined
-    group.traverse(child => {
-      if (!batched && child instanceof ThreeRendererBatchedLine2) {
-        batched = child
-      }
-    })
-    expect(batched).toBeDefined()
-    const slotId = batched!.geometry.getAttribute(BATCH_SLOT_ID_ATTRIBUTE)
-    expect(slotId).toBeInstanceOf(THREE.InstancedBufferAttribute)
-    expect(slotId.getX(0)).toBe(0)
-    expect(slotId.getX(1)).toBe(0)
   })
 
   it('keeps slotIds after indexed-line batch growth', () => {

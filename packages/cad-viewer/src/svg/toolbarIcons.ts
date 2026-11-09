@@ -6,8 +6,6 @@
 
 import {
   ICON_CLEAR_MEASUREMENTS,
-  ICON_MARKUP_EXPORT,
-  ICON_MARKUP_IMPORT,
   ICON_MEASURE,
   ICON_MEASURE_ANGLE,
   ICON_MEASURE_ARC,
@@ -15,7 +13,6 @@ import {
   ICON_MEASURE_CONTINUOUS,
   ICON_MEASURE_DISTANCE,
   ICON_MEASURE_POINT,
-  ICON_MEASUREMENT_PANEL,
   ICON_PAN,
   ICON_SELECT,
   ICON_SWITCH_BG,
@@ -46,10 +43,4 @@ export const measurePoint = applicationSvgIcon(ICON_MEASURE_POINT, 'IconMeasureP
 export const clearMeasurements = applicationSvgIcon(
   ICON_CLEAR_MEASUREMENTS,
   'IconClearMeasurements'
-)
-export const importIcon = applicationSvgIcon(ICON_MARKUP_IMPORT, 'IconImport')
-export const exportIcon = applicationSvgIcon(ICON_MARKUP_EXPORT, 'IconExport')
-export const measurementPanel = applicationSvgIcon(
-  ICON_MEASUREMENT_PANEL,
-  'IconMeasurementPanel'
 )

@@ -10,20 +10,6 @@ import type { ApplicationContext } from '../../app/ApplicationContext'
 import { eventBus } from '../global/eventBus'
 import { EditorMessageType } from '../input/ui/EditorMessageType'
 import { EditorOpenMode } from '../view/EditorOpenMode'
-import { type EditorSessionAccessory } from './EditorSessionAccessory'
-
-/**
- * Thrown from {@link EditorSessionAccessory.mount} when the accessory declines to
- * mount (for example when a host ribbon already covers the same UI).
- * {@link EditorCommand.trigger} treats this as a successful no-op.
- */
-export class EditorSessionAccessoryMountSkippedError extends Error {
-  /** Creates an error with a stable message and `name` for instanceof checks. */
-  constructor() {
-    super('session-accessory-mount-skipped')
-    this.name = 'EditorSessionAccessoryMountSkippedError'
-  }
-}
 
 /**
  * Abstract base class for all CAD commands.
@@ -240,60 +226,11 @@ export abstract class EditorCommand<TUserData extends object = {}> {
    * ```
    */
   async trigger(context: ApplicationContext) {
-    let sessionAccessoryMounted = false
-    const accessory = this.sessionAccessory
-
     try {
       this.onCommandWillStart(context)
       context.view.editor.events.commandWillStart.dispatch({ command: this })
-      if (accessory) {
-        try {
-          const hostInfo = context.view.sessionAccessoryHost
-          const options = {
-            host: hostInfo.host,
-            type: hostInfo.type,
-            view: context.view
-          }
-          const mountArgs = {
-            command: this,
-            accessory,
-            options,
-            source: 'command' as const
-          }
-          context.view.editor.events.beforeMountSessionAccessory.dispatch(
-            mountArgs
-          )
-          accessory.mount(options)
-          context.view.editor.events.afterMountSessionAccessory.dispatch(
-            mountArgs
-          )
-          sessionAccessoryMounted = true
-        } catch (error) {
-          if (!(error instanceof EditorSessionAccessoryMountSkippedError)) {
-            // Mount failures must not block command execution.
-          }
-        }
-      }
       await this.execute(context)
     } finally {
-      if (sessionAccessoryMounted && accessory) {
-        try {
-          const unmountArgs = {
-            command: this,
-            accessory,
-            source: 'command' as const
-          }
-          context.view.editor.events.beforeUnmountSessionAccessory.dispatch(
-            unmountArgs
-          )
-          accessory.unmount()
-          context.view.editor.events.afterUnmountSessionAccessory.dispatch(
-            unmountArgs
-          )
-        } catch {
-          // Unmount failures must not mask command completion.
-        }
-      }
       context.view.editor.events.commandEnded.dispatch({ command: this })
       this.onCommandEnded(context)
     }
@@ -326,14 +263,6 @@ export abstract class EditorCommand<TUserData extends object = {}> {
   async execute(_context: ApplicationContext) {
     // Do nothing - subclasses should override this method
   }
-
-  /**
-   * Optional widgets for the command session UI. On desktop they mount at the
-   * top center of the canvas; on phone/pad they mount at the top of the bottom
-   * session panel. When non-null, {@link trigger} mounts before {@link execute}
-   * and unmounts in `finally`.
-   */
-  sessionAccessory: EditorSessionAccessory | null = null
 
   /**
    * Displays a message in the command-line output.
