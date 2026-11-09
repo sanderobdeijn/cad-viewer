@@ -78,12 +78,6 @@ New to CAD Viewer? The **[User Guide](https://mlightcad.com/cad-viewer/docs/)** 
 - **Zoom**: Pinch with two fingers
 - **Pan**: Single-finger drag
 
-## Plugin System
-
-CAD-Viewer is built around a modular **plugin system** in [`@mlightcad/cad-simple-viewer`](packages/cad-simple-viewer). Plugins implement the `ApplicationPlugin` interface and hook into viewer lifecycle via `onLoad` / `onUnload`—typically to register commands, add UI, or wire export/import pipelines.
-
-Load plugins through `ApplicationDocManager.instance.pluginManager` (`loadPlugin`, `registerLazyPlugin`, or `plugins.fromConfig` when creating the document manager). Plugins support **lazy loading**: register a small stub up front and download the heavy bundle only when the user runs the related command.
-
 ## Performance
 
 CAD-Viewer is engineered for **exceptional performance** and can handle very large drawings while maintaining high frame rates. It employs multiple advanced rendering technologies to optimize performance:
@@ -255,9 +249,8 @@ Legend:
 * [ ] OpenLayers / Map integration
 * [ ] CMS / Notion embedding
 
-#### Plugin System
+#### Extensibility
 
-* [x] Plugin API
 * [ ] Custom entity support
 * [x] Custom command
 

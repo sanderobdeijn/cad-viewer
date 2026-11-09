@@ -8,14 +8,14 @@
 | **`UIShortCutToolbar`** | Top-right erase bar with an accessory slot and optional collapse |
 | **`UISimpleToolbar`** | Low-level icon strip with overflow “⋯” menu (building block for the shortcut bar) |
 
-Hosts can compose **preset buttons** and layout defaults on top of `UIToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one without the plugin.
+Hosts can compose **preset buttons** and layout defaults on top of `UIToolbar`. This guide focuses on the engine APIs in `cad-simple-viewer` so you can mount your own toolbar or customize one.
 
 ---
 
 ## 1. Architecture
 
 ```
-Host (plugin / HTML shell / your app)
+Host (HTML shell / your app)
         │
         ├─ builds UIToolbarItem[] (+ optional presets / separators)
         ├─ supplies UIToolbarI18n + onCommand

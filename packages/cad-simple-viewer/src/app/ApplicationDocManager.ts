@@ -38,7 +38,6 @@ import {
   EditorOpenMode
 } from '../editor'
 import { APPLICATION_MODEL_SPACE_ID } from '../model/ApplicationItemDrawable'
-import { ApplicationPluginManager } from '../plugin/ApplicationPluginManager'
 import { isScriptQuitCommand, parseScriptLines } from '../util/ApplicationScriptParser'
 import { ThreeRendererView2d } from '../view'
 import { ApplicationBusyIndicator } from './ApplicationBusyIndicator'
@@ -135,59 +134,6 @@ export interface ApplicationDocManagerOptions {
   busyIndicatorHost?: HTMLElement
 
   /**
-   * Configuration for automatic plugin loading.
-   *
-   * Plugins can be loaded automatically during initialization from:
-   * - A configuration array of plugin instances or factory functions
-   * - A folder path with a list of plugin files to load
-   *
-   * @example
-   * ```typescript
-   * // Load plugins from configuration
-   * ApplicationDocManager.createInstance({
-   *   plugins: {
-   *     fromConfig: [
-   *       new MyPlugin1(),
-   *       () => new MyPlugin2()
-   *     ]
-   *   }
-   * });
-   *
-   * // Load plugins from folder
-   * ApplicationDocManager.createInstance({
-   *   plugins: {
-   *     fromFolder: {
-   *       folderPath: './plugins',
-   *       pluginList: ['Plugin1.js', 'Plugin2.js'],
-   *       continueOnError: true
-   *     }
-   *   }
-   * });
-   * ```
-   */
-  plugins?: {
-    /**
-     * Load plugins from a configuration array.
-     * Each item can be a plugin instance or a factory function that returns a plugin.
-     */
-    fromConfig?: Array<
-      | import('../plugin/ApplicationPlugin').ApplicationPlugin
-      | (() => import('../plugin/ApplicationPlugin').ApplicationPlugin)
-    >
-    /**
-     * Load plugins from a folder using dynamic imports.
-     */
-    fromFolder?: {
-      /** Path to the folder containing plugin files */
-      folderPath: string
-      /** List of plugin file names to load */
-      pluginList: string[]
-      /** Continue loading other plugins if one fails (default: false) */
-      continueOnError?: boolean
-    }
-  }
-
-  /**
    * Absolute root URL for user-guide pages (trailing slash optional).
    * Used by {@link applicationDocsUrl} for in-app help links (e.g. mobile magnifier).
    * Defaults to {@link APPLICATION_DEFAULT_DOCS_BASE_URL} when omitted.
@@ -279,8 +225,6 @@ export class ApplicationDocManager {
   private _busyIndicator: ApplicationBusyIndicator
   /** Command manager */
   private _commandManager: EditorCommandStack
-  /** Plugin manager */
-  private _pluginManager: ApplicationPluginManager
   /**
    * Alias overrides provided by caller options.
    *
@@ -368,10 +312,6 @@ export class ApplicationDocManager {
 
     this._commandManager = new EditorCommandStack()
     this.registerCommands()
-    this._pluginManager = new ApplicationPluginManager(
-      this.context,
-      this._commandManager
-    )
     const busyHost = options.busyIndicatorHost ?? view.container
     this._busyIndicatorHost = busyHost
     this._busyIndicator = new ApplicationBusyIndicator(busyHost)
@@ -387,11 +327,6 @@ export class ApplicationDocManager {
     this.events.documentCreated.dispatch({
       doc,
       mode: doc.openMode
-    })
-
-    // Load plugins asynchronously (don't await to avoid blocking initialization)
-    this.loadPlugins(options.plugins).catch(error => {
-      log.error('[ApplicationDocManager] Error loading plugins:', error)
     })
 
     if (options.notificationCenter !== false) {
@@ -446,15 +381,14 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Destroy the view and unload all plugins
+   * Destroy the view and close all documents
    */
   async destroy() {
-    // Abort progressive convert before plugins/documents go away so in-flight
+    // Abort progressive convert before documents go away so in-flight
     // entity commits do not read a torn-down singleton.
     this._mainView.abortConversion()
     this._splitView?.abortConversion()
 
-    await this._pluginManager.unloadAllPlugins()
     for (const session of [...this._sessions]) {
       session.context.dispose()
       session.doc.destroy()
@@ -579,7 +513,6 @@ export class ApplicationDocManager {
       this._activeSession = session
       session.context.resume()
     }
-    this._pluginManager.setContext(session.context)
     this.setActiveLayout()
     this.curView.syncDisplaySettings()
     this.events.documentActivated.dispatch({
@@ -749,15 +682,6 @@ export class ApplicationDocManager {
    */
   get commandManager() {
     return this._commandManager
-  }
-
-  /**
-   * Gets plugin manager to load and unload plugins
-   *
-   * @returns The plugin manager
-   */
-  get pluginManager() {
-    return this._pluginManager
   }
 
   /**
@@ -1029,8 +953,6 @@ export class ApplicationDocManager {
    * Executes a command by its string name.
    *
    * This method looks up a registered command by name and executes it with the current context.
-   * If the command is not registered yet, it attempts to load a lazy plugin whose trigger
-   * matches the command name (see {@link ApplicationPluginManager.loadByTrigger}).
    * It checks if the command's required mode is compatible with the document's current mode.
    * If the command is not found or not compatible, an error is thrown.
    *
@@ -1055,8 +977,7 @@ export class ApplicationDocManager {
    * Executes a single command script and awaits completion.
    *
    * The first line is the command name; remaining lines are queued as inputs for
-   * `getPoint` / `getKeywords` / etc. Lazy plugins are loaded via
-   * {@link ApplicationPluginManager.loadByTrigger} when needed.
+   * `getPoint` / `getKeywords` / etc.
    *
    * Unlike {@link runScript}, leftover script inputs are cleared when the command
    * ends (interactive / one-shot behavior).
@@ -1115,18 +1036,9 @@ export class ApplicationDocManager {
     options: { preserveScriptInputs: boolean }
   ) {
     const documentMode = this.context.doc.openMode
-    let cmd =
+    const cmd =
       this._commandManager.lookupGlobalCmd(cmdName) ??
       this._commandManager.lookupLocalCmd(cmdName, documentMode)
-
-    if (!cmd) {
-      const loaded = await this._pluginManager.loadByTrigger(cmdName)
-      if (loaded) {
-        cmd =
-          this._commandManager.lookupGlobalCmd(cmdName) ??
-          this._commandManager.lookupLocalCmd(cmdName, documentMode)
-      }
-    }
 
     if (!cmd) {
       throw new Error(`Command '${cmdName}' not found`)
@@ -1404,72 +1316,6 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Loads plugins automatically based on the provided configuration.
-   *
-   * This method is called during initialization if plugins are configured.
-   * It supports loading from both configuration arrays and folder paths.
-   *
-   * @param pluginsConfig - Plugin loading configuration
-   * @private
-   */
-  private async loadPlugins(pluginsConfig?: ApplicationDocManagerOptions['plugins']) {
-    if (!pluginsConfig) {
-      return
-    }
-
-    // Load plugins from configuration array
-    if (pluginsConfig.fromConfig && pluginsConfig.fromConfig.length > 0) {
-      try {
-        const result = await this._pluginManager.loadPluginsFromConfig(
-          pluginsConfig.fromConfig,
-          { continueOnError: true }
-        )
-        if (result.loaded.length > 0) {
-          log.info(
-            `[ApplicationDocManager] Loaded ${result.loaded.length} plugin(s) from config:`,
-            result.loaded
-          )
-        }
-        if (result.failed.length > 0) {
-          log.warn(
-            `[ApplicationDocManager] Failed to load ${result.failed.length} plugin(s):`,
-            result.failed.map(f => `${f.name}: ${f.error.message}`)
-          )
-        }
-      } catch (error) {
-        log.error('[ApplicationDocManager] Error loading plugins from config:', error)
-      }
-    }
-
-    // Load plugins from folder
-    if (pluginsConfig.fromFolder) {
-      try {
-        const result = await this._pluginManager.loadPluginsFromFolder(
-          pluginsConfig.fromFolder.folderPath,
-          {
-            pluginList: pluginsConfig.fromFolder.pluginList,
-            continueOnError: pluginsConfig.fromFolder.continueOnError ?? true
-          }
-        )
-        if (result.loaded.length > 0) {
-          log.info(
-            `[ApplicationDocManager] Loaded ${result.loaded.length} plugin(s) from folder:`,
-            result.loaded
-          )
-        }
-        if (result.failed.length > 0) {
-          log.warn(
-            `[ApplicationDocManager] Failed to load ${result.failed.length} plugin(s) from folder:`,
-            result.failed.map(f => `${f.name}: ${f.error.message}`)
-          )
-        }
-      } catch (error) {
-        log.error('[ApplicationDocManager] Error loading plugins from folder:', error)
-      }
-    }
-  }
-
-  /**
    * Parks the live view onto the active session so another document can take the canvas.
    */
   private parkActiveSession() {
@@ -1515,7 +1361,6 @@ export class ApplicationDocManager {
     const session = new ApplicationDocSession(`doc-${this._nextSessionId++}`, context)
     this._sessions.push(session)
     this._activeSession = session
-    this._pluginManager.setContext(context)
     this.events.documentCreated.dispatch({
       doc,
       mode: doc.openMode
@@ -1553,6 +1398,5 @@ export class ApplicationDocManager {
     )
     this._sessions = [replacement]
     this._activeSession = replacement
-    this._pluginManager.setContext(context)
   }
 }

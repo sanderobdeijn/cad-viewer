@@ -99,17 +99,6 @@ export class ApplicationI18n {
   }
 
   /**
-   * Register a plugin's messages.
-   * Alias for mergeLocaleMessage for consistency with vue-i18n.
-   */
-  public static registerMessage<L extends ApplicationLocale>(
-    locale: L,
-    messages: ApplicationLocaleMessage
-  ): void {
-    this.mergeLocaleMessage(locale, messages)
-  }
-
-  /**
    * Set the current active locale for translation.
    *
    * @param locale - Locale to activate (`"en"`)

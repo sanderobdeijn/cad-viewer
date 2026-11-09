@@ -6,7 +6,7 @@ import { ApplicationProgress } from './ApplicationProgress'
 /**
  * Reference-counted busy overlay for long-running application operations.
  *
- * Used by commands and plugins during blocking work such as export or conversion.
+ * Used by commands during blocking work such as export or conversion.
  * Emits {@link eventBus} `busy-indicator` events so host UI can stay in sync.
  */
 export class ApplicationBusyIndicator {

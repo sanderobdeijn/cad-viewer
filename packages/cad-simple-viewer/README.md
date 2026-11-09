@@ -47,10 +47,6 @@ To learn about the built-in notification center (and how to replace the default 
 
 For the plain-DOM toolbar engine (`UIToolbar`, shortcut bar, and host customization), see [docs/toolbar.md](./docs/toolbar.md).
 
-### Plugins and data sources
-
-- **`pluginManager`** — load command plugins (`ApplicationPlugin`) via `loadPlugin` / `registerLazyPlugin`.
-
 `cad-simple-viewer` always starts from a blank drawing created with `ApplicationDocManager.newDocument()`; drawings are not loaded from or saved to files. It provides comprehensive support for **modifying drawings in real-time**. You can add, edit, and delete entities within the drawing, and the viewer will automatically update to reflect these changes.
 
 When you modify entities, you're working directly with the underlying drawing database. The viewer automatically detects these changes and updates the display accordingly. This real-time synchronization ensures that:
