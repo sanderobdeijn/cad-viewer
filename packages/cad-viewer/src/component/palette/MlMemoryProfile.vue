@@ -301,76 +301,6 @@
           </el-table-column>
         </el-table>
       </div>
-
-      <div v-else-if="activeTab === 'fonts'" class="ml-memory-profile-pane">
-        <div class="ml-memory-profile-fonts" v-if="snapshot">
-          <div class="ml-memory-profile-fonts-meta">
-            {{
-              t('main.toolPalette.memoryProfile.fontMemorySummary', {
-                live: formatMemoryBytes(snapshot.fonts.estimatedBytes),
-                main: formatMemoryBytes(snapshot.fonts.mainThreadBytes),
-                workers: formatMemoryBytes(snapshot.fonts.workerBytes)
-              })
-            }}
-          </div>
-          <el-table
-            :data="snapshot.fonts.fonts"
-            size="small"
-            class="ml-memory-profile-table"
-            table-layout="fixed"
-            :empty-text="t('main.toolPalette.memoryProfile.empty')"
-          >
-            <el-table-column
-              prop="name"
-              :label="t('main.toolPalette.memoryProfile.columns.font')"
-              min-width="100"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="type"
-              :label="t('main.toolPalette.memoryProfile.columns.type')"
-              width="64"
-            />
-            <el-table-column
-              :label="t('main.toolPalette.memoryProfile.columns.estimated')"
-              width="96"
-              align="right"
-              header-align="right"
-            >
-              <template #default="{ row }">
-                {{ formatMemoryBytes(row.estimatedBytes) }}
-              </template>
-            </el-table-column>
-          </el-table>
-          <div
-            v-if="snapshot.fonts.missedNames.length > 0"
-            class="ml-memory-profile-fonts-missed"
-          >
-            <div class="ml-memory-profile-fonts-title">
-              {{ t('main.toolPalette.memoryProfile.missedFonts') }}
-            </div>
-            <div class="ml-memory-profile-fonts-list">
-              {{ snapshot.fonts.missedNames.join(', ') }}
-            </div>
-          </div>
-          <div
-            v-if="snapshot.fonts.indexedDbFontCount > 0"
-            class="ml-memory-profile-fonts-storage"
-          >
-            <div class="ml-memory-profile-fonts-title">
-              {{ t('main.toolPalette.memoryProfile.fontStorage') }}
-            </div>
-            <div class="ml-memory-profile-fonts-meta">
-              {{
-                t('main.toolPalette.memoryProfile.fontStorageSummary', {
-                  count: snapshot.fonts.indexedDbFontCount,
-                  size: formatMemoryBytes(snapshot.fonts.indexedDbBytes)
-                })
-              }}
-            </div>
-          </div>
-        </div>
-      </div>
     </ml-overflow-tabs>
   </div>
 </template>
@@ -424,10 +354,6 @@ const detailTabs = computed<MlOverflowTab[]>(() => [
   {
     name: 'materials',
     label: t('main.toolPalette.memoryProfile.tabs.materials')
-  },
-  {
-    name: 'fonts',
-    label: t('main.toolPalette.memoryProfile.tabs.fonts')
   }
 ])
 
@@ -440,8 +366,7 @@ const PIE_COLORS: Record<string, string> = {
   geometry: 'var(--el-color-primary)',
   mapping: 'var(--el-color-success)',
   spatial: 'var(--el-color-warning)',
-  materials: 'var(--el-color-info)',
-  fonts: '#b37feb'
+  materials: 'var(--el-color-info)'
 }
 
 interface PieSlice {
@@ -525,8 +450,6 @@ const categoryLabel = (id: string) => {
       return t('main.toolPalette.memoryProfile.categories.spatial')
     case 'materials':
       return t('main.toolPalette.memoryProfile.categories.materials')
-    case 'fonts':
-      return t('main.toolPalette.memoryProfile.categories.fonts')
     default:
       return id
   }
@@ -735,42 +658,5 @@ onMounted(() => {
 
 .ml-memory-profile-table :deep(.el-table__inner-wrapper) {
   height: 100%;
-}
-
-.ml-memory-profile-fonts {
-  font-size: 12px;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ml-memory-profile-fonts-title {
-  font-weight: 600;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-}
-
-.ml-memory-profile-fonts-meta {
-  font-size: 11px;
-  opacity: 0.85;
-  margin-bottom: 6px;
-  flex-shrink: 0;
-}
-
-.ml-memory-profile-fonts-missed {
-  margin-top: 8px;
-  flex-shrink: 0;
-}
-
-.ml-memory-profile-fonts-storage {
-  margin-top: 8px;
-  flex-shrink: 0;
-  opacity: 0.85;
-}
-
-.ml-memory-profile-fonts-list {
-  word-break: break-all;
-  opacity: 0.85;
 }
 </style>

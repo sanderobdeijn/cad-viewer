@@ -2,13 +2,6 @@ import mitt, { type Emitter } from 'mitt'
 
 import { EditorMessageType } from '../input/ui/EditorMessageType'
 
-export interface EditorFontNotLoadedInfo {
-  /** Font name */
-  fontName: string
-  /** URL where the font was attempted to be loaded from */
-  url: string
-}
-
 /**
  * Type definition for all events that can be emitted through the global event bus.
  *
@@ -16,9 +9,6 @@ export interface EditorFontNotLoadedInfo {
  * type safety for event emission and listening throughout the application.
  *
  * ## Event Categories
- * - **File Operations**: `cache-font`, `font-file-selected`
- * - **Font Management**: `fonts-not-loaded`, `failed-to-get-avaiable-fonts`, `font-not-found`
- * - **Missing Resources**: `missed-data-changed`
  * - **User Messages**: `message`
  * - **Busy Indicator**: `busy-indicator`
  */
@@ -30,12 +20,6 @@ export type EditorBusyIndicatorEventArgs = {
 }
 
 export type EditorEvents = {
-  /** Emitted to request opening a font file dialog for IndexedDB caching */
-  'cache-font': {}
-  /** Emitted when the user selects a font file in the cache-font dialog */
-  'font-file-selected': {
-    file?: File
-  }
   /** Emitted to display a message to the user */
   message: {
     /** The message text to display */
@@ -43,28 +27,6 @@ export type EditorEvents = {
     /** The severity/type of the message */
     type: EditorMessageType
   }
-  /** Emitted when some fonts can not be found in font repository */
-  'fonts-not-found': {
-    fonts: string[]
-  }
-  /** Emitted when some fonts fails to load */
-  'fonts-not-loaded': {
-    fonts: EditorFontNotLoadedInfo[]
-  }
-  /** Emitted when the available fonts list cannot be retrieved */
-  'failed-to-get-avaiable-fonts': {
-    /** URL where the fonts list was attempted to be retrieved from */
-    url: string
-  }
-  /** Emitted when a required font is not found */
-  'font-not-found': {
-    /** Name of the missing font */
-    fontName: string
-    /** Number of entities that require this font */
-    count: number
-  }
-  /** Emitted after missing resource caches change and UI state should refresh */
-  'missed-data-changed': {}
   /** Emitted when the application busy indicator is shown or hidden */
   'busy-indicator': EditorBusyIndicatorEventArgs
 }
@@ -80,7 +42,6 @@ export type EditorEvents = {
  * The event bus is particularly useful for:
  * - File operation status updates
  * - Error and warning notifications
- * - Font loading status
  * - Cross-component communication
  *
  * @example

@@ -18,17 +18,17 @@ describe('ApplicationNotificationStore (per-session)', () => {
   it('keeps separate lists per session and exposes only the active one', () => {
     const store = new ApplicationNotificationStore()
     store.setActiveSession('doc-1')
-    store.warning('A fonts', undefined, { source: 'font-missed' })
+    store.warning('A', undefined, { source: 'example' })
     store.setActiveSession('doc-2')
-    store.warning('B fonts', undefined, { source: 'font-missed' })
+    store.warning('B', undefined, { source: 'example' })
 
     expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('B fonts')
+    expect(store.notifications[0].title).toBe('B')
     expect(store.notifications[0].sessionId).toBe('doc-2')
 
     store.setActiveSession('doc-1')
     expect(store.notifications).toHaveLength(1)
-    expect(store.notifications[0].title).toBe('A fonts')
+    expect(store.notifications[0].title).toBe('A')
   })
 
   it('clear() only clears the active session', () => {
@@ -74,13 +74,12 @@ describe('ApplicationNotificationStore (per-session)', () => {
 })
 
 describe('applicationGroupNotifications', () => {
-  it('collapses multiple font-missed notifications into one group', () => {
+  it('collapses notifications that share a source into one group', () => {
     const groups = applicationGroupNotifications([
       makeNotification({
         id: '1',
-        title: 'Font A',
-        source: 'font-missed',
-        fontNames: ['A']
+        title: 'A',
+        source: 'example'
       }),
       makeNotification({
         id: '2',
@@ -89,15 +88,14 @@ describe('applicationGroupNotifications', () => {
       }),
       makeNotification({
         id: '3',
-        title: 'Font B',
-        source: 'font-missed',
-        fontNames: ['B'],
+        title: 'B',
+        source: 'example',
         type: 'error'
       })
     ])
 
     expect(groups).toHaveLength(2)
-    expect(groups[0].key).toBe('font-missed')
+    expect(groups[0].key).toBe('example')
     expect(groups[0].collapsible).toBe(true)
     expect(groups[0].items).toHaveLength(2)
     expect(groups[0].type).toBe('error')
@@ -105,17 +103,17 @@ describe('applicationGroupNotifications', () => {
     expect(groups[1].collapsible).toBe(false)
   })
 
-  it('keeps a single groupable notification as a flat item', () => {
+  it('keeps a single notification with a source as a flat item', () => {
     const groups = applicationGroupNotifications([
       makeNotification({
         id: '1',
-        title: 'Fonts',
-        source: 'font-missed'
+        title: 'A',
+        source: 'example'
       })
     ])
 
     expect(groups).toHaveLength(1)
     expect(groups[0].collapsible).toBe(false)
-    expect(groups[0].source).toBe('font-missed')
+    expect(groups[0].source).toBe('example')
   })
 })

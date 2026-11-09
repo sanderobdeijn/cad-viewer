@@ -23,7 +23,7 @@ The THREE.js renderer employs cutting-edge rendering technologies for exceptiona
 - **Buffer Geometry Optimization**: Efficient memory management and geometry merging for reduced GPU overhead
 - **Material Caching**: Reuses materials across similar entities to minimize state changes
 - **WebGL Optimization**: Leverages modern WebGL features for hardware-accelerated rendering
-- **Rendering MText in Web Workers**: Renders mtext entities in multiple web workers
+- **Text with troika-three-text**: Draws text as signed-distance-field glyphs that stay sharp at any zoom
 
 ## Directory Structure (partial)
 - `src/batch/` – Advanced batched geometry and group rendering optimizations

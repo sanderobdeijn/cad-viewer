@@ -1,13 +1,8 @@
 /**
- * Identifies the subsystem that produced a notification for grouping / cleanup.
+ * Identifies the subsystem that produced a notification. Notifications that
+ * share a source collapse into one expandable group in the panels.
  */
-export type ApplicationNotificationSource = 'font-missed'
-
-/**
- * Sources the default / Vue UIs collapse into expandable groups.
- */
-export const APPLICATION_GROUPABLE_NOTIFICATION_SOURCES: readonly ApplicationNotificationSource[] =
-  ['font-missed'] as const
+export type ApplicationNotificationSource = string
 
 /**
  * Visual severity category for a notification entry.
@@ -48,11 +43,6 @@ export interface ApplicationNotification {
   timeout?: number
   /** Producer used for grouping and selective removal. */
   source?: ApplicationNotificationSource
-  /**
-   * Font names associated with a `font-missed` notification, used when pruning
-   * resolved missing-font alerts.
-   */
-  fontNames?: string[]
   /**
    * {@link ApplicationDocSession.id} of the document this notification belongs to.
    * Assigned by the store when omitted (uses the active session).
@@ -159,14 +149,6 @@ export interface ApplicationNotificationCenter {
    */
   removeBySource(source: ApplicationNotificationSource): void
   /**
-   * Drops `font-missed` entries that no longer apply given the still-missing fonts.
-   *
-   * @param missedFontNames - Fonts that are still unresolved; entries whose
-   *   `fontNames` no longer intersect this set are removed. An empty set removes
-   *   every `font-missed` entry in the active session.
-   */
-  removeResolvedFontMissedNotifications(missedFontNames: Iterable<string>): void
-  /**
    * Switches which document's list is exposed via {@link notifications}.
    * Called by the event bridge on document activate.
    *
@@ -195,9 +177,9 @@ export interface ApplicationNotificationCenter {
  * One visual group produced by {@link applicationGroupNotifications} for panel UIs.
  */
 export interface ApplicationNotificationGroup {
-  /** Stable key (`font-missed` or `single:<id>`). */
+  /** Stable key (the shared source, or `single:<id>`). */
   key: string
-  /** Present when the group collapses a groupable {@link ApplicationNotificationSource}. */
+  /** Present when the group collapses notifications that share a source. */
   source?: ApplicationNotificationSource
   /** Entries in insertion order within the group. */
   items: ApplicationNotification[]
@@ -220,7 +202,7 @@ const TYPE_RANK: Record<ApplicationNotificationType, number> = {
 }
 
 /**
- * Groups notifications for UI panels (`font-missed` collapses).
+ * Groups notifications for UI panels; entries that share a source collapse.
  *
  * @param notifications - Flat list for the active session (newest first).
  * @returns Groups in first-seen order; collapsible only when a groupable source
@@ -234,11 +216,7 @@ export function applicationGroupNotifications(
 
   for (const notification of notifications) {
     const source = notification.source
-    const isGroupable =
-      source != null &&
-      (APPLICATION_GROUPABLE_NOTIFICATION_SOURCES as readonly string[]).includes(
-        source
-      )
+    const isGroupable = source != null
     const key = isGroupable ? source! : `single:${notification.id}`
 
     const existing = groups.get(key)

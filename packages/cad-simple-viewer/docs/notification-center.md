@@ -1,6 +1,6 @@
 # Notification Center
 
-`@mlightcad/cad-simple-viewer` writes user-visible alerts — **missing fonts**, **open failures**, and similar — into a **Notification Center** when a drawing opens. A lightweight DOM bell UI is installed by default. Hosts (for example `@mlightcad/cad-viewer`, or your own shell) can implement the same interface and **replace** that UI while still reusing the engine-side event bridge and message formatters.
+`@mlightcad/cad-simple-viewer` writes user-visible alerts — **open failures**, warnings, and similar — into a **Notification Center** when a drawing opens. A lightweight DOM bell UI is installed by default. Hosts (for example `@mlightcad/cad-viewer`, or your own shell) can implement the same interface and **replace** that UI while still reusing the engine-side event bridge and message formatters.
 
 This guide covers architecture, visibility, default behavior, how to override the center, and the contract custom centers must honor.
 
@@ -9,7 +9,7 @@ This guide covers architecture, visibility, default behavior, how to override th
 ## 1. Architecture
 
 ```
-Engine events (font-not-found / open-file-progress / message / …)
+Engine events (message / …)
         │
         ▼
 ApplicationNotificationEventBridge   ← formats title/body, writes into the current Center
@@ -105,7 +105,7 @@ Custom Centers should drive their own show/hide from `subscribe` / reactive `not
 
 `ApplicationDocManager.createInstance()` by default:
 
-1. Installs `ApplicationNotificationEventBridge` (fonts, parse warnings, generic `message`, etc.);
+1. Installs `ApplicationNotificationEventBridge` (generic `message` events);
 2. Mounts the built-in DOM notification bell on the **canvas container** (`curView.container`).
 
 ### Theme and layout
@@ -255,16 +255,6 @@ class MyNotificationCenter implements ApplicationNotificationCenter {
     this.removeWhere(n => n.source === source)
   }
 
-  removeResolvedFontMissedNotifications(missedFontNames: Iterable<string>) {
-    const missed = new Set(missedFontNames)
-    this.removeWhere(n => {
-      if (n.source !== 'font-missed') return false
-      if (missed.size === 0) return true
-      if (!n.fontNames?.length) return false
-      return !n.fontNames.some(name => missed.has(name))
-    })
-  }
-
   subscribe(listener: () => void) {
     this.listeners.add(listener)
     return () => this.listeners.delete(listener)
@@ -332,7 +322,7 @@ The `@mlightcad/cad-viewer` pattern:
 1. `createInstance({ notificationCenter: { showDefaultUi: false } })`
 2. Implement (or adapt) `ApplicationNotificationCenter` with a reactive Vue store (**per session**)
 3. `applicationSetNotificationCenter(adapter)`
-4. Panel components read the store only — do **not** re-subscribe to `font-not-found` and similar events
+4. Panel components read the store only — do **not** re-subscribe to `message` and similar events
 
 Minimal adapter:
 
@@ -362,8 +352,6 @@ export function registerHostNotificationCenter() {
     clear: () => vue.clear(),
     removeWhere: p => vue.removeWhere(p),
     removeBySource: s => vue.removeBySource(s),
-    removeResolvedFontMissedNotifications: names =>
-      vue.removeResolvedFontMissedNotifications(names),
     setActiveSession: id => vue.setActiveSession(id),
     clearSession: id => vue.clearSession(id)
   }
@@ -383,11 +371,7 @@ Position host panels relative to the **canvas / main drawing area** (`position: 
 
 ## 6. `source` and grouping
 
-The bridge stamps some alerts with `source` for grouping and cleanup:
-
-| `source` | Meaning |
-|---|---|
-| `font-missed` | Font missing / load failure; use `fontNames` + `removeResolvedFontMissedNotifications` |
+Producers can stamp a notification with a `source` string. Notifications that share a source collapse into one expandable group, and `removeBySource` clears them together. The bridge itself does not set a source.
 
 Use `applicationGroupNotifications(notifications)` to collapse same-`source` rows (built-in bell and cad-viewer panel both use this helper).
 
@@ -400,9 +384,7 @@ When the bridge is enabled (`notificationCenter !== false`):
 | Source | Center behavior |
 |---|---|
 | `eventBus` `message` | info / warning / error / success |
-| `fonts-not-loaded` / `fonts-not-found` / `font-not-found` | `font-missed` |
-| `missed-data-changed` | prune resolved font-missed rows |
-| `failed-to-open-file` / `failed-to-get-avaiable-fonts` | error |
+| `failed-to-open-file` | error |
 | `documentActivated` / `documentCreated` | `setActiveSession(activeSessionId)` |
 | `documentToBeDestroyed` | `clearSession(sessionId)` |
 
@@ -428,7 +410,7 @@ Command-line history (`EditorCommand.showMessage`) is a separate channel. Only `
 **Q: Why is the bell not at the screen corner?**  
 By design it tracks the **canvas**. If the viewer is not full-window, the bell stays on the drawing area. Pass `notificationCenter.host` only when you intentionally want a different mount node.
 
-**Q: Why don’t Doc A’s font warnings appear while Doc B is active?**  
+**Q: Why don’t Doc A’s warnings appear while Doc B is active?**  
 Notifications are stored per `sessionId`. Activate Doc A again (or read that session’s bucket in a custom Center) to see its list.
 
 ---

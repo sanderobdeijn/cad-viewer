@@ -141,16 +141,6 @@ class NotificationCenter {
     this.removeWhere(notification => notification.source === source)
   }
 
-  removeResolvedFontMissedNotifications(missedFontNames: Iterable<string>) {
-    const missed = new Set(missedFontNames)
-    this.removeWhere(notification => {
-      if (notification.source !== 'font-missed') return false
-      if (missed.size === 0) return true
-      if (!notification.fontNames?.length) return false
-      return !notification.fontNames.some(fontName => missed.has(fontName))
-    })
-  }
-
   info(title: string, message?: string, options?: Partial<Notification>) {
     return this.add({
       type: 'info',
@@ -212,10 +202,6 @@ export function useNotificationCenter() {
     clearAll: notificationCenter.clearAll.bind(notificationCenter),
     removeWhere: notificationCenter.removeWhere.bind(notificationCenter),
     removeBySource: notificationCenter.removeBySource.bind(notificationCenter),
-    removeResolvedFontMissedNotifications:
-      notificationCenter.removeResolvedFontMissedNotifications.bind(
-        notificationCenter
-      ),
     info: notificationCenter.info.bind(notificationCenter),
     warning: notificationCenter.warning.bind(notificationCenter),
     error: notificationCenter.error.bind(notificationCenter),

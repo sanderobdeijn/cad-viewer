@@ -35,15 +35,7 @@ export default {
   message: {
     fetchingDrawingFile: 'Fetching file ...',
     calculatingSmartExtents: 'Calculating smart extents ...',
-    collectingMemoryProfile: 'Analyzing memory ...',
-    fontCached: 'Font cached successfully',
-    fontCacheFailed: 'Failed to cache font',
-    fontsNotFound: 'Fonts not found in the font repository: {fonts}.',
-    fontsNotLoaded: 'Failed to load fonts: {fonts}.',
-    fontMissedInDrawing:
-      'Font "{font}" is required by {count} text object(s) but is not available. Displaying with "{replacementFont}".',
-    fontMissedReplacement: '"{font}" (displaying with "{replacement}")',
-    failedToGetAvaiableFonts: 'Failed to get available fonts from "{url}"!'
+    collectingMemoryProfile: 'Analyzing memory ...'
   },
   notification: {
     center: {
@@ -52,14 +44,9 @@ export default {
       noNotifications: 'No notifications'
     },
     group: {
-      fontMissed: 'Missing Fonts',
-      fontMissedSummary:
-        '{count} font-related messages. Click to expand details.',
       genericSummary: '{count} messages. Click to expand details.'
     },
     title: {
-      fontNotFound: 'Font Not Found',
-      fontNotLoaded: 'Font Not Loaded',
       systemMessage: 'System Message',
       systemWarning: 'System Warning',
       systemError: 'System Error',
@@ -69,7 +56,6 @@ export default {
   progress: {
     start: 'Start parsing file ...',
     parse: 'Parsing file ...',
-    font: 'Downloading fonts needed by this drawing ...',
     ltype: 'Parsing line types ...',
     style: 'Parsing text syltes ...',
     dimstyle: 'Parsing dimension styles ...',

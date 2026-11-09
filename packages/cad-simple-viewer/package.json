@@ -44,7 +44,6 @@
   "scripts": {
     "clean": "rimraf dist lib tsconfig.tsbuildinfo",
     "build": "tsc && vite build",
-    "copy:workers": "node ../../tools/copy-workers.mjs",
     "lint": "eslint src/",
     "lint:fix": "eslint --fix --quiet src/"
   },
@@ -52,8 +51,6 @@
     "@mlightcad/common": "workspace:*",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
-    "@mlightcad/mtext-parser": "workspace:*",
-    "@mlightcad/mtext-renderer": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",
     "@mlightcad/three-viewcube": "workspace:*",
     "@types/lodash-es": "^4.17.12",
@@ -68,8 +65,6 @@
     "@mlightcad/common": "workspace:*",
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
-    "@mlightcad/mtext-parser": "workspace:*",
-    "@mlightcad/mtext-renderer": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",
     "lodash-es": "4.17.21",
     "three": "^0.186.1"

@@ -14,7 +14,6 @@
   - Entity information display
   - Dark/light theme support
   - Status bar with progress and settings
-  - Customizable base URL for fonts, templates, and example files
   
   COMPONENTS INCLUDED:
   - Ribbon with CAD commands
@@ -26,7 +25,6 @@
   
   EVENTS HANDLED:
   - File loading and error handling
-  - Font loading notifications
   - General message display
   - File opening failures
   
@@ -48,11 +46,6 @@
  * ```vue
  * // Basic usage
  * <MlCadViewer
- * />
- *
- * // Usage with custom baseUrl for fonts
- * <MlCadViewer
- *   :base-url="'https://my-cdn.com/cad-data/'"
  * />
  *
  * // Usage with a self-hosted user-guide root
@@ -78,7 +71,6 @@ import { GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT } from '@mlightcad/graphic-i
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import elementPlusEnglish from 'element-plus/es/locale/lang/en'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 import {
   initializeCadViewer,
@@ -93,7 +85,7 @@ import {
   useDocument,
   useSettings
 } from '../composable'
-import { MlDialogManager, MlFontFileReader } from './common'
+import { MlDialogManager } from './common'
 import { MlEntityInfo, MlToolBars } from './layout'
 import { MlNotificationCenter } from './notification'
 import { MlPaletteManager } from './palette'
@@ -116,28 +108,20 @@ const emit = defineEmits<{
 interface Props {
   /** Background color as 24-bit hexadecimal RGB number (e.g., 0x000000) */
   background?: number
-  /** Base URL for loading fonts (e.g., 'https://example.com/cad-data/') */
-  baseUrl?: string
   /**
    * Absolute root URL for user-guide pages (trailing slash optional).
    * Forwarded to {@link ApplicationDocManagerOptions.docsBaseUrl} for in-app help links
    * (e.g. mobile magnifier). Defaults to the public mlightcad docs site.
    */
   docsBaseUrl?: string
-  /**
-   * The flag whether to use main thread or webwork to render drawing.
-   * - true: use main thread
-   * - false: use web worker
-   */
-  useMainThreadDraw?: boolean
   /** Initial theme of the viewer */
   theme?: 'light' | 'dark'
   /**
    * Whether opening a drawing is progressive.
    *
    * Controls both stages: mid-open paints during entity convert, and overlay
-   * policy. When `false` (default), the overlay stays until entities and
-   * deferred text geometry are idle. When `true`, the overlay locks the UI
+   * policy. When `false` (default), the overlay stays until entity
+   * conversion is idle. When `true`, the overlay locks the UI
    * until parse/conversion finish, then hides so pan/zoom work while scene
    * convert continues (status bar clears at CONVERSION end). Deprecated
    * `waitForTextGeometry` is ignored.
@@ -158,9 +142,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   background: undefined,
-  baseUrl: undefined,
   docsBaseUrl: undefined,
-  useMainThreadDraw: true,
   theme: 'dark',
   progressiveRendering: false,
   circleSides: GRAPHICS_INTERFACE_DRAW_CIRCLE_SIDES_DRAFT
@@ -171,7 +153,6 @@ const buildOpenOptions = (): ApplicationOpenDatabaseOptions => ({
   circleSides: props.circleSides
 })
 
-const { t } = useI18n()
 // Canvas element reference
 const containerRef = ref<HTMLDivElement>()
 const layoutRef = ref<HTMLDivElement>()
@@ -317,10 +298,8 @@ onMounted(async () => {
     initializeCadViewer({
       container: containerRef.value,
       busyIndicatorHost: layoutRef.value,
-      baseUrl: props.baseUrl,
       docsBaseUrl: props.docsBaseUrl,
-      autoResize: true,
-      useMainThreadDraw: props.useMainThreadDraw
+      autoResize: true
     })
     // ApplicationDocManager.instance is guaranteed only after viewer initialization.
     editorRef.value = ApplicationDocManager.instance
@@ -377,15 +356,6 @@ eventBus.on('message', params => {
     message: params.message,
     grouping: true,
     type: params.type,
-    showClose: true
-  })
-})
-
-eventBus.on('failed-to-get-avaiable-fonts', params => {
-  ElMessage({
-    message: t('main.message.failedToGetAvaiableFonts', { url: params.url }),
-    grouping: true,
-    type: 'error',
     showClose: true
   })
 })
@@ -476,9 +446,6 @@ const closeNotificationCenter = () => {
           />
         </footer>
       </div>
-
-      <!-- Hidden components for file handling and entity information -->
-      <ml-font-file-reader v-if="editorRef" />
 
       <!-- Entity info panel for displaying object properties -->
       <ml-entity-info v-if="editorRef" />

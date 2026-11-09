@@ -43,7 +43,7 @@ npm install @mlightcad/cad-simple-viewer
 
 Please refer to [cad-simple-viewer-example](https://github.com/mlight-lee/cad-simple-viewer-example) on basic usage and advanced usage.
 
-To learn about the built-in notification center (and how to replace the default bell UI while still receiving font-missing alerts), see [docs/notification-center.md](./docs/notification-center.md).
+To learn about the built-in notification center (and how to replace the default bell UI while still receiving its alerts), see [docs/notification-center.md](./docs/notification-center.md).
 
 For the plain-DOM toolbar engine (`UIToolbar`, shortcut bar, and host customization), see [docs/toolbar.md](./docs/toolbar.md).
 
@@ -62,10 +62,6 @@ This capability makes `cad-simple-viewer` suitable for applications that need to
 **Important Note**: The usage patterns in `cad-simple-viewer` are **very similar to AutoCAD RealDWG**. If you're familiar with AutoCAD RealDWG development, you'll find the API structure and workflow nearly identical. The main difference is that we use the [**realdwg-web API**](https://mlight-lee.github.io/realdwg-web/) instead of the native RealDWG libraries.
 
 In [cad-simple-viewer-example](https://github.com/mlight-lee/cad-simple-viewer-example) it demonstrates how to create one drawing with [**realdwg-web API**](https://mlight-lee.github.io/realdwg-web/).
-
-## Web Worker deployment
-
-The viewer ships one MTEXT layout worker. Deploy it next to your app and pass its URL through `webworkerFileUrls.mtextRender`.
 
 ## Available Exports
 

@@ -3,7 +3,7 @@ import { ApplicationI18n } from '../i18n/ApplicationI18n'
 /**
  * Translation function used by notification message formatters.
  *
- * @param key - Locale message key (e.g. `main.message.fontsNotFound`).
+ * @param key - Locale message key (e.g. `main.message.fetchingDrawingFile`).
  * @param params - Optional `{name}` placeholders to interpolate.
  * @returns Localized string.
  */

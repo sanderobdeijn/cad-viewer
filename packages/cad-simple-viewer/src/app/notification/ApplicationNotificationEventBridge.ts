@@ -1,6 +1,4 @@
 import { eventBus } from '../../editor/global/eventBus'
-import { ApplicationFontUtil } from '../../util/ApplicationFontUtil'
-import { applicationFormatFontsMissedReplacement } from '../../util/ApplicationFormatFontMissedMessage'
 import { applicationI18nTranslate } from '../../util/ApplicationI18nTranslate'
 import type { ApplicationDocManager, ApplicationDocumentEventArgs } from '../ApplicationDocManager'
 import type { ApplicationNotificationCenter } from './ApplicationNotificationTypes'
@@ -73,101 +71,6 @@ export class ApplicationNotificationEventBridge {
   }
 
   /**
-   * Handles fonts that failed to load from the remote repository.
-   *
-   * @param params - Failed font descriptors.
-   */
-  private readonly _onFontsNotLoaded = (params: {
-    fonts: { fontName: string; url: string }[]
-  }) => {
-    const fontNames = params.fonts.map(font => font.fontName)
-    this._getCenter().error(
-      applicationI18nTranslate('main.notification.title.fontNotLoaded'),
-      applicationI18nTranslate('main.message.fontsNotLoaded', {
-        fonts: applicationFormatFontsMissedReplacement(fontNames)
-      }),
-      {
-        source: 'font-missed',
-        fontNames,
-        persistent: true,
-        ...this.sessionOptions()
-      }
-    )
-  }
-
-  /**
-   * Handles fonts that could not be found in the remote repository.
-   *
-   * @param params - Missing font names.
-   */
-  private readonly _onFontsNotFound = (params: { fonts: string[] }) => {
-    this._getCenter().warning(
-      applicationI18nTranslate('main.notification.title.fontNotFound'),
-      applicationI18nTranslate('main.message.fontsNotFound', {
-        fonts: applicationFormatFontsMissedReplacement(params.fonts)
-      }),
-      {
-        source: 'font-missed',
-        fontNames: params.fonts,
-        ...this.sessionOptions()
-      }
-    )
-  }
-
-  /**
-   * Handles a single font required by the drawing that is unavailable at render time.
-   *
-   * Replaces any prior `font-missed` entry for the same font name.
-   *
-   * @param params - Font name and how many text objects require it.
-   */
-  private readonly _onFontNotFound = (params: {
-    fontName: string
-    count: number
-  }) => {
-    const fontName = params.fontName.trim()
-    if (!fontName) return
-    const center = this._getCenter()
-    center.removeWhere(
-      notification =>
-        notification.source === 'font-missed' &&
-        notification.fontNames?.includes(fontName) === true
-    )
-    center.warning(
-      applicationI18nTranslate('main.notification.title.fontNotFound'),
-      applicationI18nTranslate('main.message.fontMissedInDrawing', {
-        font: fontName,
-        count: params.count,
-        replacementFont: ApplicationFontUtil.getReplacementFontName(fontName)
-      }),
-      { source: 'font-missed', fontNames: [fontName], ...this.sessionOptions() }
-    )
-  }
-
-  /**
-   * Prunes resolved `font-missed` notifications when missed-data changes.
-   */
-  private readonly _onMissedDataChanged = () => {
-    const missedFonts = Object.keys(this._docManager.curView.missedData.fonts)
-    this._getCenter().removeResolvedFontMissedNotifications(missedFonts)
-  }
-
-  /**
-   * Handles failure to fetch the available-fonts catalog.
-   *
-   * @param params - Catalog URL that failed.
-   */
-  private readonly _onFailedToGetFonts = (params: { url: string }) => {
-    this._getCenter().error(
-      applicationI18nTranslate('main.notification.title.systemError'),
-      applicationI18nTranslate('main.message.failedToGetAvaiableFonts', {
-        url: params.url
-      }),
-      this.sessionOptions()
-    )
-  }
-
-  /**
    * Syncs the active session before a new document opens.
    */
   private readonly _onDocumentToBeOpened = () => {
@@ -222,11 +125,6 @@ export class ApplicationNotificationEventBridge {
     this.syncActiveSession()
 
     eventBus.on('message', this._onMessage)
-    eventBus.on('fonts-not-loaded', this._onFontsNotLoaded)
-    eventBus.on('fonts-not-found', this._onFontsNotFound)
-    eventBus.on('font-not-found', this._onFontNotFound)
-    eventBus.on('missed-data-changed', this._onMissedDataChanged)
-    eventBus.on('failed-to-get-avaiable-fonts', this._onFailedToGetFonts)
 
     this._docManager.events.documentToBeOpened.addEventListener(
       this._onDocumentToBeOpened
@@ -250,11 +148,6 @@ export class ApplicationNotificationEventBridge {
     this._installed = false
 
     eventBus.off('message', this._onMessage)
-    eventBus.off('fonts-not-loaded', this._onFontsNotLoaded)
-    eventBus.off('fonts-not-found', this._onFontsNotFound)
-    eventBus.off('font-not-found', this._onFontNotFound)
-    eventBus.off('missed-data-changed', this._onMissedDataChanged)
-    eventBus.off('failed-to-get-avaiable-fonts', this._onFailedToGetFonts)
 
     this._docManager.events.documentToBeOpened.removeEventListener(
       this._onDocumentToBeOpened

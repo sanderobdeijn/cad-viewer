@@ -103,10 +103,10 @@ describe('ThreeRendererRenderer direct capture', () => {
     expect(renderer.takeDirectCapture()).toBeNull()
   })
 
-  it('misses capture when mtext() is drawn during capture', () => {
+  it('misses capture when text() is drawn during capture', () => {
     const renderer = createRenderer()
     renderer.beginDirectCapture()
-    renderer.mtext({} as never, {} as never)
+    renderer.text({} as never)
     expect(renderer.takeDirectCapture()).toBeNull()
   })
 })

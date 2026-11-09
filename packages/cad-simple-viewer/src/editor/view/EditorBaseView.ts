@@ -128,27 +128,6 @@ export {
 } from './EditorSelectionAction'
 
 /**
- * One unresolved external reference reported by the viewer.
- */
-export interface EditorMissedXref {
-  /** Block table record name of the xref */
-  name: string
-  /** Saved path from the drawing (may be empty if the converter did not provide it) */
-  pathName: string
-  /** True when the xref is an overlay reference */
-  isOverlay: boolean
-}
-
-/**
- * Represents missed data when rendering entities in the drawing
- */
-export interface EditorMissedData {
-  fonts: Record<string, number>
-  /** Unresolved external references in the drawing */
-  xrefs: EditorMissedXref[]
-}
-
-/**
  * Type of callback function used to calculate size of canvas when window resized
  */
 export type EditorCalculateSizeCallback = () => { width: number; height: number }
@@ -179,7 +158,6 @@ export type EditorCalculateSizeCallback = () => { width: number; height: number 
  * ```typescript
  * class MyView extends EditorBaseView {
  *   // Implement required abstract methods
- *   get missedData() { return { fonts: {}, xrefs: [] }; }
  *   get mode() { return this._mode; }
  *   set mode(value) { this._mode = value; }
  *   // ... other abstract methods
@@ -454,17 +432,6 @@ export abstract class EditorBaseView {
   set selectionBoxSize(value: number) {
     this._selectionBoxSize = value
   }
-
-  /**
-   * Gets information about missing data during rendering.
-   *
-   * This includes fonts that couldn't be loaded and images that are
-   * missing or inaccessible. Implementations should track and report
-   * this information to help users understand rendering issues.
-   *
-   * @returns Object containing missing fonts and images
-   */
-  abstract get missedData(): EditorMissedData
 
   /**
    * Gets the current view mode.

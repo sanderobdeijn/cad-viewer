@@ -1,6 +1,4 @@
 export * from './ThreeRendererDirectBatch'
 export * from './ThreeRendererEntityPreview'
-export * from './ThreeRendererFontLoader'
-export * from './ThreeRendererMTextRenderer'
 export * from './ThreeRendererRenderContext'
 export * from './ThreeRendererRenderer'

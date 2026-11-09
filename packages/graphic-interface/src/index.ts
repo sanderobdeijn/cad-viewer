@@ -30,15 +30,10 @@ export {
   graphicsInterfaceDrawCircleSides,
   graphicsInterfaceDrawTessellateOptions
 } from './GraphicsInterfaceDrawTessellate'
-export type { GraphicsInterfaceFontMapping, GraphicsInterfaceRenderer } from './GraphicsInterfaceRenderer'
-export type { GraphicsInterfaceShapeData } from './GraphicsInterfaceShapeData'
+export type { GraphicsInterfaceRenderer } from './GraphicsInterfaceRenderer'
 export type { GraphicsInterfaceStyleType } from './GraphicsInterfaceStyleType'
 export type { GraphicsInterfaceSubEntityTraits } from './GraphicsInterfaceSubEntityTraits'
-export {
-  GraphicsInterfaceMTextAttachmentPoint,
-  GraphicsInterfaceMTextFlowDirection
-} from './GraphicsInterfaceTextStyle'
-export type { GraphicsInterfaceMTextData, GraphicsInterfaceTextStyle } from './GraphicsInterfaceTextStyle'
+export type { GraphicsInterfaceTextData } from './GraphicsInterfaceText'
 export {
   GraphicsInterfaceDefaultLightingType,
   GraphicsInterfaceOrthographicType,

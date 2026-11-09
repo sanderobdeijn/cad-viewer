@@ -273,23 +273,6 @@ export class ApplicationNotificationStore implements ApplicationNotificationCent
   }
 
   /**
-   * Drops `font-missed` entries that no longer apply given the still-missing fonts.
-   *
-   * @param missedFontNames - Fonts that are still unresolved.
-   */
-  removeResolvedFontMissedNotifications(
-    missedFontNames: Iterable<string>
-  ): void {
-    const missed = new Set(missedFontNames)
-    this.removeWhere(notification => {
-      if (notification.source !== 'font-missed') return false
-      if (missed.size === 0) return true
-      if (!notification.fontNames?.length) return false
-      return !notification.fontNames.some(fontName => missed.has(fontName))
-    })
-  }
-
-  /**
    * Clears listeners, all session buckets, and the active session pointer.
    */
   dispose(): void {

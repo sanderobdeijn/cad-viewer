@@ -12,7 +12,6 @@
           class="ml-status-bar-current-pos"
           >{{ posText }}</el-button
         >
-        <ml-warning-button />
         <ml-notification-button @click="toggleNotificationCenter" />
         <ml-theme-button
           :is-dark="props.isDark"
@@ -78,7 +77,6 @@ import MlPointStyleButton from './MlPointStyleButton.vue'
 import MlPolarTrackingButton from './MlPolarTrackingButton.vue'
 import MlSettingButton from './MlSettingButton.vue'
 import MlThemeButton from './MlThemeButton.vue'
-import MlWarningButton from './MlWarningButton.vue'
 
 const props = defineProps<{
   isDark: boolean

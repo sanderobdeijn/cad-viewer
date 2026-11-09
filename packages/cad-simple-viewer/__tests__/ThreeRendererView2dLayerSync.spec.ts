@@ -36,8 +36,7 @@ describe('layer material remap fan-out', () => {
     const renderer = {
       getLayerBoundMaterial: jest.fn((material: THREE.Material) => material),
       styleManager: {
-        getLineMaterial: jest.fn(),
-        getMTextFillMaterial: jest.fn()
+        getLineMaterial: jest.fn()
       }
     } as unknown as ThreeRendererRenderer
 
@@ -95,8 +94,7 @@ describe('layer material remap fan-out', () => {
     const renderer = {
       getLayerBoundMaterial,
       styleManager: {
-        getLineMaterial: jest.fn(),
-        getMTextFillMaterial: jest.fn()
+        getLineMaterial: jest.fn()
       }
     } as unknown as ThreeRendererRenderer
 

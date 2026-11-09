@@ -5,7 +5,6 @@ import {
   ApplicationDrawingUnitsCmd,
   ApplicationMeasurementPanelCmd,
   ApplicationMemCmd,
-  ApplicationMissedDataCmd,
   ApplicationPointStyleCmd
 } from '../command'
 import { MlDrawingUnitsDlg, MlPointStyleDlg } from '../component'
@@ -15,12 +14,6 @@ let isCommandRegistered = false
 export const registerCmds = () => {
   if (!isCommandRegistered) {
     const register = ApplicationDocManager.instance.commandManager
-    register.addCommand(
-      EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
-      'md',
-      'md',
-      new ApplicationMissedDataCmd()
-    )
     register.addCommand(
       EditorCommandStack.SYSTEMT_COMMAND_GROUP_NAME,
       'pttype',

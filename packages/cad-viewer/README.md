@@ -12,7 +12,6 @@ CAD Viewer is a **high-performance** Vue 3 component for creating and editing CA
 - **Always a new drawing** - The viewer opens with a blank drawing; drawings are not loaded from or saved to files
 - **Easy integration** - No server setup or backend infrastructure needed for third-party integration
 - **Customizable UI** - Control visibility of toolbars, command line, coordinates, and performance stats
-- **Customizable Resources** - Set custom base URLs for fonts, templates, and example files
 - Modern UI optimized for large CAD file handling
 - State management for entities and settings
 - Integration with optimized SVG and THREE.js renderers
@@ -80,12 +79,6 @@ Then create one vue component as follows.
 <template>
   <div>
     <MlCADViewer :background="0x808080" />
-    
-    <!-- With custom base URL for fonts and templates -->
-    <!-- <MlCADViewer 
-      :background="0x808080" 
-      :base-url="'https://my-cdn.com/cad-data/'"
-    /> -->
   </div>
 </template>
 
@@ -123,8 +116,6 @@ The `MlCadViewer` component accepts the following props:
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `background` | `number` | `undefined` | Background color as 24-bit hexadecimal RGB (e.g., `0x000000` for black, `0x808080` for gray). |
-| `baseUrl` | `string` | `undefined` | Base URL for loading fonts, templates, and example files. This URL is used by the CAD viewer to load resources like fonts and drawing templates. **Note**: If not provided, uses the default URL. |
-| `useMainThreadDraw` | `boolean` | `false` | Optional flag whether to use main thread or webwork to render drawing. The true value means using main thread to render drawing. This approach take less memory and take longer time to show rendering results. The false value means using web worker to render drawing. This approach take more memory and take shorter time to show rendering results. |
 | `theme` | `'light' \| 'dark'` | `'dark'` | Initial UI theme of the CAD viewer. On mount, this prop initializes the `colorTheme` setting (`0 = dark`, `1 = light`). After that, the viewer theme is driven by `colorTheme`, so runtime changes from the status bar theme button, the `COLORTHEME` command or direct setting updates stay synchronized across `cad-viewer` and `cad-simple-viewer`. |
 ### UI Settings
 
@@ -144,10 +135,7 @@ Settings resolve in three layers (later wins): built-in defaults, user preferenc
 #### Example (recommended)
 ```vue
 <template>
-  <!-- Custom baseUrl for fonts and templates -->
-  <!-- <MlCadViewer 
-    :base-url="'https://my-cdn.com/cad-data/'"
-  /> -->
+  <MlCadViewer />
 </template>
 
 <script setup lang="ts">
@@ -180,40 +168,6 @@ ApplicationSettingManager.instance.apply(
 - Property setters (for example `isShowToolbar = false`) and the in-app settings menu persist user preferences by default.
 - On the same origin, give each product its own `storageKey` via `ApplicationSettingManager.configure` so preferences do not cross-contaminate. Call `configure` before the first settings read/write.
 
-### Base URL Configuration
-
-The `baseUrl` property allows you to customize where the CAD viewer loads fonts, templates, and example files from. This is particularly useful for:
-
-- **Self-hosted resources**: Host your own fonts and templates on your CDN or server
-- **Corporate environments**: Use internal servers for CAD resources
-- **Offline deployments**: Serve resources from local file systems
-- **Custom branding**: Use your own templates and fonts
-
-#### Default Behavior
-If no `baseUrl` is provided, the viewer uses the default URL: `https://cdn.jsdelivr.net/gh/mlightcad/cad-data`
-
-#### Resource Structure
-When using a custom `baseUrl`, ensure your server has the following structure:
-```
-your-base-url/
-├── fonts/           # Font files for text rendering
-└── examples/        # Example CAD files
-```
-
-#### Example: Custom Base URL
-```vue
-<template>
-  <MlCadViewer 
-    :base-url="'https://my-company.com/cad-resources/'"
-  />
-</template>
-```
-
-This configuration will:
-- Load fonts from `https://my-company.com/cad-resources/fonts/`
-- Load templates from `https://my-company.com/cad-resources/templates/`
-- Use the custom base URL for any "Quick New" operations
-
 ### Component Features
 
 The `MlCadViewer` component includes:
@@ -233,14 +187,12 @@ The component automatically handles various events:
 
 - **File Loading** - Supports local file loading (via file dialog), drag-and-drop, and URL-based file loading
 - **Error Messages** - Displays user-friendly error messages for failed operations
-- **Font Loading** - Handles missing fonts with appropriate notifications
 - **System Messages** - Shows status updates and operation feedback
 
 ### Advanced Usage
 
 Please refer to [readme of cad-simple-viewer](../cad-simple-viewer/README.md) to learn the following advanced usage.
 
-- Define your own font loader to load fonts from your own server
 - Create drawing or modify drawing
 
 ## Available Exports
@@ -278,7 +230,7 @@ The viewer UI theme is synchronized through the `colorTheme` setting on `Applica
 - `colorTheme = 1` means light theme.
 - The `theme` prop provides the initial value when `MlCadViewer` mounts.
 - Clicking the status bar theme button updates `colorTheme`.
-- Any runtime change to `colorTheme` is reflected automatically in viewer UI and MTEXT-related UI.
+- Any runtime change to `colorTheme` is reflected automatically in viewer UI.
 - The exported `useDark` composable wraps `colorTheme` instead of maintaining an isolated local dark-mode state.
 
 ### Locale

@@ -1,4 +1,3 @@
-import { CommonEventManager } from '@mlightcad/common'
 import {
   GeometryArea2d,
   GeometryCircularArc2d,
@@ -9,15 +8,11 @@ import {
 } from '@mlightcad/geometry-engine'
 import {
   graphicsInterfaceDrawTessellateOptions,
-  GraphicsInterfaceFontMapping,
-  GraphicsInterfaceMTextData,
   GraphicsInterfacePointStyle,
   GraphicsInterfaceRenderer,
-  GraphicsInterfaceShapeData,
   GraphicsInterfaceSubEntityTraits,
-  GraphicsInterfaceTextStyle
+  GraphicsInterfaceTextData
 } from '@mlightcad/graphic-interface'
-import { FontManager } from '@mlightcad/mtext-renderer'
 import * as THREE from 'three'
 
 import type { ThreeRendererBatchDrawPolicy } from '../draw/ThreeRendererBatchDrawPolicy'
@@ -26,11 +21,10 @@ import {
   ThreeRendererGroup,
   ThreeRendererLine,
   ThreeRendererLineSegments,
-  ThreeRendererMText,
   ThreeRendererObject,
   ThreeRendererPoint,
   ThreeRendererPolygon,
-  ThreeRendererShape
+  ThreeRendererText
 } from '../object'
 import {
   buildOffsetRingCenterline,
@@ -44,16 +38,7 @@ import {
   type ThreeRendererEntityPreviewOptions,
   type ThreeRendererEntityPreviewResult
 } from './ThreeRendererEntityPreview'
-import { ThreeRendererMTextRenderer } from './ThreeRendererMTextRenderer'
 import { ThreeRendererRenderContext } from './ThreeRendererRenderContext'
-
-/** Event payload when a mapped font cannot be resolved during rendering. */
-export interface ThreeRendererFontNotFoundEventArgs {
-  /** Name of the font that could not be found. */
-  fontName: string
-  /** Number of characters using this font; set when the font is missing. */
-  count?: number
-}
 
 /**
  * Lifecycle state for the direct-batch draw-call capture session.
@@ -194,14 +179,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    */
   private _drawOrderZ = 0
 
-  public readonly events: {
-    fontNotFound: CommonEventManager<ThreeRendererFontNotFoundEventArgs>
-    fontLoaded: CommonEventManager<ThreeRendererFontNotFoundEventArgs>
-  } = {
-    fontNotFound: new CommonEventManager<ThreeRendererFontNotFoundEventArgs>(),
-    fontLoaded: new CommonEventManager<ThreeRendererFontNotFoundEventArgs>()
-  }
-
   /**
    * Options for {@link ThreeRendererRenderer} construction beyond a live WebGL backend.
    */
@@ -212,15 +189,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
     this._context = new ThreeRendererRenderContext()
     const size = renderer.getSize(new THREE.Vector2())
     this._context.styleManager.updateLineResolution(size.x, size.y)
-    ThreeRendererMTextRenderer.getInstance().overrideStyleManager(
-      this._context.styleManager
-    )
-    FontManager.instance.events.fontNotFound.addEventListener(args => {
-      this.events.fontNotFound.dispatch(args)
-    })
-    FontManager.instance.events.fontLoaded.addEventListener(args => {
-      this.events.fontLoaded.dispatch(args)
-    })
     this._subEntityTraits = ThreeRendererSubEntityTraitsUtil.createDefaultTraits()
   }
 
@@ -503,45 +471,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   }
 
   /**
-   * @inheritdoc
-   */
-  setFontMapping(mapping: GraphicsInterfaceFontMapping) {
-    FontManager.instance.setFontMapping(mapping)
-  }
-
-  /**
-   * Fonts list which can't be found
-   */
-  get missedFonts() {
-    return FontManager.instance.missedFonts
-  }
-
-  /**
-   * Snapshot of session-scoped missed fonts for park/restore.
-   */
-  snapshotMissedFonts(): Record<string, number> {
-    return { ...FontManager.instance.missedFonts }
-  }
-
-  /**
-   * Restores or clears session-scoped missed fonts (main + MText workers).
-   * Fire-and-forget worker sync so document switches stay synchronous.
-   * Swallow worker rejections (e.g. "Renderer terminated" when destroy()
-   * runs before the sync settles) so they do not become unhandled.
-   */
-  replaceMissedFonts(fonts: Record<string, number>): void {
-    FontManager.instance.replaceMissedFonts(fonts)
-    void ThreeRendererMTextRenderer.getInstance()
-      .replaceMissedFonts(FontManager.instance.missedFonts)
-      .catch(() => {})
-  }
-
-  /** Clears session-scoped missed fonts for the active document. */
-  clearMissedFonts(): void {
-    this.replaceMissedFonts({})
-  }
-
-  /**
    * Gets whether entity lineweights are displayed.
    */
   get showLineWeight() {
@@ -769,35 +698,12 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   /**
    * @inheritdoc
    */
-  mtext(mtext: GraphicsInterfaceMTextData, style: GraphicsInterfaceTextStyle, delay?: boolean) {
+  text(text: GraphicsInterfaceTextData) {
     if (this._directCapture !== 'off') {
       this.missDirectCapture()
-      return this.createDirectCapturePlaceholder() as ThreeRendererMText
+      return this.createDirectCapturePlaceholder() as ThreeRendererText
     }
-    return new ThreeRendererMText(
-      mtext,
-      this._subEntityTraits,
-      style,
-      this._context,
-      delay
-    )
-  }
-
-  /**
-   * @inheritdoc
-   */
-  shape(shape: GraphicsInterfaceShapeData, style?: GraphicsInterfaceTextStyle, delay?: boolean) {
-    if (this._directCapture !== 'off') {
-      this.missDirectCapture()
-      return this.createDirectCapturePlaceholder() as ThreeRendererShape
-    }
-    return new ThreeRendererShape(
-      shape,
-      this._subEntityTraits,
-      style,
-      this._context,
-      delay
-    )
+    return new ThreeRendererText(text, this._subEntityTraits, this._context)
   }
 
   /**
@@ -832,7 +738,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
    */
   dispose() {
     this._context.styleManager.dispose()
-    this.clearMissedFonts()
   }
 
   private linePoints(points: GeometryPoint2dLike[]) {

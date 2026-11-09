@@ -92,7 +92,7 @@ export class ThreeRendererProgressiveOpenFitController {
   }
 
   /**
-   * Frames linework bounds before deferred glyphs finish.
+   * Frames linework bounds before the final fit.
    *
    * The zoom runs as a programmatic camera change, so the host view's
    * `viewChanged` listener does not mark the open fit as user-adjusted and

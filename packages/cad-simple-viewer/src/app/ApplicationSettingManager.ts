@@ -2,22 +2,6 @@ import { CommonEventManager } from '@mlightcad/common'
 
 import { ApplicationOsnapMode, applicationOsnapModesToMask } from '../model/ApplicationOsnapMode'
 /**
- * Font mappings for CAD text rendering.
- *
- * Maps original font names to replacement font names when the original
- * font is not available in the system.
- *
- * @example
- * ```typescript
- * const fontMapping: ApplicationFontMapping = {
- *   'AutoCAD Font': 'Arial',
- *   'SimSun': 'Microsoft YaHei'
- * };
- * ```
- */
-export type ApplicationFontMapping = Record<string, string>
-
-/**
  * Configuration settings for the CAD application.
  *
  * Contains various UI and rendering preferences that can be persisted
@@ -41,8 +25,6 @@ export interface ApplicationSettings {
   isShowShortCutToolbar: boolean
   /** Whether performance statistics are displayed */
   isShowStats: boolean
-  /** Font mapping configuration for text rendering */
-  fontMapping: ApplicationFontMapping
   /** Object snap modes */
   osnapModes: number
   /** When true, never show the mobile precise point-pick tutorial again. */
@@ -186,7 +168,6 @@ const DEFAULT_VALUES: ApplicationSettings = {
   isShowToolbar: true,
   isShowShortCutToolbar: true,
   isShowStats: false,
-  fontMapping: {},
   osnapModes: applicationOsnapModesToMask([
     ApplicationOsnapMode.EndPoint,
     ApplicationOsnapMode.MidPoint,
@@ -524,7 +505,6 @@ export class ApplicationSettingManager<T extends ApplicationSettings = Applicati
    * @example
    * ```typescript
    * const isDebug = settings.get('isDebug');
-   * const fontMapping = settings.get('fontMapping');
    * ```
    */
   get<K extends keyof T>(key: K) {
@@ -694,38 +674,6 @@ export class ApplicationSettingManager<T extends ApplicationSettings = Applicati
    */
   set isShowStats(value: boolean) {
     this.set('isShowStats', value)
-  }
-
-  /**
-   * Gets the font mapping configuration.
-   *
-   * @returns The current font mapping
-   */
-  get fontMapping() {
-    return this.get('fontMapping')
-  }
-
-  /**
-   * Sets the font mapping configuration.
-   *
-   * @param value - The new font mapping
-   */
-  set fontMapping(value: ApplicationFontMapping) {
-    this.set('fontMapping', value)
-  }
-
-  /**
-   * Sets a single font mapping entry.
-   *
-   * @param originalFont - The original font name
-   * @param mappedFont - The replacement font name
-   */
-  setFontMapping(originalFont: string, mappedFont: string) {
-    const mapping = {
-      ...(this.get('fontMapping') as ApplicationFontMapping)
-    }
-    mapping[originalFont] = mappedFont
-    this.set('fontMapping', mapping)
   }
 
   /**

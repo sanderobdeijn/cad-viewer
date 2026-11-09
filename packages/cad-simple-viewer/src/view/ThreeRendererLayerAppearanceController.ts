@@ -1,6 +1,5 @@
 import { GraphicsInterfaceSubEntityTraits } from '@mlightcad/graphic-interface'
 import { ThreeRendererRenderer } from '@mlightcad/three-renderer'
-import * as THREE from 'three'
 
 import {
   APPLICATION_DEFAULT_LAYER,
@@ -50,31 +49,6 @@ export class ThreeRendererLayerAppearanceController {
         this.renderer
       )
     )
-  }
-
-  /**
-   * Rebinds text materials after groups are split/reparented or when the
-   * canvas background changes (ACI-7 foreground inversion).
-   *
-   * @param root - Object subtree to traverse for text refresh hooks.
-   * @param layerTraits - Optional resolved traits passed through to text wrappers.
-   */
-  refreshTextMaterialsInObjectTree(
-    root: THREE.Object3D,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ): void {
-    root.traverse(child => {
-      const refresh = (
-        child as {
-          refreshTextMaterials?: (
-            layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-          ) => void
-        }
-      ).refreshTextMaterials
-      if (typeof refresh === 'function') {
-        refresh.call(child, layerTraits)
-      }
-    })
   }
 
   /**

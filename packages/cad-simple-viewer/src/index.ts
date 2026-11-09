@@ -8,8 +8,3 @@ export * from './plugin'
 export * from './view'
 export * from './ui'
 export * from './model'
-export {
-  MTextColor,
-  MTextParagraphAlignment,
-  MTextParagraphAlignment as GraphicsInterfaceTextParagraphAlignment
-} from '@mlightcad/mtext-parser'

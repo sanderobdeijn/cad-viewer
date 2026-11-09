@@ -28,7 +28,7 @@ export interface EditorSpatialQueryResultItemEx extends EditorSpatialQueryResult
 /**
  * Unions spatial-query child boxes into one axis-aligned WCS rectangle.
  *
- * Non-finite child boxes (for example deferred MText placeholders seeded with
+ * Non-finite child boxes (for example placeholders for geometry not built yet, seeded with
  * `±Infinity`) are skipped so the union matches
  * {@link ThreeRendererGroup.syncWcsBboxFromChildBoxes}.
  */

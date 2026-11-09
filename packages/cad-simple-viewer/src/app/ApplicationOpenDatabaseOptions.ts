@@ -30,7 +30,7 @@ export interface ApplicationOpenDatabaseOptions {
    *
    * - `false` (default): conversion still runs asynchronously, but the canvas
    *   is not redrawn until every entity is converted. The open-file overlay
-   *   stays up until deferred text glyph jobs finish
+   *   stays up until conversion finishes
    *   ({@link ThreeRendererView2d.isProcessingEntities}).
    * - `true`: entity conversion yields across event-loop turns so geometry
    *   paints as batches land and the camera can reframe. The canvas overlay
@@ -39,7 +39,7 @@ export interface ApplicationOpenDatabaseOptions {
    *   parse/conversion progress and clears at CONVERSION `END`.
    *
    * Export / CLI completeness is not controlled by this flag. Callers that
-   * need fully drawable text (HTML/PDF/PNG, headless scripts) still wait via
+   * need a fully converted scene (HTML/PDF/PNG, headless scripts) still wait via
    * {@link ThreeRendererView2d.waitUntilIdle} /
    * {@link ThreeRendererView2d.ensureEntitiesConvertedForExport}.
    */
@@ -48,12 +48,11 @@ export interface ApplicationOpenDatabaseOptions {
   /**
    * @deprecated Ignored. Both stages of progressive rendering — mid-open
    * paints during entity convert, and whether the open overlay waits for
-   * deferred text glyph geometry — are controlled by
+   * conversion — are controlled by
    * {@link progressiveRendering}.
    *
-   * This option used to control only the text stage (`true` kept
-   * "Rendering drawing ..." up until glyphs finished; `false` hid it when
-   * entity convert finished) and was easy to confuse with
+   * This option used to control only the text stage of the old text
+   * renderer and was easy to confuse with
    * `progressiveRendering`. {@link ApplicationDocManager} strips it with a warning.
    */
   waitForTextGeometry?: boolean

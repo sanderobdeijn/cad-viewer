@@ -10,15 +10,14 @@ import {
   type GraphicsInterfaceDrawable,
   graphicsInterfaceForegroundColorForBackground
 } from '@mlightcad/graphic-interface'
-import { FontManager } from '@mlightcad/mtext-renderer'
 import {
   setAcTrDrawOrderZAllocator,
   ThreeRendererEntity,
-  ThreeRendererGlyphEntity,
   ThreeRendererGroup,
   ThreeRendererHtmlTransientManager,
-  ThreeRendererMTextRenderer,
-  ThreeRendererRenderer} from '@mlightcad/three-renderer'
+  ThreeRendererRenderer,
+  ThreeRendererText
+} from '@mlightcad/three-renderer'
 import { ThreeRendererMatrixUtil } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -43,7 +42,6 @@ import {
   EditorSpatialQueryResultItem,
   EditorSpatialQueryResultItemEx,
   EditorViewMode,
-  eventBus,
   resolvePointerSelectionAction
 } from '../editor'
 import {
@@ -56,20 +54,17 @@ import {
   editorNeedsCrossingGeometryRefine
 } from '../editor/view/EditorSelectionBoxIntersect'
 import { isEffectiveSpatialQueryHit } from '../editor/view/EditorSpatialQueryResult'
-import { APPLICATION_DIMENSION_TEXT_STYLE } from '../model/ApplicationDimensionGeometry'
 import {
   APPLICATION_DEFAULT_LAYER,
   APPLICATION_MODEL_SPACE_ID
 } from '../model/ApplicationItemDrawable'
 import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
 import { ThreeRendererGeometryUtil } from '../util'
-import { planTextStyleFontPreload } from '../util/ApplicationTextStyleFontPreload'
 import {
   trySelectReviewOverlay,
   trySelectReviewOverlaysByBox
 } from './EditorReviewOverlayPick'
 import { EditorViewKeyHandler } from './EditorViewKeyHandler'
-import { shouldRegenDatabaseAfterFontLoad } from './fontLoadRegen'
 import {
   absorbConvertQueue,
   adaptConvertSliceSize,
@@ -218,16 +213,15 @@ export class ThreeRendererView2d extends EditorBaseView {
    * wasted conversion work — this set skips re-entry until the current pass ends.
    */
   /**
-   * Object ids claimed by an in-flight interactive {@link batchConvert},
-   * including deferred glyph commits that have not yet called
-   * {@link ThreeRendererScene.addEntity}. Without this, a second convert pass can
-   * append another batched slot for the same id (visible as doubled TEXT
-   * linetype labels) because {@link hasEntity} is still false.
+   * Object ids claimed by an in-flight interactive {@link batchConvert}
+   * that have not yet called {@link ThreeRendererScene.addEntity}. Without
+   * this, a second convert pass can append another batched slot for the same
+   * id because {@link hasEntity} is still false.
    */
   private readonly _claimedConvertObjectIds = new Set<string>()
   /**
    * Per-objectId convert generation. Bumped by {@link updateEntity} so an
-   * in-flight progressive {@link batchConvert} / deferred commit for the same
+   * in-flight progressive {@link batchConvert} for the same
    * id cannot `addEntity` after the scene was cleared for reconversion
    * (ghost drawables from before the update).
    */
@@ -279,49 +273,11 @@ export class ThreeRendererView2d extends EditorBaseView {
   private _disposeProgressiveInputWatch?: () => void
   /**
    * Saved view was not applied at open. Frame batch bounds once linework
-   * convert drains, so the canvas is not blank until deferred glyphs finish.
+   * convert drains, so the canvas is not blank until the final fit.
    * Applied on a timer so it does not run on the entity-parse stack.
    */
   private _openLineworkFramePending = false
   private _openLineworkFrameTimer: ReturnType<typeof setTimeout> | null = null
-  /**
-   * In-flight + queued glyph/group geometry jobs that await fonts via asyncDraw.
-   * Counted separately so linework convert can continue while text waits.
-   */
-  private _pendingGeometryJobs = 0
-  /**
-   * Waiting deferred geometry runners. Capped concurrency avoids scheduling
-   * thousands of text `asyncDraw` jobs at once (large multi-sheet DWGs
-   * otherwise flood the main thread and freeze on "Rendering drawing ...").
-   */
-  private _deferredGeometryQueue: Array<{
-    run: () => Promise<void>
-    epoch: number
-  }> = []
-  /** Currently executing deferred geometry runners. */
-  private _deferredGeometryActive = 0
-  /**
-   * Debounced glyph rebuild after {@link FontManager.events.fontLoaded} so a
-   * burst of lazy face loads (simsun + malgun, etc.) triggers one redraw pass.
-   */
-  private _fontLoadedRedrawTimer: ReturnType<typeof setTimeout> | null = null
-  private _fontLoadedRedrawEpoch = 0
-  /**
-   * `performance.now()` when convert and deferred glyph jobs last reached
-   * idle together. Zero until that first transition. Used to ignore the
-   * open-time `fontLoaded` regen that replays the loading spinner.
-   */
-  private _entityProcessingIdleAt = 0
-  /**
-   * Convert epoch for which text-style font preload was started.
-   */
-  private _textStyleFontPreloadEpoch = -1
-  /**
-   * In-flight (or resolved) preload of the text style fonts.
-   * Started at conversion stage `STYLE` END so download overlaps LAYER/BLOCK/
-   * ENTITY parse and linework convert; glyph jobs await this before draw.
-   */
-  private _textStyleFontPreloadPromise: Promise<void> | null = null
   /** Grip point display and drag editing (Write mode only). */
   private _gripManager: EditorGripManager
   /** Global keyboard shortcuts for the view (erase, etc.). */
@@ -337,89 +293,10 @@ export class ThreeRendererView2d extends EditorBaseView {
   private readonly _viewDomAbort = new AbortController()
   private _viewDisposed = false
   /** Named listeners so dispose can detach from shared singletons. */
-  private _onFontNotFound?: (args: { fontName: string; count?: number }) => void
-  private _onFontLoaded?: (args?: { fontName?: string }) => void
+  private _onTextSynced?: () => void
   private _onSettingsModified?: (args: { key: string; value: unknown }) => void
   private _onCommandWillStartHitTest?: () => void
   private _onCommandEndedHitTest?: () => void
-  /**
-   * Promise that resolves when text-style fonts needed by deferred glyph jobs
-   * are ready. Shared so concurrent deferred jobs do not each await a long
-   * font preload.
-   */
-  private _deferredFontsReady: Promise<void> | null = null
-
-  /** Convert-phase wall timers (ms) for OPENPERF diagnostics. */
-  private _convertPhaseMs = {
-    finishGeometry: 0,
-    addEntity: 0,
-    awaitFonts: 0
-  }
-
-  /** Last text-style font preload plan (for OPENPERF). */
-  private _fontPreloadDiag: {
-    critical: string[]
-    /** @deprecated Prefer {@link preset}; kept for OPENPROF compatibility. */
-    workerWarm: string[]
-    background: string[]
-    /** Full default/symbol preset loaded at open start (drawing-independent). */
-    preset: string[]
-    workerSkipped: number
-    /** Where mesh/style faces are parsed for this open. */
-    parseSite?: 'main' | 'worker'
-  } | null = null
-
-  private ensureDeferredFontsReady(): Promise<void> {
-    if (!this._deferredFontsReady) {
-      const t0 = performance.now()
-      // Preset (fallback) + STYLE-table faces must both be ready before glyph
-      // bake. Linework convert does not await this promise.
-      const ready = Promise.all([
-        this.awaitPresetFontsReadySafe(),
-        this.awaitTextStyleFontsReady()
-      ]).then(
-        () => undefined,
-        () => undefined
-      )
-      this._deferredFontsReady = ready.then(() => {
-        this._convertPhaseMs.awaitFonts += performance.now() - t0
-      })
-    }
-    return this._deferredFontsReady
-  }
-
-  /**
-   * Awaits DocManager preset preload when the singleton exists.
-   * No-op in unit tests that construct a view without a manager.
-   */
-  private async awaitPresetFontsReadySafe(): Promise<void> {
-    const singleton = ApplicationDocManager as unknown as {
-      _instance?: ApplicationDocManager
-    }
-    if (!singleton._instance) {
-      return
-    }
-    await singleton._instance.awaitPresetFontsReady()
-  }
-
-  /**
-   * Returns and resets convert-phase wall timers collected during the last open.
-   */
-  takeConvertPhaseTimings() {
-    const snapshot = {
-      ...this._convertPhaseMs,
-      fontPreload: this._fontPreloadDiag
-        ? { ...this._fontPreloadDiag }
-        : undefined
-    }
-    this._convertPhaseMs = {
-      finishGeometry: 0,
-      addEntity: 0,
-      awaitFonts: 0
-    }
-    this._fontPreloadDiag = null
-    return snapshot
-  }
 
   /**
    * Wall-time between cooperative yields during scene convert (ms) when
@@ -444,19 +321,13 @@ export class ThreeRendererView2d extends EditorBaseView {
   private static readonly PROGRESSIVE_OPEN_PAINT_INTERVAL_MS = 2500
   /**
    * Minimum interval between interactive non-progressive mid-open paints (ms)
-   * while convert / deferred glyphs run under "Rendering drawing ...".
+   * while convert runs under "Rendering drawing ...".
    * Longer than {@link PROGRESSIVE_OPEN_PAINT_INTERVAL_MS}: the overlay is
    * semi-transparent (`rgba(0,0,0,0.45)`), but each paint still redraws the
-   * full scene and used to fire on every glyph completion. Headless
+   * full scene. Headless
    * (`cooperativeYield` false) skips these paints entirely.
    */
   private static readonly NON_PROGRESSIVE_OPEN_PAINT_INTERVAL_MS = 4000
-  /**
-   * Max concurrent deferred glyph geometry finalizers. Large drawings
-   * enqueue thousands of jobs; keep this modest to limit peak JS heap during
-   * open while retaining reasonable text throughput after convert finishes.
-   */
-  private static readonly DEFERRED_GEOMETRY_CONCURRENCY = 8
   /**
    * Target wall time of one interactive convert slice (ms) while a paper
    * layout is active.
@@ -556,23 +427,11 @@ export class ThreeRendererView2d extends EditorBaseView {
     // Shared across all layer batched groups so later entities occlude
     // earlier linework via depth, matching AutoCAD draw order.
     setAcTrDrawOrderZAllocator(() => this._renderer.allocateDrawOrderZ())
-    const fontMapping = ApplicationSettingManager.instance.fontMapping
-    this._renderer.setFontMapping(fontMapping)
-    this._onFontNotFound = args => {
-      eventBus.emit('font-not-found', {
-        fontName: args.fontName,
-        count: args.count ?? 0
-      })
+    // Text lays out asynchronously; repaint once a label is ready to draw.
+    this._onTextSynced = () => {
+      this._isDirty = true
     }
-    this._onFontLoaded = args => {
-      // Lazy load success clears FontManager.missedFonts; refresh status-bar state.
-      eventBus.emit('missed-data-changed', {})
-      // On-demand faces (e.g. style `malgun`) may finish after the first glyph
-      // bake. Rebuild text so Hangul is not left as permanent '?'.
-      this.scheduleGlyphRedrawAfterFontLoad(args?.fontName)
-    }
-    this._renderer.events.fontNotFound.addEventListener(this._onFontNotFound)
-    this._renderer.events.fontLoaded.addEventListener(this._onFontLoaded)
+    ThreeRendererText.events.synced.addEventListener(this._onTextSynced)
 
     this._scene = this.createScene()
     this._layerAppearance = new ThreeRendererLayerAppearanceController(
@@ -865,7 +724,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._htmlDirty = false
     this.startAnimationLoop()
     this._numOfEntitiesToProcess = 0
-    this.resetDeferredGeometryQueue()
   }
 
   private getPointerSelectionAction(e: MouseEvent) {
@@ -976,8 +834,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * True while batch conversion or deferred glyph/group geometry is still
-   * running.
+   * True while batch conversion is still running.
    *
    * Parsing can report 100% before this reaches zero; callers that need a
    * fully drawable scene (export, scripted zoom) should wait on this (as
@@ -985,29 +842,28 @@ export class ThreeRendererView2d extends EditorBaseView {
    *
    * The open-file progress overlay uses this when
    * {@link ApplicationOpenDatabaseOptions.progressiveRendering} is off, so
-   * "Rendering drawing ..." stays up until deferred glyph jobs finish.
+   * "Rendering drawing ..." stays up until conversion finishes.
    * When progressive rendering is on, the overlay hides at CONVERSION `END`
    * and does not wait on this flag (pan/zoom enabled while convert continues).
    * Deprecated `waitForTextGeometry` no longer selects this gate.
    */
   get isProcessingEntities() {
-    return this._numOfEntitiesToProcess > 0 || this._pendingGeometryJobs > 0
+    return this._numOfEntitiesToProcess > 0
   }
 
   /**
    * True while the entity convert queue / {@link batchConvert} is still
-   * draining. Does **not** include deferred glyph geometry jobs.
+   * draining.
    */
   get isConvertingEntities() {
     return this._numOfEntitiesToProcess > 0
   }
 
   /**
-   * Waits until batch conversion and deferred glyph/font geometry finish.
+   * Waits until batch conversion finishes.
    *
-   * Document open can resolve before text is drawable (`FontManager.lazyFontLoading`
-   * + deferred geometry jobs). Call this before raster/HTML export or scripted
-   * commands that assume a complete scene.
+   * Document open can resolve before conversion has drained. Call this before
+   * raster/HTML export or scripted commands that assume a complete scene.
    *
    * @param timeoutMs - Maximum wait; returns `false` on timeout (default 60s).
    * @returns `true` when idle, `false` if still busy after the timeout.
@@ -1015,7 +871,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   async waitUntilIdle(timeoutMs = 60_000): Promise<boolean> {
     const deadline = Date.now() + Math.max(0, timeoutMs)
     // Require two consecutive idle samples so a brief gap between convert
-    // batches / deferred jobs does not look like a finished scene.
+    // batches does not look like a finished scene.
     let idleStreak = 0
     for (;;) {
       if (!this.isProcessingEntities) {
@@ -1204,18 +1060,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._htmlDirty = value
   }
 
-  /**
-   * Gets information about missing data during rendering (fonts, xrefs).
-   *
-   * @returns Object containing missing fonts and unresolved xrefs
-   */
-  get missedData() {
-    return {
-      fonts: this._renderer.missedFonts,
-      xrefs: []
-    }
-  }
-
   get center() {
     return this.activeLayoutView.center
   }
@@ -1249,9 +1093,6 @@ export class ThreeRendererView2d extends EditorBaseView {
    */
   private applyCanvasBackground(value: number) {
     this._renderer.currentBackgroundColor = value
-    this._layerAppearance.refreshTextMaterialsInObjectTree(
-      this._scene.internalScene
-    )
     // Style-manager changeForeground only updates cache entries; batch
     // containers own private material clones and must be repainted too.
     this._scene.repaintForegroundMaterials(
@@ -1274,11 +1115,10 @@ export class ThreeRendererView2d extends EditorBaseView {
    * Rebuilds byLayer materials on ACI-7 (foreground) layers after a canvas
    * background change.
    *
-   * The scene traversal above only reaches entity wrappers that still expose
-   * `refreshTextMaterials` — but `ThreeRendererBatchedGroup.addEntity` flattens glyph
-   * entities into cloned drawable subtrees at add time, so for already-batched
-   * layouts it matches nothing and ACI-7 byLayer text kept its build-time
-   * colour (white text on a white canvas, #464). Entity-level ACI-7 materials
+   * `ThreeRendererBatchedGroup.addEntity` flattens entities into cloned
+   * drawable subtrees at add time, so byLayer drawables on an ACI-7 layer
+   * keep their build-time colour (white on a white canvas, #464) unless the
+   * layer is resynced. Entity-level ACI-7 materials
    * are foreground-tracked and repainted by the style manager, but byLayer
    * materials on an ACI-7 layer were created before the manager knew the
    * layer colour and are not. Re-running the live layer sync — the same path
@@ -1409,8 +1249,7 @@ export class ThreeRendererView2d extends EditorBaseView {
 
   /**
    * When open framing waits on {@link zoomToFitDrawing}, show the linework
-   * bounds as soon as entity convert drains. The final fit still runs after
-   * deferred glyphs so text extents can refine the camera.
+   * bounds as soon as entity convert drains.
    */
   requestOpenLineworkFrame() {
     this._openLineworkFramePending = true
@@ -1449,7 +1288,6 @@ export class ThreeRendererView2d extends EditorBaseView {
    */
   zoomToFitDrawing(timeout: number = 0, layoutBtrId?: string) {
     const waiter = new EditorConditionWaiter(
-      // Include deferred glyph/group jobs so text extents land before final fit.
       () => !this.isProcessingEntities,
       () => {
         if (layoutBtrId && this._externallyFramedLayouts.delete(layoutBtrId)) {
@@ -1887,11 +1725,9 @@ export class ThreeRendererView2d extends EditorBaseView {
       }
     }
 
-    // Reconvert through the same path as initial load so deferred geometry is
-    // drawn.
+    // Reconvert through the same path as initial load.
     void (async () => {
       await this.batchConvert(entities)
-      await this.waitUntilDeferredGeometryIdle()
       if (selectedIds.length > 0) {
         this.highlight(selectedIds)
       }
@@ -1962,8 +1798,8 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * Invalidates in-flight progressive convert and empties convert / deferred
-   * queues without tearing down the renderer or DOM.
+   * Invalidates in-flight progressive convert and empties the convert queue
+   * without tearing down the renderer or DOM.
    *
    * Call before {@link ApplicationDocManager.destroy} tears down documents so
    * in-flight commits do not keep reading the manager singleton.
@@ -1972,14 +1808,11 @@ export class ThreeRendererView2d extends EditorBaseView {
     // Invalidate any in-flight progressive convert so it neither paints into
     // the cleared scene nor double-decrements the processing counter.
     this._convertEpoch++
-    this.clearFontLoadedRedrawTimer()
     this._convertQueue.length = 0
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
     this.cancelOpenLineworkFrame()
-    this.resetDeferredGeometryQueue()
-    this._entityProcessingIdleAt = 0
   }
 
   /**
@@ -1994,7 +1827,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._externallyFramedLayouts.clear()
     this._loadingLayouts.clear()
     this._renderer.dispose()
-    eventBus.emit('missed-data-changed', {})
   }
 
   /**
@@ -2009,7 +1841,6 @@ export class ThreeRendererView2d extends EditorBaseView {
       initializedLayouts: this._initializedLayouts,
       externallyFramedLayouts: this._externallyFramedLayouts,
       loadingLayouts: this._loadingLayouts,
-      missedFonts: this._renderer.snapshotMissedFonts(),
       selectionIds: this.selectionSet.ids
     }
   }
@@ -2021,20 +1852,16 @@ export class ThreeRendererView2d extends EditorBaseView {
    */
   restoreSessionState(state: ThreeRendererViewSessionState): void {
     this._convertEpoch++
-    this.clearFontLoadedRedrawTimer()
     this.cancelOpenLineworkFrame()
     this._convertQueue.length = 0
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
-    this.resetDeferredGeometryQueue()
-    this._entityProcessingIdleAt = 0
     this._scene = state.scene
     this._layoutViewManager = state.layoutViewManager
     this._initializedLayouts = state.initializedLayouts
     this._externallyFramedLayouts = state.externallyFramedLayouts
     this._loadingLayouts = state.loadingLayouts
-    this._renderer.replaceMissedFonts(state.missedFonts ?? {})
     this.rebindLayerAppearance()
     this._layoutViewManager.resize(this.width, this.height)
     this.selectionSet.clear()
@@ -2042,7 +1869,6 @@ export class ThreeRendererView2d extends EditorBaseView {
       this.selectionSet.add(state.selectionIds)
     }
     this._isDirty = true
-    eventBus.emit('missed-data-changed', {})
   }
 
   /**
@@ -2053,24 +1879,19 @@ export class ThreeRendererView2d extends EditorBaseView {
   beginNewSession(): ThreeRendererViewSessionState {
     const parked = this.captureSessionState()
     this._convertEpoch++
-    this.clearFontLoadedRedrawTimer()
     this.cancelOpenLineworkFrame()
     this._convertQueue.length = 0
     this._numOfEntitiesToProcess = 0
     this._claimedConvertObjectIds.clear()
     this._entityConvertGeneration.clear()
-    this.resetDeferredGeometryQueue()
-    this._entityProcessingIdleAt = 0
     this._scene = this.createScene()
     this._layoutViewManager = new ThreeRendererLayoutViewManager()
     this._initializedLayouts = new Set()
     this._externallyFramedLayouts = new Set()
     this._loadingLayouts = new Set()
-    this._renderer.clearMissedFonts()
     this.rebindLayerAppearance()
     this.selectionSet.clear()
     this._isDirty = true
-    eventBus.emit('missed-data-changed', {})
     return parked
   }
 
@@ -2085,7 +1906,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     state.initializedLayouts.clear()
     state.externallyFramedLayouts.clear()
     state.loadingLayouts.clear()
-    state.missedFonts = {}
     state.selectionIds = []
   }
 
@@ -2364,13 +2184,8 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._disposeMobileBoxGesture = undefined
     this._viewDomAbort.abort()
 
-    if (this._onFontNotFound) {
-      this._renderer.events.fontNotFound.removeEventListener(
-        this._onFontNotFound
-      )
-    }
-    if (this._onFontLoaded) {
-      this._renderer.events.fontLoaded.removeEventListener(this._onFontLoaded)
+    if (this._onTextSynced) {
+      ThreeRendererText.events.synced.removeEventListener(this._onTextSynced)
     }
     if (this._onSettingsModified) {
       ApplicationSettingManager.instance.events.modified.removeEventListener(
@@ -2389,7 +2204,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     }
 
     this._gripManager.dispose()
-    this.clearFontLoadedRedrawTimer()
     this.cancelOpenLineworkFrame()
     this.stopAnimationLoop()
 
@@ -2470,12 +2284,12 @@ export class ThreeRendererView2d extends EditorBaseView {
     })
 
     const stillLoading = this._numOfEntitiesToProcess > 0
-    const sceneBusy = stillLoading || this._pendingGeometryJobs > 0
+    const sceneBusy = stillLoading
     // Headless non-progressive (`cooperativeYield` false): skip WebGL until
     // idle. Export reads scene batches, not the framebuffer, and software
     // WebGL + uncapped rAF spent most of open time rasterizing. Interactive
     // non-progressive still paints under "Rendering drawing ..." — throttled
-    // below so each glyph completion does not redraw the full scene.
+    // below so each converted batch does not redraw the full scene.
     const deferRenderWhileLoading =
       !this._progressiveRendering && !this._cooperativeYield && sceneBusy
     if (!this._isDirty && !this._htmlDirty && !sceneBusy) {
@@ -2578,421 +2392,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * Starts loading fonts referenced by the drawing text style table.
-   *
-   * Call when conversion stage `STYLE` ends so the download overlaps later
-   * parse stages and linework convert. Does not block the caller — glyph
-   * finalize awaits {@link awaitTextStyleFontsReady} (and the open-start
-   * preset gate) instead.
-   *
-   * Drawing-independent preset faces are loaded separately via
-   * {@link ApplicationDocManager.ensurePresetFontsForOpen} at open start.
-   *
-   */
-  startTextStyleFontPreload(): void {
-    const epoch = this._convertEpoch
-    if (
-      this._textStyleFontPreloadEpoch === epoch &&
-      this._textStyleFontPreloadPromise
-    ) {
-      return
-    }
-    this._textStyleFontPreloadEpoch = epoch
-    // Worker mode: do not parse STYLE faces on the main thread (would dual-
-    // parse mesh with workers). Each worker draw awaits its own content/style
-    // faces via awaitFontsBeforeDraw. Preset fallbacks are gated separately
-    // by ensurePresetFontsForOpen (scope: all).
-    //
-    // Main mode: gate deferred glyph jobs on style-table faces only. Unused
-    // preset faces were already started at open — do not re-request here.
-    const styleFonts = [APPLICATION_DIMENSION_TEXT_STYLE.font]
-    const fallbackFonts = FontManager.instance.getFontsToLoad()
-    const firstDefault = [...FontManager.instance.defaultFonts][0]
-    const plan = planTextStyleFontPreload(styleFonts, fallbackFonts, {
-      firstDefaultFont: firstDefault
-    })
-    const mtextRenderer = ThreeRendererMTextRenderer.getInstance()
-    const parseSite =
-      mtextRenderer.getRenderMode() === 'worker' ? 'worker' : 'main'
-    const singleton = ApplicationDocManager as unknown as {
-      _instance?: ApplicationDocManager
-    }
-    const preset = singleton._instance?.lastPresetFontsForOpen?.length
-      ? [...singleton._instance.lastPresetFontsForOpen]
-      : [...fallbackFonts]
-    this._fontPreloadDiag = {
-      critical: [...plan.critical],
-      workerWarm: [],
-      background: [],
-      preset,
-      workerSkipped: 0,
-      parseSite
-    }
-    if (parseSite === 'worker') {
-      this._textStyleFontPreloadPromise = Promise.resolve()
-      return
-    }
-
-    // Same deadline as ApplicationDocManager.installFontFileLoadTimeout.
-    const preloadTimeoutMs = 30_000
-    if (plan.critical.length === 0) {
-      this._textStyleFontPreloadPromise = Promise.resolve()
-      return
-    }
-    const preload = FontManager.instance.requestFonts(plan.critical)
-    this._textStyleFontPreloadPromise = new Promise<void>(resolve => {
-      const timer = setTimeout(() => {
-        // Glyph draw still falls back via FontManager defaults / '?'.
-        resolve()
-      }, preloadTimeoutMs)
-      preload.then(
-        () => {
-          clearTimeout(timer)
-          resolve()
-        },
-        () => {
-          clearTimeout(timer)
-          resolve()
-        }
-      )
-    })
-  }
-
-  /**
-   * Waits until {@link startTextStyleFontPreload} has finished (or starts a
-   * fallback preload from this view's bound draw database if STYLE was missed).
-   */
-  async awaitTextStyleFontsReady(): Promise<void> {
-    if (!this._textStyleFontPreloadPromise) {
-      this.startTextStyleFontPreload()
-    }
-    await this._textStyleFontPreloadPromise
-  }
-
-  /**
-   * Finishes geometry for a converted entity.
-   *
-   * Glyph entities and groups use
-   * {@link ThreeRendererEntity.asyncDraw} so {@link FontManager.awaitFontsBeforeDraw}
-   * can wait for fonts without relying on a full-scene regen. Other entities
-   * keep the sync finalize path.
-   */
-  private async finishEntityGeometry(
-    threeEntity: ThreeRendererEntity,
-    _progressive: boolean
-  ) {
-    const t0 = performance.now()
-    try {
-      const isGroup = threeEntity instanceof ThreeRendererGroup
-      const groupPending =
-        isGroup && this.groupHasPendingGlyphGeometry(threeEntity)
-      const needsGlyphDraw =
-        groupPending ||
-        (threeEntity instanceof ThreeRendererGlyphEntity &&
-          !threeEntity.hasDrawableGeometry())
-
-      if (needsGlyphDraw) {
-        await this.ensureDeferredFontsReady()
-      }
-
-      if (isGroup) {
-        // Linework-only groups (no empty glyph shells) skip asyncDraw; spatial
-        // boxes are refreshed by syncGroupSpatialBoundsForIndexing after commit.
-        if (!groupPending) {
-          return
-        }
-        await threeEntity.asyncDraw()
-        return
-      }
-      if (threeEntity.hasDrawableGeometry()) {
-        return
-      }
-      await threeEntity.asyncDraw()
-    } finally {
-      this._convertPhaseMs.finishGeometry += performance.now() - t0
-    }
-  }
-
-  private needsDeferredFontGeometry(threeEntity: ThreeRendererEntity): boolean {
-    if (threeEntity instanceof ThreeRendererGlyphEntity) {
-      return !threeEntity.hasDrawableGeometry()
-    }
-    // Only defer groups that still have empty glyph shells. Linework-only
-    // groups should commit on the convert path and not occupy the geometry pool.
-    if (threeEntity instanceof ThreeRendererGroup) {
-      return this.groupHasPendingGlyphGeometry(threeEntity)
-    }
-    return false
-  }
-
-  private clearFontLoadedRedrawTimer() {
-    if (this._fontLoadedRedrawTimer != null) {
-      clearTimeout(this._fontLoadedRedrawTimer)
-      this._fontLoadedRedrawTimer = null
-    }
-  }
-
-  /**
-   * Coalesces late font-load notifications into one glyph rebuild pass.
-   */
-  private scheduleGlyphRedrawAfterFontLoad(fontName?: string) {
-    this.clearFontLoadedRedrawTimer()
-    const epoch = this._convertEpoch
-    this._fontLoadedRedrawTimer = setTimeout(() => {
-      this._fontLoadedRedrawTimer = null
-      if (epoch !== this._convertEpoch) {
-        return
-      }
-      void this.redrawGlyphEntitiesAfterFontLoad(epoch, fontName)
-    }, 50)
-  }
-
-  /**
-   * Rebuilds text after a late {@link FontManager.events.fontLoaded}.
-   *
-   * Live {@link ThreeRendererGlyphEntity} shells (rare: mid-convert / not yet batched)
-   * are re-drawn in place. Committed text is already flattened into batches and
-   * disposed. A database regen does not rebuild those batches — `entityAppended`
-   * skips ids the view already has — but it does replay open-file CONVERSION
-   * progress. That replay is skipped while the open has just gone idle
-   * ({@link shouldRegenDatabaseAfterFontLoad}); a face that arrives later can
-   * still regen.
-   */
-  private async redrawGlyphEntitiesAfterFontLoad(
-    epoch: number,
-    fontName?: string
-  ) {
-    if (epoch !== this._convertEpoch) {
-      return
-    }
-    // Drop overlapping redraws from a rapid fontLoaded burst.
-    const redrawEpoch = ++this._fontLoadedRedrawEpoch
-    const glyphs: ThreeRendererGlyphEntity[] = []
-    for (const layout of this._scene.layouts.values()) {
-      layout.layers.forEach(layer => {
-        layer.internalObject.traverse(obj => {
-          if (obj instanceof ThreeRendererGlyphEntity) {
-            glyphs.push(obj)
-          }
-        })
-      })
-    }
-    for (const glyph of glyphs) {
-      if (
-        epoch !== this._convertEpoch ||
-        redrawEpoch !== this._fontLoadedRedrawEpoch
-      ) {
-        return
-      }
-      await glyph.asyncDraw()
-    }
-    if (glyphs.length > 0) {
-      if (epoch === this._convertEpoch) {
-        this._isDirty = true
-      }
-      return
-    }
-
-    // Default/symbol preset faces are requested in the background under lazy
-    // loading (mtext-renderer awaitFontsBeforeDraw only waits on content/style
-    // fonts). Regenerating for every default face load would thrash after open;
-    // style fonts that finish late still take the regen path below.
-    if (fontName) {
-      const defaults = FontManager.instance.defaultFonts
-      const normalized = fontName.toLowerCase()
-      if (
-        defaults.has(fontName) ||
-        defaults.has(normalized) ||
-        [...defaults].some(name => name.toLowerCase() === normalized)
-      ) {
-        return
-      }
-    }
-
-    if (
-      epoch !== this._convertEpoch ||
-      redrawEpoch !== this._fontLoadedRedrawEpoch
-    ) {
-      return
-    }
-
-    // Font load before the first convert idle (empty scene, ENTITY stream not
-    // started yet). Glyph jobs await that font. regen() here replays the
-    // in-flight database: measured as thousands of duplicate convert claims
-    // and a ~1GB heap spike at the start of open.
-    if (this._entityProcessingIdleAt <= 0) {
-      return
-    }
-
-    const msSinceIdle = performance.now() - this._entityProcessingIdleAt
-    // Open-time text awaits its fonts, then this debounced callback runs.
-    // Regen here only flashes the loading spinner again after
-    // "Rendering drawing ..." has already hidden (progressive rendering on).
-    if (
-      !shouldRegenDatabaseAfterFontLoad(
-        this.isProcessingEntities,
-        0,
-        msSinceIdle
-      )
-    ) {
-      return
-    }
-
-    void ApplicationDocManager.instance?.regen()
-  }
-
-  private groupHasPendingGlyphGeometry(group: ThreeRendererGroup): boolean {
-    // Prefer O(source shells). A full THREE.traverse over a large group
-    // (100k+ flattened mesh leaves) was dominating scene-convert wall time.
-    for (const entity of group.getSourceEntities()) {
-      if (entity instanceof ThreeRendererGlyphEntity && !entity.hasDrawableGeometry()) {
-        return true
-      }
-    }
-    return ThreeRendererView2d.directChildrenHavePendingGlyphs(group)
-  }
-
-  /**
-   * Walks only {@link ThreeRendererEntity} containers for empty glyph shells.
-   *
-   * Skips raw mesh/line leaves under a flattened {@link ThreeRendererGroup} so checking
-   * a large group is O(glyph shells), not O(all drawable leaves).
-   */
-  private static directChildrenHavePendingGlyphs(
-    root: THREE.Object3D
-  ): boolean {
-    const children = root.children
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i]
-      if (child instanceof ThreeRendererGlyphEntity) {
-        if (!child.hasDrawableGeometry()) {
-          return true
-        }
-        continue
-      }
-      if (child instanceof ThreeRendererGroup) {
-        for (const entity of child.getSourceEntities()) {
-          if (
-            entity instanceof ThreeRendererGlyphEntity &&
-            !entity.hasDrawableGeometry()
-          ) {
-            return true
-          }
-        }
-        if (ThreeRendererView2d.directChildrenHavePendingGlyphs(child)) {
-          return true
-        }
-        continue
-      }
-      if (child instanceof ThreeRendererEntity) {
-        // Nested non-group entity that may still host deferred glyph children.
-        if (ThreeRendererView2d.directChildrenHavePendingGlyphs(child)) {
-          return true
-        }
-      }
-    }
-    return false
-  }
-
-  /**
-   * Runs glyph/group geometry finalize off the main convert loop so other
-   * entities keep converting while fonts download.
-   *
-   * Jobs are queued with bounded concurrency — unbounded parallel
-   * `asyncDraw` on large text drawings can freeze the main thread
-   * during the "Rendering drawing ..." stage.
-   */
-  private enqueueDeferredGeometry(
-    run: () => Promise<void>,
-    epoch: number
-  ): void {
-    if (epoch !== this._convertEpoch) {
-      return
-    }
-    this._pendingGeometryJobs++
-    this._deferredGeometryQueue.push({ run, epoch })
-    this.pumpDeferredGeometryQueue()
-  }
-
-  /**
-   * Starts queued deferred geometry jobs up to
-   * {@link DEFERRED_GEOMETRY_CONCURRENCY}.
-   */
-  private pumpDeferredGeometryQueue(): void {
-    while (
-      this._deferredGeometryActive < ThreeRendererView2d.DEFERRED_GEOMETRY_CONCURRENCY &&
-      this._deferredGeometryQueue.length > 0
-    ) {
-      const job = this._deferredGeometryQueue.shift()!
-      if (job.epoch !== this._convertEpoch) {
-        this._pendingGeometryJobs = Math.max(0, this._pendingGeometryJobs - 1)
-        continue
-      }
-
-      this._deferredGeometryActive++
-      void job
-        .run()
-        .then(() => {
-          // Progressive: dirty every glyph (animate throttles paints).
-          // Interactive non-progressive: same, under a longer open-paint
-          // interval so "Rendering drawing ..." still shows progress.
-          // Headless non-progressive: skip — the pool-drain dirty below
-          // queues the single frame export/scripts need.
-          if (
-            job.epoch === this._convertEpoch &&
-            (this._progressiveRendering || this._cooperativeYield)
-          ) {
-            this._isDirty = true
-          }
-        })
-        .catch(error => {
-          log.error('[ThreeRendererView2d] Deferred entity geometry failed:', error)
-        })
-        .finally(() => {
-          this._deferredGeometryActive = Math.max(
-            0,
-            this._deferredGeometryActive - 1
-          )
-          if (job.epoch === this._convertEpoch) {
-            this._pendingGeometryJobs = Math.max(
-              0,
-              this._pendingGeometryJobs - 1
-            )
-            if (this._pendingGeometryJobs === 0) {
-              this._isDirty = true
-            }
-            this.stampEntityProcessingIdle()
-          }
-          this.pumpDeferredGeometryQueue()
-        })
-    }
-  }
-
-  /** Drops queued deferred geometry and resets counters for a new epoch. */
-  private resetDeferredGeometryQueue(): void {
-    this._deferredGeometryQueue.length = 0
-    // Keep `_deferredGeometryActive`: in-flight runners still own concurrency
-    // slots until their `finally` runs. Zeroing here lets pump over-schedule
-    // when those completions decrement the counter afterward.
-    this._pendingGeometryJobs = 0
-    this._textStyleFontPreloadPromise = null
-    this._textStyleFontPreloadEpoch = -1
-    this._deferredFontsReady = null
-    this._fontPreloadDiag = null
-  }
-
-  /**
-   * Waits until side-pool glyph/group jobs for the current convert epoch finish.
-   * Used by entity updates that must highlight after text is in the scene.
-   */
-  private async waitUntilDeferredGeometryIdle(): Promise<void> {
-    const epoch = this._convertEpoch
-    while (epoch === this._convertEpoch && this._pendingGeometryJobs > 0) {
-      await new Promise<void>(resolve => setTimeout(resolve, 0))
-    }
-  }
-
-  /**
    * Converts the specified database entities to three entities
    * @param entities - The database entities
    * @returns The converted three entities
@@ -3002,12 +2401,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     options: { forExport?: boolean } = {}
   ) {
     const epoch = this._convertEpoch
-    // Fallback: if STYLE-stage preload never started (e.g. non-conversion open
-    // paths), kick it off without blocking linework convert. Glyph finalize
-    // awaits the promise via {@link awaitTextStyleFontsReady}.
-    if (!options.forExport && !this._textStyleFontPreloadPromise) {
-      this.startTextStyleFontPreload()
-    }
     const progressive = this._progressiveRendering && !options.forExport
     // Time-budgeted yields keep the UI (and optional progressive paints) alive
     // during large open chunks. Count-based yields alone stall on expensive
@@ -3050,7 +2443,7 @@ export class ThreeRendererView2d extends EditorBaseView {
         }
 
         // Open and export can both observe the same id: the open drain claims
-        // it before deferred glyph commit calls addEntity, and export convert
+        // it before it calls addEntity, and export convert
         // used to ignore that claim (`forExport`) and expand the block again.
         // Claim as soon as convert starts so a later pass skips it. Skipping
         // a claimed id is safe for export — off/frozen entities are not
@@ -3105,9 +2498,6 @@ export class ThreeRendererView2d extends EditorBaseView {
           // Append refused (e.g. invisible) — fall through to the legacy path.
         }
 
-        // Sync-construct the entity shell. Glyph geometry is finished via
-        // asyncDraw (awaits fonts when awaitFontsBeforeDraw is on). Text/group
-        // finalize runs in a side pool so linework convert is not blocked.
         const threeEntity: ThreeRendererEntity | null = this.drawEntity(entity, false)
         if (!threeEntity) {
           // Release the claim so a later export pass can retry; otherwise
@@ -3123,45 +2513,28 @@ export class ThreeRendererView2d extends EditorBaseView {
           threeEntity.ownerId = entity.ownerId
           threeEntity.layerName = entity.layer
           threeEntity.visible = entity.visibility !== false
-          const deferGeometry =
-            !options.forExport && this.needsDeferredFontGeometry(threeEntity)
-
-          const commitEntity = async () => {
-            await this.finishEntityGeometry(threeEntity, progressive)
-            if (epoch !== this._convertEpoch) {
-              threeEntity.dispose()
-              return
-            }
-            if (
-              objectId &&
-              (this._entityConvertGeneration.get(objectId) ?? 0) !== convertGen
-            ) {
-              threeEntity.dispose()
-              return
-            }
-            if (threeEntity instanceof ThreeRendererGroup) {
-              this.syncGroupSpatialBoundsForIndexing(threeEntity)
-            }
-            const tAdd = performance.now()
-            this._scene.addEntity(threeEntity, true)
-            this._convertPhaseMs.addEntity += performance.now() - tAdd
-            this.applySessionHiddenObjectState(entity.objectId)
-            // Release memory occupied by this entity
+          if (
+            objectId &&
+            (this._entityConvertGeneration.get(objectId) ?? 0) !== convertGen
+          ) {
             threeEntity.dispose()
-            if (progressive) {
-              this.markProgressiveDirty()
-              this._progressiveOpenFit.afterGeometryBatch(
-                () => this.getDrawingExtents(),
-                i
-              )
-            } else {
-              this.markInteractiveOpenDirty()
-            }
+            continue
           }
-          if (deferGeometry) {
-            this.enqueueDeferredGeometry(commitEntity, epoch)
+          if (threeEntity instanceof ThreeRendererGroup) {
+            this.syncGroupSpatialBoundsForIndexing(threeEntity)
+          }
+          this._scene.addEntity(threeEntity, true)
+          this.applySessionHiddenObjectState(entity.objectId)
+          // Release memory occupied by this entity
+          threeEntity.dispose()
+          if (progressive) {
+            this.markProgressiveDirty()
+            this._progressiveOpenFit.afterGeometryBatch(
+              () => this.getDrawingExtents(),
+              i
+            )
           } else {
-            await commitEntity()
+            this.markInteractiveOpenDirty()
           }
         }
       } catch (error) {
@@ -3238,11 +2611,7 @@ export class ThreeRendererView2d extends EditorBaseView {
       // the user pans/zooms (animate bails when !_isDirty && !_htmlDirty &&
       // !stillLoading).
       this._isDirty = true
-      // Missed images (and fonts already tracked) are collected during convert;
-      // notify the Resources / External References palette once the queue is idle.
-      eventBus.emit('missed-data-changed', {})
     }
-    this.stampEntityProcessingIdle()
   }
 
   /**
@@ -3259,17 +2628,8 @@ export class ThreeRendererView2d extends EditorBaseView {
     }
     this._openLineworkFramePending = false
     // Programmatic so a progressive open does not treat this as a user zoom
-    // and skip the glyph-aware final fit.
+    // and skip the final fit.
     this._progressiveOpenFit.frameProgrammatically(box)
   }
 
-  /**
-   * Records the moment convert and deferred glyph jobs are both idle.
-   * Intermediate completions (linework done, text still queued) do not stamp.
-   */
-  private stampEntityProcessingIdle() {
-    if (this._numOfEntitiesToProcess === 0 && this._pendingGeometryJobs === 0) {
-      this._entityProcessingIdleAt = performance.now()
-    }
-  }
 }

@@ -45,11 +45,7 @@ export function examplePeerPackageAliases(fromPackageDir: string): Alias[] {
   const fallbackRequire = createRequire(
     fromPackageDir + '/../cad-simple-viewer/package.json'
   )
-  const names = [
-    '@mlightcad/mtext-renderer',
-    '@mlightcad/three-renderer',
-    'three'
-  ] as const
+  const names = ['@mlightcad/three-renderer', 'three'] as const
   const aliases: Alias[] = []
   for (const name of names) {
     const direct = resolvePackageEntry(require, name)
@@ -86,15 +82,10 @@ export const CORE_PACKAGE_IDS = [
 ] as const
 
 /**
- * Packages that stay with the three-renderer chunk (text/rendering stack).
+ * Packages that stay with the three-renderer chunk (rendering stack).
  * three and the core packages are split out separately for clearer caching.
  */
-export const THREE_RENDERER_STACK_IDS = [
-  'three-renderer',
-  'mtext-renderer',
-  'mtext-parser',
-  'shx-parser'
-] as const
+export const THREE_RENDERER_STACK_IDS = ['three-renderer'] as const
 
 function matchMonorepoPackage(id: string, packageId: string): boolean {
   const normalized = id.replace(/\\/g, '/')

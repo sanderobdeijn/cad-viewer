@@ -153,25 +153,6 @@ export class ThreeRendererStyleManager {
   }
 
   /**
-   * Returns a fill material for MText glyph geometry.
-   *
-   * MText glyphs are rendered as mesh fills, so they share the fill
-   * manager with other solid fills and wide polylines. Their distinction now
-   * lives on `traits.drawOrder`: normal linework-tier fills stay at
-   * `0`, while under-linework fills set `-1` upstream.
-   *
-   * @param traits - Current entity traits (built via
-   *                 `ThreeRendererSubEntityTraitsUtil.createTraitsForMText`).
-   */
-  getMTextFillMaterial(
-    traits: GraphicsInterfaceSubEntityTraits,
-    layerColor?: CommonColor,
-    layerColorRgb?: number
-  ): THREE.Material {
-    return this.fillMgr.getMaterial(traits, {}, layerColorRgb, layerColor)
-  }
-
-  /**
    * Returns a `BackSide` variant of the given fill material.
    *
    * Mirrored transforms (negative determinant)

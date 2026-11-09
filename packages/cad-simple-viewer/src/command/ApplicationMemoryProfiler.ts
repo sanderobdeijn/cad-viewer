@@ -1,12 +1,4 @@
-import {
-  FontManager,
-  type FontMemoryStats,
-  type MemoryUsageReport
-} from '@mlightcad/mtext-renderer'
-import {
-  ThreeRendererMTextRenderer,
-  type ThreeRendererStyleManagerStats
-} from '@mlightcad/three-renderer'
+import { type ThreeRendererStyleManagerStats } from '@mlightcad/three-renderer'
 
 import type { ThreeRendererSpatialIndexStats } from '../spatialIndex'
 import type { ThreeRendererSceneStats } from '../view/ThreeRendererScene'
@@ -49,37 +41,6 @@ export interface ApplicationMemorySpatialLayoutRow {
   stats: ThreeRendererSpatialIndexStats
 }
 
-/** One loaded font row for the Memory palette fonts table. */
-export interface ApplicationMemoryFontRow {
-  name: string
-  type: string
-  estimatedBytes: number
-}
-
-/**
- * Text / mtext-renderer memory stats from
- * {@link ThreeRendererMTextRenderer.estimateMemoryUsage}.
- */
-export interface ApplicationMemoryFontStats {
-  missedCount: number
-  missedNames: string[]
-  /** Live isolate memory (main + workers); excludes IndexedDB storage. */
-  estimatedBytes: number
-  mainThreadBytes: number
-  workerBytes: number
-  loadedFontCount: number
-  /**
-   * Persistent IndexedDB font blobs (disk/storage).
-   * Not included in {@link estimatedBytes} or the memory pie chart.
-   */
-  indexedDbBytes: number
-  indexedDbFontCount: number
-  fonts: ApplicationMemoryFontRow[]
-  /** Full mtext-renderer report when available. */
-  report?: MemoryUsageReport
-  isEstimated: true
-}
-
 /**
  * Structured memory snapshot for the MEM diagnostics palette.
  *
@@ -101,7 +62,6 @@ export interface ApplicationMemorySnapshot {
     totalChildItems: number
   }
   materials: ThreeRendererStyleManagerStats
-  fonts: ApplicationMemoryFontStats
 }
 
 /**
@@ -164,53 +124,6 @@ function collectGeometryLayers(
   return rows
 }
 
-function flattenFontRows(report: MemoryUsageReport): ApplicationMemoryFontRow[] {
-  const fonts: FontMemoryStats[] = [
-    ...report.mainThread.fonts,
-    ...report.workers.flatMap(worker => worker.fonts)
-  ]
-  const byName = new Map<string, ApplicationMemoryFontRow>()
-  for (const font of fonts) {
-    const name = font.names[0] ?? '(unnamed)'
-    const existing = byName.get(name)
-    if (!existing || font.estimatedBytes > existing.estimatedBytes) {
-      byName.set(name, {
-        name,
-        type: font.type,
-        estimatedBytes: font.estimatedBytes
-      })
-    }
-  }
-  return [...byName.values()].sort(
-    (a, b) => b.estimatedBytes - a.estimatedBytes
-  )
-}
-
-async function collectFontStats(): Promise<ApplicationMemoryFontStats> {
-  const missed = FontManager.instance.missedFonts ?? {}
-  const missedNames = Object.keys(missed)
-
-  const report = await ThreeRendererMTextRenderer.getInstance().estimateMemoryUsage()
-  const workerBytes = report.workers.reduce(
-    (sum, worker) => sum + worker.totalEstimatedBytes,
-    0
-  )
-
-  return {
-    missedCount: missedNames.length,
-    missedNames,
-    estimatedBytes: report.totalEstimatedBytes,
-    mainThreadBytes: report.mainThread.totalEstimatedBytes,
-    workerBytes,
-    loadedFontCount: flattenFontRows(report).length,
-    indexedDbBytes: report.indexedDbFontCache.totalBytes,
-    indexedDbFontCount: report.indexedDbFontCache.fontCount,
-    fonts: flattenFontRows(report),
-    report,
-    isEstimated: true
-  }
-}
-
 /**
  * Collects a cross-cutting memory snapshot for the current view.
  */
@@ -243,18 +156,10 @@ export async function collectMemorySnapshot(
   )
 
   const materials = view.renderer.styleManager.getStats()
-  const fonts = await collectFontStats()
   const heap = readHeapStats()
 
   const geometryBytes = sceneStats.summary.totalSize.geometry
   const mappingBytes = sceneStats.summary.totalSize.mapping
-
-  const fontDetailParts = [`${fonts.loadedFontCount} loaded`]
-  if (fonts.missedCount > 0) {
-    fontDetailParts.push(`${fonts.missedCount} missed`)
-  }
-  // IndexedDB font blobs are disk/storage, not live memory — never include
-  // them in summary bytes or pie-chart details.
 
   const summary: ApplicationMemoryCategoryRow[] = [
     {
@@ -280,12 +185,6 @@ export async function collectMemorySnapshot(
       bytes: materials.totalEstimatedBytes,
       isEstimated: true,
       detail: `${materials.totalCount} cached`
-    },
-    {
-      id: 'fonts',
-      bytes: fonts.estimatedBytes,
-      isEstimated: true,
-      detail: fontDetailParts.join(' · ')
     }
   ]
 
@@ -312,8 +211,7 @@ export async function collectMemorySnapshot(
       totalRootItems,
       totalChildItems
     },
-    materials,
-    fonts
+    materials
   }
 }
 

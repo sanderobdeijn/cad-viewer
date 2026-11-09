@@ -209,7 +209,7 @@ export class ThreeRendererLayer {
    * Refreshes drawable materials after a layer-table style change.
    *
    * Updates batched material ids when the style cache remaps instances, patches
-   * unbatched drawables, and rematerializes text glyph hierarchies.
+   * unbatched drawables, and refreshes layer-bound batch colours.
    *
    * @param layerName - Target layer whose drawables should be refreshed.
    * @param layerTraits - Resolved layer traits from the live layer-table record.
@@ -270,18 +270,6 @@ export class ThreeRendererLayer {
     )
   }
 
-  /** Rematerializes MTEXT/TEXT drawables stored as unbatched glyph subtrees. */
-  rematerializeLayerTextDrawables(
-    layerName: string,
-    styleManager: ThreeRendererStyleManager,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ) {
-    this._group.rematerializeLayerTextDrawables(
-      layerName,
-      styleManager,
-      layerTraits
-    )
-  }
 
   /**
    * Re-render points with latest point style settings

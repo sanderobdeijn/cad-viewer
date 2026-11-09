@@ -18,12 +18,6 @@ export interface ThreeRendererViewSessionState {
   externallyFramedLayouts: Set<string>
   /** Layouts currently being batch-converted. */
   loadingLayouts: Set<string>
-  /**
-   * Missing fonts reported while this document was active.
-   * Parked with the session so FontManager's live map can track the active
-   * document only; restored when the session becomes active again.
-   */
-  missedFonts: Record<string, number>
   /** Selected entity ids at the moment the session was parked. */
   selectionIds: string[]
 }

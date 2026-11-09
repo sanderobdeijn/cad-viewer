@@ -9,8 +9,6 @@ pnpm install
 pnpm dev
 ```
 
-Pass `?worker=1` in the URL to render MTEXT in a web worker instead of on the main thread.
-
 ## Tests
 
 `e2e/` holds the Playwright tests:

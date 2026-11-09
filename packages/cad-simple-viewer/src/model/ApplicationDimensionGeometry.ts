@@ -8,15 +8,11 @@ import {
   type GeometryPoint2dLike,
   GeometryPolyline2d,
   GeometryVector2d,
-  type GeometryVector2dLike,
-  GeometryVector3d
+  type GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import {
   type GraphicsInterfaceEntity,
-  GraphicsInterfaceMTextAttachmentPoint,
-  GraphicsInterfaceMTextFlowDirection,
-  type GraphicsInterfaceRenderer,
-  type GraphicsInterfaceTextStyle
+  type GraphicsInterfaceRenderer
 } from '@mlightcad/graphic-interface'
 
 /**
@@ -47,20 +43,6 @@ const DIMENSION_ARROW_SIZE = 10
 const DIMENSION_TEXT_HEIGHT = 10
 const ARROW_HALF_WIDTH = 0.125
 const LABEL_CHAR_WIDTH = 0.6
-
-/** The text style dimension labels are drawn with. */
-export const APPLICATION_DIMENSION_TEXT_STYLE: GraphicsInterfaceTextStyle = {
-  name: 'Standard',
-  standardFlag: 0,
-  fixedTextHeight: 0,
-  widthFactor: 1,
-  obliqueAngle: 0,
-  textGenerationFlag: 0,
-  lastHeight: 2.5,
-  font: 'arial',
-  bigFont: '',
-  extendedFont: 'Arial'
-}
 
 interface DimensionArrow {
   position: GeometryPoint2d
@@ -279,25 +261,12 @@ export function drawDimension(
   }
   if (label) {
     drawables.push(
-      renderer.mtext(
-        {
-          text: label.text,
-          height: label.height,
-          width: 0,
-          position: label.position,
-          rotation: 0,
-          directionVector: new GeometryVector3d(
-            Math.cos(label.rotation),
-            Math.sin(label.rotation),
-            0
-          ),
-          attachmentPoint: GraphicsInterfaceMTextAttachmentPoint.MiddleCenter,
-          drawingDirection: GraphicsInterfaceMTextFlowDirection.LEFT_TO_RIGHT,
-          lineSpaceFactor: 1,
-          lineSpaceStyle: 0
-        },
-        APPLICATION_DIMENSION_TEXT_STYLE
-      )
+      renderer.text({
+        text: label.text,
+        height: label.height,
+        position: label.position,
+        rotation: label.rotation
+      })
     )
   }
   return renderer.group(drawables)

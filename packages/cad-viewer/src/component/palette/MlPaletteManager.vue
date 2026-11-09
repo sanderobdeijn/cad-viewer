@@ -18,12 +18,6 @@
           <ml-measurement-palette />
         </div>
         <div
-          v-else-if="store.dialogs.activePaletteTab === 'missingResources'"
-          class="ml-missing-resources-wrapper"
-        >
-          <ml-missing-resources />
-        </div>
-        <div
           v-else-if="store.dialogs.activePaletteTab === 'memoryProfile'"
           class="ml-memory-profile-wrapper"
         >
@@ -48,7 +42,6 @@ import { useViewerRect } from '../../composable'
 import { toolPaletteTabName, toolPaletteTitle } from '../../locale'
 import MlMeasurementPalette from './MlMeasurementPalette.vue'
 import MlMemoryProfile from './MlMemoryProfile.vue'
-import MlMissingResources from './MlMissingResources.vue'
 
 const containerRect = useViewerRect()
 
@@ -137,7 +130,6 @@ const syncPaletteToContainer = () => {
 
 const baseTabNames = [
   'measurements',
-  'missingResources',
   'memoryProfile'
 ] as const
 const tabNames = computed((): readonly string[] => [...baseTabNames])

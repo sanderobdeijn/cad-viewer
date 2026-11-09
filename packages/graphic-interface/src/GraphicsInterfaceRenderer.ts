@@ -9,16 +9,8 @@ import {
 import { GraphicsInterfaceContext } from './GraphicsInterfaceContext'
 import { GraphicsInterfaceEntity } from './GraphicsInterfaceEntity'
 import { GraphicsInterfacePointStyle } from './GraphicsInterfacePointStyle'
-import { GraphicsInterfaceShapeData } from './GraphicsInterfaceShapeData'
 import { GraphicsInterfaceSubEntityTraits } from './GraphicsInterfaceSubEntityTraits'
-import { GraphicsInterfaceMTextData, GraphicsInterfaceTextStyle } from './GraphicsInterfaceTextStyle'
-
-/**
- * Font mappings.
- * - The key is the original font name
- * - The value is the mapped font name
- */
-export type GraphicsInterfaceFontMapping = Record<string, string>
+import { GraphicsInterfaceTextData } from './GraphicsInterfaceText'
 
 export interface GraphicsInterfaceRenderer<T extends GraphicsInterfaceEntity = GraphicsInterfaceEntity> {
   /**
@@ -112,32 +104,9 @@ export interface GraphicsInterfaceRenderer<T extends GraphicsInterfaceEntity = G
   offsetRing(outer: GeometryPoint2dLike[], inner: GeometryPoint2dLike[]): T
 
   /**
-   * Draw multiple line texts
-   * @param mtext Input multiple line text data to draw
-   * @param style Input text style applied to the text string
-   * @param delay The flag to delay creating one rendered entity and just create one dummy
-   * entity. Renderer can delay heavy calculation operation to avoid blocking UI when this
-   * flag is true.
+   * Draw one line of text, centred on its position.
+   * @param text Input text and placement to draw
    * @returns Return an object which can be added to scene
    */
-  mtext(mtext: GraphicsInterfaceMTextData, style: GraphicsInterfaceTextStyle, delay?: boolean): T
-
-  /**
-   * Draw one SHX shape glyph.
-   *
-   * @param shape Shape placement and glyph identity
-   * @param style Optional text style that references the SHX shape font. When omitted,
-   * `null`, or `undefined`, the renderer resolves the glyph by collecting every shape
-   * definition file from the text style table and searching them for the shape specified
-   * in {@link shape}.
-   * @param delay When true, the renderer may defer heavy work and return a placeholder
-   * @returns Rendered entity for the scene graph
-   */
-  shape(shape: GraphicsInterfaceShapeData, style?: GraphicsInterfaceTextStyle, delay?: boolean): T
-
-  /**
-   * Set font mapping
-   * @param Input font mapping to set
-   */
-  setFontMapping(mapping: GraphicsInterfaceFontMapping): void
+  text(text: GraphicsInterfaceTextData): T
 }

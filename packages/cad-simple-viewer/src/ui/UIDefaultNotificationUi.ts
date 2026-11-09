@@ -11,8 +11,7 @@ import {
   applicationGroupNotifications,
   type ApplicationNotification,
   type ApplicationNotificationCenter,
-  type ApplicationNotificationGroup,
-  type ApplicationNotificationSource
+  type ApplicationNotificationGroup
 } from '../app/notification/ApplicationNotificationTypes'
 import {
   editorGetUiLayout,
@@ -604,10 +603,6 @@ function findShortcutToolbarShell(host: HTMLElement): HTMLElement | null {
  * @returns Localized source title, or the first item title as fallback.
  */
 function groupTitle(group: ApplicationNotificationGroup): string {
-  const source = group.source as ApplicationNotificationSource | undefined
-  if (source === 'font-missed') {
-    return applicationI18nTranslate('main.notification.group.fontMissed')
-  }
   return group.items[0]?.title ?? ''
 }
 
@@ -619,11 +614,6 @@ function groupTitle(group: ApplicationNotificationGroup): string {
  */
 function groupSummary(group: ApplicationNotificationGroup): string {
   const count = group.items.length
-  if (group.source === 'font-missed') {
-    return applicationI18nTranslate('main.notification.group.fontMissedSummary', {
-      count
-    })
-  }
   return applicationI18nTranslate('main.notification.group.genericSummary', { count })
 }
 

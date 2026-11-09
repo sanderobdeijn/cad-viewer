@@ -1217,7 +1217,7 @@ const fileMenuItems = computed<FileMenuItemModel[]>(() => {
 const ribbonTexts = computed<RibbonLocaleTexts>(() => {
   locale.value
   return {
-    fileMenuLabel: t('main.toolPalette.missingResources.file')
+    fileMenuLabel: t('main.ribbon.fileMenu')
   }
 })
 

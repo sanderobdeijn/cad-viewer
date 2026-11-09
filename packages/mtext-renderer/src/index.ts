@@ -1,7 +1,0 @@
-export { getColorByIndex } from './common'
-export * from './common/eventManager'
-export * from './font'
-export * from './memory'
-export * from './shxParser'
-export * from './renderer'
-export * from './worker'

@@ -2,9 +2,6 @@
   "mcpServers": {
     "realdwg-web Docs": {
       "url": "https://gitmcp.io/mlightcad/realdwg-web"
-    },
-    "mtext-renderer Docs": {
-      "url": "https://gitmcp.io/mlightcad/mtext-renderer"
     }
   }
 }

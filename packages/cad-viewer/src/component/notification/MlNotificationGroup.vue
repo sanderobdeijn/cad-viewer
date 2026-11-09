@@ -71,7 +71,7 @@ import MlNotificationItem from './MlNotificationItem.vue'
 /**
  * Collapsible notification group for the Vue notification center panel.
  *
- * Used when multiple entries share a groupable source (`font-missed`).
+ * Used when multiple entries share a source.
  */
 interface Props {
   /** Group produced by {@link groupNotifications}. */
@@ -124,25 +124,15 @@ const typeIcon = computed(() => {
 })
 
 /**
- * Localized group title for known sources, otherwise the first item title.
+ * Group title: the first item's title.
  */
-const title = computed(() => {
-  const source = props.group.source
-  if (source === 'font-missed') {
-    return t('main.notification.group.fontMissed')
-  }
-  return props.group.items[0]?.title ?? ''
-})
+const title = computed(() => props.group.items[0]?.title ?? '')
 
 /**
  * Localized summary line including the item count.
  */
 const summary = computed(() => {
   const count = props.group.items.length
-  const source = props.group.source
-  if (source === 'font-missed') {
-    return t('main.notification.group.fontMissedSummary', { count })
-  }
   return t('main.notification.group.genericSummary', { count })
 })
 </script>

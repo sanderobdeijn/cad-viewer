@@ -101,12 +101,6 @@ export function createCadViewerNotificationCenterAdapter(): ApplicationNotificat
       vue.removeBySource(source)
     },
     /**
-     * @param missedFontNames - Fonts that are still unresolved.
-     */
-    removeResolvedFontMissedNotifications(missedFontNames) {
-      vue.removeResolvedFontMissedNotifications(missedFontNames)
-    },
-    /**
      * @param sessionId - Active document session id, or `null`.
      */
     setActiveSession(sessionId) {

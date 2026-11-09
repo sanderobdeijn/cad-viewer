@@ -9,7 +9,11 @@ export default defineConfig({
       name: 'three-renderer',
       fileName: 'index'
     },
-    minify: true
+    minify: true,
+    rollupOptions: {
+      // A regular dependency; leave it for the app's bundler to resolve.
+      external: ['troika-three-text']
+    }
   },
   plugins: [peerDepsExternal() as PluginOption]
 })

@@ -114,8 +114,7 @@ describe('ThreeRendererBatchedGroup layer style rebind', () => {
       material => material,
       {
         currentBackgroundColor: 0x000000,
-        getLineMaterial: jest.fn(),
-        getMTextFillMaterial: jest.fn()
+        getLineMaterial: jest.fn()
       } as never
     )
 
@@ -154,8 +153,7 @@ describe('ThreeRendererBatchedGroup layer style rebind', () => {
       false,
       getLayerBoundMaterial,
       {
-        getLineMaterial: jest.fn(),
-        getMTextFillMaterial: jest.fn()
+        getLineMaterial: jest.fn()
       } as never
     )
 

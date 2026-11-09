@@ -5,8 +5,8 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
  * Duck-typed Three.js object guards.
  *
  * `instanceof` fails when more than one `three` copy is present in the bundle
- * (common with pnpm + linked packages such as mtext-renderer). Glyph meshes and
- * line segments created by mtext-renderer would then be silently dropped from
+ * (common with pnpm + linked packages). Meshes and line segments built
+ * against another copy would then be silently dropped from
  * {@link ThreeRendererBatchedGroup.addEntity}. Prefer these flags / `type` strings, which
  * Three.js sets on every instance regardless of which package copy constructed
  * it.

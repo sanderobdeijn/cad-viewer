@@ -1,11 +1,8 @@
 import { CommonEventManager, log } from '@mlightcad/common'
-import { FontManager } from '@mlightcad/mtext-renderer'
-import { ThreeRendererMTextRenderer } from '@mlightcad/three-renderer'
 
 import {
   ApplicationAboutCmd,
   ApplicationArcCmd,
-  ApplicationCacheFontCmd,
   ApplicationCircleCmd,
   ApplicationCloseCmd,
   ApplicationCopyCmd,
@@ -38,8 +35,7 @@ import {
   EditorCalculateSizeCallback,
   EditorCommand,
   EditorCommandStack,
-  EditorOpenMode,
-  eventBus
+  EditorOpenMode
 } from '../editor'
 import { APPLICATION_MODEL_SPACE_ID } from '../model/ApplicationItemDrawable'
 import { ApplicationPluginManager } from '../plugin/ApplicationPluginManager'
@@ -51,21 +47,14 @@ import { ApplicationContext } from './ApplicationContext'
 import { ApplicationDocSession } from './ApplicationDocSession'
 import { APPLICATION_DEFAULT_DOCS_BASE_URL, applicationSetDocsBaseUrl } from './ApplicationDocsUrl'
 import { ApplicationDocument } from './ApplicationDocument'
-import { ApplicationFontLoader } from './ApplicationFontLoader'
 import { ApplicationOpenDatabaseOptions } from './ApplicationOpenDatabaseOptions'
 import { APPLICATION_SETTING_COMMANDS, ApplicationSettingManager } from './ApplicationSettingManager'
-import {
-  checkWebworkerReadiness,
-  DEFAULT_WEBWORKER_FILE_URLS,
-  resetWebworkerReadinessCache
-} from './ApplicationWebworkerReadiness'
 import {
   applicationDisposeNotificationService,
   applicationInstallNotificationService,
   type UINotificationBellPlacement
 } from './notification'
 
-const DEFAULT_BASE_URL = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data'
 /**
  * Built-in command alias table used when users do not provide explicit alias overrides.
  *
@@ -119,25 +108,6 @@ export interface ApplicationDocumentEventArgs {
 }
 
 /**
- * Defines URLs for Web Worker JavaScript bundles used by the CAD viewer.
- *
- * Each entry points to a standalone worker script responsible for
- * off-main-thread processing such as file parsing or text rendering.
- */
-export interface ApplicationWebworkerFiles {
-  /**
-   * URL of the Web Worker bundle responsible for rendering MTEXT entities.
-   *
-   * This worker handles MTEXT layout, formatting, and glyph processing
-   * independently from the main rendering thread.
-   */
-  mtextRender?: string | URL
-}
-
-/** AutoCAD-era default font fallback chain used when glyphs are missing. */
-const DEFAULT_FONTS_PRESET = 'modern' as const
-
-/**
  * Options for creating ApplicationDocManager instance
  */
 export interface ApplicationDocManagerOptions {
@@ -157,37 +127,6 @@ export interface ApplicationDocManagerOptions {
    * The flag whether to auto resize canvas when container size changed. Default is false.
    */
   autoResize?: boolean
-  /**
-   * Base URL to load resources (such as fonts annd drawing templates) needed
-   */
-  baseUrl?: string
-  /**
-   * The flag whether to use main thread or webwork to render drawing.
-   * - true: use main thread to render drawing. This approach take less memory and take longer time to show
-   *         rendering results.
-   * - false: use web worker to render drawing. This approach take more memory and take shorter time to show
-   *         rendering results.
-   */
-  useMainThreadDraw?: boolean
-
-  /**
-   * When `true`, eagerly preload the modern fallback font chain at viewer
-   * init via {@link ApplicationDocManager.loadDefaultFonts}. Default is `false`:
-   * fonts load on demand through {@link FontManager.lazyFontLoading}.
-   */
-  preloadDefaultFonts?: boolean
-  /**
-   * URLs for Web Worker JavaScript bundles used by the CAD viewer.
-   */
-  webworkerFileUrls?: ApplicationWebworkerFiles
-
-  /**
-   * When true, verify worker script URLs via HEAD requests after initialization.
-   * The result is exposed through {@link ApplicationDocManager.workersReady} and the
-   * `workersReady` event. Defaults to false.
-   */
-  checkWorkersOnInit?: boolean
-
   /**
    * Host element for the busy overlay (e.g. HTML export spinner).
    * Set to the viewer shell so the mask covers ribbon, toolbars, and status bar.
@@ -279,7 +218,7 @@ export interface ApplicationDocManagerOptions {
   commandAliases?: Record<string, string | string[]>
 
   /**
-   * Built-in notification center (font missing, etc.).
+   * Built-in notification center.
    *
    * Notifications are scoped per document session (MDI). The default DOM UI is
    * positioned relative to the canvas host, not the browser window.
@@ -316,7 +255,6 @@ export interface ApplicationDocManagerOptions {
  * - Document creation and opening (from URLs or file content)
  * - View and context management
  * - Command registration and execution
- * - Font loading for text rendering
  * - Event handling for document lifecycle
  *
  * The manager follows a singleton pattern to ensure only one instance manages the application state.
@@ -335,10 +273,6 @@ export class ApplicationDocManager {
   private _splitView?: ThreeRendererView2d
   /** Monotonic id suffix for {@link ApplicationDocSession.id}. */
   private _nextSessionId = 1
-  /** Font loader for managing CAD text fonts */
-  private _fontLoader: ApplicationFontLoader
-  /** Base URL to get fonts, templates, and example files */
-  private _baseUrl: string
   /** Host element for the busy overlay (e.g. HTML export spinner). */
   private _busyIndicatorHost: HTMLElement
   /** Busy overlay for long-running command operations */
@@ -360,19 +294,6 @@ export class ApplicationDocManager {
   private _commandAliasOverrides: Map<string, string[]>
   /** Singleton instance */
   private static _instance?: ApplicationDocManager
-  /** Worker URLs configured at initialization */
-  private _webworkerFileUrls?: ApplicationWebworkerFiles
-  /** Cached worker readiness; null until checked, then true or false */
-  private _workersReady: boolean | null = null
-  /** In-flight worker readiness check */
-  private _workersReadyCheckPromise?: Promise<boolean>
-  /**
-   * In-flight / completed preset (default+symbol) font load started at open.
-   * Reused across opens so IndexedDB/mesh parse is not repeated.
-   */
-  private _presetFontsForOpenPromise: Promise<void> | null = null
-  /** Names last requested by {@link ensurePresetFontsForOpen} (OPENPROF). */
-  private _lastPresetFontsForOpen: string[] = []
 
   /** Events fired during document lifecycle */
   public readonly events = {
@@ -387,9 +308,7 @@ export class ApplicationDocManager {
     /** Fired before a document is closed and destroyed */
     documentToBeDestroyed: new CommonEventManager<ApplicationDocumentEventArgs>(),
     /** Fired after a document has been closed */
-    documentDestroyed: new CommonEventManager<ApplicationDocumentEventArgs>(),
-    /** Fired when a worker readiness check completes */
-    workersReady: new CommonEventManager<{ ready: boolean }>()
+    documentDestroyed: new CommonEventManager<ApplicationDocumentEventArgs>()
   }
 
   /**
@@ -402,21 +321,10 @@ export class ApplicationDocManager {
    * @private
    */
   private constructor(options: ApplicationDocManagerOptions = {}) {
-    this._baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
     applicationSetDocsBaseUrl(options.docsBaseUrl ?? APPLICATION_DEFAULT_DOCS_BASE_URL)
     this._commandAliasOverrides = this.normalizeCommandAliasConfig(
       options.commandAliases
     )
-    if (options.useMainThreadDraw) {
-      ThreeRendererMTextRenderer.getInstance().setRenderMode('main')
-    } else {
-      ThreeRendererMTextRenderer.getInstance().setRenderMode('worker')
-    }
-    FontManager.instance.setDefaultFonts(DEFAULT_FONTS_PRESET)
-    FontManager.instance.lazyFontLoading = true
-    FontManager.instance.awaitFontsBeforeDraw = true
-    void ThreeRendererMTextRenderer.getInstance().setLazyFontLoading(true)
-    void ThreeRendererMTextRenderer.getInstance().setAwaitFontsBeforeDraw(true)
 
     // Create one empty drawing
     const doc = new ApplicationDocument()
@@ -458,18 +366,6 @@ export class ApplicationDocManager {
     )
     this._sessions = [this._activeSession]
 
-    this._fontLoader = new ApplicationFontLoader()
-    // Share one DefaultFontLoader cache between UI catalog and on-demand draws.
-    FontManager.instance.setFontLoader(this._fontLoader.fontLoader)
-    const fontsUrl = this.resolveFontsBaseUrl()
-    this._fontLoader.baseUrl = fontsUrl
-    FontManager.instance.baseUrl = fontsUrl
-    // Always push the URL into ThreeRendererMTextRenderer (workers). DefaultFontLoader
-    // skips onFontUrlChanged when the value equals its built-in default, which
-    // would leave workers on an unset/stale font base URL.
-    ThreeRendererMTextRenderer.getInstance().setFontUrl(fontsUrl)
-    this.installFontFileLoadTimeout()
-
     this._commandManager = new EditorCommandStack()
     this.registerCommands()
     this._pluginManager = new ApplicationPluginManager(
@@ -493,14 +389,6 @@ export class ApplicationDocManager {
       mode: doc.openMode
     })
 
-    if (options.preloadDefaultFonts) {
-      void this.loadDefaultFonts()
-    }
-    this._webworkerFileUrls = options.webworkerFileUrls
-    this.registerWorkers(options.webworkerFileUrls)
-    if (options.checkWorkersOnInit) {
-      void this.areWorkersReady()
-    }
     // Load plugins asynchronously (don't await to avoid blocking initialization)
     this.loadPlugins(options.plugins).catch(error => {
       log.error('[ApplicationDocManager] Error loading plugins:', error)
@@ -534,16 +422,6 @@ export class ApplicationDocManager {
       ApplicationDocManager._instance = new ApplicationDocManager(options)
     }
     return this._instance
-  }
-
-  /**
-   * Checks whether configured worker scripts are reachable without creating an
-   * {@link ApplicationDocManager} instance.
-   */
-  static checkWebworkerReadiness(
-    webworkerFileUrls?: ApplicationWebworkerFiles
-  ): Promise<boolean> {
-    return checkWebworkerReadiness(webworkerFileUrls)
   }
 
   /**
@@ -589,50 +467,7 @@ export class ApplicationDocManager {
     this._splitView = undefined
     this._mainView.dispose()
     applicationDisposeNotificationService()
-    ThreeRendererMTextRenderer.resetInstance()
-    resetWebworkerReadinessCache()
     ApplicationDocManager._instance = undefined
-  }
-
-  /**
-   * Last worker readiness result for this manager, or null if not checked yet.
-   */
-  get workersReady(): boolean | null {
-    return this._workersReady
-  }
-
-  /**
-   * Returns true when all configured worker files are reachable.
-   *
-   * Uses HEAD requests internally. A successful result is cached on this
-   * instance for fast subsequent calls; failures update {@link workersReady}
-   * to false but can be retried. The underlying URL probe does not cache
-   * failures, so transient network errors can recover on a later call.
-   */
-  areWorkersReady(): Promise<boolean> {
-    if (this._workersReady === true) {
-      return Promise.resolve(true)
-    }
-
-    if (!this._workersReadyCheckPromise) {
-      this._workersReadyCheckPromise = checkWebworkerReadiness(
-        this._webworkerFileUrls
-      )
-        .then(ready => {
-          this._workersReady = ready
-          this._workersReadyCheckPromise = undefined
-          this.events.workersReady.dispatch({ ready })
-          return ready
-        })
-        .catch(() => {
-          this._workersReady = false
-          this._workersReadyCheckPromise = undefined
-          this.events.workersReady.dispatch({ ready: false })
-          return false
-        })
-    }
-
-    return this._workersReadyCheckPromise
   }
 
   /**
@@ -933,164 +768,6 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Base URL to load fonts
-   */
-  get baseUrl() {
-    return this._baseUrl
-  }
-
-  /**
-   * Gets the list of available fonts that can be loaded.
-   *
-   * Note: These fonts are available for loading but may not be loaded yet.
-   * Prefer {@link getAvaiableFonts} when the catalog may not have been fetched yet
-   * (lazy font loading no longer preloads metadata at viewer init).
-   *
-   * @returns Array of available font names
-   */
-  get avaiableFonts() {
-    return this._fontLoader.avaiableFonts
-  }
-
-  /**
-   * Fetches font repository metadata (`fonts.json`) if not already cached.
-   * Emits `failed-to-get-avaiable-fonts` and returns `[]` when the catalog cannot
-   * be retrieved.
-   */
-  async getAvaiableFonts() {
-    try {
-      return await this._fontLoader.getAvaiableFonts()
-    } catch {
-      eventBus.emit('failed-to-get-avaiable-fonts', {
-        url: this._fontLoader.baseUrl
-      })
-      return []
-    }
-  }
-
-  /**
-   * Loads the specified fonts for text rendering.
-   *
-   * @param fonts - Array of font names to load
-   * @returns Promise that resolves when fonts are loaded
-   *
-   * @example
-   * ```typescript
-   * await docManager.loadFonts(['Arial', 'Times New Roman']);
-   * ```
-   */
-  async loadFonts(fonts: string[]) {
-    await this._fontLoader.load(fonts)
-  }
-
-  /**
-   * Loads default fonts for CAD text rendering.
-   *
-   * This method loads either the specified fonts or the configured default font
-   * fallback chains ({@link DEFAULT_FONTS_PRESET}, currently `modern`: text
-   * `simsun` → `hztxt`, symbol `amgdt`) if no fonts are provided. The loaded
-   * fonts are used for rendering CAD text entities like MText and Text in the viewer.
-   *
-   * It is better to load default fonts when viewer is initialized so that the viewer can
-   * render text correctly if fonts used in the document are not available.
-   *
-   * @param fonts - Optional array of font names to load. If not provided or null,
-   *               loads the active {@link FontManager.getFontsToLoad} chains
-   * @returns Promise that resolves when all specified fonts are loaded
-   *
-   * @example
-   * ```typescript
-   * // Load the modern default font chain
-   * await docManager.loadDefaultFonts();
-   *
-   * // Load specific fonts
-   * await docManager.loadDefaultFonts(['Arial', 'SimSun']);
-   *
-   * // Load no fonts (empty array)
-   * await docManager.loadDefaultFonts([]);
-   * ```
-   *
-   * @see {@link ApplicationFontLoader.load} - The underlying font loading implementation
-   * @see {@link createExampleDoc} - Method that uses this for example document creation
-   */
-  async loadDefaultFonts(fonts?: string[]) {
-    if (fonts == null) {
-      await this._fontLoader.load([...FontManager.instance.getFontsToLoad()])
-    } else {
-      await this._fontLoader.load(fonts)
-    }
-  }
-
-  /**
-   * Starts loading the active default/symbol preset chain
-   * ({@link FontManager.getFontsToLoad}) so it overlaps DWG/DXF parse.
-   *
-   * Preset faces are drawing-independent. Callers must not await this from
-   * the open hot path — linework convert continues; glyph finalize awaits
-   * {@link awaitPresetFontsReady} instead.
-   *
-   * - Worker mode: {@link ThreeRendererMTextRenderer.loadFonts} with `scope: 'all'` so
-   *   every isolate has fallbacks before glyph bake (no main-thread dual parse).
-   * - Main mode: {@link FontManager.requestFonts} (full await, including mesh).
-   *
-   * The promise is reused for the process lifetime. A 30s deadline matches
-   * {@link installFontFileLoadTimeout} so a stalled CDN cannot pin the open
-   * overlay; on timeout glyph draw still falls back to `'?'`.
-   */
-  ensurePresetFontsForOpen(): Promise<void> {
-    if (this._presetFontsForOpenPromise) {
-      return this._presetFontsForOpenPromise
-    }
-    const names = [...FontManager.instance.getFontsToLoad()]
-    this._lastPresetFontsForOpen = names
-    if (names.length === 0) {
-      this._presetFontsForOpenPromise = Promise.resolve()
-      return this._presetFontsForOpenPromise
-    }
-    const mtextRenderer = ThreeRendererMTextRenderer.getInstance()
-    const parseSite =
-      mtextRenderer.getRenderMode() === 'worker' ? 'worker' : 'main'
-    // Keep in sync with installFontFileLoadTimeout / text-style preload race.
-    const timeoutMs = 30_000
-    const load =
-      parseSite === 'worker'
-        ? mtextRenderer.loadFonts(names, { scope: 'all' }).then(() => undefined)
-        : FontManager.instance.requestFonts(names).then(() => undefined)
-    this._presetFontsForOpenPromise = new Promise<void>(resolve => {
-      const timer = setTimeout(() => {
-        // Glyph draw still falls back via FontManager defaults / '?'.
-        resolve()
-      }, timeoutMs)
-      load.then(
-        () => {
-          clearTimeout(timer)
-          resolve()
-        },
-        () => {
-          clearTimeout(timer)
-          resolve()
-        }
-      )
-    })
-    return this._presetFontsForOpenPromise
-  }
-
-  /**
-   * Waits until {@link ensurePresetFontsForOpen} has finished (starting it if
-   * open never kicked it off). Used by deferred glyph finalize.
-   */
-  async awaitPresetFontsReady(): Promise<void> {
-    await this.ensurePresetFontsForOpen()
-  }
-
-  /**
-   * Preset face names from the last {@link ensurePresetFontsForOpen} call.
-   * Empty until the first open starts preset preload.
-   */
-  get lastPresetFontsForOpen(): readonly string[] {
-    return this._lastPresetFontsForOpen
-  }
-  /**
    * Creates a blank drawing in a new document session (or reuses the current
    * unused Untitled). The new drawing is presented as unsaved.
    *
@@ -1118,67 +795,10 @@ export class ApplicationDocManager {
   }
 
   /**
-   * Redraws the current view. Currently it is used once you modified font mapping
-   * for missed fonts so that the drawing can apply new fonts.
+   * Redraws the current view.
    */
   regen() {
     return this.context.regen()
-  }
-
-  /**
-   * Rejects a font-file download that never completes.
-   *
-   * {@link FontManager} awaits `FileLoader.loadAsync` with no deadline. Open
-   * always awaits main-thread {@link FontManager.requestFonts} from
-   * {@link ThreeRendererView2d.awaitTextStyleFontsReady} before deferred glyph jobs,
-   * including when MTEXT geometry itself is drawn in workers. A stalled CDN
-   * therefore keeps `_pendingGeometryJobs` nonzero and the open overlay up.
-   *
-   * Worker isolates also load fonts, but {@link ApplicationDocManager.ensurePresetFontsForOpen}
-   * races that path with the same deadline; in-worker render requests still
-   * fall back to WebWorkerRenderer's request timeout.
-   */
-  private installFontFileLoadTimeout() {
-    const manager = FontManager.instance as unknown as {
-      loader?: {
-        loadAsync: (url: string) => Promise<unknown>
-        __cadFontLoadTimeout?: boolean
-      }
-    }
-    const loader = manager.loader
-    if (!loader || loader.__cadFontLoadTimeout) {
-      return
-    }
-    const original = loader.loadAsync.bind(loader)
-    // Keep in sync with ThreeRendererView2d text-style font preload race.
-    const timeoutMs = 30_000
-    loader.loadAsync = (url: string) =>
-      new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error(`Font load timed out after ${timeoutMs}ms`))
-        }, timeoutMs)
-        original(url).then(
-          value => {
-            clearTimeout(timer)
-            resolve(value)
-          },
-          error => {
-            clearTimeout(timer)
-            reject(error)
-          }
-        )
-      })
-    loader.__cadFontLoadTimeout = true
-  }
-
-  /**
-   * Resolves the font repository URL from {@link baseUrl}.
-   */
-  private resolveFontsBaseUrl(): string {
-    const base = this._baseUrl.endsWith('/')
-      ? this._baseUrl
-      : `${this._baseUrl}/`
-    return `${base}fonts/`
   }
 
   /**
@@ -1285,7 +905,6 @@ export class ApplicationDocManager {
 
     addSystemCommand('about', 'about', new ApplicationAboutCmd())
     addSystemCommand('arc', 'arc', new ApplicationArcCmd())
-    addSystemCommand('cachefont', 'cachefont', new ApplicationCacheFontCmd())
     addSystemCommand('circle', 'circle', new ApplicationCircleCmd())
     addSystemCommand('close', 'close', new ApplicationCloseCmd())
     addSystemCommand('ellipse', 'ellipse', new ApplicationEllipseCmd())
@@ -1631,10 +1250,6 @@ export class ApplicationDocManager {
     if (openCadScene) {
       openCadScene.skipSpatialIndex = options?.skipSpatialIndex === true
     }
-    // Preset fonts are drawing-independent — start immediately so download /
-    // mesh parse overlaps db.read. Glyph finalize awaits the promise; linework
-    // convert does not.
-    void this.ensurePresetFontsForOpen()
   }
 
   /**
@@ -1679,9 +1294,6 @@ export class ApplicationDocManager {
   /**
    * Sets up or validates database opening options.
    *
-   * Fonts are not loaded during open; {@link FontManager.lazyFontLoading}
-   * fetches them on demand while text is drawn.
-   *
    * @param options - Optional database opening options to validate/modify
    * @returns The validated options object
    * @private
@@ -1692,7 +1304,6 @@ export class ApplicationDocManager {
         progressiveRendering: false
       }
     } else {
-      this.stripObsoleteFontOpenOptions(options)
       this.stripDeprecatedWaitForTextGeometry(options)
       if (options.progressiveRendering == null) {
         options.progressiveRendering = false
@@ -1717,34 +1328,6 @@ export class ApplicationDocManager {
     console.warn(
       '[ApplicationDocManager] Ignoring deprecated open option waitForTextGeometry; ' +
         'both stages of progressive rendering are controlled by progressiveRendering.'
-    )
-  }
-
-  /**
-   * Removes removed open-time font options that integrators may still pass via
-   * cast/spread so they cannot silently affect `db.read`.
-   */
-  private stripObsoleteFontOpenOptions(options: ApplicationOpenDatabaseOptions) {
-    const legacy = options as ApplicationOpenDatabaseOptions & {
-      fontLoader?: unknown
-      failOnFontLoadError?: unknown
-    }
-    const hadFontLoader = legacy.fontLoader != null
-    const hadFailOnFontLoadError = legacy.failOnFontLoadError != null
-    if (!hadFontLoader && !hadFailOnFontLoadError) {
-      return
-    }
-    delete legacy.fontLoader
-    delete legacy.failOnFontLoadError
-    console.warn(
-      '[ApplicationDocManager] Ignoring obsolete open options ' +
-        [
-          hadFontLoader ? 'fontLoader' : null,
-          hadFailOnFontLoadError ? 'failOnFontLoadError' : null
-        ]
-          .filter(Boolean)
-          .join(', ') +
-        '; fonts load on demand via FontManager.lazyFontLoading.'
     )
   }
 
@@ -1818,20 +1401,6 @@ export class ApplicationDocManager {
     message?: string
   ): Promise<T> {
     return this._busyIndicator.withBusyIndicator(work, message)
-  }
-
-  /**
-   * Initializes background workers used by the viewer runtime.
-   *
-   * Points the MText renderer at its Web Worker script for text layout and
-   * shaping.
-   */
-  private registerWorkers(webworkerFileUrls?: ApplicationWebworkerFiles) {
-    const mtextRenderer = ThreeRendererMTextRenderer.getInstance()
-    mtextRenderer.initialize(
-      webworkerFileUrls?.mtextRender ?? DEFAULT_WEBWORKER_FILE_URLS.mtextRender
-    )
-    void mtextRenderer.setDefaultFonts([...FontManager.instance.defaultFonts])
   }
 
   /**

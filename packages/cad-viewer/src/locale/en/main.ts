@@ -5,6 +5,7 @@ export default {
     about: 'About'
   },
   ribbon: {
+    fileMenu: 'File',
     tab: {
       home: 'Home',
       measurement: 'Measurement'
@@ -61,8 +62,6 @@ export default {
       copy: 'Copy selected objects to a new location.',
       erase: 'Delete selected objects from the drawing.',
       offset: 'Create a parallel copy of an object at a specified distance.',
-      missingResources:
-        'Open the Missing / External Resources palette for fonts, images, and xrefs.',
       drawingUnits:
         'Open Drawing Units to set coordinate formats, precision, and insertion scale.',
       circleOption: {
@@ -281,9 +280,6 @@ export default {
       dark: 'Switch to light light',
       light: 'Switch to dark theme'
     },
-    warning: {
-      font: 'The following fonts are not found!'
-    },
     notification: {
       tooltip: 'Show notifications'
     },
@@ -309,44 +305,6 @@ export default {
         point: 'XY'
       }
     },
-    missingResources: {
-      tab: 'Resources',
-      title: 'Missing / External Resources',
-      fontTab: 'Font',
-      fileReferences: 'File References',
-      details: 'Details',
-      foundAt: 'Found at',
-      selectReference: 'Select a reference to view details',
-      expandDetails: 'Expand details',
-      collapseDetails: 'Collapse details',
-      apply: 'Apply',
-      applyDone: 'Replacements applied',
-      emptyFonts: 'No missing fonts',
-      emptyImages: 'No missing images',
-      matchFontType: 'Match font type (SHX / mesh)',
-      missedFont: 'Missed Font',
-      replacedFont: 'Replaced Font',
-      selectFont: 'Select font to replace',
-      selectLocalFont: 'Select local font file',
-      file: 'File',
-      name: 'Name',
-      path: 'Saved path',
-      type: 'Type',
-      typeAttach: 'Attach',
-      typeOverlay: 'Overlay',
-      status: 'Status',
-      statusMissing: 'Missing',
-      statusLoaded: 'Loaded',
-      actions: 'Actions',
-      visible: 'Visible',
-      browse: 'Browse…',
-      fromUrl: 'URL…',
-      unload: 'Unload',
-      load: 'Load',
-      empty: 'No external references or images in this drawing',
-      urlRequired: 'Please enter a URL',
-      loadFailed: 'Failed to load reference "{name}"'
-    },
     memoryProfile: {
       tab: 'Memory',
       title: 'Memory Profile',
@@ -362,11 +320,6 @@ export default {
       pieTotal: 'Accounted',
       pieAriaLabel: 'Memory breakdown by category',
       empty: 'No data',
-      missedFonts: 'Missed fonts',
-      fontMemory: 'Font / mtext memory',
-      fontMemorySummary: 'Memory {live} (main {main} · workers {workers})',
-      fontStorage: 'IndexedDB storage (not memory)',
-      fontStorageSummary: '{count} cached fonts · {size}',
       materialPoint: 'Point',
       materialLine: 'Line',
       materialFill: 'Fill',
@@ -376,14 +329,12 @@ export default {
         geometry: 'Geometry',
         mapping: 'Mapping',
         spatial: 'Spatial Index',
-        materials: 'Materials',
-        fonts: 'Fonts'
+        materials: 'Materials'
       },
       tabs: {
         geometry: 'Geometry',
         spatial: 'Spatial',
-        materials: 'Materials',
-        fonts: 'Fonts'
+        materials: 'Materials'
       },
       columns: {
         layout: 'Layout',
@@ -396,8 +347,7 @@ export default {
         estimated: 'Est. size',
         type: 'Type',
         count: 'Count',
-        category: 'Category',
-        font: 'Font'
+        category: 'Category'
       }
     }
   },
@@ -417,15 +367,6 @@ export default {
     layer: 'Layer'
   },
   message: {
-    loadingFonts: 'Loading fonts ...',
-    fontsNotFound: 'Fonts {fonts} can not be found in font repository!',
-    fontsNotLoaded: 'Fonts {fonts} can not be loaded!',
-    fontMissedInDrawing:
-      'Font "{font}" is required by {count} text object(s) but is not available. Displaying with "{replacementFont}".',
-    fontMissedReplacement: '"{font}" (displaying with "{replacement}")',
-    fontCached: 'Font "{font}" cached successfully.',
-    fontCacheFailed: 'Failed to cache font "{fileName}".',
-    failedToGetAvaiableFonts: 'Failed to get avaiable fonts from "{url}"!',
     fetchingDrawingFile: 'Fetching file ...'
   },
   notification: {
@@ -435,9 +376,6 @@ export default {
       noNotifications: 'No notifications'
     },
     group: {
-      fontMissed: 'Missing Fonts',
-      fontMissedSummary:
-        '{count} font-related messages. Click to expand details.',
       genericSummary: '{count} messages. Click to expand details.'
     },
     time: {
@@ -447,8 +385,6 @@ export default {
       daysAgo: '{count} day ago | {count} days ago'
     },
     title: {
-      fontNotFound: 'Font Not Found',
-      fontNotLoaded: 'Font Not Loaded',
       systemMessage: 'System Message',
       systemWarning: 'System Warning',
       systemError: 'System Error',

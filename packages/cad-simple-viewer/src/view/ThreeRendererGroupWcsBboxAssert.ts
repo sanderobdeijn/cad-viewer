@@ -13,7 +13,7 @@ export interface ThreeRendererGroupWcsBboxLike {
 /**
  * Tests whether a 2D axis-aligned box has finite extents.
  *
- * Deferred MText/Shape geometry can seed `±Infinity` placeholders in
+ * Geometry that is not built yet can seed `±Infinity` placeholders in
  * {@link ThreeRendererGroup.wcsChildBoxes}; those entries must be skipped when unioning
  * bounds for spatial indexing.
  */

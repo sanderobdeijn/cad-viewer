@@ -1,5 +1,4 @@
 export * from './ApplicationMemCmd'
-export * from './ApplicationMissedDataCmd'
 export * from './ApplicationMeasurementPanelCmd'
 export * from './ApplicationDrawingUnitsCmd'
 export * from './ApplicationPointStyleCmd'

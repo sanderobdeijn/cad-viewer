@@ -2,7 +2,6 @@ import * as THREE from 'three'
 
 import { ThreeRendererRenderContext } from '../renderer/ThreeRendererRenderContext'
 import { ThreeRendererEntity } from './ThreeRendererEntity'
-import { ThreeRendererGlyphEntity } from './ThreeRendererGlyphEntity'
 
 export interface ThreeRendererEntityBox {
   minX: number
@@ -32,7 +31,7 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
    *
    * After step 3, `group.children` no longer contains the source entities,
    * yet their `wcsBbox` values remain the authoritative local extents once
-   * deferred drawing (MText/Shape `syncDraw`) completes.
+   * deferred drawing (`syncDraw`) completes.
    *
    * Consumers such as {@link getSourceEntities},
    * {@link refreshWcsChildBoxesFromChildren}, and {@link syncDraw} rely on this
@@ -88,7 +87,7 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
    * Rebuilds {@link wcsChildBoxes} and the aggregate {@link wcsBbox} from
    * current entity geometry.
    *
-   * MText/Shape bounds can still be empty when a group is built. An empty
+   * Child bounds can still be empty when a group is built. An empty
    * {@link THREE.Box3} contains `±Infinity` corners, which must not reach
    * spatial indexing.
    *
@@ -223,102 +222,6 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
   }
 
   /**
-   * Like {@link syncDraw}, but uses {@link ThreeRendererEntity.asyncDraw} so glyph
-   * children can wait for fonts without using the sync fallback path.
-   */
-  override async asyncDraw(): Promise<void> {
-    await this.asyncDrawPendingGlyphs()
-    this.refreshWcsChildBoxesFromChildren()
-  }
-
-  /**
-   * Draws empty glyph shells on this group.
-   *
-   * @param options.chunkSize - Glyphs started per micro-batch (default 24).
-   * @param options.yieldBudgetMs - Wall time between cooperative yields.
-   *   Defaults to 32 when {@link ThreeRendererRenderContext.yieldDuringAsyncDraw} is
-   *   set, and to no yield for headless export.
-   */
-  private async asyncDrawPendingGlyphs(
-    options: { chunkSize?: number; yieldBudgetMs?: number } = {}
-  ): Promise<void> {
-    const chunkSize = options.chunkSize ?? 24
-    const yieldBudgetMs =
-      options.yieldBudgetMs ??
-      (this.renderContext.yieldDuringAsyncDraw ? 32 : Number.POSITIVE_INFINITY)
-    const sourceEntities = this.getSourceEntities()
-    const tasks: Array<() => Promise<void>> = []
-    const seen = new Set<ThreeRendererEntity>()
-    const enqueue = (child: ThreeRendererEntity) => {
-      if (seen.has(child)) {
-        return
-      }
-      seen.add(child)
-      if (child.hasDrawableGeometry()) {
-        return
-      }
-      tasks.push(() => child.asyncDraw())
-    }
-
-    for (const entity of sourceEntities) {
-      enqueue(entity)
-    }
-    // Only walk ThreeRendererEntity containers — never dive into flattened mesh/line
-    // leaves.
-    this.enqueuePendingGlyphEntitiesFromTree(this, enqueue)
-
-    if (tasks.length === 0) {
-      return
-    }
-    // Start glyph draws in small batches and return to the event loop.
-    let budgetStart = performance.now()
-    for (let i = 0; i < tasks.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, tasks.length)
-      const pending: Promise<void>[] = []
-      for (let j = i; j < end; j++) {
-        pending.push(tasks[j]())
-      }
-      await Promise.all(pending)
-      if (
-        end < tasks.length &&
-        performance.now() - budgetStart >= yieldBudgetMs
-      ) {
-        await new Promise<void>(resolve => setTimeout(resolve, 0))
-        budgetStart = performance.now()
-      }
-    }
-  }
-
-  /**
-   * Collects nested {@link ThreeRendererEntity} glyph hosts under `root` without
-   * walking drawable mesh/line leaves.
-   */
-  private enqueuePendingGlyphEntitiesFromTree(
-    root: THREE.Object3D,
-    enqueue: (entity: ThreeRendererEntity) => void
-  ): void {
-    const children = root.children
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i]
-      if (child instanceof ThreeRendererGlyphEntity) {
-        enqueue(child)
-        continue
-      }
-      if (child instanceof ThreeRendererGroup) {
-        for (const entity of child.getSourceEntities()) {
-          enqueue(entity)
-        }
-        this.enqueuePendingGlyphEntitiesFromTree(child, enqueue)
-        continue
-      }
-      if (child instanceof ThreeRendererEntity) {
-        enqueue(child)
-        this.enqueuePendingGlyphEntitiesFromTree(child, enqueue)
-      }
-    }
-  }
-
-  /**
    * Releases render resources owned by this group and its tracked source entities.
    *
    * {@link flatten} reparents drawable leaves onto {@link children} and detaches
@@ -383,7 +286,7 @@ export class ThreeRendererGroup extends ThreeRendererEntity {
    *   {@link appendSourceEntityWcsChildBox} or
    *   {@link appendTreeEntityWcsChildBox}.
    * - **Empty or non-finite boxes**: skipped via {@link isFiniteEntityBox} so
-   *   deferred MText/Shape geometry cannot seed `±Infinity` values.
+   *   deferred geometry cannot seed `±Infinity` values.
    *
    * @param object - Entity or nested group whose bounds should be recorded.
    */

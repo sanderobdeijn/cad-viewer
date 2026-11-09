@@ -22,7 +22,6 @@ import { ThreeRendererStyleManager } from '../style/ThreeRendererStyleManager'
 import {
   ThreeRendererBufferGeometryUtil,
   ThreeRendererMaterialUtil,
-  ThreeRendererMTextColorUtil,
   ThreeRendererSubEntityTraitsUtil
 } from '../util'
 import {
@@ -729,17 +728,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     )
 
     this._unbatchedObjects.traverse(object => {
-      const refresh = (
-        object as {
-          refreshTextMaterials?: (
-            layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-          ) => void
-        }
-      ).refreshTextMaterials
-      if (typeof refresh === 'function') {
-        refresh.call(object, layerTraits)
-      }
-
       if (!('material' in object)) {
         return
       }
@@ -759,7 +747,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     })
 
     if (styleManager) {
-      this.rematerializeLayerTextDrawables(layerName, styleManager, layerTraits)
+      this.refreshLayerBoundMaterialColors(layerName, styleManager, layerTraits)
     }
   }
 
@@ -910,29 +898,14 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Rebinds MTEXT/TEXT glyph materials under unbatched placement roots.
-   *
-   * Entity wrappers are not kept in the scene tree after batching, so layer
-   * colour updates must rematerialize the cloned glyph subtrees directly.
+   * Refreshes the colour of layer-bound batch materials after a layer colour
+   * change.
    */
-  rematerializeLayerTextDrawables(
+  refreshLayerBoundMaterialColors(
     layerName: string,
     styleManager: ThreeRendererStyleManager,
     layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
   ) {
-    for (const root of this._unbatchedObjects.children) {
-      const storedTraits = getSceneDrawableUserData(root).textEntityTraits
-      if (storedTraits == null || storedTraits.layer !== layerName) {
-        continue
-      }
-
-      ThreeRendererMTextColorUtil.rematerializeTextHierarchy(
-        root,
-        ThreeRendererMTextColorUtil.cloneEntityTraits(storedTraits),
-        styleManager
-      )
-    }
-
     if (!layerTraits?.color) {
       return
     }
@@ -993,7 +966,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     traits.drawOrder = metadata.drawOrder ?? 0
 
     if (metadata.drawOrder === 0 && metadata.isForeground !== true) {
-      return styleManager.getMTextFillMaterial(traits)
+      return styleManager.getFillMaterial(traits)
     }
 
     return styleManager.getLineMaterial(traits, true)
@@ -1270,7 +1243,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
         // The leaf itself is instanced, but complex linetypes hang off it as
         // children and still need their own slots.
       } else if (isThreeLineSegments2(object)) {
-        // Duck-type across duplicate three.js copies (mtext-renderer vs app).
+        // Duck-type across duplicate three.js copies.
         // `instanceof` silently drops glyph LineSegments/Meshes — see
         // ThreeRendererThreeObjectGuards.
         const item = this.addLine2(object, {
@@ -2755,11 +2728,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
       clonedDrawable.bakedWorldMatrix = source.matrixWorld.toArray(
         new Array<number>(16)
       )
-      if (sourceDrawable.textEntityTraits) {
-        clonedDrawable.textEntityTraits = ThreeRendererMTextColorUtil.cloneEntityTraits(
-          sourceDrawable.textEntityTraits
-        )
-      }
     }
     this.finalizeUnbatchedLineClone(cloned)
     return cloned
@@ -2858,11 +2826,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     clonedDrawable.bakedWorldMatrix = source.matrixWorld.toArray(
       new Array<number>(16)
     )
-    if (sourceDrawable.textEntityTraits) {
-      clonedDrawable.textEntityTraits = ThreeRendererMTextColorUtil.cloneEntityTraits(
-        sourceDrawable.textEntityTraits
-      )
-    }
 
     cloned.traverse(child => {
       if (!this.hasMaterial(child)) {

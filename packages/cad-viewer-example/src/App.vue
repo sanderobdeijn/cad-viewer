@@ -1,10 +1,6 @@
 <template>
   <div id="app-root">
-    <MlCadViewer
-      :base-url="BASE_URL"
-      :use-main-thread-draw="useMainThreadDraw"
-      @create="onCreate"
-    >
+    <MlCadViewer @create="onCreate">
       <template #side-panel>
         <div class="text-editor-pane">
           <textarea
@@ -39,12 +35,6 @@ import { ref } from 'vue'
 ApplicationSettingManager.configure({
   storageKey: 'mlightcad.settings.cad-viewer'
 })
-
-const BASE_URL = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@main/'
-/** Pass `?worker=1` to render MTEXT in a web worker. */
-const useMainThreadDraw = !new URLSearchParams(window.location.search).has(
-  'worker'
-)
 
 /** How long typing must pause before the text is applied to the drawing. */
 const APPLY_DELAY_MS = 300

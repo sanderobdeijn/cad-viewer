@@ -1,8 +1,6 @@
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
-import type { ThreeRendererMTextEntityTraits } from './ThreeRendererMTextColorUtil'
-
 /**
  * Relative-to-eye flags stored on {@link THREE.Object3D.userData}.
  *
@@ -54,8 +52,6 @@ export interface ThreeRendererPickableObjectUserData {
  */
 export interface ThreeRendererStyledDrawableUserData {
   styleMaterialId?: number
-  /** Entity colour/layer snapshot for unbatched MTEXT/TEXT placement roots. */
-  textEntityTraits?: ThreeRendererMTextEntityTraits
 }
 
 /**
@@ -317,27 +313,6 @@ export function markHighlightOverlayGroup(
   const overlay = group as ThreeRendererHighlightOverlayGroup
   overlay.userData.highlightOverlayGroup = true
   return overlay
-}
-
-/**
- * Resolves the Object3D that carries MTEXT insertion/rotation from the renderer.
- * Worker output is already the placement root; sync output wraps it under `MText`.
- */
-export function resolveMTextRenderRoot(mtext: THREE.Object3D): THREE.Object3D {
-  if (mtext.children.length !== 1) {
-    return mtext
-  }
-
-  const child = mtext.children[0]
-  if (
-    child instanceof THREE.Mesh ||
-    child instanceof THREE.Line ||
-    child instanceof THREE.LineSegments
-  ) {
-    return mtext
-  }
-
-  return child
 }
 
 /**
