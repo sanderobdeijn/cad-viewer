@@ -1,6 +1,5 @@
 export * from './ApplicationCommandUtil'
 export * from './ApplicationCssColor'
-export * from './ApplicationDrawingExtents'
 export * from './ApplicationGeTransform'
 export * from './ApplicationMeasurementUtil'
 export * from './ApplicationMeasureBadgeFont'

@@ -1,4 +1,4 @@
-import { GeometryBox3d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
+import { GeometryBox2d, GeometryPoint2dLike } from '@mlightcad/geometry-engine'
 
 import { ApplicationSettingManager } from '../../app/ApplicationSettingManager'
 import {
@@ -63,11 +63,11 @@ const MAX_PRIMITIVES_PER_SOURCE = 32
 
 type IntersectionSource = {
   key: string
-  box: GeometryBox3d
+  box: GeometryBox2d
   item: ApplicationItemContents
 }
 
-function boxesOverlapXY(a: GeometryBox3d, b: GeometryBox3d): boolean {
+function boxesOverlapXY(a: GeometryBox2d, b: GeometryBox2d): boolean {
   return (
     a.min.x <= b.max.x &&
     a.max.x >= b.min.x &&

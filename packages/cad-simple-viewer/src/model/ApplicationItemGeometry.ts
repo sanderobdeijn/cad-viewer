@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 import {
-  GeometryBox3d,
+  GeometryBox2d,
   GeometryCircularArc2d,
   type GeometryDimension,
   GeometryEllipseArc2d,
@@ -166,16 +166,16 @@ interface ShapeOps<G extends GeometryShape> {
   offset(geometry: G, distance: number): G[]
   offsetSide(geometry: G, point: GeometryPoint2dLike): 1 | -1
   intersectCurves(geometry: G): GeometryIntersectPrimitive[]
-  extents(geometry: G): GeometryBox3d
+  extents(geometry: G): GeometryBox2d
   draw(geometry: G, renderer: GraphicsInterfaceRenderer): GraphicsInterfaceEntity | undefined
 }
 
 const boxOf = (geometry: {
   box: { min: GeometryPoint2dLike; max: GeometryPoint2dLike }
 }) =>
-  new GeometryBox3d(
-    { x: geometry.box.min.x, y: geometry.box.min.y, z: 0 },
-    { x: geometry.box.max.x, y: geometry.box.max.y, z: 0 }
+  new GeometryBox2d(
+    { x: geometry.box.min.x, y: geometry.box.min.y },
+    { x: geometry.box.max.x, y: geometry.box.max.y }
   )
 
 const outsideCircle = (
@@ -774,8 +774,8 @@ const polylineOps: ShapeOps<GeometryPolyline2d> = {
   },
   extents(polyline) {
     const box = polyline.box
-    if (box.isEmpty()) return new GeometryBox3d()
-    return new GeometryBox3d().setFromPoints([
+    if (box.isEmpty()) return new GeometryBox2d()
+    return new GeometryBox2d().setFromPoints([
       new GeometryPoint2d(box.min.x, box.min.y),
       new GeometryPoint2d(box.max.x, box.min.y),
       new GeometryPoint2d(box.max.x, box.max.y),
@@ -998,12 +998,12 @@ export function intersectItems(
 }
 
 /** Returns the bounding box of an item. */
-export function itemExtents(contents: ApplicationItemContents): GeometryBox3d {
+export function itemExtents(contents: ApplicationItemContents): GeometryBox2d {
   switch (contents.kind) {
     case 'shape':
       return shapeOps(contents.geometry).extents(contents.geometry)
     case 'point':
-      return new GeometryBox3d().expandByPoint(contents.geometry)
+      return new GeometryBox2d().expandByPoint(contents.geometry)
     case 'dimension':
       return dimensionExtents(contents.geometry as GeometryDimension)
   }

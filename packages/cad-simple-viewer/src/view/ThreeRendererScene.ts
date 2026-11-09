@@ -1,5 +1,5 @@
 import { log } from '@mlightcad/common'
-import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import {
   ThreeRendererDirectEntityMeta,
   ThreeRendererEntity,
@@ -293,7 +293,7 @@ export class ThreeRendererScene {
    * @returns Return query results
    */
   search(
-    box: GeometryBox2d | GeometryBox3d,
+    box: GeometryBox2d,
     options?: ThreeRendererSpatialSearchOptions
   ) {
     const activeLayout = this.activeLayout

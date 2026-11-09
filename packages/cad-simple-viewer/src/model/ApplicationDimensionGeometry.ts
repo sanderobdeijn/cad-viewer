@@ -1,6 +1,6 @@
 import {
   GeometryArea2d,
-  GeometryBox3d,
+  GeometryBox2d,
   type GeometryDimension,
   GeometryLine2d,
   type GeometryMatrix3d,
@@ -226,8 +226,8 @@ export function dimensionGraphics(
 }
 
 /** Returns the extents of a dimension's graphics and points. */
-export function dimensionExtents(dimension: GeometryDimension): GeometryBox3d {
-  const box = new GeometryBox3d()
+export function dimensionExtents(dimension: GeometryDimension): GeometryBox2d {
+  const box = new GeometryBox2d()
   const { lines, arrows, label } = dimensionGraphics(dimension)
   for (const line of lines) {
     box.expandByPoint(line.startPoint)

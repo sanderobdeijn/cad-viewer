@@ -42,8 +42,7 @@ npm install @mlightcad/geometry-engine
 - **GeometryQuaternion**: Quaternion-based 3D rotations
 
 #### Mathematical Utilities
-- **GeometryBox2d, GeometryBox3d**: Bounding boxes in 2D and 3D space
-- **GeometryPlane**: 3D plane representations
+- **GeometryBox2d**: Bounding boxes in 2D space
 - **GeometryTol**: Tolerance settings for geometric comparisons
 
 ### Geometry Classes

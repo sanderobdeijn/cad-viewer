@@ -1,7 +1,6 @@
 import { CommonUiYieldGate, log } from '@mlightcad/common'
 import {
   GeometryBox2d,
-  GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike
@@ -1237,7 +1236,7 @@ export class ThreeRendererView2d extends EditorBaseView {
    * @inheritdoc
    */
   search(
-    box: GeometryBox2d | GeometryBox3d,
+    box: GeometryBox2d,
     options?: ThreeRendererSpatialSearchOptions
   ) {
     return this._scene.search(box, options)

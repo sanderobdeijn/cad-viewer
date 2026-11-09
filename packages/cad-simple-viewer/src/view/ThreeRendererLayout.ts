@@ -1,4 +1,4 @@
-import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import {
   ThreeRendererBatchedGroup,
   ThreeRendererDirectEntityMeta,
@@ -602,7 +602,7 @@ export class ThreeRendererLayout {
    * @returns Return query results containing entity IDs and their bounds
    */
   search(
-    box: GeometryBox2d | GeometryBox3d,
+    box: GeometryBox2d,
     options?: ThreeRendererSpatialSearchOptions
   ) {
     return this._spatialIndex.search(

@@ -1,7 +1,6 @@
 import { CommonEventManager } from '@mlightcad/common'
 import {
   GeometryBox2d,
-  GeometryBox3d,
   GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPoint2dLike,
@@ -151,8 +150,6 @@ export abstract class EditorBaseView {
   private _height: number
   /** Optional callback to calculate canvas size on resize */
   private _calculateSizeCallback?: EditorCalculateSizeCallback
-  /** Bounding box of all entities in the view */
-  private _bbox: GeometryBox3d
   /** Current mouse position in world coordinates */
   private _curPos: GeometryPoint2d
   /**
@@ -251,7 +248,6 @@ export abstract class EditorBaseView {
     this._container = container
     this._canvas = canvas
     const rect = canvas.getBoundingClientRect()
-    this._bbox = new GeometryBox3d()
     this._width = rect.width
     this._height = rect.height
     this._curPos = new GeometryPoint2d()
@@ -513,7 +509,7 @@ export abstract class EditorBaseView {
    * @returns Return query results
    */
   abstract search(
-    box: GeometryBox2d | GeometryBox3d,
+    box: GeometryBox2d,
     options?: ThreeRendererSpatialSearchOptions
   ): EditorSpatialQueryResultItemEx[]
 
@@ -893,13 +889,6 @@ export abstract class EditorBaseView {
   }
   set height(value: number) {
     this._height = value
-  }
-
-  /**
-   * The bounding box to include all entities in this viewer
-   */
-  get bbox() {
-    return this._bbox
   }
 
   /**

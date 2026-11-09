@@ -1,45 +1,5 @@
-import {
-  GeometryBox2d,
-  GeometryBox3d,
-  GeometryPoint2dLike
-} from '@mlightcad/geometry-engine'
+import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
-
-/**
- * Converts a Three.js Box3 to a CAD geometry GeometryBox3d.
- *
- * @param from - The Three.js Box3 to convert
- * @returns The equivalent CAD geometry Box3d
- */
-const threeBox3dToGeBox3d = (from: THREE.Box3) => {
-  return new GeometryBox3d(from.min, from.max)
-}
-
-/**
- * Converts a CAD geometry GeometryBox3d to a CAD geometry Box2.
- *
- * @param from - The CAD geometry Box3d to convert
- * @returns The converted CAD geometry Box2
- */
-const geBox3dToGeBox2d = (from: GeometryBox3d) => {
-  return new GeometryBox2d(
-    from.min as unknown as GeometryPoint2dLike,
-    from.max as unknown as GeometryPoint2dLike
-  )
-}
-
-/**
- * Converts a CAD geometry GeometryBox3d to a Three.js Box3.
- *
- * @param from - The CAD geometry Box3d to convert
- * @returns The equivalent Three.js Box3
- */
-const geBox3dToThreeBox3d = (from: GeometryBox3d) => {
-  return new THREE.Box3(
-    from.min as unknown as THREE.Vector3,
-    from.max as unknown as THREE.Vector3
-  )
-}
 
 /**
  * Converts a Three.js Box2 to a CAD geometry GeometryBox2d.
@@ -115,12 +75,6 @@ const ThreeRendererGeometryUtil = {
   threeBo2dToGeBox2d: threeBox2dToGeBox2d,
   /** Converts CAD geometry GeometryBox2d to Three.js Box2 */
   geBox2dToThreeBox2d: geBox2dToThreeBox2d,
-  /** Converts Three.js Box3 to CAD geometry GeometryBox3d */
-  threeBox3dToGeBox3d: threeBox3dToGeBox3d,
-  /** Converts CAD geometry GeometryBox3d to Three.js Box3 */
-  geBox3dToThreeBox3d: geBox3dToThreeBox3d,
-  /** Converts CAD geometry GeometryBox3d to CAD geometry GeometryBox2d */
-  goBox3dToGeBox2d: geBox3dToGeBox2d,
   /** Converts Three.js Box3 to CAD geometry Box2d (ignores Z) */
   threeBox3dToGeBox2d: threeBox3dToGeBox2d,
   /** Converts CAD geometry GeometryBox2d to Three.js Box3 (Z=0) */
@@ -130,9 +84,6 @@ const ThreeRendererGeometryUtil = {
 export {
   threeBox2dToGeBox2d,
   geBox2dToThreeBox2d,
-  threeBox3dToGeBox3d,
-  geBox3dToThreeBox3d,
-  geBox3dToGeBox2d,
   threeBox3dToGeBox2d,
   geBox2dToThreeBox3d,
   ThreeRendererGeometryUtil

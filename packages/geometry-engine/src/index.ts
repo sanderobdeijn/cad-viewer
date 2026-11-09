@@ -29,10 +29,8 @@ export type {
 } from './geometry'
 export {
   GeometryBox2d,
-  GeometryBox3d,
   GeometryMatrix2d,
   GeometryMatrix3d,
-  GeometryPlane,
   GeometryPoint2d,
   GeometryQuaternion,
   GeometryVector2d,

@@ -1,7 +1,6 @@
 import {
   GeometryArea2d,
   GeometryBox2d,
-  GeometryBox3d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryUtil,
@@ -9,7 +8,6 @@ import {
   GeometryLoop2d,
   GeometryMatrix2d,
   GeometryMatrix3d,
-  GeometryPlane,
   GeometryPoint2d,
   GeometryPolyline2d,
   GeometryQuaternion,
@@ -412,7 +410,7 @@ describe('geometry-engine public API coverage boost', () => {
     expect(q.toJSON()).toHaveLength(4)
   })
 
-  it('covers box and plane methods', () => {
+  it('covers box methods', () => {
     const b2 = new GeometryBox2d()
     b2.set({ x: 0, y: 0 }, { x: 1, y: 1 })
       .setFromPoints([
@@ -453,102 +451,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(b2.translate({ x: 1, y: 1 })).toBeInstanceOf(GeometryBox2d)
     expect(b2.equals(b2.clone())).toBe(true)
 
-    const b3 = new GeometryBox3d()
-    b3.set({ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 })
-      .setFromArray([0, 0, 0, 2, 3, 4])
-      .setFromPoints([
-        { x: 0, y: 0, z: 0 },
-        { x: 2, y: 2, z: 2 }
-      ])
-      .setFromCenterAndSize({ x: 1, y: 1, z: 1 }, { x: 2, y: 2, z: 2 })
-    expect(b3.clone().copy(b3)).toBeInstanceOf(GeometryBox3d)
-    expect(b3.makeEmpty().isEmpty()).toBe(true)
-    b3.set({ x: 0, y: 0, z: 0 }, { x: 2, y: 2, z: 2 })
-    expect(b3.getCenter(new GeometryVector3d()).toArray()).toEqual([1, 1, 1])
-    expect(b3.getSize(new GeometryVector3d()).toArray()).toEqual([2, 2, 2])
-    expect(b3.center).toBeInstanceOf(GeometryVector3d)
-    expect(b3.size).toBeInstanceOf(GeometryVector3d)
-    expect(b3.expandByPoint({ x: 3, y: -1, z: 0 })).toBeInstanceOf(
-      GeometryBox3d
-    )
-    expect(b3.expandByVector({ x: 1, y: 1, z: 1 })).toBeInstanceOf(
-      GeometryBox3d
-    )
-    expect(b3.expandByScalar(1)).toBeInstanceOf(GeometryBox3d)
-    expect(b3.containsPoint({ x: 1, y: 1, z: 1 })).toBe(true)
-    expect(
-      b3.containsBox(
-        new GeometryBox3d({ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 })
-      )
-    ).toBe(true)
-    expect(
-      b3.getParameter({ x: 1, y: 1, z: 1 }, new GeometryVector3d())
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(
-      b3.intersectsBox(
-        new GeometryBox3d({ x: 1, y: 1, z: 1 }, { x: 4, y: 4, z: 4 })
-      )
-    ).toBe(true)
-
-    const plane = new GeometryPlane().setComponents(0, 0, 1, -1)
-    expect(b3.intersectsPlane(plane)).toBe(true)
-    expect(
-      b3.clampPoint({ x: 10, y: 10, z: 10 }, new GeometryVector3d())
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(b3.distanceToPoint({ x: 5, y: 5, z: 5 })).toBeGreaterThan(0)
-    expect(
-      b3
-        .clone()
-        .intersect(
-          new GeometryBox3d({ x: 1, y: 1, z: 1 }, { x: 2, y: 2, z: 2 })
-        )
-    ).toBeInstanceOf(GeometryBox3d)
-    expect(
-      b3
-        .clone()
-        .union(new GeometryBox3d({ x: -1, y: -1, z: -1 }, { x: 0, y: 0, z: 0 }))
-    ).toBeInstanceOf(GeometryBox3d)
-    expect(
-      b3.applyMatrix4(new GeometryMatrix3d().makeTranslation(1, 2, 3))
-    ).toBeInstanceOf(GeometryBox3d)
-    expect(b3.translate({ x: -1, y: -2, z: -3 })).toBeInstanceOf(GeometryBox3d)
-    expect(b3.equals(b3.clone())).toBe(true)
-
-    const p2 = new GeometryPlane()
-      .set({ x: 0, y: 1, z: 0 }, -2)
-      .setFromNormalAndCoplanarPoint(
-        { x: 0, y: 1, z: 0 },
-        new GeometryVector3d(0, 2, 0)
-      )
-      .setFromCoplanarPoints(
-        new GeometryVector3d(0, 0, 0),
-        new GeometryVector3d(1, 0, 0),
-        new GeometryVector3d(0, 0, 1)
-      )
-    expect(p2.copy(plane)).toBeInstanceOf(GeometryPlane)
-    expect(p2.normalize().negate()).toBeInstanceOf(GeometryPlane)
-    expect(p2.distanceToPoint({ x: 0, y: 0, z: 0 })).toBeDefined()
-    expect(
-      p2.projectPoint({ x: 1, y: 3, z: 1 }, new GeometryVector3d())
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(
-      p2.intersectsBox(
-        new GeometryBox3d({ x: -1, y: -1, z: -1 }, { x: 1, y: 1, z: 1 })
-      )
-    ).toBe(true)
-    expect(p2.coplanarPoint(new GeometryVector3d())).toBeInstanceOf(
-      GeometryVector3d
-    )
-    expect(
-      p2.applyMatrix4(
-        new GeometryMatrix3d().makeTranslation(0, 1, 0),
-        new GeometryMatrix2d()
-      )
-    ).toBeInstanceOf(GeometryPlane)
-    expect(p2.translate(new GeometryVector3d(0, 1, 0))).toBeInstanceOf(
-      GeometryPlane
-    )
-    expect(p2.equals(p2.clone())).toBe(true)
   })
 
   it('covers representative geometry class public methods', () => {
