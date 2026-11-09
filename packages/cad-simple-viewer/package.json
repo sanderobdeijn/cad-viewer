@@ -52,7 +52,7 @@
     "@mlightcad/geometry-engine": "workspace:*",
     "@mlightcad/graphic-interface": "workspace:*",
     "@mlightcad/three-renderer": "workspace:*",
-    "@mlightcad/three-viewcube": "workspace:*",
+    "@mlightcad/three-viewcube": "^0.0.9",
     "@types/lodash-es": "^4.17.12",
     "@types/rbush": "^3.0.4",
     "@types/three": "^0.186.0",
