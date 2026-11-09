@@ -1,7 +1,6 @@
-import { CommonColor, deepClone } from '@mlightcad/common'
+import { deepClone } from '@mlightcad/common'
 import {
   graphicsInterfaceForegroundColorForBackground,
-  GraphicsInterfaceLineWeight,
   graphicsInterfaceResolveSubEntityTraitsRgbFromBackground,
   GraphicsInterfaceSubEntityTraits
 } from '@mlightcad/graphic-interface'
@@ -10,9 +9,8 @@ import * as THREE from 'three'
 import { ThreeRendererCommonUtil, ThreeRendererMaterialUtil } from '../util'
 import {
   getMaterialMetadata,
-  hasByLayerBinding,
-  setMaterialMetadata,
-  ThreeRendererByLayerBindingFlags} from './ThreeRendererMaterialMetadata'
+  setMaterialMetadata
+} from './ThreeRendererMaterialMetadata'
 import { ThreeRendererStyleManagerOptions } from './ThreeRendererStyleManagerOptions'
 
 /** Diagnostic snapshot of one material cache. */
@@ -43,7 +41,6 @@ export type ThreeRendererMaterialSide = 'front' | 'back'
  * - caching
  * - key → traits storage
  * - getMaterial()
- * - updateLayerMaterial()
  * - dispose()
  *
  * Subclasses must implement:
@@ -57,7 +54,7 @@ export abstract class ThreeRendererMaterialManager<T> {
   /** Material cache indexed by key. */
   protected cache: Record<string, THREE.Material> = {}
 
-  /** Original cloned traits for each key (needed for layer updates). */
+  /** Original cloned traits for each key (needed for side variants). */
   protected keyToTraits: Record<string, GraphicsInterfaceSubEntityTraits & T> = {}
 
   /** Options shared with subclasses (viewport scale, zoom uniforms, etc.) */
@@ -90,18 +87,8 @@ export abstract class ThreeRendererMaterialManager<T> {
   /**
    * Returns (or creates) a material matching traits.
    * Subclasses provide buildKey() and createMaterialImpl().
-   *
-   * @param layerColorRgb - Optional resolved layer swatch for ByLayer traits
-   *   (e.g. MText `\C256`). When omitted, ByLayer materials fall back to white
-   *   until a later {@link updateLayerMaterial} refresh.
-   * @param layerColor - Optional full layer colour (ACI-7 / foreground tracking).
    */
-  getMaterial(
-    traits: GraphicsInterfaceSubEntityTraits,
-    options: T,
-    layerColorRgb?: number,
-    layerColor?: CommonColor
-  ): THREE.Material {
+  getMaterial(traits: GraphicsInterfaceSubEntityTraits, options: T): THREE.Material {
     const key = this.buildKey(traits, options)
 
     // cache original traits
@@ -114,125 +101,11 @@ export abstract class ThreeRendererMaterialManager<T> {
 
     // hit cache
     if (this.cache[key]) {
-      const cached = this.cache[key]
-      // First ByLayer create without a swatch leaves white fallback. When a
-      // later caller (e.g. MText `\C256`) supplies the layer RGB, paint the
-      // shared layer material in place — it is keyed by layer name, so only
-      // that layer's ByLayer glyphs are affected.
-      if (
-        traits.color.isByLayer &&
-        typeof layerColorRgb === 'number' &&
-        getMaterialMetadata(cached).isForeground !== true
-      ) {
-        const swatch = layerColor ?? new CommonColor().setRGBValue(layerColorRgb)
-        this.refreshMaterialResolvedColor(cached, { color: swatch })
-      }
-      return cached
+      return this.cache[key]
     }
 
     // otherwise create
-    return this.createMaterial(
-      key,
-      traits,
-      options,
-      undefined,
-      layerColorRgb,
-      layerColor
-    )
-  }
-
-  /**
-   * Updates all materials belonging to a given layer and whose style is
-   * partially or fully ByLayer.
-   *
-   * A material qualifies for replacement if:
-   *   metadata.layer === layerName &&
-   *   one of {isByLayerColor,isByLayerLineType,isByLayerLineWeight,isByLayerTransparency} is true
-   *
-   * For each qualifying material:
-   * 1. Rebuild merged traits (old traits + new layer-level traits)
-   * 2. Compute a NEW material key
-   * 3. When the key is unchanged (typical for ByLayer colour-only updates),
-   *    refresh the cached material colour in place and keep the same id
-   * 4. Otherwise dispose the old material, create a new one, and remap ids
-   * 5. Update cache/keyToTraits
-   * 6. Return mapping { oldMaterialId → newMaterial }
-   */
-  updateLayerMaterial(
-    layerName: string,
-    newTraits: Partial<GraphicsInterfaceSubEntityTraits>
-  ): Record<number, THREE.Material> {
-    const idMap: Record<number, THREE.Material> = {}
-
-    // iterate all cached materials and check userData
-    for (const oldKey of Object.keys(this.cache)) {
-      const oldMaterial = this.cache[oldKey]
-      const metadata = getMaterialMetadata(oldMaterial)
-      const oldTraits = this.keyToTraits[oldKey]
-      if (!oldTraits) continue
-
-      const byLayerBindings = this.resolveByLayerBindings(
-        oldTraits,
-        oldMaterial
-      )
-
-      const isTarget =
-        metadata.layer === layerName &&
-        (hasByLayerBinding(metadata) ||
-          hasByLayerBinding(byLayerBindings) ||
-          this.shouldInheritLayerColor(oldTraits, byLayerBindings, oldMaterial))
-      if (!isTarget) continue
-
-      // Step 1: merged traits (only mutate traits that are actually ByLayer)
-      const mergedTraits = this.cloneTraits(oldTraits)
-      this.applyInheritedLayerTraits(
-        mergedTraits,
-        newTraits,
-        byLayerBindings,
-        oldMaterial
-      )
-      if (newTraits.layer != null) {
-        mergedTraits.layer = newTraits.layer
-      }
-
-      // Step 2: build new key
-      const newKey = this.buildKey(mergedTraits, mergedTraits)
-
-      const oldMaterialId = oldMaterial.id
-
-      if (newKey === oldKey) {
-        if (byLayerBindings.isByLayerColor && newTraits.color) {
-          this.refreshMaterialResolvedColor(oldMaterial, newTraits)
-        }
-        this.keyToTraits[oldKey] = mergedTraits
-        idMap[oldMaterialId] = oldMaterial
-        continue
-      }
-
-      // Step 3: dispose old
-      oldMaterial.dispose()
-      delete this.cache[oldKey]
-      delete this.keyToTraits[oldKey]
-
-      // Step 4: create new material
-      const layerRgb = newTraits.color?.RGB
-      const newMaterial = this.createMaterial(
-        newKey,
-        mergedTraits,
-        mergedTraits,
-        byLayerBindings,
-        typeof layerRgb === 'number' ? layerRgb : undefined,
-        newTraits.color
-      )
-
-      // Step 5: store merged traits
-      this.keyToTraits[newKey] = mergedTraits
-
-      // Step 6: id mapping
-      idMap[oldMaterialId] = newMaterial
-    }
-
-    return idMap
+    return this.createMaterial(key, traits, options)
   }
 
   /**
@@ -280,71 +153,6 @@ export abstract class ThreeRendererMaterialManager<T> {
   }
 
   /**
-   * Returns a cached material bound to the specified effective layer.
-   *
-   * The returned material preserves visual traits and
-   * cache semantics, but future layer updates will target the effective layer instead of the
-   * original source layer.
-   *
-   * @param material - Existing cached material to bind.
-   * @param layerName - Effective layer name that should own the returned material.
-   * @returns The layer-bound cached material, or `undefined` when the input material is not owned
-   * by this manager.
-   */
-  getLayerBoundMaterial(
-    material: THREE.Material,
-    layerName: string,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ): THREE.Material | undefined {
-    const metadata = getMaterialMetadata(material)
-    const key = metadata.materialKey
-    if (!key) return undefined
-
-    const traits = this.keyToTraits[key]
-    if (!traits) return undefined
-
-    if (traits.layer === layerName && !layerTraits) {
-      return material
-    }
-
-    const remappedTraits: GraphicsInterfaceSubEntityTraits & T = {
-      ...this.cloneTraits(traits),
-      layer: layerName
-    }
-    const byLayerBindings = this.resolveByLayerBindings(traits, material)
-    this.applyInheritedLayerTraits(
-      remappedTraits,
-      layerTraits,
-      byLayerBindings,
-      material
-    )
-    const remappedKey = this.buildKey(remappedTraits, remappedTraits)
-
-    if (this.cache[remappedKey]) {
-      const cached = this.cache[remappedKey]
-      if (
-        remappedTraits.color.isByLayer &&
-        layerTraits?.color &&
-        getMaterialMetadata(cached).isByLayerColor
-      ) {
-        this.refreshMaterialResolvedColor(cached, layerTraits)
-      }
-      return cached
-    }
-
-    this.keyToTraits[remappedKey] = remappedTraits
-    const layerRgb = layerTraits?.color?.RGB
-    return this.createMaterial(
-      remappedKey,
-      remappedTraits,
-      remappedTraits,
-      byLayerBindings,
-      typeof layerRgb === 'number' ? layerRgb : undefined,
-      layerTraits?.color
-    )
-  }
-
-  /**
    * Clones render traits while preserving class-based color/transparency values.
    *
    * {@link deepClone} only copies enumerable fields, so `CommonColor` /
@@ -365,104 +173,7 @@ export abstract class ThreeRendererMaterialManager<T> {
   }
 
   /**
-   * Applies target-layer traits only to attributes that are actually ByLayer on this entity.
-   *
-   * This preserves explicit per-entity settings while resolving inherited values during
-   * layer rebinding.
-   */
-  private applyInheritedLayerTraits(
-    traits: GraphicsInterfaceSubEntityTraits & T,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>,
-    byLayerBindings?: ThreeRendererByLayerBindingFlags,
-    material?: THREE.Material
-  ) {
-    if (!layerTraits) return
-
-    const isByLayerLineType = byLayerBindings?.isByLayerLineType === true
-    const isByLayerLineWeight = byLayerBindings?.isByLayerLineWeight === true
-    const isByLayerTransparency =
-      byLayerBindings?.isByLayerTransparency === true
-
-    if (
-      this.shouldInheritLayerColor(traits, byLayerBindings, material) &&
-      layerTraits.color &&
-      !traits.color.isByLayer
-    ) {
-      traits.color = layerTraits.color.clone()
-    }
-
-    if (isByLayerLineType && layerTraits.lineType) {
-      traits.lineType = deepClone(layerTraits.lineType)
-    }
-
-    if (isByLayerLineWeight && layerTraits.lineWeight != null) {
-      traits.lineWeight = layerTraits.lineWeight
-    }
-
-    if (isByLayerTransparency && layerTraits.transparency) {
-      traits.transparency = deepClone(layerTraits.transparency)
-    }
-  }
-
-  /**
-   * Returns whether a cached material should follow live layer colour updates.
-   */
-  protected shouldInheritLayerColor(
-    traits: GraphicsInterfaceSubEntityTraits,
-    byLayerBindings?: ThreeRendererByLayerBindingFlags,
-    material?: THREE.Material
-  ): boolean {
-    const metadata = material ? getMaterialMetadata(material) : undefined
-
-    if (byLayerBindings?.isByLayerColor === true) {
-      return true
-    }
-    if (traits.color?.isByLayer === true) {
-      return true
-    }
-    if (metadata?.isByLayerColor === true) {
-      return true
-    }
-    if (metadata?.isByLayerColor === false) {
-      return !!traits.color?.isByLayer
-    }
-    if (metadata?.isForeground === true) {
-      return false
-    }
-    return this.hasByLayerKeyTraits(traits)
-  }
-
-  /**
-   * Resolves ByLayer binding flags from explicit metadata first, then falls back
-   * to symbolic traits when metadata is unavailable.
-   */
-  private resolveByLayerBindings(
-    traits: GraphicsInterfaceSubEntityTraits,
-    material?: THREE.Material
-  ): ThreeRendererByLayerBindingFlags {
-    const metadata = material ? getMaterialMetadata(material) : undefined
-    const inferredTransparencyByLayer =
-      (traits.transparency as Partial<{ isByLayer: boolean }>)?.isByLayer ===
-      true
-
-    return {
-      isByLayerColor:
-        metadata?.isByLayerColor === true ||
-        (traits.color.isByLayer === true && metadata?.isForeground !== true),
-      isByLayerLineType:
-        metadata?.isByLayerLineType ?? traits.lineType.type === 'ByLayer',
-      isByLayerLineWeight:
-        metadata?.isByLayerLineWeight ??
-        traits.lineWeight === GraphicsInterfaceLineWeight.ByLayer,
-      isByLayerTransparency:
-        metadata?.isByLayerTransparency ?? inferredTransparencyByLayer
-    }
-  }
-
-  /**
    * Creates a THREE.js material and stores metadata in userData:
-   *   - layer
-   *   - isByLayerColor/isByLayerLineType/isByLayerLineWeight/isByLayerTransparency
    *   - isForeground      (inverts with layout background when tracked)
    *   - drawOrder         (batch/render-order tier for same-plane meshes)
    *   - materialKey (cache key, used by getBackSideVariant for reverse lookup)
@@ -470,23 +181,10 @@ export abstract class ThreeRendererMaterialManager<T> {
   protected createMaterial(
     key: string,
     traits: GraphicsInterfaceSubEntityTraits,
-    options: T,
-    byLayerBindings?: ThreeRendererByLayerBindingFlags,
-    layerColorRgb?: number,
-    layerColor?: CommonColor
+    options: T
   ): THREE.Material {
-    const material = this.createMaterialImpl(traits, options, layerColorRgb)
-    // A ByLayer material on an ACI-7 layer must follow the foreground too:
-    // its resolved layer RGB is the theme-dependent white/black, not an
-    // absolute colour (#464). Re-consult shouldTrackForeground with the
-    // layer colour substituted so ByLayer-on-ACI-7 obeys the same
-    // subclass rules (e.g. gradient/empty-fill exclusions) as explicit
-    // ACI-7.
-    const isForeground =
-      this.shouldTrackForeground(traits, options) ||
-      (traits.color.isByLayer &&
-        layerColor?.isForeground === true &&
-        this.shouldTrackForeground({ ...traits, color: layerColor }, options))
+    const material = this.createMaterialImpl(traits, options)
+    const isForeground = this.shouldTrackForeground(traits, options)
 
     // Foreground-follow materials (typically ACI 7 lines/text) must be
     // initialized from the current layout background, not from trait RGB,
@@ -501,16 +199,8 @@ export abstract class ThreeRendererMaterialManager<T> {
       )
     }
 
-    const resolvedByLayerBindings =
-      byLayerBindings ?? this.resolveByLayerBindings(traits)
-
-    // Attach metadata required for layer updates and side-variant lookups
+    // Attach metadata required for foreground repaints and side-variant lookups
     setMaterialMetadata(material, {
-      layer: traits.layer,
-      isByLayerColor: resolvedByLayerBindings.isByLayerColor,
-      isByLayerLineType: resolvedByLayerBindings.isByLayerLineType,
-      isByLayerLineWeight: resolvedByLayerBindings.isByLayerLineWeight,
-      isByLayerTransparency: resolvedByLayerBindings.isByLayerTransparency,
       isForeground,
       drawOrder: traits.drawOrder ?? 0,
       materialKey: key
@@ -518,16 +208,6 @@ export abstract class ThreeRendererMaterialManager<T> {
 
     this.cache[key] = material
     return material
-  }
-
-  /**
-   * Returns whether traits should be cached as layer-scoped instead of entity-scoped.
-   *
-   * This flag is used for material-key partitioning only; userData stores granular
-   * ByLayer flags per trait.
-   */
-  protected hasByLayerKeyTraits(traits: GraphicsInterfaceSubEntityTraits): boolean {
-    return traits.color.isByLayer || traits.lineType.type === 'ByLayer'
   }
 
   /**
@@ -572,62 +252,10 @@ export abstract class ThreeRendererMaterialManager<T> {
   }
 
   /**
-   * Resolves the RGB written into a Three.js material.
-   *
-   * Cache keys stay symbolic (`color.toString()`), but materials still carry
-   * the current layer-table swatch when it is available.
-   */
-  protected resolveMaterialRgb(
-    traits: GraphicsInterfaceSubEntityTraits,
-    layerColorRgb?: number
-  ): number {
-    if (traits.color.isByLayer && typeof layerColorRgb === 'number') {
-      return layerColorRgb
-    }
-    return this.resolveTraitsRgb(traits)
-  }
-
-  /**
    * Builds the colour portion of a material cache key from symbolic CAD colour.
    */
   protected buildKeyColorSegment(traits: GraphicsInterfaceSubEntityTraits): string {
     return traits.color.toString()
-  }
-
-  /**
-   * Repaints one cached material from resolved layer-table colour.
-   *
-   * An ACI-7 (foreground) layer colour must not be applied as its raw RGB —
-   * that bakes white onto a light canvas (#464). Resolve it against the
-   * current background instead, and keep `isForeground` metadata in sync so
-   * `changeForeground` flips the material on subsequent background switches.
-   */
-  protected refreshMaterialResolvedColor(
-    material: THREE.Material,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>
-  ): void {
-    const color = layerTraits.color
-    if (!color) {
-      return
-    }
-    if (color.isForeground) {
-      setMaterialMetadata(material, { isForeground: true })
-      ThreeRendererMaterialUtil.setMaterialColor(
-        material,
-        new THREE.Color(
-          graphicsInterfaceForegroundColorForBackground(this.options.currentBackgroundColor)
-        )
-      )
-      return
-    }
-    const rgb = color.RGB
-    if (typeof rgb !== 'number') {
-      return
-    }
-    if (getMaterialMetadata(material).isForeground === true) {
-      setMaterialMetadata(material, { isForeground: false })
-    }
-    ThreeRendererMaterialUtil.setMaterialColor(material, new THREE.Color(rgb))
   }
 
   /** Subclass must build stable key. */
@@ -636,7 +264,6 @@ export abstract class ThreeRendererMaterialManager<T> {
   /** Subclass must create material. */
   protected abstract createMaterialImpl(
     traits: GraphicsInterfaceSubEntityTraits,
-    options: T,
-    layerColorRgb?: number
+    options: T
   ): THREE.Material
 }

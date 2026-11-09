@@ -53,7 +53,6 @@ jest.mock('rbush', () => {
   }
 })
 
-import { CommonColor } from '@mlightcad/common'
 import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import type { ThreeRendererEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
@@ -109,22 +108,11 @@ jest.mock('@mlightcad/three-renderer', () => {
 import { isEffectiveSpatialQueryHit } from '../src/editor/view/EditorSpatialQueryResult'
 import { ThreeRendererLayout } from '../src/view/ThreeRendererLayout'
 
-function createLayerInfo(name = '0') {
-  return {
-    name,
-    isFrozen: false,
-    isOff: false,
-    color: new CommonColor()
-  }
-}
-
 function createEntity(
-  objectId: string,
-  layerName = '0'
+  objectId: string
 ): ThreeRendererEntity & { wcsBbox: THREE.Box3 } {
   return {
     objectId,
-    layerName,
     ownerId: 'layout-1',
     userData: {},
     wcsBbox: new THREE.Box3(
@@ -150,7 +138,6 @@ describe('ThreeRendererLayout bounding box', () => {
 
   it('registers spatial index for direct line entities', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     const material = new THREE.LineBasicMaterial()
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute(
@@ -161,7 +148,6 @@ describe('ThreeRendererLayout bounding box', () => {
     const added = layout.addDirectEntity({
       objectId: 'direct-line-1',
       ownerId: 'layout-1',
-      layerName: '0',
       visible: true,
       kind: 'lineBasic',
       geometry,
@@ -187,24 +173,8 @@ describe('ThreeRendererLayout bounding box', () => {
     material.dispose()
   })
 
-  it('recomputes layout box when a layer is turned off', () => {
-    const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
-    layout.addEntity(createEntity('line-1'))
-
-    layout.box
-    expect(mockComputeBoundingBox).toHaveBeenCalledTimes(1)
-
-    layout.updateLayer({ ...createLayerInfo(), isOff: true })
-
-    mockComputeBoundingBox.mockClear()
-    expect(layout.box.isEmpty()).toBe(true)
-    expect(mockComputeBoundingBox).not.toHaveBeenCalled()
-  })
-
   it('recomputes layout box when entity visibility changes', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     layout.addEntity(createEntity('line-1'))
 
     layout.box
@@ -218,7 +188,6 @@ describe('ThreeRendererLayout bounding box', () => {
 
   it('tracks extendBbox exclusions for zoom framing', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     const entity = createEntity('ray-1')
 
     layout.addEntity(entity, false)
@@ -232,7 +201,6 @@ describe('ThreeRendererLayout bounding box', () => {
 
   it('recomputes layout box when an entity is removed', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     layout.addEntity(createEntity('line-1'))
 
     layout.box
@@ -254,7 +222,6 @@ describe('ThreeRendererLayout bounding box', () => {
 
   it('does not recompute layout box when entity removal fails', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     layout.addEntity(createEntity('line-1'))
 
     layout.box
@@ -269,7 +236,6 @@ describe('ThreeRendererLayout bounding box', () => {
 
   it('recomputes layout box when an entity is updated', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     layout.addEntity(createEntity('line-1'))
 
     layout.box
@@ -290,9 +256,18 @@ describe('ThreeRendererLayout bounding box', () => {
     expect(mockAddEntity).toHaveBeenCalled()
   })
 
+  it('adds a newly visible entity on update without a prior remove', () => {
+    const layout = new ThreeRendererLayout()
+    const entity = createEntity('line-1')
+    entity.visible = true
+
+    expect(layout.updateEntity(entity)).toBe(true)
+    expect(mockRemoveEntity).toHaveBeenCalledWith('line-1')
+    expect(mockAddEntity).toHaveBeenCalledWith(entity)
+  })
+
   it('does not recompute layout box when entity update fails', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
     layout.addEntity(createEntity('line-1'))
 
     layout.box
@@ -327,7 +302,6 @@ describe('ThreeRendererLayout spatial index', () => {
 
   it('indexes group root bbox from child-box union when aggregate wcsBbox is stale', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
 
     const entity = createEntity('GROUP-1')
     entity.wcsBbox = new THREE.Box3(
@@ -363,7 +337,6 @@ describe('ThreeRendererLayout spatial index', () => {
 
   it('does not window-select a group when only part of its geometry fits the pick box', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
 
     const entity = createEntity('GROUP-2')
     entity.wcsBbox = new THREE.Box3(
@@ -407,7 +380,6 @@ describe('ThreeRendererLayout spatial index', () => {
 
   it('crossing-selects a group when child geometry intersects the pick box', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
 
     const entity = createEntity('GROUP-cross')
     entity.wcsBbox = new THREE.Box3(
@@ -442,7 +414,6 @@ describe('ThreeRendererLayout spatial index', () => {
 
   it('window-selects a group when the child union fits entirely inside the pick box', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
 
     const entity = createEntity('GROUP-window')
     entity.wcsBbox = new THREE.Box3(
@@ -477,7 +448,6 @@ describe('ThreeRendererLayout spatial index', () => {
 
   it('refreshes point spatial-index boxes after PDSIZE rerender', () => {
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo())
 
     const point = createEntity('point-1')
     point.wcsBbox = new THREE.Box3(
@@ -521,8 +491,7 @@ describe('ThreeRendererLayout entity preview helpers', () => {
 
   it('canCreateEntityPreview requires every entity when requireAllEntities is true', () => {
     const layout = new ThreeRendererLayout()
-    const group = layout.addLayer(createLayerInfo())
-      .internalObject as unknown as {
+    const group = layout.internalObject.children[0] as unknown as {
       hasEntity: jest.Mock
       computeBoundingBox: jest.Mock
     }
@@ -561,8 +530,7 @@ describe('ThreeRendererLayout entity preview helpers', () => {
 
   it('findPreviewableEntityIds returns only ids with batch bounds in this layout', () => {
     const layout = new ThreeRendererLayout()
-    const group = layout.addLayer(createLayerInfo())
-      .internalObject as unknown as {
+    const group = layout.internalObject.children[0] as unknown as {
       hasEntity: jest.Mock
       computeBoundingBox: jest.Mock
     }

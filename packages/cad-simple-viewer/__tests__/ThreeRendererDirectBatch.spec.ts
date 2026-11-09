@@ -108,7 +108,6 @@ describe('ThreeRendererDirectBatch eligibility', () => {
       if (!meta) return
       expect(meta.objectId).toBe(line.objectId)
       expect(meta.ownerId).toBe(line.ownerId)
-      expect(meta.layerName).toBe(line.layer)
       expect(meta.kind).toBe('lineBasic')
       expect(meta.wcsBbox.min.x).toBeCloseTo(0)
       expect(meta.wcsBbox.max.x).toBeCloseTo(10)

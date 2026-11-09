@@ -423,7 +423,7 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
     this._drawOrderZ = 0
   }
 
-  /** Shared style/material cache used by entity conversion and layer updates. */
+  /** Shared style/material cache used by entity conversion. */
   get styleManager() {
     return this._context.styleManager
   }
@@ -496,28 +496,6 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
 
   set forceShowLineWeight(value: boolean) {
     this._context.styleManager.forceShowLineWeight = value
-  }
-
-  updateLayerMaterial(
-    layerName: string,
-    newTraits: Partial<GraphicsInterfaceSubEntityTraits>
-  ): Record<number, THREE.Material> {
-    return this._context.styleManager.updateLayerMaterial(layerName, newTraits)
-  }
-
-  /**
-   * Returns one cached material bound to an effective layer while preserving symbolic traits.
-   */
-  getLayerBoundMaterial(
-    material: THREE.Material,
-    layerName: string,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ) {
-    return this._context.styleManager.getLayerBoundMaterial(
-      material,
-      layerName,
-      layerTraits
-    )
   }
 
   /**
@@ -747,7 +725,7 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
         return this.createDirectCapturePlaceholder()
       }
       if (this.tryCaptureDirectPayload({ kind: 'lineStrip', points })) {
-        // Placeholder so worldDraw can attach objectId / layer metadata.
+        // Placeholder so worldDraw can attach objectId metadata.
         return this.createDirectCapturePlaceholder()
       }
       return this.createDirectCapturePlaceholder()

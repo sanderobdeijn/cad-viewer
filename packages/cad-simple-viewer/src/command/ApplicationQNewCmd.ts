@@ -7,7 +7,6 @@ import { EditorCommand } from '../editor'
  * This command uses {@link ApplicationDocManager.newDocument} to create a new document
  * from the default ISO template (`acadiso.dxf`), which provides:
  * - Standard ISO drawing settings
- * - Predefined layers and styles
  * - Default drawing setup
  *
  * This is equivalent to "Quick New" functionality in traditional CAD applications,

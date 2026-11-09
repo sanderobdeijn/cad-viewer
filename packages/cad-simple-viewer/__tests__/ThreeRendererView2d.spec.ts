@@ -53,7 +53,6 @@ jest.mock('rbush', () => {
   }
 })
 
-import { CommonColor } from '@mlightcad/common'
 import { GeometryBox2d } from '@mlightcad/geometry-engine'
 import type { ThreeRendererEntity } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
@@ -61,18 +60,8 @@ import * as THREE from 'three'
 import { unionGroupWcsChildBoxes } from '../src/view/ThreeRendererGroupWcsBboxAssert'
 import { ThreeRendererLayout } from '../src/view/ThreeRendererLayout'
 
-function createLayerInfo(name: string) {
-  return {
-    name,
-    isFrozen: false,
-    isOff: false,
-    color: new CommonColor()
-  }
-}
-
 function createGroupEntity(
   objectId: string,
-  layerName: string,
   wcsBbox: THREE.Box3,
   spatialIndexChildBoxes: Array<{
     minX: number
@@ -91,7 +80,6 @@ function createGroupEntity(
   Object.assign(group, {
     objectId,
     ownerId: 'layout-1',
-    layerName,
     wcsBbox
   })
   return group
@@ -134,13 +122,11 @@ describe('group WCS spatial index registration', () => {
 
     const entity = createGroupEntity(
       'GROUP-1',
-      'L2',
       groupWcsBbox,
       spatialIndexChildBoxes
     )
 
     const layout = new ThreeRendererLayout()
-    layout.addLayer(createLayerInfo('L2'))
     layout.addEntity(entity)
 
     const queryBox = new GeometryBox2d()

@@ -59,7 +59,6 @@ export default {
     ltype: 'Parsing line types ...',
     style: 'Parsing text syltes ...',
     dimstyle: 'Parsing dimension styles ...',
-    layer: 'Parsing layers ...',
     vport: 'Parsing viewports ...',
     blockrecord: 'Parsing block record ...',
     header: 'Parsing header ...',

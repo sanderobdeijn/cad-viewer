@@ -10,9 +10,7 @@ import {
 } from '@mlightcad/three-renderer'
 import * as THREE from 'three'
 
-import { EditorLayerInfo } from '../editor'
 import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
-import { ThreeRendererLayer } from './ThreeRendererLayer'
 import {
   type ThreeRendererEntityPreviewRootOptions,
   ThreeRendererLayout,
@@ -54,13 +52,11 @@ export interface ThreeRendererSceneStats {
  * ```
  * Scene
  * └── Layout (ThreeRendererLayout) - Paper space or model space
- *     └── Layer (ThreeRendererLayer) - Drawing layers for organization
- *         └── Entity (ThreeRendererEntity) - Individual CAD entities (lines, arcs, etc.)
+ *     └── Entity (ThreeRendererEntity) - Individual CAD entities (lines, arcs, etc.)
  * ```
  *
  * ## Key Responsibilities
  * - **Layout Management**: Handles multiple layouts (model space and paper spaces)
- * - **Layer Organization**: Manages layer visibility and entity grouping
  * - **Entity Rendering**: Provides access to all renderable CAD entities
  * - **Spatial Queries**: Calculates bounding boxes and spatial relationships
  * - **Three.js Integration**: Maintains the underlying Three.js scene
@@ -75,9 +71,9 @@ export interface ThreeRendererSceneStats {
  * // Set up model space
  * scene.modelSpaceBtrId = modelSpaceId;
  *
- * // Add entities to layers
+ * // Add entities
  * const entity = new ThreeRendererLine(...);
- * scene.addEntity(entity, layerName);
+ * scene.addEntity(entity);
  *
  * // Get all visible entities for rendering
  * const entities = scene.getAllEntities();
@@ -90,7 +86,6 @@ export class ThreeRendererScene {
   /** The underlying Three.js scene object */
   private _scene: THREE.Scene
   /** Map of layout ID to layout object */
-  private _layers: Map<string, EditorLayerInfo>
   /** Map of layout ID to layout object */
   private _layouts: Map<string, ThreeRendererLayout>
   /** ID of the currently active layout */
@@ -119,7 +114,6 @@ export class ThreeRendererScene {
     this._transientManager = new ThreeRendererTransientManager(this._scene)
     this._htmlTransientManager = new ThreeRendererHtmlTransientManager(this._scene)
     this._previewOverlayManager = new ThreeRendererPreviewOverlayManager(this._scene)
-    this._layers = new Map()
     this._layouts = new Map()
     this._activeLayoutBtrId = ''
     this._modelSpaceBtrId = ''
@@ -141,13 +135,6 @@ export class ThreeRendererScene {
    */
   get htmlTransientManager() {
     return this._htmlTransientManager
-  }
-
-  /**
-   * The layers in this scene
-   */
-  get layers() {
-    return this._layers
   }
 
   /**
@@ -299,10 +286,6 @@ export class ThreeRendererScene {
     this._layouts.set(ownerId, layout)
     this._scene.add(layout.internalObject)
     layout.visible = ownerId == this._activeLayoutBtrId
-
-    this._layers.forEach(layer => {
-      layout.addLayer(layer)
-    })
     return layout
   }
 
@@ -316,7 +299,6 @@ export class ThreeRendererScene {
       layout.clear()
     })
     this._layouts.clear()
-    this._layers.clear()
     this._transientManager.clear()
     this._htmlTransientManager.clear()
     this._previewOverlayManager.clear()
@@ -396,44 +378,6 @@ export class ThreeRendererScene {
   ) {
     const activeLayout = this.activeLayout
     return activeLayout ? activeLayout.search(box, options) : []
-  }
-
-  addLayer(layer: EditorLayerInfo) {
-    const updatedLayers: ThreeRendererLayer[] = []
-    this._layers.set(layer.name, layer)
-    this._layouts.forEach(layout => {
-      const updatedLayer = layout.addLayer(layer)
-      if (updatedLayer) updatedLayers.push(updatedLayer)
-    })
-    return updatedLayers
-  }
-
-  updateLayer(layer: EditorLayerInfo) {
-    const updatedLayers: ThreeRendererLayer[] = []
-    this._layers.set(layer.name, layer)
-    this._layouts.forEach(layout => {
-      const updatedLayer = layout.updateLayer(layer)
-      if (updatedLayer) updatedLayers.push(updatedLayer)
-    })
-    return updatedLayers
-  }
-
-  /**
-   * Invokes a callback for every scene layer group with the given name across layouts.
-   *
-   * @param layerName - Layer name shared by each layout's {@link ThreeRendererLayer} bucket.
-   * @param fn - Callback invoked with the scene layer and owning layout.
-   */
-  forEachSceneLayer(
-    layerName: string,
-    fn: (sceneLayer: ThreeRendererLayer, layout: ThreeRendererLayout) => void
-  ): void {
-    this._layouts.forEach(layout => {
-      const sceneLayer = layout.getLayer(layerName)
-      if (sceneLayer) {
-        fn(sceneLayer, layout)
-      }
-    })
   }
 
   /**

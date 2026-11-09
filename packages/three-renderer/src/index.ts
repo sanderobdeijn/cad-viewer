@@ -30,9 +30,6 @@ export { ThreeRendererMatrixUtil } from './util/ThreeRendererMatrixUtil'
 export {
   getSceneDrawableUserData,
   markHighlightOverlayGroup,
-  patchDrawableMaterialFromCache,
-  resolveCachedMaterialRemap,
-  syncStyleMaterialIdFromMaterials,
   type ThreeRendererHighlightOverlayGroup,
   type ThreeRendererHighlightOverlayGroupUserData
 } from './util/ThreeRendererObjectUserData'

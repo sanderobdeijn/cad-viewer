@@ -8,7 +8,7 @@ import type { ThreeRendererScene } from './ThreeRendererScene'
  * showing a different document.
  */
 export interface ThreeRendererViewSessionState {
-  /** Scene graph for this document (layouts, layers, HTML transients). */
+  /** Scene graph for this document (layouts, HTML transients). */
   scene: ThreeRendererScene
   /** Per-layout cameras for this document. */
   layoutViewManager: ThreeRendererLayoutViewManager

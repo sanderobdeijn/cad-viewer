@@ -584,19 +584,6 @@ export class UIToolbar {
   }
 
   /**
-   * Returns the layer toolbar button, expanding a collapsed toolbar first.
-   */
-  getLayerButtonAnchor(): HTMLElement | undefined {
-    if (this.options.collapsible && this.collapsed) {
-      this.setCollapsed(false)
-    }
-    return (
-      this.root.querySelector<HTMLElement>('[data-toolbar-item-id="layer"]') ??
-      undefined
-    )
-  }
-
-  /**
    * Sets collapsed state without toggling.
    *
    * @param collapsed - Target collapsed state.

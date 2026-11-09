@@ -18,7 +18,7 @@ import {
 
 /**
  * A two-level (hierarchical) spatial index designed for complex CAD
- * scene structures such as groups, layers, or nested entities.
+ * scene structures such as groups or nested entities.
  *
  * The index consists of:
  *

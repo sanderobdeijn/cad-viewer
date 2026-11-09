@@ -54,10 +54,7 @@ import {
   editorNeedsCrossingGeometryRefine
 } from '../editor/view/EditorSelectionBoxIntersect'
 import { isEffectiveSpatialQueryHit } from '../editor/view/EditorSpatialQueryResult'
-import {
-  APPLICATION_DEFAULT_LAYER,
-  APPLICATION_MODEL_SPACE_ID
-} from '../model/ApplicationItemDrawable'
+import { APPLICATION_MODEL_SPACE_ID } from '../model/ApplicationItemDrawable'
 import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
 import { ThreeRendererGeometryUtil } from '../util'
 import {
@@ -72,10 +69,8 @@ import {
   hasPendingActiveOwner
 } from './ThreeRendererConvertQueue'
 import { tryBuildDirectEntityMeta } from './ThreeRendererDirectBatch'
-import { ThreeRendererEntityDisplayController } from './ThreeRendererEntityDisplayController'
 import { unionGroupWcsChildBoxes } from './ThreeRendererGroupWcsBboxAssert'
 import { computeIntelligentExtentsAsync } from './ThreeRendererIntelligentExtents'
-import { ThreeRendererLayerAppearanceController } from './ThreeRendererLayerAppearanceController'
 import { ThreeRendererLayoutView } from './ThreeRendererLayoutView'
 import { ThreeRendererLayoutViewManager } from './ThreeRendererLayoutViewManager'
 import { sortPickResults } from './ThreeRendererPickResultUtil'
@@ -115,7 +110,7 @@ export const DEFAULT_VIEW_2D_OPTIONS: ThreeRendererView2dOptions = {
  * This class extends {@link EditorBaseView} and provides functionality for:
  * - Rendering 2D CAD drawings with Three.js WebGL renderer
  * - Handling user interactions (pan, zoom, select)
- * - Managing layouts, layers, and entities
+ * - Managing layouts and entities
  * - Supporting various CAD file formats (DWG, DXF)
  *
  * @example
@@ -146,7 +141,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   private _rafId: number | null = null
   /** Manager for layout views and viewport handling */
   private _layoutViewManager: ThreeRendererLayoutViewManager
-  /** The 3D scene containing all CAD entities organized by layouts and layers */
+  /** The 3D scene containing all CAD entities organized by layouts */
   private _scene: ThreeRendererScene
   /** Flag indicating if the WebGL scene needs to be re-rendered */
   private _isDirty: boolean
@@ -199,19 +194,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   private _externallyFramedLayouts: Set<string> = new Set()
   /** Progressive camera framing while entities batch-convert at document open. */
   private readonly _progressiveOpenFit: ThreeRendererProgressiveOpenFitController
-  /** Entity display policy for layer-aware conversion skipping. */
-  private readonly _entityDisplay: ThreeRendererEntityDisplayController
-  /** Layer appearance sync for style-table changes and text refresh. */
-  private _layerAppearance: ThreeRendererLayerAppearanceController
-  /**
-   * Layer names with an in-flight {@link convertMissingEntitiesOnLayer} pass.
-   *
-   * {@link updateLayer} triggers that conversion fire-and-forget when a layer
-   * becomes visible again. Rapid or repeated layer-on events for the same name
-   * would otherwise start parallel {@link batchConvert} runs over the same
-   * pending entities. `hasEntity` prevents duplicate scene entries, but not the
-   * wasted conversion work — this set skips re-entry until the current pass ends.
-   */
   /**
    * Object ids claimed by an in-flight interactive {@link batchConvert}
    * that have not yet called {@link ThreeRendererScene.addEntity}. Without
@@ -231,11 +213,6 @@ export class ThreeRendererView2d extends EditorBaseView {
    * geometry paints incrementally while the open overlay is still visible.
    */
   private _progressiveRendering = false
-  /**
-   * When true, open-time convert includes off/frozen-layer entities so HTML
-   * export does not need a second convert pass for those entities.
-   */
-  private _convertInvisibleLayers = false
   /**
    * When false, {@link batchConvert} skips cooperative setTimeout yields.
    * Headless CLI sets this false; interactive viewers leave it true.
@@ -424,7 +401,7 @@ export class ThreeRendererView2d extends EditorBaseView {
     renderer.setSize(this.width, this.height)
 
     this._renderer = new ThreeRendererRenderer(renderer)
-    // Shared across all layer batched groups so later entities occlude
+    // Shared across all batched groups so later entities occlude
     // earlier linework via depth, matching AutoCAD draw order.
     setAcTrDrawOrderZAllocator(() => this._renderer.allocateDrawOrderZ())
     // Text lays out asynchronously; repaint once a label is ready to draw.
@@ -434,10 +411,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     ThreeRendererText.events.synced.addEventListener(this._onTextSynced)
 
     this._scene = this.createScene()
-    this._layerAppearance = new ThreeRendererLayerAppearanceController(
-      this._scene,
-      this._renderer
-    )
     // Initialize background color through setter to keep renderer/cursor in sync.
     this.backgroundColor =
       mergedOptions.background ?? GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND
@@ -715,9 +688,6 @@ export class ThreeRendererView2d extends EditorBaseView {
         this._isDirty = true
       }
     )
-    this._entityDisplay = new ThreeRendererEntityDisplayController(layerName =>
-      layerName === APPLICATION_DEFAULT_LAYER.name ? APPLICATION_DEFAULT_LAYER : undefined
-    )
     this.initialize()
     this.onWindowResize()
     this._isDirty = true
@@ -898,16 +868,6 @@ export class ThreeRendererView2d extends EditorBaseView {
   set progressiveRendering(value: boolean) {
     this._progressiveRendering = value
     this.resetProgressiveOpenStats()
-  }
-
-  /**
-   * When true, open-time convert includes off/frozen-layer entities.
-   */
-  get convertInvisibleLayers() {
-    return this._convertInvisibleLayers
-  }
-  set convertInvisibleLayers(value: boolean) {
-    this._convertInvisibleLayers = value
   }
 
   /**
@@ -1098,7 +1058,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._scene.repaintForegroundMaterials(
       graphicsInterfaceForegroundColorForBackground(value)
     )
-    this.resyncForegroundLayersForBackground()
     this.applyViewClearColor(value)
   }
 
@@ -1109,25 +1068,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._renderer.setClearColor(value)
     this.editor.syncCursorBackground(value)
     this._isDirty = true
-  }
-
-  /**
-   * Rebuilds byLayer materials on ACI-7 (foreground) layers after a canvas
-   * background change.
-   *
-   * `ThreeRendererBatchedGroup.addEntity` flattens entities into cloned
-   * drawable subtrees at add time, so byLayer drawables on an ACI-7 layer
-   * keep their build-time colour (white on a white canvas, #464) unless the
-   * layer is resynced. Entity-level ACI-7 materials
-   * are foreground-tracked and repainted by the style manager, but byLayer
-   * materials on an ACI-7 layer were created before the manager knew the
-   * layer colour and are not. Re-running the live layer sync — the same path
-   * a layer-table colour edit uses, which the #464 workaround exploited —
-   * rebuilds them against the background set just above, with foreground
-   * tracking attached for subsequent switches.
-   */
-  private resyncForegroundLayersForBackground() {
-    this._layerAppearance.syncFromLiveRecord(APPLICATION_DEFAULT_LAYER.name)
   }
 
   /**
@@ -1479,11 +1419,9 @@ export class ThreeRendererView2d extends EditorBaseView {
   }
 
   /**
-   * Adds model space and the one layer that items are drawn on, if missing.
+   * Adds model space, the one layout that items are drawn in, if missing.
    */
   addModelSpace() {
-    this._scene.addLayer(APPLICATION_DEFAULT_LAYER)
-    this._layerAppearance.syncFromLiveRecord(APPLICATION_DEFAULT_LAYER.name)
     this.addLayout(APPLICATION_MODEL_SPACE_ID)
   }
 
@@ -1862,7 +1800,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._initializedLayouts = state.initializedLayouts
     this._externallyFramedLayouts = state.externallyFramedLayouts
     this._loadingLayouts = state.loadingLayouts
-    this.rebindLayerAppearance()
     this._layoutViewManager.resize(this.width, this.height)
     this.selectionSet.clear()
     if (state.selectionIds.length > 0) {
@@ -1889,7 +1826,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     this._initializedLayouts = new Set()
     this._externallyFramedLayouts = new Set()
     this._loadingLayouts = new Set()
-    this.rebindLayerAppearance()
     this.selectionSet.clear()
     this._isDirty = true
     return parked
@@ -1907,16 +1843,6 @@ export class ThreeRendererView2d extends EditorBaseView {
     state.externallyFramedLayouts.clear()
     state.loadingLayouts.clear()
     state.selectionIds = []
-  }
-
-  /**
-   * Recreates the layer-appearance controller after the scene is swapped.
-   */
-  private rebindLayerAppearance() {
-    this._layerAppearance = new ThreeRendererLayerAppearanceController(
-      this._scene,
-      this._renderer
-    )
   }
 
   /**
@@ -2434,11 +2360,7 @@ export class ThreeRendererView2d extends EditorBaseView {
         if (epoch !== this._convertEpoch) {
           continue
         }
-        const shouldConvert =
-          options.forExport || this._convertInvisibleLayers
-            ? this._entityDisplay.shouldConvertForExport(entity)
-            : this._entityDisplay.shouldConvert(entity)
-        if (!shouldConvert) {
+        if (!entity.visibility) {
           continue
         }
 
@@ -2511,8 +2433,7 @@ export class ThreeRendererView2d extends EditorBaseView {
         if (threeEntity) {
           threeEntity.objectId = entity.objectId
           threeEntity.ownerId = entity.ownerId
-          threeEntity.layerName = entity.layer
-          threeEntity.visible = entity.visibility !== false
+          threeEntity.visible = true
           if (
             objectId &&
             (this._entityConvertGeneration.get(objectId) ?? 0) !== convertGen

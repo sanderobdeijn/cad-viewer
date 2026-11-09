@@ -24,21 +24,15 @@ export class ThreeRendererPointMaterialManager extends ThreeRendererMaterialMana
     const size = options.size ?? 1
     const drawOrderSuffix = this.buildDrawOrderSuffix(traits)
     const colorKey = this.buildKeyColorSegment(traits)
-    return `${traits.layer}_${colorKey}_${size}${drawOrderSuffix}`
-  }
-
-  /** Returns true if color is ByLayer. */
-  protected hasByLayerKeyTraits(traits: GraphicsInterfaceSubEntityTraits): boolean {
-    return traits.color.isByLayer
+    return `${colorKey}_${size}${drawOrderSuffix}`
   }
 
   protected createMaterialImpl(
     traits: GraphicsInterfaceSubEntityTraits,
-    options: ThreeRendererPointMaterialOptions = {},
-    layerColorRgb?: number
+    options: ThreeRendererPointMaterialOptions = {}
   ): THREE.Material {
     return new THREE.PointsMaterial({
-      color: this.resolveMaterialRgb(traits, layerColorRgb),
+      color: this.resolveTraitsRgb(traits),
       size: options.size
     })
   }

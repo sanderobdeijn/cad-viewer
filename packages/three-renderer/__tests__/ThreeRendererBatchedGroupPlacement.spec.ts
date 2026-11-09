@@ -17,8 +17,7 @@ function createLine(
   objectId: string,
   start: { x: number; y: number },
   end: { x: number; y: number },
-  context: ThreeRendererRenderContext,
-  layerName = '0'
+  context: ThreeRendererRenderContext
 ) {
   const line = new ThreeRendererLine(
     [
@@ -30,8 +29,6 @@ function createLine(
     false
   )
   line.objectId = objectId
-  line.layerName = layerName
-  line.userData.layerName = layerName
   return line
 }
 
@@ -70,7 +67,6 @@ describe('ThreeRendererBatchedGroup preview subset', () => {
     group.matrixAutoUpdate = false
     group.updateMatrixWorld(true)
     group.objectId = GROUP_ID
-    group.layerName = '图框层'
     group.visible = true
 
     const batchGroup = new ThreeRendererBatchedGroup()

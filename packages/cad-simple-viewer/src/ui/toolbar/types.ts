@@ -114,7 +114,7 @@ export interface UISubToolbarOptions extends Partial<UIToolbarChromeOptions> {
    * the new strip is visible (saves vertical space on phone). When false,
    * nested strips stack beside/above the ancestor (pad/desktop).
    *
-   * Also, when true, layers / measurements dock panels, sub-toolbars,
+   * Also, when true, measurement dock panels, sub-toolbars,
    * and menus are mutually exclusive: opening one closes the others.
    * @default false
    */

@@ -98,16 +98,6 @@ export class ThreeRendererEntity extends ThreeRendererObject implements Graphics
   }
 
   /**
-   * @inheritdoc
-   */
-  get layerName() {
-    return this.userData.layerName!
-  }
-  set layerName(value: string) {
-    this.userData.layerName = value
-  }
-
-  /**
    * Flattens the descendant hierarchy under `root` so that every leaf render object becomes a
    * direct child of `root`, while keeping the visual result unchanged.
    *
@@ -163,13 +153,6 @@ export class ThreeRendererEntity extends ThreeRendererObject implements Graphics
       const children = object.children
       object.children = []
       for (const child of children) {
-        // Drawables without a layer of their own use their parent's layer.
-        const objectData = getObjectUserData(object)
-        const childData = getObjectUserData(child)
-        if (objectData.layerName && !childData.layerName) {
-          childData.layerName = objectData.layerName
-        }
-
         if (child.children.length > 0) {
           // Keep descending until we reach actual render leaves.
           traverseAndCollectChildren(child, rootMatrixWorldInverse)
@@ -387,7 +370,6 @@ export class ThreeRendererEntity extends ThreeRendererObject implements Graphics
   copy(object: ThreeRendererEntity, recursive?: boolean) {
     this.objectId = object.objectId
     this.ownerId = object.ownerId
-    this.layerName = object.layerName
     this.wcsBbox = object.wcsBbox
     return super.copy(object, recursive)
   }

@@ -64,15 +64,6 @@ export interface ApplicationOpenDatabaseOptions {
   circleSides?: number
 
   /**
-   * When `true`, convert entities on off/frozen layers during open so offline
-   * HTML/PDF export does not need a second convert pass for those entities.
-   * Interactive viewing leaves this `false` (default) and converts them later
-   * when a layer is turned on or {@link ThreeRendererView2d.ensureEntitiesConvertedForExport}
-   * runs.
-   */
-  convertInvisibleLayers?: boolean
-
-  /**
    * When `true`, skip building the hierarchical spatial index while converting
    * entities. Headless HTML/JPEG export only needs scene batch geometry and
    * layout boxes; the spatial index is for interactive pick / smart extents.

@@ -15,8 +15,6 @@ export class GraphicsInterfaceViewport {
   private _number: number
   private _id: string
   private _groupId: string
-  private _frozenLayerIds: string[]
-  private _frozenLayers: string[]
   /** Annotation scale name for this viewport (e.g. `"1:50"`), when known. */
   private _annotationScaleName: string
   /**
@@ -36,8 +34,6 @@ export class GraphicsInterfaceViewport {
     this._viewTarget = new GeometryPoint2d()
     this._viewTwistAngle = 0
     this._viewHeight = 0
-    this._frozenLayerIds = []
-    this._frozenLayers = []
     this._annotationScaleName = ''
     this._annotationScaleFactor = 0
   }
@@ -70,29 +66,6 @@ export class GraphicsInterfaceViewport {
   }
   set groupId(value: string) {
     this._groupId = value
-  }
-
-  /**
-   * Soft-pointer object ids of layers frozen in this viewport (DXF group 331 /
-   * VPLAYER). Empty when the viewport does not freeze any layers.
-   */
-  get frozenLayerIds() {
-    return this._frozenLayerIds
-  }
-  set frozenLayerIds(value: string[]) {
-    this._frozenLayerIds = [...value]
-  }
-
-  /**
-   * Names of layers frozen in this viewport (resolved from
-   * {@link frozenLayerIds}). Used by renderers to hide model-space layer
-   * groups while drawing through the viewport.
-   */
-  get frozenLayers() {
-    return this._frozenLayers
-  }
-  set frozenLayers(value: string[]) {
-    this._frozenLayers = [...value]
   }
 
   /**
@@ -273,8 +246,6 @@ export class GraphicsInterfaceViewport {
     viewport.viewTarget.copy(this.viewTarget)
     viewport.viewTwistAngle = this.viewTwistAngle
     viewport.viewHeight = this.viewHeight
-    viewport.frozenLayerIds = this.frozenLayerIds
-    viewport.frozenLayers = this.frozenLayers
     viewport.annotationScaleName = this.annotationScaleName
     viewport.annotationScaleFactor = this.annotationScaleFactor
     return viewport
@@ -296,8 +267,6 @@ export class GraphicsInterfaceViewport {
     this.viewTarget.copy(viewport.viewTarget)
     this.viewTwistAngle = viewport.viewTwistAngle
     this.viewHeight = viewport.viewHeight
-    this.frozenLayerIds = viewport.frozenLayerIds
-    this.frozenLayers = viewport.frozenLayers
     this.annotationScaleName = viewport.annotationScaleName
     this.annotationScaleFactor = viewport.annotationScaleFactor
     return this

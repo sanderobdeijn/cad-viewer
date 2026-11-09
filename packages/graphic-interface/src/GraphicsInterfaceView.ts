@@ -34,7 +34,6 @@ export interface GraphicsInterfaceView {
   backClippingPlane: number
   viewHeight: number
   viewTwistAngle: number
-  frozenLayers: string[]
   styleSheet: string
   renderMode: GraphicsInterfaceRenderMode
   viewMode: number

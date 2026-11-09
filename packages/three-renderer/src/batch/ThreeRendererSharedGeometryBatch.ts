@@ -70,7 +70,7 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
 
   /**
    * @param geometry - Owned geometry clone. Not disposed by this batch.
-   * @param material - Layer material shared with the style cache.
+   * @param material - Material shared with the style cache.
    * @param origin - World translation used to keep instance matrices small.
    * @param kind - Primitive family of `geometry`.
    * @param sourceUuid - UUID of the template geometry this batch serves.
@@ -338,7 +338,7 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
    * Unions world-space bounds of visible slots into `target`.
    *
    * @param target - Destination box. Not cleared.
-   * @param options - Optional object-id filters used by layer extent queries.
+   * @param options - Optional object-id filters used by extent queries.
    */
   unionActiveVisibleBoundingBoxInto(
     target: THREE.Box3,
@@ -473,7 +473,7 @@ export class ThreeRendererSharedGeometryBatch extends THREE.Object3D {
     return target
   }
 
-  /** Matrix relative to this batch (parented under the layer group). */
+  /** Matrix relative to this batch (parented under the batched group). */
   private composeLocalMatrix(index: number, target: THREE.Matrix4) {
     this.readRelative(index, _relative)
     _originTranslation.makeTranslation(

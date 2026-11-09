@@ -1153,10 +1153,8 @@ export class ApplicationDocManager {
     // mode uses zoom-to-fit — not for restored VPORT/saved views.
     this.curView.progressiveRendering = options?.progressiveRendering ?? false
     this.curView.renderer.context.circleSides = options?.circleSides
-    // Headless HTML export: convert off layers once, skip pick indexes, and
-    // optionally skip cooperative yields that only matter for an interactive UI.
-    this.curView.convertInvisibleLayers =
-      options?.convertInvisibleLayers === true
+    // Headless export: skip pick indexes, and optionally skip cooperative
+    // yields that only matter for an interactive UI.
     this.curView.cooperativeYield = options?.cooperativeYield !== false
     const openCadScene = this.curView.cadScene
     if (openCadScene) {

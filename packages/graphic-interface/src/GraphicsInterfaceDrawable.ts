@@ -6,16 +6,14 @@ import type { GraphicsInterfaceRenderer } from './GraphicsInterfaceRenderer'
  * Something the renderer can draw: one shape, point or dimension of a drawing.
  *
  * The view converts drawables into scene objects. It keys them by
- * {@link objectId}, files them under {@link ownerId} and {@link layer}, and
- * draws them through {@link worldDraw}.
+ * {@link objectId}, files them under {@link ownerId}, and draws them through
+ * {@link worldDraw}.
  */
 export interface GraphicsInterfaceDrawable {
   /** Id of the drawn item */
   readonly objectId: string
   /** Id of the space that owns the item */
   readonly ownerId: string
-  /** Name of the layer the item is drawn on */
-  readonly layer: string
   /** Whether the item is shown */
   readonly visibility: boolean
   /** Kind of the item, for diagnostics */

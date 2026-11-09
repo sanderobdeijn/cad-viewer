@@ -9,17 +9,16 @@ export class ThreeRendererSubEntityTraitsUtil {
     return {
       color: new CommonColor(),
       lineType: {
-        type: 'ByLayer',
+        type: 'UserSpecified',
         name: 'Continuous',
         standardFlag: 0,
         description: 'Solid line',
         totalPatternLength: 0
       },
       lineTypeScale: 1,
-      lineWeight: GraphicsInterfaceLineWeight.ByLayer,
+      lineWeight: GraphicsInterfaceLineWeight.ByLineWeightDefault,
       transparency: new CommonTransparency(),
       thickness: 0,
-      layer: '0',
       drawOrder: 0
     }
   }

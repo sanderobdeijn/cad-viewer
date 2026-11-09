@@ -167,7 +167,7 @@ export class ThreeRendererGeometrySanitizer {
     reportedIssues.add(key)
 
     const label = entity
-      ? `${entityTypeName(entity)} ${entity.objectId} (layer ${entity.layer})`
+      ? `${entityTypeName(entity)} ${entity.objectId}`
       : 'unknown entity'
     console.warn(
       `[ThreeRendererGeometrySanitizer] ${label} ${source}: ${detail}. Upstream entity data is likely invalid.`

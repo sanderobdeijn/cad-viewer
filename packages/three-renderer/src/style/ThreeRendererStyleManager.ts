@@ -1,4 +1,3 @@
-import { CommonColor } from '@mlightcad/common'
 import {
   GRAPHICS_INTERFACE_MODEL_SPACE_BACKGROUND,
   graphicsInterfaceForegroundColorForBackground,
@@ -80,21 +79,14 @@ export class ThreeRendererStyleManager {
    */
   getLineMaterial(
     traits: GraphicsInterfaceSubEntityTraits,
-    basicMaterialOnly?: boolean,
-    layerColor?: CommonColor,
-    layerColorRgb?: number
+    basicMaterialOnly?: boolean
   ): THREE.Material {
     const showLineWeight =
       this.options.showLineWeight || this._forceShowLineWeight
     const forceBasicMaterial = !showLineWeight
-    return this.lineMgr.getMaterial(
-      traits,
-      {
-        basicMaterialOnly: basicMaterialOnly || forceBasicMaterial
-      },
-      layerColorRgb,
-      layerColor
-    )!
+    return this.lineMgr.getMaterial(traits, {
+      basicMaterialOnly: basicMaterialOnly || forceBasicMaterial
+    })!
   }
 
   /**
@@ -166,49 +158,6 @@ export class ThreeRendererStyleManager {
    */
   getBackSideVariant(material: THREE.Material): THREE.Material {
     return this.fillMgr.getBackSideVariant(material)
-  }
-
-  /**
-   * Forces all materials that belong to the given layer to update,
-   * for traits that use ByLayer color or ByLayer lineType.
-   *
-   * @param layerName - The name of the layer whose materials need to be updated.
-   * @param newTraits - Layer-level traits (color, lineType, etc.) resolved from your layer table.
-   * @returns Mapping: oldMaterialId → newMaterial
-   */
-  updateLayerMaterial(
-    layerName: string,
-    newTraits: Partial<GraphicsInterfaceSubEntityTraits>
-  ): Record<number, THREE.Material> {
-    return {
-      ...this.lineMgr.updateLayerMaterial(layerName, newTraits),
-      ...this.pointMgr.updateLayerMaterial(layerName, newTraits),
-      ...this.fillMgr.updateLayerMaterial(layerName, newTraits)
-    }
-  }
-
-  /**
-   * Returns a cached material bound to an effective layer without changing symbolic traits.
-   *
-   * The returned material keeps the same appearance now, but future layer updates
-   * will target the effective layer instead of the source layer.
-   *
-   * @param material - Existing material used by a rendered object.
-   * @param layerName - Effective layer that should own future updates for this material.
-   * @param layerTraits - Optional resolved layer traits applied immediately for ByLayer attributes.
-   * @returns A cached material bound to the effective layer.
-   */
-  getLayerBoundMaterial(
-    material: THREE.Material,
-    layerName: string,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ) {
-    return (
-      this.lineMgr.getLayerBoundMaterial(material, layerName, layerTraits) ||
-      this.pointMgr.getLayerBoundMaterial(material, layerName, layerTraits) ||
-      this.fillMgr.getLayerBoundMaterial(material, layerName, layerTraits) ||
-      material
-    )
   }
 
   /**

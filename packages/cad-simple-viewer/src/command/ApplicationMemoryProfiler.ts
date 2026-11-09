@@ -22,10 +22,9 @@ export interface ApplicationMemoryCategoryRow {
   detail?: string
 }
 
-export interface ApplicationMemoryGeometryLayerRow {
+export interface ApplicationMemoryGeometryLayoutRow {
   layoutKey: string
   layoutIndex: number
-  layerName: string
   entityCount: number
   lineBytes: number
   meshBytes: number
@@ -53,7 +52,7 @@ export interface ApplicationMemorySnapshot {
   summary: ApplicationMemoryCategoryRow[]
   geometry: {
     scene: ThreeRendererSceneStats
-    layers: ApplicationMemoryGeometryLayerRow[]
+    layouts: ApplicationMemoryGeometryLayoutRow[]
   }
   spatial: {
     layouts: ApplicationMemorySpatialLayoutRow[]
@@ -94,34 +93,28 @@ function readHeapStats(): ApplicationMemoryHeapStats | undefined {
   }
 }
 
-function collectGeometryLayers(
+function collectGeometryLayouts(
   sceneStats: ThreeRendererSceneStats,
   layoutKeys: string[]
-): ApplicationMemoryGeometryLayerRow[] {
-  const rows: ApplicationMemoryGeometryLayerRow[] = []
-  sceneStats.layouts.forEach((layout, layoutIndex) => {
-    const layoutKey = layoutKeys[layoutIndex] ?? `layout-${layoutIndex}`
-    for (const layer of layout.layers) {
-      rows.push({
-        layoutKey,
-        layoutIndex,
-        layerName: layer.name,
-        entityCount: layer.summary.entityCount,
-        lineBytes:
-          layer.line.indexed.geometrySize + layer.line.nonIndexed.geometrySize,
-        meshBytes:
-          layer.mesh.indexed.geometrySize + layer.mesh.nonIndexed.geometrySize,
-        pointBytes:
-          layer.point.indexed.geometrySize +
-          layer.point.nonIndexed.geometrySize,
-        unbatchedBytes: layer.unbatched.geometrySize,
-        geometryBytes: layer.summary.totalGeometrySize,
-        mappingBytes: layer.summary.totalMappingSize,
-        unbatchedCount: layer.unbatched.count
-      })
+): ApplicationMemoryGeometryLayoutRow[] {
+  return sceneStats.layouts.map((layout, layoutIndex) => {
+    const batch = layout.batch
+    return {
+      layoutKey: layoutKeys[layoutIndex] ?? `layout-${layoutIndex}`,
+      layoutIndex,
+      entityCount: batch.summary.entityCount,
+      lineBytes:
+        batch.line.indexed.geometrySize + batch.line.nonIndexed.geometrySize,
+      meshBytes:
+        batch.mesh.indexed.geometrySize + batch.mesh.nonIndexed.geometrySize,
+      pointBytes:
+        batch.point.indexed.geometrySize + batch.point.nonIndexed.geometrySize,
+      unbatchedBytes: batch.unbatched.geometrySize,
+      geometryBytes: batch.summary.totalGeometrySize,
+      mappingBytes: batch.summary.totalMappingSize,
+      unbatchedCount: batch.unbatched.count
     }
   })
-  return rows
 }
 
 /**
@@ -134,7 +127,7 @@ export async function collectMemorySnapshot(
   const layoutEntries = [...view.cadScene.layouts.entries()]
   const layoutKeys = layoutEntries.map(([ownerId]) => ownerId)
 
-  const geometryLayers = collectGeometryLayers(sceneStats, layoutKeys)
+  const geometryLayouts = collectGeometryLayouts(sceneStats, layoutKeys)
 
   const spatialLayouts: ApplicationMemorySpatialLayoutRow[] = layoutEntries.map(
     ([ownerId, layout]) => ({
@@ -203,7 +196,7 @@ export async function collectMemorySnapshot(
     summary,
     geometry: {
       scene: sceneStats,
-      layers: geometryLayers
+      layouts: geometryLayouts
     },
     spatial: {
       layouts: spatialLayouts,

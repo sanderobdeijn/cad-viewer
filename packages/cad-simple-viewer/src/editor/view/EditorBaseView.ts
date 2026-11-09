@@ -638,7 +638,7 @@ export abstract class EditorBaseView {
   abstract clear(): void
 
   /**
-   * Adds model space and the one layer that items are drawn on, if missing.
+   * Adds model space, the one layout that items are drawn in, if missing.
    */
   abstract addModelSpace(): void
 

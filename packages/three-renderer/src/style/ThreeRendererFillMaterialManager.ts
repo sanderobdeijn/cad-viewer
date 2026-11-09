@@ -24,7 +24,7 @@ export interface ThreeRendererFillMaterialOptions {
  *
  * Responsibilities:
  * - Returns THREE.MeshBasicMaterial for solid fills.
- * - Caches materials per layer, colour, transparency, side and draw order.
+ * - Caches materials per colour, transparency, side and draw order.
  * - Provides `clear()` method to dispose of all cached materials.
  */
 export class ThreeRendererFillMaterialManager extends ThreeRendererMaterialManager<ThreeRendererFillMaterialOptions> {
@@ -67,12 +67,11 @@ export class ThreeRendererFillMaterialManager extends ThreeRendererMaterialManag
    */
   protected createMaterialImpl(
     traits: GraphicsInterfaceSubEntityTraits,
-    options: ThreeRendererFillMaterialOptions,
-    layerColorRgb?: number
+    options: ThreeRendererFillMaterialOptions
   ): THREE.Material {
     const side = options.side ?? 'front'
     const threeSide = side === 'back' ? THREE.BackSide : THREE.FrontSide
-    const rgb = this.resolveMaterialRgb(traits, layerColorRgb)
+    const rgb = this.resolveTraitsRgb(traits)
 
     const material = this.createMeshBasicMaterial(rgb, threeSide)
 
@@ -119,7 +118,7 @@ export class ThreeRendererFillMaterialManager extends ThreeRendererMaterialManag
   /**
    * Build a deterministic caching key based on traits and options.
    *
-   * Partitioning dimensions beyond colour/layer:
+   * Partitioning dimensions beyond colour and transparency:
    *
    * - `side`: `'back'` variant goes in a separate key so mirrored
    *   fills don't steal the front-side material of the common path.
@@ -139,7 +138,7 @@ export class ThreeRendererFillMaterialManager extends ThreeRendererMaterialManag
     const sideSuffix = options.side === 'back' ? '_back' : ''
     const drawOrderSuffix = this.buildDrawOrderSuffix(traits)
     const colorKey = this.buildKeyColorSegment(traits)
-    return `solid_${traits.layer}_${colorKey}_a${this.transparencyKey(traits)}${sideSuffix}${drawOrderSuffix}`
+    return `solid_${colorKey}_a${this.transparencyKey(traits)}${sideSuffix}${drawOrderSuffix}`
   }
 
   private transparencyKey(traits: GraphicsInterfaceSubEntityTraits): number {

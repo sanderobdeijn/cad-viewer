@@ -49,7 +49,6 @@ export interface ThreeRendererBuiltDirectGeometry {
 export interface ThreeRendererDirectEntityMeta extends ThreeRendererBuiltDirectGeometry {
   objectId: string
   ownerId: string
-  layerName: string
   visible: boolean
 }
 

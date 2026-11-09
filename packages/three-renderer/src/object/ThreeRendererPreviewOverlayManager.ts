@@ -43,7 +43,7 @@ export class ThreeRendererPreviewOverlayManager {
   /**
    * Registers one preview overlay and attaches it to the scene.
    *
-   * @param root - Preview root group built from batched layer subsets
+   * @param root - Preview root group built from batched subsets
    * @returns Handle that identifies the overlay for later updates and removal
    */
   add(root: THREE.Group): ThreeRendererBatchedPreviewHandle {

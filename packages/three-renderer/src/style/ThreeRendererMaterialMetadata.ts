@@ -1,31 +1,12 @@
 import * as THREE from 'three'
 
 /**
- * Immutable ByLayer binding semantics carried with a cached material.
- *
- * These flags answer a specific question for each visual trait:
- * "Should this trait be inherited from the owning layer when the layer changes?"
- */
-export interface ThreeRendererByLayerBindingFlags {
-  /** True when color is layer-bound and must follow layer color updates. */
-  isByLayerColor: boolean
-  /** True when linetype is layer-bound and must follow layer linetype updates. */
-  isByLayerLineType: boolean
-  /** True when lineweight is layer-bound and must follow layer lineweight updates. */
-  isByLayerLineWeight: boolean
-  /** True when transparency is layer-bound and must follow layer transparency updates. */
-  isByLayerTransparency: boolean
-}
-
-/**
  * Canonical metadata attached to `THREE.Material.userData` by cad-viewer.
  *
  * `THREE.Material` supports arbitrary `userData`, so this interface defines the
  * strongly-typed contract used by style/material management logic.
  */
-export interface ThreeRendererMaterialMetadata extends ThreeRendererByLayerBindingFlags {
-  /** Effective layer name used to target layer-level style updates. */
-  layer: string
+export interface ThreeRendererMaterialMetadata {
   /** Internal cache key used by style managers for reverse lookup. */
   materialKey: string
   /** True when color follows foreground inversion rules (ACI 7 behavior). */
@@ -75,49 +56,4 @@ export function setMaterialMetadata(
   patch: ThreeRendererMaterialMetadataPatch
 ): void {
   Object.assign(getMaterialMetadata(material), patch)
-}
-
-/**
- * Returns whether metadata indicates at least one ByLayer-bound trait.
- */
-export function hasByLayerBinding(
-  metadata: ThreeRendererMaterialMetadataPatch
-): boolean {
-  return (
-    metadata.isByLayerColor === true ||
-    metadata.isByLayerLineType === true ||
-    metadata.isByLayerLineWeight === true ||
-    metadata.isByLayerTransparency === true
-  )
-}
-
-/**
- * Returns whether a drawable material should follow live layer-table style updates.
- *
- * When {@link objectLayerName} is supplied, drawables moved to another layer
- * still participate in layer sync even
- * if cached metadata still references the source layer name.
- *
- * @param material - Drawable material whose metadata drives the decision.
- * @param layerName - Layer name targeted by the current sync pass.
- * @param objectLayerName - Optional runtime layer name on the drawable.
- * @returns True when the material should receive live layer-table style updates.
- */
-export function followsLayerStyle(
-  material: THREE.Material,
-  layerName: string,
-  objectLayerName?: string
-): boolean {
-  const metadata = getMaterialMetadata(material)
-
-  if (metadata.layer !== layerName && objectLayerName !== layerName) {
-    return false
-  }
-  if (metadata.isByLayerColor === true) {
-    return true
-  }
-  if (metadata.isForeground === true) {
-    return false
-  }
-  return hasByLayerBinding(metadata)
 }

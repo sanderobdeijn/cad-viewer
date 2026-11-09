@@ -18,12 +18,6 @@ export interface GraphicsInterfaceEntity {
   set ownerId(value: string)
 
   /**
-   * The name of the layer referenced by this entity
-   */
-  get layerName(): string
-  set layerName(value: string)
-
-  /**
    * Object's visibility
    */
   get visible(): boolean

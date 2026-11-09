@@ -18,17 +18,11 @@ export interface ThreeRendererLineMaterialOptions {
  * - Thin lines (THREE.LineBasicMaterial)
  * - Lines with a lineweight ({@link LineMaterial})
  *
- * Materials are cached by computed keys. Each material also remembers:
- * - The CAD layer it belongs to
- * - Whether its certain property value (for example color) is ByLayer
- *
- * Layer updates then locate materials using these userData flags instead of
- * maintaining a separate layer → key mapping.
+ * Materials are cached by computed keys.
  */
 export class ThreeRendererLineMaterialManager extends ThreeRendererMaterialManager<ThreeRendererLineMaterialOptions> {
   /**
    * Builds a stable material key from traits.
-   * Every key includes the effective layer so layer-scoped updates stay precise.
    */
   protected buildKey(
     traits: GraphicsInterfaceSubEntityTraits,
@@ -38,16 +32,15 @@ export class ThreeRendererLineMaterialManager extends ThreeRendererMaterialManag
     const mode = options.basicMaterialOnly ? 'basic' : 'fat'
     const drawOrderSuffix = this.buildDrawOrderSuffix(traits)
     const colorKey = this.buildKeyColorSegment(traits)
-    return `${traits.layer}_${mode}_${colorKey}_${lineWidth}${drawOrderSuffix}`
+    return `${mode}_${colorKey}_${lineWidth}${drawOrderSuffix}`
   }
 
   protected createMaterialImpl(
     traits: GraphicsInterfaceSubEntityTraits,
-    options: ThreeRendererLineMaterialOptions = {},
-    layerColorRgb?: number
+    options: ThreeRendererLineMaterialOptions = {}
   ): THREE.Material {
     let material: THREE.Material
-    const rgb = this.resolveMaterialRgb(traits, layerColorRgb)
+    const rgb = this.resolveTraitsRgb(traits)
 
     if (options.basicMaterialOnly || traits.lineWeight < 0) {
       material = new THREE.LineBasicMaterial({
@@ -62,13 +55,6 @@ export class ThreeRendererLineMaterialManager extends ThreeRendererMaterialManag
       material = fatLineMaterial
     }
     return material
-  }
-
-  protected hasByLayerKeyTraits(traits: GraphicsInterfaceSubEntityTraits): boolean {
-    return (
-      super.hasByLayerKeyTraits(traits) ||
-      traits.lineWeight === GraphicsInterfaceLineWeight.ByLayer
-    )
   }
 
   private resolveLineWidth(lineWeight: GraphicsInterfaceLineWeight): number {

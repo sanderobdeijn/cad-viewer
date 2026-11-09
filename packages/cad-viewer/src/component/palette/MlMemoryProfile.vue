@@ -174,7 +174,7 @@
     >
       <div v-if="activeTab === 'geometry'" class="ml-memory-profile-pane">
         <el-table
-          :data="snapshot?.geometry.layers ?? []"
+          :data="snapshot?.geometry.layouts ?? []"
           size="small"
           class="ml-memory-profile-table"
           table-layout="fixed"
@@ -184,12 +184,6 @@
             prop="layoutKey"
             :label="t('main.toolPalette.memoryProfile.columns.layout')"
             min-width="90"
-            show-overflow-tooltip
-          />
-          <el-table-column
-            prop="layerName"
-            :label="t('main.toolPalette.memoryProfile.columns.layer')"
-            min-width="80"
             show-overflow-tooltip
           />
           <el-table-column

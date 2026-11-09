@@ -14,8 +14,7 @@ function createLine(
   objectId: string,
   start: { x: number; y: number },
   end: { x: number; y: number },
-  context: ThreeRendererRenderContext,
-  layerName = '0'
+  context: ThreeRendererRenderContext
 ) {
   const line = new ThreeRendererLine(
     [
@@ -27,8 +26,6 @@ function createLine(
     false
   )
   line.objectId = objectId
-  line.layerName = layerName
-  line.userData.layerName = layerName
   return line
 }
 
@@ -62,15 +59,13 @@ describe('ThreeRendererGroup wcsBbox', () => {
       'line-a',
       { x: 0, y: 0 },
       { x: 10, y: 0 },
-      context,
-      'L2'
+      context
     )
     const deferred = createLine(
       'line-deferred',
       { x: 5, y: 5 },
       { x: 15, y: 10 },
-      context,
-      'L3'
+      context
     )
     deferred.wcsBbox.makeEmpty()
 

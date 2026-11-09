@@ -1,1 +1,1 @@
-export type GraphicsInterfaceStyleType = 'ByLayer' | 'ByBlock' | 'UserSpecified'
+export type GraphicsInterfaceStyleType = 'ByBlock' | 'UserSpecified'

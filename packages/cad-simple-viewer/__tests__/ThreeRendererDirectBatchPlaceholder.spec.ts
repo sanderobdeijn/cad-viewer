@@ -118,7 +118,6 @@ describe('direct-batch capture placeholder', () => {
       expect(afterRelease.parent).toBeNull()
       // Still usable by the next capture session.
       expect(afterRelease.objectId).toBe(entities[2].objectId)
-      expect(afterRelease.layerName).toBe(entities[2].layer)
       // The fix must not have started routing capture releases through the
       // prototype `dispose`.
       expect(disposeSpy).not.toHaveBeenCalled()
@@ -144,7 +143,6 @@ describe('direct-batch capture placeholder', () => {
         expect(meta!.geometry).not.toBe(placeholder)
         expect(meta!.worldOffset).not.toBe(placeholder)
         expect(meta!.objectId).toBe(line.objectId)
-        expect(meta!.layerName).toBe(line.layer)
         expect(meta!.visible).toBe(true)
 
         // Still the same instance, still empty, still detached.

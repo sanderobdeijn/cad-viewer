@@ -1,8 +1,4 @@
 import { GeometryPoint2dLike } from '@mlightcad/geometry-engine'
-import {
-  graphicsInterfaceForegroundColorForBackground,
-  GraphicsInterfaceSubEntityTraits
-} from '@mlightcad/graphic-interface'
 import * as THREE from 'three'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
@@ -14,15 +10,13 @@ import {
 import { ThreeRendererPointSymbolCreator } from '../geometry/ThreeRendererPointSymbolCreator'
 import { ThreeRendererEntity } from '../object'
 import {
-  followsLayerStyle,
   getMaterialMetadata,
   setMaterialMetadata
 } from '../style/ThreeRendererMaterialMetadata'
 import { ThreeRendererStyleManager } from '../style/ThreeRendererStyleManager'
 import {
   ThreeRendererBufferGeometryUtil,
-  ThreeRendererMaterialUtil,
-  ThreeRendererSubEntityTraitsUtil
+  ThreeRendererMaterialUtil
 } from '../util'
 import {
   HIGHLIGHT_HOVER_COLOR,
@@ -34,8 +28,6 @@ import {
   getObjectUserData,
   getSceneDrawableUserData,
   markHighlightOverlayGroup,
-  patchDrawableMaterialFromCache,
-  syncStyleMaterialIdFromMaterials,
   type ThreeRendererHighlightOverlayGroup} from '../util/ThreeRendererObjectUserData'
 import {
   isThreeLineSegments,
@@ -146,7 +138,7 @@ type ThreeRendererOriginBatchMap<T extends ThreeRendererOriginBatch> = Map<numbe
  * Reverse lookup from one logical CAD entity to a single geometry slot inside a
  * batched container.
  *
- * A decomposed entity (for example one with drawables on several layers) may
+ * A decomposed entity (for example one with several drawables) may
  * occupy several slots; {@link ThreeRendererBatchedGroup} stores an array of these entries
  * per entity object id in `_entitiesMap`.
  */
@@ -171,7 +163,7 @@ export interface ThreeRendererEntityInBatchedObject {
 /**
  * Batched-slot record stored per entity object id.
  *
- * A decomposed entity (for example one with drawables on several layers) may
+ * A decomposed entity (for example one with several drawables) may
  * occupy several slots. To save one `Array` wrapper per common single-slot
  * entity, the map stores a bare {@link ThreeRendererEntityInBatchedObject} while the
  * entity owns exactly one slot, promotes to an array only from the second
@@ -267,7 +259,7 @@ export interface ThreeRendererPreviewSubsetOptions {
 
 /**
  * Aggregates and manages all batched render objects belonging to one CAD
- * layer/layout group.
+ * layout group.
  *
  * Entities are distributed into per-material batch containers (line/mesh/point
  * and wide-line variants). Multiple containers may share one material when their
@@ -703,331 +695,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Refreshes batched and unbatched drawables after a layer-table style change.
-   *
-   * Runs one unbatched-object traversal for text refresh, cache id patching, and
-   * layer-bound remapping instead of scanning the full batched geometry tree.
-   */
-  syncAppearanceFromRecord(
-    layerName: string,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    materials: Record<number, THREE.Material>,
-    needsIdPatch: boolean,
-    getLayerBoundMaterial: (
-      material: THREE.Material,
-      layerName: string,
-      layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-    ) => THREE.Material | undefined,
-    styleManager?: ThreeRendererStyleManager
-  ) {
-    this.rebindBatchedMaterialsForLayer(
-      layerName,
-      layerTraits,
-      getLayerBoundMaterial,
-      styleManager
-    )
-
-    this._unbatchedObjects.traverse(object => {
-      if (!('material' in object)) {
-        return
-      }
-
-      const drawable = object as THREE.Mesh | THREE.Line | THREE.LineSegments
-      if (needsIdPatch) {
-        patchDrawableMaterialFromCache(drawable, materials)
-      }
-
-      this.rebindUnbatchedDrawableMaterial(
-        drawable,
-        layerName,
-        layerTraits,
-        getLayerBoundMaterial,
-        styleManager
-      )
-    })
-
-    if (styleManager) {
-      this.refreshLayerBoundMaterialColors(layerName, styleManager, layerTraits)
-    }
-  }
-
-  /**
-   * Rebinds layer-bound batch materials after a layer-table style change.
-   *
-   * Batched MTEXT/TEXT glyphs and cloned unbatched drawables may not share the
-   * same material instance as the style-manager cache entry updated by
-   * {@link ThreeRendererStyleManager.updateLayerMaterial}.
-   */
-  rebindMaterialsForLayer(
-    layerName: string,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    getLayerBoundMaterial: (
-      material: THREE.Material,
-      layerName: string,
-      layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-    ) => THREE.Material | undefined,
-    styleManager?: ThreeRendererStyleManager
-  ) {
-    this.rebindBatchedMaterialsForLayer(
-      layerName,
-      layerTraits,
-      getLayerBoundMaterial,
-      styleManager
-    )
-
-    this._unbatchedObjects.traverse(object => {
-      if (!('material' in object)) {
-        return
-      }
-
-      this.rebindUnbatchedDrawableMaterial(
-        object as THREE.Mesh | THREE.Line | THREE.LineSegments,
-        layerName,
-        layerTraits,
-        getLayerBoundMaterial,
-        styleManager
-      )
-    })
-  }
-
-  private rebindBatchedMaterialsForLayer(
-    layerName: string,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    getLayerBoundMaterial: (
-      material: THREE.Material,
-      layerName: string,
-      layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-    ) => THREE.Material | undefined,
-    styleManager?: ThreeRendererStyleManager
-  ) {
-    const reboundByOldId = new Map<number, THREE.Material>()
-
-    for (const group of this.groups) {
-      for (const materialId of [...group.keys()]) {
-        const batches = group.get(materialId)
-        const material = batches?.[0]?.material as THREE.Material | undefined
-        if (!material || reboundByOldId.has(materialId)) {
-          continue
-        }
-        if (!followsLayerStyle(material, layerName, layerName)) {
-          continue
-        }
-
-        const rebound = this.resolveLayerBoundMaterial(
-          material,
-          layerName,
-          layerTraits,
-          getLayerBoundMaterial,
-          styleManager,
-          layerName
-        )
-        if (!rebound) {
-          continue
-        }
-
-        if (rebound === material) {
-          // Each batch owns a material clone; refresh color on every clone.
-          for (const batch of batches!) {
-            this.refreshLayerBoundMaterialColor(
-              batch.material as THREE.Material,
-              layerTraits,
-              styleManager
-            )
-          }
-          continue
-        }
-
-        reboundByOldId.set(materialId, rebound)
-        this.updateMaterial(materialId, rebound)
-      }
-    }
-  }
-
-  private rebindUnbatchedDrawableMaterial(
-    drawable: THREE.Mesh | THREE.Line | THREE.LineSegments,
-    layerName: string,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    getLayerBoundMaterial: (
-      material: THREE.Material,
-      layerName: string,
-      layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-    ) => THREE.Material | undefined,
-    styleManager?: ThreeRendererStyleManager
-  ) {
-    const objectLayerName = drawable.userData.layerName as string | undefined
-    const effectiveObjectLayerName = objectLayerName ?? layerName
-    const drawableUserData = getSceneDrawableUserData(drawable)
-
-    const rebindSingle = (material: THREE.Material): THREE.Material => {
-      if (!followsLayerStyle(material, layerName, effectiveObjectLayerName)) {
-        return material
-      }
-
-      const rebound = this.resolveLayerBoundMaterial(
-        material,
-        layerName,
-        layerTraits,
-        getLayerBoundMaterial,
-        styleManager,
-        effectiveObjectLayerName
-      )
-      if (!rebound) {
-        return material
-      }
-
-      if (rebound === material) {
-        this.refreshLayerBoundMaterialColor(material, layerTraits, styleManager)
-        return material
-      }
-
-      return rebound
-    }
-
-    const currentMaterial = drawable.material
-    if (Array.isArray(currentMaterial)) {
-      drawable.material = currentMaterial.map(rebindSingle)
-      syncStyleMaterialIdFromMaterials(drawableUserData, drawable.material)
-      return
-    }
-
-    const rebound = rebindSingle(currentMaterial)
-    if (rebound !== currentMaterial) {
-      drawable.material = rebound
-      syncStyleMaterialIdFromMaterials(drawableUserData, rebound)
-    }
-  }
-
-  /**
-   * Refreshes the colour of layer-bound batch materials after a layer colour
-   * change.
-   */
-  refreshLayerBoundMaterialColors(
-    layerName: string,
-    styleManager: ThreeRendererStyleManager,
-    layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-  ) {
-    if (!layerTraits?.color) {
-      return
-    }
-
-    for (const group of this.groups) {
-      for (const materialId of [...group.keys()]) {
-        const batches = group.get(materialId)
-        const material = batches?.[0]?.material as THREE.Material | undefined
-        if (!material || !followsLayerStyle(material, layerName, layerName)) {
-          continue
-        }
-        this.refreshLayerBoundMaterialColor(material, layerTraits, styleManager)
-      }
-    }
-  }
-
-  private resolveLayerBoundMaterial(
-    material: THREE.Material,
-    layerName: string,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    getLayerBoundMaterial: (
-      material: THREE.Material,
-      layerName: string,
-      layerTraits?: Partial<GraphicsInterfaceSubEntityTraits>
-    ) => THREE.Material | undefined,
-    styleManager?: ThreeRendererStyleManager,
-    objectLayerName?: string
-  ): THREE.Material | undefined {
-    const rebound = getLayerBoundMaterial(material, layerName, layerTraits)
-    if (rebound) {
-      return rebound
-    }
-    if (!styleManager) {
-      return undefined
-    }
-    return this.resolveLayerBoundReplacement(
-      material,
-      layerName,
-      styleManager,
-      objectLayerName ?? layerName
-    )
-  }
-
-  private resolveLayerBoundReplacement(
-    material: THREE.Material,
-    layerName: string,
-    styleManager: ThreeRendererStyleManager,
-    objectLayerName: string
-  ): THREE.Material | undefined {
-    if (!followsLayerStyle(material, layerName, objectLayerName)) {
-      return undefined
-    }
-
-    const metadata = getMaterialMetadata(material)
-    const traits = ThreeRendererSubEntityTraitsUtil.createDefaultTraits()
-    traits.layer = layerName
-    traits.color.setByLayer()
-    traits.drawOrder = metadata.drawOrder ?? 0
-
-    if (metadata.drawOrder === 0 && metadata.isForeground !== true) {
-      return styleManager.getFillMaterial(traits)
-    }
-
-    return styleManager.getLineMaterial(traits, true)
-  }
-
-  private refreshLayerBoundMaterialColor(
-    material: THREE.Material,
-    layerTraits: Partial<GraphicsInterfaceSubEntityTraits>,
-    styleManager?: ThreeRendererStyleManager
-  ) {
-    // Only rewrite colour when the material is actually colour-bound to the
-    // layer. `followsLayerStyle` is also true for ByLayer lineweight / linetype
-    // alone; applying the layer colour in those cases clobbers absolute entity
-    // colours (e.g. true-color solid hatches on an ACI-7 layer become white).
-    const metadata = getMaterialMetadata(material)
-    if (metadata.isByLayerColor !== true) {
-      return
-    }
-
-    // An ACI-7 (foreground) layer colour is theme-dependent: applying its raw
-    // RGB bakes white onto a light canvas (#464). Resolve it against the
-    // current background, and keep the clone's isForeground metadata in sync
-    // so later foreground-only repaints reach it too.
-    const isForegroundColor = layerTraits.color?.isForeground === true
-    setMaterialMetadata(material, { isForeground: isForegroundColor })
-    if (isForegroundColor && !styleManager) {
-      // Cannot resolve a theme-dependent colour without the background.
-      return
-    }
-    const rgb =
-      isForegroundColor && styleManager
-        ? graphicsInterfaceForegroundColorForBackground(styleManager.currentBackgroundColor)
-        : layerTraits.color?.RGB
-    if (typeof rgb !== 'number') {
-      return
-    }
-    const currentRgb = this.getMaterialDisplayRgb(material)
-    if (currentRgb === rgb) {
-      return
-    }
-    ThreeRendererMaterialUtil.setMaterialColor(material, new THREE.Color(rgb))
-  }
-
-  private getMaterialDisplayRgb(material: THREE.Material): number | undefined {
-    if (
-      material instanceof THREE.MeshBasicMaterial ||
-      material instanceof THREE.LineBasicMaterial
-    ) {
-      return material.color.getHex()
-    }
-
-    const shaderMaterial = material as THREE.ShaderMaterial
-    const uniformColor = shaderMaterial.uniforms?.u_color?.value
-    if (uniformColor instanceof THREE.Color) {
-      return uniformColor.getHex()
-    }
-
-    return undefined
-  }
-
-  /**
    * Return true if this group contains the entity with the specified object id. Otherwise, return false.
    * @param objectId Input the object id of one entity
    * @returns Return true if this group contains the entity with the specified object id. Otherwise,
@@ -1173,7 +840,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
     const objectId = String(entity.objectId ?? '')
     const entityVisible = entity.visible
     // One logical entity (same objectId) can be appended in multiple passes
-    // (e.g. one render entity per layer).
+    // (e.g. one render entity per drawable).
     // Keep accumulating geometry mappings instead of overwriting previous ones.
     //
     // Collect slots locally and then feed them through appendEntitySlot, which
@@ -2185,7 +1852,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Points a shared-geometry batch at a replacement layer material.
+   * Points a shared-geometry batch at a replacement material.
    *
    * @param oldId - Material id currently referenced by shared batches.
    * @param material - Replacement material from the style cache.
@@ -2849,7 +2516,7 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
    * Avoids {@link THREE.Matrix4.decompose}: mirrored scales produce
    * negative determinants that do not round-trip through TRS, which previously
    * shoved text tens of millions of units away
-   * and blew up zoom-to-extents / layer-fit boxes.
+   * and blew up zoom-to-extents boxes.
    */
   private copyWorldMatrixOntoClone(
     source: THREE.Object3D,

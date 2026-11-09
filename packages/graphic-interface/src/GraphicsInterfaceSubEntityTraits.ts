@@ -5,7 +5,7 @@ import { GraphicsInterfaceLineWeight } from './GraphicsInterfaceLineWeight'
 
 /**
  * Trait settings for a sub‑entity in AutoCAD graphics (corresponding to GraphicsInterfaceSubEntityTraits).
- * These properties define visual attributes like color, line style, layer, thickness, etc.
+ * These properties define visual attributes like color, line style, thickness, etc.
  */
 export interface GraphicsInterfaceSubEntityTraits {
   /**
@@ -47,12 +47,6 @@ export interface GraphicsInterfaceSubEntityTraits {
    * similarly to AutoCAD's "thickness" property.
    */
   thickness: number
-
-  /**
-   * The name of the layer on which the entity resides.
-   * Corresponds to AutoCAD layer name (i.e. current layer in drawing).
-   */
-  layer: string
 
   /**
    * Explicit render-order tier used when different primitive types

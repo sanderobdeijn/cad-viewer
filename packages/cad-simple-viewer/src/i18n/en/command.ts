@@ -46,10 +46,6 @@ export default {
     circle: {
       description: 'Creates one circle by center and radius'
     },
-    clayer: {
-      description:
-        'Sets the current layer for new objects and editing operations'
-    },
     colortheme: {
       description:
         'Controls the color theme of the user interface (dark or light)'

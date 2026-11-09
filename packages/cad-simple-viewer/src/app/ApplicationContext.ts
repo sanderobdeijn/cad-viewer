@@ -166,8 +166,8 @@ export class ApplicationContext {
   }
 
   /**
-   * Clears the view and draws the document again: model space and its layer,
-   * then the items of its model.
+   * Clears the view and draws the document again: model space, then the
+   * items of its model.
    */
   async regen() {
     this._view.clear()

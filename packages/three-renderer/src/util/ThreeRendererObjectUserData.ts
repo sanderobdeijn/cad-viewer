@@ -60,7 +60,6 @@ export interface ThreeRendererStyledDrawableUserData {
 export interface ThreeRendererEntityIdentityUserData {
   objectId?: string
   ownerId?: string
-  layerName?: string
 }
 
 /**
@@ -207,78 +206,6 @@ export function getSceneDrawableUserData(
   object: THREE.Object3D
 ): ThreeRendererSceneDrawableUserData {
   return getObjectUserData(object) as ThreeRendererSceneDrawableUserData
-}
-
-/**
- * Resolves a style-cache material remap for one drawable material instance.
- */
-export function resolveCachedMaterialRemap(
-  material: THREE.Material,
-  materials: Record<number, THREE.Material>,
-  styleMaterialId?: number
-): THREE.Material | undefined {
-  return (
-    materials[material.id] ??
-    (styleMaterialId != null ? materials[styleMaterialId] : undefined)
-  )
-}
-
-/**
- * Keeps {@link ThreeRendererStyledDrawableUserData.styleMaterialId} aligned with drawable materials.
- *
- * Array materials only store a style id when every slot shares the same material id.
- */
-export function syncStyleMaterialIdFromMaterials(
-  userData: ThreeRendererStyledDrawableUserData,
-  material: THREE.Material | THREE.Material[]
-): void {
-  if (Array.isArray(material)) {
-    const ids = new Set(material.map(entry => entry.id))
-    if (ids.size === 1) {
-      userData.styleMaterialId = material[0].id
-      return
-    }
-    delete userData.styleMaterialId
-    return
-  }
-
-  userData.styleMaterialId = material.id
-}
-
-type ThreeRendererMaterialDrawable = THREE.Mesh | THREE.Line | THREE.LineSegments
-
-/**
- * Patches drawable material slots after the style cache replaces material instances.
- */
-export function patchDrawableMaterialFromCache(
-  drawable: ThreeRendererMaterialDrawable,
-  materials: Record<number, THREE.Material>
-): void {
-  const userData = getSceneDrawableUserData(drawable)
-  const current = drawable.material
-
-  if (Array.isArray(current)) {
-    drawable.material = current.map(entry => {
-      const remapped = resolveCachedMaterialRemap(
-        entry,
-        materials,
-        userData.styleMaterialId
-      )
-      return remapped && remapped !== entry ? remapped : entry
-    })
-    syncStyleMaterialIdFromMaterials(userData, drawable.material)
-    return
-  }
-
-  const remapped = resolveCachedMaterialRemap(
-    current,
-    materials,
-    userData.styleMaterialId
-  )
-  if (remapped && remapped !== current) {
-    drawable.material = remapped
-    syncStyleMaterialIdFromMaterials(userData, remapped)
-  }
 }
 
 export function getHighlightUserData(

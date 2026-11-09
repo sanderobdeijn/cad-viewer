@@ -1,6 +1,5 @@
 export * from './EditorBaseView'
 export * from './EditorHoverController'
-export * from './EditorLayerInfo'
 export * from './EditorOpenMode'
 export * from './EditorSelectionAction'
 export * from './EditorSelectionBoxIntersect'

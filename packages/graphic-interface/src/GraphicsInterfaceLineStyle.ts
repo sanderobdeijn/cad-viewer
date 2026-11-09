@@ -84,7 +84,6 @@ export interface GraphicsInterfaceLineStyle extends GraphicsInterfaceBaseLineSty
   /**
    * Indicates how the style is determined for this entity.
    *
-   * - `ByLayer`: The style is inherited from the layer the entity belongs to.
    * - `ByBlock`: The style is inherited from the block reference containing the entity.
    * - `UserSpecified`: The style is explicitly defined on the entity itself.
    */

@@ -15,7 +15,7 @@ import { GraphicsInterfaceTextData } from './GraphicsInterfaceText'
 export interface GraphicsInterfaceRenderer<T extends GraphicsInterfaceEntity = GraphicsInterfaceEntity> {
   /**
    * The entity traits object gives the user control of, and access to, the attribute
-   * (color, layer, linetype, etc.) settings of the current geometry.
+   * (color, linetype, etc.) settings of the current geometry.
    */
   get subEntityTraits(): GraphicsInterfaceSubEntityTraits
 

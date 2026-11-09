@@ -1,23 +1,25 @@
 import { GeometryBox2d, GeometryBox3d } from '@mlightcad/geometry-engine'
 import {
-  disposePreviewSubset,
+  ThreeRendererBatchedGroup,
+  ThreeRendererBatchedGroupStats,
   ThreeRendererDirectEntityMeta,
   ThreeRendererEntity,
   ThreeRendererEntityPreview,
-  ThreeRendererGroup} from '@mlightcad/three-renderer'
+  ThreeRendererGroup
+} from '@mlightcad/three-renderer'
 import * as THREE from 'three'
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
-import { EditorLayerInfo, EditorSpatialQueryResultItem } from '../editor'
+import { EditorSpatialQueryResultItem } from '../editor'
 import { unionSpatialQueryItems } from '../editor/view/EditorSpatialQueryResult'
 import { ThreeRendererHierarchicalSpatialIndex } from '../spatialIndex'
 import type { ThreeRendererSpatialSearchOptions } from '../spatialIndex/ThreeRendererSpatialIndex'
 import { isFiniteSpatialBBox } from './ThreeRendererGroupWcsBboxAssert'
-import { ThreeRendererLayer, ThreeRendererLayerStats } from './ThreeRendererLayer'
 
 /** Options for {@link ThreeRendererLayout.createEntityPreviewRoot}. */
 export interface ThreeRendererEntityPreviewRootOptions {
   /**
-   * Behavior when one entity id cannot be extracted from a layer batch group.
+   * Behavior when one entity id cannot be extracted from the batch group.
    *
    * - `fail` (default): dispose the partial preview and return `null`
    * - `skip`: ignore that id and continue with the remaining ids
@@ -30,14 +32,14 @@ export interface ThreeRendererEntityPreviewRootOptions {
 /**
  * Interface representing statistics for a layout.
  * Provides detailed information about the layout's content including
- * layer statistics and memory usage breakdown.
+ * batch statistics and memory usage breakdown.
  */
 export interface ThreeRendererLayoutStats {
-  /** Statistics for each layer in the layout */
-  layers: ThreeRendererLayerStats[]
+  /** Statistics of the batch group that holds the layout's entities */
+  batch: ThreeRendererBatchedGroupStats
   /** Summary statistics for the entire layout */
   summary: {
-    /** Total number of entities across all layers */
+    /** Total number of entities in the layout */
     entityCount: number
     /** Memory usage breakdown by object type */
     totalSize: {
@@ -71,15 +73,14 @@ export interface ThreeRendererLayoutStats {
  *
  * A layout manages the organization and rendering of CAD entities within a specific coordinate space.
  * It provides functionality for:
- * - Managing entities organized by layers
+ * - Managing entities in one batched group
  * - Spatial indexing for efficient entity queries
  * - Bounding box management for view operations
  * - Entity selection and highlighting
  * - Memory usage tracking and statistics
  *
- * Layouts use a spatial index (R-tree) for fast entity lookup operations and maintain
- * a hierarchical structure where entities are grouped by layers for efficient rendering
- * and visibility management.
+ * Layouts use a spatial index (R-tree) for fast entity lookup operations and
+ * batch their entities into one {@link ThreeRendererBatchedGroup} for efficient rendering.
  *
  * @example
  * ```typescript
@@ -107,8 +108,8 @@ export class ThreeRendererLayout {
   private _boxDirty: boolean
   /** Entity ids excluded from layout bounds (e.g. RAY/XLINE) */
   private _extentExcludedObjectIds: Set<string>
-  /** Map of layers indexed by layer name */
-  private _layers: Map<string, ThreeRendererLayer>
+  /** The batched group that holds all entities of this layout */
+  private _batch: ThreeRendererBatchedGroup
   /** The flag indicating whether the layout is loaded/activated */
   private _isLoaded: boolean
   /**
@@ -133,7 +134,8 @@ export class ThreeRendererLayout {
     this._cachedSmartExtents = undefined
     this._boxDirty = true
     this._extentExcludedObjectIds = new Set()
-    this._layers = new Map()
+    this._batch = new ThreeRendererBatchedGroup()
+    this._group.add(this._batch)
     this._isLoaded = false
   }
 
@@ -143,15 +145,6 @@ export class ThreeRendererLayout {
    */
   get internalObject() {
     return this._group
-  }
-
-  /**
-   * Gets the map of layers in this layout.
-   *
-   * @returns Map of layer names to layer objects
-   */
-  get layers() {
-    return this._layers
   }
 
   /**
@@ -170,7 +163,7 @@ export class ThreeRendererLayout {
   }
 
   /**
-   * Recomputes {@link box} from batch geometry across all visible layers.
+   * Recomputes {@link box} from batch geometry.
    */
   computeBatchBoundingBox(target = new THREE.Box3()) {
     if (this._boxDirty) {
@@ -180,13 +173,8 @@ export class ThreeRendererLayout {
   }
 
   private recomputeBox() {
-    this._cachedBox.makeEmpty()
-    const scratch = new THREE.Box3()
-    this._layers.forEach(layer => {
-      layer.computeBatchBoundingBox(scratch, this._extentExcludedObjectIds)
-      if (!scratch.isEmpty()) {
-        this._cachedBox.union(scratch)
-      }
+    this._batch.computeBoundingBox(this._cachedBox, {
+      excludeObjectIds: this._extentExcludedObjectIds
     })
     this._boxDirty = false
   }
@@ -232,12 +220,9 @@ export class ThreeRendererLayout {
 
   /**
    * The number of entities stored in this layout.
-   * Calculates the total by summing entities across all layers.
    */
   get entityCount() {
-    let count = 0
-    this._layers.forEach(layer => (count += layer.entityCount))
-    return count
+    return this._batch.entityCount
   }
 
   /**
@@ -251,68 +236,38 @@ export class ThreeRendererLayout {
    * The statistics of this layout.
    * Provides detailed information about memory usage and entity counts.
    */
-  get stats() {
-    const layers: ThreeRendererLayerStats[] = []
-    let totalGeometrySize = 0
-    let totalMappingSize = 0
-    let lineTotalSize = 0
-    let meshTotalSize = 0
-    let pointTotalSize = 0
-    let unbatchedTotalSize = 0
-    let unbatchedTotalCount = 0
-    const unbatchedByType = {
-      line: 0,
-      mesh: 0,
-      point: 0,
-      other: 0
-    }
-    this._layers.forEach(layer => {
-      const stats = layer.stats
-      layers.push(stats)
-      lineTotalSize +=
-        stats.line.indexed.geometrySize + stats.line.nonIndexed.geometrySize
-      meshTotalSize +=
-        stats.mesh.indexed.geometrySize + stats.mesh.nonIndexed.geometrySize
-      pointTotalSize +=
-        stats.point.indexed.geometrySize + stats.point.nonIndexed.geometrySize
-      unbatchedTotalSize += stats.unbatched.geometrySize
-      unbatchedTotalCount += stats.unbatched.count
-      unbatchedByType.line += stats.unbatched.byType.line
-      unbatchedByType.mesh += stats.unbatched.byType.mesh
-      unbatchedByType.point += stats.unbatched.byType.point
-      unbatchedByType.other += stats.unbatched.byType.other
-      totalGeometrySize += stats.summary.totalGeometrySize
-      totalMappingSize += stats.summary.totalMappingSize
-    })
+  get stats(): ThreeRendererLayoutStats {
+    const batch = this._batch.stats
     return {
-      layers,
+      batch,
       summary: {
         entityCount: this.entityCount,
         totalSize: {
-          line: lineTotalSize,
-          mesh: meshTotalSize,
-          point: pointTotalSize,
-          unbatched: unbatchedTotalSize,
-          geometry: totalGeometrySize,
-          mapping: totalMappingSize,
-          unbatchedCount: unbatchedTotalCount,
-          unbatchedByType
+          line:
+            batch.line.indexed.geometrySize + batch.line.nonIndexed.geometrySize,
+          mesh:
+            batch.mesh.indexed.geometrySize + batch.mesh.nonIndexed.geometrySize,
+          point:
+            batch.point.indexed.geometrySize +
+            batch.point.nonIndexed.geometrySize,
+          unbatched: batch.unbatched.geometrySize,
+          geometry: batch.summary.totalGeometrySize,
+          mapping: batch.summary.totalMappingSize,
+          unbatchedCount: batch.unbatched.count,
+          unbatchedByType: { ...batch.unbatched.byType }
         }
       }
-    } as ThreeRendererLayoutStats
+    }
   }
 
   /**
    * Clears all entities from the layout.
-   * Removes all layers, resets the bounding box, and clears the spatial index.
+   * Clears the batch group, resets the bounding box, and clears the spatial index.
    *
    * @returns This layout instance for method chaining
    */
   clear() {
-    this._layers.forEach(layer => {
-      layer.clear()
-    })
-    this._layers.clear()
+    this._batch.clear()
     this._cachedBox.makeEmpty()
     this.clearSmartExtentsCache()
     this._boxDirty = true
@@ -323,16 +278,13 @@ export class ThreeRendererLayout {
 
   /**
    * Re-render points with latest point style settings.
-   * Updates the visual representation of all point entities across all layers
-   * and refreshes spatial-index boxes so enlarged markers stay selectable.
+   * Updates the visual representation of all point entities and refreshes spatial-index boxes so enlarged markers stay selectable.
    *
    * @param displayMode - Input display mode of points
    * @param displaySize - Input display size of points (`PDSIZE`)
    */
   rerenderPoints(displayMode: number, displaySize: number = 0) {
-    this._layers.forEach(layer => {
-      layer.rerenderPoints(displayMode, displaySize)
-    })
+    this._batch.rerenderPoints(displayMode, displaySize)
     this.refreshPointSpatialIndexes()
   }
 
@@ -345,10 +297,7 @@ export class ThreeRendererLayout {
    * point-symbol subset.
    */
   private refreshPointSpatialIndexes() {
-    const boxes = new Map<string, THREE.Box3>()
-    this._layers.forEach(layer => {
-      layer.collectPointObjectWorldBoxes(boxes)
-    })
+    const boxes = this._batch.collectPointObjectWorldBoxes(new Map())
 
     boxes.forEach((box, objectId) => {
       if (this._spatialIndex.hasChildIndex(objectId)) {
@@ -374,7 +323,7 @@ export class ThreeRendererLayout {
    * Applies ACI-7 / foreground colour to owned batch material clones in this layout.
    */
   repaintForegroundMaterials(color: number) {
-    this._layers.forEach(layer => layer.repaintForegroundMaterials(color))
+    this._batch.repaintForegroundMaterials(color)
   }
 
   /**
@@ -385,43 +334,32 @@ export class ThreeRendererLayout {
    * @returns True if the object intersects with the ray, false otherwise
    */
   isIntersectWith(objectId: string, raycaster: THREE.Raycaster) {
-    const layers = this.getLayersByObjectId(objectId)
-    for (let index = 0; index < layers.length; ++index) {
-      const layer = layers[index]
-      if (layer && layer.isIntersectWith(objectId, raycaster)) return true
-    }
-    return false
+    return (
+      this._batch.hasEntity(objectId) &&
+      this._batch.isIntersectWith(objectId, raycaster)
+    )
   }
 
   hasVisibleEntity(objectId: string) {
-    return this.getLayersByObjectId(objectId).some(layer => layer.visible)
+    return this._batch.hasEntity(objectId)
   }
 
   /**
-   * Add one AutoCAD entity into this layout. If layer group referenced by the entity doesn't exist, create one
-   * layer group and add this entity this group.
+   * Add one entity into this layout.
    *
    * @param entity - Input AutoCAD entity to be added into this layout.
    * @param extendBbox - Input the flag whether to extend the bounding box of the scene by union the bounding box
    * of the specified entity. Defaults to true.
    * @returns This layout instance for method chaining
    *
-   * @throws {Error} When entity is missing required objectId or layerName
+   * @throws {Error} When entity is missing the required objectId
    */
   addEntity(entity: ThreeRendererEntity, extendBbox: boolean = true) {
     if (!entity.objectId) {
       throw new Error('Object id is required to add one entity!')
     }
-    if (!entity.layerName) {
-      throw new Error('Layer name is required to add one entity!')
-    }
 
-    const layer = this._layers.get(entity.layerName)
-    if (!layer) {
-      throw new Error(`layer '${entity.layerName}' doesn't exist!`)
-    }
-
-    layer.addEntity(entity)
+    this._batch.addEntity(entity)
 
     if (!extendBbox) {
       this._extentExcludedObjectIds.add(entity.objectId)
@@ -447,16 +385,8 @@ export class ThreeRendererLayout {
     if (!meta.objectId) {
       throw new Error('Object id is required to add one entity!')
     }
-    if (!meta.layerName) {
-      throw new Error('Layer name is required to add one entity!')
-    }
 
-    const layer = this._layers.get(meta.layerName)
-    if (!layer) {
-      throw new Error(`layer '${meta.layerName}' doesn't exist!`)
-    }
-
-    const appended = layer.addDirectEntity(meta)
+    const appended = this.appendDirectGeometry(meta)
     if (!appended) {
       return false
     }
@@ -478,12 +408,7 @@ export class ThreeRendererLayout {
    * @returns Return true if remove the specified entity successfully. Otherwise, return false.
    */
   removeEntity(objectId: string) {
-    let result = false
-    for (const [_, layer] of this._layers) {
-      if (layer.removeEntity(objectId)) {
-        result = true
-      }
-    }
+    const result = this._batch.removeEntity(objectId)
     if (result) {
       this._spatialIndex.removeById(objectId)
       this._extentExcludedObjectIds.delete(objectId)
@@ -499,39 +424,32 @@ export class ThreeRendererLayout {
    * @returns Return true if update the specified entity successfully. Otherwise, return false.
    */
   updateEntity(entity: ThreeRendererEntity) {
-    for (const [_, layer] of this._layers) {
-      if (layer.updateEntity(entity)) {
-        this._spatialIndex.removeById(entity.objectId)
-        this.registerEntitySpatialIndex(entity)
-        this.invalidateBox()
-        return true
-      }
+    if (!entity.objectId) {
+      return false
     }
-    return false
+    const isRemoved = this._batch.removeEntity(entity.objectId)
+    if (!isRemoved && !entity.visible) {
+      return false
+    }
+    this._batch.addEntity(entity)
+    this._spatialIndex.removeById(entity.objectId)
+    this.registerEntitySpatialIndex(entity)
+    this.invalidateBox()
+    return true
   }
 
   /**
-   * Returns true when any layer in this layout contains the entity.
+   * Returns true when this layout contains the entity.
    */
   hasEntity(objectId: string) {
-    for (const [_, layer] of this._layers) {
-      if (layer.hasEntity(objectId)) {
-        return true
-      }
-    }
-    return false
+    return this._batch.hasEntity(objectId)
   }
 
   /**
    * Updates entity visibility without rebuilding batched geometry.
    */
   setEntityVisible(objectId: string, visible: boolean) {
-    let updated = false
-    for (const [_, layer] of this._layers) {
-      if (layer.setEntityVisible(objectId, visible)) {
-        updated = true
-      }
-    }
+    const updated = this._batch.setEntityVisible(objectId, visible)
     if (updated) {
       this.invalidateBox()
     }
@@ -542,13 +460,7 @@ export class ThreeRendererLayout {
    * Returns the current scene visibility for one entity.
    */
   getEntityVisible(objectId: string) {
-    for (const [_, layer] of this._layers) {
-      const visible = layer.getEntityVisible(objectId)
-      if (visible !== undefined) {
-        return visible
-      }
-    }
-    return undefined
+    return this._batch.getEntityVisible(objectId)
   }
 
   /**
@@ -624,15 +536,9 @@ export class ThreeRendererLayout {
       return target
     }
 
-    const includeObjectIds = new Set(entityIds)
-    const scratch = new THREE.Box3()
-    for (const layer of this._layers.values()) {
-      layer.computeBatchBoundingBox(scratch, undefined, includeObjectIds)
-      if (!scratch.isEmpty()) {
-        target.union(scratch)
-      }
-    }
-    return target
+    return this._batch.computeBoundingBox(target, {
+      includeObjectIds: new Set(entityIds)
+    })
   }
 
   /**
@@ -650,7 +556,7 @@ export class ThreeRendererLayout {
   }
 
   /**
-   * Builds one preview root group by extracting GPU-resident geometry from layer batches.
+   * Builds one preview root group by extracting GPU-resident geometry from the batch group.
    *
    * Entities that are missing from this layout or cannot be extracted are skipped.
    * Returns `null` only when no drawable geometry could be collected.
@@ -673,98 +579,35 @@ export class ThreeRendererLayout {
       }
     }
 
-    const idsByLayer = new Map<ThreeRendererLayer, Set<string>>()
-
+    const ids = new Set<string>()
     for (const id of entityIds) {
-      const layers = this.getLayersByObjectId(id)
-      if (layers.length === 0) {
+      if (!this._batch.hasEntity(id)) {
         if (requireAllEntities || missingEntity === 'fail') {
           return null
         }
         continue
       }
-      for (const layer of layers) {
-        let layerIds = idsByLayer.get(layer)
-        if (!layerIds) {
-          layerIds = new Set()
-          idsByLayer.set(layer, layerIds)
-        }
-        layerIds.add(id)
-      }
+      ids.add(id)
     }
 
-    if (idsByLayer.size === 0) {
+    if (ids.size === 0) {
+      return null
+    }
+
+    const idList = [...ids]
+    const subset = this._batch.createPreviewSubset(idList, {
+      // Complex hatches may need several drawable slots per entity.
+      maxSlots: Math.max(10000, idList.length * 8),
+      missingEntity
+    })
+    if (!subset || subset.children.length === 0) {
       return null
     }
 
     const previewRoot = new THREE.Group()
     previewRoot.name = 'EntityPreviewRoot'
-    for (const [layer, ids] of idsByLayer) {
-      const idList = [...ids]
-      const subset = layer.createPreviewSubset(idList, {
-        // Complex hatches may need several drawable slots per entity.
-        maxSlots: Math.max(10000, idList.length * 8),
-        missingEntity
-      })
-      if (!subset || subset.children.length === 0) {
-        if (missingEntity === 'fail') {
-          disposePreviewSubset(previewRoot)
-          return null
-        }
-        continue
-      }
-      previewRoot.add(subset)
-    }
-
-    if (previewRoot.children.length === 0) {
-      return null
-    }
+    previewRoot.add(subset)
     return previewRoot
-  }
-
-  /**
-   * Gets the layer with the specified name from this layout
-   * @param name - Layer name
-   * @returns - The layer with the specified name in this layout
-   */
-  getLayer(name: string) {
-    return this._layers.get(name)
-  }
-
-  /**
-   * Adds layer into this layout. If the layer already exist, do nothing.
-   *
-   * @param name - Input layer name
-   * @returns Return added layer or the existing layer in this layout if one layer
-   * group already exists in this layout.
-   */
-  addLayer(info: EditorLayerInfo) {
-    const name = info.name
-    let layer = this._layers.get(name)
-    if (layer === undefined) {
-      layer = new ThreeRendererLayer(info)
-      this._layers.set(name, layer)
-      this._group.add(layer.internalObject)
-    }
-    return layer
-  }
-
-  /**
-   * Updates layer information (such as visibility). If the layer doesn't exist, do nothing.
-   * @param info - The layer information
-   * @returns Returns the updated layer group.
-   */
-  updateLayer(info: EditorLayerInfo) {
-    const layer = this._layers.get(info.name)
-    if (layer) {
-      // TODO: Handle layer name changes
-      const wasVisible = layer.visible
-      layer.update(info)
-      if (wasVisible !== layer.visible) {
-        this.invalidateBox()
-      }
-    }
-    return layer
   }
 
   /**
@@ -774,9 +617,12 @@ export class ThreeRendererLayout {
    * @param ids - Array of entity object IDs to hover
    */
   hover(ids: string[]) {
-    this.applyHighlightToLayers(ids, (layer, entityIds) =>
-      layer.hover(entityIds)
-    )
+    const entityIds = this.idsInBatch(ids)
+    if (entityIds.length === 1) {
+      this._batch.hover(entityIds[0]!)
+    } else if (entityIds.length > 1) {
+      this._batch.hoverMany(entityIds)
+    }
   }
 
   /**
@@ -786,9 +632,12 @@ export class ThreeRendererLayout {
    * @param ids - Array of entity object IDs to unhover
    */
   unhover(ids: string[]) {
-    this.applyHighlightToLayers(ids, (layer, entityIds) =>
-      layer.unhover(entityIds)
-    )
+    const entityIds = this.idsInBatch(ids)
+    if (entityIds.length === 1) {
+      this._batch.unhover(entityIds[0]!)
+    } else if (entityIds.length > 1) {
+      this._batch.unhoverMany(entityIds)
+    }
   }
 
   /**
@@ -798,9 +647,12 @@ export class ThreeRendererLayout {
    * @param ids - Array of entity object IDs to select
    */
   select(ids: string[]) {
-    this.applyHighlightToLayers(ids, (layer, entityIds) =>
-      layer.select(entityIds)
-    )
+    const entityIds = this.idsInBatch(ids)
+    if (entityIds.length === 1) {
+      this._batch.select(entityIds[0]!)
+    } else if (entityIds.length > 1) {
+      this._batch.selectMany(entityIds)
+    }
   }
 
   /**
@@ -810,34 +662,62 @@ export class ThreeRendererLayout {
    * @param ids - Array of entity object IDs to unselect
    */
   unselect(ids: string[]) {
-    this.applyHighlightToLayers(ids, (layer, entityIds) =>
-      layer.unselect(entityIds)
-    )
+    const entityIds = this.idsInBatch(ids)
+    if (entityIds.length === 1) {
+      this._batch.unselect(entityIds[0]!)
+    } else if (entityIds.length > 1) {
+      this._batch.unselectMany(entityIds)
+    }
+  }
+
+  /** Returns the ids that the batch group holds, so highlights skip unknown ids. */
+  private idsInBatch(ids: string[]) {
+    return ids.filter(id => this._batch.hasEntity(id))
   }
 
   /**
-   * Groups entity ids by render layer and applies one bulk highlight call per layer.
+   * Appends pre-built geometry directly into the batch (line / point / mesh).
    *
-   * @param ids - Entity object ids whose highlight state should change.
-   * @param apply - Layer callback invoked once per layer with its grouped entity ids.
+   * @returns `true` when the geometry was registered in the batched group.
    */
-  private applyHighlightToLayers(
-    ids: string[],
-    apply: (layer: ThreeRendererLayer, entityIds: string[]) => void
-  ) {
-    const layerToIds = new Map<ThreeRendererLayer, string[]>()
-    for (const id of ids) {
-      const layers = this.getLayersByObjectId(id)
-      for (const layer of layers) {
-        const bucket = layerToIds.get(layer)
-        if (bucket) {
-          bucket.push(id)
-        } else {
-          layerToIds.set(layer, [id])
-        }
-      }
+  private appendDirectGeometry(meta: ThreeRendererDirectEntityMeta): boolean {
+    const options = {
+      objectId: meta.objectId,
+      visible: meta.visible,
+      position: meta.position
     }
-    layerToIds.forEach((entityIds, layer) => apply(layer, entityIds))
+    switch (meta.kind) {
+      case 'lineFat':
+        return this._batch.appendLine2Geometry(
+          meta.geometry as LineSegmentsGeometry,
+          meta.material,
+          meta.worldOffset,
+          options
+        )
+      case 'lineBasic':
+        return this._batch.appendLineGeometry(
+          meta.geometry as THREE.BufferGeometry,
+          meta.material,
+          meta.worldOffset,
+          options
+        )
+      case 'point':
+        return this._batch.appendPointGeometry(
+          meta.geometry as THREE.BufferGeometry,
+          meta.material,
+          meta.worldOffset,
+          options
+        )
+      case 'mesh':
+        return this._batch.appendMeshGeometry(
+          meta.geometry as THREE.BufferGeometry,
+          meta.material,
+          meta.worldOffset,
+          options
+        )
+      default:
+        return false
+    }
   }
 
   /**
@@ -922,26 +802,6 @@ export class ThreeRendererLayout {
   }
 
   /**
-   * Returns all layers that contain renderable entities associated with
-   * the specified AutoCAD object ID.
-   *
-   * This method returns every layer holding an entity with that object ID.
-   *
-   * @param objectId - The AutoCAD object ID to search for
-   * @returns An array of layers containing entities associated with the given object ID;
-   *          returns an empty array if no matching layers are found
-   */
-  private getLayersByObjectId(objectId: string) {
-    const layers = []
-    for (const [_, layer] of this._layers) {
-      if (layer.hasEntity(objectId)) {
-        layers.push(layer)
-      }
-    }
-    return layers
-  }
-
-  /**
    * Gets optional child bounding boxes used to build a child-level spatial index
    * for one render entity.
    *
@@ -985,8 +845,8 @@ export class ThreeRendererLayout {
    * `ThreeRendererGroup` hierarchy.
    *
    * @param entity - The render entity to index. Called from
-   *                 {@link addEntity} and {@link updateEntity} after layer
-   *                 membership is updated.
+   *                 {@link addEntity} and {@link updateEntity} after the
+   *                 batch group is updated.
    */
   private registerEntitySpatialIndex(entity: ThreeRendererEntity) {
     if (this.skipSpatialIndex) {

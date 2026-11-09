@@ -45,8 +45,7 @@ describe('ThreeRendererGeometrySanitizer', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
     const entity = {
       constructor: { typeName: 'Line' },
-      objectId: 'ABC123',
-      layer: '0'
+      objectId: 'ABC123'
     } as never
 
     ThreeRendererGeometrySanitizer.filterFinitePoints(

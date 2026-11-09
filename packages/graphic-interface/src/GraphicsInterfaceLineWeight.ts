@@ -7,7 +7,6 @@
 export enum GraphicsInterfaceLineWeight {
   ByBlock = -2,
   ByDIPs = -4,
-  ByLayer = -1,
   ByLineWeightDefault = -3,
   LineWeight000 = 0,
   LineWeight005 = 5,

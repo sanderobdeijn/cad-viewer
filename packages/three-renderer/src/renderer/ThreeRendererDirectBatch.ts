@@ -66,7 +66,6 @@ export function tryBuildDirectEntityMeta(
       ...built,
       objectId: entity.objectId,
       ownerId: entity.ownerId,
-      layerName: entity.layer,
       visible: entity.visibility !== false
     }
   } catch (error) {
@@ -82,7 +81,7 @@ function buildFromCapture(
   renderer: ThreeRendererRenderer
 ): Omit<
   ThreeRendererDirectEntityMeta,
-  'objectId' | 'ownerId' | 'layerName' | 'visible'
+  'objectId' | 'ownerId' | 'visible'
 > | null {
   const traits = renderer.subEntityTraits
 

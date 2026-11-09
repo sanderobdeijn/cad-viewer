@@ -338,7 +338,6 @@ export default {
       },
       columns: {
         layout: 'Layout',
-        layer: 'Layer',
         geometry: 'Geometry',
         mapping: 'Mapping',
         entities: 'Entities',
@@ -363,8 +362,7 @@ export default {
   ribbonProperty: {
     color: 'Color',
     lineType: 'Linetype',
-    lineWeight: 'Lineweight',
-    layer: 'Layer'
+    lineWeight: 'Lineweight'
   },
   message: {
     fetchingDrawingFile: 'Fetching file ...'

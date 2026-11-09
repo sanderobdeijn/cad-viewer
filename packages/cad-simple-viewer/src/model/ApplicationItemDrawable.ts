@@ -10,12 +10,10 @@ import {
   type GraphicsInterfaceDrawable,
   type GraphicsInterfaceEntity,
   GraphicsInterfaceLineWeight,
-  type GraphicsInterfaceRenderer,
-  type GraphicsInterfaceSubEntityTraits
+  type GraphicsInterfaceRenderer
 } from '@mlightcad/graphic-interface'
 
 import { ApplicationSettingManager } from '../app/ApplicationSettingManager'
-import type { EditorLayerInfo } from '../editor/view/EditorLayerInfo'
 import {
   type ApplicationItemContents,
   type ApplicationPointDisplay,
@@ -57,41 +55,6 @@ export function applicationPreviewDrawable(
   )
 }
 
-/** The layer every item is drawn on. */
-export const APPLICATION_ITEM_LAYER = '0'
-
-/** Returns a colour from the AutoCAD colour index. */
-function aciColor(index: number) {
-  const color = new CommonColor()
-  color.colorIndex = index
-  return color
-}
-
-/** Layer 0, the one layer that items are drawn on. It is white, which shows as the foreground colour. */
-export const APPLICATION_DEFAULT_LAYER: EditorLayerInfo = {
-  name: APPLICATION_ITEM_LAYER,
-  isFrozen: false,
-  isOff: false,
-  color: aciColor(7)
-}
-
-/** The traits that items on {@link APPLICATION_DEFAULT_LAYER} take by layer. */
-export function applicationDefaultLayerTraits(): Partial<GraphicsInterfaceSubEntityTraits> {
-  return {
-    layer: APPLICATION_ITEM_LAYER,
-    color: aciColor(7),
-    lineType: {
-      type: 'UserSpecified',
-      name: 'Continuous',
-      standardFlag: 0,
-      description: 'Solid line',
-      totalPatternLength: 0
-    },
-    lineWeight: GraphicsInterfaceLineWeight.ByLineWeightDefault,
-    transparency: new CommonTransparency()
-  }
-}
-
 /** Id of model space, the one layout that items are drawn in. */
 export const APPLICATION_MODEL_SPACE_ID = '*MODEL_SPACE'
 
@@ -117,11 +80,9 @@ export function itemTypeName(item: ApplicationItemContents) {
 
 /**
  * Draws one model item for the view, in the one style every item has: the
- * foreground colour, a continuous line and the default line weight, on
- * layer 0.
+ * foreground colour, a continuous line and the default line weight.
  */
 export class ApplicationItemDrawable implements GraphicsInterfaceDrawable {
-  readonly layer = APPLICATION_ITEM_LAYER
   readonly visibility = true
 
   /**
@@ -151,23 +112,21 @@ export class ApplicationItemDrawable implements GraphicsInterfaceDrawable {
     const traits = renderer.subEntityTraits
     traits.color = new CommonColor().setForeground()
     traits.lineType = {
-      type: 'ByLayer',
+      type: 'UserSpecified',
       name: 'Continuous',
       standardFlag: 0,
       description: 'Solid line',
       totalPatternLength: 0
     }
     traits.lineTypeScale = 1
-    traits.lineWeight = GraphicsInterfaceLineWeight.ByLayer
+    traits.lineWeight = GraphicsInterfaceLineWeight.ByLineWeightDefault
     traits.transparency = new CommonTransparency()
-    traits.layer = this.layer
     traits.drawOrder = 0
     traits.thickness = 0
     const drawable = drawItem(this.item, renderer, this.pointDisplay())
     if (drawable) {
       drawable.objectId = this.objectId
       drawable.ownerId = this.ownerId
-      drawable.layerName = this.layer
     }
     return drawable
   }

@@ -259,7 +259,6 @@ While `isOpening` is true, command buttons are disabled. Items with `requiresDoc
 | `setDocState(partial)` | Update document / open-mode gating |
 | `reparentTo(newHost)` | Move the root to another mount element |
 | `syncInParentLayout()` | Re-apply flex sibling layout after canvas reparent |
-| `getLayerButtonAnchor()` | Expand if needed and return the `layer` button element |
 | `destroy()` | Tear down listeners and DOM |
 
 Getters: `placement`, `isCollapsed`, `isVisible`, `replaceOnNested`.
