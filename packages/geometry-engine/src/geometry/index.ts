@@ -21,11 +21,7 @@ export type { GeometryPolyline2dVertex } from './GeometryPolyline2d'
 export { GeometryLine2d } from './GeometryLine2d'
 export { GeometryLoop2d } from './GeometryLoop2d'
 export type { GeometryBoundaryEdgeType } from './GeometryLoop2d'
-export {
-  geometryCloneIntersectPrimitive,
-  geometryIntersectCurves,
-  geometryTransformIntersectPrimitive
-} from './GeometryCurveIntersect'
+export { geometryIntersectCurves } from './GeometryCurveIntersect'
 export type {
   GeometryCurveExtent,
   GeometryIntersectPrimitive

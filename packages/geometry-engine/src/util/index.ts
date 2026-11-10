@@ -4,35 +4,16 @@ export {
   GeometryMathUtil,
   DEG2RAD,
   RAD2DEG,
-  geometryCeilPowerOfTwo,
   geometryClamp,
-  geometryDamp,
   geometryDegToRad,
-  geometryEuclideanModulo,
-  geometryFloorPowerOfTwo,
-  geometryGenerateUUID,
   geometryIntPartLength,
-  geometryInverseLerp,
-  geometryIsBetween,
   geometryIsBetweenAngle,
   geometryIsAngleOnCcwSweep,
-  geometryIsPowerOfTwo,
-  geometryLerp,
-  geometryMapLinear,
   geometryNormalizeAngle,
-  geometryPingpong,
   geometryRadToDeg,
-  geometryRandFloat,
-  geometryRandFloatSpread,
-  geometryRandInt,
-  geometryRelativeEps,
-  geometrySeededRandom,
-  geometrySmootherstep,
-  geometrySmoothstep
+  geometryRelativeEps
 } from './GeometryMathUtil'
 export { GeometryTol, DEFAULT_TOL } from './GeometryTol'
-export { geometryOffsetVertexPath } from './GeometryCurveOffsetUtil'
-export { geometryOffsetSmoothedSampledPath } from './GeometrySampledCurveOffsetUtil'
 export {
   geometryClosedPolygonArea2d,
   geometryPolygonArea2d,

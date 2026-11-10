@@ -1,5 +1,5 @@
 import { GeometryBox2d, GeometryMatrix2d, GeometryPoint2d } from '../math'
-import { FLOAT_TOL, GeometryMathUtil, TAU } from '../util'
+import { FLOAT_TOL, TAU } from '../util'
 import { GeometryCircularArc2d } from './GeometryCircularArc2d'
 import { GeometryCurve2d } from './GeometryCurve2d'
 import type { GeometryTessellateOptions } from './GeometryCurveTessellate'
@@ -32,86 +32,12 @@ export class GeometryLoop2d extends GeometryCurve2d {
   }
 
   /**
-   * Build loops from a list of boundary edges.
-   *
-   * This method greedily connects the nearest edge endpoints to form one or more
-   * closed loops. If a loop cannot be closed within the given tolerance, it will
-   * still return the best-effort loop with the collected edges.
-   *
-   * @param edges Input edges
-   * @param tolerance Distance tolerance to treat two points as connected
-   * @returns Loops constructed from the input edges
-   */
-  static buildFromEdges(
-    edges: ReadonlyArray<GeometryBoundaryEdgeType>,
-    tolerance = 1e-3
-  ): GeometryLoop2d[] {
-    if (edges.length === 0) return []
-
-    // Work on a mutable copy so we can consume edges as we form loops.
-    const remaining = [...edges]
-    const loops: GeometryLoop2d[] = []
-    const toleranceSq = tolerance * tolerance
-
-    // Squared-distance check to avoid repeated sqrt calls.
-    const isClose = (a: GeometryPoint2d, b: GeometryPoint2d) => {
-      const dx = a.x - b.x
-      const dy = a.y - b.y
-      return dx * dx + dy * dy <= toleranceSq
-    }
-
-    while (remaining.length > 0) {
-      const loopEdges: GeometryBoundaryEdgeType[] = []
-      const current = remaining.shift() as GeometryBoundaryEdgeType
-      loopEdges.push(current)
-
-      const start = GeometryLoop2d.getEdgeStartPoint(current)
-      let end = GeometryLoop2d.getEdgeEndPoint(current)
-
-      // If the first edge is already closed, keep it as a single-edge loop.
-      if (!isClose(start, end)) {
-        while (remaining.length > 0) {
-          // Find the closest edge endpoint to the current end point.
-          const match = GeometryLoop2d.findConnectingEdge(
-            remaining,
-            end,
-            toleranceSq
-          )
-          if (match.index < 0) break
-
-          let next = remaining.splice(match.index, 1)[0]
-          // Reverse the edge direction if its end is closer than its start.
-          if (match.reverse) {
-            next = GeometryLoop2d.reverseEdge(next)
-          }
-          loopEdges.push(next)
-          end = GeometryLoop2d.getEdgeEndPoint(next)
-
-          // Stop once we close the loop back to the original start.
-          if (isClose(end, start)) break
-        }
-      }
-
-      loops.push(new GeometryLoop2d(loopEdges))
-    }
-
-    return loops
-  }
-
-  /**
    * Append an edge to this loop
    * @param curve
    */
   add(curve: GeometryBoundaryEdgeType) {
     this._curves.push(curve)
     this._boundingBoxNeedsUpdate = true
-  }
-
-  /**
-   * The number of edges in this loop
-   */
-  get numberOfEdges() {
-    return this._curves.length
   }
 
   /**
@@ -217,136 +143,6 @@ export class GeometryLoop2d extends GeometryCurve2d {
       })
     })
     return points
-  }
-
-  private static findConnectingEdge(
-    edges: GeometryBoundaryEdgeType[],
-    target: GeometryPoint2d,
-    toleranceSq: number
-  ) {
-    let bestIndex = -1
-    let bestReverse = false
-    let bestDistance = Number.POSITIVE_INFINITY
-
-    for (let i = 0; i < edges.length; i++) {
-      const edge = edges[i]
-      const start = GeometryLoop2d.getEdgeStartPoint(edge)
-      const end = GeometryLoop2d.getEdgeEndPoint(edge)
-
-      // Distance from target to edge start.
-      const dxStart = target.x - start.x
-      const dyStart = target.y - start.y
-      const distStart = dxStart * dxStart + dyStart * dyStart
-
-      if (distStart < bestDistance) {
-        bestDistance = distStart
-        bestIndex = i
-        bestReverse = false
-      }
-
-      // Distance from target to edge end.
-      const dxEnd = target.x - end.x
-      const dyEnd = target.y - end.y
-      const distEnd = dxEnd * dxEnd + dyEnd * dyEnd
-
-      if (distEnd < bestDistance) {
-        bestDistance = distEnd
-        bestIndex = i
-        bestReverse = true
-      }
-    }
-
-    // If the closest edge is still too far away, report no match.
-    if (bestDistance > toleranceSq) {
-      return { index: -1, reverse: false }
-    }
-    return { index: bestIndex, reverse: bestReverse }
-  }
-
-  /**
-   * Get the start point of an edge as a 2D point.
-   * @param edge Input edge
-   * @returns Start point
-   */
-  private static getEdgeStartPoint(edge: GeometryBoundaryEdgeType) {
-    const start = edge.startPoint as GeometryPoint2d
-    return new GeometryPoint2d(start.x, start.y)
-  }
-
-  /**
-   * Get the end point of an edge as a 2D point.
-   * @param edge Input edge
-   * @returns End point
-   */
-  private static getEdgeEndPoint(edge: GeometryBoundaryEdgeType) {
-    const end = edge.endPoint as GeometryPoint2d
-    return new GeometryPoint2d(end.x, end.y)
-  }
-
-  /**
-   * Reverse an edge so its start/end direction is flipped.
-   * @param edge Input edge
-   * @returns Reversed edge
-   */
-  private static reverseEdge(
-    edge: GeometryBoundaryEdgeType
-  ): GeometryBoundaryEdgeType {
-    if (edge instanceof GeometryLine2d) {
-      return new GeometryLine2d(edge.endPoint, edge.startPoint)
-    }
-    if (edge instanceof GeometryCircularArc2d) {
-      return GeometryLoop2d.reverseCircularArcEdge(edge)
-    }
-    if (edge instanceof GeometryEllipseArc2d) {
-      return new GeometryEllipseArc2d(
-        edge.center,
-        edge.majorAxisRadius,
-        edge.minorAxisRadius,
-        edge.endAngle,
-        edge.startAngle,
-        !edge.clockwise,
-        edge.rotation
-      )
-    }
-    return edge
-  }
-
-  /**
-   * Reverse a circular arc while preserving physical endpoints.
-   *
-   * `GeometryCircularArc2d` uses mirrored public angles when `clockwise` is true, so simply
-   * swapping `startAngle`/`endAngle` and flipping `clockwise` produces a reflected
-   * complementary arc. Rebuild from physical endpoint angles instead.
-   */
-  private static reverseCircularArcEdge(
-    edge: GeometryCircularArc2d
-  ): GeometryCircularArc2d {
-    const start = edge.startPoint
-    const end = edge.endPoint
-    const newClockwise = !edge.clockwise
-    // New start is the old end; new end is the old start.
-    const physicalStartAngle = Math.atan2(
-      end.y - edge.center.y,
-      end.x - edge.center.x
-    )
-    const physicalEndAngle = Math.atan2(
-      start.y - edge.center.y,
-      start.x - edge.center.x
-    )
-    // Match GeometryCircularArc2d clockwise public-angle convention (mirror ≈ negation).
-    const toPublicAngle = (angle: number) => {
-      const normalized = GeometryMathUtil.normalizeAngle(angle)
-      return newClockwise
-        ? GeometryMathUtil.normalizeAngle(-normalized)
-        : normalized
-    }
-    return new GeometryCircularArc2d(
-      edge.center,
-      edge.radius,
-      toPublicAngle(physicalStartAngle),
-      toPublicAngle(physicalEndAngle),
-      newClockwise
-    )
   }
 }
 

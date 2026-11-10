@@ -23,11 +23,8 @@ import {
   geometryTryCreateShorterArc
 } from './GeometryCircularArc2dFactory'
 import {
-  type GeometryCircumcircle2d,
-  geometryComputeCircumcircle2d,
   geometryIsBetterDistanceAlign,
   geometryPointLiesOnCircle2d,
-  geometryProjectPointOntoCircle2d,
   geometrySameCircle2d
 } from './GeometryCircularArcUtil'
 import { GeometryCurve2d } from './GeometryCurve2d'
@@ -154,28 +151,6 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
     arc._clockwise = clockwise
     arc._boundingBoxNeedsUpdate = true
     return arc
-  }
-
-  /**
-   * Return the circumcircle of three XY points, or `null` when they are collinear.
-   */
-  static computeCircumcircle(
-    p1: GeometryPoint2dLike,
-    p2: GeometryPoint2dLike,
-    p3: GeometryPoint2dLike
-  ): GeometryCircumcircle2d | null {
-    return geometryComputeCircumcircle2d(p1, p2, p3)
-  }
-
-  /**
-   * Project `point` radially onto the circle `(center, radius)`.
-   */
-  static projectPoint(
-    center: GeometryPoint2dLike,
-    radius: number,
-    point: GeometryPoint2dLike
-  ) {
-    return geometryProjectPointOntoCircle2d(center, radius, point)
   }
 
   /**

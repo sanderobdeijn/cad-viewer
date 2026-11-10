@@ -129,17 +129,6 @@ export class GeometryVector2d {
   }
 
   /**
-   * Replace this vector's y value with y.
-   * @param y Input new value of y component of this vector
-   * @returns Return this vector
-   */
-  setY(y: number) {
-    this.y = y
-
-    return this
-  }
-
-  /**
    * If index equals 0 set x to value.
    * If index equals 1 set y to value
    * @param index 0 or 1.
@@ -261,17 +250,6 @@ export class GeometryVector2d {
   }
 
   /**
-   * Subtract s from this vector's x and y components.
-   * @param s Input one scalar value
-   * @returns Return this vector
-   */
-  subScalar(s: number) {
-    this.x -= s
-    this.y -= s
-    return this
-  }
-
-  /**
    * Sets this vector to a - b.
    * @param a Input one 2d vector
    * @param b Input one 2d vector
@@ -388,35 +366,6 @@ export class GeometryVector2d {
   }
 
   /**
-   * If this vector's x or y values are greater than the max value, they are replaced by the max value.
-   * If this vector's x or y values are less than the min value, they are replaced by the min value.
-   * @param minVal Input the minimum value the components will be clamped to
-   * @param maxVal Input the maximum value the length will be clamped to
-   * @returns Return this vector
-   */
-  clampScalar(minVal: number, maxVal: number) {
-    this.x = Math.max(minVal, Math.min(maxVal, this.x))
-    this.y = Math.max(minVal, Math.min(maxVal, this.y))
-
-    return this
-  }
-
-  /**
-   * If this vector's length is greater than the max value, it is replaced by the max value.
-   * If this vector's length is less than the min value, it is replaced by the min value.
-   * @param min Input the minimum value the length will be clamped to
-   * @param max Input the maximum value the length will be clamped to
-   * @returns Return this vector
-   */
-  clampLength(min: number, max: number) {
-    const length = this.length()
-
-    return this.divideScalar(length || 1).multiplyScalar(
-      Math.max(min, Math.min(max, length))
-    )
-  }
-
-  /**
    * The components of this vector are rounded down to the nearest integer value.
    * @returns Return this vector
    */
@@ -445,29 +394,6 @@ export class GeometryVector2d {
   round() {
     this.x = Math.round(this.x)
     this.y = Math.round(this.y)
-
-    return this
-  }
-
-  /**
-   * The components of this vector are rounded towards zero (up if negative, down if positive) to
-   * an integer value.
-   * @returns Return this vector
-   */
-  roundToZero() {
-    this.x = Math.trunc(this.x)
-    this.y = Math.trunc(this.y)
-
-    return this
-  }
-
-  /**
-   * Invert this vector - i.e. sets x = -x and y = -y.
-   * @returns Return this vector
-   */
-  negate() {
-    this.x = -this.x
-    this.y = -this.y
 
     return this
   }
@@ -510,14 +436,6 @@ export class GeometryVector2d {
   }
 
   /**
-   * Compute the Manhattan length of this vector.
-   * @returns Return the Manhattan length of this vector。
-   */
-  manhattanLength() {
-    return Math.abs(this.x) + Math.abs(this.y)
-  }
-
-  /**
    * Converts this vector to a unit vector - that is, sets it equal to a vector with the same
    * direction as this one, but length 1.
    * @returns Return this vector
@@ -534,22 +452,6 @@ export class GeometryVector2d {
     // computes the angle in radians with respect to the positive x-axis
     const angle = Math.atan2(-this.y, -this.x) + Math.PI
     return angle
-  }
-
-  /**
-   * Return the angle between this vector and vector v in radians.
-   * @param v Input one 2d vector
-   * @returns Return the angle between this vector and vector v in radians.
-   */
-  angleTo(v: GeometryVector2d) {
-    const denominator = Math.sqrt(this.lengthSq() * v.lengthSq())
-
-    if (denominator === 0) return Math.PI / 2
-
-    const theta = this.dot(v) / denominator
-
-    // clamp, to handle numerical problems
-    return Math.acos(Math.max(-1, Math.min(1, theta)))
   }
 
   /**
@@ -575,24 +477,6 @@ export class GeometryVector2d {
   }
 
   /**
-   * Compute the Manhattan distance from this vector to v.
-   * @param v Input one 2d vector
-   * @returns Return the Manhattan distance from this vector to v.
-   */
-  manhattanDistanceTo(v: GeometryVector2dLike) {
-    return Math.abs(this.x - v.x) + Math.abs(this.y - v.y)
-  }
-
-  /**
-   * Sets this vector to a vector with the same direction as this one, but length l.
-   * @param len Input one sclar value
-   * @returns Return this vector
-   */
-  setLength(len: number) {
-    return this.normalize().multiplyScalar(len)
-  }
-
-  /**
    * Linearly interpolates between this vector and v, where alpha is the percent distance along the
    * line - alpha = 0 will be this vector, and alpha = 1 will be v.
    * @param v Input 2d vector to interpolate towards.
@@ -602,26 +486,6 @@ export class GeometryVector2d {
   lerp(v: GeometryVector2dLike, alpha: number) {
     this.x += (v.x - this.x) * alpha
     this.y += (v.y - this.y) * alpha
-
-    return this
-  }
-
-  /**
-   * Sets this vector to be the vector linearly interpolated between v1 and v2 where alpha is the
-   * percent distance along the line connecting the two vectors - alpha = 0 will be v1, and
-   * alpha = 1 will be v2.
-   * @param v1 Input the starting vector.
-   * @param v2 Input vector to interpolate towards.
-   * @param alpha Input interpolation factor, typically in the closed interval [0, 1].
-   * @returns
-   */
-  lerpVectors(
-    v1: GeometryVector2dLike,
-    v2: GeometryVector2dLike,
-    alpha: number
-  ) {
-    this.x = v1.x + (v2.x - v1.x) * alpha
-    this.y = v1.y + (v2.y - v1.y) * alpha
 
     return this
   }

@@ -183,32 +183,6 @@ export class GeometryBox2d {
   }
 
   /**
-   * Expand this box equilaterally by vector. The width of this box will be expanded by the x component
-   * of vector in both directions. The height of this box will be expanded by the y component of vector
-   * in both directions.
-   * @param vector Input 2d vector to expand the box by.
-   * @returns Return this box
-   */
-  expandByVector(vector: GeometryVector2dLike) {
-    this.min.sub(vector)
-    this.max.add(vector)
-
-    return this
-  }
-
-  /**
-   * Expand each dimension of the box by scalar. If negative, the dimensions of the box will be contracted.
-   * @param scalar Input distance to expand the box by.
-   * @returns Return this box
-   */
-  expandByScalar(scalar: number) {
-    this.min.addScalar(-scalar)
-    this.max.addScalar(scalar)
-
-    return this
-  }
-
-  /**
    * Return true if the specified point lies within or on the boundaries of this box.
    * @param point Input 2d point to check for inclusion.
    * @returns Return true if the specified point lies within or on the boundaries of this box.
@@ -238,22 +212,6 @@ export class GeometryBox2d {
   }
 
   /**
-   * Return a point as a proportion of this box's width and height.
-   * @param point Input one point
-   * @param target Input the result will be copied into this 2d vector.
-   * @returns Return a point as a proportion of this box's width and height.
-   */
-  getParameter(point: GeometryVector2dLike, target: GeometryVector2d) {
-    // This can potentially have a divide by zero if the box
-    // has a size dimension of 0.
-
-    return target.set(
-      (point.x - this.min.x) / (this.max.x - this.min.x),
-      (point.y - this.min.y) / (this.max.y - this.min.y)
-    )
-  }
-
-  /**
    * Determine whether or not this box intersects box.
    * @param box Input 2d box to check for intersection against.
    * @returns Return true if this box intersects box.
@@ -277,16 +235,6 @@ export class GeometryBox2d {
    */
   clampPoint(point: GeometryVector2dLike, target: GeometryVector2d) {
     return target.copy(point).clamp(this.min, this.max)
-  }
-
-  /**
-   * Return the distance from any edge of this box to the specified point. If the point lies inside of
-   * this box, the distance will be 0.
-   * @param point Input 2d vector to measure distance to.
-   * @returns Return the distance from any edge of this box to the specified point.
-   */
-  distanceToPoint(point: GeometryVector2dLike) {
-    return this.clampPoint(point, _vector).distanceTo(point)
   }
 
   /**

@@ -166,13 +166,6 @@ export class GeometryEllipseArc2d extends GeometryCurve2d {
   }
 
   /**
-   * Return true if the arc is a large arc whose delta angle value is greater than PI.
-   */
-  get isLargeArc() {
-    return Math.abs(this.deltaAngle) > Math.PI ? 1 : 0
-  }
-
-  /**
    * Compute the bounding box of the 3D ellipse arc.
    * The bounding box is defined by its minimum and maximum x, y, and z coordinates.
    * @returns Return bounding box containing the min and max coordinates
@@ -529,29 +522,6 @@ export class GeometryEllipseArc2d extends GeometryCurve2d {
       this.clockwise,
       this.rotation
     )
-  }
-
-  /**
-   * Returns the two focal points of this ellipse in WCS (XY).
-   *
-   * Returns an empty array when the ellipse is circular (major equals minor).
-   */
-  getFocusPoints(): GeometryPoint2d[] {
-    const a = Math.max(this.majorAxisRadius, this.minorAxisRadius)
-    const b = Math.min(this.majorAxisRadius, this.minorAxisRadius)
-    if (a - b < 1e-9) {
-      return []
-    }
-    const c = Math.sqrt(a * a - b * b)
-    const cos = Math.cos(this.rotation)
-    const sin = Math.sin(this.rotation)
-    const isMajorPrimary = this.majorAxisRadius >= this.minorAxisRadius
-    const ux = isMajorPrimary ? cos : -sin
-    const uy = isMajorPrimary ? sin : cos
-    return [
-      new GeometryPoint2d(this.center.x - c * ux, this.center.y - c * uy),
-      new GeometryPoint2d(this.center.x + c * ux, this.center.y + c * uy)
-    ]
   }
 
   /**

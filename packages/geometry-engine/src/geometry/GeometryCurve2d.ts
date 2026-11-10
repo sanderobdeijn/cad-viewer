@@ -1,5 +1,5 @@
 import { GeometryPoint2d } from '../math/GeometryPoint2d'
-import { FLOAT_TOL,geometryClamp } from '../util'
+import { FLOAT_TOL, geometryClamp } from '../util'
 import { GeometryShape2d } from './GeometryShape2d'
 
 /**
@@ -71,21 +71,6 @@ export abstract class GeometryCurve2d extends GeometryShape2d {
 
     for (let d = 0; d <= divisions; d++) {
       points.push(this.getPoint(d / divisions))
-    }
-
-    return points
-  }
-
-  /**
-   * Return a set of divisions + 1 equi-spaced points using `getPointAt(u)`.
-   * @param divisions Input number of pieces to divide the curve into. Default is 5.
-   * @returns Return a set of divisions + 1 equi-spaced points using `getPointAt(u)`.
-   */
-  getSpacedPoints(divisions = 5) {
-    const points = []
-
-    for (let d = 0; d <= divisions; d++) {
-      points.push(this.getPointAt(d / divisions))
     }
 
     return points
@@ -209,18 +194,6 @@ export abstract class GeometryCurve2d extends GeometryShape2d {
     const tangent = new GeometryPoint2d()
     tangent.copy(pt2).sub(pt1).normalize()
     return tangent
-  }
-
-  /**
-   * Return tangent at a point which is equidistant to the ends of the curve from the point given in
-   * `getTangent`.
-   * @param u Input a position on the curve according to the arc length. Must be in the range [0, 1].
-   * @returns Return tangent at a point which is equidistant to the ends of the curve from the point
-   * given in `getTangent`.
-   */
-  getTangentAt(u: number) {
-    const t = this.getUtoTmapping(u)
-    return this.getTangent(t)
   }
 
   /**

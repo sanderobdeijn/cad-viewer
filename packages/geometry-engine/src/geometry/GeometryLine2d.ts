@@ -100,27 +100,6 @@ export class GeometryLine2d extends GeometryCurve2d {
   }
 
   /**
-   * Check whether the specified point is on this line.
-   * @param point Input point to check
-   * @returns Return true if the specified point is on this line. Otherwise, return false.
-   */
-  isPointOnLine(point: GeometryPoint2dLike): boolean {
-    return this.project(point).distanceTo(point) < 1e-6
-  }
-
-  /**
-   * Return a point at a certain position along the line.
-   * - If `flag` is false, the length is measured from the end point
-   * - If `flag` is true, the length is measured from the start point
-   * @param length Use this length value to return a position along the line.
-   * @returns Return a point at a certain position along the line.
-   */
-  atLength(length: number, flag: boolean = false) {
-    const origin = flag ? this._start : this._end
-    return new GeometryPoint2d(origin).addScaledVector(this.direction, length)
-  }
-
-  /**
    * Extend this line with the specified length
    * @param length Input the length of extension
    * @param inversed Input true to extend past the start point, or false to extend past the end point

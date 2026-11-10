@@ -39,17 +39,7 @@ describe('GeometryEllipseArc2d', () => {
       true,
       0.2
     )
-    expect(cwArc.isLargeArc).toBe(0)
     expect(cwArc.getPoint(0.5)).toBeDefined()
-
-    const largeArc = new GeometryEllipseArc2d(
-      { x: 0, y: 0 },
-      4,
-      2,
-      0,
-      Math.PI * 1.5
-    )
-    expect(largeArc.isLargeArc).toBe(1)
 
     const wrapped = new GeometryEllipseArc2d({ x: 0, y: 0 }, 3, 2, 0.3, 1.1)
     ;(wrapped as any)._startAngle = 0.3

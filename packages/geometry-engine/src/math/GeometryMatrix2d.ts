@@ -272,65 +272,6 @@ export class GeometryMatrix2d {
   }
 
   /**
-   * Transpose this matrix in place.
-   * @returns Return this matrix
-   */
-  transpose() {
-    let tmp
-    const m = this.elements
-
-    tmp = m[1]
-    m[1] = m[3]
-    m[3] = tmp
-    tmp = m[2]
-    m[2] = m[6]
-    m[6] = tmp
-    tmp = m[5]
-    m[5] = m[7]
-    m[7] = tmp
-
-    return this
-  }
-
-  /**
-   * Set the UV transform matrix from offset, repeat, rotation, and center.
-   * @param tx Input offset x
-   * @param ty Input offset y
-   * @param sx Input repeat x
-   * @param sy Input repeat y
-   * @param rotation Input rotation, in radians. Positive values rotate counterclockwise
-   * @param cx Input center x of rotation
-   * @param cy Input center y of rotation
-   * @returns Return this matrix
-   */
-  setUvTransform(
-    tx: number,
-    ty: number,
-    sx: number,
-    sy: number,
-    rotation: number,
-    cx: number,
-    cy: number
-  ) {
-    const c = Math.cos(rotation)
-    const s = Math.sin(rotation)
-
-    this.set(
-      sx * c,
-      sx * s,
-      -sx * (c * cx + s * cy) + cx + tx,
-      -sy * s,
-      sy * c,
-      -sy * (-s * cx + c * cy) + cy + ty,
-      0,
-      0,
-      1
-    )
-
-    return this
-  }
-
-  /**
    * Scale this matrix with the given scalar values.
    * @param sx Input one scalar value
    * @param sy Input one scalar value

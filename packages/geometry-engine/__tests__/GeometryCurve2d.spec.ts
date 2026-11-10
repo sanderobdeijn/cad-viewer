@@ -27,7 +27,6 @@ describe('GeometryCurve2d', () => {
   it('exposes shared curve behavior through subclass', () => {
     const curve2d = new TestCurve2d()
     expect(curve2d.length).toBeCloseTo(1, 8)
-    expect(curve2d.getTangentAt(0.5).x).toBeCloseTo(1, 8)
     expect(curve2d.box.min.x).toBe(0)
     expect(curve2d.boundingBoxNeedUpdate).toBe(false)
   })
@@ -41,7 +40,6 @@ describe('GeometryCurve2d', () => {
     const curve2d = new TestCurve2d()
     expect(curve2d.getPointAt(0.3).x).toBeCloseTo(0.3, 8)
     expect(curve2d.getPoints(2).map(p => p.x)).toEqual([0, 0.5, 1])
-    expect(curve2d.getSpacedPoints(2).map(p => p.x)).toEqual([0, 0.5, 1])
     expect(curve2d.getLengths(4)).toEqual([0, 0.25, 0.5, 0.75, 1])
 
     // distance branch

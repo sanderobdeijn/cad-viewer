@@ -1,9 +1,4 @@
-import {
-  GeometryBox2d,
-  GeometryMatrix2d,
-  GeometryPoint2d,
-  GeometryVector2d
-} from '../math'
+import { GeometryBox2d, GeometryPoint2d, GeometryVector2d } from '../math'
 import {
   DEFAULT_TOL,
   FLOAT_TOL,
@@ -81,56 +76,6 @@ export function geometryIntersectCurves(
     }
   }
   return dedupePoints(points)
-}
-
-/**
- * Returns a transformed copy of a curve primitive.
- */
-export function geometryTransformIntersectPrimitive(
-  primitive: GeometryIntersectPrimitive,
-  matrix: GeometryMatrix2d
-): GeometryIntersectPrimitive {
-  const cloned = geometryCloneIntersectPrimitive(primitive)
-  switch (cloned.kind) {
-    case 'line':
-      cloned.line.transform(matrix)
-      return cloned
-    case 'circularArc':
-      cloned.arc.transform(matrix)
-      return cloned
-    case 'ellipseArc':
-      cloned.arc.transform(matrix)
-      return cloned
-  }
-}
-
-/**
- * Returns a deep-cloned curve primitive.
- */
-export function geometryCloneIntersectPrimitive(
-  primitive: GeometryIntersectPrimitive
-): GeometryIntersectPrimitive {
-  switch (primitive.kind) {
-    case 'line':
-      return {
-        kind: 'line',
-        line: primitive.line.clone(),
-        extent: primitive.extent,
-        extendable: primitive.extendable
-      }
-    case 'circularArc':
-      return {
-        kind: 'circularArc',
-        arc: primitive.arc.clone(),
-        extendable: primitive.extendable
-      }
-    case 'ellipseArc':
-      return {
-        kind: 'ellipseArc',
-        arc: primitive.arc.clone(),
-        extendable: primitive.extendable
-      }
-  }
 }
 
 type PreparedLine = {

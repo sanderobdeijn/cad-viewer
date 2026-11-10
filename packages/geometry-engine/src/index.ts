@@ -11,9 +11,7 @@ export {
   geometryIsBetterDistanceAlign,
   geometryPointLiesOnCircle2d,
   geometrySameCircle2d,
-  geometryCloneIntersectPrimitive,
-  geometryIntersectCurves,
-  geometryTransformIntersectPrimitive
+  geometryIntersectCurves
 } from './geometry'
 export type {
   GeometryBoundaryEdgeType,
@@ -49,41 +47,17 @@ export {
   ORIGIN_POINT_2D,
   RAD2DEG,
   TAU,
-  geometryCeilPowerOfTwo,
   geometryClamp,
-  geometryDamp,
   geometryDegToRad,
-  geometryEuclideanModulo,
-  geometryFloorPowerOfTwo,
-  geometryGenerateUUID,
   geometryIntPartLength,
-  geometryInverseLerp,
-  geometryIsBetween,
   geometryIsBetweenAngle,
   geometryIsAngleOnCcwSweep,
-  geometryIsPowerOfTwo,
-  geometryLerp,
-  geometryMapLinear,
   geometryNormalizeAngle,
-  geometryPingpong,
   geometryRadToDeg,
-  geometryRandFloat,
-  geometryRandFloatSpread,
-  geometryRandInt,
   geometryRelativeEps,
-  geometrySeededRandom,
-  geometrySmootherstep,
-  geometrySmoothstep,
-  geometryOffsetSmoothedSampledPath,
-  geometryOffsetVertexPath,
   geometryClosedPolygonArea2d,
   geometryPolygonArea2d,
   geometrySignedPolygonArea2d
 } from './util'
-export { Model, ModelParseError } from './Model'
-export type {
-  ModelItem,
-  ModelItemEventArgs,
-  ModelItemKind,
-  ModelTextItem
-} from './Model'
+export { Model } from './Model'
+export type { ModelItem, ModelItemEventArgs, ModelTextItem } from './Model'

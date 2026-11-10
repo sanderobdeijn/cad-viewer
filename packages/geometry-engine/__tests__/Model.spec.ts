@@ -4,9 +4,9 @@ import {
   GeometryLine2d,
   GeometryPoint2d,
   GeometryPolyline2d,
-  Model,
-  ModelParseError
+  Model
 } from '../src'
+import { ModelParseError } from '../src/Model'
 
 const withoutIds = (text: string) => text.replace(/ id=\S+/g, '')
 
