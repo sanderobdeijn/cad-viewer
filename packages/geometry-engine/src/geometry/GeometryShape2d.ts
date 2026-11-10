@@ -1,9 +1,4 @@
-import {
-  GeometryBox2d,
-  GeometryMatrix2d,
-  GeometryMatrix3d,
-  GeometryVector2dLike
-} from '../math'
+import { GeometryBox2d, GeometryMatrix2d, GeometryVector2dLike } from '../math'
 import { GeometryShape } from './GeometryShape'
 
 /**
@@ -27,14 +22,6 @@ export abstract class GeometryShape2d extends GeometryShape {
    * @param matrix Input transformation matrix
    */
   abstract transform(matrix: GeometryMatrix2d): this
-
-  /**
-   * Transforms this shape by the XY affine part of a 4x4 matrix.
-   * @param matrix Input transformation matrix
-   */
-  transform3d(matrix: GeometryMatrix3d): this {
-    return this.transform(new GeometryMatrix2d().setFromAffineMatrix4(matrix))
-  }
 
   /**
    * Return a deep-cloned copy of this 2d shape.

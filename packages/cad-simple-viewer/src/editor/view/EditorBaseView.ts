@@ -1,7 +1,7 @@
 import { CommonEventManager } from '@mlightcad/common'
 import {
   GeometryBox2d,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike,
   type ModelItem
@@ -104,7 +104,10 @@ export {
 /**
  * Type of callback function used to calculate size of canvas when window resized
  */
-export type EditorCalculateSizeCallback = () => { width: number; height: number }
+export type EditorCalculateSizeCallback = () => {
+  width: number
+  height: number
+}
 
 /**
  * Abstract base class for all CAD view implementations.
@@ -569,7 +572,9 @@ export abstract class EditorBaseView {
    * Add the specified transient entity or entities in the current scene.
    * @param entity Input one or multiple transient entities
    */
-  abstract addTransientEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+  abstract addTransientEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ): void
 
   /**
    * Remove the specified transient entity or entities in the current scene.
@@ -598,7 +603,7 @@ export abstract class EditorBaseView {
    * @param handleId - Preview handle returned by {@link createEntityPreview}
    * @param matrix - World transform to apply to the preview geometry
    */
-  abstract updateEntityPreview(handleId: string, matrix: GeometryMatrix3d): void
+  abstract updateEntityPreview(handleId: string, matrix: GeometryMatrix2d): void
 
   /**
    * Removes one batched preview overlay.
@@ -614,7 +619,7 @@ export abstract class EditorBaseView {
   abstract updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
       objectId: string
-      matrix: GeometryMatrix3d
+      matrix: GeometryMatrix2d
     }>
   ): void
 
@@ -629,20 +634,26 @@ export abstract class EditorBaseView {
    * and draw it or them
    * @param entity Input one or multiple entities to add into the current scene
    */
-  abstract addEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+  abstract addEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ): void
 
   /**
    * Remove the specified entity or entities from current drawing database and current scene
    * and draw it or them
    * @param entity Input one or multiple entities to remove
    */
-  abstract removeEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+  abstract removeEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ): void
 
   /**
    * Update the specified entity or entities
    * @param entity Input the entity or entities to update
    */
-  abstract updateEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]): void
+  abstract updateEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ): void
 
   /**
    * Returns true when the entity is already present in the scene.

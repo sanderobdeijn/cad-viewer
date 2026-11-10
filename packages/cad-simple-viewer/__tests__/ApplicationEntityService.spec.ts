@@ -1,4 +1,4 @@
-import { GeometryLine2d, GeometryMatrix3d } from '@mlightcad/geometry-engine'
+import { GeometryLine2d, GeometryMatrix2d } from '@mlightcad/geometry-engine'
 
 import { ApplicationModelSync } from '../src/app/ApplicationModelSync'
 import { EditorOpenMode } from '../src/editor/view/EditorOpenMode'
@@ -46,7 +46,7 @@ describe('ApplicationEntityService', () => {
 
   test('cloneAndTransform adds transformed copies', () => {
     const { sync, ids, service } = createService()
-    const matrix = new GeometryMatrix3d().makeTranslation(0, 5, 0)
+    const matrix = new GeometryMatrix2d().makeTranslation(0, 5)
 
     service.cloneAndTransform(service.getItemsByIds([ids[0]]), matrix)
 

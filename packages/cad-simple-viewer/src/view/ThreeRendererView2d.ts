@@ -1,7 +1,7 @@
 import { CommonUiYieldGate, log } from '@mlightcad/common'
 import {
   GeometryBox2d,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
@@ -1235,10 +1235,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   /**
    * @inheritdoc
    */
-  search(
-    box: GeometryBox2d,
-    options?: ThreeRendererSpatialSearchOptions
-  ) {
+  search(box: GeometryBox2d, options?: ThreeRendererSpatialSearchOptions) {
     return this._scene.search(box, options)
   }
 
@@ -1310,12 +1307,17 @@ export class ThreeRendererView2d extends EditorBaseView {
    * Add the specified transient entity or entities into this view
    * @param entity Input one or multiple transient entities
    */
-  addTransientEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]) {
+  addTransientEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ) {
     const entities = Array.isArray(entity) ? entity : [entity]
     const epoch = this._convertEpoch
     for (let i = 0; i < entities.length; ++i) {
       const entity = entities[i]
-      const threeEntity: ThreeRendererEntity | null = this.drawEntity(entity, true)
+      const threeEntity: ThreeRendererEntity | null = this.drawEntity(
+        entity,
+        true
+      )
       if (threeEntity) {
         threeEntity.objectId = entity.objectId
         void threeEntity
@@ -1330,7 +1332,10 @@ export class ThreeRendererView2d extends EditorBaseView {
             this._isDirty = true
           })
           .catch(error => {
-            log.error('[ThreeRendererView2d] Transient entity geometry failed:', error)
+            log.error(
+              '[ThreeRendererView2d] Transient entity geometry failed:',
+              error
+            )
             threeEntity.dispose()
           })
       }
@@ -1377,9 +1382,12 @@ export class ThreeRendererView2d extends EditorBaseView {
   /**
    * @inheritdoc
    */
-  updateEntityPreview(handleId: string, matrix: GeometryMatrix3d): void {
+  updateEntityPreview(handleId: string, matrix: GeometryMatrix2d): void {
     if (
-      this._scene.updatePreview(handleId, ThreeRendererMatrixUtil.createMatrix4(matrix))
+      this._scene.updatePreview(
+        handleId,
+        ThreeRendererMatrixUtil.createMatrix4(matrix)
+      )
     ) {
       this._isDirty = true
     }
@@ -1400,7 +1408,7 @@ export class ThreeRendererView2d extends EditorBaseView {
   updateTransientPreviewTransforms(
     transforms: ReadonlyArray<{
       objectId: string
-      matrix: GeometryMatrix3d
+      matrix: GeometryMatrix2d
     }>
   ): void {
     const updated = this._scene.updateTransientPreviewTransforms(
@@ -1450,7 +1458,9 @@ export class ThreeRendererView2d extends EditorBaseView {
   /**
    * @inheritdoc
    */
-  removeEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]) {
+  removeEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ) {
     const entities = Array.isArray(entity) ? entity : [entity]
     entities.forEach(entity => this._scene.removeEntity(entity.objectId))
     this._isDirty = true
@@ -1507,7 +1517,9 @@ export class ThreeRendererView2d extends EditorBaseView {
    *
    * Pure translations should use {@link translateEntity} instead.
    */
-  updateEntity(entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]) {
+  updateEntity(
+    entity: GraphicsInterfaceDrawable | GraphicsInterfaceDrawable[]
+  ) {
     const entities = Array.isArray(entity) ? entity : [entity]
     if (entities.length === 0) return
 
@@ -2182,7 +2194,10 @@ export class ThreeRendererView2d extends EditorBaseView {
           // Append refused (e.g. invisible) — fall through to the legacy path.
         }
 
-        const threeEntity: ThreeRendererEntity | null = this.drawEntity(entity, false)
+        const threeEntity: ThreeRendererEntity | null = this.drawEntity(
+          entity,
+          false
+        )
         if (!threeEntity) {
           // Release the claim so a later export pass can retry; otherwise
           // `forExport` claim checks would skip this id forever.
@@ -2314,5 +2329,4 @@ export class ThreeRendererView2d extends EditorBaseView {
     // and skip the final fit.
     this._progressiveOpenFit.frameProgrammatically(box)
   }
-
 }

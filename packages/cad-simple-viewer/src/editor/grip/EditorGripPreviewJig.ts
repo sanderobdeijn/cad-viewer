@@ -1,7 +1,7 @@
 import {
   GeometryPoint2d,
   GeometryPoint2dLike,
-  GeometryVector3d
+  GeometryVector2d
 } from '@mlightcad/geometry-engine'
 
 import {
@@ -59,11 +59,10 @@ export class EditorGripPreviewJig extends EditorPreviewJig<GeometryPoint2dLike> 
     )
   }
 
-  computeOffset(point: GeometryPoint2dLike): GeometryVector3d {
-    return new GeometryVector3d(
+  computeOffset(point: GeometryPoint2dLike): GeometryVector2d {
+    return new GeometryVector2d(
       point.x - this._gripBaseWcs.x,
-      point.y - this._gripBaseWcs.y,
-      0
+      point.y - this._gripBaseWcs.y
     )
   }
 

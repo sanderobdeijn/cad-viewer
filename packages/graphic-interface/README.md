@@ -28,7 +28,6 @@ npm install @mlightcad/graphic-interface
 ### Core Rendering Classes
 - **GraphicsInterfaceRenderer**: Main interface for rendering entities to drawable objects
 - **GraphicsInterfaceEntity**: Base class for drawable objects that can be rendered
-- **GraphicsInterfaceView**: Represents a view with camera and projection settings
 - **GraphicsInterfaceViewport**: Manages viewport settings and clipping
 
 ### Style Classes
@@ -93,19 +92,12 @@ arrowStyle.setSize(3);
 arrowStyle.setColor(1); // Red
 ```
 
-### View and Viewport Management
+### Viewport Management
 ```typescript
-import { GraphicsInterfaceView, GraphicsInterfaceViewport, GeometryVector3d } from '@mlightcad/graphic-interface';
-
-// Create a view
-const view = new GraphicsInterfaceView();
-view.setEyePoint(new GeometryVector3d(0, 0, 100));
-view.setTargetPoint(new GeometryVector3d(0, 0, 0));
-view.setUpVector(new GeometryVector3d(0, 1, 0));
+import { GraphicsInterfaceViewport } from '@mlightcad/graphic-interface';
 
 // Create a viewport
 const viewport = new GraphicsInterfaceViewport();
-viewport.setView(view);
 viewport.setWidth(800);
 viewport.setHeight(600);
 viewport.setZoom(1.0);

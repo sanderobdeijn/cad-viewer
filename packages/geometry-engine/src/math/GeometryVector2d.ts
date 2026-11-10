@@ -2,7 +2,6 @@ import { CommonErrors } from '@mlightcad/common'
 
 import { GeometryMathUtil } from '../util/GeometryMathUtil'
 import { GeometryMatrix2d } from './GeometryMatrix2d'
-import type { GeometryMatrix3d } from './GeometryMatrix3d'
 import { GeometryPoint2dLike } from './GeometryPoint2d'
 
 /**
@@ -340,23 +339,6 @@ export class GeometryVector2d {
 
     this.x = e[0] * x + e[3] * y + e[6]
     this.y = e[1] * x + e[4] * y + e[7]
-
-    return this
-  }
-
-  /**
-   * Multiply this vector (with an implicit z = 0 and w = 1) by m and keep the XY part of the result.
-   * @param m Input one 4x4 matrix
-   * @returns Return this vector
-   */
-  applyMatrix4(m: GeometryMatrix3d) {
-    const x = this.x,
-      y = this.y
-    const e = m.elements
-    const w = 1 / (e[3] * x + e[7] * y + e[15])
-
-    this.x = (e[0] * x + e[4] * y + e[12]) * w
-    this.y = (e[1] * x + e[5] * y + e[13]) * w
 
     return this
   }

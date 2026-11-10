@@ -1,5 +1,5 @@
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 /**
@@ -13,10 +13,10 @@ export function createRotationMatrix(
   basePoint: GeometryPoint2dLike,
   angleRad: number
 ) {
-  return new GeometryMatrix3d()
-    .makeTranslation(basePoint.x, basePoint.y, 0)
-    .multiply(new GeometryMatrix3d().makeRotationZ(angleRad))
+  return new GeometryMatrix2d()
+    .makeTranslation(basePoint.x, basePoint.y)
+    .multiply(new GeometryMatrix2d().makeRotation(angleRad))
     .multiply(
-      new GeometryMatrix3d().makeTranslation(-basePoint.x, -basePoint.y, -0)
+      new GeometryMatrix2d().makeTranslation(-basePoint.x, -basePoint.y)
     )
 }

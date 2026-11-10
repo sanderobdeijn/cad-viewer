@@ -3,7 +3,7 @@ import {
   GeometryBox2d,
   type GeometryDimension,
   GeometryLine2d,
-  type GeometryMatrix3d,
+  type GeometryMatrix2d,
   GeometryPoint2d,
   type GeometryPoint2dLike,
   GeometryPolyline2d,
@@ -137,11 +137,11 @@ export function moveDimensionGrips(
 /** Returns a copy of a dimension with its points transformed. */
 export function transformDimension(
   dimension: GeometryDimension,
-  matrix: GeometryMatrix3d
+  matrix: GeometryMatrix2d
 ): GeometryDimension {
   const moved = cloneDimension(dimension)
   for (const point of Object.values(moved.points)) {
-    point.applyMatrix4(matrix)
+    point.applyMatrix2d(matrix)
   }
   return moved
 }

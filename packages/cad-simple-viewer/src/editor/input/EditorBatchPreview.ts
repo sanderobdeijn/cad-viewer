@@ -1,5 +1,5 @@
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
@@ -67,7 +67,7 @@ export class EditorBatchedPreview {
         return
       }
       this._handleIds.push(handleId)
-      view.updateEntityPreview(handleId, new GeometryMatrix3d())
+      view.updateEntityPreview(handleId, new GeometryMatrix2d())
     }
     this.useBatchPreview = this._handleIds.length === this.copyCount
   }
@@ -81,7 +81,7 @@ export class EditorBatchedPreview {
    * @param view - View that owns the preview overlay
    * @param matrix - World transform to apply to the preview geometry
    */
-  updateMatrix(view: EditorBaseView, matrix: GeometryMatrix3d): void {
+  updateMatrix(view: EditorBaseView, matrix: GeometryMatrix2d): void {
     if (!this.useBatchPreview || this._handleIds.length !== 1) {
       return
     }
@@ -120,7 +120,7 @@ export class EditorBatchedPreview {
       )
       view.updateEntityPreview(
         handleId,
-        new GeometryMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
+        new GeometryMatrix2d().makeTranslation(scaled.x, scaled.y)
       )
     })
   }

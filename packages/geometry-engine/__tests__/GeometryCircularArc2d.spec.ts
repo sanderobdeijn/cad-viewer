@@ -1,7 +1,6 @@
 import {
   DEFAULT_TOL,
   GeometryCircularArc2d,
-  GeometryMatrix3d,
   GeometryTol,
   ORIGIN_POINT_2D,
   TAU
@@ -532,7 +531,7 @@ describe('GeometryCircularArc2d in place of the 3D class', () => {
       Math.PI / 2,
       false
     )
-    arc.transform3d(new GeometryMatrix3d().makeScale(-1, 1, 1))
+    arc.transform(new GeometryMatrix2d().makeScale(-1, 1))
     expect(arc.clockwise).toBe(true)
     expect(arc.startPoint.x).toBeCloseTo(-2, 8)
     expect(arc.endPoint.y).toBeCloseTo(2, 8)

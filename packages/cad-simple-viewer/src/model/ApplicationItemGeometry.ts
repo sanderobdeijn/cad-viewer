@@ -16,16 +16,14 @@ import {
   type GeometryIntersectPrimitive,
   GeometryLine2d,
   GeometryMathUtil,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   type GeometryPoint2dLike,
   GeometryPolyline2d,
   type GeometryPolyline2dVertex,
   type GeometryShape,
-  geometryTransformOcsPointToWcs,
   GeometryVector2d,
   type GeometryVector2dLike,
-  GeometryVector3d,
   type ModelItem,
   TAU
 } from '@mlightcad/geometry-engine'
@@ -63,7 +61,7 @@ const QUADRANT_ANGLES = [0, Math.PI / 2, Math.PI, (Math.PI / 2) * 3]
 const BULGE_EPS = 1e-10
 
 const translation = (offset: GeometryVector2dLike) =>
-  GeometryMatrix3d.makeTranslation({ x: offset.x, y: offset.y, z: 0 })
+  new GeometryMatrix2d().makeTranslation(offset.x, offset.y)
 
 const pickNearest = (
   pickPoint: GeometryPoint2dLike,
@@ -162,12 +160,15 @@ interface ShapeOps<G extends GeometryShape> {
     pickPoint: GeometryPoint2dLike,
     out: GeometryPoint2dLike[]
   ): void
-  transform(geometry: G, matrix: GeometryMatrix3d): G
+  transform(geometry: G, matrix: GeometryMatrix2d): G
   offset(geometry: G, distance: number): G[]
   offsetSide(geometry: G, point: GeometryPoint2dLike): 1 | -1
   intersectCurves(geometry: G): GeometryIntersectPrimitive[]
   extents(geometry: G): GeometryBox2d
-  draw(geometry: G, renderer: GraphicsInterfaceRenderer): GraphicsInterfaceEntity | undefined
+  draw(
+    geometry: G,
+    renderer: GraphicsInterfaceRenderer
+  ): GraphicsInterfaceEntity | undefined
 }
 
 const boxOf = (geometry: {
@@ -191,7 +192,7 @@ const lineOps: ShapeOps<GeometryLine2d> = {
     let moved = line.clone()
     for (const index of indices) {
       if (index === 0) {
-        moved = moved.transform3d(translation(offset))
+        moved = moved.transform(translation(offset))
       } else if (index === 1) {
         moved = new GeometryLine2d(
           moved.startPoint.clone().add(offset),
@@ -225,7 +226,7 @@ const lineOps: ShapeOps<GeometryLine2d> = {
     }
   },
   transform(line, matrix) {
-    const moved = line.clone().transform3d(matrix)
+    const moved = line.clone().transform(matrix)
     return new GeometryLine2d(moved.startPoint, moved.endPoint)
   },
   offset(line, distance) {
@@ -253,7 +254,7 @@ const circleOps: ShapeOps<GeometryCircularArc2d> = {
     let moved = circle.clone()
     for (const index of indices) {
       if (index === 0) {
-        moved = moved.transform3d(translation(offset))
+        moved = moved.transform(translation(offset))
       } else if (index >= 1 && index <= 4) {
         const point = moved.getPointAtAngle(QUADRANT_ANGLES[index - 1])
         const radius = new GeometryPoint2d(
@@ -302,7 +303,7 @@ const circleOps: ShapeOps<GeometryCircularArc2d> = {
         break
     }
   },
-  transform: (circle, matrix) => circle.clone().transform3d(matrix),
+  transform: (circle, matrix) => circle.clone().transform(matrix),
   offset(circle, distance) {
     const moved = circle.offset(distance)
     return moved
@@ -342,7 +343,7 @@ const arcOps: ShapeOps<GeometryCircularArc2d> = {
     let moved = arc.clone()
     for (const index of indices) {
       if (index === 0) {
-        moved = moved.transform3d(translation(offset))
+        moved = moved.transform(translation(offset))
       } else if (index === 1 || index === 2) {
         const point = index === 1 ? moved.startPoint : moved.endPoint
         const angle = polarAngle(moved.center, {
@@ -393,7 +394,7 @@ const arcOps: ShapeOps<GeometryCircularArc2d> = {
         break
     }
   },
-  transform: (arc, matrix) => arc.clone().transform3d(matrix),
+  transform: (arc, matrix) => arc.clone().transform(matrix),
   offset(arc, distance) {
     const radius = arc.radius + distance
     if (radius <= 0) return []
@@ -460,7 +461,7 @@ const ellipseOps: ShapeOps<GeometryEllipseArc2d> = {
     let moved = ellipse.clone()
     for (const index of indices) {
       if (index === 0) {
-        moved = moved.transform3d(translation(offset))
+        moved = moved.transform(translation(offset))
       } else if (moved.closed && index >= 1 && index <= 4) {
         moveEllipseQuadrant(moved, QUADRANT_ANGLES[index - 1], offset)
       } else if (index === 1) {
@@ -514,7 +515,7 @@ const ellipseOps: ShapeOps<GeometryEllipseArc2d> = {
         break
     }
   },
-  transform: (ellipse, matrix) => ellipse.clone().transform3d(matrix),
+  transform: (ellipse, matrix) => ellipse.clone().transform(matrix),
   offset(ellipse, distance) {
     const moved = ellipse.offset(distance)
     return moved
@@ -564,8 +565,7 @@ const polylineWith = (
 const copyVertices = (polyline: GeometryPolyline2d) =>
   polyline.vertices.map(vertex => ({ ...vertex }))
 
-const toWcs = (x: number, y: number) =>
-  geometryTransformOcsPointToWcs({ x, y }, GeometryVector3d.Z_AXIS)
+const toWcs = (x: number, y: number) => new GeometryPoint2d(x, y)
 
 const polylineArcPrimitive = (
   arc: GeometryCircularArc2d,
@@ -690,7 +690,9 @@ const polylineOps: ShapeOps<GeometryPolyline2d> = {
   transform(polyline, matrix) {
     const flipBulge = matrix.determinant() < 0
     const vertices = copyVertices(polyline).map(vertex => {
-      const point = new GeometryPoint2d(vertex.x, vertex.y).applyMatrix4(matrix)
+      const point = new GeometryPoint2d(vertex.x, vertex.y).applyMatrix2d(
+        matrix
+      )
       return {
         ...vertex,
         x: point.x,
@@ -830,7 +832,9 @@ export function cloneItemContents(
 }
 
 /** Returns the grip points of an item, in grip index order. */
-export function itemGripPoints(contents: ApplicationItemContents): GeometryPoint2d[] {
+export function itemGripPoints(
+  contents: ApplicationItemContents
+): GeometryPoint2d[] {
   switch (contents.kind) {
     case 'shape':
       return shapeOps(contents.geometry).gripPoints(contents.geometry)
@@ -916,7 +920,7 @@ export function itemOsnapPoints(
 /** Returns new contents transformed by a matrix. */
 export function transformItem(
   contents: ApplicationItemContents,
-  matrix: GeometryMatrix3d
+  matrix: GeometryMatrix2d
 ): ApplicationItemContents {
   switch (contents.kind) {
     case 'shape':
@@ -930,7 +934,7 @@ export function transformItem(
     case 'point':
       return {
         kind: 'point',
-        geometry: contents.geometry.clone().applyMatrix4(matrix)
+        geometry: contents.geometry.clone().applyMatrix2d(matrix)
       }
     case 'dimension':
       return {

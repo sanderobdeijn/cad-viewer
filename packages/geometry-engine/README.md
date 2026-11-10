@@ -35,11 +35,10 @@ npm install @mlightcad/geometry-engine
 
 #### Points and Vectors
 - **GeometryPoint2d**: Represents a 2D point
-- **GeometryVector2d, GeometryVector3d**: Represent 2D and 3D vectors with magnitude and direction
+- **GeometryVector2d**: Represents 2D vectors with magnitude and direction
 
 #### Transformations
-- **GeometryMatrix2d, GeometryMatrix3d**: 2D and 3D transformation matrices
-- **GeometryQuaternion**: Quaternion-based 3D rotations
+- **GeometryMatrix2d**: 2D transformation matrices
 
 #### Mathematical Utilities
 - **GeometryBox2d**: Bounding boxes in 2D space
@@ -68,19 +67,19 @@ npm install @mlightcad/geometry-engine
 
 ### Basic Point and Vector Operations
 ```typescript
-import { GeometryPoint2d, GeometryVector3d, GeometryMatrix3d } from '@mlightcad/geometry-engine';
+import { GeometryMatrix2d, GeometryPoint2d, GeometryVector2d } from '@mlightcad/geometry-engine';
 
 // Create points and vectors
 const point1 = new GeometryPoint2d(0, 0);
 const point2 = new GeometryPoint2d(10, 10);
-const vector = new GeometryVector3d(1, 0, 0);
+const vector = new GeometryVector2d(1, 0);
 
 // Calculate distance between points
 const distance = point1.distanceTo(point2);
 
 // Transform a point
-const matrix = GeometryMatrix3d.translation(5, 5, 5);
-const transformedPoint = point1.transformBy(matrix);
+const matrix = new GeometryMatrix2d().makeTranslation(5, 5);
+const transformedPoint = point1.clone().applyMatrix2d(matrix);
 ```
 
 ### Line and Curve Operations
@@ -107,19 +106,19 @@ const pointOnArc = arc.evalPoint(param);
 
 ### Matrix Transformations
 ```typescript
-import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine';
+import { GeometryMatrix2d, GeometryPoint2d } from '@mlightcad/geometry-engine';
 
 // Create transformation matrices
-const translation = GeometryMatrix3d.translation(10, 20, 30);
-const rotation = GeometryMatrix3d.rotation(Math.PI / 4, GeometryVector3d.kZAxis);
-const scale = GeometryMatrix3d.scaling(2, 2, 2);
+const translation = new GeometryMatrix2d().makeTranslation(10, 20);
+const rotation = new GeometryMatrix2d().makeRotation(Math.PI / 4);
+const scale = new GeometryMatrix2d().makeScale(2, 2);
 
 // Combine transformations
 const combined = translation.multiply(rotation).multiply(scale);
 
 // Apply transformation to a point
 const point = new GeometryPoint2d(1, 1);
-const transformed = point.transformBy(combined);
+const transformed = point.applyMatrix2d(combined);
 ```
 
 ### Polyline Operations
@@ -144,7 +143,7 @@ const isClosed = polyline.isClosed();
 
 ### Geometric Utilities
 ```typescript
-import { GeometryUtil, GeometryPoint2d, GeometryVector3d } from '@mlightcad/geometry-engine';
+import { GeometryLine2d, GeometryUtil, GeometryPoint2d } from '@mlightcad/geometry-engine';
 
 // Calculate intersection between lines
 const line1 = new GeometryLine2d(new GeometryPoint2d(0, 0), new GeometryPoint2d(1, 0));

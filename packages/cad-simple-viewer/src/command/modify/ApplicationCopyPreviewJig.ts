@@ -1,6 +1,6 @@
 import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
@@ -59,7 +59,12 @@ export class ApplicationCopyPreviewJig extends EditorSelectionTransformPreviewJi
     const targets =
       this.previewEntries.length > 0
         ? this.previewEntries
-        : [{ entity: { objectId: '' } as GraphicsInterfaceDrawable, copyFactor: 1 }]
+        : [
+            {
+              entity: { objectId: '' } as GraphicsInterfaceDrawable,
+              copyFactor: 1
+            }
+          ]
     return targets.map(entry => {
       const scaled = scaleCopyDisplacement(
         displacement,
@@ -69,7 +74,7 @@ export class ApplicationCopyPreviewJig extends EditorSelectionTransformPreviewJi
       )
       return {
         objectId: entry.entity.objectId,
-        matrix: new GeometryMatrix3d().makeTranslation(scaled.x, scaled.y, 0)
+        matrix: new GeometryMatrix2d().makeTranslation(scaled.x, scaled.y)
       }
     })
   }

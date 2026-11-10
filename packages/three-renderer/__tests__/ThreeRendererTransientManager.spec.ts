@@ -1,4 +1,4 @@
-import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix2d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 import { ThreeRendererEntity } from '../src/object/ThreeRendererEntity'
@@ -50,7 +50,7 @@ describe('ThreeRendererTransientManager.applyTransforms', () => {
     const baseline = group.matrix.clone()
 
     const rotation = ThreeRendererMatrixUtil.createMatrix4(
-      new GeometryMatrix3d().makeRotationZ(Math.PI / 4)
+      new GeometryMatrix2d().makeRotation(Math.PI / 4)
     )
     manager.applyTransforms([{ id: group.objectId, matrix: rotation }])
 

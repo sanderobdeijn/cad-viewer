@@ -1,9 +1,4 @@
-import {
-  GeometryPoint2dLike,
-  GeometryVector2d,
-  GeometryVector3d,
-  GeometryVector3dLike
-} from '../math'
+import { GeometryPoint2dLike, GeometryVector2d } from '../math'
 import { FLOAT_TOL } from './GeometryConstants'
 
 /**
@@ -67,16 +62,6 @@ export class GeometryTol {
    */
   equalPoint2d(p1: GeometryPoint2dLike, p2: GeometryPoint2dLike) {
     return new GeometryVector2d(p1).sub(p2).length() < this.equalPointTol
-  }
-
-  /**
-   * Return true if two points are equal with the specified tolerance.
-   * @param p1 Input the first 2d point
-   * @param p2 Input the second 2d point
-   * @returns Return true if two poitns are equal with the specified tolerance.
-   */
-  equalPoint3d(p1: GeometryVector3dLike, p2: GeometryVector3dLike) {
-    return new GeometryVector3d(p1).sub(p2).length() < this.equalPointTol
   }
 
   /**

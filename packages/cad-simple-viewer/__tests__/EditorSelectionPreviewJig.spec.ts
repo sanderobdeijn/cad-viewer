@@ -1,6 +1,6 @@
 import {
   GeometryLine2d,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   type ModelItem
 } from '@mlightcad/geometry-engine'
@@ -43,7 +43,7 @@ function createBatchView() {
 
 class TestTransformJig extends EditorSelectionTransformPreviewJig<GeometryPoint2d> {
   protected buildTransforms(point: GeometryPoint2d) {
-    const matrix = new GeometryMatrix3d().makeTranslation(point.x, point.y, 0)
+    const matrix = new GeometryMatrix2d().makeTranslation(point.x, point.y)
     return this.previewEntries.map(entry => ({
       objectId: entry.entity.objectId,
       matrix

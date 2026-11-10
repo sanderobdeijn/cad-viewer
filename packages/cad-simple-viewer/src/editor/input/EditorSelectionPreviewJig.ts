@@ -1,5 +1,5 @@
 import type { ModelItem } from '@mlightcad/geometry-engine'
-import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix2d } from '@mlightcad/geometry-engine'
 import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
 
 import { applicationPreviewDrawable } from '../../model/ApplicationItemDrawable'
@@ -20,7 +20,7 @@ export interface EditorSelectionPreviewEntry {
  */
 export interface EditorSelectionPreviewTransform {
   objectId: string
-  matrix: GeometryMatrix3d
+  matrix: GeometryMatrix2d
 }
 
 /**
@@ -107,7 +107,11 @@ export abstract class EditorSelectionTransformPreviewJig<
    * @param sourceEntities - Original entities cloned for preview display.
    * @param copyCount - Number of copy placements for array previews (default `1`).
    */
-  constructor(view: EditorBaseView, sourceEntities: ModelItem[], copyCount = 1) {
+  constructor(
+    view: EditorBaseView,
+    sourceEntities: ModelItem[],
+    copyCount = 1
+  ) {
     super(view)
     this._view = view
     this.copyCount = copyCount
@@ -136,7 +140,9 @@ export abstract class EditorSelectionTransformPreviewJig<
    *
    * @param value - Current prompt input sampled by the editor.
    */
-  protected abstract buildTransforms(value: T): EditorSelectionPreviewTransform[]
+  protected abstract buildTransforms(
+    value: T
+  ): EditorSelectionPreviewTransform[]
 
   /**
    * Applies the latest transform to batch overlays or caches transforms for
@@ -198,7 +204,10 @@ export abstract class EditorSelectionTransformPreviewJig<
     const entries: EditorSelectionPreviewEntry[] = []
     for (let factor = 1; factor <= copyCount; factor++) {
       sourceEntities.forEach(item => {
-        entries.push({ entity: applicationPreviewDrawable(item), copyFactor: factor })
+        entries.push({
+          entity: applicationPreviewDrawable(item),
+          copyFactor: factor
+        })
       })
     }
     return entries

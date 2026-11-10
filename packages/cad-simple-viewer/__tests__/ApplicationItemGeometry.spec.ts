@@ -3,7 +3,7 @@ import {
   type GeometryDimension,
   GeometryEllipseArc2d,
   GeometryLine2d,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   type GeometryPoint2dLike,
   GeometryPolyline2d,
@@ -158,9 +158,9 @@ describe('item geometry', () => {
       })
 
       it('transforms as the entity did', () => {
-        const matrix = new GeometryMatrix3d()
-          .makeRotationZ(0.7)
-          .setPosition(3, -4, 0)
+        const matrix = new GeometryMatrix2d()
+          .makeTranslation(3, -4)
+          .multiply(new GeometryMatrix2d().makeRotation(0.7))
         expect(line(transformItem(contentsOf(sample), matrix))).toBe(
           sample.transformed
         )

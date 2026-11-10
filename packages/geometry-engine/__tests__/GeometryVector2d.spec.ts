@@ -1,4 +1,4 @@
-import { GeometryMatrix3d, GeometryPoint2d, GeometryVector2d } from '../src'
+import { GeometryPoint2d, GeometryVector2d } from '../src'
 
 describe('GeometryVector2d', () => {
   it('supports basic vector ops', () => {
@@ -37,21 +37,5 @@ describe('GeometryVector2d', () => {
     expect(cloned).toBeInstanceOf(GeometryPoint2d)
     expect(cloned).not.toBe(point)
     expect(cloned.toArray()).toEqual([3, 5])
-  })
-})
-
-describe('GeometryVector2d.applyMatrix4', () => {
-  it('keeps the XY part of a 4x4 transform', () => {
-    const point = new GeometryVector2d(1, 2)
-    point.applyMatrix4(new GeometryMatrix3d().makeTranslation(3, 4, 5))
-    expect(point.x).toBeCloseTo(4, 8)
-    expect(point.y).toBeCloseTo(6, 8)
-  })
-
-  it('applies rotation about Z', () => {
-    const point = new GeometryVector2d(1, 0)
-    point.applyMatrix4(new GeometryMatrix3d().makeRotationZ(Math.PI / 2))
-    expect(point.x).toBeCloseTo(0, 8)
-    expect(point.y).toBeCloseTo(1, 8)
   })
 })

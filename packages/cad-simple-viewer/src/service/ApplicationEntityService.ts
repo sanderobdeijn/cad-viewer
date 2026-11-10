@@ -1,11 +1,14 @@
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2dLike,
   type ModelItem
 } from '@mlightcad/geometry-engine'
 
 import type { ApplicationModelSync } from '../app/ApplicationModelSync'
-import { type ApplicationItemContents, transformItem } from '../model/ApplicationItemGeometry'
+import {
+  type ApplicationItemContents,
+  transformItem
+} from '../model/ApplicationItemGeometry'
 import { createRotationMatrix } from '../util/ApplicationGeTransform'
 
 /**
@@ -52,7 +55,7 @@ export class ApplicationEntityService {
    * @param matrix - Transform to apply.
    * @returns Number of items transformed.
    */
-  transformItems(items: ModelItem[], matrix: GeometryMatrix3d): number {
+  transformItems(items: ModelItem[], matrix: GeometryMatrix2d): number {
     let count = 0
     for (const item of items) {
       if (this.sync.update(item.id, transformItem(item, matrix))) count++
@@ -71,10 +74,9 @@ export class ApplicationEntityService {
     items: ModelItem[],
     displacement: GeometryPoint2dLike
   ): number {
-    const matrix = new GeometryMatrix3d().makeTranslation(
+    const matrix = new GeometryMatrix2d().makeTranslation(
       displacement.x,
-      displacement.y,
-      0
+      displacement.y
     )
     return this.transformItems(items, matrix)
   }
@@ -105,7 +107,7 @@ export class ApplicationEntityService {
    */
   cloneAndTransform(
     items: ModelItem[],
-    matrix: GeometryMatrix3d,
+    matrix: GeometryMatrix2d,
     options: ApplicationCloneAndTransformOptions = {}
   ): ApplicationItemContents[] {
     const copies = items.map(item => transformItem(item, matrix))

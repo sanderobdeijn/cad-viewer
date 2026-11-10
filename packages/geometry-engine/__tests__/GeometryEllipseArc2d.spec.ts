@@ -1,8 +1,4 @@
-import {
-  GeometryEllipseArc2d,
-  GeometryMatrix2d,
-  GeometryMatrix3d
-} from '../src'
+import { GeometryEllipseArc2d, GeometryMatrix2d } from '../src'
 
 describe('GeometryEllipseArc2d', () => {
   it('evaluates points on arc', () => {
@@ -152,7 +148,7 @@ describe('GeometryEllipseArc2d in place of the 3D class', () => {
       0,
       Math.PI / 2
     )
-    ellipse.transform3d(new GeometryMatrix3d().makeTranslation(2, 3, 9))
+    ellipse.transform(new GeometryMatrix2d().makeTranslation(2, 3))
     expect(ellipse.center).toMatchObject({ x: 3, y: 3 })
     expect(ellipse.startPoint.x).toBeCloseTo(7, 8)
     expect(ellipse.startPoint.y).toBeCloseTo(3, 8)

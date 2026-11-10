@@ -1,4 +1,4 @@
-import { GeometryMatrix3d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix2d } from '@mlightcad/geometry-engine'
 import * as THREE from 'three'
 
 /**
@@ -6,25 +6,26 @@ import * as THREE from 'three'
  * @internal
  */
 export class ThreeRendererMatrixUtil {
-  static createMatrix4(matrix: GeometryMatrix3d) {
-    const elements = matrix.elements
+  /** Converts a 2D affine matrix to a Three.js matrix that keeps Z unchanged. */
+  static createMatrix4(matrix: GeometryMatrix2d) {
+    const e = matrix.elements
     return new THREE.Matrix4(
-      elements[0],
-      elements[4],
-      elements[8],
-      elements[12],
-      elements[1],
-      elements[5],
-      elements[9],
-      elements[13],
-      elements[2],
-      elements[6],
-      elements[10],
-      elements[14],
-      elements[3],
-      elements[7],
-      elements[11],
-      elements[15]
+      e[0],
+      e[3],
+      0,
+      e[6],
+      e[1],
+      e[4],
+      0,
+      e[7],
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
     )
   }
 }

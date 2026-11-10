@@ -1,6 +1,6 @@
 import {
   GeometryBox2d,
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryVector2d
 } from '../math'
@@ -88,18 +88,18 @@ export function geometryIntersectCurves(
  */
 export function geometryTransformIntersectPrimitive(
   primitive: GeometryIntersectPrimitive,
-  matrix: GeometryMatrix3d
+  matrix: GeometryMatrix2d
 ): GeometryIntersectPrimitive {
   const cloned = geometryCloneIntersectPrimitive(primitive)
   switch (cloned.kind) {
     case 'line':
-      cloned.line.transform3d(matrix)
+      cloned.line.transform(matrix)
       return cloned
     case 'circularArc':
-      cloned.arc.transform3d(matrix)
+      cloned.arc.transform(matrix)
       return cloned
     case 'ellipseArc':
-      cloned.arc.transform3d(matrix)
+      cloned.arc.transform(matrix)
       return cloned
   }
 }

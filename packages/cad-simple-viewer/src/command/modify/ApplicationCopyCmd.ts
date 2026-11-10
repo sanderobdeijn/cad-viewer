@@ -1,6 +1,6 @@
 import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
@@ -107,7 +107,10 @@ export class ApplicationCopyCmd extends EditorCommand {
    * @param context - Active command context
    * @param copies - Cloned entities to add
    */
-  private appendCopies(context: ApplicationContext, copies: ApplicationItemContents[]) {
+  private appendCopies(
+    context: ApplicationContext,
+    copies: ApplicationItemContents[]
+  ) {
     if (copies.length === 0) {
       return
     }
@@ -138,10 +141,9 @@ export class ApplicationCopyCmd extends EditorCommand {
         copyCount,
         fitMode
       )
-      const matrix = new GeometryMatrix3d().makeTranslation(
+      const matrix = new GeometryMatrix2d().makeTranslation(
         stepDisplacement.x,
-        stepDisplacement.y,
-        0
+        stepDisplacement.y
       )
       copies.push(...sourceEntities.map(item => transformItem(item, matrix)))
     }
@@ -167,7 +169,8 @@ export class ApplicationCopyCmd extends EditorCommand {
       prompt.keywords.default = defaultKeyword
     }
 
-    const result = await ApplicationDocManager.instance.editor.getKeywords(prompt)
+    const result =
+      await ApplicationDocManager.instance.editor.getKeywords(prompt)
     if (result.status === EditorPromptStatus.None) {
       return currentMode
     }

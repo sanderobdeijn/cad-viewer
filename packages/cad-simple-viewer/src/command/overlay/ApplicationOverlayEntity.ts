@@ -1,7 +1,7 @@
 import type {
   GeometryPoint2d,
   GeometryPoint2dLike,
-  GeometryVector3dLike
+  GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
 import type { ThreeRendererHtmlGroup } from '@mlightcad/three-renderer'
 
@@ -61,7 +61,9 @@ export abstract class ApplicationOverlayEntity {
    * @param view - Active 2D view that hosts HTML / CAD transients.
    * @returns Built group, entity ids, and cleanup hooks.
    */
-  protected abstract subWorldDraw(view: ThreeRendererView2d): ApplicationOverlayWorldDrawResult
+  protected abstract subWorldDraw(
+    view: ThreeRendererView2d
+  ): ApplicationOverlayWorldDrawResult
 
   /**
    * Grip points in WCS.
@@ -79,7 +81,7 @@ export abstract class ApplicationOverlayEntity {
    * @param _offset - World-space translation applied to each selected grip.
    * @returns This entity for chaining.
    */
-  subMoveGripPointsAt(_indices: number[], _offset: GeometryVector3dLike): this {
+  subMoveGripPointsAt(_indices: number[], _offset: GeometryVector2dLike): this {
     return this
   }
 

@@ -1,6 +1,4 @@
-import { GeometryMatrix3d } from './GeometryMatrix3d'
 import { GeometryVector2d } from './GeometryVector2d'
-import { GeometryVector3d } from './GeometryVector3d'
 
 /**
  * The class representing a 3x3 matrix.
@@ -124,51 +122,6 @@ export class GeometryMatrix2d {
     te[6] = me[6]
     te[7] = me[7]
     te[8] = me[8]
-
-    return this
-  }
-
-  /**
-   * Extracts the basis of this matrix into the three axis vectors provided
-   * @param xAxis Input X axis vector
-   * @param yAxis Input Y axis vector
-   * @param zAxis Input Z axis vector
-   * @returns Return this matrix
-   */
-  extractBasis(
-    xAxis: GeometryVector3d,
-    yAxis: GeometryVector3d,
-    zAxis: GeometryVector3d
-  ) {
-    xAxis.setFromMatrix3Column(this, 0)
-    yAxis.setFromMatrix3Column(this, 1)
-    zAxis.setFromMatrix3Column(this, 2)
-
-    return this
-  }
-
-  /**
-   * Set this matrix to the upper 3x3 matrix of the Matrix4 m.
-   * @param m Input one 4x4 matrix
-   * @returns Return this matrix
-   */
-  setFromMatrix4(m: GeometryMatrix3d) {
-    const me = m.elements
-
-    this.set(me[0], me[4], me[8], me[1], me[5], me[9], me[2], me[6], me[10])
-
-    return this
-  }
-
-  /**
-   * Set this matrix to the XY affine part of a 4x4 matrix, including its translation.
-   * @param m Input one 4x4 matrix
-   * @returns Return this matrix
-   */
-  setFromAffineMatrix4(m: GeometryMatrix3d) {
-    const me = m.elements
-
-    this.set(me[0], me[4], me[12], me[1], me[5], me[13], 0, 0, 1)
 
     return this
   }
@@ -335,38 +288,6 @@ export class GeometryMatrix2d {
     tmp = m[5]
     m[5] = m[7]
     m[7] = tmp
-
-    return this
-  }
-
-  /**
-   * Sets this matrix as the upper left 3x3 of the normal matrix of the passed matrix4. The normal
-   * matrix is the inverse transpose of the matrix m.
-   * @param matrix4 Input one 4x4 matrix
-   * @returns Return this matrix
-   */
-  getNormalMatrix(matrix4: GeometryMatrix3d) {
-    return this.setFromMatrix4(matrix4).invert().transpose()
-  }
-
-  /**
-   * Set this matrix as the upper left 3x3 of the normal matrix of the passed matrix4. The normal
-   * matrix is the inverse transpose of the matrix m.
-   * @param r Input one 4x4 matrix
-   * @returns Return this matrix
-   */
-  transposeIntoArray(r: GeometryMatrix3d) {
-    const m = this.elements
-
-    r.elements[0] = m[0]
-    r.elements[1] = m[3]
-    r.elements[2] = m[6]
-    r.elements[3] = m[1]
-    r.elements[4] = m[4]
-    r.elements[5] = m[7]
-    r.elements[6] = m[2]
-    r.elements[7] = m[5]
-    r.elements[8] = m[8]
 
     return this
   }

@@ -7,12 +7,9 @@ import {
   GeometryLine2d,
   GeometryLoop2d,
   GeometryMatrix2d,
-  GeometryMatrix3d,
   GeometryPoint2d,
   GeometryPolyline2d,
-  GeometryQuaternion,
-  GeometryVector2d,
-  GeometryVector3d
+  GeometryVector2d
 } from '../src'
 
 describe('geometry-engine public API coverage boost', () => {
@@ -61,7 +58,7 @@ describe('geometry-engine public API coverage boost', () => {
     expect(flat2d.slice(0, 4)).toEqual([1, 2, 4, 5])
   })
 
-  it('covers vector and matrix methods in 2d and 3d', () => {
+  it('covers vector and matrix methods', () => {
     const v2 = new GeometryVector2d(1, -2)
     expect(v2.width).toBe(1)
     v2.width = 2
@@ -136,14 +133,9 @@ describe('geometry-engine public API coverage boost', () => {
     expect(v2b.relativeEps()).toBeGreaterThan(0)
 
     const m2 = new GeometryMatrix2d()
-    const basisX = new GeometryVector3d()
-    const basisY = new GeometryVector3d()
-    const basisZ = new GeometryVector3d()
     m2.set(1, 2, 3, 4, 5, 6, 7, 8, 9)
       .identity()
       .copy(new GeometryMatrix2d().makeScale(2, 3))
-      .extractBasis(basisX, basisY, basisZ)
-      .setFromMatrix4(new GeometryMatrix3d().makeScale(2, 3, 1))
       .multiply(new GeometryMatrix2d().makeRotation(Math.PI / 4))
       .premultiply(new GeometryMatrix2d().makeTranslation(1, 2))
       .multiplyMatrices(
@@ -154,12 +146,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(m2.determinant()).toBeDefined()
     expect(m2.clone().invert()).toBeInstanceOf(GeometryMatrix2d)
     expect(m2.transpose()).toBeInstanceOf(GeometryMatrix2d)
-    expect(
-      m2.getNormalMatrix(new GeometryMatrix3d().makeRotationX(0.2))
-    ).toBeInstanceOf(GeometryMatrix2d)
-    expect(m2.transposeIntoArray(new GeometryMatrix3d())).toBeInstanceOf(
-      GeometryMatrix2d
-    )
     expect(m2.setUvTransform(0, 0, 1, 1, 0.1, 0, 0)).toBeInstanceOf(
       GeometryMatrix2d
     )
@@ -174,240 +160,6 @@ describe('geometry-engine public API coverage boost', () => {
     )
     expect(m2.equals(m2.clone())).toBe(true)
     expect(m2.fromArray([1, 2, 3, 4, 5, 6, 7, 8, 9]).toArray()).toHaveLength(9)
-
-    const v3 = new GeometryVector3d(1, 2, 3)
-    v3.set(2, 3, 4)
-      .setScalar(3)
-      .setX(1)
-      .setY(2)
-      .setZ(3)
-      .setComponent(0, 4)
-      .setComponent(1, 5)
-      .setComponent(2, 6)
-    expect(v3.getComponent(0)).toBe(4)
-    expect(v3.clone().copy({ x: 1, y: 1, z: 1 }).toArray()).toEqual([1, 1, 1])
-
-    const q = new GeometryQuaternion().setFromAxisAngle(
-      GeometryVector3d.Z_AXIS,
-      Math.PI / 3
-    )
-    const m3 = new GeometryMatrix3d().compose(
-      new GeometryVector3d(1, 2, 3),
-      q,
-      new GeometryVector3d(2, 2, 2)
-    )
-
-    v3.add({ x: 1, y: 1, z: 1 })
-      .addScalar(1)
-      .addVectors({ x: 1, y: 1, z: 1 }, { x: 2, y: 2, z: 2 })
-      .addScaledVector({ x: 1, y: 0, z: 0 }, 2)
-      .sub({ x: 1, y: 1, z: 1 })
-      .subScalar(1)
-      .subVectors({ x: 5, y: 5, z: 5 }, { x: 1, y: 2, z: 3 })
-      .multiply({ x: 2, y: 3, z: 4 })
-      .multiplyScalar(0.5)
-      .multiplyVectors({ x: 2, y: 2, z: 2 }, { x: 3, y: 3, z: 3 })
-      .applyAxisAngle(GeometryVector3d.Z_AXIS, Math.PI / 2)
-      .applyMatrix3(new GeometryMatrix2d().identity())
-      .applyNormalMatrix(new GeometryMatrix2d().identity())
-      .applyMatrix4(m3)
-      .applyQuaternion(q)
-      .transformDirection(new GeometryMatrix3d().makeRotationY(0.1))
-      .divide({ x: 2, y: 2, z: 2 })
-      .divideScalar(2)
-      .min({ x: 0, y: 0, z: 0 })
-      .max({ x: 1, y: 1, z: 1 })
-      .clamp({ x: -1, y: -1, z: -1 }, { x: 1, y: 1, z: 1 })
-      .clampScalar(-1, 1)
-      .clampLength(0.2, 1)
-      .floor()
-      .ceil()
-      .round()
-      .roundToZero()
-      .negate()
-
-    expect(v3.dot({ x: 1, y: 0, z: 0 })).toBeDefined()
-    expect(v3.isParallelTo(new GeometryVector3d(2, 0, 0))).toBeDefined()
-    expect(v3.lengthSq()).toBeGreaterThanOrEqual(0)
-    expect(v3.length()).toBeGreaterThanOrEqual(0)
-    expect(v3.manhattanLength()).toBeGreaterThanOrEqual(0)
-    v3.set(3, 4, 5)
-    expect(v3.normalize().length()).toBeCloseTo(1, 6)
-    expect(v3.setLength(2).length()).toBeCloseTo(2, 5)
-    expect(v3.lerp({ x: 0, y: 0, z: 0 }, 0.5)).toBeInstanceOf(GeometryVector3d)
-    expect(
-      v3.lerpVectors({ x: 0, y: 0, z: 0 }, { x: 2, y: 2, z: 2 }, 0.5)
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(v3.cross({ x: 1, y: 0, z: 0 })).toBeInstanceOf(GeometryVector3d)
-    expect(
-      v3.crossVectors({ x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 })
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(v3.projectOnVector(new GeometryVector3d(1, 0, 0))).toBeInstanceOf(
-      GeometryVector3d
-    )
-    expect(v3.projectOnPlane(new GeometryVector3d(0, 0, 1))).toBeInstanceOf(
-      GeometryVector3d
-    )
-    expect(v3.reflect({ x: 0, y: 1, z: 0 })).toBeInstanceOf(GeometryVector3d)
-    expect(v3.angleTo(new GeometryVector3d(1, 0, 0))).toBeGreaterThanOrEqual(0)
-    expect(v3.distanceTo({ x: 1, y: 1, z: 1 })).toBeGreaterThanOrEqual(0)
-    expect(v3.distanceToSquared({ x: 1, y: 1, z: 1 })).toBeGreaterThanOrEqual(0)
-    expect(v3.manhattanDistanceTo({ x: 1, y: 1, z: 1 })).toBeGreaterThanOrEqual(
-      0
-    )
-    expect(
-      v3
-        .setFromMatrixPosition(new GeometryMatrix3d().makeTranslation(4, 5, 6))
-        .toArray()
-    ).toEqual([4, 5, 6])
-    expect(
-      v3.setFromMatrixScale(new GeometryMatrix3d().makeScale(2, 3, 4)).toArray()
-    ).toEqual([2, 3, 4])
-    expect(
-      v3.setFromMatrixColumn(new GeometryMatrix3d().identity(), 0)
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(
-      v3.setFromMatrix3Column(new GeometryMatrix2d().identity(), 1)
-    ).toBeInstanceOf(GeometryVector3d)
-    expect(v3.equals(v3.clone())).toBe(true)
-    expect(v3.fromArray([1, 2, 3]).toArray()).toEqual([1, 2, 3])
-    expect(v3.random().x).toBeGreaterThanOrEqual(0)
-    expect(v3.randomDirection().length()).toBeCloseTo(1, 6)
-
-    const m4 = new GeometryMatrix3d()
-    const xAxis = new GeometryVector3d()
-    const yAxis = new GeometryVector3d()
-    const zAxis = new GeometryVector3d()
-    m4.set(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)
-      .identity()
-      .copy(new GeometryMatrix3d().makeTranslation(1, 2, 3))
-      .copyPosition(new GeometryMatrix3d().makeTranslation(4, 5, 6))
-      .setFromMatrix3(new GeometryMatrix2d().identity())
-      .setFromExtrusionDirection(new GeometryVector3d(0, 0, 1))
-      .extractBasis(xAxis, yAxis, zAxis)
-      .makeBasis(
-        { x: 1, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 },
-        { x: 0, y: 0, z: 1 }
-      )
-      .extractRotation(new GeometryMatrix3d().makeRotationZ(0.2))
-      .makeRotationFromQuaternion(
-        new GeometryQuaternion().setFromAxisAngle(GeometryVector3d.X_AXIS, 0.2)
-      )
-      .lookAt(
-        new GeometryVector3d(0, 0, 10),
-        new GeometryVector3d(),
-        GeometryVector3d.Y_AXIS
-      )
-      .multiply(new GeometryMatrix3d().makeScale(2, 2, 2))
-      .premultiply(new GeometryMatrix3d().makeTranslation(1, 1, 1))
-      .multiplyMatrices(
-        new GeometryMatrix3d().makeRotationX(0.1),
-        new GeometryMatrix3d().makeTranslation(1, 2, 3)
-      )
-      .multiplyScalar(0.5)
-    expect(m4.determinant()).toBeDefined()
-    expect(m4.transpose()).toBeInstanceOf(GeometryMatrix3d)
-    expect(m4.setPosition(1, 2, 3)).toBeInstanceOf(GeometryMatrix3d)
-    expect(m4.invert()).toBeInstanceOf(GeometryMatrix3d)
-    expect(m4.scale(new GeometryVector3d(2, 2, 2))).toBeInstanceOf(
-      GeometryMatrix3d
-    )
-    expect(m4.getMaxScaleOnAxis()).toBeGreaterThan(0)
-    expect(
-      m4.makeTranslation(new GeometryVector3d(1, 2, 3), 0, 0)
-    ).toBeInstanceOf(GeometryMatrix3d)
-    expect(
-      m4.makeRotationX(0.1).makeRotationY(0.2).makeRotationZ(0.3)
-    ).toBeInstanceOf(GeometryMatrix3d)
-    expect(m4.makeRotationAxis(GeometryVector3d.Z_AXIS, 0.5)).toBeInstanceOf(
-      GeometryMatrix3d
-    )
-    expect(m4.makeScale(2, 3, 4).makeShear(1, 0, 0, 0, 0, 0)).toBeInstanceOf(
-      GeometryMatrix3d
-    )
-    expect(
-      m4.compose(
-        new GeometryVector3d(1, 2, 3),
-        new GeometryQuaternion(),
-        new GeometryVector3d(1, 1, 1)
-      )
-    ).toBeInstanceOf(GeometryMatrix3d)
-    expect(
-      m4.decompose(
-        new GeometryVector3d(),
-        new GeometryQuaternion(),
-        new GeometryVector3d()
-      )
-    ).toBeInstanceOf(GeometryMatrix3d)
-    expect(m4.equals(m4.clone())).toBe(true)
-    expect(
-      m4.fromArray(new Array(16).fill(0).map((_, i) => i + 1)).toArray()
-    ).toHaveLength(16)
-  })
-
-  it('covers quaternion and euler methods', () => {
-    const q = new GeometryQuaternion(0, 0, 0, 1)
-    const dst = [0, 0, 0, 0]
-    GeometryQuaternion.slerpFlat(dst, 0, [0, 0, 0, 1], 0, [0, 0, 1, 0], 0, 0.5)
-    expect(dst[3]).toBeDefined()
-    expect(
-      GeometryQuaternion.multiplyQuaternionsFlat(
-        dst,
-        0,
-        [0, 0, 0, 1],
-        0,
-        [0, 0, 1, 0],
-        0
-      )
-    ).toBe(dst)
-
-    let changed = 0
-    q._onChange(() => {
-      changed++
-    })
-    q.x = 0.1
-    q.y = 0.2
-    q.z = 0.3
-    q.w = 0.9
-    expect(changed).toBeGreaterThan(0)
-
-    const qa = new GeometryQuaternion().setFromAxisAngle(
-      GeometryVector3d.X_AXIS,
-      0.2
-    )
-    const qb = new GeometryQuaternion().setFromAxisAngle(
-      GeometryVector3d.Y_AXIS,
-      0.3
-    )
-    expect(q.set(0, 0, 0, 1).clone().copy(qa)).toBeInstanceOf(
-      GeometryQuaternion
-    )
-    expect(
-      q.setFromRotationMatrix(new GeometryMatrix3d().makeRotationZ(0.1))
-    ).toBeInstanceOf(GeometryQuaternion)
-    expect(
-      q.setFromUnitVectors(
-        new GeometryVector3d(1, 0, 0),
-        new GeometryVector3d(0, 1, 0)
-      )
-    ).toBeInstanceOf(GeometryQuaternion)
-    expect(q.angleTo(qa)).toBeGreaterThanOrEqual(0)
-    expect(q.rotateTowards(qa, 0.1)).toBeInstanceOf(GeometryQuaternion)
-    expect(q.identity().invert().conjugate()).toBeInstanceOf(GeometryQuaternion)
-    expect(q.dot(qa)).toBeDefined()
-    expect(q.lengthSq()).toBeDefined()
-    expect(q.length()).toBeDefined()
-    expect(q.normalize().length()).toBeCloseTo(1, 6)
-    expect(
-      q.multiply(qa).premultiply(qb).multiplyQuaternions(qa, qb)
-    ).toBeInstanceOf(GeometryQuaternion)
-    expect(q.slerp(qa, 0.3)).toBeInstanceOf(GeometryQuaternion)
-    expect(q.slerpQuaternions(qa, qb, 0.5)).toBeInstanceOf(GeometryQuaternion)
-    expect(q.random().length()).toBeCloseTo(1, 6)
-    expect(q.equals(q.clone())).toBe(true)
-    expect(q.fromArray([1, 2, 3, 4], 0).toArray()).toEqual([1, 2, 3, 4])
-    expect(q.toJSON()).toHaveLength(4)
   })
 
   it('covers box methods', () => {
@@ -450,7 +202,6 @@ describe('geometry-engine public API coverage boost', () => {
     ).toBeInstanceOf(GeometryBox2d)
     expect(b2.translate({ x: 1, y: 1 })).toBeInstanceOf(GeometryBox2d)
     expect(b2.equals(b2.clone())).toBe(true)
-
   })
 
   it('covers representative geometry class public methods', () => {
@@ -478,8 +229,7 @@ describe('geometry-engine public API coverage boost', () => {
     expect(line3.extend(1).endPoint.x).toBeCloseTo(3, 6)
     expect(line3.extend(1, true).startPoint.x).toBeCloseTo(-1, 6)
     expect(
-      line3.transform3d(new GeometryMatrix3d().makeTranslation(1, 1, 1))
-        .startPoint
+      line3.transform(new GeometryMatrix2d().makeTranslation(1, 1)).startPoint
     ).toMatchObject({ x: 0, y: 1 })
 
     const poly = new GeometryPolyline2d([
@@ -583,7 +333,7 @@ describe('geometry-engine public API coverage boost', () => {
     expect(ellipse3.offset(1)?.majorAxisRadius).toBe(5)
     expect(ellipse3.offset(-3)).toBeNull()
     expect(
-      ellipse3.transform3d(new GeometryMatrix3d().makeScale(1.5, 0.5, 1))
+      ellipse3.transform(new GeometryMatrix2d().makeScale(1.5, 0.5))
     ).toBeInstanceOf(GeometryEllipseArc2d)
 
     const circ2 = new GeometryCircularArc2d(

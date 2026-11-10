@@ -30,18 +30,13 @@ export type {
 export {
   GeometryBox2d,
   GeometryMatrix2d,
-  GeometryMatrix3d,
   GeometryPoint2d,
-  GeometryQuaternion,
-  GeometryVector2d,
-  GeometryVector3d
+  GeometryVector2d
 } from './math'
 export type {
   GeometryPoint2dLike,
   GeometryPointLike,
-  GeometryVector,
   GeometryVector2dLike,
-  GeometryVector3dLike,
   GeometryVectorLike
 } from './math'
 export {
@@ -61,9 +56,6 @@ export {
   geometryEuclideanModulo,
   geometryFloorPowerOfTwo,
   geometryGenerateUUID,
-  geometryGetOcsAngle,
-  geometryGetOcsReferenceVector,
-  geometryGetOcsReferenceVectorInto,
   geometryIntPartLength,
   geometryInverseLerp,
   geometryIsBetween,
@@ -82,9 +74,6 @@ export {
   geometrySeededRandom,
   geometrySmootherstep,
   geometrySmoothstep,
-  geometryTransformOcsPointToWcs,
-  geometryTransformOcsPointToWcsInto,
-  geometryTransformWcsPointToOcs,
   geometryOffsetSmoothedSampledPath,
   geometryOffsetVertexPath,
   geometryClosedPolygonArea2d,

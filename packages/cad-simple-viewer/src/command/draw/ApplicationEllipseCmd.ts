@@ -3,7 +3,7 @@ import {
   GeometryPoint2d,
   GeometryPoint2dLike,
   GeometryTol,
-  GeometryVector3dLike,
+  GeometryVector2dLike,
   TAU
 } from '@mlightcad/geometry-engine'
 import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
@@ -27,7 +27,7 @@ type EllipseKeywordKey = 'arc' | 'center' | 'rotation'
 
 interface EllipseDefinition {
   center: GeometryPoint2dLike
-  majorAxis: GeometryVector3dLike
+  majorAxis: GeometryVector2dLike
   majorRadius: number
   minorRadius: number
   startAngle: number
@@ -51,15 +51,15 @@ function midpoint2d(
 function normalizeVector2d(
   x: number,
   y: number
-): GeometryVector3dLike | undefined {
+): GeometryVector2dLike | undefined {
   const length = Math.hypot(x, y)
   if (!Number.isFinite(length) || GeometryTol.isNonPositive(length))
     return undefined
-  return { x: x / length, y: y / length, z: 0 }
+  return { x: x / length, y: y / length }
 }
 
-function perpendicular2d(unit: GeometryVector3dLike): GeometryVector3dLike {
-  return { x: -unit.y, y: unit.x, z: 0 }
+function perpendicular2d(unit: GeometryVector2dLike): GeometryVector2dLike {
+  return { x: -unit.y, y: unit.x }
 }
 
 function degToRad(degree: number) {
@@ -70,7 +70,7 @@ function radToDeg(rad: number) {
   return (rad * 180) / Math.PI
 }
 
-function axisAngleDeg(axis: GeometryVector3dLike) {
+function axisAngleDeg(axis: GeometryVector2dLike) {
   return radToDeg(Math.atan2(axis.y, axis.x))
 }
 
@@ -106,7 +106,7 @@ function axisUnitFromCenterToPoint(
 
 function buildEllipseDefinition(
   center: GeometryPoint2dLike,
-  firstAxisUnit: GeometryVector3dLike,
+  firstAxisUnit: GeometryVector2dLike,
   firstAxisRadius: number,
   secondAxisRadius: number,
   startAngle: number = 0,
@@ -356,7 +356,10 @@ export class ApplicationEllipseCmd extends EditorCommand {
    * @param context - Current application/document context.
    * @param definition - Ellipse geometric definition to append.
    */
-  private appendEllipse(context: ApplicationContext, definition: EllipseDefinition) {
+  private appendEllipse(
+    context: ApplicationContext,
+    definition: EllipseDefinition
+  ) {
     context.doc.modelSync.addItems({
       kind: 'shape',
       geometry: createEllipse(definition)
@@ -456,7 +459,10 @@ export class ApplicationEllipseCmd extends EditorCommand {
     secondAxisPrompt.useDashedLine = true
     secondAxisPrompt.useBasePoint = true
     secondAxisPrompt.basePoint = new GeometryPoint2d(firstAxisEndpoint)
-    secondAxisPrompt.jig = new ApplicationLineJig(context.view, firstAxisEndpoint)
+    secondAxisPrompt.jig = new ApplicationLineJig(
+      context.view,
+      firstAxisEndpoint
+    )
     const secondAxisResult =
       await ApplicationDocManager.instance.editor.getPoint(secondAxisPrompt)
     if (secondAxisResult.status !== EditorPromptStatus.OK) return
@@ -498,7 +504,7 @@ export class ApplicationEllipseCmd extends EditorCommand {
   private async promptOtherAxis(
     context: ApplicationContext,
     center: GeometryPoint2dLike,
-    firstAxisUnit: GeometryVector3dLike,
+    firstAxisUnit: GeometryVector2dLike,
     firstAxisRadius: number,
     arcMode: boolean
   ) {
@@ -651,7 +657,8 @@ export class ApplicationEllipseCmd extends EditorCommand {
       }),
       baseEllipse.center
     )
-    const endResult = await ApplicationDocManager.instance.editor.getAngle(endPrompt)
+    const endResult =
+      await ApplicationDocManager.instance.editor.getAngle(endPrompt)
     if (endResult.status !== EditorPromptStatus.OK) return undefined
 
     return {

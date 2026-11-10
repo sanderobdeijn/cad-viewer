@@ -1,6 +1,6 @@
 import type { ModelItem } from '@mlightcad/geometry-engine'
 import {
-  GeometryMatrix3d,
+  GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
@@ -32,15 +32,19 @@ export class ApplicationMovePreviewJig extends EditorSelectionTransformPreviewJi
       point.x - this._basePoint.x,
       point.y - this._basePoint.y
     )
-    const matrix = new GeometryMatrix3d().makeTranslation(
+    const matrix = new GeometryMatrix2d().makeTranslation(
       displacement.x,
-      displacement.y,
-      0
+      displacement.y
     )
     const targets =
       this.previewEntries.length > 0
         ? this.previewEntries
-        : [{ entity: { objectId: '' } as GraphicsInterfaceDrawable, copyFactor: 1 }]
+        : [
+            {
+              entity: { objectId: '' } as GraphicsInterfaceDrawable,
+              copyFactor: 1
+            }
+          ]
     return targets.map(entry => ({
       objectId: entry.entity.objectId,
       matrix

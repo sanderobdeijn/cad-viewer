@@ -30,14 +30,6 @@ export {
   geometrySmootherstep,
   geometrySmoothstep
 } from './GeometryMathUtil'
-export {
-  geometryGetOcsAngle,
-  geometryGetOcsReferenceVector,
-  geometryGetOcsReferenceVectorInto,
-  geometryTransformOcsPointToWcs,
-  geometryTransformOcsPointToWcsInto,
-  geometryTransformWcsPointToOcs
-} from './GeometryOcsUtil'
 export { GeometryTol, DEFAULT_TOL } from './GeometryTol'
 export { geometryOffsetVertexPath } from './GeometryCurveOffsetUtil'
 export { geometryOffsetSmoothedSampledPath } from './GeometrySampledCurveOffsetUtil'

@@ -1,4 +1,4 @@
-import { GeometryMatrix3d, GeometryPoint2d } from '@mlightcad/geometry-engine'
+import { GeometryMatrix2d, GeometryPoint2d } from '@mlightcad/geometry-engine'
 
 import {
   EditorBatchedPreview,
@@ -12,7 +12,7 @@ function createMockView(options: {
   multiHandle?: boolean
 }) {
   const createdIds: string[][] = []
-  const updatedMatrices: GeometryMatrix3d[] = []
+  const updatedMatrices: GeometryMatrix2d[] = []
   const removedIds: string[] = []
   let nextHandle = 0
 
@@ -32,7 +32,7 @@ function createMockView(options: {
       return options.handleId === undefined ? 'preview-1' : options.handleId
     }),
     updateEntityPreview: jest.fn(
-      (_handleId: string, matrix: GeometryMatrix3d) => {
+      (_handleId: string, matrix: GeometryMatrix2d) => {
         updatedMatrices.push(matrix)
       }
     ),
@@ -57,7 +57,7 @@ describe('EditorBatchedPreview', () => {
     expect(createdIds).toHaveLength(1)
     expect(createdIds[0]).toEqual(ids)
 
-    preview.updateMatrix(view, new GeometryMatrix3d().makeTranslation(1, 2, 3))
+    preview.updateMatrix(view, new GeometryMatrix2d().makeTranslation(1, 2))
     expect(view.updateEntityPreview).toHaveBeenCalledTimes(2)
 
     preview.dispose(view)

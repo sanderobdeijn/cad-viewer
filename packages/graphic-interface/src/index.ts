@@ -34,10 +34,4 @@ export type { GraphicsInterfaceRenderer } from './GraphicsInterfaceRenderer'
 export type { GraphicsInterfaceStyleType } from './GraphicsInterfaceStyleType'
 export type { GraphicsInterfaceSubEntityTraits } from './GraphicsInterfaceSubEntityTraits'
 export type { GraphicsInterfaceTextData } from './GraphicsInterfaceText'
-export {
-  GraphicsInterfaceDefaultLightingType,
-  GraphicsInterfaceOrthographicType,
-  GraphicsInterfaceRenderMode
-} from './GraphicsInterfaceView'
-export type { GraphicsInterfaceView } from './GraphicsInterfaceView'
 export { GraphicsInterfaceViewport } from './GraphicsInterfaceViewport'
