@@ -9,6 +9,7 @@ import {
   ApplicationEraseCmd,
   ApplicationHideObjectsCmd,
   ApplicationLineCmd,
+  ApplicationLoadExampleCmd,
   ApplicationMoveCmd,
   ApplicationOffsetCmd,
   ApplicationPanCmd,
@@ -557,6 +558,7 @@ export class ApplicationDocManager {
     addSystemCommand('dimlinear', 'dimlinear', new ApplicationDimLinearCmd())
     registerMeasureCommands(addSystemCommand)
     addSystemCommand('line', 'line', new ApplicationLineCmd())
+    addSystemCommand('loadexample', 'loadexample', new ApplicationLoadExampleCmd())
     addSystemCommand('copy', 'copy', new ApplicationCopyCmd())
     addSystemCommand('move', 'move', new ApplicationMoveCmd())
     addSystemCommand('offset', 'offset', new ApplicationOffsetCmd())

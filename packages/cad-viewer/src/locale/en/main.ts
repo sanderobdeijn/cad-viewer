@@ -60,6 +60,7 @@ export default {
       offset: 'Create a parallel copy of an object at a specified distance.',
       drawingUnits:
         'Open Drawing Units to set coordinate formats, precision, and insertion scale.',
+      loadExample: 'Add an example rectangle of 2000 mm by 1000 mm at 0,0.',
       circleOption: {
         centerRadius:
           'Create a circle by specifying a center point and a radius.',
@@ -122,7 +123,8 @@ export default {
       copy: 'Copy',
       erase: 'Erase',
       offset: 'Offset',
-      drawingUnits: 'Drawing\nUnits'
+      drawingUnits: 'Drawing\nUnits',
+      loadExample: 'Load\nExample'
     }
   },
   verticalToolbar: {

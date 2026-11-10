@@ -313,3 +313,90 @@ for (const command of [
     )
   })
 }
+
+/** Reads the corners of each drawn polyline. */
+const polylineCorners = (page: Page) =>
+  page.evaluate(() => {
+    const mgr = (
+      window as unknown as {
+        ApplicationDocManager: {
+          instance: {
+            curDocument: {
+              model: {
+                items: {
+                  kind: string
+                  geometry: { vertices?: { x: number; y: number }[] }
+                }[]
+              }
+            }
+          }
+        }
+      }
+    ).ApplicationDocManager.instance
+    return mgr.curDocument.model.items
+      .filter(item => item.kind === 'shape' && item.geometry.vertices)
+      .map(item => item.geometry.vertices!.map(v => [v.x, v.y]))
+  })
+
+const setUnits = (page: Page, units: number) =>
+  page.evaluate(
+    units =>
+      (
+        window as unknown as {
+          ApplicationSettingManager: {
+            instance: { set(key: string, value: unknown): void }
+          }
+        }
+      ).ApplicationSettingManager.instance.set('insertionUnits', units),
+    units
+  )
+
+test('loads the example rectangle from the Home tab', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto('/')
+  await page.waitForFunction(
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
+  )
+  await setUnits(page, 4)
+
+  await page
+    .getByRole('button', {
+      name: 'Add an example rectangle of 2000 mm by 1000 mm at 0,0.'
+    })
+    .click()
+
+  await expect.poll(() => polylineCorners(page)).toEqual([
+    [
+      [0, 0],
+      [2000, 0],
+      [2000, 1000],
+      [0, 1000]
+    ]
+  ])
+  await expect(page.getByLabel('Text editor')).toHaveValue(/Polyline/)
+  expect(errors).toEqual([])
+})
+
+test('sizes the example rectangle in the drawing units', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForFunction(
+    () => !!(window as Window & { ApplicationDocManager?: unknown }).ApplicationDocManager
+  )
+  await setUnits(page, 6)
+
+  await page
+    .getByRole('button', {
+      name: 'Add an example rectangle of 2000 mm by 1000 mm at 0,0.'
+    })
+    .click()
+
+  await expect.poll(() => polylineCorners(page)).toEqual([
+    [
+      [0, 0],
+      [2, 0],
+      [2, 1],
+      [0, 1]
+    ]
+  ])
+})

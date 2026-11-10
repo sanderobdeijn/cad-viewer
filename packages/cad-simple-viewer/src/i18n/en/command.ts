@@ -212,6 +212,9 @@ export default {
     qnew: {
       description: 'Starts a new drawing'
     },
+    loadexample: {
+      description: 'Adds an example rectangle of 2000 mm by 1000 mm at 0,0'
+    },
     rectang: {
       description: 'Creates a rectangle by specifying two opposite corners'
     },

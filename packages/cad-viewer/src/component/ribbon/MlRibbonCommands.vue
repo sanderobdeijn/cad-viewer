@@ -316,7 +316,8 @@ const buildBaseTabs = (
     copy: t('main.ribbon.tooltip.copy'),
     erase: t('main.ribbon.tooltip.erase'),
     offset: t('main.ribbon.tooltip.offset'),
-    drawingUnits: t('main.ribbon.tooltip.drawingUnits')
+    drawingUnits: t('main.ribbon.tooltip.drawingUnits'),
+    loadExample: t('main.ribbon.tooltip.loadExample')
   }
   const ribbonDropdownOptionTooltips = {
     circleCenterRadius: t('main.ribbon.tooltip.circleOption.centerRadius'),
@@ -876,6 +877,18 @@ const buildBaseTabs = (
                     labelWrapLines: 2,
                     labelWrapWidth: 'max-content'
                   }
+                },
+                {
+                  id: 'cmd-load-example',
+                  type: 'button',
+                  label: t('main.ribbon.command.loadExample'),
+                  tooltip: ribbonTooltips.loadExample,
+                  size: 'large',
+                  props: {
+                    icon: rect,
+                    labelWrapLines: 2,
+                    labelWrapWidth: 'max-content'
+                  }
                 }
               ]
             }
@@ -944,6 +957,7 @@ const ribbonData = computed(() => {
   commandByItemId.set('cmd-erase', 'erase')
   commandByItemId.set('cmd-offset', 'offset')
   commandByItemId.set('cmd-drawing-units', 'units')
+  commandByItemId.set('cmd-load-example', 'loadexample')
   commandByItemId.set('cmd-tool-measure-distance', 'measuredistance')
   commandByItemId.set('cmd-tool-measure-continuous', 'measurecontinuous')
   commandByItemId.set('cmd-tool-measure-angle', 'measureangle')
