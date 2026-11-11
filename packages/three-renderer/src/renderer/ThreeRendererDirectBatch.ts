@@ -3,10 +3,8 @@ import type { GraphicsInterfaceDrawable } from '@mlightcad/graphic-interface'
 import { resolveAnchorFromBox } from '../draw/ThreeRendererBatchDrawPolicy'
 import type { ThreeRendererEntity } from '../object/ThreeRendererEntity'
 import {
-  buildAreaGeometry,
   buildLineGeometry,
   buildLineSegmentsGeometry,
-  buildOffsetRingDirectGeometry,
   buildPointGeometry,
   isDirectBatchRejectedMaterial,
   type ThreeRendererDirectEntityMeta} from '../object/ThreeRendererLineGeometryBuilder'
@@ -119,35 +117,6 @@ function buildFromCapture(
       return null
     }
     return buildPointGeometry(payload.point, material)
-  }
-
-  if (payload.kind === 'area') {
-    const built = buildAreaGeometry(payload.area, traits, renderer.context)
-    if (!built) {
-      return null
-    }
-    if (isDirectBatchRejectedMaterial(built.material)) {
-      built.geometry.dispose()
-      return null
-    }
-    return built
-  }
-
-  if (payload.kind === 'offsetRing') {
-    const built = buildOffsetRingDirectGeometry(
-      payload.outer,
-      payload.inner,
-      traits,
-      renderer.context
-    )
-    if (!built) {
-      return null
-    }
-    if (isDirectBatchRejectedMaterial(built.material)) {
-      built.geometry.dispose()
-      return null
-    }
-    return built
   }
 
   return null

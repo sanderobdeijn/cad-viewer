@@ -582,13 +582,6 @@ export class ThreeRendererLayout {
           meta.worldOffset,
           options
         )
-      case 'mesh':
-        return this._batch.appendMeshGeometry(
-          meta.geometry as THREE.BufferGeometry,
-          meta.material,
-          meta.worldOffset,
-          options
-        )
       default:
         return false
     }

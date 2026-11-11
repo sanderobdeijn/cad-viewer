@@ -1,11 +1,9 @@
 import {
-  GeometryArea2d,
   GeometryBox2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryUtil,
   GeometryLine2d,
-  GeometryLoop2d,
   GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPolyline2d,
@@ -220,47 +218,6 @@ describe('geometry-engine public API coverage boost', () => {
     expect(poly.getPoints(6).length).toBeGreaterThan(0)
     poly.translate({ x: 1, y: 2 })
 
-    const loop = new GeometryLoop2d([
-      new GeometryLine2d({ x: 0, y: 0 }, { x: 2, y: 0 }),
-      new GeometryLine2d({ x: 2, y: 0 }, { x: 2, y: 2 }),
-      new GeometryLine2d({ x: 2, y: 2 }, { x: 0, y: 2 }),
-      new GeometryLine2d({ x: 0, y: 2 }, { x: 0, y: 0 })
-    ])
-    expect(loop.curves).toHaveLength(4)
-    loop.add(new GeometryLine2d({ x: 0, y: 0 }, { x: 0, y: 0 }))
-    expect(loop.startPoint).toBeInstanceOf(GeometryPoint2d)
-    expect(loop.endPoint).toBeInstanceOf(GeometryPoint2d)
-    expect(loop.length).toBeGreaterThan(0)
-    expect(loop.calculateBoundingBox()).toBeInstanceOf(GeometryBox2d)
-    expect(
-      loop.transform(new GeometryMatrix2d().makeTranslation(1, 1))
-    ).toBeInstanceOf(GeometryLoop2d)
-    expect(loop.closed).toBe(true)
-    expect(loop.getPoints(5).length).toBeGreaterThan(0)
-
-    const area = new GeometryArea2d()
-    area.add(loop)
-    area.add(
-      new GeometryPolyline2d(
-        [
-          { x: 0.2, y: 0.2 },
-          { x: 0.8, y: 0.2 },
-          { x: 0.8, y: 0.8 },
-          { x: 0.2, y: 0.8 }
-        ],
-        true
-      )
-    )
-    expect(area.loops).toHaveLength(2)
-    expect(area.outter).toBeDefined()
-    expect(area.calculateBoundingBox()).toBeInstanceOf(GeometryBox2d)
-    expect(
-      area.transform(new GeometryMatrix2d().makeTranslation(1, 0))
-    ).toBeInstanceOf(GeometryArea2d)
-    expect(area.getPoints(8)).toHaveLength(2)
-    expect(area.buildHierarchy().index).toBe(-1)
-    expect(area.area).toBeGreaterThan(0)
-
     const ellipse2 = new GeometryEllipseArc2d(
       { x: 0, y: 0 },
       4,
@@ -299,11 +256,5 @@ describe('geometry-engine public API coverage boost', () => {
       false
     )
     expect(circ2.clone()).toBeInstanceOf(GeometryCircularArc2d)
-    const rev = new GeometryLoop2d([
-      new GeometryLine2d({ x: 0, y: 0 }, { x: 1, y: 0 }),
-      new GeometryCircularArc2d({ x: 1, y: 1 }, 1, -Math.PI / 2, 0, false),
-      new GeometryEllipseArc2d({ x: 0, y: 1 }, 1, 0.5, 0, Math.PI / 2, false, 0)
-    ])
-    expect(rev.getPoints(4).length).toBeGreaterThan(0)
   })
 })

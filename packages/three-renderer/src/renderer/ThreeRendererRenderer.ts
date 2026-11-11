@@ -1,10 +1,8 @@
 import {
-  GeometryArea2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryPoint2d,
-  GeometryPoint2dLike,
-  GeometryPolyline2d
+  GeometryPoint2dLike
 } from '@mlightcad/geometry-engine'
 import {
   graphicsInterfaceDrawTessellateOptions,
@@ -18,18 +16,14 @@ import * as THREE from 'three'
 import type { ThreeRendererBatchDrawPolicy } from '../draw/ThreeRendererBatchDrawPolicy'
 import {
   ThreeRendererEntity,
+  ThreeRendererFill,
   ThreeRendererGroup,
   ThreeRendererLine,
   ThreeRendererLineSegments,
   ThreeRendererObject,
   ThreeRendererPoint,
-  ThreeRendererPolygon,
   ThreeRendererText
 } from '../object'
-import {
-  buildOffsetRingCenterline,
-  buildOffsetRingDirectGeometry
-} from '../object/ThreeRendererLineGeometryBuilder'
 import { ThreeRendererMaterialManager } from '../style/ThreeRendererMaterialManager'
 import { ThreeRendererSubEntityTraitsUtil } from '../util'
 import { ThreeRendererCamera } from '../viewport/ThreeRendererCamera'
@@ -94,7 +88,6 @@ class ThreeRendererDirectCapturePlaceholder extends ThreeRendererEntity {
  * - `'lineStrip'`: connected polyline vertices from {@link ThreeRendererRenderer.lines}
  *   (and other paths that funnel through private `linePoints`).
  * - `'point'`: a single point plus its display style.
- * - `'area'`: a filled 2-D area.
  * - `'lineSegments'`: raw interleaved segment buffer (positions + indices).
  */
 export type ThreeRendererDirectCapturePayload =
@@ -111,23 +104,6 @@ export type ThreeRendererDirectCapturePayload =
       point: GeometryPoint2d
       /** Point display style (size, shape, etc.). */
       style: GraphicsInterfacePointStyle
-    }
-  | {
-      /** Filled area captured from {@link ThreeRendererRenderer.area}. */
-      kind: 'area'
-      /** Area geometry in drawing coordinates. */
-      area: GeometryArea2d
-    }
-  | {
-      /**
-       * Closed wide polyline payload shape retained for direct-batch rebuild.
-       * {@link ThreeRendererRenderer.offsetRing} no longer captures this kind — fill +
-       * centerline stroke cannot share one payload — but batch rebuild still
-       * accepts it. `outer[i]` / `inner[i]` are the two offsets of one sample.
-       */
-      kind: 'offsetRing'
-      outer: GeometryPoint2dLike[]
-      inner: GeometryPoint2dLike[]
     }
   | {
       /** Indexed line segments captured from {@link ThreeRendererRenderer.lineSegments}. */
@@ -567,72 +543,12 @@ export class ThreeRendererRenderer implements GraphicsInterfaceRenderer<ThreeRen
   /**
    * @inheritdoc
    */
-  area(area: GeometryArea2d) {
+  fill(points: GeometryPoint2dLike[]) {
     if (this._directCapture !== 'off') {
-      if (this.tryCaptureDirectPayload({ kind: 'area', area })) {
-        return this.createDirectCapturePlaceholder() as ThreeRendererPolygon
-      }
-      return this.createDirectCapturePlaceholder() as ThreeRendererPolygon
-    }
-    return new ThreeRendererPolygon(area, this._subEntityTraits, this._context)
-  }
-
-  /**
-   * @inheritdoc
-   *
-   * Draws the filled offset ring and a centerline stroke. The fill carries
-   * true world-space width; the stroke stays ≥ ~1 device pixel so frames with a
-   * small `constantWidth` do not vanish at fit-zoom.
-   */
-  offsetRing(outer: GeometryPoint2dLike[], inner: GeometryPoint2dLike[]) {
-    if (this._directCapture !== 'off') {
-      // Fill + centerline cannot share one direct payload; fall back so the
-      // hairline visibility stroke is not dropped.
       this.missDirectCapture()
-      return this.createDirectCapturePlaceholder()
+      return this.createDirectCapturePlaceholder() as ThreeRendererFill
     }
-    const built = buildOffsetRingDirectGeometry(
-      outer,
-      inner,
-      this._subEntityTraits,
-      this._context
-    )
-    const fill = built
-      ? this.createOffsetRingFillEntity(built)
-      : // Strip triangulation rejects collapsed or non-aligned loops. Rebuild
-        // the same two boundaries as an area so the fill is not dropped.
-        this.area(this.offsetRingArea(outer, inner))
-    const centerline = buildOffsetRingCenterline(outer, inner)
-    if (!centerline) {
-      return fill
-    }
-    return this.group([fill, this.linePoints(centerline)])
-  }
-
-  private createOffsetRingFillEntity(
-    built: NonNullable<ReturnType<typeof buildOffsetRingDirectGeometry>>
-  ): ThreeRendererEntity {
-    const entity = new ThreeRendererEntity(this._context)
-    const mesh = new THREE.Mesh(built.geometry, built.material)
-    mesh.position.copy(built.worldOffset)
-    entity.add(mesh)
-    entity.wcsBbox = built.wcsBbox
-    return entity
-  }
-
-  private offsetRingArea(
-    outer: GeometryPoint2dLike[],
-    inner: GeometryPoint2dLike[]
-  ) {
-    const area = new GeometryArea2d()
-    const toLoop = (points: GeometryPoint2dLike[]) =>
-      new GeometryPolyline2d(
-        points.map(point => new GeometryPoint2d(point.x, point.y)),
-        true
-      )
-    area.add(toLoop(outer))
-    area.add(toLoop(inner))
-    return area
+    return new ThreeRendererFill(points, this._subEntityTraits, this._context)
   }
 
   /**

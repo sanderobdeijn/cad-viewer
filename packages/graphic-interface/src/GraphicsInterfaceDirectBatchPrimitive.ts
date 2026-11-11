@@ -13,5 +13,3 @@ export type GraphicsInterfaceDirectBatchPrimitive =
   | 'lineSegments'
   /** `point` with a simple Points drawable (no symbol LineSegments). */
   | 'point'
-  /** `area` solid fill (single area call, not a group of areas). */
-  | 'area'

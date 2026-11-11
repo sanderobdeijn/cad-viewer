@@ -295,9 +295,6 @@ importers:
 
   packages/three-renderer:
     dependencies:
-      '@velipso/polybool':
-        specifier: ^1.1.1
-        version: 1.1.1
       troika-three-text:
         specifier: ^0.53.0
         version: 0.53.1(three@0.186.1)
@@ -2507,9 +2504,6 @@ packages:
     resolution: {integrity: sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA==}
     cpu: [x64]
     os: [win32]
-
-  '@velipso/polybool@1.1.1':
-    resolution: {integrity: sha512-HlWrm/wloLkUDHPQ1AgUdXysKL3y+rqV94udU5CVTtEPci5v6WjEfozNJTOOSwCsz50ySIxJK4gABqfbx1sD7A==}
 
   '@vitejs/plugin-vue@5.2.4':
     resolution: {integrity: sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==}
@@ -7877,10 +7871,6 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
-
-  '@velipso/polybool@1.1.1':
-    dependencies:
-      tslib: 2.8.1
 
   '@vitejs/plugin-vue@5.2.4(vite@5.4.21(@types/node@24.12.4)(sass@1.98.0))(vue@3.5.31(typescript@5.9.3))':
     dependencies:

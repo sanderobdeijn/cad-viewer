@@ -1,5 +1,3 @@
-export { GeometryArea2d } from './GeometryArea2d'
-export type { GeometryIndexNode, GeometryLoop2dType } from './GeometryArea2d'
 export type { GeometryDimension } from './GeometryDimension'
 export { GeometryShape } from './GeometryShape'
 export { GeometryShape2d } from './GeometryShape2d'
@@ -19,8 +17,6 @@ export { GeometryEllipseArc2d } from './GeometryEllipseArc2d'
 export { GeometryPolyline2d } from './GeometryPolyline2d'
 export type { GeometryPolyline2dVertex } from './GeometryPolyline2d'
 export { GeometryLine2d } from './GeometryLine2d'
-export { GeometryLoop2d } from './GeometryLoop2d'
-export type { GeometryBoundaryEdgeType } from './GeometryLoop2d'
 export { geometryIntersectCurves } from './GeometryCurveIntersect'
 export type {
   GeometryCurveExtent,

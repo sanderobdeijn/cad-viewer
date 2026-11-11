@@ -1,9 +1,7 @@
 import {
-  GeometryArea2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
   GeometryLine2d,
-  GeometryLoop2d,
   GeometryMatrix2d,
   GeometryPoint2d,
   GeometryPolyline2d
@@ -153,33 +151,6 @@ describe('Geometry transform regression', () => {
       )
       expect(polyline.vertices[0].bulge).toBe(expectedBulge)
     })
-  })
-
-  it('transforms loops and areas through child curves', () => {
-    const loop = new GeometryLoop2d([
-      new GeometryLine2d({ x: 0, y: 0 }, { x: 1, y: 0 }),
-      new GeometryLine2d({ x: 1, y: 0 }, { x: 1, y: 1 }),
-      new GeometryLine2d({ x: 1, y: 1 }, { x: 0, y: 1 }),
-      new GeometryLine2d({ x: 0, y: 1 }, { x: 0, y: 0 })
-    ])
-    const area = new GeometryArea2d()
-    area.add(
-      new GeometryPolyline2d(
-        [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-          { x: 1, y: 1 },
-          { x: 0, y: 1 }
-        ],
-        true
-      )
-    )
-
-    loop.transform(new GeometryMatrix2d().makeTranslation(3, 4))
-    area.transform(new GeometryMatrix2d().makeScale(2, 2))
-
-    expectPoint2dClose(loop.startPoint, { x: 3, y: 4 })
-    expect(area.area).toBeCloseTo(4, 8)
   })
 
   it('transforms circular arcs using transformed points instead of origin-relative vectors', () => {

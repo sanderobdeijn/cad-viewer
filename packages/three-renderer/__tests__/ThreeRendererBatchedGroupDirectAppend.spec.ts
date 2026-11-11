@@ -92,30 +92,4 @@ describe('ThreeRendererBatchedGroup direct line append', () => {
     material.dispose()
   })
 
-  it('appends mesh geometry with draw-order renderOrder', () => {
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 0, 1, 0], 3)
-    )
-    geometry.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1))
-
-    const group = new ThreeRendererBatchedGroup()
-    expect(
-      group.appendMeshGeometry(
-        geometry,
-        material,
-        new THREE.Vector3(50, 50, 0),
-        {
-          objectId: 'mesh-1'
-        }
-      )
-    ).toBe(true)
-    geometry.dispose()
-
-    expect(group.hasEntity('mesh-1')).toBe(true)
-    group.removeEntity('mesh-1')
-    material.dispose()
-  })
 })

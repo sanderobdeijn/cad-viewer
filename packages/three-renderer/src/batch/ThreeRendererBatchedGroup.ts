@@ -966,55 +966,6 @@ export class ThreeRendererBatchedGroup extends THREE.Group {
   }
 
   /**
-   * Appends pre-built mesh geometry directly into a mesh batch without
-   * creating a temporary {@link THREE.Mesh} / {@link ThreeRendererPolygon}.
-   *
-   * Geometry must already be in local coordinates relative to `worldOffset`.
-   * The caller must dispose the geometry afterward.
-   */
-  appendMeshGeometry(
-    geometry: THREE.BufferGeometry,
-    material: THREE.Material,
-    worldOffset: THREE.Vector3,
-    options: ThreeRendererDirectAppendOptions
-  ): boolean {
-    if (options.visible === false) {
-      return false
-    }
-
-    applyDrawOrderZ(worldOffset, material)
-
-    const hasIndex = geometry.getIndex() !== null
-    const batches = hasIndex ? this._meshWithIndexBatches : this._meshBatches
-    const batchedMesh = this.resolveOriginBatch(
-      batches,
-      material.id,
-      worldOffset,
-      () => {
-        const metadata = getMaterialMetadata(material)
-        const drawOrder = metadata.drawOrder ?? 0
-        const batch = new ThreeRendererBatchedMesh(
-          ThreeRendererBatchedGroup.INITIAL_MESH_VERTEX_CAPACITY,
-          ThreeRendererBatchedGroup.INITIAL_MESH_INDEX_CAPACITY,
-          this.createOwnedBatchMaterial(material)
-        )
-        batch.renderOrder = drawOrder
-        return batch
-      }
-    )
-
-    const geometryId = batchedMesh.addGeometry(geometry, -1, -1, worldOffset)
-    batchedMesh.setGeometryInfo(geometryId, { objectId: options.objectId })
-
-    const item: ThreeRendererEntityInBatchedObject = {
-      batchedObjectId: batchedMesh.id,
-      batchId: geometryId
-    }
-    this.registerDirectAppend(options.objectId, item, true)
-    return true
-  }
-
-  /**
    * Records a direct-append slot in `_entitiesMap` and applies visibility.
    */
   private registerDirectAppend(

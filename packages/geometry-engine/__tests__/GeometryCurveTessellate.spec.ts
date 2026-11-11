@@ -1,9 +1,6 @@
 import {
-  GeometryArea2d,
   GeometryCircularArc2d,
   GeometryEllipseArc2d,
-  GeometryLine2d,
-  GeometryLoop2d,
   GeometryPolyline2d,
   ORIGIN_POINT_2D,
   TAU
@@ -145,59 +142,4 @@ describe('GeometryCurveTessellate', () => {
     })
   })
 
-  describe('loop and area tessellate', () => {
-    it('emits vertices only for a square of straight edges', () => {
-      const loop = new GeometryLoop2d([
-        new GeometryLine2d({ x: 0, y: 0 }, { x: 1, y: 0 }),
-        new GeometryLine2d({ x: 1, y: 0 }, { x: 1, y: 1 }),
-        new GeometryLine2d({ x: 1, y: 1 }, { x: 0, y: 1 }),
-        new GeometryLine2d({ x: 0, y: 1 }, { x: 0, y: 0 })
-      ])
-      const points = loop.tessellate()
-      expect(points.length).toBeLessThanOrEqual(5)
-      expect(points.length).toBeGreaterThanOrEqual(4)
-    })
-
-    it('samples a short circular edge with far fewer than 101 points', () => {
-      const loop = new GeometryLoop2d([
-        new GeometryCircularArc2d(ORIGIN_POINT_2D, 1, 0, Math.PI / 18, false),
-        new GeometryLine2d({ x: 1, y: 0 }, ORIGIN_POINT_2D)
-      ])
-      const points = loop.tessellate()
-      expect(points.length).toBeGreaterThan(2)
-      expect(points.length).toBeLessThan(25)
-    })
-
-    it('samples an elliptical edge without using a fixed 100-point grid', () => {
-      const ellipse = new GeometryEllipseArc2d(
-        ORIGIN_POINT_2D,
-        2,
-        1,
-        0,
-        Math.PI / 18
-      )
-      const loop = new GeometryLoop2d([ellipse])
-      const points = loop.tessellate()
-      expect(points.length).toBeGreaterThan(1)
-      expect(points.length).toBeLessThan(ellipse.getPoints(100).length)
-    })
-
-    it('tessellates every area loop', () => {
-      const area = new GeometryArea2d()
-      area.add(
-        new GeometryPolyline2d(
-          [
-            { x: 0, y: 0 },
-            { x: 2, y: 0 },
-            { x: 2, y: 2 },
-            { x: 0, y: 2 }
-          ],
-          true
-        )
-      )
-      const loops = area.tessellate()
-      expect(loops).toHaveLength(1)
-      expect(loops[0].length).toBeGreaterThanOrEqual(4)
-    })
-  })
 })

@@ -55,8 +55,6 @@ npm install @mlightcad/geometry-engine
 #### Complex Geometric Entities
 - **GeometryPolyline2d**: 2D polyline with multiple segments
 - **GeometryShape2d**: Complex geometric shapes
-- **GeometryArea2d**: 2D area calculations
-- **GeometryLoop2d**: 2D loop representations
 
 #### Utility Classes
 - **GeometryUtil**: Utility functions for geometric operations

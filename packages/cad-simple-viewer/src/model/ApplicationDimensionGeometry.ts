@@ -1,12 +1,10 @@
 import {
-  GeometryArea2d,
   GeometryBox2d,
   type GeometryDimension,
   GeometryLine2d,
   type GeometryMatrix2d,
   GeometryPoint2d,
   type GeometryPoint2dLike,
-  GeometryPolyline2d,
   GeometryVector2d,
   type GeometryVector2dLike
 } from '@mlightcad/geometry-engine'
@@ -255,9 +253,7 @@ export function drawDimension(
     renderer.lines([line.startPoint, line.endPoint])
   )
   for (const arrow of arrows) {
-    const area = new GeometryArea2d()
-    area.add(new GeometryPolyline2d(arrowOutline(arrow), true))
-    drawables.push(renderer.area(area))
+    drawables.push(renderer.fill(arrowOutline(arrow)))
   }
   if (label) {
     drawables.push(

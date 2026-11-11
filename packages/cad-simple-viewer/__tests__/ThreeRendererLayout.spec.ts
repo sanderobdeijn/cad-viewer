@@ -75,7 +75,6 @@ let lastCapturedExclude: ReadonlySet<string> | undefined
 const mockAppendLineGeometry = jest.fn().mockReturnValue(true)
 const mockAppendLine2Geometry = jest.fn().mockReturnValue(true)
 const mockAppendPointGeometry = jest.fn().mockReturnValue(true)
-const mockAppendMeshGeometry = jest.fn().mockReturnValue(true)
 const mockRerenderPoints = jest.fn()
 const mockCollectPointObjectWorldBoxes = jest.fn(
   (out: Map<string, THREE.Box3> = new Map()) => out
@@ -96,7 +95,6 @@ jest.mock('@mlightcad/three-renderer', () => {
       group.appendLineGeometry = mockAppendLineGeometry
       group.appendLine2Geometry = mockAppendLine2Geometry
       group.appendPointGeometry = mockAppendPointGeometry
-      group.appendMeshGeometry = mockAppendMeshGeometry
       group.rerenderPoints = mockRerenderPoints
       group.collectPointObjectWorldBoxes = mockCollectPointObjectWorldBoxes
       return group
@@ -129,7 +127,6 @@ describe('ThreeRendererLayout bounding box', () => {
     mockAppendLineGeometry.mockReturnValue(true)
     mockAppendLine2Geometry.mockReturnValue(true)
     mockAppendPointGeometry.mockReturnValue(true)
-    mockAppendMeshGeometry.mockReturnValue(true)
     mockCollectPointObjectWorldBoxes.mockImplementation(
       (out: Map<string, THREE.Box3> = new Map()) => out
     )

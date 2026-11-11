@@ -1,10 +1,8 @@
 export {
-  GeometryArea2d,
   GeometryCircularArc2d,
   GeometryCurve2d,
   GeometryEllipseArc2d,
   GeometryLine2d,
-  GeometryLoop2d,
   GeometryPolyline2d,
   GeometryShape,
   GeometryShape2d,
@@ -14,13 +12,10 @@ export {
   geometryIntersectCurves
 } from './geometry'
 export type {
-  GeometryBoundaryEdgeType,
   GeometryCircumcircle2d,
   GeometryCurveExtent,
   GeometryDimension,
-  GeometryIndexNode,
   GeometryIntersectPrimitive,
-  GeometryLoop2dType,
   GeometryPolyline2dVertex,
   GeometryResolvedTessellateOptions,
   GeometryTessellateOptions

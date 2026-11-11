@@ -49,27 +49,17 @@ describe('ThreeRendererRenderer direct capture', () => {
     }
   })
 
-  it('captures area() payload without building ThreeRendererPolygon geometry', () => {
+  it('does not capture fill()', () => {
     const renderer = createRenderer()
-    const loops = [
-      [
-        { x: 0, y: 0 },
-        { x: 10, y: 0 },
-        { x: 10, y: 5 }
-      ]
-    ]
-    const area = {
-      getPoints: () => loops,
-      tessellate: () => loops,
-      buildHierarchy: () => ({ children: [] })
-    }
 
     renderer.beginDirectCapture()
-    const placeholder = renderer.area(area as never)
+    const placeholder = renderer.fill([
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 5 }
+    ])
     expect(placeholder.children).toHaveLength(0)
-
-    const payload = renderer.takeDirectCapture()
-    expect(payload).toEqual({ kind: 'area', area })
+    expect(renderer.takeDirectCapture()).toBeNull()
   })
 
   it('captures lineSegments() payload', () => {
