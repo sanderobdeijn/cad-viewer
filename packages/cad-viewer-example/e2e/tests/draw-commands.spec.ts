@@ -68,13 +68,16 @@ const settledDrawnPixels = async (page: Page) => {
 }
 
 /**
- * Expects the editor text, ignoring the `id=` field of each line, which holds
- * object ids that depend on what was drawn before.
+ * Removes the object ids from the editor text, which depend on what was drawn
+ * before: the `id=` field of each line and the ids of line ends, so that
+ * `point(id, x, y)` reads `(x, y)`.
  */
+const withoutIds = (text: string) =>
+  text.replace(/ id=\S+/g, '').replace(/point\([^,()]+, ([^()]*)\)/g, '($1)')
+
+/** Expects the editor text, ignoring object ids. */
 const expectEditorValue = (editor: Locator, expected: string | RegExp) => {
-  const value = expect.poll(async () =>
-    (await editor.inputValue()).replace(/ id=\S+/g, '')
-  )
+  const value = expect.poll(async () => withoutIds(await editor.inputValue()))
   return typeof expected === 'string'
     ? value.toBe(expected)
     : value.toMatch(expected)
@@ -486,7 +489,7 @@ test('moves and deletes a measurement through the UI', async ({ page }) => {
   await page.mouse.move(grip.x + 100, grip.y + 60, { steps: 5 })
   await page.mouse.up()
   await expect
-    .poll(async () => (await editor.inputValue()).replace(/ id=\S+/g, ''))
+    .poll(async () => withoutIds(await editor.inputValue()))
     .not.toMatch(/MeasureDistance start=.0, 0./)
   await expectEditorValue(
     editor,

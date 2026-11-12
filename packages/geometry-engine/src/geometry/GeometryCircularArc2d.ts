@@ -105,8 +105,7 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
         )
       }
     } else if (argsLength == 5) {
-      const center = a as GeometryPoint2dLike
-      this.center = new GeometryPoint2d(center.x, center.y)
+      this.center = a as GeometryPoint2dLike
       this.radius = b as number
       this._clockwise = e as boolean
       // Store internal angles (unmirrored)
@@ -445,8 +444,13 @@ export class GeometryCircularArc2d extends GeometryCurve2d {
   get center(): GeometryPoint2d {
     return this._center
   }
+  /** Keeps the id of `value`, or else the id of the current center. */
   set center(value: GeometryPoint2dLike) {
+    const id = value.id ?? this._center?.id
     this._center = new GeometryPoint2d(value.x, value.y)
+    if (id !== undefined) {
+      this._center.id = id
+    }
     this._boundingBoxNeedsUpdate = true
   }
 

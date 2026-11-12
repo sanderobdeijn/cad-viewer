@@ -31,6 +31,9 @@ describe('ApplicationEntityService', () => {
 
   test('translateItems moves items and keeps their ids', () => {
     const { sync, ids, service } = createService()
+    const [a, b] = sync.model.items.map(item =>
+      (item.geometry as GeometryLine2d).getPoints().map(point => point.id)
+    )
 
     const count = service.translateItems(service.getItemsByIds(ids), {
       x: 1,
@@ -39,8 +42,8 @@ describe('ApplicationEntityService', () => {
 
     expect(count).toBe(2)
     expect(sync.model.toString().split('\n')).toEqual([
-      `Line id=${ids[0]} start=(1, 2) end=(11, 2)`,
-      `Line id=${ids[1]} start=(1, 2) end=(21, 2)`
+      `Line id=${ids[0]} start=point(${a[0]}, 1, 2) end=point(${a[1]}, 11, 2)`,
+      `Line id=${ids[1]} start=point(${b[0]}, 1, 2) end=point(${b[1]}, 21, 2)`
     ])
   })
 
@@ -50,10 +53,18 @@ describe('ApplicationEntityService', () => {
 
     service.cloneAndTransform(service.getItemsByIds([ids[0]]), matrix)
 
+    const [original, , copy] = sync.model.items
+    const pointIds = (item: typeof copy) =>
+      (item.geometry as GeometryLine2d).getPoints().map(point => point.id)
     expect(sync.model.items).toHaveLength(3)
-    expect(sync.model.toString()).toContain('start=(0, 5) end=(10, 5)')
-    expect(sync.model.toString()).toContain(
-      `Line id=${ids[0]} start=(0, 0) end=(10, 0)`
-    )
+    expect(copy.id).not.toBe(ids[0])
+    expect((copy.geometry as GeometryLine2d).getPoints()).toEqual([
+      expect.objectContaining({ x: 0, y: 5 }),
+      expect.objectContaining({ x: 10, y: 5 })
+    ])
+    // The copy gets ends of its own; the original keeps its ends.
+    expect(pointIds(copy)).not.toContain(pointIds(original)[0])
+    expect(pointIds(copy)).not.toContain(pointIds(original)[1])
+    expect((original.geometry as GeometryLine2d).startPoint.y).toBe(0)
   })
 })

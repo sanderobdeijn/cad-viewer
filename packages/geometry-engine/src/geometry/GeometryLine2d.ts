@@ -15,12 +15,13 @@ export class GeometryLine2d extends GeometryCurve2d {
   private _end: GeometryPoint2d
   /**
    * This constructor initializes the line object to use start as the start point, and end
-   * as the endpoint. Both points must be in WCS coordinates.
+   * as the endpoint. Both points must be in WCS coordinates. The ids of the
+   * points are kept.
    */
   constructor(start: GeometryPoint2dLike, end: GeometryPoint2dLike) {
     super()
-    this._start = new GeometryPoint2d(start)
-    this._end = new GeometryPoint2d(end)
+    this._start = GeometryPoint2d.from(start)
+    this._end = GeometryPoint2d.from(end)
   }
 
   /**
@@ -107,12 +108,12 @@ export class GeometryLine2d extends GeometryCurve2d {
   extend(length: number, inversed: boolean = false) {
     const direction = this.direction
     if (inversed) {
-      this._start = new GeometryPoint2d(this._start).addScaledVector(
+      this._start = this._start.clone().addScaledVector(
         direction,
         -length
       )
     } else {
-      this._end = new GeometryPoint2d(this._end).addScaledVector(
+      this._end = this._end.clone().addScaledVector(
         direction,
         length
       )

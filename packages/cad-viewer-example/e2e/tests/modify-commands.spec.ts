@@ -12,7 +12,7 @@ const run = async (page: Page, ...inputs: string[]) => {
   }
 }
 
-const modelText = (page: Page) =>
+const rawModelText = (page: Page) =>
   page.evaluate(() =>
     (
       window as never as {
@@ -22,6 +22,21 @@ const modelText = (page: Page) =>
       }
     ).ApplicationDocManager.instance.curDocument.model.toString()
   )
+
+/** The model text with line ends written `(x, y)`, without their ids. */
+const modelText = async (page: Page) =>
+  (await rawModelText(page)).replace(
+    /point\([^,()]+, ([^()]*)\)/g,
+    '($1)'
+  )
+
+/** The ids of the ends of the line with this id, as written in the model text. */
+const endIds = async (page: Page, id: string) => {
+  const line = (await rawModelText(page))
+    .split('\n')
+    .find(text => text.startsWith(`Line id=${id} `))
+  return [...(line ?? '').matchAll(/point\(([^,()]+),/g)].map(match => match[1])
+}
 
 const ids = (page: Page) =>
   page.evaluate(() =>
@@ -89,12 +104,17 @@ test('moves, copies, rotates, offsets, erases and drags grips through the model'
   await page.waitForTimeout(300)
   expect(await ids(page)).toHaveLength(2)
 
+  const lineEnds = await endIds(page, line)
+  expect(lineEnds).toHaveLength(2)
+
   await select(page, [line])
   await run(page, 'move', '0,0', '10,0')
   await page.waitForTimeout(300)
   expect(await modelText(page)).toContain(
     `Line id=${line} start=(10, 0) end=(110, 0)`
   )
+  // Moving a line keeps the ids of its ends.
+  expect(await endIds(page, line)).toEqual(lineEnds)
 
   await select(page, [line])
   await run(page, 'rotate', '10,0', '90')

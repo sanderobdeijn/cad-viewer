@@ -81,8 +81,13 @@ export class GeometryEllipseArc2d extends GeometryCurve2d {
   get center(): GeometryPoint2d {
     return this._center
   }
+  /** Keeps the id of `value`, or else the id of the current center. */
   set center(value: GeometryPoint2dLike) {
+    const id = value.id ?? this._center?.id
     this._center = new GeometryPoint2d(value.x, value.y)
+    if (id !== undefined) {
+      this._center.id = id
+    }
     this._boundingBoxNeedsUpdate = true
   }
 

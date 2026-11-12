@@ -12,6 +12,8 @@ import { geometryOffsetPolyline2d } from './GeometryPolyline2dOffset'
 export interface GeometryPolyline2dVertex {
   x: number
   y: number
+  /** The id of this vertex in a model, if any */
+  id?: string
   /**
    * The bulge factor used to indicate how much of an arc segment is present at this vertex.
    * The bulge factor is the tangent of one fourth the included angle for an arc segment, made

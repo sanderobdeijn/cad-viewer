@@ -12,7 +12,8 @@ import {
 } from '../src/model/ApplicationItemDrawable'
 import type { ApplicationItemContents } from '../src/model/ApplicationItemGeometry'
 
-const withoutIds = (text: string) => text.replace(/ id=\S+/g, '')
+const withoutIds = (text: string) =>
+  text.replace(/ id=\S+/g, '').replace(/point\([^,()]+, ([^()]*)\)/g, '($1)')
 
 let mockMeasurements: unknown[] = []
 const mockListeners = new Set<() => void>()
@@ -240,11 +241,15 @@ describe('ApplicationModelSync', () => {
     it('updates a changed line in place', () => {
       const { sync } = createSync()
       const [id] = sync.addItems(createLine())
+      const [start, end] = (
+        sync.model.get(id)!.geometry as GeometryLine2d
+      ).getPoints()
 
       sync.applyText('Line start=(1, 2) end=(3, 4)')
 
+      // The ends keep their ids when the text leaves them out.
       expect(sync.model.toString()).toBe(
-        `Line id=${id} start=(1, 2) end=(3, 4)`
+        `Line id=${id} start=point(${start.id}, 1, 2) end=point(${end.id}, 3, 4)`
       )
       sync.dispose()
     })
@@ -372,6 +377,11 @@ describe('ApplicationModelSync', () => {
       it('changes, adds and removes arcs in place', () => {
         const { sync } = createSync()
         const id = addArcPolyline(sync)
+        const vertexIds = () =>
+          (sync.model.get(id)!.geometry as GeometryPolyline2d).vertices.map(
+            vertex => vertex.id
+          )
+        const [first, second] = vertexIds()
 
         sync.applyText(
           'Polyline vertices=[(0, 0, bulge=-1), (10, 0)] closed=false'
@@ -382,9 +392,15 @@ describe('ApplicationModelSync', () => {
           'Polyline vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false'
         )
         expect(bulges(sync)).toEqual([0, 1, 0])
-        expect(sync.model.toString()).toBe(
-          `Polyline id=${id} vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false`
+        expect(sync.model.items.map(item => item.id)).toEqual([id])
+        expect(withoutIds(sync.model.toString())).toBe(
+          'Polyline vertices=[(0, 0), (10, 0, bulge=1), (20, 0)] closed=false'
         )
+        // The vertices keep their ids by position; the added one gets a new id.
+        const ids = vertexIds()
+        expect(ids.slice(0, 2)).toEqual([first, second])
+        expect(ids[2]).toBeDefined()
+        expect([id, first, second]).not.toContain(ids[2])
         sync.dispose()
       })
 
